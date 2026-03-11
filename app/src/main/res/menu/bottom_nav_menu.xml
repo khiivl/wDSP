@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_eq"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="EQ" />
+    <item
+        android:id="@+id/nav_fm_curve"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="F-M Curve" />
+    <item
+        android:id="@+id/nav_delays"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        android:title="Delays" />
+    <item
+        android:id="@+id/nav_other"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Other" />
+</menu>

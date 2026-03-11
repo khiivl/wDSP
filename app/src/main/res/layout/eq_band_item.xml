@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <ToggleButton
+        android:id="@+id/btn_q"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.08"
+        android:background="@android:color/transparent"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="0dp"
+        android:textColor="@color/q_switch_text"
+        android:textSize="14sp"
+        android:textOff="2.2"
+        android:textOn="4.7" />
+
+    <TextView
+        android:id="@+id/tv_db"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.08"
+        android:gravity="center"
+        android:text="0"
+        android:textColor="@color/cyan_custom"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_label"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.08"
+        android:gravity="center"
+        android:textColor="@color/band_label"
+        android:textSize="14sp" />
+
+    <FrameLayout
+        android:id="@+id/seek_box"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.76">
+
+        <SeekBar
+            android:id="@+id/seek_band"
+            android:layout_width="1000dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:max="12"
+            android:padding="0dp"
+            android:progress="6"
+            android:progressTint="@color/seek_track"
+            android:rotation="270"
+            android:thumbOffset="0dp"
+            android:thumbTint="@color/cyan_custom" />
+    </FrameLayout>
+
+</LinearLayout>

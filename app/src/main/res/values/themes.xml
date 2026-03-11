@@ -1,0 +1,40 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/cyan_custom</item>
+        <item name="android:statusBarColor">@color/cyan_custom</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Theme.WDSP" parent="Base.Theme.WDSP" />
+
+    <!-- Standard Text Styles -->
+    <style name="TextTitle">
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_theme_aware</item>
+    </style>
+
+    <style name="TextHeader">
+        <item name="android:textSize">@dimen/text_size_header</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_theme_aware</item>
+    </style>
+
+    <style name="TextLabel">
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textColor">@color/text_theme_aware</item>
+    </style>
+
+    <style name="TextValue">
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_theme_aware_2</item>
+    </style>
+
+    <style name="TextSmall">
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:textColor">@color/text_theme_aware</item>
+    </style>
+</resources>
