@@ -1,9 +1,11 @@
 This is a free and open-source DSP app designed to fully replace the stock DSP app on K706/QF Android head units. 
 
-If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka
-
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
 Compatible with vertical and horizontal head units.
+
+If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka
+
+----------------------------------------------------------------------------------------------------------------------
 
 Features:
 
