@@ -10,7 +10,7 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 Features:
 
 Equalization:
-- Fully customizable EQ that is true-to-hardware (16 bands with 2dB per step) with subwoofer control on the same page.
+- EQ that is true-to-hardware (16 bands with 2dB per step), correctly labeled, with Q control with presets of 2.2 and 4.7. Subwoofer control on the same page.
 - Customizable loudness curve to make music sound better at low volumes. Calibration and subwoofer tweaking included.
 - Bass filtering and boost just like in the stock DSP, but with correctly labeled values.
 
