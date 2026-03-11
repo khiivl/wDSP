@@ -24,7 +24,6 @@ Presets:
 - All the settings in the app are saved to a preset that the user is able to duplicate, export, import and rename.
 - Automatic preset switching system that makes it possible to apply presets to different audio types, like Media, AUX, Radio and Bluetooth calls.
 
-Technical info:
 Written on Java, set to target API29. Reverse-engineered proprietary MCU communication protocol. Communicates with the framework.jar service using reflections.
 
 The app is licensed with the GPLv3 license. 
