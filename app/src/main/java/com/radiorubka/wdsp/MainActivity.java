@@ -1006,7 +1006,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAutoPresetDialog() {
-        String p = getSystemProperty("sys.qf.last_audio_src", "");
+        String p = getSystemProperty("sys.qf.last_audio_src", "Unknown");
         String cur = (String) spinnerPresets.getSelectedItem();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());

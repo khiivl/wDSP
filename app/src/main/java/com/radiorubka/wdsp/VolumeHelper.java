@@ -28,8 +28,7 @@ public class VolumeHelper {
 
         try {
             // Obfuscated: "android.qf.os.VolumeManager"
-            String vmName = new String(Base64.decode("YW5kcm9pZC5xZi5vcy5Wb2x1bWVNYW5hZ2Vy", Base64.DEFAULT));
-            Class<?> vmClass = Class.forName(vmName);
+            Class<?> vmClass = Class.forName("android.qf.os.VolumeManager");
             mVolumeManager = vmClass.getMethod("getInstance").invoke(null);
 
             vmClass.getMethod("initVolumeManager", Context.class).invoke(mVolumeManager, context.getApplicationContext());
@@ -73,7 +72,7 @@ public class VolumeHelper {
 
         if (!success && audioManager != null) {
             try {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, val, 0);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, val, 1);
             } catch (Exception e) {
                 Log.e(TAG, "Standard volume adjustment failed", e);
             }

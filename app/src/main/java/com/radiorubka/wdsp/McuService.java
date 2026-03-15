@@ -18,7 +18,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -54,7 +53,6 @@ public class McuService extends Service implements LocationListener {
     private HandlerThread workerThread;
     private Handler backgroundHandler;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private PowerManager.WakeLock wakeLock;
 
     private boolean isPolling = false;
     private int lastVolumeRead = -1;
@@ -191,13 +189,6 @@ public class McuService extends Service implements LocationListener {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-        if (pm != null) {
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wDSP:McuWakeLock");
-            wakeLock.setReferenceCounted(false);
-            if (!wakeLock.isHeld()) wakeLock.acquire();
-        }
-
         workerThread = new HandlerThread("wDSP_Worker", -16); // THREAD_PRIORITY_AUDIO
         workerThread.start();
         backgroundHandler = new Handler(workerThread.getLooper());
@@ -279,11 +270,14 @@ public class McuService extends Service implements LocationListener {
 
         startForeground(NOTIFICATION_ID, notification);
 
-        backgroundHandler.post(() -> {
-            applyCurrentSettings();
-            startPolling();
-            startGps();
-        });
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            backgroundHandler.post(() -> {
+                applyCurrentSettings();
+                startPolling();
+                startGps();
+            });
+            Log.d("McuService", "Background tasks started after 5s delay");
+        }, 3000); // 5 second delay
 
         return START_STICKY;
     }
@@ -376,7 +370,8 @@ public class McuService extends Service implements LocationListener {
 
     private void checkPlayer() {
         String currentPlayer = getSystemProperty("sys.qf.last_audio_src", "");
-        if (VolumeHelper.getActivePlayerType() == "btcall_type") {
+        if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
+            lastPlayerSource = "Call";
             processPlayerSwitch("Call");
         }
         else if (!Objects.equals(currentPlayer, lastPlayerSource)) {
@@ -664,7 +659,6 @@ public class McuService extends Service implements LocationListener {
             stopGps();
             workerThread.quitSafely();
         });
-        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         try { unregisterReceiver(controlReceiver); } catch (Exception ignored) {}
     }
 
