@@ -837,6 +837,290 @@
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- GALA Tab Content -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_gala"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_gala_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:text="GALA (Speed Dependent Volume)"
+                android:textColor="@color/text_theme_aware"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_gala_title">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Master Switch -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:background="@color/visualizer_container_bg">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable GALA Feature"
+                            android:textColor="@color/text_theme_aware"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switch_gala_enable"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Status Display -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="24dp"
+                        android:weightSum="2">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:layout_marginEnd="4dp"
+                            android:background="#0D000000">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="GPS SPEED"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_theme_aware_2" />
+                            <TextView
+                                android:id="@+id/tv_gala_speed"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 km/h"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/cyan_custom" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:layout_marginStart="4dp"
+                            android:background="#0D000000">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="VOL OFFSET"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_theme_aware_2" />
+                            <TextView
+                                android:id="@+id/tv_gala_offset"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+0"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/cyan_custom" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Controls -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sensitivity Settings"
+                        android:textColor="@color/text_theme_aware"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:layout_marginBottom="8dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:background="#05000000">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Volume Step Interval"
+                            android:textColor="@color/text_theme_aware" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <SeekBar
+                                android:id="@+id/seek_gala_increment"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:max="45"
+                                android:progress="15"
+                                android:progressTint="@color/cyan_custom"
+                                android:thumbTint="@color/cyan_custom" />
+                            <TextView
+                                android:id="@+id/tv_gala_increment_val"
+                                android:layout_width="70dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="20 km/h"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="Standstill Threshold"
+                            android:textColor="@color/text_theme_aware" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <SeekBar
+                                android:id="@+id/seek_gala_minspeed"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:max="60"
+                                android:progress="0"
+                                android:progressTint="@color/cyan_custom"
+                                android:thumbTint="@color/cyan_custom" />
+                            <TextView
+                                android:id="@+id/tv_gala_minspeed_val"
+                                android:layout_width="70dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="0 km/h"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="Maximum Speed Limit"
+                            android:textColor="@color/text_theme_aware" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <SeekBar
+                                android:id="@+id/seek_gala_maxspeed"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:max="60"
+                                android:progress="30"
+                                android:progressTint="@color/cyan_custom"
+                                android:thumbTint="@color/cyan_custom" />
+                            <TextView
+                                android:id="@+id/tv_gala_maxspeed_val"
+                                android:layout_width="70dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="150 km/h"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="Max Volume Adjustment"
+                            android:textColor="@color/text_theme_aware" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <SeekBar
+                                android:id="@+id/seek_gala_max_adj"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:max="32"
+                                android:progress="12"
+                                android:progressTint="@color/cyan_custom"
+                                android:thumbTint="@color/cyan_custom" />
+                            <TextView
+                                android:id="@+id/tv_gala_max_adj_val"
+                                android:layout_width="70dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="12"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1A000000" android:layout_marginVertical="24dp" />
+
+                    <!-- Debug Section -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Simulation &amp; Debug"
+                        android:textColor="@color/simulate_speed_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:background="#05FF5722">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Simulate Vehicle Speed"
+                            android:textColor="@color/simulate_speed_color" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <SeekBar
+                                android:id="@+id/seek_simulate_speed"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:max="200"
+                                android:progress="0"
+                                android:progressTint="@color/simulate_speed_color"
+                                android:thumbTint="@color/simulate_speed_color" />
+                            <TextView
+                                android:id="@+id/tv_simulate_speed_val"
+                                android:layout_width="70dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="0 km/h"
+                                android:textColor="@color/simulate_speed_color"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </FrameLayout>
 
     <LinearLayout

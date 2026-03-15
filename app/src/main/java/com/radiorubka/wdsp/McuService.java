@@ -143,6 +143,7 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                    applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
                         startGps();
@@ -221,6 +222,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.example.wdsp.SIMULATE_SPEED");
         
         registerReceiver(controlReceiver, controlFilter);
+
+        applyCurrentSettings();
     }
 
     private void loadPlayerMap() {
