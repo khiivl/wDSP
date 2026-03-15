@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
             if ("com.example.wdsp.PRESET_CHANGED".equals(action)) {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
+                    Toast.makeText(MainActivity.this, "Auto applied preset: " + name, Toast.LENGTH_SHORT).show();
                     spinnerPresets.setSelection(presetNames.indexOf(name));
                 }
             } else if ("com.example.wdsp.VOLUME_CHANGED".equals(action)) {
@@ -236,6 +237,13 @@ public class MainActivity extends AppCompatActivity {
         if (isFullyInitialized) {
             refreshAllUiValues();
             SelectTab();
+        }
+        // Force the UI to match the saved preference
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String current = prefs.getString("last_selected_preset", "Preset 1");
+        int index = presetNames.indexOf(current);
+        if (index >= 0) {
+            spinnerPresets.setSelection(index, false); // Update spinner without triggering listeners
         }
     }
 

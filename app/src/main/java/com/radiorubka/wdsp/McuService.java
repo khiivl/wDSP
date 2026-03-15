@@ -388,7 +388,7 @@ public class McuService extends Service implements LocationListener {
         if (presetToLoad == null) {
             presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
         }
-        if (presetToLoad == null && currentPlayer.equals("btcall_type")) {
+        if (currentPlayer.equals("Call")) {
             presetToLoad = "Call";
         }
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
