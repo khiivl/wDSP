@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.radiorubka.wdsp'
-    compileSdk 29
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.radiorubka.wdsp"
         minSdk 29
-        targetSdk 29
+        targetSdk 34
         versionCode 1
         versionName "0.1"
 

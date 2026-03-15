@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMcuServiceWithSafety() {
+
         // 1. Check for Notification Permission (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)

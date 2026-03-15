@@ -1321,6 +1321,229 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_gala"
+            android:padding="16dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_theme_aware"
+                android:id="@+id/tv_gala_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GALA (Speed Dependent Volume)"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <LinearLayout
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:id="@+id/layout_gala_controls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:layout_constraintTop_toBottomOf="@+id/tv_gala_title">
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textColor="@color/text_theme_aware"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Enable GALA:"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switch_gala_enable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"/>
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textColor="@color/text_theme_aware"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Volume Step every:"
+                    android:layout_marginStart="32dp"/>
+
+                <SeekBar
+                    android:id="@+id/seek_gala_increment"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:max="45"
+                    android:progress="15"
+                    android:layout_marginStart="8dp"
+                    android:progressTint="@color/cyan_custom"
+                    android:thumbTint="@color/cyan_custom"/>
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_theme_aware_2"
+                    android:id="@+id/tv_gala_increment_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="20 km/h"
+                    android:layout_marginStart="8dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                app:layout_constraintTop_toBottomOf="@+id/layout_gala_controls">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textColor="@color/text_theme_aware"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current GPS Speed:"/>
+
+                    <TextView
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/cyan_custom"
+                        android:id="@+id/tv_gala_speed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 km/h"
+                        android:layout_marginStart="16dp"/>
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textColor="@color/text_theme_aware"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Standstill speed:"
+                        android:layout_marginStart="32dp"/>
+
+                    <SeekBar
+                        android:id="@+id/seek_gala_minspeed"
+                        android:layout_width="350dp"
+                        android:layout_height="wrap_content"
+                        android:max="60"
+                        android:progress="0"
+                        android:layout_marginStart="8dp"
+                        android:progressTint="@color/cyan_custom"
+                        android:thumbTint="@color/cyan_custom"/>
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_theme_aware_2"
+                        android:id="@+id/tv_gala_minspeed_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 km/h"
+                        android:layout_marginStart="8dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp">
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textColor="@color/text_theme_aware"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Applied Volume Offset:"/>
+
+                    <TextView
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/cyan_custom"
+                        android:id="@+id/tv_gala_offset"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+0"
+                        android:layout_marginStart="16dp"/>
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textColor="@color/text_theme_aware"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Maximum speed:"
+                        android:layout_marginStart="32dp"/>
+
+                    <SeekBar
+                        android:id="@+id/seek_gala_maxspeed"
+                        android:layout_width="350dp"
+                        android:layout_height="wrap_content"
+                        android:max="60"
+                        android:progress="30"
+                        android:layout_marginStart="8dp"
+                        android:progressTint="@color/cyan_custom"
+                        android:thumbTint="@color/cyan_custom"/>
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_theme_aware_2"
+                        android:id="@+id/tv_gala_maxspeed_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="150 km/h"
+                        android:layout_marginStart="8dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp">
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textColor="@color/text_theme_aware"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:text="Simulate Speed:"/>
+
+                    <SeekBar
+                        android:id="@+id/seek_simulate_speed"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:max="200"
+                        android:progress="0"
+                        android:layout_weight="1"
+                        android:progressTint="#ff5722"
+                        android:thumbTint="#ff5722"/>
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ff5722"
+                        android:gravity="end"
+                        android:id="@+id/tv_simulate_speed_val"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="0 km/h"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </FrameLayout>
 
     <LinearLayout
