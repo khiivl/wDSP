@@ -16,4 +16,8 @@
         android:id="@+id/nav_other"
         android:icon="@android:drawable/ic_menu_manage"
         android:title="Other" />
+    <item
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:id="@+id/nav_gala"
+        android:title="GALA"/>
 </menu>

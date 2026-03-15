@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -49,9 +50,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -102,6 +105,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
     private EqVisualizerView fmVisualizer;
     
+    // GALA Controls
+    private SwitchCompat switchGalaEnable;
+    private SeekBar seekGalaInc, seekGalaMinSpeed, seekGalaMaxSpeed, seekSimulateSpeed, seekGalaMaxAdj;
+    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvGalaMaxSpeedVal, tvSimulateSpeedVal, tvGalaMaxAdjVal;
+
     private float currentFmSubOffset = 0f;
     private int currentEffectiveVolume = -1;
 
@@ -110,6 +118,13 @@ public class MainActivity extends AppCompatActivity {
     private int accentColor;
     private boolean isUpdatingUi = false;
     private boolean isFullyInitialized = false;
+
+    // MCU Management Fields
+    private Object mcuManager;
+    private Method setEqMethod;
+
+    private Method getPropMethod;
+    private final Map<Byte, byte[]> mcuCache = new HashMap<>();
 
     public static class Globals {
         public static int currentSubFreqHz = 0;
@@ -133,6 +148,11 @@ public class MainActivity extends AppCompatActivity {
                 if (isFullyInitialized && findViewById(R.id.layout_fm_curve).getVisibility() == View.VISIBLE) {
                     updateFmVisualizer();
                 }
+            } else if ("com.example.wdsp.GALA_UPDATE".equals(action)) {
+                float speed = intent.getFloatExtra("speed", 0.0f);
+                int offset = intent.getIntExtra("waveOffset", 0);
+                if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
+                if (tvGalaOffset != null) tvGalaOffset.setText(String.format(Locale.getDefault(), "+%d", offset));
             }
         }
     };
@@ -148,9 +168,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize the Hardware Manager
-        HardwareManager.getInstance(this);
-        
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
         
         // 1. Instant UI: Minimal views needed for the first screen
@@ -159,8 +176,9 @@ public class MainActivity extends AppCompatActivity {
         
         // 2. Background Tasks: Reflection and Service
         new Thread(() -> {
+            bypassHiddenApiRestrictions();
             VolumeHelper.init(MainActivity.this);
-            startMcuServiceWithSafety();
+            startMcuService();
         }).start();
 
         // 3. Delayed UI Initialization: EQ Bands are heavy
@@ -176,29 +194,40 @@ public class MainActivity extends AppCompatActivity {
             isFullyInitialized = true;
             sendUiSignal(true);
             refreshAllUiValues();
+            requestBatteryOptimization();
+            initReflection();
+            ensureCallPresetExists();
         }, 50);
     }
 
-    private void startMcuServiceWithSafety() {
+    private void bypassHiddenApiRestrictions() {
+        try {
+            Method gr = Class.forName("dalvik.system.VMRuntime").getDeclaredMethod("getRuntime");
+            Object vmr = gr.invoke(null);
+            Method setEx = vmr.getClass().getDeclaredMethod("setHiddenApiExemptions", String[].class);
+            setEx.invoke(vmr, (Object) new String[]{"L"});
+        } catch (Exception e) {
+            Log.e(TAG, "Hidden API bypass failed", e);
+        }
+    }
 
-        // 1. Check for Notification Permission (Android 13+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // ASK and STOP. Do not start the service yet.
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 102);
-                return;
+    private void startMcuService() {
+        List<String> permissions = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
             }
         }
 
-        // 2. Only if permission is granted, start the service
-        Intent intent = new Intent(this, McuService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
+        if (!permissions.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), 102);
+            return;
         }
+
+        startForegroundService(new Intent(this, McuService.class));
     }
 
     @Override
@@ -216,28 +245,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
 
-                // Show a quick explanation so the user isn't confused
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.battery_dialog_title)
-                        .setMessage(R.string.battery_dialog_message)
-                        .setPositiveButton(R.string.btn_allow, (dialog, which) -> {
-                            try {
-                                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                                intent.setData(Uri.parse("package:" + getPackageName()));
-                                startActivity(intent);
-                            } catch (Exception e) {
-                                // Fallback to the main optimization settings if the direct intent fails
-                                Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(R.string.btn_later, null)
-                        .show();
-            }
+            // Show a quick explanation so the user isn't confused
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.battery_dialog_title)
+                    .setMessage(R.string.battery_dialog_message)
+                    .setPositiveButton(R.string.btn_allow, (dialog, which) -> {
+                        try {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            // Fallback to the main optimization settings if the direct intent fails
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton(R.string.btn_later, null)
+                    .show();
         }
     }
 
@@ -255,16 +282,24 @@ public class MainActivity extends AppCompatActivity {
         updateFmVisualizer();
         updateFaderLabels();
 
-        TextView tvStatus = findViewById(R.id.tv_hw_status); // Make sure this ID exists in your XML
+        TextView tvStatus = findViewById(R.id.tv_hw_status);
         if (tvStatus != null) {
-            if (HardwareManager.getInstance(this).isHardwareDetected()) {
+            if (mcuManager != null || isHardwareAccessible()) {
                 tvStatus.setText("");
                 tvStatus.setTextColor(Color.GREEN);
             } else {
-                // This tells the Google Reviewer the app is in "Demo Mode"
                 tvStatus.setText(R.string.hw_demo_mode);
                 tvStatus.setTextColor(Color.RED);
             }
+        }
+    }
+
+    private boolean isHardwareAccessible() {
+        try {
+            IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
+            return b != null;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -281,8 +316,9 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.example.wdsp.PRESET_CHANGED");
         filter.addAction("com.example.wdsp.VOLUME_CHANGED");
+        filter.addAction("com.example.wdsp.GALA_UPDATE");
         
-        ContextCompat.registerReceiver(this, serviceReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
+        registerReceiver(serviceReceiver, filter);
     }
 
     private void setupLogic() {
@@ -292,6 +328,7 @@ public class MainActivity extends AppCompatActivity {
         setupFmControls();
         setupDelayControls();
         setupDelay1Controls();
+        setupGalaControls();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
@@ -357,6 +394,21 @@ public class MainActivity extends AppCompatActivity {
         tvSysVolumeVal = findViewById(R.id.tv_sys_volume_val);
         tvSubOffsetVal = findViewById(R.id.tv_sub_offset_val);
         tvSubOffsetWarn = findViewById(R.id.tv_sub_offset_warn);
+        
+        // GALA
+        switchGalaEnable = findViewById(R.id.switch_gala_enable);
+        seekGalaInc = findViewById(R.id.seek_gala_increment);
+        tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
+        tvGalaSpeed = findViewById(R.id.tv_gala_speed);
+        seekGalaMinSpeed = findViewById(R.id.seek_gala_minspeed);
+        tvGalaMinSpeedVal = findViewById(R.id.tv_gala_minspeed_val);
+        tvGalaOffset = findViewById(R.id.tv_gala_offset);
+        seekGalaMaxSpeed = findViewById(R.id.seek_gala_maxspeed);
+        tvGalaMaxSpeedVal = findViewById(R.id.tv_gala_maxspeed_val);
+        seekSimulateSpeed = findViewById(R.id.seek_simulate_speed);
+        tvSimulateSpeedVal = findViewById(R.id.tv_simulate_speed_val);
+        seekGalaMaxAdj = findViewById(R.id.seek_gala_max_adj);
+        tvGalaMaxAdjVal = findViewById(R.id.tv_gala_max_adj_val);
     }
 
     @Override
@@ -585,9 +637,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupFmControls() {
         switchFmEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
-                if (checked) {
-                    requestBatteryOptimization();
-                }
                 autoSaveCurrent();
                 updateFmVisualizer();
                 updateEqMcu();
@@ -670,11 +719,25 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void ensureCallPresetExists() {
+        if (!presetNames.contains("Call")) {
+            presetNames.add("Call");
+            Collections.sort(presetNames);
+            presetAdapter.notifyDataSetChanged();
+        }
+    }
+
     private void addNewPreset() {
-        int c = 1; String n; String prefix = getString(R.string.default_preset_name).split(" ")[0] + " ";
+        int c = 1;
+        String n;
+        String prefix = getString(R.string.default_preset_name).split(" ")[0] + " ";
         do { n = prefix + (presetNames.size() + c++); } while (presetNames.contains(n));
-        presetNames.add(n); Collections.sort(presetNames); savePresetList(); savePreset(n);
-        presetAdapter.notifyDataSetChanged(); spinnerPresets.setSelection(presetNames.indexOf(n));
+        presetNames.add(n);
+        Collections.sort(presetNames);
+        savePresetList();
+        savePreset(n);
+        presetAdapter.notifyDataSetChanged();
+        spinnerPresets.setSelection(presetNames.indexOf(n));
     }
 
     private void renameCurrentPreset() {
@@ -687,17 +750,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performRename(String o, String n) {
+        if ("Call".equals(o)) return;
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
         copyPresetData(p, e, o, n);
-        int idx = presetNames.indexOf(o); presetNames.set(idx, n); Collections.sort(presetNames);
+        int idx = presetNames.indexOf(o);
+        presetNames.set(idx, n);
+        Collections.sort(presetNames);
         if (o.equals(p.getString(PREF_LAST_SELECTED, null))) e.putString(PREF_LAST_SELECTED, n);
         e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)); e.apply();
         presetAdapter.notifyDataSetChanged(); spinnerPresets.setSelection(presetNames.indexOf(n));
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -710,7 +776,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void deleteCurrentPreset() {
         String curr = (String) spinnerPresets.getSelectedItem();
-        if (curr == null) return;
+        if (curr == null || "Call".equals(curr)) return;
         if (presetNames.size() <= 1) { Toast.makeText(this, R.string.toast_cannot_delete_last, Toast.LENGTH_SHORT).show(); return; }
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
@@ -729,8 +795,11 @@ public class MainActivity extends AppCompatActivity {
         if (curr.equals(p.getString("default_preset_name", ""))) e.putString("default_preset_name", defaultPreset);
         presetNames.remove(curr);
         if (presetNames.isEmpty()) { presetNames.add(defaultPreset); resetUiInternal(6); savePreset(defaultPreset); }
-        e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)); e.apply();
-        presetAdapter.notifyDataSetChanged(); spinnerPresets.setSelection(0);
+        e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
+        e.apply();
+        presetAdapter.notifyDataSetChanged();
+        spinnerPresets.setSelection(0);
+        loadPreset(presetNames.get(0));
     }
 
     private void savePreset(String name) {
@@ -751,6 +820,13 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_d1_fl", seekDelay1Fl.getProgress()); e.putInt(name + "_d1_fr", seekDelay1Fr.getProgress());
             e.putInt(name + "_d1_rl", seekDelay1Rl.getProgress()); e.putInt(name + "_d1_rr", seekDelay1Rr.getProgress());
             e.putInt(name + "_rsse_val", seekDelay1RSSE.getProgress()); e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
+            
+            // GALA
+            e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+            e.putInt(name + "_gala_increment", seekGalaInc.getProgress());
+            e.putInt(name + "_gala_min_speed", seekGalaMinSpeed.getProgress());
+            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
+            e.putInt(name + "_gala_max_adj", seekGalaMaxAdj.getProgress());
         }
         e.apply();
     }
@@ -797,6 +873,17 @@ public class MainActivity extends AppCompatActivity {
             seekDelay1Rr.setProgress(p.getInt(name + "_d1_rr", 0));
             seekDelay1RSSE.setProgress(p.getInt(name + "_rsse_val", 10));
             switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
+            
+            // GALA
+            switchGalaEnable.setChecked(p.getBoolean(name + "_gala_enabled", false));
+            seekGalaInc.setProgress(p.getInt(name + "_gala_increment", 15));
+            tvGalaIncVal.setText((seekGalaInc.getProgress() + 5) + " km/h");
+            seekGalaMinSpeed.setProgress(p.getInt(name + "_gala_min_speed", 0));
+            tvGalaMinSpeedVal.setText((seekGalaMinSpeed.getProgress() * 5) + " km/h");
+            seekGalaMaxSpeed.setProgress(p.getInt(name + "_gala_max_speed", 30));
+            tvGalaMaxSpeedVal.setText((seekGalaMaxSpeed.getProgress() * 5) + " km/h");
+            seekGalaMaxAdj.setProgress(p.getInt(name + "_gala_max_adj", 12));
+            tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer(); applyAllToMcu();
     }
@@ -854,25 +941,72 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendEqToHardware(byte[] data) {
         if (data == null || data.length == 0) return;
-        HardwareManager.getInstance(this).sendData(data);
+        byte cmd = data[0];
+        byte[] cached = mcuCache.get(cmd);
+        if (cached == null || !Arrays.equals(cached, data)) {
+            mcuCache.put(cmd, data.clone());
+            try {
+                if (mcuManager == null) {
+                    IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
+                    if (b != null) {
+                        mcuManager = Class.forName("android.qf.mcu.IMcuManager$Stub").getMethod("asInterface", IBinder.class).invoke(null, b);
+                    }
+                    if (mcuManager != null) {
+                        setEqMethod = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
+                    }
+                }
+                if (mcuManager == null || setEqMethod == null) return;
+                setEqMethod.invoke(mcuManager, (Object) data);
+            } catch (Exception e) {
+                Log.e(TAG, "MCU Error: " + e.getMessage());
+            }
+        }
     }
 
     private void setupNavigation() {
         BottomNavigationView bn = findViewById(R.id.bottom_navigation);
-        final View eq = findViewById(R.id.layout_eq), fm = findViewById(R.id.layout_fm_curve), dly = findViewById(R.id.layout_delays), ftr = findViewById(R.id.layout_filters);
+        final View eq = findViewById(R.id.layout_eq),
+                fm = findViewById(R.id.layout_fm_curve),
+                dly = findViewById(R.id.layout_delays),
+                ftr = findViewById(R.id.layout_filters),
+                gl = findViewById(R.id.layout_gala);
         bn.setOnItemSelectedListener(it -> {
             int id = it.getItemId(); 
-            eq.setVisibility(View.GONE); fm.setVisibility(View.GONE); dly.setVisibility(View.GONE); ftr.setVisibility(View.GONE);
+            eq.setVisibility(View.GONE);
+            fm.setVisibility(View.GONE);
+            dly.setVisibility(View.GONE);
+            ftr.setVisibility(View.GONE);
+            gl.setVisibility(View.GONE);
             if (id == R.id.nav_eq) eq.setVisibility(View.VISIBLE); 
             else if (id == R.id.nav_fm_curve) { fm.setVisibility(View.VISIBLE); updateFmVisualizer(); }
             else if (id == R.id.nav_delays) dly.setVisibility(View.VISIBLE); 
-            else if (id == R.id.nav_other) ftr.setVisibility(View.VISIBLE); 
+            else if (id == R.id.nav_other) ftr.setVisibility(View.VISIBLE);
+            else if (id == R.id.nav_gala) gl.setVisibility(View.VISIBLE);
             return true;
         });
     }
 
+    private void initReflection() {
+        try {
+            Class<?> sp = Class.forName("android.os.SystemProperties");
+            getPropMethod = sp.getMethod("get", String.class, String.class);
+            Log.i(TAG, "Reflection initialized successfully.");
+        } catch (Exception e) {
+            Log.e(TAG, "Critical Reflection Failure", e);
+        }
+    }
+
+    private String getSystemProperty(String key, String def) {
+        try {
+            if (getPropMethod != null) {
+                return (String) getPropMethod.invoke(null, key, def);
+            }
+        } catch (Exception ignored) {}
+        return def;
+    }
+
     private void showAutoPresetDialog() {
-        String p = VolumeHelper.getActivePlayerType();
+        String p = getSystemProperty("sys.qf.last_audio_src", "");
         String cur = (String) spinnerPresets.getSelectedItem();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());
@@ -891,26 +1025,62 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void setupGalaControls() {
+        switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
+        
+        SeekBar.OnSeekBarChangeListener galal = new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
+                if (sb == seekGalaInc) tvGalaIncVal.setText((p + 5) + " km/h");
+                else if (sb == seekGalaMinSpeed) tvGalaMinSpeedVal.setText((p * 5) + " km/h");
+                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText((p * 5) + " km/h");
+                else if (sb == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
+                else if (sb == seekSimulateSpeed) {
+                    tvSimulateSpeedVal.setText(p + " km/h");
+                    if (u) {
+                        Intent intent = new Intent("com.example.wdsp.SIMULATE_SPEED");
+                        intent.putExtra("speed", (float) p);
+                        sendBroadcast(intent);
+                    }
+                }
+                if (u && !isUpdatingUi) { autoSaveCurrent(); }
+            }
+            @Override public void onStartTrackingTouch(SeekBar sb) {}
+            @Override public void onStopTrackingTouch(SeekBar sb) {}
+        };
+        seekGalaInc.setOnSeekBarChangeListener(galal);
+        seekGalaMinSpeed.setOnSeekBarChangeListener(galal);
+        seekGalaMaxSpeed.setOnSeekBarChangeListener(galal);
+        seekSimulateSpeed.setOnSeekBarChangeListener(galal);
+        seekGalaMaxAdj.setOnSeekBarChangeListener(galal);
+    }
+
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
     private void autoSaveCurrent() { String n = (String) spinnerPresets.getSelectedItem(); if (n != null) savePreset(n); }
     private int getSystemVolume() { return VolumeHelper.getVolume(); }
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); try { unregisterReceiver(serviceReceiver); } catch (Exception e) {} }
     private void exportPresets() { String s = (String) spinnerPresets.getSelectedItem(); exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s != null ? s : "wDSP_Presets") + ".json")); }
-    private void importPresets() { importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
+    private void importPresets() {
+        importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
     private void savePresetsToFile(Uri u) { try (OutputStream os = getContentResolver().openOutputStream(u)) { os.write(new Gson().toJson(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getAll()).getBytes()); Toast.makeText(this, R.string.toast_exported, Toast.LENGTH_SHORT).show(); } catch (IOException e) { Log.e(TAG, "Export error", e); } }
     private void loadPresetsFromFile(Uri u) {
         try (InputStream is = getContentResolver().openInputStream(u); BufferedReader r = new BufferedReader(new InputStreamReader(is))) {
-            StringBuilder sb = new StringBuilder(); String l; while ((l = r.readLine()) != null) sb.append(l);
+            StringBuilder sb = new StringBuilder();
+            String l; while ((l = r.readLine()) != null) sb.append(l);
             Map<String, Object> im = new Gson().fromJson(sb.toString(), new TypeToken<Map<String, Object>>() {}.getType());
             SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear();
             for (Map.Entry<String, Object> ent : im.entrySet()) {
                 Object v = ent.getValue(); String k = ent.getKey();
-                if (v instanceof Boolean) e.putBoolean(k, (Boolean) v); else if (v instanceof String) e.putString(k, (String) v);
-                else if (v instanceof Double) { double d = (Double) v; if (d == Math.rint(d)) e.putInt(k, (int) d); else e.putFloat(k, (float) d); }
+                if (v instanceof Boolean) e.putBoolean(k, (Boolean) v);
+                else if (v instanceof String) e.putString(k, (String) v);
+                else if (v instanceof Double) { double d = (Double) v;
+                    if (d == Math.rint(d)) e.putInt(k, (int) d);
+                    else e.putFloat(k, (float) d); }
                 else if (v instanceof List) { Set<String> s = new HashSet<>(); for (Object item : (List<?>) v) s.add(item.toString()); e.putStringSet(k, s); }
             }
-            e.apply(); setupPresets(); Toast.makeText(this, R.string.toast_imported, Toast.LENGTH_SHORT).show();
+            e.apply();
+            setupPresets();
+            Toast.makeText(this, R.string.toast_imported, Toast.LENGTH_SHORT).show();
         } catch (Exception e) { Log.e(TAG, "Import error", e); }
     }
 
@@ -926,6 +1096,13 @@ public class MainActivity extends AppCompatActivity {
             seekFaderLr.setProgress(12); seekFaderFr.setProgress(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setProgress(25); seekFmStrength.setProgress(100);
+            
+            // GALA reset
+            switchGalaEnable.setChecked(false);
+            seekGalaInc.setProgress(15);
+            seekGalaMinSpeed.setProgress(0);
+            seekGalaMaxSpeed.setProgress(30);
+            seekGalaMaxAdj.setProgress(12);
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer();
     }

@@ -73,7 +73,7 @@
 
     <!-- Hardware Status -->
     <string name="hw_detecting">Hardware: Detecting...</string>
-    <string name="hw_demo_mode">Hardware: Demo Mode (K706 not found). THE APP REQUIRES COMPATIBLE HARDWARE TO FUNCTION! Currently the app is in log-only mode.</string>
+    <string name="hw_demo_mode">Can\'t connect to MCU_SERVICE</string>
 
     <!-- Preset Dialogs -->
     <string name="dialog_rename_title">Rename</string>
