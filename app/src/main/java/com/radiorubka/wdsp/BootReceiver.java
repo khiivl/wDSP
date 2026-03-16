@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat;
  * Receiver to start McuService on boot or quick boot.
  * Uses ContextCompat to safely handle foreground service starts on all Android versions.
  */
-@SuppressWarnings("SpellCheckingInspection")
 public class BootReceiver extends BroadcastReceiver {
     private static final String TAG = "wDSP_BootReceiver";
 

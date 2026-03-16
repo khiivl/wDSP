@@ -37,7 +37,6 @@ import java.util.Objects;
  * player-based preset switching,
  * and GALA (Speed Sensitive Volume).
  */
-@SuppressWarnings("SpellCheckingInspection")
 public class McuService extends Service implements LocationListener {
     private static final String TAG = "wDSP_McuService";
 

@@ -5,7 +5,6 @@ package com.radiorubka.wdsp;
  * Centralizing these allows easy tuning of the Fletcher-Munson curve 
  * and fatigue trim offsets.
  */
-@SuppressWarnings("SpellCheckingInspection")
 public class AudioConfig {
     public static final int NUM_BANDS = 16;
     

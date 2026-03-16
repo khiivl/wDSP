@@ -14,7 +14,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import java.util.Locale;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class EqVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;
