@@ -392,6 +392,9 @@ public class McuService extends Service implements LocationListener {
             presetToLoad = "Call";
         }
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
+            if (isUiVisible == false) {
+                Toast.makeText(McuService.this, "Auto applied preset: " + presetToLoad, Toast.LENGTH_SHORT).show();
+            }
             prefs.edit().putString(PREF_LAST_SELECTED, presetToLoad).apply();
             presetChangedIntent.putExtra("preset", presetToLoad);
             if (isUiVisible) {

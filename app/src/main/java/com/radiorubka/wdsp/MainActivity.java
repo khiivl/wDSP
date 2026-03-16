@@ -239,11 +239,17 @@ public class MainActivity extends AppCompatActivity {
             SelectTab();
         }
         // Force the UI to match the saved preference
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        String current = prefs.getString("last_selected_preset", "Preset 1");
-        int index = presetNames.indexOf(current);
-        if (index >= 0) {
-            spinnerPresets.setSelection(index, false); // Update spinner without triggering listeners
+        if (isFullyInitialized && presetNames != null) {
+            refreshAllUiValues();
+            SelectTab();
+
+            // Only run this if presetNames is actually ready
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            String current = prefs.getString("last_selected_preset", "Call");
+            int index = presetNames.indexOf(current);
+            if (index >= 0 && spinnerPresets != null) {
+                // Optional: spinnerPresets.setSelection(index, false);
+            }
         }
     }
 
