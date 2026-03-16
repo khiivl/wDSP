@@ -691,9 +691,9 @@ public class MainActivity extends AppCompatActivity {
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
         if (switchFmSubComp.isChecked()) {
-            tvSubOffsetVal.setText(String.format(Locale.getDefault(), "%.1f dB", currentFmSubOffset));
+            tvSubOffsetVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), currentFmSubOffset));
             float subPot = currentFmSubOffset + seekSubGain.getProgress();
-            tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), "%.1f dB", subPot - 12f) : "OK");
+            tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : "OK");
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
     }

@@ -1039,7 +1039,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/margin_small"
                             android:layout_marginBottom="@dimen/margin_small"
-                            android:text="@string/speaker_bass_controls" />
+                            android:text="@string/front_speaker_bass" />
 
                         <!-- Front Filter Row -->
                         <androidx.constraintlayout.widget.ConstraintLayout

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">wDSP</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto</string>
@@ -13,8 +13,8 @@
     <string name="lbl_sub">Sub:</string>
     <string name="btn_plus">+</string>
     <string name="btn_minus">-</string>
-    <string name="q_high" translatable="false">4.7</string>
-    <string name="q_low" translatable="false">2.2</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Compensation Curve</string>
@@ -25,7 +25,7 @@
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Sub Offset:</string>
     <string name="lbl_lower_sub_by">Lower sub by:</string>
-    <string name="lbl_calibration_point">Calibration Point:</string>
+    <string name="lbl_calibration_point">Calibration Point (has to be around 80 dB):</string>
     <string name="lbl_correction_strength">Correction Strength:</string>
 
     <!-- Delays Tab -->
@@ -76,7 +76,7 @@
     <string name="btn_apply">Apply</string>
     <string name="btn_reapply">Reapply if reset</string>
     <string name="value_default">Not set</string>
-    <string name="btn_ok" translatable="false">OK</string>
+    <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancel</string>
     <string name="none">None</string>
 
@@ -105,7 +105,7 @@
     <string name="automation_title_fmt">Automation: %1$s</string>
     <string name="active_player_fmt">Active Player: %1$s</string>
     <string name="current_associations">Current Associations:\n</string>
-    <string name="global_default_fmt" translatable="false">\nGlobal Default: %1$s</string>
+    <string name="global_default_fmt">\nGlobal Default: %1$s</string>
     <string name="btn_assign">Assign</string>
     <string name="btn_set_default">Set Default</string>
     <string name="btn_unassign">Unassign</string>
@@ -117,9 +117,17 @@
 
     <!-- Labels -->
     <string name="lbl_hz_fmt">%1$s hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">F-M Curve</string>
+    <string name="DLtab">Delays</string>
+    <string name="OTtab">Other</string>
+    <string name="GLtab">Speed</string>
 
 </resources>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Авто</string>
+    <string name="btn_add">Додaти</string>
+    <string name="btn_rename">Перейм.</string>
+    <string name="btn_delete">Видал.</string>
+    <string name="btn_export">Експорт</string>
+    <string name="btn_import">Імпорт</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Саб:</string>
+    <string name="btn_plus">+</string>
+    <string name="btn_minus">-</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Тонкомпенсація (Крива Флетчера-Менсона)</string>
+    <string name="enable_loudness">Увімкнути Loudness</string>
+    <string name="trim_highs">Послабити ВЧ</string>
+    <string name="sub_tweaking">Налаштування сабвуфера</string>
+    <string name="fm_visualizer_label">Попередній перегляд корекції</string>
+    <string name="lbl_volume">Гучність:</string>
+    <string name="lbl_sub_offset">Зміщення сабв.:</string>
+    <string name="lbl_lower_sub_by">Знизити рівень сабв. на:</string>
+    <string name="lbl_calibration_point">Точка калібрування (має бути ~80 дБ):</string>
+    <string name="lbl_correction_strength">Інтенсивність корекції:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Часова корекція (Затримки)</string>
+    <string name="spatial_correction">Просторова корекція</string>
+    <string name="surround_mode">Режим Surround</string>
+    <string name="front_left">Передній лівий</string>
+    <string name="front_right">Передній правий</string>
+    <string name="rear_left">Задній лівий</string>
+    <string name="rear_right">Задній правий</string>
+    <string name="subwoofer">Сабвуфер</string>
+    <string name="rear_fill_enhancement">Розширення Rear-Fill</string>
+    <string name="delay_value_format">%1$.1f мс (%2$d см)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Вбудована Loudness (ЗАСТАРІЛО)</string>
+    <string name="speaker_bass_controls">Керування басом динаміків</string>
+    <string name="front_speaker_bass">Бас передніх динаміків</string>
+    <string name="rear_speaker_bass">Бас задніх динаміків</string>
+    <string name="lbl_filter">Фільтр</string>
+    <string name="lbl_boost">Підсил.</string>
+    <string name="lbl_freq">Част.</string>
+    <string name="lbl_center">Центр</string>
+    <string name="fader_balance">Фейдер та Баланс</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Адаптивна гучність)</string>
+    <string name="enable_gala">Увімкнути GALA:</string>
+    <string name="enable_gala_feature">Активувати функцію GALA</string>
+    <string name="vol_step_interval">Інтервал кроку гучності</string>
+    <string name="vol_step_every">Крок гучності кожні:</string>
+    <string name="gps_speed_label">ШВИДКІСТЬ GPS</string>
+    <string name="current_gps_speed">Поточна швидкість GPS:</string>
+    <string name="vol_offset_label">ЗМІЩЕННЯ ГУЧНОСТІ</string>
+    <string name="applied_vol_offset">Застосоване зміщення:</string>
+    <string name="standstill_threshold">Поріг зупинки</string>
+    <string name="standstill_speed">Швидкість зупинки:</string>
+    <string name="max_speed_limit">Ліміт макс. швидкості</string>
+    <string name="max_speed_label">Макс. швидкість:</string>
+    <string name="max_vol_adj">Макс. коригування гучності</string>
+    <string name="max_adjustment">Макс. коригування:</string>
+    <string name="sensitivity_settings">Налаштування чутливості</string>
+    <string name="simulation_debug">Симуляція та налагодження</string>
+    <string name="simulate_vehicle_speed">Симулювати швидкість авто</string>
+    <string name="simulate_speed">Симулювати швидкість:</string>
+
+    <!-- General -->
+    <string name="btn_apply">Застосувати</string>
+    <string name="btn_reapply">Перезастосувати при скиданні</string>
+    <string name="value_default">Не встановлено</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Скасувати</string>
+    <string name="none">Немає</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Налаштування застосовано</string>
+    <string name="toast_exists">Вже існує</string>
+    <string name="toast_cannot_delete_last">Неможливо видалити останній пресет</string>
+    <string name="toast_exported">Експортовано</string>
+    <string name="toast_imported">Імпортовано</string>
+    <string name="toast_sub_comp_limit">Компенсація сабвуфера обмежена 80Гц</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Робота wDSP у фоні</string>
+    <string name="battery_dialog_message">Для стабільної роботи динамічного еквалайзера необхідно виключити wDSP з оптимізації акумулятора.</string>
+    <string name="btn_allow">Дозволити</string>
+    <string name="btn_later">Пізніше</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Апаратне заб.: Пошук…</string>
+    <string name="hw_demo_mode">Немає з’єднання з MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Перейменувати</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Автоматизація: %1$s</string>
+    <string name="active_player_fmt">Активний плеєр: %1$s</string>
+    <string name="current_associations">Поточні призначення:\n</string>
+    <string name="global_default_fmt">\nГлоб. Стандарт: %1$s</string>
+    <string name="btn_assign">Призначити</string>
+    <string name="btn_set_default">Зробити стандартним</string>
+    <string name="btn_unassign">Скасувати призначення</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Пресет 1</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Гц</string>
+    <string name="lbl_db_fmt">+ %1$d дБ</string>
+    <string name="lbl_db_fmt2">%.1f дБ</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d км/год</string>
+
+    <!-- Menu -->
+    <string name="EQtab">Еквалайзер</string>
+    <string name="FMtab">Тонкомпенсація</string>
+    <string name="DLtab">Затримки</string>
+    <string name="OTtab">Інше</string>
+    <string name="GLtab">Адапт. Гучн.</string>
+</resources>
