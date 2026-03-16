@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -203,10 +202,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void bypassHiddenApiRestrictions() {
         try {
-            Method gr = Class.forName("dalvik.system.VMRuntime").getDeclaredMethod("getRuntime");
+            Class<?> vmRuntimeClass = Class.forName("dalvik.system.VMRuntime");
+            // noinspection DiscouragedPrivateApi
+            Method gr = vmRuntimeClass.getDeclaredMethod("getRuntime");
             Object vmr = gr.invoke(null);
-            Method setEx = vmr.getClass().getDeclaredMethod("setHiddenApiExemptions", String[].class);
-            setEx.invoke(vmr, (Object) new String[]{"L"});
+
+            // Use the class reference we already have instead of calling vmr.getClass()
+            // and check if vmr instance is null before invoking.
+            if (vmr != null) {
+                Method setEx = vmRuntimeClass.getDeclaredMethod("setHiddenApiExemptions", String[].class);
+                setEx.invoke(vmr, (Object) new String[]{"L"});
+            }
         } catch (Exception e) {
             Log.e(TAG, "Hidden API bypass failed", e);
         }
@@ -217,10 +223,8 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         }
 
         if (!permissions.isEmpty()) {
@@ -248,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
             String current = prefs.getString("last_selected_preset", "Call");
             int index = presetNames.indexOf(current);
             if (index >= 0 && spinnerPresets != null) {
-                // Optional: spinnerPresets.setSelection(index, false);
+                spinnerPresets.setSelection(index, false);
             }
         }
     }
