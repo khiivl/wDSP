@@ -10,7 +10,9 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 How to use:
 
 1. Install, launch, give all the permissions. Ready to use. Don't use the stock DSP app, since it will reset your settings if launched and closed.
-2. If you want to disable the stock DSP app, run in adb: adb shell "pm disable com.qf.soundeffect"
+use 'adb shell pm disable com.qf.soundeffects' command to disable it.
+'adb shell pm enable com.qf.soundeffects' will revent it.
+3. If you want to disable the stock DSP app, run in adb: adb shell "pm disable com.qf.soundeffect"
 
 ----------------------------------------------------------------------------------------------------------------------
 
