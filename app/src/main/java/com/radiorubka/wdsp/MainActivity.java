@@ -62,7 +62,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Main";
