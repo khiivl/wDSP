@@ -1,5 +1,6 @@
 package com.radiorubka.wdsp;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,8 +13,6 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -38,6 +37,7 @@ import java.util.Objects;
  * player-based preset switching,
  * and GALA (Speed Sensitive Volume).
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class McuService extends Service implements LocationListener {
     private static final String TAG = "wDSP_McuService";
 
@@ -108,6 +108,7 @@ public class McuService extends Service implements LocationListener {
 
     private void initReflection() {
         try {
+            // noinspection PrivateApi
             Class<?> sp = Class.forName("android.os.SystemProperties");
             getPropMethod = sp.getMethod("get", String.class, String.class);
             Log.i(TAG, "Reflection initialized successfully.");
@@ -178,6 +179,7 @@ public class McuService extends Service implements LocationListener {
         if (isUiVisible) sendBroadcast(volumeChangedIntent);
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -369,7 +371,7 @@ public class McuService extends Service implements LocationListener {
     }
 
     private void checkPlayer() {
-        String currentPlayer = getSystemProperty("sys.qf.last_audio_src", "");
+        String currentPlayer = getSystemProperty();
         if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
@@ -392,7 +394,7 @@ public class McuService extends Service implements LocationListener {
             presetToLoad = "Call";
         }
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
-            if (isUiVisible == false) {
+            if (!isUiVisible) {
                 Toast.makeText(McuService.this, "Auto applied preset: " + presetToLoad, Toast.LENGTH_SHORT).show();
             }
             prefs.edit().putString(PREF_LAST_SELECTED, presetToLoad).apply();
@@ -595,10 +597,10 @@ public class McuService extends Service implements LocationListener {
 
     private void ensureMcuManager() throws Exception {
         if (mcuManagerInstance == null) {
-            Class<?> sm = Class.forName("android.os.ServiceManager");
+            @SuppressLint("PrivateApi") Class<?> sm = Class.forName("android.os.ServiceManager");
             IBinder binder = (IBinder) sm.getMethod("getService", String.class).invoke(null, "mcu_service");
             if (binder != null) {
-                Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
+                @SuppressLint("PrivateApi") Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
                 mcuManagerInstance = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
                 if (mcuManagerInstance != null) {
                     setEqDataMethod = mcuManagerInstance.getClass().getMethod("RPC_SetEQData", byte[].class);
@@ -607,13 +609,13 @@ public class McuService extends Service implements LocationListener {
         }
     }
 
-    private String getSystemProperty(String key, String def) {
+    private String getSystemProperty() {
         try {
             if (getPropMethod != null) {
-                return (String) getPropMethod.invoke(null, key, def);
+                return (String) getPropMethod.invoke(null, "sys.qf.last_audio_src", "Unknown");
             }
         } catch (Exception ignored) {}
-        return def;
+        return "";
     }
 
     private void startGps() {
@@ -634,23 +636,18 @@ public class McuService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        backgroundHandler.post(() -> {
-            currentSpeedKmh = location.getSpeed() * 3.6f;
-        });
+        backgroundHandler.post(() -> currentSpeedKmh = location.getSpeed() * 3.6f);
     }
 
-    @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
     @Override public void onProviderEnabled(@NonNull String provider) {}
     @Override public void onProviderDisabled(@NonNull String provider) {}
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID, "wDSP Background Service", NotificationManager.IMPORTANCE_LOW);
-            channel.setShowBadge(false);
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            if (nm != null) nm.createNotificationChannel(channel);
-        }
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID, "wDSP Background Service", NotificationManager.IMPORTANCE_LOW);
+        channel.setShowBadge(false);
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        if (nm != null) nm.createNotificationChannel(channel);
     }
 
     @Override

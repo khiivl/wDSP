@@ -9,34 +9,42 @@ import android.graphics.Path;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import java.util.Locale;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class EqVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;
-    private Paint pointPaint;
     private Paint gridPaint;
     private Paint textPaint;
     private Paint warningPaint;
-    private int[] gains = new int[AudioConfig.NUM_BANDS];
+
+    private final int[] gains = new int[AudioConfig.NUM_BANDS];
     private float[] offsets = null;
     private float[] warnings = null;
-    
-    private final float MAX_GAIN = 12f;
-    // PERFECT OFFSET VALUES - DO NOT CHANGE
-//    private final float TOP_OFFSET_RATIO = 0.235f;
 
+    private float[] xCoords;
+    private float[] yCoords;
+
+    // Pre-allocated Path objects
+    private final Path fullPath = new Path();
+    private final Path fillPath = new Path();
+
+    @SuppressWarnings("FieldCanBeLocal")
     private final float TOP_OFFSET_RATIO = 0.237f;
+    @SuppressWarnings("FieldCanBeLocal")
     private final float DRAW_HEIGHT_RATIO = 0.760f;
 
-    private int colorLine;
     private int colorFill;
-    private int colorPoints;
-    private int colorGrid;
-    
     private float thumbRadiusOffset;
     private float pointRadius;
+
+    // Cache for gradient parameters to avoid reallocation
+    private float lastDrawStartY = -1;
+    private float lastGridBottom = -1;
 
     public EqVisualizerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -45,14 +53,17 @@ public class EqVisualizerView extends View {
 
     private void init() {
         float density = getContext().getResources().getDisplayMetrics().density;
-        
-        colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);
+
+        int colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);
         colorFill = ContextCompat.getColor(getContext(), R.color.visualizer_fill);
-        colorPoints = ContextCompat.getColor(getContext(), R.color.visualizer_points);
-        colorGrid = ContextCompat.getColor(getContext(), R.color.visualizer_grid);
-        
+        int colorGrid = ContextCompat.getColor(getContext(), R.color.visualizer_grid);
+
         thumbRadiusOffset = 10 * density;
         pointRadius = 6 * density;
+
+        // Pre-allocate coordinate arrays based on config
+        xCoords = new float[AudioConfig.NUM_BANDS];
+        yCoords = new float[AudioConfig.NUM_BANDS];
 
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         linePaint.setColor(colorLine);
@@ -63,10 +74,6 @@ public class EqVisualizerView extends View {
 
         fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         fillPaint.setStyle(Paint.Style.FILL);
-
-        pointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        pointPaint.setColor(colorPoints);
-        pointPaint.setStyle(Paint.Style.FILL);
 
         gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gridPaint.setColor(colorGrid);
@@ -109,13 +116,8 @@ public class EqVisualizerView extends View {
         invalidate();
     }
 
-    public void setQStates(boolean[] newQStates) {
-        // Kept for compatibility with MainActivity call, but logic removed
-        invalidate();
-    }
-
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         float w = getWidth();
         float totalH = getHeight();
@@ -126,80 +128,71 @@ public class EqVisualizerView extends View {
 
         float drawStartY = topArea + thumbRadiusOffset;
         float drawHeight = sliderAreaH - (thumbRadiusOffset * 2);
+        float gridBottom = drawStartY + drawHeight;
 
         float stepX = w / (float)AudioConfig.NUM_BANDS;
+        float MAX_GAIN = 12f;
 
-        // Grid
+        // 1. Draw Grid
         for (int i = 0; i <= 12; i++) {
             float y = drawStartY + drawHeight - (i / MAX_GAIN) * drawHeight;
             canvas.drawLine(0, y, w, y, gridPaint);
         }
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float x = (i + 0.5f) * stepX;
-            canvas.drawLine(x, drawStartY, x, drawStartY + drawHeight, gridPaint);
-        }
+            canvas.drawLine(x, drawStartY, x, gridBottom, gridPaint);
 
-        // Calculate cubic spline curve that passes exactly through the points
-        float[] xCoords = new float[AudioConfig.NUM_BANDS];
-        float[] yCoords = new float[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            xCoords[i] = (i + 0.5f) * stepX;
+            // Calculate coordinates into pre-allocated arrays
+            xCoords[i] = x;
             yCoords[i] = drawStartY + drawHeight - (gains[i] / MAX_GAIN) * drawHeight;
         }
 
-        // Create the main line path
-        Path fullPath = new Path();
-        fullPath.moveTo(0, yCoords[0]); // Start at the left edge
-        fullPath.lineTo(xCoords[0], yCoords[0]); // Straight line to the first band
+        // 2. Prepare Path
+        fullPath.reset();
+        fullPath.moveTo(0, yCoords[0]);
+        fullPath.lineTo(xCoords[0], yCoords[0]);
 
-        // Draw the curves between bands
         for (int i = 1; i < AudioConfig.NUM_BANDS; i++) {
             float cp1x = xCoords[i-1] + (xCoords[i] - xCoords[i-1]) / 2f;
             fullPath.cubicTo(cp1x, yCoords[i-1], cp1x, yCoords[i], xCoords[i], yCoords[i]);
         }
-
-        // Extend the line to the right edge
         fullPath.lineTo(w, yCoords[AudioConfig.NUM_BANDS - 1]);
 
-        // Create the fill area
-        Path fillPath = new Path(fullPath);
-        float gridBottom = drawStartY + drawHeight; // The exact bottom line of the grid
+        // 3. Prepare Fill (Reuse fullPath)
+        fillPath.set(fullPath);
         fillPath.lineTo(w, gridBottom);
         fillPath.lineTo(0, gridBottom);
         fillPath.close();
 
-        // Update the gradient to match the grid exactly
-        fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom,
-                colorFill, Color.TRANSPARENT, Shader.TileMode.CLAMP));
+        // 4. Update Shader only if dimensions changed
+        if (drawStartY != lastDrawStartY || gridBottom != lastGridBottom) {
+            fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom,
+                    colorFill, Color.TRANSPARENT, Shader.TileMode.CLAMP));
+            lastDrawStartY = drawStartY;
+            lastGridBottom = gridBottom;
+        }
 
-        // Draw the visual elements
+        // 5. Draw the paths
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
 
-        // Draw Anchor Points
+        // 6. Draw Text
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            //canvas.drawCircle(xCoords[i], yCoords[i], pointRadius, pointPaint);
-
-            // Draw offset text if available
             if (offsets != null) {
                 float val = offsets[i];
-                if (Math.abs(val) > 0.05f) { // Only draw if significant
+                if (Math.abs(val) > 0.05f) {
+                    // Note: String.format still allocates, but it's necessary for dynamic text.
+                    // To optimize further, one could use a StringBuilder or specialized formatter.
                     String label = String.format(Locale.getDefault(), "%s%.1f", (val > 0 ? "+" : ""), val);
                     canvas.drawText(label, xCoords[i], yCoords[i] - pointRadius - 8, textPaint);
                 }
             }
 
-            // Draw warning text if available
             if (warnings != null && Math.abs(warnings[i]) > 0.05f) {
                 String warningLabel = String.format(Locale.getDefault(), "-%.1f", warnings[i]);
-                // Draw it below the offset text or just above the point if no offset text
                 float yOffset = (offsets != null && Math.abs(offsets[i]) > 0.05f) ? 24 : 8;
                 canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
             }
         }
-    }
-
-    private void fullLineToEdge(Path p, float x, float y, float[] xs, float[] ys) {
-        p.lineTo(x, y);
     }
 }

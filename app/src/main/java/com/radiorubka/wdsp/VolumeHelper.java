@@ -1,5 +1,8 @@
 package com.radiorubka.wdsp;
 
+import static android.media.AudioManager.FLAG_SHOW_UI;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioManager;
 import android.util.Base64;
@@ -28,7 +31,7 @@ public class VolumeHelper {
 
         try {
             // Obfuscated: "android.qf.os.VolumeManager"
-            Class<?> vmClass = Class.forName("android.qf.os.VolumeManager");
+            @SuppressLint("PrivateApi") Class<?> vmClass = Class.forName("android.qf.os.VolumeManager");
             mVolumeManager = vmClass.getMethod("getInstance").invoke(null);
 
             vmClass.getMethod("initVolumeManager", Context.class).invoke(mVolumeManager, context.getApplicationContext());
@@ -52,8 +55,14 @@ public class VolumeHelper {
         Object activeState = getActiveVolumeInstance();
         if (activeState != null && mGetVolumeVal != null) {
             try {
-                return (int) mGetVolumeVal.invoke(activeState);
-            } catch (Exception ignored) {}
+                Object result = mGetVolumeVal.invoke(activeState);
+                // Check for null before unboxing the result to a primitive int
+                if (result instanceof Integer) {
+                    return (Integer) result;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to get hardware volume", e);
+            }
         }
 
         return (audioManager != null) ? audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) : 0;
@@ -72,7 +81,7 @@ public class VolumeHelper {
 
         if (!success && audioManager != null) {
             try {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, val, 1);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, val, FLAG_SHOW_UI);
             } catch (Exception e) {
                 Log.e(TAG, "Standard volume adjustment failed", e);
             }

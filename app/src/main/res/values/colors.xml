@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="text_theme_aware">#212121</color>
     <color name="text_theme_aware_2">#757575</color>
     <color name="cyan_custom">#028889</color>
-    <color name="cyan_semitransparent">#4D028889</color>
-    <color name="dynamic_bg">#FFFFFF</color>
-    <color name="button_text">#2C2C2C</color>
-    <color name="command_bg">#F0F0F0</color>
     <color name="visualizer_grid">#15000000</color>
     <color name="visualizer_line">#028889</color>
-    <color name="visualizer_points">#028889</color>
     <color name="visualizer_fill">#40028889</color>
     <color name="band_label">#80000000</color>
     <color name="q_switch_text">#028889</color>

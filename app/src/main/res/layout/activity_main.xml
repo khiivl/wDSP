@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/app_background"
@@ -24,7 +23,6 @@
 
     <!-- Container for different screens -->
     <FrameLayout
-        android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -64,12 +62,14 @@
                     android:scrollbars="none">
 
                     <LinearLayout
+                        style="?android:attr/buttonBarStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/btn_auto_preset"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_small"
@@ -81,6 +81,7 @@
 
                         <Button
                             android:id="@+id/btn_add_preset"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_tiny"
@@ -92,6 +93,7 @@
 
                         <Button
                             android:id="@+id/btn_rename_preset"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_tiny"
@@ -103,6 +105,7 @@
 
                         <Button
                             android:id="@+id/btn_delete_preset"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_tiny"
@@ -114,6 +117,7 @@
 
                         <Button
                             android:id="@+id/btn_export_presets"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_tiny"
@@ -125,6 +129,7 @@
 
                         <Button
                             android:id="@+id/btn_import_presets"
+                            style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginStart="@dimen/margin_tiny"
@@ -138,7 +143,6 @@
             </LinearLayout>
 
             <FrameLayout
-                android:id="@+id/visualizer_container"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_marginHorizontal="0dp"
@@ -297,32 +301,37 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingEnd="5dp"
+                            android:paddingStart="0dp"
                             android:text="@string/enable_loudness" />
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_fm_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingEnd="12dp" />
+                            android:paddingEnd="12dp"
+                            android:paddingStart="0dp"/>
 
                         <TextView
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingEnd="5dp"
+                            android:paddingStart="0dp"
                             android:text="@string/trim_highs" />
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_fatigue_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingEnd="12dp" />
+                            android:paddingEnd="12dp"
+                            android:paddingStart="0dp"/>
 
                         <TextView
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingEnd="5dp"
+                            android:paddingStart="0dp"
                             android:text="@string/sub_tweaking" />
 
                         <androidx.appcompat.widget.SwitchCompat
@@ -346,7 +355,6 @@
                             android:layout_height="match_parent" />
 
                         <TextView
-                            android:id="@+id/tv_fm_visualizer_label"
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -457,7 +465,6 @@
 
                     <!-- Strength Slider -->
                     <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_fm_strength"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
@@ -541,7 +548,6 @@
 
                     <!-- Precise Delays Column -->
                     <LinearLayout
-                        android:id="@+id/layout_precise_col"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -726,7 +732,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/subwoofer"
                                 app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:ignore="TooManyViews" />
 
                             <TextView
                                 android:id="@+id/tv_delay_sub_val"
@@ -753,7 +760,6 @@
 
                     <!-- Legacy Delays Column -->
                     <LinearLayout
-                        android:id="@+id/layout_legacy_col"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -982,7 +988,6 @@
                 app:layout_constraintGuide_percent="0.5" />
 
             <View
-                android:id="@+id/center_divider"
                 android:layout_width="1dp"
                 android:layout_height="0dp"
                 android:alpha="0.3"
@@ -1018,24 +1023,23 @@
                     android:layout_height="wrap_content">
 
                     <LinearLayout
-                        android:id="@+id/layout_bass_section"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:paddingEnd="@dimen/padding_standard"
+                        android:paddingStart="0dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
                         <TextView
-                            android:id="@+id/lbl_front_section"
                             style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/margin_small"
                             android:layout_marginBottom="@dimen/margin_small"
-                            android:text="@string/front_speaker_bass" />
+                            android:text="@string/speaker_bass_controls" />
 
                         <!-- Front Filter Row -->
                         <androidx.constraintlayout.widget.ConstraintLayout
@@ -1130,7 +1134,6 @@
                         </LinearLayout>
 
                         <TextView
-                            android:id="@+id/lbl_rear_section"
                             style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -1235,10 +1238,10 @@
 
             <!-- Fader Controls (Right Side) -->
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/layout_fader_section"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:paddingStart="@dimen/padding_standard"
+                android:paddingEnd="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/guideline_right"
@@ -1285,7 +1288,6 @@
                     app:srcCompat="@drawable/car" />
 
                 <FrameLayout
-                    android:id="@+id/seek_fader_fr_container"
                     android:layout_width="64dp"
                     android:layout_height="@dimen/fader_length"
                     app:layout_constraintBottom_toBottomOf="@+id/imageView"
@@ -1336,7 +1338,7 @@
                 android:id="@+id/tv_gala_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GALA (Speed Dependent Volume)"
+                android:text="@string/gala_title"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
 
@@ -1354,7 +1356,7 @@
                     android:textColor="@color/text_theme_aware"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Enable GALA:"/>
+                    android:text="@string/enable_gala"/>
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switch_gala_enable"
@@ -1367,7 +1369,7 @@
                     android:textColor="@color/text_theme_aware"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Volume Step every:"
+                    android:text="@string/vol_step_every"
                     android:layout_marginStart="32dp"/>
 
                 <SeekBar
@@ -1387,7 +1389,7 @@
                     android:id="@+id/tv_gala_increment_val"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="20 km/h"
+                    android:text="@string/value_default"
                     android:layout_marginStart="8dp"/>
 
             </LinearLayout>
@@ -1409,7 +1411,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Current GPS Speed:"/>
+                        android:text="@string/current_gps_speed"/>
 
                     <TextView
                         android:textSize="22sp"
@@ -1418,7 +1420,7 @@
                         android:id="@+id/tv_gala_speed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0 km/h"
+                        android:text="@string/value_default"
                         android:layout_marginStart="16dp"/>
 
                     <TextView
@@ -1426,7 +1428,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Standstill speed:"
+                        android:text="@string/standstill_speed"
                         android:layout_marginStart="32dp"/>
 
                     <SeekBar
@@ -1446,7 +1448,7 @@
                         android:id="@+id/tv_gala_minspeed_val"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0 km/h"
+                        android:text="@string/value_default"
                         android:layout_marginStart="8dp"/>
 
                 </LinearLayout>
@@ -1462,7 +1464,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Applied Volume Offset:"/>
+                        android:text="@string/applied_vol_offset"/>
 
                     <TextView
                         android:textSize="22sp"
@@ -1471,7 +1473,7 @@
                         android:id="@+id/tv_gala_offset"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+0"
+                        android:text="@string/value_default"
                         android:layout_marginStart="16dp"/>
 
                     <TextView
@@ -1479,7 +1481,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Maximum speed:"
+                        android:text="@string/max_speed_label"
                         android:layout_marginStart="32dp"/>
 
                     <SeekBar
@@ -1499,7 +1501,7 @@
                         android:id="@+id/tv_gala_maxspeed_val"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="150 km/h"
+                        android:text="@string/value_default"
                         android:layout_marginStart="8dp"/>
 
                 </LinearLayout>
@@ -1515,7 +1517,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Max Adjustment:"/>
+                        android:text="@string/max_adjustment"/>
 
                     <SeekBar
                         android:id="@+id/seek_gala_max_adj"
@@ -1534,7 +1536,7 @@
                         android:id="@+id/tv_gala_max_adj_val"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12"
+                        android:text="@string/value_default"
                         android:layout_marginStart="8dp"/>
 
                 </LinearLayout>
@@ -1551,7 +1553,7 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_width="160dp"
                         android:layout_height="wrap_content"
-                        android:text="Simulate Speed:"/>
+                        android:text="@string/simulate_speed"/>
 
                     <SeekBar
                         android:id="@+id/seek_simulate_speed"
@@ -1571,7 +1573,7 @@
                         android:id="@+id/tv_simulate_speed_val"
                         android:layout_width="80dp"
                         android:layout_height="wrap_content"
-                        android:text="0 km/h"/>
+                        android:text="@string/value_default"/>
 
                 </LinearLayout>
 

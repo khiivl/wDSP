@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/app_background"
@@ -14,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:alpha="1"
-        android:text="Hardware: Detecting..."
+        android:text="@string/hw_detecting"
         android:textColor="@color/cyan_custom"
         android:textSize="@dimen/text_size_header"
         android:elevation="10dp"
@@ -24,7 +23,6 @@
 
     <!-- Container for different screens -->
     <FrameLayout
-        android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -72,47 +70,52 @@
                 app:layout_constraintTop_toBottomOf="@+id/layout_presetspinner">
 
                 <LinearLayout
+                    style="?android:attr/buttonBarStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/btn_auto_preset"
+                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
                         android:backgroundTint="#607D8B"
                         android:paddingHorizontal="4dp"
-                        android:text="Auto"
+                        android:text="@string/btn_auto"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btn_add_preset"
+                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
                         android:backgroundTint="#FF9800"
                         android:paddingHorizontal="4dp"
-                        android:text="Add"
+                        android:text="@string/btn_add"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btn_rename_preset"
+                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_weight="1"
                         android:backgroundTint="#2196F3"
                         android:paddingHorizontal="4dp"
-                        android:text="Ren"
+                        android:text="@string/btn_rename"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
+                    style="?android:attr/buttonBarStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -120,36 +123,38 @@
 
                     <Button
                         android:id="@+id/btn_delete_preset"
+                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
                         android:backgroundTint="#F44336"
                         android:paddingHorizontal="4dp"
-                        android:text="Del"
+                        android:text="@string/btn_delete"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btn_export_presets"
+                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
                         android:backgroundTint="#4CAF50"
                         android:paddingHorizontal="4dp"
-                        android:text="Exp"
+                        android:text="@string/btn_export"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btn_import_presets"
-                        android:layout_width="0dp"
+                        style="?android:attr/buttonBarButtonStyle" android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_weight="1"
                         android:backgroundTint="#9C27B0"
                         android:paddingHorizontal="4dp"
-                        android:text="Imp"
+                        android:text="@string/btn_import"
                         android:textColor="@color/colored_button_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -157,7 +162,6 @@
             </LinearLayout>
 
             <FrameLayout
-                android:id="@+id/visualizer_container"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_marginVertical="8dp"
@@ -184,6 +188,7 @@
 
             <LinearLayout
                 android:id="@+id/layout_buttons"
+                style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -195,20 +200,20 @@
 
                 <Button
                     android:id="@+id/btn_minus"
-                    android:layout_width="64dp"
+                    style="?android:attr/buttonBarButtonStyle" android:layout_width="64dp"
                     android:layout_height="48dp"
                     android:layout_marginEnd="8dp"
                     android:backgroundTint="@color/cyan_custom"
-                    android:text="-"
+                    android:text="@string/btn_minus"
                     android:textColor="@color/colored_button_text"
                     android:textSize="20sp" />
 
                 <Button
                     android:id="@+id/btn_plus"
-                    android:layout_width="64dp"
+                    style="?android:attr/buttonBarButtonStyle" android:layout_width="64dp"
                     android:layout_height="48dp"
                     android:backgroundTint="@color/cyan_custom"
-                    android:text="+"
+                    android:text="@string/btn_plus"
                     android:textColor="@color/colored_button_text"
                     android:textSize="20sp" />
 
@@ -229,7 +234,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sub:"
+                    android:text="@string/lbl_sub"
                     android:textColor="@color/cyan_custom"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -250,7 +255,7 @@
                     android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="0"
+                    android:text="@string/value_default"
                     android:textColor="@color/cyan_custom"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -277,7 +282,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:text="Loudness Compensation"
+                android:text="@string/fm_title"
                 android:textColor="@color/text_theme_aware"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -306,7 +311,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Enable Loudness Curve"
+                            android:text="@string/enable_loudness"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp" />
                         <androidx.appcompat.widget.SwitchCompat
@@ -325,7 +330,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Trim Highs (Fatigue Control)"
+                            android:text="@string/trim_highs"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp" />
                         <androidx.appcompat.widget.SwitchCompat
@@ -344,7 +349,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Active Subwoofer Tweaking"
+                            android:text="@string/sub_tweaking"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp" />
                         <androidx.appcompat.widget.SwitchCompat
@@ -368,7 +373,7 @@
                             android:layout_gravity="top|center"
                             android:layout_marginTop="8dp"
                             android:alpha="0.6"
-                            android:text="Real-time Compensation Preview"
+                            android:text="@string/fm_visualizer_label"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="14sp" />
                     </FrameLayout>
@@ -382,7 +387,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="System Volume:"
+                            android:text="@string/lbl_volume"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="16sp" />
                         <TextView
@@ -390,7 +395,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="0"
+                            android:text="@string/value_default"
                             android:textColor="@color/text_theme_aware_2"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -398,7 +403,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Subwoofer Offset:"
+                            android:text="@string/lbl_sub_offset"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="16sp" />
                         <TextView
@@ -406,7 +411,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="0 dB"
+                            android:text="@string/value_default"
                             android:textColor="@color/text_theme_aware_2"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -414,7 +419,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Lower Sub By:"
+                            android:text="@string/lbl_lower_sub_by"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="16sp" />
                         <TextView
@@ -422,7 +427,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="0 dB"
+                            android:text="@string/value_default"
                             android:textColor="@color/text_theme_aware_2"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -432,7 +437,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Calibration Point"
+                        android:text="@string/lbl_calibration_point"
                         android:textColor="@color/text_theme_aware"
                         android:textSize="16sp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
@@ -450,7 +455,7 @@
                             android:layout_width="40dp"
                             android:layout_height="wrap_content"
                             android:gravity="end"
-                            android:text="25"
+                            android:text="@string/value_default"
                             android:textColor="@color/text_theme_aware_2"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -460,7 +465,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Correction Strength"
+                        android:text="@string/lbl_correction_strength"
                         android:textColor="@color/text_theme_aware"
                         android:textSize="16sp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
@@ -478,7 +483,7 @@
                             android:layout_width="40dp"
                             android:layout_height="wrap_content"
                             android:gravity="end"
-                            android:text="100"
+                            android:text="@string/value_default"
                             android:textColor="@color/text_theme_aware_2"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -499,7 +504,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:text="Time Alignment"
+                android:text="@string/delays_title"
                 android:textColor="@color/text_theme_aware"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -529,7 +534,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Spatial Correction (Precise)"
+                            android:text="@string/spatial_correction"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -543,56 +548,57 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Front Left"
+                        android:text="@string/front_left"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="8dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay_fl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- FR -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Front Right"
+                        android:text="@string/front_right"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay_fr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RL -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rear Left"
+                        android:text="@string/rear_left"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay_rl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RR -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rear Right"
+                        android:text="@string/rear_right"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay_rr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold"
+                            tools:ignore="TooManyViews" />
                     </LinearLayout>
                     <!-- Sub -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Subwoofer"
+                        android:text="@string/subwoofer"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay_sub" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay_sub_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay_sub_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1A000000" android:layout_marginVertical="24dp" />
@@ -608,7 +614,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Surround Mode (Legacy)"
+                            android:text="@string/surround_mode"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -622,56 +628,56 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Front Left"
+                        android:text="@string/front_left"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="8dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay1_fl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay1_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay1_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy FR -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Front Right"
+                        android:text="@string/front_right"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay1_fr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay1_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay1_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy RL -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rear Left"
+                        android:text="@string/rear_left"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay1_rl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay1_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay1_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy RR -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rear Right"
+                        android:text="@string/rear_right"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay1_rr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay1_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0.0 ms (0 cm)" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay1_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RSSE -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rear Fill Enhancement"
+                        android:text="@string/rear_fill_enhancement"
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <SeekBar android:id="@+id/seek_delay1_rsse" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="20" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                        <TextView android:id="@+id/tv_delay1_rsse_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="0" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_delay1_rsse_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>
@@ -699,7 +705,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Built-in Loudness (Not Recommended)"
+                        android:text="@string/built_in_loudness_legacy"
                         android:textColor="@color/text_theme_aware_2"
                         android:textSize="18sp" />
 
@@ -707,7 +713,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Speaker Bass Controls"
+                        android:text="@string/speaker_bass_controls"
                         android:textColor="@color/text_theme_aware"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -723,7 +729,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Front Speakers"
+                            android:text="@string/front_speaker_bass"
                             android:textColor="@color/cyan_custom"
                             android:textStyle="bold"
                             android:textSize="16sp" />
@@ -732,29 +738,29 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Filter"
+                                android:text="@string/lbl_filter"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <SeekBar android:id="@+id/seek_bass_filter_front" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="11" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                                <TextView android:id="@+id/tv_bass_filter_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="20 hz" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                <TextView android:id="@+id/tv_bass_filter_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Boost"
+                                android:text="@string/lbl_boost"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <SeekBar android:id="@+id/seek_bass_boost_front" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                                <TextView android:id="@+id/tv_bass_boost_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="+0 dB" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                <TextView android:id="@+id/tv_bass_boost_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Freq"
+                                android:text="@string/lbl_freq"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <Spinner android:id="@+id/spinner_bass_freq_front" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/cyan_custom" />
@@ -765,7 +771,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Rear Speakers"
+                            android:text="@string/rear_speaker_bass"
                             android:textColor="@color/cyan_custom"
                             android:textStyle="bold"
                             android:textSize="16sp" />
@@ -773,29 +779,29 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Filter"
+                                android:text="@string/lbl_filter"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <SeekBar android:id="@+id/seek_bass_filter_rear" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="11" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                                <TextView android:id="@+id/tv_bass_filter_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="20 hz" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                <TextView android:id="@+id/tv_bass_filter_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Boost"
+                                android:text="@string/lbl_boost"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <SeekBar android:id="@+id/seek_bass_boost_rear" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
-                                <TextView android:id="@+id/tv_bass_boost_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="+0 dB" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                <TextView android:id="@+id/tv_bass_boost_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Freq"
+                                android:text="@string/lbl_freq"
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <Spinner android:id="@+id/spinner_bass_freq_rear" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/cyan_custom" />
@@ -807,7 +813,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
-                        android:text="Fader &amp; Balance"
+                        android:text="@string/fader_balance"
                         android:textColor="@color/text_theme_aware"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -819,18 +825,20 @@
                         android:gravity="center_horizontal"
                         android:orientation="vertical">
 
-                        <TextView android:id="@+id/tv_fader_lr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Center" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_fader_lr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
                         <SeekBar android:id="@+id/seek_fader_lr" android:layout_width="match_parent" android:layout_height="48dp" android:max="24" android:progress="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
 
                         <LinearLayout android:layout_width="match_parent" android:layout_height="320dp" android:orientation="horizontal" android:layout_marginTop="12dp" android:gravity="center">
                             <FrameLayout android:layout_width="64dp" android:layout_height="match_parent">
                                 <SeekBar android:id="@+id/seek_fader_fr" android:layout_width="280dp" android:layout_height="wrap_content" android:layout_gravity="center" android:max="24" android:progress="12" android:rotation="270" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
                             </FrameLayout>
-                            <ImageView android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:scaleType="fitCenter" app:srcCompat="@drawable/car" />
+                            <ImageView android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                                android:contentDescription="@null"
+                                android:scaleType="fitCenter" app:srcCompat="@drawable/car" />
                             <View android:layout_width="64dp" android:layout_height="match_parent" />
                         </LinearLayout>
 
-                        <TextView android:id="@+id/tv_fader_fr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Center" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_fader_fr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -849,7 +857,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:text="GALA (Speed Dependent Volume)"
+                android:text="@string/gala_title"
                 android:textColor="@color/text_theme_aware"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -881,7 +889,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Enable GALA Feature"
+                            android:text="@string/enable_gala_feature"
                             android:textColor="@color/text_theme_aware"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -895,7 +903,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:baselineAligned="false" android:orientation="horizontal"
                         android:layout_marginBottom="24dp"
                         android:weightSum="2">
 
@@ -911,14 +919,14 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="GPS SPEED"
+                                android:text="@string/gps_speed_label"
                                 android:textSize="12sp"
                                 android:textColor="@color/text_theme_aware_2" />
                             <TextView
                                 android:id="@+id/tv_gala_speed"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="0 km/h"
+                                android:text="@string/value_default"
                                 android:textSize="22sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/cyan_custom" />
@@ -936,14 +944,14 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="VOL OFFSET"
+                                android:text="@string/vol_offset_label"
                                 android:textSize="12sp"
                                 android:textColor="@color/text_theme_aware_2" />
                             <TextView
                                 android:id="@+id/tv_gala_offset"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="+0"
+                                android:text="@string/value_default"
                                 android:textSize="22sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/cyan_custom" />
@@ -954,7 +962,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sensitivity Settings"
+                        android:text="@string/sensitivity_settings"
                         android:textColor="@color/text_theme_aware"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -971,7 +979,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Volume Step Interval"
+                            android:text="@string/vol_step_interval"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <SeekBar
@@ -988,7 +996,7 @@
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="20 km/h"
+                                android:text="@string/value_default"
                                 android:textColor="@color/text_theme_aware_2"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -997,7 +1005,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="Standstill Threshold"
+                            android:text="@string/standstill_threshold"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <SeekBar
@@ -1014,7 +1022,7 @@
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="0 km/h"
+                                android:text="@string/value_default"
                                 android:textColor="@color/text_theme_aware_2"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1023,7 +1031,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="Maximum Speed Limit"
+                            android:text="@string/max_speed_limit"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <SeekBar
@@ -1040,7 +1048,7 @@
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="150 km/h"
+                                android:text="@string/value_default"
                                 android:textColor="@color/text_theme_aware_2"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1049,7 +1057,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="Max Volume Adjustment"
+                            android:text="@string/max_vol_adj"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <SeekBar
@@ -1066,7 +1074,7 @@
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="12"
+                                android:text="@string/value_default"
                                 android:textColor="@color/text_theme_aware_2"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1078,7 +1086,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Simulation &amp; Debug"
+                        android:text="@string/simulation_debug"
                         android:textColor="@color/simulate_speed_color"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -1094,7 +1102,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Simulate Vehicle Speed"
+                            android:text="@string/simulate_vehicle_speed"
                             android:textColor="@color/simulate_speed_color" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <SeekBar
@@ -1111,7 +1119,7 @@
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="0 km/h"
+                                android:text="@string/value_default"
                                 android:textColor="@color/simulate_speed_color"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1149,7 +1157,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:backgroundTint="@color/cyan_custom"
-            android:text="Apply"
+            android:text="@string/btn_apply"
             android:textAllCaps="false"
             android:textColor="@color/colored_button_text"
             android:textSize="12sp"

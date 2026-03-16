@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name" translatable="false">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto</string>
@@ -13,8 +13,8 @@
     <string name="lbl_sub">Sub:</string>
     <string name="btn_plus">+</string>
     <string name="btn_minus">-</string>
-    <string name="q_high">4.7</string>
-    <string name="q_low">2.2</string>
+    <string name="q_high" translatable="false">4.7</string>
+    <string name="q_low" translatable="false">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Compensation Curve</string>
@@ -42,14 +42,38 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Built-in Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Speaker Bass Controls</string>
     <string name="front_speaker_bass">Front Speaker Bass</string>
     <string name="rear_speaker_bass">Rear Speaker Bass</string>
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
     <string name="lbl_freq">Freq</string>
     <string name="lbl_center">Center</string>
+    <string name="fader_balance">Fader &amp; Balance</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Speed Dependent Volume)</string>
+    <string name="enable_gala">Enable GALA:</string>
+    <string name="enable_gala_feature">Enable GALA Feature</string>
+    <string name="vol_step_interval">Volume Step Interval</string>
+    <string name="vol_step_every">Volume Step every:</string>
+    <string name="gps_speed_label">GPS SPEED</string>
+    <string name="current_gps_speed">Current GPS Speed:</string>
+    <string name="vol_offset_label">VOL OFFSET</string>
+    <string name="applied_vol_offset">Applied Volume Offset:</string>
+    <string name="standstill_threshold">Standstill Threshold</string>
+    <string name="standstill_speed">Standstill speed:</string>
+    <string name="max_speed_limit">Maximum Speed Limit</string>
+    <string name="max_speed_label">Maximum speed:</string>
+    <string name="max_vol_adj">Max Volume Adjustment</string>
+    <string name="max_adjustment">Max Adjustment:</string>
+    <string name="sensitivity_settings">Sensitivity Settings</string>
+    <string name="simulation_debug">Simulation &amp; Debug</string>
+    <string name="simulate_vehicle_speed">Simulate Vehicle Speed</string>
+    <string name="simulate_speed">Simulate Speed:</string>
 
     <!-- General -->
+    <string name="btn_apply">Apply</string>
     <string name="btn_reapply">Reapply if reset</string>
     <string name="value_default">Not set</string>
     <string name="btn_ok">OK</string>
@@ -62,7 +86,6 @@
     <string name="toast_cannot_delete_last">Cannot delete the last preset</string>
     <string name="toast_exported">Exported</string>
     <string name="toast_imported">Imported</string>
-    <string name="toast_preset_fmt">Preset: %1$s</string>
     <string name="toast_sub_comp_limit">Sub Comp limited to 80Hz</string>
 
     <!-- Battery Optimization Dialog -->
@@ -72,7 +95,7 @@
     <string name="btn_later">Later</string>
 
     <!-- Hardware Status -->
-    <string name="hw_detecting">Hardware: Detecting...</string>
+    <string name="hw_detecting">Hardware: Detecting…</string>
     <string name="hw_demo_mode">Can\'t connect to MCU_SERVICE</string>
 
     <!-- Preset Dialogs -->
@@ -91,11 +114,12 @@
     <string name="default_preset_name">Preset 1</string>
 
     <!-- Notification -->
-    <string name="notif_channel_name">wDSP Service</string>
-    <string name="notif_title">wDSP Active</string>
-    <string name="notif_content">Hardware link active</string>
 
     <!-- Labels -->
     <string name="lbl_hz_fmt">%1$s hz</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+
 </resources>

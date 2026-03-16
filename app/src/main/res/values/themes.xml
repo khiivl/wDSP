@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
@@ -33,8 +33,4 @@
         <item name="android:textColor">@color/text_theme_aware_2</item>
     </style>
 
-    <style name="TextSmall">
-        <item name="android:textSize">@dimen/text_size_small</item>
-        <item name="android:textColor">@color/text_theme_aware</item>
-    </style>
 </resources>

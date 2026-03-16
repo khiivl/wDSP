@@ -1,6 +1,7 @@
 package com.radiorubka.wdsp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -61,6 +62,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Main";
@@ -272,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage(R.string.battery_dialog_message)
                     .setPositiveButton(R.string.btn_allow, (dialog, which) -> {
                         try {
-                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                             intent.setData(Uri.parse("package:" + getPackageName()));
                             startActivity(intent);
                         } catch (Exception e) {
@@ -314,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isHardwareAccessible() {
         try {
-            IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
+            @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
             return b != null;
         } catch (Exception e) {
             return false;
@@ -330,6 +332,7 @@ public class MainActivity extends AppCompatActivity {
         setupNavigation();
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerServiceReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.example.wdsp.PRESET_CHANGED");
@@ -701,7 +704,7 @@ public class MainActivity extends AppCompatActivity {
         int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
         int cal = seekFmCalVol.getProgress(); float str = seekFmStrength.getProgress() / 100f;
         if (vol < cal && switchFmEnable.isChecked()) {
-            float ratio = (float)(cal - vol) / (cal > 1 ? (float)(cal - 1) : 1f);
+            float ratio = (float)(cal - vol) / (float)(cal - 1);
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
             if (switchFmSubComp.isChecked()) {
                 int currentSubFreq = Globals.currentSubFreqHz;
@@ -808,11 +811,13 @@ public class MainActivity extends AppCompatActivity {
                 if (!linkedPreset.equals(curr)) updatedMap.put(playerName, linkedPreset);
             }
             e.putString("player_preset_map", updatedMap.toString());
-        } catch (Exception err) { }
+        } catch (Exception err) {
+            Log.e(TAG, "Error updating player map: " + err.getMessage());
+        }
         String defaultPreset = getString(R.string.default_preset_name);
         if (curr.equals(p.getString("default_preset_name", ""))) e.putString("default_preset_name", defaultPreset);
         presetNames.remove(curr);
-        if (presetNames.isEmpty()) { presetNames.add(defaultPreset); resetUiInternal(6); savePreset(defaultPreset); }
+        if (presetNames.isEmpty()) { presetNames.add(defaultPreset); resetUiInternal(); savePreset(defaultPreset); }
         e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
         e.apply();
         presetAdapter.notifyDataSetChanged();
@@ -895,11 +900,11 @@ public class MainActivity extends AppCompatActivity {
             // GALA
             switchGalaEnable.setChecked(p.getBoolean(name + "_gala_enabled", false));
             seekGalaInc.setProgress(p.getInt(name + "_gala_increment", 15));
-            tvGalaIncVal.setText((seekGalaInc.getProgress() + 5) + " km/h");
+            tvGalaIncVal.setText(getString(R.string.speed_kmh_format, seekGalaInc.getProgress() + 5));
             seekGalaMinSpeed.setProgress(p.getInt(name + "_gala_min_speed", 0));
-            tvGalaMinSpeedVal.setText((seekGalaMinSpeed.getProgress() * 5) + " km/h");
+            tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMinSpeed.getProgress() * 5));
             seekGalaMaxSpeed.setProgress(p.getInt(name + "_gala_max_speed", 30));
-            tvGalaMaxSpeedVal.setText((seekGalaMaxSpeed.getProgress() * 5) + " km/h");
+            tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMaxSpeed.getProgress() * 5));
             seekGalaMaxAdj.setProgress(p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
         }
@@ -957,6 +962,7 @@ public class MainActivity extends AppCompatActivity {
 
     private byte calculateQByte(int off) { int r = 0; for (int i = 0; i < 8; i++) if (qSwitches.get(off+i).isChecked()) r |= (1 << i); return (byte) r; }
 
+    @SuppressLint("PrivateApi")
     private void sendEqToHardware(byte[] data) {
         if (data == null || data.length == 0) return;
         byte cmd = data[0];
@@ -965,7 +971,7 @@ public class MainActivity extends AppCompatActivity {
             mcuCache.put(cmd, data.clone());
             try {
                 if (mcuManager == null) {
-                    IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
+                    @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
                     if (b != null) {
                         mcuManager = Class.forName("android.qf.mcu.IMcuManager$Stub").getMethod("asInterface", IBinder.class).invoke(null, b);
                     }
@@ -1006,7 +1012,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initReflection() {
         try {
-            Class<?> sp = Class.forName("android.os.SystemProperties");
+            @SuppressLint("PrivateApi") Class<?> sp = Class.forName("android.os.SystemProperties");
             getPropMethod = sp.getMethod("get", String.class, String.class);
             Log.i(TAG, "Reflection initialized successfully.");
         } catch (Exception e) {
@@ -1014,17 +1020,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String getSystemProperty(String key, String def) {
+    private String getSystemProperty() {
         try {
             if (getPropMethod != null) {
-                return (String) getPropMethod.invoke(null, key, def);
+                return (String) getPropMethod.invoke(null, "sys.qf.last_audio_src", "Unknown");
             }
         } catch (Exception ignored) {}
-        return def;
+        return "Unknown";
     }
 
     private void showAutoPresetDialog() {
-        String p = getSystemProperty("sys.qf.last_audio_src", "Unknown");
+        String p = getSystemProperty();
         String cur = (String) spinnerPresets.getSelectedItem();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());
@@ -1036,9 +1042,9 @@ public class MainActivity extends AppCompatActivity {
         
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.automation_title_fmt, cur))
-                .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb.toString())
+                .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb)
                 .setPositiveButton(R.string.btn_assign, (d, w) -> { map.put(p, cur); prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply(); })
-                .setNeutralButton(R.string.btn_set_default, (d, w) -> { prefs.edit().putString(PREF_DEFAULT_PRESET, cur).apply(); })
+                .setNeutralButton(R.string.btn_set_default, (d, w) -> prefs.edit().putString(PREF_DEFAULT_PRESET, cur).apply())
                 .setNegativeButton(R.string.btn_unassign, (d, w) -> { if (map.containsKey(p)) { map.remove(p); prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply(); } })
                 .show();
     }
@@ -1048,12 +1054,12 @@ public class MainActivity extends AppCompatActivity {
         
         SeekBar.OnSeekBarChangeListener galal = new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                if (sb == seekGalaInc) tvGalaIncVal.setText((p + 5) + " km/h");
-                else if (sb == seekGalaMinSpeed) tvGalaMinSpeedVal.setText((p * 5) + " km/h");
-                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText((p * 5) + " km/h");
+                if (sb == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
+                else if (sb == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
+                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
                 else if (sb == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
                 else if (sb == seekSimulateSpeed) {
-                    tvSimulateSpeedVal.setText(p + " km/h");
+                    tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
                     if (u) {
                         Intent intent = new Intent("com.example.wdsp.SIMULATE_SPEED");
                         intent.putExtra("speed", (float) p);
@@ -1076,11 +1082,28 @@ public class MainActivity extends AppCompatActivity {
     private void autoSaveCurrent() { String n = (String) spinnerPresets.getSelectedItem(); if (n != null) savePreset(n); }
     private int getSystemVolume() { return VolumeHelper.getVolume(); }
 
-    @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); try { unregisterReceiver(serviceReceiver); } catch (Exception e) {} }
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
+        try {
+            unregisterReceiver(serviceReceiver);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "Failed to unregister receiver. It may have already been unregistered.", e);
+        }
+    }
     private void exportPresets() { String s = (String) spinnerPresets.getSelectedItem(); exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s != null ? s : "wDSP_Presets") + ".json")); }
     private void importPresets() {
         importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
-    private void savePresetsToFile(Uri u) { try (OutputStream os = getContentResolver().openOutputStream(u)) { os.write(new Gson().toJson(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getAll()).getBytes()); Toast.makeText(this, R.string.toast_exported, Toast.LENGTH_SHORT).show(); } catch (IOException e) { Log.e(TAG, "Export error", e); } }
+    private void savePresetsToFile(Uri u) {
+        try (OutputStream os = getContentResolver().openOutputStream(u)) {
+            assert os != null;
+            os.write(new Gson().toJson(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getAll()).getBytes());
+            Toast.makeText(this, R.string.toast_exported, Toast.LENGTH_SHORT).show();
+        }
+        catch (IOException e) {
+            Log.e(TAG, "Export error", e);
+        } }
     private void loadPresetsFromFile(Uri u) {
         try (InputStream is = getContentResolver().openInputStream(u); BufferedReader r = new BufferedReader(new InputStreamReader(is))) {
             StringBuilder sb = new StringBuilder();
@@ -1107,8 +1130,8 @@ public class MainActivity extends AppCompatActivity {
         int fr = seekFaderFr.getProgress(); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
     }
 
-    private void resetUiInternal(int p) {
-        isUpdatingUi = true; for (SeekBar s : gainSliders) s.setProgress(p); for (int i=0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, p);
+    private void resetUiInternal() {
+        isUpdatingUi = true; for (SeekBar s : gainSliders) s.setProgress(6); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
             for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setProgress(0); spinnerSubFreq.setSelection(5);
             seekFaderLr.setProgress(12); seekFaderFr.setProgress(12); updateFaderLabels(); switchLoud.setChecked(false);
