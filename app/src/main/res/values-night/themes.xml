@@ -1,9 +1,0 @@
-<resources>
-    <!-- Base application theme. -->
-    <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <item name="colorPrimary">@color/cyan_custom</item>
-        <item name="android:statusBarColor">@color/cyan_custom</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
-</resources>

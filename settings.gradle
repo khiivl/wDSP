@@ -20,4 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "wDSP"
-include ':app'
+include ':wdsp_app'
+include ':wdsp_proxy'
