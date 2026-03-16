@@ -31,6 +31,8 @@ How to use:
 1. Install, launch, give all the permissions. Ready to use. Don't use the stock DSP app, since it will reset your settings if launched and closed.
 2. If you want to disable the stock DSP app, run in adb: adb shell "pm disable com.qf.soundeffect"
 
+----------------------------------------------------------------------------------------------------------------------
+
 Written on Java, set to target API29. Reverse-engineered proprietary MCU communication protocol. Communicates with the framework.jar service using reflections.
 
 The app is licensed with the GPLv3 license. 
