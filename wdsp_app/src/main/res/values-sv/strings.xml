@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto</string>
+    <string name="btn_add">Lägg till</string>
+    <string name="btn_rename">Namn</string>
+    <string name="btn_delete">Ta bort</string>
+    <string name="btn_export">Exp</string>
+    <string name="btn_import">Imp</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus">+</string>
+    <string name="btn_minus">-</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">F-M Loudness-kurva</string>
+    <string name="enable_loudness">Aktivera Loudness</string>
+    <string name="trim_highs">Dämpa diskant</string>
+    <string name="sub_tweaking">Sub-justering</string>
+    <string name="fm_visualizer_label">Realtidsvy korrigering</string>
+    <string name="lbl_volume">Volym:</string>
+    <string name="lbl_sub_offset">Sub-offset:</string>
+    <string name="lbl_lower_sub_by">Sänk sub med:</string>
+    <string name="lbl_calibration_point">Kalibreringspunkt (bör vara ca 80 dB):</string>
+    <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Tidskorrigering (Delays)</string>
+    <string name="spatial_correction">Rumslig korrigering</string>
+    <string name="surround_mode">Surroundläge</string>
+    <string name="front_left">Vänster fram</string>
+    <string name="front_right">Höger fram</string>
+    <string name="rear_left">Vänster bak</string>
+    <string name="rear_right">Höger bak</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Rear-fill förstärkning</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Inbyggd Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Basinställningar högtalare</string>
+    <string name="front_speaker_bass">Frontbas</string>
+    <string name="rear_speaker_bass">Bakbas</string>
+    <string name="lbl_filter">Filter</string>
+    <string name="lbl_boost">Boost</string>
+    <string name="lbl_freq">Frekv</string>
+    <string name="lbl_center">Center</string>
+    <string name="fader_balance">Fader &amp; Balans</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Hastighetsberoende volym)</string>
+    <string name="enable_gala">Aktivera GALA:</string>
+    <string name="enable_gala_feature">Aktivera GALA-funktion</string>
+    <string name="vol_step_interval">Volymstegsintervall</string>
+    <string name="vol_step_every">Volymsteg per:</string>
+    <string name="gps_speed_label">GPS-HASTIGHET</string>
+    <string name="current_gps_speed">Nuvarande GPS-hastighet:</string>
+    <string name="vol_offset_label">VOL-OFFSET</string>
+    <string name="applied_vol_offset">Tillämpad volym-offset:</string>
+    <string name="standstill_threshold">Tröskel för stillastående</string>
+    <string name="standstill_speed">Hastighet stillastående:</string>
+    <string name="max_speed_limit">Maxhastighetsgräns</string>
+    <string name="max_speed_label">Maxhastighet:</string>
+    <string name="max_vol_adj">Max volymjustering</string>
+    <string name="max_adjustment">Max justering:</string>
+    <string name="sensitivity_settings">Känslighetsinställningar</string>
+    <string name="simulation_debug">Simulering &amp; Debug</string>
+    <string name="simulate_vehicle_speed">Simulera fordonshastighet</string>
+    <string name="simulate_speed">Simulera hastighet:</string>
+
+    <!-- General -->
+    <string name="btn_apply">Verkställ</string>
+    <string name="btn_reapply">Verkställ vid återställning</string>
+    <string name="value_default">Ej satt</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Avbryt</string>
+    <string name="none">Ingen</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Inställningar sparade</string>
+    <string name="toast_exists">Finns redan</string>
+    <string name="toast_cannot_delete_last">Kan inte radera sista profilen</string>
+    <string name="toast_exported">Exporterad</string>
+    <string name="toast_imported">Importerad</string>
+    <string name="toast_sub_comp_limit">Sub-komp begränsad till 80Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Låt wDSP köras</string>
+    <string name="battery_dialog_message">För att säkerställa att dynamiska EQ-justeringar fungerar pålitligt måste wDSP undantas från batterioptimering.</string>
+    <string name="btn_allow">Tillåt</string>
+    <string name="btn_later">Senare</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hårdvara: Söker…</string>
+    <string name="hw_demo_mode">Kan inte ansluta till MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Ändra namn</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatisering: %1$s</string>
+    <string name="active_player_fmt">Aktiv spelare: %1$s</string>
+    <string name="current_associations">Nuvarande kopplingar:\n</string>
+    <string name="global_default_fmt">\nGlobal Default: %1$s</string>
+    <string name="btn_assign">Tilldela</string>
+    <string name="btn_set_default">Sätt som standard</string>
+    <string name="btn_unassign">Ta bort koppling</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Profil 1</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Delays</string>
+    <string name="OTtab">Annat</string>
+    <string name="GLtab">Fart</string>
+
+</resources>
