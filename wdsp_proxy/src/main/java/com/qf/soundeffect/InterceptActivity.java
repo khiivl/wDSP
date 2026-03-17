@@ -6,7 +6,6 @@ import android.os.Bundle;
 
 public class InterceptActivity extends Activity {
     @Override
-    @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Launch your real app
