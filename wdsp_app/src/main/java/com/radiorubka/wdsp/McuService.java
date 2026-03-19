@@ -80,6 +80,9 @@ public class McuService extends Service implements LocationListener {
     private float currentSpeedKmh = 0.0f;
     private float simulatedSpeedKmh = -1.0f;
     private int baseStandstillVolume = -1;
+
+    private boolean wasMuted = false;
+
     private int lastReadHardwareVol = -1;
 
     private long lastEqWriteTime = 0;
@@ -309,52 +312,102 @@ public class McuService extends Service implements LocationListener {
             if (!isPolling) return;
             checkVolumeAndGala();
             checkPlayer();
+            checkForBug();
             backgroundHandler.postDelayed(this, 100);
         }
     };
 
+
+    // This is used to check for the bug in the jitu (maybe also haiwai) f/w
+    // the bug is caused by user turning the volume to 0 and then unmuting.
+    // it COULD blow up the subwoofer, potentially.
+    private void checkForBug() {
+        if (VolumeHelper.getVolume() == 0 && !VolumeHelper.isHardwareMuted()) {
+            VolumeHelper.setVolume(1);
+        }
+    }
+
+
+    // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.
     private void checkVolumeAndGala() {
+
+        // alright. step-by step.
+        // this gets the speed
         float speed = simulatedSpeedKmh >= 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+
+        // this gets the volume and the mute state
         int hardwareVol = VolumeHelper.getVolume();
-        
+        boolean isCurrentlyMuted = (hardwareVol <= 0 || VolumeHelper.isHardwareMuted());
+
+        // 1. THE GUARD: If muted or at volume 0, stop GALA processing immediately.
+        // This prevents the bug with the volume being set to 1 and stops GALA from unmuting the system.
+        if (isCurrentlyMuted) {
+            wasMuted = true;
+            lastReadHardwareVol = hardwareVol;
+            lastAppliedVolume = hardwareVol;
+
+            // Still update UI if visible so the speed needle/text moves while muted
+            if (isUiVisible) {
+                galaUpdateIntent.putExtra("speed", speed);
+                galaUpdateIntent.putExtra("waveOffset", 0);
+                sendBroadcast(galaUpdateIntent);
+            }
+            return;
+        }
+
+        // 2. PRE-CALCULATE OFFSET: Calculate what the GALA boost should be right now.
+        int rawOffset = 0;
         if (cachedGalaEn) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
             int minSpeed = cachedGalaMinV * 5;
-            // int maxSpeed = cachedGalaMaxV * 5;
-            
-            int rawOffset = 0;
             if (speed >= minSpeed) {
-                // float constrainedSpeed = Math.min(speed, maxSpeed);
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
-                // Apply max adjustment limit
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
             }
-            
-            if (baseStandstillVolume == -1) {
-                baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
-                lastReadHardwareVol = hardwareVol;
-                lastAppliedVolume = hardwareVol;
-            }
-            
-            if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
-                baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
-                if (hardwareVol < rawOffset) {
-                    baseStandstillVolume = 0;
-                    lastAppliedVolume = hardwareVol;
-                }
-                Log.d(TAG, "Manual Adjust: Vol=" + hardwareVol + " Base=" + baseStandstillVolume);
-            }
-            
-            lastReadHardwareVol = hardwareVol;
-            int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
-            
-            if (hardwareVol != targetVol) {
+        }
+
+        // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
+        // immediately force the volume to (Base + Current Offset).
+        if (wasMuted) {
+            wasMuted = false;
+            if (baseStandstillVolume != -1) {
+                int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
-                hardwareVol = targetVol; 
+                lastReadHardwareVol = targetVol;
+                Log.d(TAG, "Unmuted: Restoring Base(" + baseStandstillVolume + ") + Offset(" + rawOffset + ") = " + targetVol);
+                return; // Exit this poll to let the hardware stabilize
+            }
+        }
+
+        // 4. INITIALIZE BASE: If this is the first run after service start.
+        if (baseStandstillVolume == -1) {
+            baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
+            lastReadHardwareVol = hardwareVol;
+            lastAppliedVolume = hardwareVol;
+        }
+
+        // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
+        // We detect this because the hardware volume changed, but NOT by our script.
+        if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
+            baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
+            if (hardwareVol < rawOffset) {
+                baseStandstillVolume = 0;
+            }
+            Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
+        }
+
+        // 6. GALA APPLICATION: Apply speed-based volume if needed.
+        if (cachedGalaEn) {
+            int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
+
+            if (hardwareVol != targetVol && rawOffset != 0) {
+                VolumeHelper.setVolume(targetVol);
+                lastAppliedVolume = targetVol;
+                hardwareVol = targetVol;
                 Log.v(TAG, "GALA Update: " + lastReadHardwareVol + " -> " + targetVol);
             }
-            
+
             if (isUiVisible) {
                 int effectiveOffset = Math.max(0, targetVol - baseStandstillVolume);
                 galaUpdateIntent.putExtra("speed", speed);
@@ -362,14 +415,17 @@ public class McuService extends Service implements LocationListener {
                 sendBroadcast(galaUpdateIntent);
             }
         } else {
+            // If GALA is disabled, the base is simply the current volume.
             baseStandstillVolume = hardwareVol;
             lastAppliedVolume = hardwareVol;
-            lastReadHardwareVol = hardwareVol;
         }
+
+        // 7. TRACKING: Update last seen volume and handle UI volume sync.
+        lastReadHardwareVol = hardwareVol;
 
         if (hardwareVol != lastVolumeRead) {
             lastVolumeRead = hardwareVol;
-            applyVolumeDependentSettings(hardwareVol);
+            applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
             if (isUiVisible) {
                 volumeChangedIntent.putExtra("volume", hardwareVol);
                 sendBroadcast(volumeChangedIntent);

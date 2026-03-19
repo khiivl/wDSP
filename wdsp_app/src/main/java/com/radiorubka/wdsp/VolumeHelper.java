@@ -22,6 +22,7 @@ public class VolumeHelper {
     private static Method mGetVolumeVal;
     private static Method mSetVolumeVal;
     private static Method mGetVolumeType;
+    private static Method mGetMuteState;
 
     public static void init(Context context) {
         if (audioManager == null) {
@@ -30,7 +31,7 @@ public class VolumeHelper {
         }
 
         try {
-            // Obfuscated: "android.qf.os.VolumeManager"
+            // "android.qf.os.VolumeManager"
             @SuppressLint("PrivateApi") Class<?> vmClass = Class.forName("android.qf.os.VolumeManager");
             mVolumeManager = vmClass.getMethod("getInstance").invoke(null);
 
@@ -41,14 +42,33 @@ public class VolumeHelper {
             // Obfuscated: "android.qf.os.VolumeState"
             String vsName = new String(Base64.decode("YW5kcm9pZC5xZi5vcy5Wb2x1bWVTdGF0ZQ==", Base64.DEFAULT));
             Class<?> vsClass = Class.forName(vsName);
+
             mGetVolumeVal = vsClass.getMethod("getVolumeVal");
             mSetVolumeVal = vsClass.getMethod("setVolumeVal", int.class);
             mGetVolumeType = vsClass.getMethod("getVolumeType");
+
+            // Reflected: public boolean getVolumeStateMute()
+            mGetMuteState = vsClass.getMethod("getVolumeStateMute");
 
             Log.d(TAG, "Hardware volume control linked via reflection.");
         } catch (Exception e) {
             Log.i(TAG, "Hardware volume not found. Using standard Android AudioManager.");
         }
+    }
+
+    public static boolean isHardwareMuted() {
+        Object activeState = getActiveVolumeInstance();
+        if (activeState != null && mGetMuteState != null) {
+            try {
+                Object result = mGetMuteState.invoke(activeState);
+                if (result instanceof Boolean) {
+                    return (Boolean) result;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to invoke hardware getVolumeStateMute", e);
+            }
+        }
+        return false;
     }
 
     public static int getVolume() {
