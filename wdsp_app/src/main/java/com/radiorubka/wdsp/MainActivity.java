@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
     
     // GALA Controls
     private SwitchCompat switchGalaEnable;
-    private SeekBar seekGalaInc, seekGalaMinSpeed, seekGalaMaxSpeed, seekSimulateSpeed, seekGalaMaxAdj;
-    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvGalaMaxSpeedVal, tvSimulateSpeedVal, tvGalaMaxAdjVal;
+    private SeekBar seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
+    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal;
 
     private float currentFmSubOffset = 0f;
     private int currentEffectiveVolume = -1;

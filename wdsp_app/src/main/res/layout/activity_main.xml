@@ -1648,12 +1648,12 @@
                         android:progress="0"
                         android:layout_weight="1"
                         android:progressTint="#ff5722"
-                        android:thumbTint="#ff5722"/>
+                        android:thumbTint="@color/cyan_custom"/>
 
                     <TextView
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#ff5722"
+                        android:textColor="@color/cyan_custom"
                         android:gravity="end"
                         android:id="@+id/tv_simulate_speed_val"
                         android:layout_width="80dp"
