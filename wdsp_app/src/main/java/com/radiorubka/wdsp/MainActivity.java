@@ -975,7 +975,7 @@ public class MainActivity extends AppCompatActivity {
             tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
 
             // Power
-            tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 12)));
+            tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer(); applyAllToMcu();
     }
