@@ -847,7 +847,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -913,6 +913,9 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_gala_min_speed", seekGalaMinSpeed.getProgress());
 //            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
             e.putInt(name + "_gala_max_adj", seekGalaMaxAdj.getProgress());
+
+            e.putInt(name + "_power_vol", -Integer.parseInt(tvPowerDb.getText().toString()));
+
         }
         e.apply();
     }
