@@ -13,6 +13,7 @@
     <string name="lbl_sub">Sub:</string>
     <string name="btn_plus">+</string>
     <string name="btn_minus">-</string>
+    <string name="btn_center">0</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -119,6 +120,7 @@
     <string name="lbl_hz_fmt">%1$s Hz</string>
     <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="lbl_db_pwr">%1$d dB</string>
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
@@ -129,5 +131,8 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Other</string>
     <string name="GLtab">Speed</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Amp Power:</string>
 
 </resources>

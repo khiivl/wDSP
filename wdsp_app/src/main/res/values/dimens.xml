@@ -10,6 +10,7 @@
     <!-- Paddings and Margins -->
     <dimen name="padding_standard">16dp</dimen>
     <dimen name="padding_small">8dp</dimen>
+    <dimen name="margin_large">32dp</dimen>
     <dimen name="margin_standard">16dp</dimen>
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_tiny">4dp</dimen>

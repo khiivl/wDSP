@@ -35,7 +35,7 @@
             android:id="@+id/layout_eq"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/layout_presets"
@@ -176,6 +176,75 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
 
+                <!-- POWER VOLUME SELECTOR (NEW) -->
+
+                <TextView
+                    android:id="@+id/lbl_pwr"
+                    style="@style/TextHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:text="@string/lbl_pwr"
+                    android:textColor="@color/cyan_custom"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Button
+                    android:id="@+id/btn_pwr_vol_minus"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:backgroundTint="@color/cyan_custom"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_minus"
+                    android:textColor="@color/colored_button_text"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_pwr_db"
+                    style="@style/TextHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:minWidth="28dp"
+                    android:gravity="center"
+                    android:text="@string/value_default"
+                    android:textColor="@color/cyan_custom"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Button
+                    android:id="@+id/btn_pwr_vol_plus"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_standard"
+                    android:backgroundTint="@color/cyan_custom"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_plus"
+                    android:textColor="@color/colored_button_text"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/lbl_sub"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- SUB LABEL (Updated to start after Power Vol Plus) -->
                 <TextView
                     android:id="@+id/lbl_sub"
                     style="@style/TextHeader"
@@ -186,7 +255,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/seek_sub_gain"
                     app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_plus"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <SeekBar
@@ -248,16 +317,32 @@
                     android:id="@+id/btn_plus"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
-                    android:layout_marginEnd="@dimen/margin_small"
+                    android:layout_marginEnd="@dimen/margin_large"
                     android:backgroundTint="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_plus"
                     android:textColor="@color/colored_button_text"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_center"
                     app:layout_constraintStart_toEndOf="@id/btn_minus"
                     app:layout_constraintTop_toTopOf="parent" />
+
+                <Button
+                    android:id="@+id/btn_center"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="@dimen/margin_tiny"
+                    android:backgroundTint="@color/btn_delete_bg"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_center"
+                    android:textColor="@color/colored_button_text"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/btn_plus"
+                    app:layout_constraintTop_toTopOf="parent" />
+
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 

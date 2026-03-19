@@ -80,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar seekSubGain;
     private Spinner spinnerSubFreq;
     private TextView tvSubDb;
+
+    private TextView tvPowerDb;
     private final String[] SUB_FREQS = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
 
     // Filter controls
@@ -336,6 +338,7 @@ public class MainActivity extends AppCompatActivity {
         seekSubGain = findViewById(R.id.seek_sub_gain);
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);
+        tvPowerDb = findViewById(R.id.tv_pwr_db);
         setupNavigation();
     }
 
@@ -360,6 +363,9 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
+        findViewById(R.id.btn_center).setOnClickListener(v -> resetAllBands());
+        findViewById(R.id.btn_pwr_vol_minus).setOnClickListener(v -> setPowerVolume(101));
+        findViewById(R.id.btn_pwr_vol_plus).setOnClickListener(v -> setPowerVolume(102));
         findViewById(R.id.btn_apply).setOnClickListener(v -> {
             autoSaveCurrent();
             applyAllToMcu();
@@ -565,6 +571,48 @@ public class MainActivity extends AppCompatActivity {
         }
         isUpdatingUi = false;
         updateVisualizer(); updateEqMcu(); autoSaveCurrent();
+    }
+
+    private void resetAllBands() {
+        isUpdatingUi = true;
+
+        // Loop through all 16 bands
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            SeekBar s = gainSliders.get(i);
+            s.setProgress(6);       // 6 is the center point (0 dB)
+            updateDbLabel(i, 6);    // Updates the text label above the slider
+        }
+
+        isUpdatingUi = false;
+
+        // Refresh the graph, the hardware, and save the state
+        updateVisualizer();
+        updateEqMcu();
+        autoSaveCurrent();
+    }
+
+    private void setPowerVolume(int control) {
+
+        String currentPreset = (String) spinnerPresets.getSelectedItem();
+        if (currentPreset == null) return;
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String key = currentPreset + "_power_vol";
+
+        int currentVal = prefs.getInt(key, 0);
+
+        if (control == 101) {
+            currentVal = Math.max(-100, currentVal - 1); // Example range -15 to +15
+        }
+        else if (control == 102) {
+            currentVal = Math.min(100, currentVal + 1);
+        }
+        else {
+            currentVal = control;
+        }
+
+        tvPowerDb.setText(getString(R.string.lbl_db_pwr, currentVal));
+        prefs.edit().putInt(key, currentVal).apply();
     }
 
     private void setupSubControls() {

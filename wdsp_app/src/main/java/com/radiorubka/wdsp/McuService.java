@@ -60,6 +60,7 @@ public class McuService extends Service implements LocationListener {
     private Method getPropMethod;
     private Object mcuManagerInstance;
     private Method setEqDataMethod;
+    private Method setMcuMsgMethod;
 
     private String currentPresetName;
     private final int[] cachedGains = new int[16];
@@ -98,9 +99,9 @@ public class McuService extends Service implements LocationListener {
     private final byte[] eqData = new byte[12];
     private final byte[] subData = new byte[2];
 
-    private final Intent volumeChangedIntent = new Intent("com.example.wdsp.VOLUME_CHANGED");
-    private final Intent presetChangedIntent = new Intent("com.example.wdsp.PRESET_CHANGED");
-    private final Intent galaUpdateIntent = new Intent("com.example.wdsp.GALA_UPDATE");
+    private final Intent volumeChangedIntent = new Intent("com.radiorubka.wdsp.VOLUME_CHANGED");
+    private final Intent presetChangedIntent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
+    private final Intent galaUpdateIntent = new Intent("com.radiorubka.wdsp.GALA_UPDATE");
 
     private boolean isUiVisible = false;
     private boolean isBootStart = true;
@@ -151,14 +152,14 @@ public class McuService extends Service implements LocationListener {
                     stopPolling();
                     stopGps();
                 }
-                else if ("com.example.wdsp.UI_ACTIVE".equals(action)) {
+                else if ("com.radiorubka.wdsp.UI_ACTIVE".equals(action)) {
                     isUiVisible = true;
                     forceUiUpdate();
                 }
-                else if ("com.example.wdsp.UI_INACTIVE".equals(action)) {
+                else if ("com.radiorubka.wdsp.UI_INACTIVE".equals(action)) {
                     isUiVisible = false;
                 }
-                else if ("com.example.wdsp.SIMULATE_SPEED".equals(action)) {
+                else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
                 }
             });
@@ -209,9 +210,10 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.qf.action.ACC_OFF");
         controlFilter.addAction("android.intent.action.QUICKBOOT_POWERON");
         controlFilter.addAction(Intent.ACTION_BOOT_COMPLETED);
-        controlFilter.addAction("com.example.wdsp.UI_ACTIVE");
-        controlFilter.addAction("com.example.wdsp.UI_INACTIVE");
-        controlFilter.addAction("com.example.wdsp.SIMULATE_SPEED");
+        controlFilter.addAction("com.radiorubka.wdsp.UI_ACTIVE");
+        controlFilter.addAction("com.radiorubka.wdsp.UI_INACTIVE");
+        controlFilter.addAction("com.radiorubka.wdsp.SIMULATE_SPEED");
+        controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
         
         registerReceiver(controlReceiver, controlFilter);
 
@@ -519,6 +521,8 @@ public class McuService extends Service implements LocationListener {
             d89[5] = (byte) (prefs.getInt(currentPresetName + "_d1_rr", 0) & 0xFF);
             sendToHardware(d89);
         }
+
+        setPowerAmpVol();
     }
 
     private byte calculateQByte(String preset, int offset) {
@@ -601,11 +605,39 @@ public class McuService extends Service implements LocationListener {
             if (binder != null) {
                 @SuppressLint("PrivateApi") Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
                 mcuManagerInstance = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
+
                 if (mcuManagerInstance != null) {
+                    // Existing EQ method
                     setEqDataMethod = mcuManagerInstance.getClass().getMethod("RPC_SetEQData", byte[].class);
+
+                    // NEW: Reflect RPC_SendMcuMsgData(byte cmd, byte[] data, int length)
+                    setMcuMsgMethod = mcuManagerInstance.getClass().getMethod("RPC_SendMcuMsgData",
+                            byte.class, byte[].class, int.class);
                 }
             }
         }
+    }
+
+    public void setPowerAmpVol() {
+
+        int val = prefs.getInt(currentPresetName + "_power_vol", 0);
+
+        backgroundHandler.post(() -> {
+            byte[] bArr = {2, (byte) val}; // Sub-ID 2, followed by value
+            try {
+                ensureMcuManager();
+                if (setMcuMsgMethod != null && mcuManagerInstance != null) {
+                    // Invoke: RPC_SendMcuMsgData((byte)24, bArr, 2)
+                    setMcuMsgMethod.invoke(mcuManagerInstance, (byte) 24, bArr, bArr.length);
+                    Log.d(TAG, "PowerAmpVol set to: " + val);
+                }
+                else {
+                    Log.e(TAG, "setMcuMsgMethod or mcuManagerInstance is null, val:" + val);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to set PowerAmpVol: " + e.getMessage());
+            }
+        });
     }
 
     private String getSystemProperty() {
