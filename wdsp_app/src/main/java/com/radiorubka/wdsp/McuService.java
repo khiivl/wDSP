@@ -74,7 +74,7 @@ public class McuService extends Service implements LocationListener {
     private boolean cachedGalaEn;
     private int cachedGalaInc;
     private int cachedGalaMinV;
-    private int cachedGalaMaxV;
+    // private int cachedGalaMaxV;
     private int cachedGalaMaxAdj;
     
     private float currentSpeedKmh = 0.0f;
@@ -205,6 +205,15 @@ public class McuService extends Service implements LocationListener {
             isBootStart = false;
         });
 
+        IntentFilter controlFilter = getIntentFilter();
+
+        registerReceiver(controlReceiver, controlFilter);
+
+        applyCurrentSettings();
+    }
+
+    @NonNull
+    private static IntentFilter getIntentFilter() {
         IntentFilter controlFilter = new IntentFilter();
         controlFilter.addAction("com.qf.action.ACC_ON");
         controlFilter.addAction("com.qf.action.ACC_OFF");
@@ -214,10 +223,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.UI_INACTIVE");
         controlFilter.addAction("com.radiorubka.wdsp.SIMULATE_SPEED");
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
-        
-        registerReceiver(controlReceiver, controlFilter);
-
-        applyCurrentSettings();
+        return controlFilter;
     }
 
     private void loadPlayerMap() {
@@ -257,7 +263,7 @@ public class McuService extends Service implements LocationListener {
         cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
         cachedGalaMinV = prefs.getInt(preset + "_gala_min_speed", 0);
-        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
+//        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
     }
 
@@ -314,12 +320,12 @@ public class McuService extends Service implements LocationListener {
         if (cachedGalaEn) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
             int minSpeed = cachedGalaMinV * 5;
-            int maxSpeed = cachedGalaMaxV * 5;
+            // int maxSpeed = cachedGalaMaxV * 5;
             
             int rawOffset = 0;
             if (speed >= minSpeed) {
-                float constrainedSpeed = Math.min(speed, maxSpeed);
-                rawOffset = (int) ((constrainedSpeed - minSpeed) / speedIncrement);
+                // float constrainedSpeed = Math.min(speed, maxSpeed);
+                rawOffset = (int) ((speed - minSpeed) / speedIncrement);
                 // Apply max adjustment limit
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
             }

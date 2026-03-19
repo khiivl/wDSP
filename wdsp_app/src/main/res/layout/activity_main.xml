@@ -1561,33 +1561,33 @@
                         android:text="@string/value_default"
                         android:layout_marginStart="16dp"/>
 
-                    <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/max_speed_label"
-                        android:layout_marginStart="32dp"/>
+<!--                    <TextView-->
+<!--                        android:textSize="18sp"-->
+<!--                        android:textColor="@color/text_theme_aware"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="@string/max_speed_label"-->
+<!--                        android:layout_marginStart="32dp"/>-->
 
-                    <SeekBar
-                        android:id="@+id/seek_gala_maxspeed"
-                        android:layout_width="350dp"
-                        android:layout_height="wrap_content"
-                        android:max="60"
-                        android:progress="30"
-                        android:layout_marginStart="8dp"
-                        android:progressTint="@color/cyan_custom"
-                        android:thumbTint="@color/cyan_custom"/>
+<!--                    <SeekBar-->
+<!--                        android:id="@+id/seek_gala_maxspeed"-->
+<!--                        android:layout_width="350dp"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:max="60"-->
+<!--                        android:progress="30"-->
+<!--                        android:layout_marginStart="8dp"-->
+<!--                        android:progressTint="@color/cyan_custom"-->
+<!--                        android:thumbTint="@color/cyan_custom"/>-->
 
-                    <TextView
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_theme_aware_2"
-                        android:id="@+id/tv_gala_maxspeed_val"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/value_default"
-                        android:layout_marginStart="8dp"/>
+<!--                    <TextView-->
+<!--                        android:textSize="18sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:textColor="@color/text_theme_aware_2"-->
+<!--                        android:id="@+id/tv_gala_maxspeed_val"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="@string/value_default"-->
+<!--                        android:layout_marginStart="8dp"/>-->
 
                 </LinearLayout>
 

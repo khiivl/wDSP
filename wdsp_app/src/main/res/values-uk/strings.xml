@@ -128,4 +128,5 @@
     <string name="DLtab">Затримки</string>
     <string name="OTtab">Інше</string>
     <string name="GLtab">Адапт. Гучн.</string>
+    <string name="lbl_pwr">Підсилення:</string>
 </resources>

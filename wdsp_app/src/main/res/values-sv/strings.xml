@@ -128,5 +128,6 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
+    <string name="lbl_pwr">" Förstärkar:"</string>
 
 </resources>

@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto</string>
+    <string name="btn_add">Nuevo</string>
+    <string name="btn_rename">Ren.</string>
+    <string name="btn_delete">Borr.</string>
+    <string name="btn_export">Exp.</string>
+    <string name="btn_import">Imp.</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus">+</string>
+    <string name="btn_minus">-</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Curva de Compensación de Loudness</string>
+    <string name="enable_loudness">Habilitar Compensación de Loudness</string>
+    <string name="trim_highs">Recorte de Agudos</string>
+    <string name="sub_tweaking">Calibración de Subwoofer</string>
+    <string name="fm_visualizer_label">Vista Previa de la Compensación en Tiempo Real</string>
+    <string name="lbl_volume">Volumen:</string>
+    <string name="lbl_sub_offset">Compensación de Subwoofer:</string>
+    <string name="lbl_lower_sub_by">Atenuar Subwoofer en:</string>
+    <string name="lbl_calibration_point">Punto de Calibración (debe rondar 80 dB):</string>
+    <string name="lbl_correction_strength">Intensidad de la Corrección:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Alineación Temporal de Altavoces (Retardos)</string>
+    <string name="spatial_correction">Corrección Espacial</string>
+    <string name="surround_mode">Modo Surround</string>
+    <string name="front_left">Frontal Izquierdo</string>
+    <string name="front_right">Frontal Derecho</string>
+    <string name="rear_left">Trasero Izquierdo</string>
+    <string name="rear_right">Trasero Derecho</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Mejora de Relleno Altavoces Traseros</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Loudness Integrado (HEREDADO)</string>
+    <string name="speaker_bass_controls">Control de Graves de Altavoces</string>
+    <string name="front_speaker_bass">Graves Altavoces Frontales</string>
+    <string name="rear_speaker_bass">Graves Altavoces Traseros</string>
+    <string name="lbl_filter">Filtro</string>
+    <string name="lbl_boost">Realce</string>
+    <string name="lbl_freq">Frecuencia</string>
+    <string name="lbl_center">Centro</string>
+    <string name="fader_balance">Fader &amp; Balance</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Ajuste de Volumen por Velocidad)</string>
+    <string name="enable_gala">Habilitar GALA:</string>
+    <string name="enable_gala_feature">Habilitar Función GALA</string>
+    <string name="vol_step_interval">Salto de Volumen</string>
+    <string name="vol_step_every">Salto de Volumen cada:</string>
+    <string name="gps_speed_label">VELOCIDAD GPS</string>
+    <string name="current_gps_speed">Velocidad Actual GPS:</string>
+    <string name="vol_offset_label">COMPENSACIÓN DE VOL</string>
+    <string name="applied_vol_offset">Compensación de Volumen Aplicada:</string>
+    <string name="standstill_threshold">Umbral de Detención</string>
+    <string name="standstill_speed">Velocidad de Detención</string>
+    <string name="max_speed_limit">Límite Máximo de Velocidad</string>
+    <string name="max_speed_label">Velocidad Máxima:</string>
+    <string name="max_vol_adj">Ajuste Máximo de Volumen</string>
+    <string name="max_adjustment">Ajuste Máximo:</string>
+    <string name="sensitivity_settings">Ajustes de Sensibilidad</string>
+    <string name="simulation_debug">Simulación &amp; Depuración</string>
+    <string name="simulate_vehicle_speed">Simular Velocidad del Vehículo</string>
+    <string name="simulate_speed">Simular Velocidad:</string>
+
+    <!-- General -->
+    <string name="btn_apply">Aplicar</string>
+    <string name="btn_reapply">Reaplicar si se Restablece</string>
+    <string name="value_default">No Establecido</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="none">Ninguno</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Ajustes aplicados</string>
+    <string name="toast_exists">Ya existe</string>
+    <string name="toast_cannot_delete_last">No se puede eliminar el último preajuste</string>
+    <string name="toast_exported">Exportado</string>
+    <string name="toast_imported">Importado</string>
+    <string name="toast_sub_comp_limit">Compensación de Subwoofer limitada a 80Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Mantener wDSP en ejecución</string>
+    <string name="battery_dialog_message">Para garantizar que los ajustes de ecualización dinámica funcionen de forma fiable mientras se usan otras aplicaciones, wDSP debe estar exento de las optimizaciones de batería del sistema.</string>
+    <string name="btn_allow">Permitir</string>
+    <string name="btn_later">Después</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardware: Detectando…</string>
+    <string name="hw_demo_mode">Imposible conectar a MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Renombrar</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatización: %1$s</string>
+    <string name="active_player_fmt">Reproductor activo: %1$s</string>
+    <string name="current_associations">Asociaciones actuales:\n</string>
+    <string name="global_default_fmt">\nPredeterminado global: %1$s</string>
+    <string name="btn_assign">Asignar</string>
+    <string name="btn_set_default">Establecer predeterminado</string>
+    <string name="btn_unassign">Desasignar</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Preajuste 1</string>
+
+    <!-- Notification -->
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Curva F-M</string>
+    <string name="DLtab">Retardos</string>
+    <string name="OTtab">Otros</string>
+    <string name="GLtab">Velocidad</string>
+    <string name="lbl_pwr">Potencia:</string>
+
+</resources>

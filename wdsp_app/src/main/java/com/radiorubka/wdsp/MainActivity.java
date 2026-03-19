@@ -140,18 +140,18 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if ("com.example.wdsp.PRESET_CHANGED".equals(action)) {
+            if ("com.radiorubka.wdsp.PRESET_CHANGED".equals(action)) {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
                     Toast.makeText(MainActivity.this, "Auto applied preset: " + name, Toast.LENGTH_SHORT).show();
                     spinnerPresets.setSelection(presetNames.indexOf(name));
                 }
-            } else if ("com.example.wdsp.VOLUME_CHANGED".equals(action)) {
+            } else if ("com.radiorubka.wdsp.VOLUME_CHANGED".equals(action)) {
                 currentEffectiveVolume = intent.getIntExtra("volume", -1);
                 if (isFullyInitialized && findViewById(R.id.layout_fm_curve).getVisibility() == View.VISIBLE) {
                     updateFmVisualizer();
                 }
-            } else if ("com.example.wdsp.GALA_UPDATE".equals(action)) {
+            } else if ("com.radiorubka.wdsp.GALA_UPDATE".equals(action)) {
                 float speed = intent.getFloatExtra("speed", 0.0f);
                 int offset = intent.getIntExtra("waveOffset", 0);
                 if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
@@ -249,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
         if (isFullyInitialized) {
             refreshAllUiValues();
             SelectTab();
@@ -266,6 +267,12 @@ public class MainActivity extends AppCompatActivity {
                 spinnerPresets.setSelection(index, false);
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sendBroadcast(new Intent("com.radiorubka.wdsp.UI_INACTIVE").setPackage(getPackageName()));
     }
 
     private void SelectTab() {
@@ -345,9 +352,9 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerServiceReceiver() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction("com.example.wdsp.PRESET_CHANGED");
-        filter.addAction("com.example.wdsp.VOLUME_CHANGED");
-        filter.addAction("com.example.wdsp.GALA_UPDATE");
+        filter.addAction("com.radiorubka.wdsp.PRESET_CHANGED");
+        filter.addAction("com.radiorubka.wdsp.VOLUME_CHANGED");
+        filter.addAction("com.radiorubka.wdsp.GALA_UPDATE");
         
         registerReceiver(serviceReceiver, filter);
     }
@@ -437,8 +444,8 @@ public class MainActivity extends AppCompatActivity {
         seekGalaMinSpeed = findViewById(R.id.seek_gala_minspeed);
         tvGalaMinSpeedVal = findViewById(R.id.tv_gala_minspeed_val);
         tvGalaOffset = findViewById(R.id.tv_gala_offset);
-        seekGalaMaxSpeed = findViewById(R.id.seek_gala_maxspeed);
-        tvGalaMaxSpeedVal = findViewById(R.id.tv_gala_maxspeed_val);
+//        seekGalaMaxSpeed = findViewById(R.id.seek_gala_maxspeed);
+//        tvGalaMaxSpeedVal = findViewById(R.id.tv_gala_maxspeed_val);
         seekSimulateSpeed = findViewById(R.id.seek_simulate_speed);
         tvSimulateSpeedVal = findViewById(R.id.tv_simulate_speed_val);
         seekGalaMaxAdj = findViewById(R.id.seek_gala_max_adj);
@@ -459,7 +466,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendUiSignal(boolean active) {
-        Intent intent = new Intent(active ? "com.example.wdsp.UI_ACTIVE" : "com.example.wdsp.UI_INACTIVE");
+        Intent intent = new Intent(active ? "com.radiorubka.wdsp.UI_ACTIVE" : "com.radiorubka.wdsp.UI_INACTIVE");
         intent.setPackage(getPackageName());
         intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         sendBroadcast(intent);
@@ -601,17 +608,18 @@ public class MainActivity extends AppCompatActivity {
 
         int currentVal = prefs.getInt(key, 0);
 
-        if (control == 101) {
-            currentVal = Math.max(-100, currentVal - 1); // Example range -15 to +15
+        if (control == 102) {
+            currentVal = Math.max(-3, currentVal - 1); // Example range -15 to +15
         }
-        else if (control == 102) {
-            currentVal = Math.min(100, currentVal + 1);
+        else if (control == 101) {
+            currentVal = Math.min(9, currentVal + 1);
         }
         else {
             currentVal = control;
         }
 
-        tvPowerDb.setText(getString(R.string.lbl_db_pwr, currentVal));
+        tvPowerDb.setText(String.valueOf(-currentVal));
+
         prefs.edit().putInt(key, currentVal).apply();
     }
 
@@ -903,7 +911,7 @@ public class MainActivity extends AppCompatActivity {
             e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
             e.putInt(name + "_gala_increment", seekGalaInc.getProgress());
             e.putInt(name + "_gala_min_speed", seekGalaMinSpeed.getProgress());
-            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
+//            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
             e.putInt(name + "_gala_max_adj", seekGalaMaxAdj.getProgress());
         }
         e.apply();
@@ -958,10 +966,13 @@ public class MainActivity extends AppCompatActivity {
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, seekGalaInc.getProgress() + 5));
             seekGalaMinSpeed.setProgress(p.getInt(name + "_gala_min_speed", 0));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMinSpeed.getProgress() * 5));
-            seekGalaMaxSpeed.setProgress(p.getInt(name + "_gala_max_speed", 30));
-            tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMaxSpeed.getProgress() * 5));
+//            seekGalaMaxSpeed.setProgress(p.getInt(name + "_gala_max_speed", 30));
+//            tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMaxSpeed.getProgress() * 5));
             seekGalaMaxAdj.setProgress(p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
+
+            // Power
+            tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 12)));
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer(); applyAllToMcu();
     }
@@ -1111,12 +1122,12 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
                 if (sb == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
                 else if (sb == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
-                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
+//                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
                 else if (sb == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
                 else if (sb == seekSimulateSpeed) {
                     tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
                     if (u) {
-                        Intent intent = new Intent("com.example.wdsp.SIMULATE_SPEED");
+                        Intent intent = new Intent("com.radiorubka.wdsp.SIMULATE_SPEED");
                         intent.putExtra("speed", (float) p);
                         sendBroadcast(intent);
                     }
@@ -1128,7 +1139,7 @@ public class MainActivity extends AppCompatActivity {
         };
         seekGalaInc.setOnSeekBarChangeListener(galal);
         seekGalaMinSpeed.setOnSeekBarChangeListener(galal);
-        seekGalaMaxSpeed.setOnSeekBarChangeListener(galal);
+//        seekGalaMaxSpeed.setOnSeekBarChangeListener(galal);
         seekSimulateSpeed.setOnSeekBarChangeListener(galal);
         seekGalaMaxAdj.setOnSeekBarChangeListener(galal);
     }
@@ -1197,7 +1208,7 @@ public class MainActivity extends AppCompatActivity {
             switchGalaEnable.setChecked(false);
             seekGalaInc.setProgress(15);
             seekGalaMinSpeed.setProgress(0);
-            seekGalaMaxSpeed.setProgress(30);
+//            seekGalaMaxSpeed.setProgress(30);
             seekGalaMaxAdj.setProgress(12);
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer();
