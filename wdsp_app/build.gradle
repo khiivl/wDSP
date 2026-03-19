@@ -47,5 +47,4 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation libs.core.ktx.v1131
-    implementation libs.multidex
 }
