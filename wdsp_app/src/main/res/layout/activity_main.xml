@@ -767,7 +767,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/rear_right"
                                 app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:ignore="TooManyViews" />
 
                             <TextView
                                 android:id="@+id/tv_delay_rr_val"
