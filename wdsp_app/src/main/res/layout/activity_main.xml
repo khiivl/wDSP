@@ -7,20 +7,6 @@
     android:background="@drawable/app_background"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/tv_hw_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:alpha="1"
-        android:text="@string/hw_detecting"
-        android:textColor="@color/cyan_custom"
-        android:textSize="@dimen/text_size_header"
-        android:elevation="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Container for different screens -->
     <FrameLayout
         android:layout_width="0dp"
