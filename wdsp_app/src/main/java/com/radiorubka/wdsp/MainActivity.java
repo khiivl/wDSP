@@ -503,12 +503,11 @@ public class MainActivity extends AppCompatActivity {
                     if (!isUpdatingUi) {
                         updateDbLabel(idx, p);
                         updateVisualizer();
+                        autoSaveCurrent();
                     }
                 }
                 @Override public void onStartTrackingTouch(SeekBar sb) {}
-                @Override public void onStopTrackingTouch(SeekBar sb) {
-                    if (!isUpdatingUi) autoSaveCurrent();
-                }
+                @Override public void onStopTrackingTouch(SeekBar sb) {}
             });
 
             layout.addView(q); layout.addView(db); layout.addView(label);
