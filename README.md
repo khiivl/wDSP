@@ -5,7 +5,7 @@ Compatible with vertical and horizontal head units.
 
 Telegram group for discussion: https://t.me/wDSPapp
 
-If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka
+If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp
 
 ----------------------------------------------------------------------------------------------------------------------
 
