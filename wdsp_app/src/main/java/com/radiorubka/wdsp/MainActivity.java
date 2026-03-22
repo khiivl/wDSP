@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private final Runnable eqMcuRunnable = this::updateEqMcu;
+//    private final Runnable eqMcuRunnable = this::updateEqMcu;
 
     private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
@@ -161,10 +161,10 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private final ActivityResultLauncher<Intent> exportLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) savePresetsToFile(r.getData().getData()); });
+            new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) saveCurrentPresetToFile(r.getData().getData()); });
 
     private final ActivityResultLauncher<Intent> importLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) loadPresetsFromFile(r.getData().getData()); });
+            new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) loadPresetFromFile(r.getData().getData()); });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -375,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_pwr_vol_plus).setOnClickListener(v -> setPowerVolume(102));
         findViewById(R.id.btn_apply).setOnClickListener(v -> {
             autoSaveCurrent();
-            applyAllToMcu();
+//            applyAllToMcu();
             Toast.makeText(this, R.string.toast_settings_applied, Toast.LENGTH_SHORT).show();
         });
         findViewById(R.id.btn_auto_preset).setOnClickListener(v -> showAutoPresetDialog());
@@ -472,15 +472,15 @@ public class MainActivity extends AppCompatActivity {
         sendBroadcast(intent);
     }
 
-    private void applyAllToMcu() {
-        if (!isFullyInitialized) return;
-        handler.post(this::updateEqMcu);
-        handler.postDelayed(this::updateSubMcu, 50);
-        handler.postDelayed(this::updateBassMcu, 100);
-        handler.postDelayed(this::updateFaderMcu, 150);
-        handler.postDelayed(this::updateDelayMcu, 200);
-        handler.postDelayed(this::updateDelay1Mcu, 250);
-    }
+//    private void applyAllToMcu() {
+//        if (!isFullyInitialized) return;
+//        handler.post(this::updateEqMcu);
+//        handler.postDelayed(this::updateSubMcu, 50);
+//        handler.postDelayed(this::updateBassMcu, 100);
+//        handler.postDelayed(this::updateFaderMcu, 150);
+//        handler.postDelayed(this::updateDelayMcu, 200);
+//        handler.postDelayed(this::updateDelay1Mcu, 250);
+//    }
 
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
@@ -506,7 +506,13 @@ public class MainActivity extends AppCompatActivity {
             q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize); 
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
             q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
-            q.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { updateVisualizer(); updateEqMcu(); autoSaveCurrent(); } });
+            q.setOnCheckedChangeListener((bv, checked) -> {
+                if (!isUpdatingUi) {
+                    updateVisualizer();
+//                    updateEqMcu();
+                    autoSaveCurrent();
+                }
+            });
 
             db.setText("0"); db.setTextColor(accentColor); 
             db.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
@@ -538,10 +544,10 @@ public class MainActivity extends AppCompatActivity {
                     if (!isUpdatingUi) {
                         updateDbLabel(idx, p);
                         updateVisualizer();
-                        if (u) {
-                            handler.removeCallbacks(eqMcuRunnable);
-                            handler.postDelayed(eqMcuRunnable, 50);
-                        }
+//                        if (u) {
+//                            handler.removeCallbacks(eqMcuRunnable);
+//                            handler.postDelayed(eqMcuRunnable, 50);
+//                        }
                     }
                 }
                 @Override public void onStartTrackingTouch(SeekBar sb) {}
@@ -577,7 +583,9 @@ public class MainActivity extends AppCompatActivity {
             s.setProgress(n); updateDbLabel(i, n);
         }
         isUpdatingUi = false;
-        updateVisualizer(); updateEqMcu(); autoSaveCurrent();
+        updateVisualizer();
+//        updateEqMcu();
+        autoSaveCurrent();
     }
 
     private void resetAllBands() {
@@ -594,7 +602,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Refresh the graph, the hardware, and save the state
         updateVisualizer();
-        updateEqMcu();
+//        updateEqMcu();
         autoSaveCurrent();
     }
 
@@ -629,7 +637,10 @@ public class MainActivity extends AppCompatActivity {
         spinnerSubFreq.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 if (isFullyInitialized && switchFmSubComp.isChecked() && pos > 5) { spinnerSubFreq.setSelection(5); Toast.makeText(MainActivity.this, R.string.toast_sub_comp_limit, Toast.LENGTH_SHORT).show(); return; }
-                if (!isUpdatingUi) { autoSaveCurrent(); updateSubMcu(); }
+                if (!isUpdatingUi) {
+                    autoSaveCurrent();
+//                    updateSubMcu();
+                }
                 String freqString = SUB_FREQS[pos];
                 Globals.currentSubFreqHz = Integer.parseInt(freqString);
             }
@@ -639,7 +650,10 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean u) { 
                 String text = "+" + p;
                 tvSubDb.setText(text); 
-                if (u && !isUpdatingUi) { autoSaveCurrent(); updateSubMcu(); } 
+                if (u && !isUpdatingUi) {
+                    autoSaveCurrent();
+//                    updateSubMcu();
+                }
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -650,7 +664,12 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> bbAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, BASS_BOOST_FREQS) {{ setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); }};
         spinnerBassFreqFront.setAdapter(bbAdapter); spinnerBassFreqRear.setAdapter(bbAdapter);
         AdapterView.OnItemSelectedListener sl = new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) { if (!isUpdatingUi) { autoSaveCurrent(); updateBassMcu(); } }
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                if (!isUpdatingUi) {
+                    autoSaveCurrent();
+//                    updateBassMcu();
+                }
+            }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         };
         spinnerBassFreqFront.setOnItemSelectedListener(sl); spinnerBassFreqRear.setOnItemSelectedListener(sl);
@@ -661,7 +680,10 @@ public class MainActivity extends AppCompatActivity {
                 else if (sb == seekBassBoostFront) tvBassBoostFrontDb.setText(getString(R.string.lbl_db_fmt, p));
                 else if (sb == seekBassFilterRear) tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
                 else if (sb == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
-                if (u && !isUpdatingUi) { autoSaveCurrent(); updateBassMcu(); }
+                if (u && !isUpdatingUi) {
+                    autoSaveCurrent();
+//                    updateBassMcu();
+                }
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -671,12 +693,21 @@ public class MainActivity extends AppCompatActivity {
 
         seekFaderLr.setMax(24); seekFaderFr.setMax(24);
         SeekBar.OnSeekBarChangeListener fl = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) { updateFaderLabels(); if (u && !isUpdatingUi) { autoSaveCurrent(); updateFaderMcu(); } }
+            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
+                updateFaderLabels();
+                if (u && !isUpdatingUi) {
+                    autoSaveCurrent();
+//                    updateFaderMcu();
+                } }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
         };
         seekFaderLr.setOnSeekBarChangeListener(fl); seekFaderFr.setOnSeekBarChangeListener(fl);
-        switchLoud.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); updateFaderMcu(); } });
+        switchLoud.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
+                autoSaveCurrent();
+//                updateFaderMcu();
+            } });
     }
 
     private void setupDelayControls() {
@@ -686,14 +717,20 @@ public class MainActivity extends AppCompatActivity {
                 if (sb == seekDelayFl) tvDelayFlVal.setText(val); else if (sb == seekDelayFr) tvDelayFrVal.setText(val);
                 else if (sb == seekDelayRl) tvDelayRlVal.setText(val); else if (sb == seekDelayRr) tvDelayRrVal.setText(val);
                 else if (sb == seekDelaySub) tvDelaySubVal.setText(val);
-                if (u && !isUpdatingUi) updateDelayMcu();
+//                if (u && !isUpdatingUi) updateDelayMcu();
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) { if (!isUpdatingUi) autoSaveCurrent(); }
         };
         seekDelayFl.setOnSeekBarChangeListener(dl); seekDelayFr.setOnSeekBarChangeListener(dl);
         seekDelayRl.setOnSeekBarChangeListener(dl); seekDelayRr.setOnSeekBarChangeListener(dl); seekDelaySub.setOnSeekBarChangeListener(dl);
-        switchPreciseEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { if (checked) switchLegacyEnable.setChecked(false); updateDelayMcu(); autoSaveCurrent(); } });
+        switchPreciseEnable.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
+                if (checked) switchLegacyEnable.setChecked(false);
+//                updateDelayMcu();
+                autoSaveCurrent();
+            }
+        });
     }
 
     private void setupDelay1Controls() {
@@ -708,14 +745,20 @@ public class MainActivity extends AppCompatActivity {
                     if (sb == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (sb == seekDelay1Fr) tvDelay1FrVal.setText(val);
                     else if (sb == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (sb == seekDelay1Rr) tvDelay1RrVal.setText(val);
                 }
-                if (u && !isUpdatingUi) updateDelay1Mcu();
+//                if (u && !isUpdatingUi) updateDelay1Mcu();
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) { if (!isUpdatingUi) autoSaveCurrent(); }
         };
         seekDelay1Fl.setOnSeekBarChangeListener(dl); seekDelay1Fr.setOnSeekBarChangeListener(dl);
         seekDelay1Rl.setOnSeekBarChangeListener(dl); seekDelay1Rr.setOnSeekBarChangeListener(dl); seekDelay1RSSE.setOnSeekBarChangeListener(dl);
-        switchLegacyEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { if (checked) switchPreciseEnable.setChecked(false); updateDelay1Mcu(); autoSaveCurrent(); } });
+        switchLegacyEnable.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
+                if (checked) switchPreciseEnable.setChecked(false);
+//                updateDelay1Mcu();
+                autoSaveCurrent();
+            }
+        });
     }
 
     private void setupFmControls() {
@@ -723,16 +766,34 @@ public class MainActivity extends AppCompatActivity {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
-                updateEqMcu();
-                updateSubMcu();
+//                updateEqMcu();
+//                updateSubMcu();
             }
         });
-        switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); updateFmVisualizer(); updateEqMcu(); } });
-        switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { if (checked && spinnerSubFreq.getSelectedItemPosition() > 5) spinnerSubFreq.setSelection(5); autoSaveCurrent(); updateFmVisualizer(); updateEqMcu(); updateSubMcu(); } });
+        switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
+                autoSaveCurrent();
+                updateFmVisualizer();
+//                updateEqMcu();
+            }
+        });
+        switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
+                if (checked && spinnerSubFreq.getSelectedItemPosition() > 5) spinnerSubFreq.setSelection(5);
+                autoSaveCurrent();
+                updateFmVisualizer();
+//                updateEqMcu();
+//                updateSubMcu();
+            }
+        });
         SeekBar.OnSeekBarChangeListener fml = new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
                 if (sb == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
-                if (u && !isUpdatingUi) { updateFmVisualizer(); updateEqMcu(); updateSubMcu(); }
+                if (u && !isUpdatingUi) {
+                    updateFmVisualizer();
+//                    updateEqMcu();
+//                    updateSubMcu();
+                }
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) { autoSaveCurrent(); }
@@ -977,84 +1038,87 @@ public class MainActivity extends AppCompatActivity {
             // Power
             tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
         }
-        isUpdatingUi = false; updateVisualizer(); updateFmVisualizer(); applyAllToMcu();
+        isUpdatingUi = false; updateVisualizer();
+        updateFmVisualizer();
+//        applyAllToMcu();
     }
 
-    private void updateEqMcu() {
-        if (!isFullyInitialized) return;
-        float[] offs = calculateFmOffsets(); byte[] data = new byte[12]; data[0] = (byte) 0x80;
-        for (int i = 0; i < 8; i++) {
-            int b1 = i * 2; float db1 = (gainSliders.get(b1).getProgress() - 6) * 2 + offs[b1];
-            int b2 = i * 2 + 1; float db2 = (gainSliders.get(b2).getProgress() - 6) * 2 + offs[b2];
-            data[i+1] = (byte) ((AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db2/2f)+6)))] << 4) | (AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db1/2f)+6)))] & 0x0F));
-        }
-        data[9] = calculateQByte(0); data[10] = calculateQByte(8); data[11] = 0x00; sendEqToHardware(data);
-    }
+//    private void updateEqMcu() {
+//        if (!isFullyInitialized) return;
+//        float[] offs = calculateFmOffsets(); byte[] data = new byte[12]; data[0] = (byte) 0x80;
+//        for (int i = 0; i < 8; i++) {
+//            int b1 = i * 2; float db1 = (gainSliders.get(b1).getProgress() - 6) * 2 + offs[b1];
+//            int b2 = i * 2 + 1; float db2 = (gainSliders.get(b2).getProgress() - 6) * 2 + offs[b2];
+//            data[i+1] = (byte) ((AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db2/2f)+6)))] << 4) | (AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db1/2f)+6)))] & 0x0F));
+//        }
+//        data[9] = calculateQByte(0); data[10] = calculateQByte(8); data[11] = 0x00; sendEqToHardware(data);
+//    }
+//
+//    private void updateSubMcu() {
+//        if (!isFullyInitialized) return;
+//        byte[] d = new byte[2]; d[0] = (byte) 0x8B;
+//        int g = Math.max(0, Math.min(12, Math.round(seekSubGain.getProgress() + currentFmSubOffset)));
+//        d[1] = (byte) ((spinnerSubFreq.getSelectedItemPosition() << 4) | (g & 0x0F)); sendEqToHardware(d);
+//    }
+//
+//    private void updateBassMcu() {
+//        if (!isFullyInitialized) return;
+//        byte[] d = new byte[4]; d[0] = (byte) 0x88;
+//        d[1] = (byte) (((spinnerBassFreqFront.getSelectedItemPosition() + 8) << 4) | (seekBassBoostFront.getProgress() & 0x0F));
+//        d[2] = (byte) (((spinnerBassFreqRear.getSelectedItemPosition() + 8) << 4) | (seekBassBoostRear.getProgress() & 0x0F));
+//        d[3] = (byte) ((seekBassFilterFront.getProgress() << 4) | (seekBassFilterRear.getProgress() & 0x0F)); sendEqToHardware(d);
+//    }
+//
+//    private void updateFaderMcu() {
+//        if (!isFullyInitialized) return;
+//        byte[] d = new byte[4]; d[0] = (byte) 0x81; d[1] = (byte) (seekFaderLr.getProgress() & 0xFF); d[2] = (byte) (seekFaderFr.getProgress() & 0xFF); d[3] = (byte) (switchLoud.isChecked() ? 1 : 0); sendEqToHardware(d);
+//    }
+//
+//    private void updateDelayMcu() {
+//        if (!isFullyInitialized) return;
+//        byte[] d = new byte[6]; d[0] = (byte) 0x8C;
+//        if (switchPreciseEnable.isChecked()) {
+//            d[1] = (byte) ((seekDelayFl.getProgress() * 5) & 0xFF); d[2] = (byte) ((seekDelayFr.getProgress() * 5) & 0xFF);
+//            d[3] = (byte) ((seekDelayRl.getProgress() * 5) & 0xFF); d[4] = (byte) ((seekDelayRr.getProgress() * 5) & 0xFF); d[5] = (byte) ((seekDelaySub.getProgress() * 5) & 0xFF);
+//        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
+//    }
+//
+//    private void updateDelay1Mcu() {
+//        if (!isFullyInitialized) return;
+//        byte[] d = new byte[6]; d[0] = (byte) 0x89;
+//        if (switchLegacyEnable.isChecked()) {
+//            d[1] = (byte) (138 + (seekDelay1RSSE.getProgress() - 10)); d[2] = (byte) (seekDelay1Fl.getProgress() & 0xFF);
+//            d[3] = (byte) (seekDelay1Fr.getProgress() & 0xFF); d[4] = (byte) (seekDelay1Rl.getProgress() & 0xFF); d[5] = (byte) (seekDelay1Rr.getProgress() & 0xFF);
+//        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
+//    }
 
-    private void updateSubMcu() {
-        if (!isFullyInitialized) return;
-        byte[] d = new byte[2]; d[0] = (byte) 0x8B;
-        int g = Math.max(0, Math.min(12, Math.round(seekSubGain.getProgress() + currentFmSubOffset)));
-        d[1] = (byte) ((spinnerSubFreq.getSelectedItemPosition() << 4) | (g & 0x0F)); sendEqToHardware(d);
-    }
+    private byte calculateQByte(int off) {
+        int r = 0; for (int i = 0; i < 8; i++) if (qSwitches.get(off+i).isChecked()) r |= (1 << i); return (byte) r; }
 
-    private void updateBassMcu() {
-        if (!isFullyInitialized) return;
-        byte[] d = new byte[4]; d[0] = (byte) 0x88;
-        d[1] = (byte) (((spinnerBassFreqFront.getSelectedItemPosition() + 8) << 4) | (seekBassBoostFront.getProgress() & 0x0F));
-        d[2] = (byte) (((spinnerBassFreqRear.getSelectedItemPosition() + 8) << 4) | (seekBassBoostRear.getProgress() & 0x0F));
-        d[3] = (byte) ((seekBassFilterFront.getProgress() << 4) | (seekBassFilterRear.getProgress() & 0x0F)); sendEqToHardware(d);
-    }
-
-    private void updateFaderMcu() {
-        if (!isFullyInitialized) return;
-        byte[] d = new byte[4]; d[0] = (byte) 0x81; d[1] = (byte) (seekFaderLr.getProgress() & 0xFF); d[2] = (byte) (seekFaderFr.getProgress() & 0xFF); d[3] = (byte) (switchLoud.isChecked() ? 1 : 0); sendEqToHardware(d);
-    }
-
-    private void updateDelayMcu() {
-        if (!isFullyInitialized) return;
-        byte[] d = new byte[6]; d[0] = (byte) 0x8C;
-        if (switchPreciseEnable.isChecked()) {
-            d[1] = (byte) ((seekDelayFl.getProgress() * 5) & 0xFF); d[2] = (byte) ((seekDelayFr.getProgress() * 5) & 0xFF);
-            d[3] = (byte) ((seekDelayRl.getProgress() * 5) & 0xFF); d[4] = (byte) ((seekDelayRr.getProgress() * 5) & 0xFF); d[5] = (byte) ((seekDelaySub.getProgress() * 5) & 0xFF);
-        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
-    }
-
-    private void updateDelay1Mcu() {
-        if (!isFullyInitialized) return;
-        byte[] d = new byte[6]; d[0] = (byte) 0x89;
-        if (switchLegacyEnable.isChecked()) {
-            d[1] = (byte) (138 + (seekDelay1RSSE.getProgress() - 10)); d[2] = (byte) (seekDelay1Fl.getProgress() & 0xFF);
-            d[3] = (byte) (seekDelay1Fr.getProgress() & 0xFF); d[4] = (byte) (seekDelay1Rl.getProgress() & 0xFF); d[5] = (byte) (seekDelay1Rr.getProgress() & 0xFF);
-        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
-    }
-
-    private byte calculateQByte(int off) { int r = 0; for (int i = 0; i < 8; i++) if (qSwitches.get(off+i).isChecked()) r |= (1 << i); return (byte) r; }
-
-    @SuppressLint("PrivateApi")
-    private void sendEqToHardware(byte[] data) {
-        if (data == null || data.length == 0) return;
-        byte cmd = data[0];
-        byte[] cached = mcuCache.get(cmd);
-        if (cached == null || !Arrays.equals(cached, data)) {
-            mcuCache.put(cmd, data.clone());
-            try {
-                if (mcuManager == null) {
-                    @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
-                    if (b != null) {
-                        mcuManager = Class.forName("android.qf.mcu.IMcuManager$Stub").getMethod("asInterface", IBinder.class).invoke(null, b);
-                    }
-                    if (mcuManager != null) {
-                        setEqMethod = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
-                    }
-                }
-                if (mcuManager == null || setEqMethod == null) return;
-                setEqMethod.invoke(mcuManager, (Object) data);
-            } catch (Exception e) {
-                Log.e(TAG, "MCU Error: " + e.getMessage());
-            }
-        }
-    }
+//    @SuppressLint("PrivateApi")
+//    private void sendEqToHardware(byte[] data) {
+//        if (data == null || data.length == 0) return;
+//        byte cmd = data[0];
+//        byte[] cached = mcuCache.get(cmd);
+//        if (cached == null || !Arrays.equals(cached, data)) {
+//            mcuCache.put(cmd, data.clone());
+//            try {
+//                if (mcuManager == null) {
+//                    @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
+//                    if (b != null) {
+//                        mcuManager = Class.forName("android.qf.mcu.IMcuManager$Stub").getMethod("asInterface", IBinder.class).invoke(null, b);
+//                    }
+//                    if (mcuManager != null) {
+//                        setEqMethod = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
+//                    }
+//                }
+//                if (mcuManager == null || setEqMethod == null) return;
+//                setEqMethod.invoke(mcuManager, (Object) data);
+//            } catch (Exception e) {
+//                Log.e(TAG, "MCU Error: " + e.getMessage());
+//            }
+//        }
+//    }
 
     private void setupNavigation() {
         BottomNavigationView bn = findViewById(R.id.bottom_navigation);
@@ -1164,34 +1228,107 @@ public class MainActivity extends AppCompatActivity {
     private void exportPresets() { String s = (String) spinnerPresets.getSelectedItem(); exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s != null ? s : "wDSP_Presets") + ".json")); }
     private void importPresets() {
         importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
-    private void savePresetsToFile(Uri u) {
+    private void saveCurrentPresetToFile(Uri u) {
         try (OutputStream os = getContentResolver().openOutputStream(u)) {
-            assert os != null;
-            os.write(new Gson().toJson(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getAll()).getBytes());
+            if (os == null) return;
+
+            // 1. Get the name of the currently selected preset
+            String currentPreset = (String) spinnerPresets.getSelectedItem();
+            if (currentPreset == null) return;
+
+            // Get the preferences into prefs
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+            // Save all the prefs entries to a map where string is the name of the pref and ? is a wildcard for all data types.
+            Map<String, ?> allEntries = prefs.getAll();
+
+            // Creating a placeholder map for filtered data
+            Map<String, Object> filteredData = new HashMap<>();
+
+            // 2. Add metadata so the importer knows this is a single preset
+            filteredData.put("is_single_preset", true);
+            filteredData.put("preset_name_label", currentPreset);
+
+            // 3. Only grab keys that start with the current preset's name
+            // (e.g., "Music_g0", "Music_sub_g", etc.)
+            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                if (entry.getKey().startsWith(currentPreset + "_")) {
+                    filteredData.put(entry.getKey(), entry.getValue());
+                }
+            }
+
+            // 4. Save only this filtered map to the file
+            os.write(new Gson().toJson(filteredData).getBytes());
             Toast.makeText(this, R.string.toast_exported, Toast.LENGTH_SHORT).show();
         }
         catch (IOException e) {
             Log.e(TAG, "Export error", e);
-        } }
-    private void loadPresetsFromFile(Uri u) {
-        try (InputStream is = getContentResolver().openInputStream(u); BufferedReader r = new BufferedReader(new InputStreamReader(is))) {
+            Toast.makeText(this, "Export failed", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void loadPresetFromFile(Uri u) {
+        try (InputStream is = getContentResolver().openInputStream(u);
+             BufferedReader r = new BufferedReader(new InputStreamReader(is))) {
+
+            // 1. Read the file into a String
             StringBuilder sb = new StringBuilder();
-            String l; while ((l = r.readLine()) != null) sb.append(l);
-            Map<String, Object> im = new Gson().fromJson(sb.toString(), new TypeToken<Map<String, Object>>() {}.getType());
-            SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear();
-            for (Map.Entry<String, Object> ent : im.entrySet()) {
-                Object v = ent.getValue(); String k = ent.getKey();
-                if (v instanceof Boolean) e.putBoolean(k, (Boolean) v);
-                else if (v instanceof String) e.putString(k, (String) v);
-                else if (v instanceof Double) { double d = (Double) v;
-                    if (d == Math.rint(d)) e.putInt(k, (int) d);
-                    else e.putFloat(k, (float) d); }
-                else if (v instanceof List) { Set<String> s = new HashSet<>(); for (Object item : (List<?>) v) s.add(item.toString()); e.putStringSet(k, s); }
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line);
+
+            // 2. Parse JSON into a Map
+            Map<String, Object> importedMap = new Gson().fromJson(sb.toString(), new TypeToken<Map<String, Object>>() {}.getType());
+
+            // 3. Get the Preset Name from metadata
+            String newPresetName = (String) importedMap.get("preset_name_label");
+            if (newPresetName == null) newPresetName = "Imported_" + System.currentTimeMillis() / 1000;
+
+            // 4. Prepare to save (NOTICE: No .clear() here!)
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            // 5. Import the settings keys
+            for (Map.Entry<String, Object> entry : importedMap.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+
+                // Skip metadata keys
+                if (key.equals("is_single_preset") || key.equals("preset_name_label")) continue;
+
+                // Save the value based on its type
+                if (value instanceof Boolean) {
+                    editor.putBoolean(key, (Boolean) value);
+                } else if (value instanceof Double) {
+                    // JSON numbers are Doubles; convert to Int or Float
+                    double d = (Double) value;
+                    if (d == Math.rint(d)) editor.putInt(key, (int) d);
+                    else editor.putFloat(key, (float) d);
+                } else if (value instanceof String) {
+                    editor.putString(key, (String) value);
+                }
             }
-            e.apply();
-            setupPresets();
-            Toast.makeText(this, R.string.toast_imported, Toast.LENGTH_SHORT).show();
-        } catch (Exception e) { Log.e(TAG, "Import error", e); }
+
+            // 6. Update the "preset_names" list so the UI shows the new preset
+            if (!presetNames.contains(newPresetName)) {
+                presetNames.add(newPresetName);
+                Collections.sort(presetNames);
+                editor.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
+            }
+
+            // 7. Save and Refresh
+            editor.apply();
+            setupPresets();           // Reloads the spinner list
+            ensureCallPresetExists(); // Safety check
+
+            // 8. Auto-select the newly imported preset
+            int newIndex = presetNames.indexOf(newPresetName);
+            if (newIndex >= 0) spinnerPresets.setSelection(newIndex);
+
+            Toast.makeText(this, getString(R.string.toast_imported) + ": " + newPresetName, Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Import error", e);
+            Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void updateFaderLabels() {

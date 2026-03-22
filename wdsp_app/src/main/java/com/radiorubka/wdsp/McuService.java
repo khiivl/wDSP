@@ -127,11 +127,40 @@ public class McuService extends Service implements LocationListener {
                 loadPlayerMap();
             } else if (key.equals(PREF_LAST_SELECTED)) {
                 syncPreset(false);
-            } else {
-                if (currentPresetName != null && key.startsWith(currentPresetName)) {
-                    loadPresetData(currentPresetName);
-                    applyCurrentSettings();
+            } else if (currentPresetName != null && key.startsWith(currentPresetName)) {
+
+                // Reload the data first
+                loadPresetData(currentPresetName);
+
+                Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
+
+                // 1. Check for Subwoofer first (specific)
+                if (key.contains("_sub")) {
+                    updateSubwoofer(VolumeHelper.getVolume());
                 }
+                // 2. Then check for EQ bands or FM settings (less specific)
+                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm")) {
+                    updateEqWithFm(VolumeHelper.getVolume());
+                }
+                else if (key.contains("_power_vol")) {
+                    setPowerAmpVol();
+                }
+                else if (key.contains("_d_")) {
+                    applySpatialDelays();
+                }
+                else if (key.contains("_d1_") || key.contains("_rsse_")) {
+                    applySurroundDelays();
+                }
+                else if (key.contains("_bb_") || key.contains("_bf_")) {
+                    applyBassBoost();
+                }
+                else if (key.contains("_f_") || key.contains("_loud")) {
+                    applyFaderLoud();
+                }
+//                else {
+//                    Log.d(TAG, "[TurboSender2000] ApplyStaticSettings called: " + key);
+//                    applyStaticSettings();
+//                }
             }
         });
     };
@@ -368,7 +397,7 @@ public class McuService extends Service implements LocationListener {
 
         // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
         // immediately force the volume to (Base + Current Offset).
-        if (wasMuted) {
+        if (wasMuted && rawOffset != 0) {
             wasMuted = false;
             if (baseStandstillVolume != -1) {
                 int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
@@ -425,7 +454,9 @@ public class McuService extends Service implements LocationListener {
 
         if (hardwareVol != lastVolumeRead) {
             lastVolumeRead = hardwareVol;
-            applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
+            if (cachedFmEn) {
+                applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
+            }
             if (isUiVisible) {
                 volumeChangedIntent.putExtra("volume", hardwareVol);
                 sendBroadcast(volumeChangedIntent);
@@ -551,19 +582,21 @@ public class McuService extends Service implements LocationListener {
         return 0;
     }
 
-    private void applyStaticSettings() {
-        if (currentPresetName == null) return;
-        
-        sendToHardware(new byte[]{(byte) 0x88, 
-            (byte) (((prefs.getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
-            (byte) (((prefs.getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
-            (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+    private void applyBassBoost() {
+        sendToHardware(new byte[]{(byte) 0x88,
+                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
+                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
+                (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+    }
 
-        sendToHardware(new byte[]{(byte) 0x81, 
-            (byte) (prefs.getInt(currentPresetName + "_f_lr", 12) & 0xFF),
-            (byte) (prefs.getInt(currentPresetName + "_f_fr", 12) & 0xFF),
-            (byte) (prefs.getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
+    private void applyFaderLoud() {
+        sendToHardware(new byte[]{(byte) 0x81,
+                (byte) (prefs.getInt(currentPresetName + "_f_lr", 12) & 0xFF),
+                (byte) (prefs.getInt(currentPresetName + "_f_fr", 12) & 0xFF),
+                (byte) (prefs.getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
+    }
 
+    private void applySpatialDelays() {
         if (prefs.getBoolean(currentPresetName + "_d_en", false)) {
             byte[] d8c = new byte[6]; d8c[0] = (byte) 0x8C;
             d8c[1] = (byte) ((prefs.getInt(currentPresetName + "_d_fl", 0) * 5) & 0xFF);
@@ -573,7 +606,13 @@ public class McuService extends Service implements LocationListener {
             d8c[5] = (byte) ((prefs.getInt(currentPresetName + "_d_sub", 0) * 5) & 0xFF);
             sendToHardware(d8c);
         }
+        else {
+            byte[] d8c = new byte[6]; d8c[0] = (byte) 0x8C;
+            sendToHardware(d8c);
+        }
+    }
 
+    private void applySurroundDelays() {
         if (prefs.getBoolean(currentPresetName + "_d1_en", false)) {
             byte[] d89 = new byte[6]; d89[0] = (byte) 0x89;
             d89[1] = (byte) (138 + (prefs.getInt(currentPresetName + "_rsse_val", 10) - 10));
@@ -583,6 +622,22 @@ public class McuService extends Service implements LocationListener {
             d89[5] = (byte) (prefs.getInt(currentPresetName + "_d1_rr", 0) & 0xFF);
             sendToHardware(d89);
         }
+        else {
+            byte[] d89 = new byte[6]; d89[0] = (byte) 0x89;
+            sendToHardware(d89);
+        }
+    }
+
+    private void applyStaticSettings() {
+        if (currentPresetName == null) return;
+        
+        applyBassBoost();
+
+        applyFaderLoud();
+
+        applySpatialDelays();
+
+        applySurroundDelays();
 
         setPowerAmpVol();
     }
@@ -646,6 +701,34 @@ public class McuService extends Service implements LocationListener {
     private void sendToHardware(byte[] data) {
         if (data == null || data.length == 0) return;
         byte cmd = data[0];
+
+        // TurboSender2000
+        String turboSender = java.util.stream.IntStream.range(0, data.length)
+                .mapToObj(i -> String.format("%02X", data[i]))
+                .collect(java.util.stream.Collectors.joining(" "));
+
+        String turboSenderType = "[NO_IDEA_WHAT_THIS_IS]: ";
+        if (cmd == (byte) 0x8B) {
+            turboSenderType = "[SUB]: ";
+        }
+        if (cmd == (byte) 0x88) {
+            turboSenderType = "[BASS_BOOST]: ";
+        }
+        if (cmd == (byte) 0x81) {
+            turboSenderType = "[FADER_LOUD_LEGACY]: ";
+        }
+        if (cmd == (byte) 0x89) {
+            turboSenderType = "[SPATIAL_DELAYS]: ";
+        }
+        if (cmd == (byte) 0x8c) {
+            turboSenderType = "[SURROUND_DELAYS]: ";
+        }
+        if (cmd == (byte) 0x80) {
+            turboSenderType = "[EQ]: ";
+        }
+
+        Log.d(TAG, "[TurboSender2000] SendToHardware invoked with " + turboSenderType + turboSender);
+
         byte[] cached = mcuCache.get(cmd);
         if (cached == null || !Arrays.equals(cached, data)) {
             try {
@@ -700,6 +783,8 @@ public class McuService extends Service implements LocationListener {
                 Log.e(TAG, "Failed to set PowerAmpVol: " + e.getMessage());
             }
         });
+
+        Log.d(TAG, "[TurboSender2000] PowerAmpVol set to: " + -val);
     }
 
     private String getSystemProperty() {
