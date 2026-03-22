@@ -13,7 +13,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -52,7 +51,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,13 +119,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUpdatingUi = false;
     private boolean isFullyInitialized = false;
 
-    // MCU Management Fields
-    private Object mcuManager;
-    private Method setEqMethod;
-
     private Method getPropMethod;
-    private final Map<Byte, byte[]> mcuCache = new HashMap<>();
-
     public static class Globals {
         public static int currentSubFreqHz = 0;
     }
@@ -317,26 +309,6 @@ public class MainActivity extends AppCompatActivity {
         // 3. Specifically update things that might change outside the app (like Volume)
         updateFmVisualizer();
         updateFaderLabels();
-
-        TextView tvStatus = findViewById(R.id.tv_hw_status);
-        if (tvStatus != null) {
-            if (mcuManager != null || isHardwareAccessible()) {
-                tvStatus.setText("");
-                tvStatus.setTextColor(Color.GREEN);
-            } else {
-                tvStatus.setText(R.string.hw_demo_mode);
-                tvStatus.setTextColor(Color.RED);
-            }
-        }
-    }
-
-    private boolean isHardwareAccessible() {
-        try {
-            @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
-            return b != null;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private void initPrimaryViews() {
@@ -444,8 +416,6 @@ public class MainActivity extends AppCompatActivity {
         seekGalaMinSpeed = findViewById(R.id.seek_gala_minspeed);
         tvGalaMinSpeedVal = findViewById(R.id.tv_gala_minspeed_val);
         tvGalaOffset = findViewById(R.id.tv_gala_offset);
-//        seekGalaMaxSpeed = findViewById(R.id.seek_gala_maxspeed);
-//        tvGalaMaxSpeedVal = findViewById(R.id.tv_gala_maxspeed_val);
         seekSimulateSpeed = findViewById(R.id.seek_simulate_speed);
         tvSimulateSpeedVal = findViewById(R.id.tv_simulate_speed_val);
         seekGalaMaxAdj = findViewById(R.id.seek_gala_max_adj);
@@ -471,17 +441,6 @@ public class MainActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         sendBroadcast(intent);
     }
-
-//    private void applyAllToMcu() {
-//        if (!isFullyInitialized) return;
-//        handler.post(this::updateEqMcu);
-//        handler.postDelayed(this::updateSubMcu, 50);
-//        handler.postDelayed(this::updateBassMcu, 100);
-//        handler.postDelayed(this::updateFaderMcu, 150);
-//        handler.postDelayed(this::updateDelayMcu, 200);
-//        handler.postDelayed(this::updateDelay1Mcu, 250);
-//    }
-
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
         container.removeAllViews(); gainSliders.clear(); qSwitches.clear(); dbLabels.clear();
@@ -544,10 +503,6 @@ public class MainActivity extends AppCompatActivity {
                     if (!isUpdatingUi) {
                         updateDbLabel(idx, p);
                         updateVisualizer();
-//                        if (u) {
-//                            handler.removeCallbacks(eqMcuRunnable);
-//                            handler.postDelayed(eqMcuRunnable, 50);
-//                        }
                     }
                 }
                 @Override public void onStartTrackingTouch(SeekBar sb) {}
@@ -766,8 +721,6 @@ public class MainActivity extends AppCompatActivity {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
-//                updateEqMcu();
-//                updateSubMcu();
             }
         });
         switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> {
@@ -782,8 +735,6 @@ public class MainActivity extends AppCompatActivity {
                 if (checked && spinnerSubFreq.getSelectedItemPosition() > 5) spinnerSubFreq.setSelection(5);
                 autoSaveCurrent();
                 updateFmVisualizer();
-//                updateEqMcu();
-//                updateSubMcu();
             }
         });
         SeekBar.OnSeekBarChangeListener fml = new SeekBar.OnSeekBarChangeListener() {
@@ -791,8 +742,6 @@ public class MainActivity extends AppCompatActivity {
                 if (sb == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
                 if (u && !isUpdatingUi) {
                     updateFmVisualizer();
-//                    updateEqMcu();
-//                    updateSubMcu();
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
@@ -1030,8 +979,6 @@ public class MainActivity extends AppCompatActivity {
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, seekGalaInc.getProgress() + 5));
             seekGalaMinSpeed.setProgress(p.getInt(name + "_gala_min_speed", 0));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMinSpeed.getProgress() * 5));
-//            seekGalaMaxSpeed.setProgress(p.getInt(name + "_gala_max_speed", 30));
-//            tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMaxSpeed.getProgress() * 5));
             seekGalaMaxAdj.setProgress(p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
 
@@ -1040,85 +987,7 @@ public class MainActivity extends AppCompatActivity {
         }
         isUpdatingUi = false; updateVisualizer();
         updateFmVisualizer();
-//        applyAllToMcu();
     }
-
-//    private void updateEqMcu() {
-//        if (!isFullyInitialized) return;
-//        float[] offs = calculateFmOffsets(); byte[] data = new byte[12]; data[0] = (byte) 0x80;
-//        for (int i = 0; i < 8; i++) {
-//            int b1 = i * 2; float db1 = (gainSliders.get(b1).getProgress() - 6) * 2 + offs[b1];
-//            int b2 = i * 2 + 1; float db2 = (gainSliders.get(b2).getProgress() - 6) * 2 + offs[b2];
-//            data[i+1] = (byte) ((AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db2/2f)+6)))] << 4) | (AudioConfig.GAIN_MAP[Math.max(0, Math.min(12, Math.round((db1/2f)+6)))] & 0x0F));
-//        }
-//        data[9] = calculateQByte(0); data[10] = calculateQByte(8); data[11] = 0x00; sendEqToHardware(data);
-//    }
-//
-//    private void updateSubMcu() {
-//        if (!isFullyInitialized) return;
-//        byte[] d = new byte[2]; d[0] = (byte) 0x8B;
-//        int g = Math.max(0, Math.min(12, Math.round(seekSubGain.getProgress() + currentFmSubOffset)));
-//        d[1] = (byte) ((spinnerSubFreq.getSelectedItemPosition() << 4) | (g & 0x0F)); sendEqToHardware(d);
-//    }
-//
-//    private void updateBassMcu() {
-//        if (!isFullyInitialized) return;
-//        byte[] d = new byte[4]; d[0] = (byte) 0x88;
-//        d[1] = (byte) (((spinnerBassFreqFront.getSelectedItemPosition() + 8) << 4) | (seekBassBoostFront.getProgress() & 0x0F));
-//        d[2] = (byte) (((spinnerBassFreqRear.getSelectedItemPosition() + 8) << 4) | (seekBassBoostRear.getProgress() & 0x0F));
-//        d[3] = (byte) ((seekBassFilterFront.getProgress() << 4) | (seekBassFilterRear.getProgress() & 0x0F)); sendEqToHardware(d);
-//    }
-//
-//    private void updateFaderMcu() {
-//        if (!isFullyInitialized) return;
-//        byte[] d = new byte[4]; d[0] = (byte) 0x81; d[1] = (byte) (seekFaderLr.getProgress() & 0xFF); d[2] = (byte) (seekFaderFr.getProgress() & 0xFF); d[3] = (byte) (switchLoud.isChecked() ? 1 : 0); sendEqToHardware(d);
-//    }
-//
-//    private void updateDelayMcu() {
-//        if (!isFullyInitialized) return;
-//        byte[] d = new byte[6]; d[0] = (byte) 0x8C;
-//        if (switchPreciseEnable.isChecked()) {
-//            d[1] = (byte) ((seekDelayFl.getProgress() * 5) & 0xFF); d[2] = (byte) ((seekDelayFr.getProgress() * 5) & 0xFF);
-//            d[3] = (byte) ((seekDelayRl.getProgress() * 5) & 0xFF); d[4] = (byte) ((seekDelayRr.getProgress() * 5) & 0xFF); d[5] = (byte) ((seekDelaySub.getProgress() * 5) & 0xFF);
-//        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
-//    }
-//
-//    private void updateDelay1Mcu() {
-//        if (!isFullyInitialized) return;
-//        byte[] d = new byte[6]; d[0] = (byte) 0x89;
-//        if (switchLegacyEnable.isChecked()) {
-//            d[1] = (byte) (138 + (seekDelay1RSSE.getProgress() - 10)); d[2] = (byte) (seekDelay1Fl.getProgress() & 0xFF);
-//            d[3] = (byte) (seekDelay1Fr.getProgress() & 0xFF); d[4] = (byte) (seekDelay1Rl.getProgress() & 0xFF); d[5] = (byte) (seekDelay1Rr.getProgress() & 0xFF);
-//        } else Arrays.fill(d, 1, 6, (byte)0); sendEqToHardware(d);
-//    }
-
-    private byte calculateQByte(int off) {
-        int r = 0; for (int i = 0; i < 8; i++) if (qSwitches.get(off+i).isChecked()) r |= (1 << i); return (byte) r; }
-
-//    @SuppressLint("PrivateApi")
-//    private void sendEqToHardware(byte[] data) {
-//        if (data == null || data.length == 0) return;
-//        byte cmd = data[0];
-//        byte[] cached = mcuCache.get(cmd);
-//        if (cached == null || !Arrays.equals(cached, data)) {
-//            mcuCache.put(cmd, data.clone());
-//            try {
-//                if (mcuManager == null) {
-//                    @SuppressLint("PrivateApi") IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "mcu_service");
-//                    if (b != null) {
-//                        mcuManager = Class.forName("android.qf.mcu.IMcuManager$Stub").getMethod("asInterface", IBinder.class).invoke(null, b);
-//                    }
-//                    if (mcuManager != null) {
-//                        setEqMethod = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
-//                    }
-//                }
-//                if (mcuManager == null || setEqMethod == null) return;
-//                setEqMethod.invoke(mcuManager, (Object) data);
-//            } catch (Exception e) {
-//                Log.e(TAG, "MCU Error: " + e.getMessage());
-//            }
-//        }
-//    }
 
     private void setupNavigation() {
         BottomNavigationView bn = findViewById(R.id.bottom_navigation);
