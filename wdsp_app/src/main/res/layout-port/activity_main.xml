@@ -28,6 +28,7 @@
                 android:id="@+id/layout_presetspinner"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="16dp"
@@ -42,7 +43,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Preset"
+                    android:hint="@string/default_preset_name_hint"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
                     app:endIconTint="@color/cyan_custom">
@@ -279,7 +280,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/margin_small"
                     android:layout_marginStart="@dimen/margin_small"
-                    android:text="EQ:"
+                    android:text="@string/eqc"
                     android:textColor="@color/cyan_custom"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_minus"
@@ -412,7 +413,8 @@
                         android:paddingVertical="10dp"
                         android:textColor="@color/cyan_custom"
                         android:textSize="14sp"
-                        android:focusable="false" />
+                        android:focusable="false"
+                        tools:ignore="LabelFor" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 

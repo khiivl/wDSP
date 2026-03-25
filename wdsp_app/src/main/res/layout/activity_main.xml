@@ -27,6 +27,7 @@
                 android:id="@+id/layout_presets"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="@dimen/padding_standard"
@@ -344,8 +345,8 @@
                         android:inputType="none"
                         android:paddingVertical="10dp"
                         android:textColor="@color/cyan_custom"
-                        android:textSize="14sp"
-                        android:focusable="false" />
+                        android:focusable="false"
+                        tools:ignore="LabelFor" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 

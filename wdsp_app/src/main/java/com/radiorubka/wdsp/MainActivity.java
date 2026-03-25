@@ -759,7 +759,7 @@ public class MainActivity extends AppCompatActivity {
         });
         switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
-                if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);;
+                if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -1303,7 +1303,7 @@ public class MainActivity extends AppCompatActivity {
     private void resetUiInternal() {
         isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false);;
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false);
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);

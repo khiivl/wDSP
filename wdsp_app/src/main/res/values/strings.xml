@@ -122,6 +122,7 @@
     <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
     <string name="hint_sub_freq">"Freq"</string>
+    <string name="eqc">"EQ:"</string>
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
