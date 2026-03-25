@@ -113,6 +113,7 @@
 
     <!-- Default Names -->
     <string name="default_preset_name">Preset 1</string>
+    <string name="default_preset_name_hint">Preset</string>
 
     <!-- Notification -->
 
@@ -120,6 +121,7 @@
     <string name="lbl_hz_fmt">%1$s Hz</string>
     <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="hint_sub_freq">"Freq"</string>
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>

@@ -12,6 +12,8 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
+
 import java.util.Locale;
 
 public class EqVisualizerView extends View {
@@ -33,9 +35,9 @@ public class EqVisualizerView extends View {
     private final Path fillPath = new Path();
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final float TOP_OFFSET_RATIO = 0.250f;
+    private final float TOP_OFFSET_RATIO = 0.257f;
     @SuppressWarnings("FieldCanBeLocal")
-    private final float DRAW_HEIGHT_RATIO = 0.730f;
+    private final float DRAW_HEIGHT_RATIO = 0.725f;
 
     private int colorFill;
     private float thumbRadiusOffset;
@@ -83,11 +85,15 @@ public class EqVisualizerView extends View {
         textPaint.setTextSize(12 * density);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
+        textPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
+
         warningPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         warningPaint.setColor(Color.RED);
         warningPaint.setTextSize(12 * density);
         warningPaint.setTextAlign(Paint.Align.CENTER);
         warningPaint.setFakeBoldText(true);
+
+        warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
     }
 
     public void setGains(int[] newGains) {

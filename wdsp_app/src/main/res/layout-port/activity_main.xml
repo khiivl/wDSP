@@ -36,12 +36,27 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <Spinner
-                    android:id="@+id/spinner_presets"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_spinner_presets"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/cyan_custom" />
+                    android:hint="Preset"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom"
+                    app:endIconTint="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_presets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:paddingVertical="12dp"
+                        android:textColor="@color/cyan_custom"
+                        tools:ignore="LabelFor" />
+
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
@@ -378,11 +393,28 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
-                <Spinner
-                    android:id="@+id/spinner_sub_freq"
-                    android:layout_width="110dp"
-                    android:layout_height="48dp"
-                    android:backgroundTint="@color/cyan_custom" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_spinner_sub_freq"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_small"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom"
+                    app:endIconTint="@color/cyan_custom"
+                    android:hint="@string/hint_sub_freq">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_sub_freq"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:paddingVertical="10dp"
+                        android:textColor="@color/cyan_custom"
+                        android:textSize="14sp"
+                        android:focusable="false" />
+
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 

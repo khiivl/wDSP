@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -39,7 +40,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
-import com.google.android.material.slider.TickVisibilityMode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.android.material.slider.Slider;
@@ -76,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
     private final List<Slider> gainSliders = new ArrayList<>();
     private final List<ToggleButton> qSwitches = new ArrayList<>();
     private final List<TextView> dbLabels = new ArrayList<>();
-    private Spinner spinnerPresets;
+    private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     
     private Slider seekSubGain;
-    private Spinner spinnerSubFreq;
+    private AutoCompleteTextView spinnerSubFreq;
     private TextView tvSubDb;
 
     private TextView tvPowerDb;
@@ -256,8 +256,8 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             String current = prefs.getString("last_selected_preset", "Call");
             int index = presetNames.indexOf(current);
-            if (index >= 0 && spinnerPresets != null) {
-                spinnerPresets.setSelection(index, false);
+            if (index >= 0 && index < presetNames.size()) {
+                spinnerPresets.setText(presetNames.get(index), false); // 'false' is vital to prevent the keyboard/popup showing
             }
         }
     }
@@ -300,12 +300,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshAllUiValues() {
         // 1. Get the name of the currently selected preset from the spinner
-        String currentPreset = (String) spinnerPresets.getSelectedItem();
+        String currentPreset = spinnerPresets.getText().toString();
 
-        if (currentPreset != null) {
-            // 2. This updates all sliders, toggles, and EQ visuals from SharedPreferences
-            loadPreset(currentPreset);
-        }
+        loadPreset(currentPreset);
 
         // 3. Specifically update things that might change outside the app (like Volume)
         updateFmVisualizer();
@@ -583,8 +580,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setPowerVolume(int control) {
 
-        String currentPreset = (String) spinnerPresets.getSelectedItem();
-        if (currentPreset == null) return;
+        String currentPreset = spinnerPresets.getText().toString();
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String key = currentPreset + "_power_vol";
@@ -607,29 +603,50 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSubControls() {
-        spinnerSubFreq.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, SUB_FREQS) {{ setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); }});
-        spinnerSubFreq.setSelection(5);
-        spinnerSubFreq.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                if (isFullyInitialized && switchFmSubComp.isChecked() && pos > 5) { spinnerSubFreq.setSelection(5); Toast.makeText(MainActivity.this, R.string.toast_sub_comp_limit, Toast.LENGTH_SHORT).show(); return; }
-                if (!isUpdatingUi) {
-                    autoSaveCurrent();
-//                    updateSubMcu();
-                }
-                String freqString = SUB_FREQS[pos];
-                Globals.currentSubFreqHz = Integer.parseInt(freqString);
+        // 1. Create the adapter (using a standard material-friendly layout)
+        ArrayAdapter<String> subAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                SUB_FREQS
+        );
+        spinnerSubFreq.setAdapter(subAdapter);
+
+        // 2. Set the initial text (replaces setSelection)
+        // 'false' is critical here to prevent the dropdown from opening or filtering
+        spinnerSubFreq.setText(SUB_FREQS[5], false);
+        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+
+        // 3. Change OnItemSelectedListener to OnItemClickListener
+        spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
+            // Logic for Sub Comp limit (if FM Sub Comp is on, limit to 80Hz/Index 5)
+            if (isFullyInitialized && switchFmSubComp.isChecked() && pos > 5) {
+                // Revert the text back to 80Hz (Index 5)
+                spinnerSubFreq.setText(SUB_FREQS[5], false);
+                Toast.makeText(MainActivity.this, R.string.toast_sub_comp_limit, Toast.LENGTH_SHORT).show();
+
+                // Re-sync Global just in case
+                Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                return;
             }
-            @Override public void onNothingSelected(AdapterView<?> p) {}
+
+            if (!isUpdatingUi) {
+                autoSaveCurrent();
+            }
+
+            // Update the global value for other calculations
+            String freqString = SUB_FREQS[pos];
+            Globals.currentSubFreqHz = Integer.parseInt(freqString);
         });
+
+        // 4. Seek Gain logic remains largely the same
         seekSubGain.addOnChangeListener((slider, value, fromUser) -> {
-            int p = (int) value; // Convert float to int
+            int p = (int) value;
             String text = "+" + p;
             tvSubDb.setText(text);
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
             }
         });
-
     }
 
     private void setupFilterControls() {
@@ -742,7 +759,7 @@ public class MainActivity extends AppCompatActivity {
         });
         switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
-                if (checked && spinnerSubFreq.getSelectedItemPosition() > 5) spinnerSubFreq.setSelection(5);
+                if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);;
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -805,19 +822,38 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Set<String> names = p.getStringSet(PREF_PRESET_NAMES, null);
         String last = p.getString(PREF_LAST_SELECTED, null);
-        presetNames = new ArrayList<>(); if (names != null) { presetNames.addAll(names); Collections.sort(presetNames); }
+
+        presetNames = new ArrayList<>();
+        if (names != null) {
+            presetNames.addAll(names);
+            Collections.sort(presetNames);
+        }
+
         String defaultPreset = getString(R.string.default_preset_name);
-        if (presetNames.isEmpty()) { presetNames.add(defaultPreset); savePresetList(); savePreset(defaultPreset); }
-        presetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, presetNames) {{ setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); }};
+        if (presetNames.isEmpty()) {
+            presetNames.add(defaultPreset);
+            savePresetList();
+            savePreset(defaultPreset);
+        }
+
+        // Use a simpler layout for the list items (standard Android or a custom one)
+        presetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, presetNames);
         spinnerPresets.setAdapter(presetAdapter);
+
+        // Initial load
         String toLoad = (last != null && presetNames.contains(last)) ? last : presetNames.get(0);
-        spinnerPresets.setSelection(presetNames.indexOf(toLoad));
+
+        // NOTE: Use setText(value, filter) for AutoCompleteTextView
+        spinnerPresets.setText(toLoad, false);
         loadPreset(toLoad);
-        spinnerPresets.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                String s = presetNames.get(pos); if (!isUpdatingUi) { loadPreset(s); getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putString(PREF_LAST_SELECTED, s).apply(); }
+
+        // Change from setOnItemSelectedListener to setOnItemClickListener
+        spinnerPresets.setOnItemClickListener((parent, view, position, id) -> {
+            String s = presetNames.get(position);
+            if (!isUpdatingUi) {
+                loadPreset(s);
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putString(PREF_LAST_SELECTED, s).apply();
             }
-            @Override public void onNothingSelected(AdapterView<?> p) {}
         });
     }
 
@@ -833,17 +869,19 @@ public class MainActivity extends AppCompatActivity {
         int c = 1;
         String n;
         String prefix = getString(R.string.default_preset_name).split(" ")[0] + " ";
-        do { n = prefix + (presetNames.size() + c++); } while (presetNames.contains(n));
+        do {
+            n = prefix + c++;
+        } while (presetNames.contains(n));
         presetNames.add(n);
         Collections.sort(presetNames);
         savePresetList();
         savePreset(n);
         presetAdapter.notifyDataSetChanged();
-        spinnerPresets.setSelection(presetNames.indexOf(n));
+        spinnerPresets.setText(n, false);
     }
 
     private void renameCurrentPreset() {
-        final String old = (String) spinnerPresets.getSelectedItem(); if (old == null) return;
+        final String old = spinnerPresets.getText().toString();
         final EditText in = new EditText(this); in.setText(old); in.setSelection(old.length());
         new AlertDialog.Builder(this).setTitle(R.string.dialog_rename_title).setView(in).setPositiveButton(R.string.btn_ok, (d, w) -> {
             String n = in.getText().toString().trim();
@@ -853,15 +891,58 @@ public class MainActivity extends AppCompatActivity {
 
     private void performRename(String o, String n) {
         if ("Call".equals(o)) return;
+
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
+
+        // 1. Move the actual EQ/Filter data (existing logic)
         copyPresetData(p, e, o, n);
+
+        // 2. Update the Automation Map (The fix for your question)
+        try {
+            String jsonMap = p.getString(PREF_PLAYER_MAP, "{}");
+            // Using Gson (which you already have in dependencies) to parse the map
+            java.lang.reflect.Type type = new TypeToken<Map<String, String>>(){}.getType();
+            Map<String, String> map = new Gson().fromJson(jsonMap, type);
+
+            boolean mapChanged = false;
+            if (map != null) {
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    if (o.equals(entry.getValue())) {
+                        entry.setValue(n); // Update the link to the new name
+                        mapChanged = true;
+                    }
+                }
+            }
+
+            if (mapChanged) {
+                e.putString(PREF_PLAYER_MAP, new Gson().toJson(map));
+            }
+
+            // 3. Update the Global Default if it was renamed
+            String currentDefault = p.getString(PREF_DEFAULT_PRESET, "");
+            if (o.equals(currentDefault)) {
+                e.putString(PREF_DEFAULT_PRESET, n);
+            }
+
+        } catch (Exception err) {
+            Log.e(TAG, "Error updating automation map during rename: " + err.getMessage());
+        }
+
+        // 4. Update the preset list (existing logic)
         int idx = presetNames.indexOf(o);
         presetNames.set(idx, n);
         Collections.sort(presetNames);
-        if (o.equals(p.getString(PREF_LAST_SELECTED, null))) e.putString(PREF_LAST_SELECTED, n);
-        e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)); e.apply();
-        presetAdapter.notifyDataSetChanged(); spinnerPresets.setSelection(presetNames.indexOf(n));
+
+        if (o.equals(p.getString(PREF_LAST_SELECTED, null))) {
+            e.putString(PREF_LAST_SELECTED, n);
+        }
+
+        e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
+        e.apply();
+
+        presetAdapter.notifyDataSetChanged();
+        spinnerPresets.setText(n, false);
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
@@ -877,8 +958,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteCurrentPreset() {
-        String curr = (String) spinnerPresets.getSelectedItem();
-        if (curr == null || "Call".equals(curr)) return;
+        String curr = spinnerPresets.getText().toString();
+        int currindex = presetNames.indexOf(curr);
+        if ("Call".equals(curr)) return;
         if (presetNames.size() <= 1) { Toast.makeText(this, R.string.toast_cannot_delete_last, Toast.LENGTH_SHORT).show(); return; }
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
@@ -902,7 +984,7 @@ public class MainActivity extends AppCompatActivity {
         e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
         e.apply();
         presetAdapter.notifyDataSetChanged();
-        spinnerPresets.setSelection(0);
+        spinnerPresets.setText(presetNames.get(Math.max(currindex - 1, 0)), false);
         loadPreset(presetNames.get(0));
     }
 
@@ -913,7 +995,7 @@ public class MainActivity extends AppCompatActivity {
     private void savePreset(String name) {
         SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) { e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i))); e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked()); }
-        e.putInt(name + "_sub_g", getIntSlider(seekSubGain)); e.putInt(name + "_sub_f", spinnerSubFreq.getSelectedItemPosition());
+        e.putInt(name + "_sub_g", getIntSlider(seekSubGain)); e.putInt(name + "_sub_f", java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()));
         if (isFullyInitialized) {
             e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront)); e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
             e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear)); e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
@@ -952,7 +1034,7 @@ public class MainActivity extends AppCompatActivity {
         int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setValue((float) sg);
         String subText = "+" + sg;
         tvSubDb.setText(subText);
-        spinnerSubFreq.setSelection(p.getInt(name + "_sub_f", 5));
+        spinnerSubFreq.setText(SUB_FREQS[p.getInt(name + "_sub_f", 5)], false);
         if (isFullyInitialized) {
             seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
             seekBassBoostFront.setValue((float) p.getInt(name + "_bb_f", 0));
@@ -999,6 +1081,7 @@ public class MainActivity extends AppCompatActivity {
         }
         isUpdatingUi = false; updateVisualizer();
         updateFmVisualizer();
+
     }
 
     private void setupNavigation() {
@@ -1045,7 +1128,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAutoPresetDialog() {
         String p = getSystemProperty();
-        String cur = (String) spinnerPresets.getSelectedItem();
+        String cur = spinnerPresets.getText().toString();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());
         String def = prefs.getString(PREF_DEFAULT_PRESET, getString(R.string.none));
@@ -1090,7 +1173,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
-    private void autoSaveCurrent() { String n = (String) spinnerPresets.getSelectedItem(); if (n != null) savePreset(n); }
+    private void autoSaveCurrent() {
+        String n = spinnerPresets.getText().toString();
+        savePreset(n);
+    }
     private int getSystemVolume() { return VolumeHelper.getVolume(); }
 
     @Override protected void onDestroy() {
@@ -1103,7 +1189,8 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Failed to unregister receiver. It may have already been unregistered.", e);
         }
     }
-    private void exportPresets() { String s = (String) spinnerPresets.getSelectedItem(); exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s != null ? s : "wDSP_Presets") + ".json")); }
+    private void exportPresets() { String s = spinnerPresets.getText().toString();
+        exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s) + ".json")); }
     private void importPresets() {
         importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
     private void saveCurrentPresetToFile(Uri u) {
@@ -1111,8 +1198,7 @@ public class MainActivity extends AppCompatActivity {
             if (os == null) return;
 
             // 1. Get the name of the currently selected preset
-            String currentPreset = (String) spinnerPresets.getSelectedItem();
-            if (currentPreset == null) return;
+            String currentPreset = spinnerPresets.getText().toString();
 
             // Get the preferences into prefs
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -1217,7 +1303,7 @@ public class MainActivity extends AppCompatActivity {
     private void resetUiInternal() {
         isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setSelection(5);
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false);;
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);

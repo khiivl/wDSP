@@ -35,12 +35,27 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <Spinner
-                    android:id="@+id/spinner_presets"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_spinner_presets"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/cyan_custom" />
+                    android:hint="@string/default_preset_name_hint"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom"
+                    app:endIconTint="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_presets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:paddingVertical="12dp"
+                        android:textColor="@color/cyan_custom"
+                        tools:ignore="LabelFor" />
+
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <HorizontalScrollView
                     android:layout_width="wrap_content"
@@ -303,20 +318,36 @@
                     android:text="@string/value_default"
                     android:textColor="@color/cyan_custom"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/spinner_sub_freq"
+                    app:layout_constraintEnd_toStartOf="@+id/layout_spinner_sub_freq"
                     app:layout_constraintStart_toEndOf="@id/seek_sub_gain"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <Spinner
-                    android:id="@+id/spinner_sub_freq"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_spinner_sub_freq"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="100dp"
-                    android:layout_height="44dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_small"
-                    android:backgroundTint="@color/cyan_custom"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom"
+                    app:endIconTint="@color/cyan_custom"
+                    android:hint="@string/hint_sub_freq"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_minus"
                     app:layout_constraintStart_toEndOf="@id/tv_sub_db"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_sub_freq"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:paddingVertical="10dp"
+                        android:textColor="@color/cyan_custom"
+                        android:textSize="14sp"
+                        android:focusable="false" />
+
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_minus"
@@ -333,7 +364,7 @@
                     app:strokeColor="@color/stroke_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_plus"
-                    app:layout_constraintStart_toEndOf="@id/spinner_sub_freq"
+                    app:layout_constraintStart_toEndOf="@id/layout_spinner_sub_freq"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.button.MaterialButton

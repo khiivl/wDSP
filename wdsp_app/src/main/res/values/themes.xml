@@ -3,8 +3,11 @@
     <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <item name="colorPrimary">@color/cyan_custom</item>
-        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:statusBarColor">?android:attr/windowBackground</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:fontFamily">@font/main_font</item>
+        <item name="fontFamily">@font/main_font</item>
+
     </style>
 
     <style name="Theme.WDSP" parent="Base.Theme.WDSP" />
