@@ -15,4 +15,11 @@
     <color name="colored_button_text">#000000</color>
     <color name="status_bar">#000000</color>
     <color name="stroke_color">#66000000</color>
+
+    <color name="btn_auto_bg">#79bcbd</color>
+    <color name="btn_add_bg">#61a9c2</color>
+    <color name="btn_rename_bg">#6593bf</color>
+    <color name="btn_export_bg">#7b79ae</color>
+    <color name="btn_import_bg">#8f5d8d</color>
+    <color name="btn_delete_bg">#944460</color>
 </resources>

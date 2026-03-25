@@ -115,21 +115,6 @@
                             android:textSize="@dimen/text_size_small" />
 
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_delete_preset"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_delete_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_delete"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
-
-                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_export_presets"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -158,6 +143,22 @@
                             app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_delete_preset"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_delete_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/btn_delete"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
                     </LinearLayout>
                 </HorizontalScrollView>
             </LinearLayout>
