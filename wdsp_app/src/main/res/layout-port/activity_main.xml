@@ -7,20 +7,6 @@
     android:background="@drawable/app_background"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/tv_hw_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:alpha="1"
-        android:text="@string/hw_detecting"
-        android:textColor="@color/cyan_custom"
-        android:textSize="@dimen/text_size_header"
-        android:elevation="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Container for different screens -->
     <FrameLayout
         android:layout_width="0dp"
@@ -35,7 +21,8 @@
             android:id="@+id/layout_eq"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone">
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/layout_presetspinner"
@@ -106,6 +93,7 @@
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
                         android:layout_height="44dp"
+                        android:layout_marginEnd="4dp"
                         android:layout_weight="1"
                         android:backgroundTint="#2196F3"
                         android:paddingHorizontal="4dp"
@@ -149,7 +137,8 @@
 
                     <Button
                         android:id="@+id/btn_import_presets"
-                        style="?android:attr/buttonBarButtonStyle" android:layout_width="0dp"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
                         android:layout_height="44dp"
                         android:layout_weight="1"
                         android:backgroundTint="#9C27B0"
@@ -198,24 +187,144 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
 
-                <Button
-                    android:id="@+id/btn_minus"
-                    style="?android:attr/buttonBarButtonStyle" android:layout_width="64dp"
-                    android:layout_height="48dp"
-                    android:layout_marginEnd="8dp"
+                <TextView
+                    android:id="@+id/lbl_pwr"
+                    style="@style/TextHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:text="@string/lbl_pwr"
+                    android:textColor="@color/cyan_custom"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_pwr_db"
+                    style="@style/TextHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:minWidth="28dp"
+                    android:gravity="center"
+                    android:text="@string/value_default"
+                    android:textColor="@color/cyan_custom"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pwr_vol_minus"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
                     android:backgroundTint="@color/cyan_custom"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
                     android:text="@string/btn_minus"
                     android:textColor="@color/colored_button_text"
-                    android:textSize="20sp" />
+                    app:cornerRadius="@dimen/button_radius"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pwr_vol_plus"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:backgroundTint="@color/cyan_custom"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_plus"
+                    app:cornerRadius="@dimen/button_radius"
+                    android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_minus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/lbl_eqc"
+                    style="@style/TextHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/margin_small"
+                    android:layout_marginStart="@dimen/margin_small"
+                    android:text="EQ:"
+                    android:textColor="@color/cyan_custom"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_minus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_minus"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:backgroundTint="@color/cyan_custom"
+                    android:text="@string/btn_minus"
+                    app:cornerRadius="@dimen/button_radius"
+                    android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    android:textSize="20sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_plus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_plus"
-                    style="?android:attr/buttonBarButtonStyle" android:layout_width="64dp"
-                    android:layout_height="48dp"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
                     android:backgroundTint="@color/cyan_custom"
                     android:text="@string/btn_plus"
+                    app:cornerRadius="@dimen/button_radius"
                     android:textColor="@color/colored_button_text"
-                    android:textSize="20sp" />
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    android:textSize="20sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_center"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_center"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:backgroundTint="@color/btn_delete_bg"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_center"
+                    app:cornerRadius="@dimen/button_radius"
+                    android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/btn_plus"
+                    app:layout_constraintTop_toTopOf="parent" />
 
             </LinearLayout>
 
@@ -239,16 +348,25 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
-                <SeekBar
+                <com.google.android.material.slider.Slider
                     android:id="@+id/seek_sub_gain"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="8dp"
                     android:layout_weight="1"
-                    android:max="12"
-                    android:progress="0"
-                    android:progressTint="@color/cyan_custom"
-                    android:thumbTint="@color/cyan_custom" />
+                    android:stepSize="1"
+                    android:value="0"
+                    android:valueFrom="0"
+                    android:valueTo="12"
+                    app:haloColor="@color/cyan_custom"
+                    app:haloRadius="24dp"
+                    app:labelBehavior="gone"
+                    app:thumbColor="@color/cyan_custom"
+                    app:thumbRadius="10dp"
+                    app:tickColorActive="@color/tick_color_active"
+                    app:tickColorInactive="@color/tick_color_inactive"
+                    app:trackColorActive="@color/cyan_custom"
+                    app:trackHeight="@dimen/slider_track_height" />
 
                 <TextView
                     android:id="@+id/tv_sub_db"
@@ -441,15 +559,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:textSize="16sp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar
+                        <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_cal_vol"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:max="32"
-                            android:progress="25"
-                            android:progressTint="@color/cyan_custom"
-                            android:thumbTint="@color/cyan_custom" />
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="25"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView
                             android:id="@+id/tv_fm_cal_vol_val"
                             android:layout_width="40dp"
@@ -469,15 +596,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:textSize="16sp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar
+                        <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_strength"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:max="100"
-                            android:progress="100"
-                            android:progressTint="@color/cyan_custom"
-                            android:thumbTint="@color/cyan_custom" />
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView
                             android:id="@+id/tv_fm_strength_val"
                             android:layout_width="40dp"
@@ -552,7 +688,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="8dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay_fl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay_fl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- FR -->
@@ -563,7 +716,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay_fr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay_fr"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RL -->
@@ -574,7 +744,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay_rl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay_rl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RR -->
@@ -585,7 +772,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay_rr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay_rr"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold"
                             tools:ignore="TooManyViews" />
                     </LinearLayout>
@@ -597,7 +801,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay_sub" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay_sub"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay_sub_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
 
@@ -632,7 +853,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="8dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay1_fl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay1_fl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay1_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy FR -->
@@ -643,7 +881,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay1_fr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay1_fr"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay1_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy RL -->
@@ -654,7 +909,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay1_rl" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay1_rl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay1_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- Legacy RR -->
@@ -665,7 +937,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay1_rr" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="10" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay1_rr"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="10"
+                            android:stepSize="1"
+                            android:value="0"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay1_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                     <!-- RSSE -->
@@ -676,7 +965,24 @@
                         android:textColor="@color/text_theme_aware"
                         android:layout_marginTop="4dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <SeekBar android:id="@+id/seek_delay1_rsse" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="20" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_delay1_rsse"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="20"
+                            android:stepSize="1"
+                            android:value="10"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
                         <TextView android:id="@+id/tv_delay1_rsse_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -742,7 +1048,24 @@
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                                <SeekBar android:id="@+id/seek_bass_filter_front" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="11" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_bass_filter_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:valueFrom="0"
+                                    android:valueTo="11"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/cyan_custom"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
                                 <TextView android:id="@+id/tv_bass_filter_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
@@ -753,7 +1076,23 @@
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                                <SeekBar android:id="@+id/seek_bass_boost_front" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_bass_boost_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:valueFrom="0"
+                                    android:valueTo="12"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/cyan_custom"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
                                 <TextView android:id="@+id/tv_bass_boost_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
@@ -783,7 +1122,24 @@
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                                <SeekBar android:id="@+id/seek_bass_filter_rear" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="11" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_bass_filter_rear"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:valueFrom="0"
+                                    android:valueTo="11"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/cyan_custom"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
                                 <TextView android:id="@+id/tv_bass_filter_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
@@ -794,7 +1150,24 @@
                                 android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                                <SeekBar android:id="@+id/seek_bass_boost_rear" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_bass_boost_rear"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:valueFrom="0"
+                                    android:valueTo="12"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/cyan_custom"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
                                 <TextView android:id="@+id/tv_bass_boost_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
                             </LinearLayout>
 
@@ -826,11 +1199,45 @@
                         android:orientation="vertical">
 
                         <TextView android:id="@+id/tv_fader_lr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
-                        <SeekBar android:id="@+id/seek_fader_lr" android:layout_width="match_parent" android:layout_height="48dp" android:max="24" android:progress="12" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_fader_lr"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="24"
+                            android:stepSize="1"
+                            android:value="12"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/cyan_custom"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
 
                         <LinearLayout android:layout_width="match_parent" android:layout_height="320dp" android:orientation="horizontal" android:layout_marginTop="12dp" android:gravity="center">
                             <FrameLayout android:layout_width="64dp" android:layout_height="match_parent">
-                                <SeekBar android:id="@+id/seek_fader_fr" android:layout_width="280dp" android:layout_height="wrap_content" android:layout_gravity="center" android:max="24" android:progress="12" android:rotation="270" android:progressTint="@color/cyan_custom" android:thumbTint="@color/cyan_custom" />
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_fader_fr"
+                                    android:layout_width="280dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:valueFrom="0"
+                                    android:valueTo="24"
+                                    android:stepSize="1"
+                                    android:value="12"
+                                    android:rotation="270"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/cyan_custom"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
                             </FrameLayout>
                             <ImageView android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
                                 android:contentDescription="@null"
@@ -982,15 +1389,24 @@
                             android:text="@string/vol_step_interval"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_increment"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="45"
-                                android:progress="15"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom" />
+                                android:valueFrom="0"
+                                android:valueTo="45"
+                                android:stepSize="1"
+                                android:value="15"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/cyan_custom"
+                                app:thumbColor="@color/cyan_custom"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone" />
                             <TextView
                                 android:id="@+id/tv_gala_increment_val"
                                 android:layout_width="70dp"
@@ -1008,15 +1424,24 @@
                             android:text="@string/standstill_threshold"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_minspeed"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="60"
-                                android:progress="0"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom" />
+                                android:valueFrom="0"
+                                android:valueTo="60"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/cyan_custom"
+                                app:thumbColor="@color/cyan_custom"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone" />
                             <TextView
                                 android:id="@+id/tv_gala_minspeed_val"
                                 android:layout_width="70dp"
@@ -1034,15 +1459,24 @@
                             android:text="@string/max_speed_limit"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_maxspeed"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="60"
-                                android:progress="30"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom" />
+                                android:valueFrom="0"
+                                android:valueTo="60"
+                                android:stepSize="1"
+                                android:value="30"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/cyan_custom"
+                                app:thumbColor="@color/cyan_custom"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone" />
                             <TextView
                                 android:id="@+id/tv_gala_maxspeed_val"
                                 android:layout_width="70dp"
@@ -1060,15 +1494,24 @@
                             android:text="@string/max_vol_adj"
                             android:textColor="@color/text_theme_aware" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_max_adj"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="32"
-                                android:progress="12"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom" />
+                                android:valueFrom="0"
+                                android:valueTo="32"
+                                android:stepSize="1"
+                                android:value="12"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/cyan_custom"
+                                app:thumbColor="@color/cyan_custom"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone" />
                             <TextView
                                 android:id="@+id/tv_gala_max_adj_val"
                                 android:layout_width="70dp"
@@ -1105,15 +1548,24 @@
                             android:text="@string/simulate_vehicle_speed"
                             android:textColor="@color/simulate_speed_color" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_simulate_speed"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="200"
-                                android:progress="0"
-                                android:progressTint="@color/simulate_speed_color"
-                                android:thumbTint="@color/simulate_speed_color" />
+                                android:valueFrom="0"
+                                android:valueTo="200"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/simulate_speed_color"
+                                app:thumbColor="@color/simulate_speed_color"
+                                app:trackColorActive="@color/simulate_speed_color"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone" />
                             <TextView
                                 android:id="@+id/tv_simulate_speed_val"
                                 android:layout_width="70dp"

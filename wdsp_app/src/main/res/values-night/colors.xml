@@ -3,12 +3,16 @@
     <color name="text_theme_aware">#E0E0E0</color>
     <color name="text_theme_aware_2">#BDBDBD</color>
     <color name="cyan_custom">#79bcbd</color>
-    <color name="visualizer_grid">#15FFFFFF</color>
-    <color name="visualizer_line">#FFFFFF</color>
+    <color name="visualizer_grid">#18FFFFFF</color>
+    <color name="visualizer_line">#AAFFFFFF</color>
     <color name="visualizer_fill">#80028889</color>
     <color name="band_label">#80FFFFFF</color>
     <color name="q_switch_text">#FFFFFF</color>
     <color name="seek_track">#40FFFFFF</color>
+    <color name="tick_color_inactive">#66000000</color>
+    <color name="tick_color_active">#99000000</color>
     <!-- Text color for colored buttons in Dark Theme -->
     <color name="colored_button_text">#000000</color>
+    <color name="status_bar">#000000</color>
+    <color name="stroke_color">#66000000</color>
 </resources>

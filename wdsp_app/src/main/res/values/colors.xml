@@ -4,12 +4,13 @@
     <color name="text_theme_aware_2">#757575</color>
     <color name="cyan_custom">#028889</color>
     <color name="visualizer_grid">#15000000</color>
-    <color name="visualizer_line">#028889</color>
+    <color name="visualizer_line">#66000000</color>
     <color name="visualizer_fill">#40028889</color>
     <color name="band_label">#80000000</color>
     <color name="q_switch_text">#028889</color>
     <color name="seek_track">#20000000</color>
     <color name="colored_button_text">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
 
     <!-- Preset Button Colors -->
     <color name="btn_auto_bg">#607D8B</color>
@@ -19,6 +20,16 @@
     <color name="btn_export_bg">#4CAF50</color>
     <color name="btn_import_bg">#9C27B0</color>
 
+    <!-- Slider Colors -->
+    <color name="tick_color_inactive">#99FFFFFF</color>
+    <color name="tick_color_active">#99FFFFFF</color>
+    <color name="halo_color">#00000000</color>
+
     <color name="visualizer_container_bg">#1A000000</color>
     <color name="simulate_speed_color">#FF5722</color>
+
+    <!-- Button Colors -->
+    <color name="stroke_color">#66FFFFFF</color>
+
+    <color name="status_bar">#FFFFFF</color>
 </resources>

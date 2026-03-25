@@ -53,7 +53,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_auto_preset"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -62,10 +62,13 @@
                             android:backgroundTint="@color/btn_auto_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_auto"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_add_preset"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -74,10 +77,13 @@
                             android:backgroundTint="@color/btn_add_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_add"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_rename_preset"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -86,10 +92,13 @@
                             android:backgroundTint="@color/btn_rename_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_rename"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_delete_preset"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -98,10 +107,13 @@
                             android:backgroundTint="@color/btn_delete_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_delete"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_export_presets"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -110,10 +122,13 @@
                             android:backgroundTint="@color/btn_export_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_export"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_import_presets"
                             style="?android:attr/buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -122,6 +137,9 @@
                             android:backgroundTint="@color/btn_import_bg"
                             android:paddingHorizontal="@dimen/padding_small"
                             android:text="@string/btn_import"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color"
                             android:textColor="@color/colored_button_text"
                             android:textSize="@dimen/text_size_small" />
                     </LinearLayout>
@@ -132,7 +150,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_marginHorizontal="0dp"
-                android:layout_marginVertical="@dimen/margin_small"
+                android:layout_marginVertical="0dp"
                 app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -157,7 +175,8 @@
                 android:id="@+id/layout_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/padding_small"
+                android:paddingTop="0dp"
+                android:paddingBottom="13dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
@@ -174,26 +193,9 @@
                     android:text="@string/lbl_pwr"
                     android:textColor="@color/cyan_custom"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Button
-                    android:id="@+id/btn_pwr_vol_minus"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:layout_marginEnd="@dimen/margin_small"
-                    android:backgroundTint="@color/cyan_custom"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:text="@string/btn_minus"
-                    android:textColor="@color/colored_button_text"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
                     app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
@@ -208,26 +210,48 @@
                     android:text="@string/value_default"
                     android:textColor="@color/cyan_custom"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
                     app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
+                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <Button
-                    android:id="@+id/btn_pwr_vol_plus"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pwr_vol_minus"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:layout_marginEnd="@dimen/margin_standard"
+                    android:backgroundTint="@color/cyan_custom"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text="@string/btn_minus"
+                    android:textColor="@color/colored_button_text"
+                    app:cornerRadius="@dimen/button_radius"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pwr_vol_plus"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="@dimen/margin_tiny"
+                    android:layout_marginEnd="@dimen/margin_large"
                     android:backgroundTint="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_plus"
+                    app:cornerRadius="@dimen/button_radius"
                     android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/lbl_sub"
                     app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
+                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <!-- SUB LABEL (Updated to start after Power Vol Plus) -->
@@ -244,20 +268,30 @@
                     app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_plus"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <SeekBar
+                <com.google.android.material.slider.Slider
                     android:id="@+id/seek_sub_gain"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/margin_small"
-                    android:max="12"
-                    android:progress="0"
-                    android:progressTint="@color/cyan_custom"
-                    android:thumbTint="@color/cyan_custom"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_sub_db"
+                    android:valueFrom="0"
+                    android:valueTo="12"
+                    android:stepSize="1"
+                    android:value="0"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="24dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:trackColorActive="@color/cyan_custom"
+                    android:theme="@style/Widget.Material3.Slider"
+                    app:trackHeight="@dimen/slider_track_height"
+                    app:labelBehavior="gone"
                     app:layout_constraintStart_toEndOf="@id/lbl_sub"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_sub_db"
+                    app:tickColorActive="@color/tick_color_active"
+                    app:tickColorInactive="@color/tick_color_inactive"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_max="@dimen/slider_max_width" />
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintWidth_max="@dimen/slider_max_width"
+                    app:thumbHeight="@dimen/thumb_height"/>
 
                 <TextView
                     android:id="@+id/tv_sub_db"
@@ -284,46 +318,55 @@
                     app:layout_constraintStart_toEndOf="@id/tv_sub_db"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_minus"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
                     android:layout_marginEnd="@dimen/margin_tiny"
                     android:backgroundTint="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_minus"
+                    app:cornerRadius="@dimen/button_radius"
                     android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_plus"
                     app:layout_constraintStart_toEndOf="@id/spinner_sub_freq"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_plus"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
                     android:layout_marginEnd="@dimen/margin_large"
                     android:backgroundTint="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_plus"
+                    app:cornerRadius="@dimen/button_radius"
                     android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_center"
                     app:layout_constraintStart_toEndOf="@id/btn_minus"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_center"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
                     android:layout_marginEnd="@dimen/margin_tiny"
                     android:backgroundTint="@color/btn_delete_bg"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_center"
+                    app:cornerRadius="@dimen/button_radius"
                     android:textColor="@color/colored_button_text"
+                    app:strokeWidth="@dimen/stroke_width"
+                    app:strokeColor="@color/stroke_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/btn_plus"
@@ -375,11 +418,12 @@
                             android:paddingStart="0dp"
                             android:text="@string/enable_loudness" />
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fm_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingEnd="12dp"
+                            app:showText="false"
                             android:paddingStart="0dp"/>
 
                         <TextView
@@ -390,11 +434,12 @@
                             android:paddingStart="0dp"
                             android:text="@string/trim_highs" />
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fatigue_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingEnd="12dp"
+                            app:showText="false"
                             android:paddingStart="0dp"/>
 
                         <TextView
@@ -405,9 +450,10 @@
                             android:paddingStart="0dp"
                             android:text="@string/sub_tweaking" />
 
-                        <androidx.appcompat.widget.SwitchCompat
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fm_sub_comp"
                             android:layout_width="wrap_content"
+                            app:showText="false"
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
@@ -508,19 +554,29 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
-                        <SeekBar
+                        <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_cal_vol"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:max="32"
-                            android:progress="25"
-                            android:progressTint="@color/cyan_custom"
-                            android:thumbTint="@color/cyan_custom"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="25"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@+id/tv_fm_cal_vol_val"
                             app:layout_constraintStart_toEndOf="@id/lbl_cal_vol"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width" />
+                            app:layout_constraintWidth_max="@dimen/slider_max_width_big"
+                            app:thumbHeight="@dimen/thumb_height"/>
 
                         <TextView
                             android:id="@+id/tv_fm_cal_vol_val"
@@ -551,19 +607,31 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
-                        <SeekBar
+                        <com.google.android.material.slider.Slider
+                            app:thumbHeight="@dimen/thumb_height"
                             android:id="@+id/seek_fm_strength"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:max="100"
-                            android:progress="100"
-                            android:progressTint="@color/cyan_custom"
-                            android:thumbTint="@color/cyan_custom"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/cyan_custom"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@+id/tv_fm_strength_val"
                             app:layout_constraintStart_toEndOf="@id/lbl_strength"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width" />
+                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
 
                         <TextView
                             android:id="@+id/tv_fm_strength_val"
@@ -641,7 +709,7 @@
                                 android:layout_weight="1"
                                 android:text="@string/spatial_correction" />
 
-                            <androidx.appcompat.widget.SwitchCompat
+                            <com.google.android.material.materialswitch.MaterialSwitch
                                 android:id="@+id/switch_precise_enable"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" />
@@ -670,16 +738,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay_fl"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_fl_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -706,16 +783,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay_fr"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_fr_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -742,16 +828,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay_rl"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_rl_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -779,16 +874,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay_rr"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_rr_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -816,16 +920,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay_sub"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_sub_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
                     </LinearLayout>
@@ -854,7 +967,7 @@
                                 android:layout_weight="1"
                                 android:text="@string/surround_mode" />
 
-                            <androidx.appcompat.widget.SwitchCompat
+                            <com.google.android.material.materialswitch.MaterialSwitch
                                 android:id="@+id/switch_legacy_enable"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" />
@@ -883,16 +996,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay1_fl"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_fl_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -919,16 +1041,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay1_fr"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_fr_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -955,16 +1086,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay1_rl"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rl_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -991,16 +1131,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay1_rr"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="10"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="10"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rr_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -1027,16 +1176,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_delay1_rsse"
                                 android:layout_width="match_parent"
-                                android:layout_height="32dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="20"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="20"
+                                android:stepSize="1"
+                                android:value="10"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rsse_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
                     </LinearLayout>
@@ -1069,7 +1227,7 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.SwitchCompat
+            <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switch_loud"
                 style="@style/TextLabel"
                 android:layout_width="wrap_content"
@@ -1136,16 +1294,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_filter_front"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="11"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="11"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_filter_front_db" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -1172,16 +1339,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_boost_front"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="12"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="12"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_boost_front_db" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -1236,16 +1412,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_filter_rear"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="11"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="11"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_filter_rear_db" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -1272,16 +1457,25 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
-                            <SeekBar
+                            <com.google.android.material.slider.Slider
+                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_boost_rear"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:max="12"
-                                android:paddingStart="@dimen/seekbar_padding_horizontal"
-                                android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                                android:progressTint="@color/cyan_custom"
-                                android:thumbTint="@color/cyan_custom"
+                                android:valueFrom="0"
+                                android:valueTo="12"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/cyan_custom"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_boost_rear_db" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -1331,17 +1525,25 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <SeekBar
+                <com.google.android.material.slider.Slider
+                    app:thumbHeight="@dimen/thumb_height"
                     android:id="@+id/seek_fader_lr"
                     android:layout_width="@dimen/fader_length"
                     android:layout_height="48dp"
                     android:layout_marginTop="@dimen/margin_tiny"
-                    android:max="24"
-                    android:paddingStart="@dimen/seekbar_padding_horizontal"
-                    android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                    android:progress="12"
-                    android:progressTint="@color/cyan_custom"
-                    android:thumbTint="@color/cyan_custom"
+                    android:valueFrom="0"
+                    android:valueTo="24"
+                    android:stepSize="1"
+                    android:value="12"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="24dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:trackColorActive="@color/cyan_custom"
+                    app:trackHeight="@dimen/slider_track_height"
+                    app:labelBehavior="gone"
+                    app:tickColorActive="@color/tick_color_active"
+                    app:tickColorInactive="@color/tick_color_inactive"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tv_fader_lr_val" />
@@ -1366,19 +1568,26 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/imageView">
 
-                    <SeekBar
+                    <com.google.android.material.slider.Slider
+                        app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_fader_fr"
                         android:layout_width="@dimen/fader_length"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:max="24"
-                        android:paddingStart="@dimen/seekbar_padding_horizontal"
-                        android:paddingEnd="@dimen/seekbar_padding_horizontal"
-                        android:progress="12"
-                        android:progressTint="@color/cyan_custom"
+                        android:valueFrom="0"
+                        android:valueTo="24"
+                        android:stepSize="1"
+                        android:value="12"
                         android:rotation="270"
-                        android:splitTrack="false"
-                        android:thumbTint="@color/cyan_custom" />
+                        app:thumbRadius="10dp"
+                        app:haloRadius="24dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/tick_color_active"
+                        app:tickColorInactive="@color/tick_color_inactive"
+                        app:trackColorActive="@color/cyan_custom"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:labelBehavior="gone" />
                 </FrameLayout>
 
                 <TextView
@@ -1430,7 +1639,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/enable_gala"/>
 
-                <androidx.appcompat.widget.SwitchCompat
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switch_gala_enable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -1444,15 +1653,25 @@
                     android:text="@string/vol_step_every"
                     android:layout_marginStart="32dp"/>
 
-                <SeekBar
+                <com.google.android.material.slider.Slider
+                    app:thumbHeight="@dimen/thumb_height"
                     android:id="@+id/seek_gala_increment"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
-                    android:max="45"
-                    android:progress="15"
+                    android:valueFrom="0"
+                    android:valueTo="45"
+                    android:stepSize="1"
+                    android:value="15"
                     android:layout_marginStart="8dp"
-                    android:progressTint="@color/cyan_custom"
-                    android:thumbTint="@color/cyan_custom"/>
+                    app:thumbRadius="10dp"
+                    app:haloRadius="24dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/tick_color_active"
+                    app:tickColorInactive="@color/tick_color_inactive"
+                    app:trackColorActive="@color/cyan_custom"
+                    app:trackHeight="@dimen/slider_track_height"
+                    app:labelBehavior="gone" />
 
                 <TextView
                     android:textSize="18sp"
@@ -1476,6 +1695,7 @@
                 <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
+                    android:gravity="center_vertical"
                     android:layout_height="wrap_content">
 
                     <TextView
@@ -1503,15 +1723,25 @@
                         android:text="@string/standstill_speed"
                         android:layout_marginStart="32dp"/>
 
-                    <SeekBar
+                    <com.google.android.material.slider.Slider
+                        app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_gala_minspeed"
                         android:layout_width="350dp"
                         android:layout_height="wrap_content"
-                        android:max="60"
-                        android:progress="0"
+                        android:valueFrom="0"
+                        android:valueTo="60"
+                        android:stepSize="1"
+                        android:value="0"
                         android:layout_marginStart="8dp"
-                        android:progressTint="@color/cyan_custom"
-                        android:thumbTint="@color/cyan_custom"/>
+                        app:thumbRadius="10dp"
+                        app:haloRadius="24dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/tick_color_active"
+                        app:tickColorInactive="@color/tick_color_inactive"
+                        app:trackColorActive="@color/cyan_custom"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:labelBehavior="gone" />
 
                     <TextView
                         android:textSize="18sp"
@@ -1529,6 +1759,7 @@
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:layout_marginTop="16dp">
 
                     <TextView
@@ -1556,15 +1787,21 @@
 <!--                        android:text="@string/max_speed_label"-->
 <!--                        android:layout_marginStart="32dp"/>-->
 
-<!--                    <SeekBar-->
+<!--                    <com.google.android.material.slider.Slider-->
 <!--                        android:id="@+id/seek_gala_maxspeed"-->
 <!--                        android:layout_width="350dp"-->
 <!--                        android:layout_height="wrap_content"-->
-<!--                        android:max="60"-->
-<!--                        android:progress="30"-->
+<!--                        android:valueFrom="0"-->
+<!--                        android:valueTo="60"-->
+<!--                        android:stepSize="1"-->
+<!--                        android:value="30"-->
 <!--                        android:layout_marginStart="8dp"-->
-<!--                        android:progressTint="@color/cyan_custom"-->
-<!--                        android:thumbTint="@color/cyan_custom"/>-->
+<!--                        app:thumbRadius="10dp"-->
+<!--                        app:haloRadius="24dp"-->
+<!--                        app:haloColor="@color/transparent"-->
+<!--                        app:thumbColor="@color/cyan_custom"-->
+<!--                        app:trackColorActive="@color/cyan_custom"-->
+<!--                        app:trackHeight="4dp" />-->
 
 <!--                    <TextView-->
 <!--                        android:textSize="18sp"-->
@@ -1582,7 +1819,8 @@
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="32dp">
 
                     <TextView
                         android:textSize="18sp"
@@ -1591,15 +1829,25 @@
                         android:layout_height="wrap_content"
                         android:text="@string/max_adjustment"/>
 
-                    <SeekBar
+                    <com.google.android.material.slider.Slider
+                        app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_gala_max_adj"
                         android:layout_width="350dp"
                         android:layout_height="wrap_content"
-                        android:max="32"
-                        android:progress="12"
+                        android:valueFrom="0"
+                        android:valueTo="32"
+                        android:stepSize="1"
+                        android:value="12"
                         android:layout_marginStart="8dp"
-                        android:progressTint="@color/cyan_custom"
-                        android:thumbTint="@color/cyan_custom"/>
+                        app:thumbRadius="10dp"
+                        app:haloRadius="24dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/tick_color_active"
+                        app:tickColorInactive="@color/tick_color_inactive"
+                        app:trackColorActive="@color/cyan_custom"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:labelBehavior="gone" />
 
                     <TextView
                         android:textSize="18sp"
@@ -1627,15 +1875,27 @@
                         android:layout_height="wrap_content"
                         android:text="@string/simulate_speed"/>
 
-                    <SeekBar
+                    <com.google.android.material.slider.Slider
+                        app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_simulate_speed"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:max="200"
-                        android:progress="0"
+                        android:valueFrom="0"
+                        android:valueTo="200"
+                        android:stepSize="1"
+                        android:value="0"
                         android:layout_weight="1"
-                        android:progressTint="#ff5722"
-                        android:thumbTint="@color/cyan_custom"/>
+                        app:thumbRadius="10dp"
+                        app:haloRadius="24dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="#ff5722"
+                        app:tickColorActive="@color/tick_color_active"
+                        app:tickColorInactive="@color/tick_color_inactive"
+                        app:tickVisibilityMode="hidden"
+                        app:trackColorActive="#ff5722"
+                        app:trackStopIndicatorSize="0dp"
+                        app:trackHeight="@dimen/slider_track_height"
+                        app:labelBehavior="gone" />
 
                     <TextView
                         android:textSize="18sp"
@@ -1675,7 +1935,7 @@
             app:itemIconTint="@color/cyan_custom"
             app:itemTextColor="@color/cyan_custom" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_apply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

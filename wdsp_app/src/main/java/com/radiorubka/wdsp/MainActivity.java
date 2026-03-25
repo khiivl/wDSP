@@ -26,7 +26,6 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,8 +38,11 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.slider.LabelFormatter;
+import com.google.android.material.slider.TickVisibilityMode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.google.android.material.slider.Slider;
 
 import org.json.JSONObject;
 
@@ -69,13 +71,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_PLAYER_MAP = "player_preset_map";
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
 
-    private final List<SeekBar> gainSliders = new ArrayList<>();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final List<Slider> gainSliders = new ArrayList<>();
     private final List<ToggleButton> qSwitches = new ArrayList<>();
     private final List<TextView> dbLabels = new ArrayList<>();
     private Spinner spinnerPresets;
     private EqVisualizerView eqVisualizer;
     
-    private SeekBar seekSubGain;
+    private Slider seekSubGain;
     private Spinner spinnerSubFreq;
     private TextView tvSubDb;
 
@@ -83,31 +87,32 @@ public class MainActivity extends AppCompatActivity {
     private final String[] SUB_FREQS = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
 
     // Filter controls
-    private SeekBar seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
+    private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
     private TextView tvBassFilterFrontVal, tvBassBoostFrontDb, tvBassFilterRearVal, tvBassBoostRearDb;
     private Spinner spinnerBassFreqFront, spinnerBassFreqRear;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
 
     // Fader & Delays
-    private SeekBar seekFaderLr, seekFaderFr;
+    private Slider seekFaderLr;
+    private Slider seekFaderFr;
     private TextView tvFaderLrVal, tvFaderFrVal;
     private SwitchCompat switchLoud;
-    private SeekBar seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
-    private SeekBar seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE;
+    private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
+    private Slider seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE;
     private SwitchCompat switchPreciseEnable, switchLegacyEnable;
     private TextView tvDelayFlVal, tvDelayFrVal, tvDelayRlVal, tvDelayRrVal, tvDelaySubVal;
     private TextView tvDelay1FlVal, tvDelay1FrVal, tvDelay1RlVal, tvDelay1RrVal, tvDelay1RSSEVal;
 
     // F-M Curve
     private SwitchCompat switchFmEnable, switchFatigueEnable, switchFmSubComp;
-    private SeekBar seekFmCalVol, seekFmStrength;
+    private Slider seekFmCalVol, seekFmStrength;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
     private EqVisualizerView fmVisualizer;
     
     // GALA Controls
     private SwitchCompat switchGalaEnable;
-    private SeekBar seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
+    private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal;
 
     private float currentFmSubOffset = 0f;
@@ -123,10 +128,6 @@ public class MainActivity extends AppCompatActivity {
     public static class Globals {
         public static int currentSubFreqHz = 0;
     }
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-
-//    private final Runnable eqMcuRunnable = this::updateEqMcu;
 
     private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
@@ -443,18 +444,20 @@ public class MainActivity extends AppCompatActivity {
     }
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
-        container.removeAllViews(); gainSliders.clear(); qSwitches.clear(); dbLabels.clear();
+        container.removeAllViews();
+        gainSliders.clear();
+        qSwitches.clear();
+        dbLabels.clear();
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
         int cL = ContextCompat.getColor(this, R.color.band_label);
-        int cS = ContextCompat.getColor(this, R.color.seek_track);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             final int idx = i;
             ToggleButton q = new ToggleButton(this);
             TextView db = new TextView(this);
-            SeekBar s = new SeekBar(this);
-            qSwitches.add(q); dbLabels.add(db); gainSliders.add(s);
+            Slider s = new Slider(this, null);
+            gainSliders.add(s); qSwitches.add(q); dbLabels.add(db);
 
             LinearLayout layout = new LinearLayout(this);
             layout.setOrientation(LinearLayout.VERTICAL); layout.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -482,10 +485,32 @@ public class MainActivity extends AppCompatActivity {
             label.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             label.setGravity(Gravity.CENTER); label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
 
-            s.setMax(12); s.setProgress(6);
-            s.setProgressTintList(ColorStateList.valueOf(cS));
+            s.setValueFrom(0f);
+            s.setValueTo(12f);
+            s.setStepSize(1f);
+            s.setValue(6f);
+            s.setThumbHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics()));
+//            s.setThumbRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics()));
+            s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+            s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
-            s.setPadding(0, 0, 0, 0); s.setThumbOffset(0); s.setRotation(270f);
+            s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
+            s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+            s.setRotation(270f);
+
+            // 1. Set the Stop Indicator size to 0 (This is the "first tick" you're seeing)
+            s.setTrackStopIndicatorSize(0);
+
+            // 3. Make the track itself invisible
+//            ColorStateList transparent = ColorStateList.valueOf(Color.TRANSPARENT);
+//            s.setTrackActiveTintList(transparent);
+//            s.setTrackInactiveTintList(transparent);
+
+            // 4. Ensure Ticks are off and invisible just in case, also hide label
+//            s.setTickVisibilityMode(TickVisibilityMode.TICK_VISIBILITY_HIDDEN);
+            s.setLabelBehavior(LabelFormatter.LABEL_GONE);
+            s.setTickActiveTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.tick_color_active)));
+            s.setTickInactiveTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.tick_color_inactive)));
 
             FrameLayout seekBox = new FrameLayout(this);
             seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.76f));
@@ -497,17 +522,13 @@ public class MainActivity extends AppCompatActivity {
                 if (h > 0 && s.getWidth() != h) { ViewGroup.LayoutParams vlp = s.getLayoutParams(); vlp.width = h; s.setLayoutParams(vlp); }
             });
 
-            s.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                    if (!isUpdatingUi) {
-                        updateDbLabel(idx, p);
-                        updateVisualizer();
-                        autoSaveCurrent();
-                    }
+            s.addOnChangeListener((slider, value, fromUser) -> {
+                if (!isUpdatingUi) {
+                    int p = Math.round(value);
+                    updateDbLabel(idx, p);
+                    updateVisualizer();
+                    autoSaveCurrent();
                 }
-                @Override public void onStartTrackingTouch(SeekBar sb) {}
-                @Override public void onStopTrackingTouch(SeekBar sb) {}
             });
 
             layout.addView(q); layout.addView(db); layout.addView(label);
@@ -519,7 +540,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateVisualizer() {
         if (eqVisualizer == null) return;
         int[] gs = new int[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = gainSliders.get(i).getProgress();
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = getIntSlider(gainSliders.get(i));
         eqVisualizer.setGains(gs);
     }
 
@@ -532,9 +553,9 @@ public class MainActivity extends AppCompatActivity {
     private void adjustAllBands(int d) {
         isUpdatingUi = true;
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            SeekBar s = gainSliders.get(i);
-            int n = Math.max(0, Math.min(12, s.getProgress() + d));
-            s.setProgress(n); updateDbLabel(i, n);
+            Slider s = gainSliders.get(i);
+            float n = Math.max(0f, Math.min(12f, s.getValue() + d));
+            s.setValue(n); updateDbLabel(i, Math.round(n));
         }
         isUpdatingUi = false;
         updateVisualizer();
@@ -547,8 +568,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Loop through all 16 bands
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            SeekBar s = gainSliders.get(i);
-            s.setProgress(6);       // 6 is the center point (0 dB)
+            Slider s = gainSliders.get(i);
+            s.setValue(6f);       // 6 is the center point (0 dB)
             updateDbLabel(i, 6);    // Updates the text label above the slider
         }
 
@@ -600,18 +621,15 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
-        seekSubGain.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) { 
-                String text = "+" + p;
-                tvSubDb.setText(text); 
-                if (u && !isUpdatingUi) {
-                    autoSaveCurrent();
-//                    updateSubMcu();
-                }
+        seekSubGain.addOnChangeListener((slider, value, fromUser) -> {
+            int p = (int) value; // Convert float to int
+            String text = "+" + p;
+            tvSubDb.setText(text);
+            if (fromUser && !isUpdatingUi) {
+                autoSaveCurrent();
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
         });
+
     }
 
     private void setupFilterControls() {
@@ -628,35 +646,34 @@ public class MainActivity extends AppCompatActivity {
         };
         spinnerBassFreqFront.setOnItemSelectedListener(sl); spinnerBassFreqRear.setOnItemSelectedListener(sl);
 
-        SeekBar.OnSeekBarChangeListener bl = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                if (sb == seekBassFilterFront) tvBassFilterFrontVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
-                else if (sb == seekBassBoostFront) tvBassBoostFrontDb.setText(getString(R.string.lbl_db_fmt, p));
-                else if (sb == seekBassFilterRear) tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
-                else if (sb == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
-                if (u && !isUpdatingUi) {
-                    autoSaveCurrent();
+        Slider.OnChangeListener bl = (slider, value, fromUser) -> {
+            int p = (int) value;
+            if (slider == seekBassFilterFront) tvBassFilterFrontVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
+            else if (slider == seekBassBoostFront) tvBassBoostFrontDb.setText(getString(R.string.lbl_db_fmt, p));
+            else if (slider == seekBassFilterRear) tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
+            else if (slider == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
+            if (fromUser && !isUpdatingUi) {
+                autoSaveCurrent();
 //                    updateBassMcu();
-                }
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
         };
-        seekBassFilterFront.setOnSeekBarChangeListener(bl); seekBassBoostFront.setOnSeekBarChangeListener(bl);
-        seekBassFilterRear.setOnSeekBarChangeListener(bl); seekBassBoostRear.setOnSeekBarChangeListener(bl);
+        seekBassFilterFront.addOnChangeListener(bl); seekBassBoostFront.addOnChangeListener(bl);
+        seekBassFilterRear.addOnChangeListener(bl); seekBassBoostRear.addOnChangeListener(bl);
 
-        seekFaderLr.setMax(24); seekFaderFr.setMax(24);
-        SeekBar.OnSeekBarChangeListener fl = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                updateFaderLabels();
-                if (u && !isUpdatingUi) {
-                    autoSaveCurrent();
-//                    updateFaderMcu();
-                } }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
-        };
-        seekFaderLr.setOnSeekBarChangeListener(fl); seekFaderFr.setOnSeekBarChangeListener(fl);
+        seekFaderLr.addOnChangeListener((slider, value, fromUser) -> {
+            updateFaderLabels();
+            if (fromUser && !isUpdatingUi) {
+                autoSaveCurrent();
+//                updateFaderMcu();
+            }
+        });
+        seekFaderFr.addOnChangeListener((slider, value, fromUser) -> {
+            updateFaderLabels();
+            if (fromUser && !isUpdatingUi) {
+                autoSaveCurrent();
+//                updateFaderMcu();
+            }
+        });
         switchLoud.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
@@ -665,19 +682,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDelayControls() {
-        SeekBar.OnSeekBarChangeListener dl = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                float ms = p * 0.5f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
-                if (sb == seekDelayFl) tvDelayFlVal.setText(val); else if (sb == seekDelayFr) tvDelayFrVal.setText(val);
-                else if (sb == seekDelayRl) tvDelayRlVal.setText(val); else if (sb == seekDelayRr) tvDelayRrVal.setText(val);
-                else if (sb == seekDelaySub) tvDelaySubVal.setText(val);
-//                if (u && !isUpdatingUi) updateDelayMcu();
-            }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) { if (!isUpdatingUi) autoSaveCurrent(); }
+        Slider.OnChangeListener dl = (slider, value, fromUser) -> {
+            int p = (int) value;
+            float ms = p * 0.5f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
+            if (slider == seekDelayFl) tvDelayFlVal.setText(val); else if (slider == seekDelayFr) tvDelayFrVal.setText(val);
+            else if (slider == seekDelayRl) tvDelayRlVal.setText(val); else if (slider == seekDelayRr) tvDelayRrVal.setText(val);
+            else if (slider == seekDelaySub) tvDelaySubVal.setText(val);
+            if (fromUser && !isUpdatingUi) autoSaveCurrent();
         };
-        seekDelayFl.setOnSeekBarChangeListener(dl); seekDelayFr.setOnSeekBarChangeListener(dl);
-        seekDelayRl.setOnSeekBarChangeListener(dl); seekDelayRr.setOnSeekBarChangeListener(dl); seekDelaySub.setOnSeekBarChangeListener(dl);
+        seekDelayFl.addOnChangeListener(dl); seekDelayFr.addOnChangeListener(dl);
+        seekDelayRl.addOnChangeListener(dl); seekDelayRr.addOnChangeListener(dl); seekDelaySub.addOnChangeListener(dl);
         switchPreciseEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 if (checked) switchLegacyEnable.setChecked(false);
@@ -688,24 +702,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDelay1Controls() {
-        SeekBar.OnSeekBarChangeListener dl = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                if (sb == seekDelay1RSSE) { 
-                    int v = p - 10; 
-                    String text = (v > 0 ? "+" : "") + v;
-                    tvDelay1RSSEVal.setText(text); 
-                }
-                else { float ms = p * 1.0f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
-                    if (sb == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (sb == seekDelay1Fr) tvDelay1FrVal.setText(val);
-                    else if (sb == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (sb == seekDelay1Rr) tvDelay1RrVal.setText(val);
-                }
-//                if (u && !isUpdatingUi) updateDelay1Mcu();
+        Slider.OnChangeListener dl = (slider, value, fromUser) -> {
+            int p = (int) value;
+            if (slider == seekDelay1RSSE) { 
+                int v = p - 10; 
+                String text = (v > 0 ? "+" : "") + v;
+                tvDelay1RSSEVal.setText(text); 
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) { if (!isUpdatingUi) autoSaveCurrent(); }
+            else { float ms = p * 1.0f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
+                if (slider == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (slider == seekDelay1Fr) tvDelay1FrVal.setText(val);
+                else if (slider == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (slider == seekDelay1Rr) tvDelay1RrVal.setText(val);
+            }
+            if (fromUser && !isUpdatingUi) autoSaveCurrent();
         };
-        seekDelay1Fl.setOnSeekBarChangeListener(dl); seekDelay1Fr.setOnSeekBarChangeListener(dl);
-        seekDelay1Rl.setOnSeekBarChangeListener(dl); seekDelay1Rr.setOnSeekBarChangeListener(dl); seekDelay1RSSE.setOnSeekBarChangeListener(dl);
+        seekDelay1Fl.addOnChangeListener(dl); seekDelay1Fr.addOnChangeListener(dl);
+        seekDelay1Rl.addOnChangeListener(dl); seekDelay1Rr.addOnChangeListener(dl); seekDelay1RSSE.addOnChangeListener(dl);
         switchLegacyEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 if (checked) switchPreciseEnable.setChecked(false);
@@ -736,17 +747,15 @@ public class MainActivity extends AppCompatActivity {
                 updateFmVisualizer();
             }
         });
-        SeekBar.OnSeekBarChangeListener fml = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                if (sb == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
-                if (u && !isUpdatingUi) {
-                    updateFmVisualizer();
-                }
+        Slider.OnChangeListener fml = (slider, value, fromUser) -> {
+            int p = (int) value;
+            if (slider == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
+            if (fromUser && !isUpdatingUi) {
+                updateFmVisualizer();
+                autoSaveCurrent();
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) { autoSaveCurrent(); }
         };
-        seekFmCalVol.setOnSeekBarChangeListener(fml); seekFmStrength.setOnSeekBarChangeListener(fml);
+        seekFmCalVol.addOnChangeListener(fml); seekFmStrength.addOnChangeListener(fml);
     }
 
     private void updateFmVisualizer() {
@@ -758,14 +767,14 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float total = offs[i];
             actual[i] = total;
-            float pot = gainSliders.get(i).getProgress() + (total / 2f);
+            float pot = getIntSlider(gainSliders.get(i)) + (total / 2f);
             float wOffset = (pot - 12f) * 2; warns[i] = (pot > 12.025f && wOffset > 0.999f) ? wOffset : 0f;
             gs[i] = Math.round(Math.max(0, Math.min(12, 6f + (total / 2f))));
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
         if (switchFmSubComp.isChecked()) {
             tvSubOffsetVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), currentFmSubOffset));
-            float subPot = currentFmSubOffset + seekSubGain.getProgress();
+            float subPot = currentFmSubOffset + seekSubGain.getValue();
             tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : "OK");
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
@@ -774,7 +783,7 @@ public class MainActivity extends AppCompatActivity {
     private float[] calculateFmOffsets() {
         float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
         int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
-        int cal = seekFmCalVol.getProgress(); float str = seekFmStrength.getProgress() / 100f;
+        int cal = getIntSlider(seekFmCalVol); float str = getIntSlider(seekFmStrength) / 100f;
         if (vol < cal && switchFmEnable.isChecked()) {
             float ratio = (float)(cal - vol) / (float)(cal - 1);
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
@@ -897,31 +906,35 @@ public class MainActivity extends AppCompatActivity {
         loadPreset(presetNames.get(0));
     }
 
+    private int getIntSlider(Slider s) {
+        return Math.round(s.getValue());
+    }
+
     private void savePreset(String name) {
         SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) { e.putInt(name + "_g" + i, gainSliders.get(i).getProgress()); e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked()); }
-        e.putInt(name + "_sub_g", seekSubGain.getProgress()); e.putInt(name + "_sub_f", spinnerSubFreq.getSelectedItemPosition());
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) { e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i))); e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked()); }
+        e.putInt(name + "_sub_g", getIntSlider(seekSubGain)); e.putInt(name + "_sub_f", spinnerSubFreq.getSelectedItemPosition());
         if (isFullyInitialized) {
-            e.putInt(name + "_bf_f", seekBassFilterFront.getProgress()); e.putInt(name + "_bb_f", seekBassBoostFront.getProgress());
-            e.putInt(name + "_bf_r", seekBassFilterRear.getProgress()); e.putInt(name + "_bb_r", seekBassBoostRear.getProgress());
+            e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront)); e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
+            e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear)); e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
             e.putInt(name + "_bb_frq_f", spinnerBassFreqFront.getSelectedItemPosition()); e.putInt(name + "_bb_frq_r", spinnerBassFreqRear.getSelectedItemPosition());
-            e.putInt(name + "_f_lr", seekFaderLr.getProgress()); e.putInt(name + "_f_fr", seekFaderFr.getProgress());
+            e.putInt(name + "_f_lr", getIntSlider(seekFaderLr)); e.putInt(name + "_f_fr", getIntSlider(seekFaderFr));
             e.putBoolean(name + "_loud", switchLoud.isChecked()); e.putBoolean(name + "_fm_en", switchFmEnable.isChecked());
             e.putBoolean(name + "_fat_en", switchFatigueEnable.isChecked()); e.putBoolean(name + "_sub_comp", switchFmSubComp.isChecked());
-            e.putInt(name + "_fm_cal", seekFmCalVol.getProgress()); e.putInt(name + "_fm_str", seekFmStrength.getProgress());
-            e.putInt(name + "_d_fl", seekDelayFl.getProgress()); e.putInt(name + "_d_fr", seekDelayFr.getProgress());
-            e.putInt(name + "_d_rl", seekDelayRl.getProgress()); e.putInt(name + "_d_rr", seekDelayRr.getProgress());
-            e.putInt(name + "_d_sub", seekDelaySub.getProgress()); e.putBoolean(name + "_d_en", switchPreciseEnable.isChecked());
-            e.putInt(name + "_d1_fl", seekDelay1Fl.getProgress()); e.putInt(name + "_d1_fr", seekDelay1Fr.getProgress());
-            e.putInt(name + "_d1_rl", seekDelay1Rl.getProgress()); e.putInt(name + "_d1_rr", seekDelay1Rr.getProgress());
-            e.putInt(name + "_rsse_val", seekDelay1RSSE.getProgress()); e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
+            e.putInt(name + "_fm_cal", getIntSlider(seekFmCalVol)); e.putInt(name + "_fm_str", getIntSlider(seekFmStrength));
+            e.putInt(name + "_d_fl", getIntSlider(seekDelayFl)); e.putInt(name + "_d_fr", getIntSlider(seekDelayFr));
+            e.putInt(name + "_d_rl", getIntSlider(seekDelayRl)); e.putInt(name + "_d_rr", getIntSlider(seekDelayRr));
+            e.putInt(name + "_d_sub", getIntSlider(seekDelaySub)); e.putBoolean(name + "_d_en", switchPreciseEnable.isChecked());
+            e.putInt(name + "_d1_fl", getIntSlider(seekDelay1Fl)); e.putInt(name + "_d1_fr", getIntSlider(seekDelay1Fr));
+            e.putInt(name + "_d1_rl", getIntSlider(seekDelay1Rl)); e.putInt(name + "_d1_rr", getIntSlider(seekDelay1Rr));
+            e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE)); e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
             
             // GALA
             e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
-            e.putInt(name + "_gala_increment", seekGalaInc.getProgress());
-            e.putInt(name + "_gala_min_speed", seekGalaMinSpeed.getProgress());
+            e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
+            e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
 //            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
-            e.putInt(name + "_gala_max_adj", seekGalaMaxAdj.getProgress());
+            e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
 
             e.putInt(name + "_power_vol", -Integer.parseInt(tvPowerDb.getText().toString()));
 
@@ -933,53 +946,53 @@ public class MainActivity extends AppCompatActivity {
         isUpdatingUi = true;
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            int g = p.getInt(name + "_g" + i, 6); gainSliders.get(i).setProgress(g); updateDbLabel(i, g);
+            int g = p.getInt(name + "_g" + i, 6); gainSliders.get(i).setValue((float) g); updateDbLabel(i, g);
             qSwitches.get(i).setChecked(p.getBoolean(name + "_q" + i, false));
         }
-        int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setProgress(sg); 
+        int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setValue((float) sg);
         String subText = "+" + sg;
         tvSubDb.setText(subText);
         spinnerSubFreq.setSelection(p.getInt(name + "_sub_f", 5));
         if (isFullyInitialized) {
-            seekBassFilterFront.setProgress(p.getInt(name + "_bf_f", 0));
-            seekBassBoostFront.setProgress(p.getInt(name + "_bb_f", 0));
-            seekBassFilterRear.setProgress(p.getInt(name + "_bf_r", 0));
-            seekBassBoostRear.setProgress(p.getInt(name + "_bb_r", 0));
+            seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
+            seekBassBoostFront.setValue((float) p.getInt(name + "_bb_f", 0));
+            seekBassFilterRear.setValue((float) p.getInt(name + "_bf_r", 0));
+            seekBassBoostRear.setValue((float) p.getInt(name + "_bb_r", 0));
             spinnerBassFreqFront.setSelection(p.getInt(name + "_bb_frq_f", 0));
             spinnerBassFreqRear.setSelection(p.getInt(name + "_bb_frq_r", 0));
-            seekFaderLr.setProgress(p.getInt(name + "_f_lr", 12));
-            seekFaderFr.setProgress(p.getInt(name + "_f_fr", 12));
+            seekFaderLr.setValue((float) p.getInt(name + "_f_lr", 12));
+            seekFaderFr.setValue((float) p.getInt(name + "_f_fr", 12));
             updateFaderLabels(); switchLoud.setChecked(p.getBoolean(name + "_loud", false));
             switchFmEnable.setChecked(p.getBoolean(name + "_fm_en", false));
             switchFatigueEnable.setChecked(p.getBoolean(name + "_fat_en", false));
             switchFmSubComp.setChecked(p.getBoolean(name + "_sub_comp", false));
-            seekFmCalVol.setProgress(p.getInt(name + "_fm_cal", 25));
-            String calText = "" + seekFmCalVol.getProgress();
+            seekFmCalVol.setValue((float) p.getInt(name + "_fm_cal", 25));
+            String calText = "" + getIntSlider(seekFmCalVol);
             tvFmCalVolVal.setText(calText);
-            seekFmStrength.setProgress(p.getInt(name + "_fm_str", 100));
-            String strText = "" + seekFmStrength.getProgress();
+            seekFmStrength.setValue((float) p.getInt(name + "_fm_str", 100));
+            String strText = "" + getIntSlider(seekFmStrength);
             tvFmStrengthVal.setText(strText);
-            seekDelayFl.setProgress(p.getInt(name + "_d_fl", 0));
-            seekDelayFr.setProgress(p.getInt(name + "_d_fr", 0));
-            seekDelayRl.setProgress(p.getInt(name + "_d_rl", 0));
-            seekDelayRr.setProgress(p.getInt(name + "_d_rr", 0));
-            seekDelaySub.setProgress(p.getInt(name + "_d_sub", 0));
+            seekDelayFl.setValue((float) p.getInt(name + "_d_fl", 0));
+            seekDelayFr.setValue((float) p.getInt(name + "_d_fr", 0));
+            seekDelayRl.setValue((float) p.getInt(name + "_d_rl", 0));
+            seekDelayRr.setValue((float) p.getInt(name + "_d_rr", 0));
+            seekDelaySub.setValue((float) p.getInt(name + "_d_sub", 0));
             switchPreciseEnable.setChecked(p.getBoolean(name + "_d_en", false));
-            seekDelay1Fl.setProgress(p.getInt(name + "_d1_fl", 0));
-            seekDelay1Fr.setProgress(p.getInt(name + "_d1_fr", 0));
-            seekDelay1Rl.setProgress(p.getInt(name + "_d1_rl", 0));
-            seekDelay1Rr.setProgress(p.getInt(name + "_d1_rr", 0));
-            seekDelay1RSSE.setProgress(p.getInt(name + "_rsse_val", 10));
+            seekDelay1Fl.setValue((float) p.getInt(name + "_d1_fl", 0));
+            seekDelay1Fr.setValue((float) p.getInt(name + "_d1_fr", 0));
+            seekDelay1Rl.setValue((float) p.getInt(name + "_d1_rl", 0));
+            seekDelay1Rr.setValue((float) p.getInt(name + "_d1_rr", 0));
+            seekDelay1RSSE.setValue((float) p.getInt(name + "_rsse_val", 10));
             switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
             
             // GALA
             switchGalaEnable.setChecked(p.getBoolean(name + "_gala_enabled", false));
-            seekGalaInc.setProgress(p.getInt(name + "_gala_increment", 15));
-            tvGalaIncVal.setText(getString(R.string.speed_kmh_format, seekGalaInc.getProgress() + 5));
-            seekGalaMinSpeed.setProgress(p.getInt(name + "_gala_min_speed", 0));
-            tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,seekGalaMinSpeed.getProgress() * 5));
-            seekGalaMaxAdj.setProgress(p.getInt(name + "_gala_max_adj", 12));
-            tvGalaMaxAdjVal.setText(String.valueOf(seekGalaMaxAdj.getProgress()));
+            seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
+            tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
+            seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
+            tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
+            seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
+            tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
 
             // Power
             tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
@@ -1053,30 +1066,27 @@ public class MainActivity extends AppCompatActivity {
     private void setupGalaControls() {
         switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
         
-        SeekBar.OnSeekBarChangeListener galal = new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                if (sb == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
-                else if (sb == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
+        Slider.OnChangeListener galal = (slider, value, fromUser) -> {
+            int p = (int) value;
+            if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
+            else if (slider == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
 //                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
-                else if (sb == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
-                else if (sb == seekSimulateSpeed) {
-                    tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
-                    if (u) {
-                        Intent intent = new Intent("com.radiorubka.wdsp.SIMULATE_SPEED");
-                        intent.putExtra("speed", (float) p);
-                        sendBroadcast(intent);
-                    }
+            else if (slider == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
+            else if (slider == seekSimulateSpeed) {
+                tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
+                if (fromUser) {
+                    Intent intent = new Intent("com.radiorubka.wdsp.SIMULATE_SPEED");
+                    intent.putExtra("speed", (float) p);
+                    sendBroadcast(intent);
                 }
-                if (u && !isUpdatingUi) { autoSaveCurrent(); }
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
+            if (fromUser && !isUpdatingUi) { autoSaveCurrent(); }
         };
-        seekGalaInc.setOnSeekBarChangeListener(galal);
-        seekGalaMinSpeed.setOnSeekBarChangeListener(galal);
+        seekGalaInc.addOnChangeListener(galal);
+        seekGalaMinSpeed.addOnChangeListener(galal);
 //        seekGalaMaxSpeed.setOnSeekBarChangeListener(galal);
-        seekSimulateSpeed.setOnSeekBarChangeListener(galal);
-        seekGalaMaxAdj.setOnSeekBarChangeListener(galal);
+        seekSimulateSpeed.addOnChangeListener(galal);
+        seekGalaMaxAdj.addOnChangeListener(galal);
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
@@ -1200,24 +1210,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateFaderLabels() {
-        int lr = seekFaderLr.getProgress(); tvFaderLrVal.setText(lr == 12 ? getString(R.string.lbl_center) : (lr < 12 ? "L " + (12-lr) : "R " + (lr-12)));
-        int fr = seekFaderFr.getProgress(); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
+        int lr = getIntSlider(seekFaderLr); tvFaderLrVal.setText(lr == 12 ? getString(R.string.lbl_center) : (lr < 12 ? "L " + (12-lr) : "R " + (lr-12)));
+        int fr = getIntSlider(seekFaderFr); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
     }
 
     private void resetUiInternal() {
-        isUpdatingUi = true; for (SeekBar s : gainSliders) s.setProgress(6); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
+        isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setProgress(0); spinnerSubFreq.setSelection(5);
-            seekFaderLr.setProgress(12); seekFaderFr.setProgress(12); updateFaderLabels(); switchLoud.setChecked(false);
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setSelection(5);
+            seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
-            seekFmCalVol.setProgress(25); seekFmStrength.setProgress(100);
+            seekFmCalVol.setValue(25); seekFmStrength.setValue(100);
             
             // GALA reset
             switchGalaEnable.setChecked(false);
-            seekGalaInc.setProgress(15);
-            seekGalaMinSpeed.setProgress(0);
+            seekGalaInc.setValue(15);
+            seekGalaMinSpeed.setValue(0);
 //            seekGalaMaxSpeed.setProgress(30);
-            seekGalaMaxAdj.setProgress(12);
+            seekGalaMaxAdj.setValue(12);
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer();
     }

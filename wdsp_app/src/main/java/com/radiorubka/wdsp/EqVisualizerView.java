@@ -33,9 +33,9 @@ public class EqVisualizerView extends View {
     private final Path fillPath = new Path();
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final float TOP_OFFSET_RATIO = 0.237f;
+    private final float TOP_OFFSET_RATIO = 0.250f;
     @SuppressWarnings("FieldCanBeLocal")
-    private final float DRAW_HEIGHT_RATIO = 0.760f;
+    private final float DRAW_HEIGHT_RATIO = 0.730f;
 
     private int colorFill;
     private float thumbRadiusOffset;
