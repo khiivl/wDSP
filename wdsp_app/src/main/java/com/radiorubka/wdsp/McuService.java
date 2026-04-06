@@ -46,7 +46,7 @@ public class McuService extends Service implements LocationListener {
     private static final String PREFS_NAME = "EqPresets";
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
     private static final String PREF_PLAYER_MAP = "player_preset_map";
-    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
+//    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
     
     private SharedPreferences prefs;
     private HandlerThread workerThread;

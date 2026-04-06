@@ -24,10 +24,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -65,9 +63,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -968,7 +966,7 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle(R.string.dialog_rename_title)
                 .setView(container)
                 .setPositiveButton(R.string.btn_ok, (d, w) -> {
-                    String newName = editText.getText().toString().trim();
+                    String newName = Objects.requireNonNull(editText.getText()).toString().trim();
                     if (!newName.isEmpty() && !newName.equals(oldName)) {
                         if (presetNames.contains(newName)) {
                             Toast.makeText(this, R.string.toast_exists, Toast.LENGTH_SHORT).show();
