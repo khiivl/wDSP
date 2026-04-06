@@ -2,7 +2,9 @@
 <resources>
     <color name="text_theme_aware">#212121</color>
     <color name="text_theme_aware_2">#757575</color>
+    <color name="text_theme_aware_3">#CC757575</color>
     <color name="cyan_custom">#028889</color>
+    <color name="custom_square">#15757575</color>
     <color name="visualizer_grid">#15000000</color>
     <color name="visualizer_line">#66000000</color>
     <color name="visualizer_fill">#40028889</color>
@@ -19,6 +21,7 @@
     <color name="btn_delete_bg">#b95076</color>
     <color name="btn_export_bg">#6f70b4</color>
     <color name="btn_import_bg">#9f5e9d</color>
+    <color name="btn_lower_bg">#00000000</color>
 
     <!-- Slider Colors -->
     <color name="tick_color_inactive">#99FFFFFF</color>
@@ -29,7 +32,8 @@
     <color name="simulate_speed_color">#FF5722</color>
 
     <!-- Button Colors -->
-    <color name="stroke_color">#66FFFFFF</color>
+    <color name="stroke_color">#66000000</color>
+    <color name="stroke_color_top">#66FFFFFF</color>
 
     <color name="status_bar">#FFFFFF</color>
 </resources>

@@ -31,8 +31,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -61,10 +66,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Main";
+
+    private static final String KEY_SELECTED_TAB = "selected_tab_id";
     private static final String PREFS_NAME = "EqPresets";
     private static final String PREF_PRESET_NAMES = "preset_names";
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
@@ -89,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
     private TextView tvBassFilterFrontVal, tvBassBoostFrontDb, tvBassFilterRearVal, tvBassBoostRearDb;
-    private Spinner spinnerBassFreqFront, spinnerBassFreqRear;
+    private AutoCompleteTextView spinnerBassFreqFront, spinnerBassFreqRear;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
 
@@ -137,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
                     Toast.makeText(MainActivity.this, "Auto applied preset: " + name, Toast.LENGTH_SHORT).show();
-                    spinnerPresets.setSelection(presetNames.indexOf(name));
+                    spinnerPresets.setText(name, false);
+                    loadPreset(name);
                 }
             } else if ("com.radiorubka.wdsp.VOLUME_CHANGED".equals(action)) {
                 currentEffectiveVolume = intent.getIntExtra("volume", -1);
@@ -161,6 +171,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        EdgeToEdge.enable(this,
+                SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+        );
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -168,7 +184,16 @@ public class MainActivity extends AppCompatActivity {
         
         // 1. Instant UI: Minimal views needed for the first screen
         initPrimaryViews();
-        SelectTab();
+
+        if (savedInstanceState != null) {
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            int tabId = savedInstanceState.getInt(KEY_SELECTED_TAB);
+            bottomNav.setSelectedItemId(tabId);
+        }
+        else {
+            SelectTab();
+        }
+
         
         // 2. Background Tasks: Reflection and Service
         new Thread(() -> {
@@ -194,6 +219,14 @@ public class MainActivity extends AppCompatActivity {
             initReflection();
             ensureCallPresetExists();
         }, 50);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save the currently selected ID
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        outState.putInt(KEY_SELECTED_TAB, bottomNav.getSelectedItemId());
     }
 
     private void bypassHiddenApiRestrictions() {
@@ -257,7 +290,9 @@ public class MainActivity extends AppCompatActivity {
             String current = prefs.getString("last_selected_preset", "Call");
             int index = presetNames.indexOf(current);
             if (index >= 0 && index < presetNames.size()) {
-                spinnerPresets.setText(presetNames.get(index), false); // 'false' is vital to prevent the keyboard/popup showing
+                String newName = presetNames.get(index);
+                spinnerPresets.setText(newName, false);
+                loadPreset(newName);
             }
         }
     }
@@ -486,7 +521,7 @@ public class MainActivity extends AppCompatActivity {
             s.setValueTo(12f);
             s.setStepSize(1f);
             s.setValue(6f);
-            s.setThumbHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics()));
+            s.setThumbHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
 //            s.setThumbRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics()));
             s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
@@ -650,18 +685,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFilterControls() {
-        ArrayAdapter<String> bbAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, BASS_BOOST_FREQS) {{ setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); }};
-        spinnerBassFreqFront.setAdapter(bbAdapter); spinnerBassFreqRear.setAdapter(bbAdapter);
-        AdapterView.OnItemSelectedListener sl = new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                if (!isUpdatingUi) {
-                    autoSaveCurrent();
-//                    updateBassMcu();
-                }
+        ArrayAdapter<String> bbAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, BASS_BOOST_FREQS);
+
+        spinnerBassFreqFront.setAdapter(bbAdapter);
+        spinnerBassFreqRear.setAdapter(bbAdapter);
+
+        // Replaced the old OnItemSelectedListener with OnItemClickListener
+        AdapterView.OnItemClickListener itemClickListener = (parent, view, pos, id) -> {
+            if (!isUpdatingUi) {
+                autoSaveCurrent();
+                // updateBassMcu(); // Uncomment if you use this
             }
-            @Override public void onNothingSelected(AdapterView<?> p) {}
         };
-        spinnerBassFreqFront.setOnItemSelectedListener(sl); spinnerBassFreqRear.setOnItemSelectedListener(sl);
+
+        spinnerBassFreqFront.setOnItemClickListener(itemClickListener);
+        spinnerBassFreqRear.setOnItemClickListener(itemClickListener);
 
         Slider.OnChangeListener bl = (slider, value, fromUser) -> {
             int p = (int) value;
@@ -691,6 +730,7 @@ public class MainActivity extends AppCompatActivity {
 //                updateFaderMcu();
             }
         });
+        switchLoud.jumpDrawablesToCurrentState();
         switchLoud.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
@@ -709,6 +749,7 @@ public class MainActivity extends AppCompatActivity {
         };
         seekDelayFl.addOnChangeListener(dl); seekDelayFr.addOnChangeListener(dl);
         seekDelayRl.addOnChangeListener(dl); seekDelayRr.addOnChangeListener(dl); seekDelaySub.addOnChangeListener(dl);
+        switchPreciseEnable.jumpDrawablesToCurrentState();
         switchPreciseEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 if (checked) switchLegacyEnable.setChecked(false);
@@ -734,6 +775,7 @@ public class MainActivity extends AppCompatActivity {
         };
         seekDelay1Fl.addOnChangeListener(dl); seekDelay1Fr.addOnChangeListener(dl);
         seekDelay1Rl.addOnChangeListener(dl); seekDelay1Rr.addOnChangeListener(dl); seekDelay1RSSE.addOnChangeListener(dl);
+        switchLegacyEnable.jumpDrawablesToCurrentState();
         switchLegacyEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 if (checked) switchPreciseEnable.setChecked(false);
@@ -744,12 +786,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFmControls() {
+        switchFmEnable.jumpDrawablesToCurrentState();
         switchFmEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
         });
+        switchFatigueEnable.jumpDrawablesToCurrentState();
         switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
@@ -757,6 +801,7 @@ public class MainActivity extends AppCompatActivity {
 //                updateEqMcu();
             }
         });
+        switchFmSubComp.jumpDrawablesToCurrentState();
         switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
                 if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);
@@ -877,16 +922,63 @@ public class MainActivity extends AppCompatActivity {
         savePresetList();
         savePreset(n);
         presetAdapter.notifyDataSetChanged();
+
         spinnerPresets.setText(n, false);
+        loadPreset(n);
     }
 
     private void renameCurrentPreset() {
-        final String old = spinnerPresets.getText().toString();
-        final EditText in = new EditText(this); in.setText(old); in.setSelection(old.length());
-        new AlertDialog.Builder(this).setTitle(R.string.dialog_rename_title).setView(in).setPositiveButton(R.string.btn_ok, (d, w) -> {
-            String n = in.getText().toString().trim();
-            if (!n.isEmpty() && !n.equals(old)) { if (presetNames.contains(n)) Toast.makeText(this, R.string.toast_exists, Toast.LENGTH_SHORT).show(); else performRename(old, n); }
-        }).setNegativeButton(R.string.btn_cancel, null).show();
+        final String oldName = spinnerPresets.getText().toString();
+
+        // Prevent renaming the protected "Call" preset immediately
+        if ("Call".equals(oldName)) {
+            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show(); // Ensure this string exists or use a literal
+            return;
+        }
+
+        // 1. Create the EditText with Material styling
+        com.google.android.material.textfield.TextInputEditText editText = new com.google.android.material.textfield.TextInputEditText(this);
+        editText.setText(oldName);
+        editText.setSelection(oldName.length());
+        editText.setSingleLine(true);
+
+        // 2. Wrap it in a TextInputLayout to get the Material look (outline/hint)
+        com.google.android.material.textfield.TextInputLayout inputLayout = new com.google.android.material.textfield.TextInputLayout(this);
+        inputLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        inputLayout.setHint(getString(R.string.dialog_rename_title));
+        inputLayout.setBoxCornerRadii(12, 12, 12, 12); // Optional: match your app's roundness
+
+        // 3. Add margins to the container so the input isn't flush against the dialog edges
+        FrameLayout container = new FrameLayout(this);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        params.leftMargin = margin;
+        params.rightMargin = margin;
+        params.topMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+        inputLayout.setLayoutParams(params);
+
+        inputLayout.addView(editText);
+        container.addView(inputLayout);
+
+        // 4. Build using MaterialAlertDialogBuilder
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_rename_title)
+                .setView(container)
+                .setPositiveButton(R.string.btn_ok, (d, w) -> {
+                    String newName = editText.getText().toString().trim();
+                    if (!newName.isEmpty() && !newName.equals(oldName)) {
+                        if (presetNames.contains(newName)) {
+                            Toast.makeText(this, R.string.toast_exists, Toast.LENGTH_SHORT).show();
+                        } else {
+                            performRename(oldName, newName);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
     }
 
     private void performRename(String o, String n) {
@@ -943,6 +1035,7 @@ public class MainActivity extends AppCompatActivity {
 
         presetAdapter.notifyDataSetChanged();
         spinnerPresets.setText(n, false);
+        loadPreset(n);
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
@@ -984,8 +1077,10 @@ public class MainActivity extends AppCompatActivity {
         e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
         e.apply();
         presetAdapter.notifyDataSetChanged();
-        spinnerPresets.setText(presetNames.get(Math.max(currindex - 1, 0)), false);
-        loadPreset(presetNames.get(0));
+
+        String newName = presetNames.get(Math.max(currindex - 1, 0));
+        spinnerPresets.setText(newName, false);
+        loadPreset(newName);
     }
 
     private int getIntSlider(Slider s) {
@@ -997,19 +1092,36 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) { e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i))); e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked()); }
         e.putInt(name + "_sub_g", getIntSlider(seekSubGain)); e.putInt(name + "_sub_f", java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()));
         if (isFullyInitialized) {
-            e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront)); e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
-            e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear)); e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
-            e.putInt(name + "_bb_frq_f", spinnerBassFreqFront.getSelectedItemPosition()); e.putInt(name + "_bb_frq_r", spinnerBassFreqRear.getSelectedItemPosition());
-            e.putInt(name + "_f_lr", getIntSlider(seekFaderLr)); e.putInt(name + "_f_fr", getIntSlider(seekFaderFr));
-            e.putBoolean(name + "_loud", switchLoud.isChecked()); e.putBoolean(name + "_fm_en", switchFmEnable.isChecked());
-            e.putBoolean(name + "_fat_en", switchFatigueEnable.isChecked()); e.putBoolean(name + "_sub_comp", switchFmSubComp.isChecked());
-            e.putInt(name + "_fm_cal", getIntSlider(seekFmCalVol)); e.putInt(name + "_fm_str", getIntSlider(seekFmStrength));
-            e.putInt(name + "_d_fl", getIntSlider(seekDelayFl)); e.putInt(name + "_d_fr", getIntSlider(seekDelayFr));
-            e.putInt(name + "_d_rl", getIntSlider(seekDelayRl)); e.putInt(name + "_d_rr", getIntSlider(seekDelayRr));
-            e.putInt(name + "_d_sub", getIntSlider(seekDelaySub)); e.putBoolean(name + "_d_en", switchPreciseEnable.isChecked());
-            e.putInt(name + "_d1_fl", getIntSlider(seekDelay1Fl)); e.putInt(name + "_d1_fr", getIntSlider(seekDelay1Fr));
-            e.putInt(name + "_d1_rl", getIntSlider(seekDelay1Rl)); e.putInt(name + "_d1_rr", getIntSlider(seekDelay1Rr));
-            e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE)); e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
+            e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront));
+            e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
+            e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear));
+            e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
+
+            int frontFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqFront.getText().toString());
+            int rearFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqRear.getText().toString());
+            e.putInt(name + "_bb_frq_f", Math.max(0, frontFreqIdx));
+            e.putInt(name + "_bb_frq_r", Math.max(0, rearFreqIdx));
+
+            e.putInt(name + "_f_lr", getIntSlider(seekFaderLr));
+            e.putInt(name + "_f_fr", getIntSlider(seekFaderFr));
+            e.putBoolean(name + "_loud", switchLoud.isChecked());
+            e.putBoolean(name + "_fm_en", switchFmEnable.isChecked());
+            e.putBoolean(name + "_fat_en", switchFatigueEnable.isChecked());
+            e.putBoolean(name + "_sub_comp", switchFmSubComp.isChecked());
+            e.putInt(name + "_fm_cal", getIntSlider(seekFmCalVol));
+            e.putInt(name + "_fm_str", getIntSlider(seekFmStrength));
+            e.putInt(name + "_d_fl", getIntSlider(seekDelayFl));
+            e.putInt(name + "_d_fr", getIntSlider(seekDelayFr));
+            e.putInt(name + "_d_rl", getIntSlider(seekDelayRl));
+            e.putInt(name + "_d_rr", getIntSlider(seekDelayRr));
+            e.putInt(name + "_d_sub", getIntSlider(seekDelaySub));
+            e.putBoolean(name + "_d_en", switchPreciseEnable.isChecked());
+            e.putInt(name + "_d1_fl", getIntSlider(seekDelay1Fl));
+            e.putInt(name + "_d1_fr", getIntSlider(seekDelay1Fr));
+            e.putInt(name + "_d1_rl", getIntSlider(seekDelay1Rl));
+            e.putInt(name + "_d1_rr", getIntSlider(seekDelay1Rr));
+            e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE));
+            e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
             
             // GALA
             e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
@@ -1034,14 +1146,25 @@ public class MainActivity extends AppCompatActivity {
         int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setValue((float) sg);
         String subText = "+" + sg;
         tvSubDb.setText(subText);
-        spinnerSubFreq.setText(SUB_FREQS[p.getInt(name + "_sub_f", 5)], false);
+        int subFreqIdx = p.getInt(name + "_sub_f", 5); // 5 is the default (80Hz)
+        if (subFreqIdx < 0 || subFreqIdx >= SUB_FREQS.length) {
+            subFreqIdx = 5; // Safety fallback
+        }
+        spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
         if (isFullyInitialized) {
             seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
             seekBassBoostFront.setValue((float) p.getInt(name + "_bb_f", 0));
             seekBassFilterRear.setValue((float) p.getInt(name + "_bf_r", 0));
             seekBassBoostRear.setValue((float) p.getInt(name + "_bb_r", 0));
-            spinnerBassFreqFront.setSelection(p.getInt(name + "_bb_frq_f", 0));
-            spinnerBassFreqRear.setSelection(p.getInt(name + "_bb_frq_r", 0));
+
+            // Replace .setSelection(int) with .setText(String, false)
+            int frontIdx = p.getInt(name + "_bb_frq_f", 0);
+            int rearIdx = p.getInt(name + "_bb_frq_r", 0);
+
+            // Use false to prevent the dropdown from popping up while loading
+            spinnerBassFreqFront.setText(BASS_BOOST_FREQS[frontIdx], false);
+            spinnerBassFreqRear.setText(BASS_BOOST_FREQS[rearIdx], false);
+
             seekFaderLr.setValue((float) p.getInt(name + "_f_lr", 12));
             seekFaderFr.setValue((float) p.getInt(name + "_f_fr", 12));
             updateFaderLabels(); switchLoud.setChecked(p.getBoolean(name + "_loud", false));
@@ -1086,25 +1209,54 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupNavigation() {
         BottomNavigationView bn = findViewById(R.id.bottom_navigation);
-        final View eq = findViewById(R.id.layout_eq),
-                fm = findViewById(R.id.layout_fm_curve),
-                dly = findViewById(R.id.layout_delays),
-                ftr = findViewById(R.id.layout_filters),
-                gl = findViewById(R.id.layout_gala);
+
+        // 1. Reference all your layout containers
+        final View eq = findViewById(R.id.layout_eq);
+        final View fm = findViewById(R.id.layout_fm_curve);
+        final View dly = findViewById(R.id.layout_delays);
+        final View ftr = findViewById(R.id.layout_filters);
+        final View gl = findViewById(R.id.layout_gala);
+
+        // 2. Put them in an array for easy looping
+        final View[] allLayouts = {eq, fm, dly, ftr, gl};
+
         bn.setOnItemSelectedListener(it -> {
-            int id = it.getItemId(); 
-            eq.setVisibility(View.GONE);
-            fm.setVisibility(View.GONE);
-            dly.setVisibility(View.GONE);
-            ftr.setVisibility(View.GONE);
-            gl.setVisibility(View.GONE);
-            if (id == R.id.nav_eq) eq.setVisibility(View.VISIBLE); 
-            else if (id == R.id.nav_fm_curve) { fm.setVisibility(View.VISIBLE); updateFmVisualizer(); }
-            else if (id == R.id.nav_delays) dly.setVisibility(View.VISIBLE); 
-            else if (id == R.id.nav_other) ftr.setVisibility(View.VISIBLE);
-            else if (id == R.id.nav_gala) gl.setVisibility(View.VISIBLE);
+            int id = it.getItemId();
+            View target = null;
+
+            // Determine which layout to show
+            if (id == R.id.nav_eq) target = eq;
+            else if (id == R.id.nav_fm_curve) { target = fm; updateFmVisualizer(); }
+            else if (id == R.id.nav_delays) target = dly;
+            else if (id == R.id.nav_other) target = ftr;
+            else if (id == R.id.nav_gala) target = gl;
+
+            if (target != null) {
+                // 3. Hide EVERYTHING first
+                for (View layout : allLayouts) {
+                    layout.setVisibility(View.GONE);
+                }
+
+                // 4. Show the target
+                target.setVisibility(View.VISIBLE);
+
+                // 5. Force switches in this layout to snap (fixes the twitch)
+                snapSwitches(target);
+            }
             return true;
         });
+    }
+
+    private void snapSwitches(View root) {
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                snapSwitches(group.getChildAt(i));
+            }
+        } else if (root instanceof SwitchCompat) {
+            // This is the magic line that stops the animation immediately
+            root.jumpDrawablesToCurrentState();
+        }
     }
 
     private void initReflection() {
@@ -1127,26 +1279,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAutoPresetDialog() {
-        String p = getSystemProperty();
+        String ass = getSystemProperty();
+        if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
+            ass = "Default";
+        }
+        String p = ass;
         String cur = spinnerPresets.getText().toString();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());
-        String def = prefs.getString(PREF_DEFAULT_PRESET, getString(R.string.none));
-        
+        // String def = prefs.getString(PREF_DEFAULT_PRESET, getString(R.string.none));
+
         StringBuilder sb = new StringBuilder(getString(R.string.current_associations));
         for (Map.Entry<String, String> entry : map.entrySet()) sb.append("- ").append(entry.getKey()).append(" -> ").append(entry.getValue()).append("\n");
-        sb.append(getString(R.string.global_default_fmt, def));
-        
-        new AlertDialog.Builder(this)
+//        sb.append(getString(R.string.global_default_fmt, def));
+
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.automation_title_fmt, cur))
                 .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb)
-                .setPositiveButton(R.string.btn_assign, (d, w) -> { map.put(p, cur); prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply(); })
-                .setNeutralButton(R.string.btn_set_default, (d, w) -> prefs.edit().putString(PREF_DEFAULT_PRESET, cur).apply())
-                .setNegativeButton(R.string.btn_unassign, (d, w) -> { if (map.containsKey(p)) { map.remove(p); prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply(); } })
+                .setPositiveButton(R.string.btn_assign, (d, w) -> {
+                    map.put(p, cur);
+                    prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+                })
+//                .setNeutralButton(R.string.btn_set_default, (d, w) ->
+//                        prefs.edit().putString(PREF_DEFAULT_PRESET, cur).apply())
+                .setNegativeButton(R.string.btn_unassign, (d, w) -> {
+                    if (map.containsKey(p)) {
+                        map.remove(p);
+                        prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+                    }
+                })
                 .show();
     }
 
     private void setupGalaControls() {
+        switchGalaEnable.jumpDrawablesToCurrentState();
         switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
         
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
@@ -1284,8 +1450,9 @@ public class MainActivity extends AppCompatActivity {
             ensureCallPresetExists(); // Safety check
 
             // 8. Auto-select the newly imported preset
-            int newIndex = presetNames.indexOf(newPresetName);
-            if (newIndex >= 0) spinnerPresets.setSelection(newIndex);
+            //int newIndex = presetNames.indexOf(newPresetName);
+            spinnerPresets.setText(newPresetName, false);
+            loadPreset(newPresetName);
 
             Toast.makeText(this, getString(R.string.toast_imported) + ": " + newPresetName, Toast.LENGTH_SHORT).show();
 

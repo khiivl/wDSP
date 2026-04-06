@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/app_background"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:fitsSystemWindows="true">
 
     <!-- Container for different screens -->
     <FrameLayout
@@ -1641,7 +1642,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="?android:attr/windowBackground"
+        android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -1650,6 +1651,8 @@
             android:layout_height="72dp"
             android:layout_weight="1"
             android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:backgroundTint="@android:color/transparent"
             app:menu="@menu/bottom_nav_menu"
             app:labelVisibilityMode="labeled"
             app:itemIconTint="@color/cyan_custom"

@@ -2,7 +2,9 @@
 <resources>
     <color name="text_theme_aware">#E0E0E0</color>
     <color name="text_theme_aware_2">#BDBDBD</color>
+    <color name="text_theme_aware_3">#CCBDBDBD</color>
     <color name="cyan_custom">#79bcbd</color>
+    <color name="custom_square">#15BDBDBD</color>
     <color name="visualizer_grid">#18FFFFFF</color>
     <color name="visualizer_line">#AAFFFFFF</color>
     <color name="visualizer_fill">#80028889</color>
@@ -15,6 +17,7 @@
     <color name="colored_button_text">#000000</color>
     <color name="status_bar">#000000</color>
     <color name="stroke_color">#66000000</color>
+    <color name="stroke_color_top">#66000000</color>
 
     <color name="btn_auto_bg">#79bcbd</color>
     <color name="btn_add_bg">#61a9c2</color>
@@ -22,4 +25,5 @@
     <color name="btn_export_bg">#7b79ae</color>
     <color name="btn_import_bg">#8f5d8d</color>
     <color name="btn_delete_bg">#944460</color>
+    <color name="btn_lower_bg">#00000000</color>
 </resources>

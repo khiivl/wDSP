@@ -2,18 +2,18 @@
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
-    <string name="btn_auto">Auto</string>
-    <string name="btn_add">Add</string>
-    <string name="btn_rename">Ren</string>
-    <string name="btn_delete">Del</string>
-    <string name="btn_export">Exp</string>
-    <string name="btn_import">Imp</string>
+    <string name="btn_auto">Auto-Preset</string>
+    <string name="btn_add">Duplicate</string>
+    <string name="btn_rename">Rename</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_export">Export</string>
+    <string name="btn_import">Import</string>
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
-    <string name="btn_plus">+</string>
-    <string name="btn_minus">-</string>
-    <string name="btn_center" translatable="false">0</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -54,7 +54,7 @@
 
     <!-- GALA Tab -->
     <string name="gala_title">GALA (Speed Dependent Volume)</string>
-    <string name="enable_gala">Enable GALA:</string>
+    <string name="enable_gala">Enable GALA</string>
     <string name="enable_gala_feature">Enable GALA Feature</string>
     <string name="vol_step_interval">Volume Step Interval</string>
     <string name="vol_step_every">Volume Step every:</string>
@@ -76,7 +76,7 @@
     <!-- General -->
     <string name="btn_apply">Apply</string>
     <string name="btn_reapply">Reapply if reset</string>
-    <string name="value_default">Not set</string>
+    <string name="value_default">None</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancel</string>
     <string name="none">None</string>
@@ -122,7 +122,7 @@
     <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
     <string name="hint_sub_freq">"Freq"</string>
-    <string name="eqc">"EQ:"</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>

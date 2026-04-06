@@ -3,7 +3,7 @@
     <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <item name="colorPrimary">@color/cyan_custom</item>
-        <item name="android:statusBarColor">?android:attr/windowBackground</item>
+        <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:fontFamily">@font/main_font</item>
         <item name="fontFamily">@font/main_font</item>
@@ -34,6 +34,21 @@
         <item name="android:textSize">@dimen/text_size_label</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_theme_aware_2</item>
+    </style>
+
+    <!-- 1. The Square Shape -->
+    <style name="ShapeAppearance.Square" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">@dimen/button_radius</item>
+    </style>
+
+    <!-- 2. The Indicator Style (Explicitly setting parent to empty to avoid lookup) -->
+    <style name="IndicatorSquare" parent="">
+        <!-- This is the internal property for the indicator's shape -->
+        <item name="shapeAppearance">@style/ShapeAppearance.Square</item>
+        <item name="android:color">@color/custom_square</item>
+        <!-- Optional: Set height and width here if you want it to be a perfect square -->
+        <item name="android:width">33dp</item>
+        <item name="android:height">33dp</item>
     </style>
 
 </resources>

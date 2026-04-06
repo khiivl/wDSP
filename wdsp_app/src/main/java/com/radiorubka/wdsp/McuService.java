@@ -108,6 +108,7 @@ public class McuService extends Service implements LocationListener {
 
     private boolean isUiVisible = false;
     private boolean isBootStart = true;
+    private String presetBeforeCall;
 
     private void initReflection() {
         try {
@@ -466,6 +467,9 @@ public class McuService extends Service implements LocationListener {
 
     private void checkPlayer() {
         String currentPlayer = getSystemProperty();
+        if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
+            currentPlayer = "Default";
+        }
         if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
@@ -478,14 +482,18 @@ public class McuService extends Service implements LocationListener {
 
     private void processPlayerSwitch(String currentPlayer) {
         String presetToLoad = playerMap.get(currentPlayer);
-        if (presetToLoad == null && (currentPlayer.isEmpty() || currentPlayer.equals("Unknown"))) {
-            presetToLoad = playerMap.get("Unknown");
-        }
-        if (presetToLoad == null) {
-            presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
-        }
+//        if (presetToLoad == null && (currentPlayer.isEmpty() || currentPlayer.equals("Unknown"))) {
+//            presetToLoad = playerMap.get("Unknown");
+//        }
+//        if (presetToLoad == null) {
+//            presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
+//        }
         if (currentPlayer.equals("Call")) {
+            presetBeforeCall = currentPresetName;
             presetToLoad = "Call";
+        }
+        if (currentPresetName.equals("Call") && !currentPlayer.equals("Call") && presetToLoad == null) {
+            presetToLoad = presetBeforeCall;
         }
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
             if (!isUiVisible) {

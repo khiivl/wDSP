@@ -2,22 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_eq"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:icon="@drawable/eq_icon"
+        android:iconTint="@color/btn_auto_bg"
         android:title="@string/EQtab" />
     <item
         android:id="@+id/nav_fm_curve"
-        android:icon="@android:drawable/ic_menu_gallery"
+        android:icon="@drawable/fm_icon"
+        android:iconTint="@color/btn_add_bg"
         android:title="@string/FMtab" />
     <item
         android:id="@+id/nav_delays"
-        android:icon="@android:drawable/ic_menu_recent_history"
+        android:icon="@drawable/del_icon"
+        android:iconTint="@color/btn_rename_bg"
         android:title="@string/DLtab" />
     <item
         android:id="@+id/nav_other"
-        android:icon="@android:drawable/ic_menu_manage"
+        android:icon="@drawable/oth_icon"
+        android:iconTint="@color/btn_export_bg"
         android:title="@string/OTtab" />
     <item
-        android:icon="@android:drawable/ic_menu_mylocation"
+        android:icon="@drawable/gala_icon"
+        android:iconTint="@color/btn_import_bg"
         android:id="@+id/nav_gala"
         android:title="@string/GLtab"/>
 </menu>

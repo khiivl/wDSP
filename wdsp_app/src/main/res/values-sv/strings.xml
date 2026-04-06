@@ -12,8 +12,6 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
-    <string name="btn_plus">+</string>
-    <string name="btn_minus">-</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -54,7 +52,7 @@
 
     <!-- GALA Tab -->
     <string name="gala_title">GALA (Hastighetsberoende volym)</string>
-    <string name="enable_gala">Aktivera GALA:</string>
+    <string name="enable_gala">Aktivera GALA</string>
     <string name="enable_gala_feature">Aktivera GALA-funktion</string>
     <string name="vol_step_interval">Volymstegsintervall</string>
     <string name="vol_step_every">Volymsteg per:</string>
@@ -115,6 +113,7 @@
     <string name="default_preset_name">Profil 1</string>
 
     <!-- Labels -->
+    <string name="default_preset_name_hint">Profil</string>
     <string name="lbl_hz_fmt">%1$s Hz</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
     <string name="lbl_db_fmt2">%.1f dB</string>
@@ -129,5 +128,6 @@
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
     <string name="lbl_pwr">" Förstärkar:"</string>
+    <string name="hint_sub_freq">Frekv</string>
 
 </resources>

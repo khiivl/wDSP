@@ -35,7 +35,7 @@ public class EqVisualizerView extends View {
     private final Path fillPath = new Path();
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final float TOP_OFFSET_RATIO = 0.257f;
+    private final float TOP_OFFSET_RATIO = 0.2525f;
     @SuppressWarnings("FieldCanBeLocal")
     private final float DRAW_HEIGHT_RATIO = 0.725f;
 
@@ -68,7 +68,7 @@ public class EqVisualizerView extends View {
 
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         linePaint.setColor(colorLine);
-        linePaint.setStrokeWidth(3.5f * density);
+        linePaint.setStrokeWidth(2.5f * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
         linePaint.setStrokeJoin(Paint.Join.ROUND);
