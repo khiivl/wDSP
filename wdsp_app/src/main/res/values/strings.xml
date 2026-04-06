@@ -121,7 +121,6 @@
     <string name="lbl_hz_fmt">%1$s Hz</string>
     <string name="lbl_db_fmt2">%.1f dB</string>
     <string name="lbl_db_fmt">+ %1$d dB</string>
-    <string name="hint_sub_freq">"Freq"</string>
     <string name="eqc" translatable="false">"EQ:"</string>
 
     <!-- Formats -->

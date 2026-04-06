@@ -341,7 +341,7 @@
                     app:hintTextColor="@color/cyan_custom"
                     app:endIconTint="@color/cyan_custom"
                     android:translationY="-2dp"
-                    android:hint="@string/hint_sub_freq"
+                    android:hint="@string/lbl_freq"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_minus"
                     app:layout_constraintStart_toEndOf="@id/tv_sub_db"

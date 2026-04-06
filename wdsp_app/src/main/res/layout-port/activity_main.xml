@@ -32,8 +32,8 @@
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
+                android:paddingHorizontal="@dimen/padding_standard"
+                android:paddingVertical="@dimen/padding_small"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -56,6 +56,7 @@
                         android:inputType="none"
                         android:paddingVertical="12dp"
                         android:textColor="@color/cyan_custom"
+                        android:focusable="false"
                         tools:ignore="LabelFor" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -67,8 +68,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="8dp"
+                android:paddingHorizontal="@dimen/padding_standard"
+                android:paddingBottom="@dimen/padding_small"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout_presetspinner">
@@ -83,11 +84,11 @@
                         android:id="@+id/btn_auto_preset"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="@dimen/margin_tiny"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_auto_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_auto"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -99,11 +100,11 @@
                         android:id="@+id/btn_add_preset"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="@dimen/margin_tiny"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_add_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_add"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -115,11 +116,11 @@
                         android:id="@+id/btn_rename_preset"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="0dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_rename_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_rename"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -132,18 +133,18 @@
                     style="?android:attr/buttonBarStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/margin_tiny"
                     android:orientation="horizontal">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_export_presets"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="@dimen/margin_tiny"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_export_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_export"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -155,10 +156,11 @@
                         android:id="@+id/btn_import_presets"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="@dimen/margin_tiny"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_import_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_import"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -170,11 +172,11 @@
                         android:id="@+id/btn_delete_preset"
                         style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_height="@dimen/button_top_height"
+                        android:layout_marginEnd="0dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/btn_delete_bg"
-                        android:paddingHorizontal="4dp"
+                        android:paddingHorizontal="@dimen/padding_small"
                         android:text="@string/btn_delete"
                         app:cornerRadius="@dimen/button_radius"
                         app:strokeWidth="@dimen/stroke_width"
@@ -188,7 +190,7 @@
             <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_marginVertical="8dp"
+                android:layout_marginVertical="@dimen/margin_small"
                 app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -217,7 +219,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp"
+                android:padding="@dimen/padding_small"
                 app:layout_constraintBottom_toTopOf="@id/layout_subuttons"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
@@ -230,12 +232,7 @@
                     android:layout_marginHorizontal="@dimen/margin_tiny"
                     android:layout_marginEnd="@dimen/margin_small"
                     android:text="@string/lbl_pwr"
-                    android:textColor="@color/cyan_custom"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:textColor="@color/cyan_custom" />
 
                 <TextView
                     android:id="@+id/tv_pwr_db"
@@ -247,50 +244,35 @@
                     android:minWidth="28dp"
                     android:gravity="center"
                     android:text="@string/value_default"
-                    android:textColor="@color/cyan_custom"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:textColor="@color/cyan_custom" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_pwr_vol_minus"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:backgroundTint="@color/cyan_custom"
+                    android:textColor="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_minus"
-                    android:textColor="@color/colored_button_text"
                     app:cornerRadius="@dimen/button_radius"
                     app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:strokeColor="@color/stroke_color" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_pwr_vol_plus"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:backgroundTint="@color/cyan_custom"
+                    android:textColor="@color/cyan_custom"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_plus"
                     app:cornerRadius="@dimen/button_radius"
-                    android:textColor="@color/colored_button_text"
                     app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_minus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:strokeColor="@color/stroke_color" />
 
                 <TextView
                     android:id="@+id/lbl_eqc"
@@ -300,66 +282,47 @@
                     android:layout_marginEnd="@dimen/margin_small"
                     android:layout_marginStart="@dimen/margin_small"
                     android:text="@string/eqc"
-                    android:textColor="@color/cyan_custom"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_minus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:textColor="@color/cyan_custom" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_minus"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:backgroundTint="@color/cyan_custom"
+                    android:textColor="@color/cyan_custom"
                     android:text="@string/btn_minus"
                     app:cornerRadius="@dimen/button_radius"
-                    android:textColor="@color/colored_button_text"
                     app:strokeWidth="@dimen/stroke_width"
                     app:strokeColor="@color/stroke_color"
-                    android:textSize="20sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_plus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    android:textSize="20sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_plus"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:backgroundTint="@color/cyan_custom"
+                    android:textColor="@color/cyan_custom"
                     android:text="@string/btn_plus"
                     app:cornerRadius="@dimen/button_radius"
-                    android:textColor="@color/colored_button_text"
                     app:strokeWidth="@dimen/stroke_width"
                     app:strokeColor="@color/stroke_color"
-                    android:textSize="20sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_center"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    android:textSize="20sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_center"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:backgroundTint="@color/btn_delete_bg"
+                    android:textColor="@color/btn_delete_bg"
                     android:minWidth="0dp"
                     android:padding="0dp"
                     android:text="@string/btn_center"
                     app:cornerRadius="@dimen/button_radius"
-                    android:textColor="@color/colored_button_text"
                     app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/btn_plus"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:strokeColor="@color/stroke_color" />
 
             </LinearLayout>
 
@@ -369,8 +332,8 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="16dp"
+                android:paddingHorizontal="@dimen/padding_standard"
+                android:paddingBottom="@dimen/padding_standard"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
@@ -387,13 +350,13 @@
                     android:id="@+id/seek_sub_gain"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginHorizontal="@dimen/margin_small"
                     android:layout_weight="1"
                     android:stepSize="1"
                     android:value="0"
                     android:valueFrom="0"
                     android:valueTo="12"
-                    app:haloColor="@color/cyan_custom"
+                    app:haloColor="@color/transparent"
                     app:haloRadius="24dp"
                     app:labelBehavior="gone"
                     app:thumbColor="@color/cyan_custom"
@@ -401,7 +364,8 @@
                     app:tickColorActive="@color/tick_color_active"
                     app:tickColorInactive="@color/tick_color_inactive"
                     app:trackColorActive="@color/cyan_custom"
-                    app:trackHeight="@dimen/slider_track_height" />
+                    app:trackHeight="@dimen/slider_track_height"
+                    app:thumbHeight="@dimen/thumb_height"/>
 
                 <TextView
                     android:id="@+id/tv_sub_db"
@@ -422,7 +386,7 @@
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
                     app:endIconTint="@color/cyan_custom"
-                    android:hint="@string/hint_sub_freq">
+                    android:hint="@string/lbl_freq">
 
                     <AutoCompleteTextView
                         android:id="@+id/spinner_sub_freq"
@@ -450,19 +414,18 @@
 
             <TextView
                 android:id="@+id/tv_fm_title"
+                style="@style/TextTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_margin="@dimen/margin_standard"
                 android:text="@string/fm_title"
-                android:textColor="@color/text_theme_aware"
-                android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:fillViewport="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_fm_title">
 
@@ -470,7 +433,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/padding_standard">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -479,13 +442,12 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/enable_loudness"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/enable_loudness" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fm_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -498,13 +460,12 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/trim_highs"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/trim_highs" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fatigue_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -517,13 +478,12 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/sub_tweaking"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/sub_tweaking" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_fm_sub_comp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -533,84 +493,73 @@
                         android:id="@+id/fm_visualizer_container"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
-                        android:background="#1A000000">
+                        android:background="@color/visualizer_container_bg">
                         <com.radiorubka.wdsp.EqVisualizerView
                             android:id="@+id/fm_visualizer"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent" />
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="top|center"
-                            android:layout_marginTop="8dp"
-                            android:alpha="0.6"
-                            android:text="@string/fm_visualizer_label"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="14sp" />
+                            android:layout_marginTop="@dimen/margin_small"
+                            android:alpha="0.7"
+                            android:text="@string/fm_visualizer_label" />
                     </FrameLayout>
 
                     <GridLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="@dimen/margin_standard"
                         android:columnCount="2"
                         android:useDefaultMargins="true">
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/lbl_volume"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="16sp" />
+                            android:text="@string/lbl_volume" />
                         <TextView
                             android:id="@+id/tv_sys_volume_val"
+                            style="@style/TextValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="@string/value_default"
-                            android:textColor="@color/text_theme_aware_2"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/value_default" />
 
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/lbl_sub_offset"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="16sp" />
+                            android:text="@string/lbl_sub_offset" />
                         <TextView
                             android:id="@+id/tv_sub_offset_val"
+                            style="@style/TextValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="@string/value_default"
-                            android:textColor="@color/text_theme_aware_2"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/value_default" />
 
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/lbl_lower_sub_by"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="16sp" />
+                            android:text="@string/lbl_lower_sub_by" />
                         <TextView
                             android:id="@+id/tv_sub_offset_warn"
+                            style="@style/TextValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:text="@string/value_default"
-                            android:textColor="@color/text_theme_aware_2"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/value_default" />
                     </GridLayout>
 
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="@string/lbl_calibration_point"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="16sp" />
+                        android:layout_marginTop="@dimen/margin_standard"
+                        android:text="@string/lbl_calibration_point" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_cal_vol"
@@ -623,31 +572,29 @@
                             android:value="25"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
                         <TextView
                             android:id="@+id/tv_fm_cal_vol_val"
+                            style="@style/TextValue"
                             android:layout_width="40dp"
                             android:layout_height="wrap_content"
                             android:gravity="end"
-                            android:text="@string/value_default"
-                            android:textColor="@color/text_theme_aware_2"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/value_default" />
                     </LinearLayout>
 
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/lbl_correction_strength"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="16sp" />
+                        android:layout_marginTop="@dimen/margin_small"
+                        android:text="@string/lbl_correction_strength" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_strength"
@@ -660,22 +607,21 @@
                             android:value="100"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
                         <TextView
                             android:id="@+id/tv_fm_strength_val"
+                            style="@style/TextValue"
                             android:layout_width="40dp"
                             android:layout_height="wrap_content"
                             android:gravity="end"
-                            android:text="@string/value_default"
-                            android:textColor="@color/text_theme_aware_2"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/value_default" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>
@@ -690,19 +636,18 @@
 
             <TextView
                 android:id="@+id/tv_delays_title"
+                style="@style/TextTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_margin="@dimen/margin_standard"
                 android:text="@string/delays_title"
-                android:textColor="@color/text_theme_aware"
-                android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:fillViewport="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
 
@@ -710,24 +655,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/padding_standard">
 
                     <!-- Precise Delays Section -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="@dimen/margin_small"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
+                            style="@style/TextHeader"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/spatial_correction"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/spatial_correction" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_precise_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -735,11 +678,11 @@
 
                     <!-- FL -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/front_left"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="8dp" />
+                        android:layout_marginTop="@dimen/margin_small" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_fl"
@@ -752,22 +695,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay_fl_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- FR -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/front_right"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_fr"
@@ -780,22 +724,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay_fr_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- RL -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_left"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_rl"
@@ -808,22 +753,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay_rl_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- RR -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_right"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_rr"
@@ -836,23 +782,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold"
-                            tools:ignore="TooManyViews" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay_rr_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- Sub -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/subwoofer"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_sub"
@@ -865,14 +811,15 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay_sub_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay_sub_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1A000000" android:layout_marginVertical="24dp" />
@@ -881,18 +828,16 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="@dimen/margin_small"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
+                            style="@style/TextHeader"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/surround_mode"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/surround_mode" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_legacy_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -900,11 +845,11 @@
 
                     <!-- Legacy FL -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/front_left"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="8dp" />
+                        android:layout_marginTop="@dimen/margin_small" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay1_fl"
@@ -917,22 +862,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay1_fl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay1_fl_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- Legacy FR -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/front_right"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay1_fr"
@@ -945,22 +891,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay1_fr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay1_fr_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- Legacy RL -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_left"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay1_rl"
@@ -973,22 +920,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay1_rl_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay1_rl_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- Legacy RR -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_right"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay1_rr"
@@ -1001,22 +949,23 @@
                             android:value="0"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay1_rr_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay1_rr_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                     <!-- RSSE -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_fill_enhancement"
-                        android:textColor="@color/text_theme_aware"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="@dimen/margin_tiny" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay1_rsse"
@@ -1029,14 +978,15 @@
                             android:value="10"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-                        <TextView android:id="@+id/tv_delay1_rsse_val" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView android:id="@+id/tv_delay1_rsse_val" style="@style/TextValue" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>
@@ -1051,54 +1001,51 @@
 
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:fillViewport="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/padding_standard">
 
-                    <androidx.appcompat.widget.SwitchCompat
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/switch_loud"
+                        style="@style/TextLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:text="@string/built_in_loudness_legacy"
-                        android:textColor="@color/text_theme_aware_2"
-                        android:textSize="18sp" />
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        android:text="@string/built_in_loudness_legacy" />
 
                     <!-- Bass Controls -->
                     <TextView
+                        style="@style/TextTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/speaker_bass_controls"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:text="@string/speaker_bass_controls" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:background="#0D00FFFF"
+                        android:background="@color/visualizer_container_bg"
                         android:orientation="vertical"
                         android:padding="12dp">
 
                         <TextView
+                            style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/front_speaker_bass"
-                            android:textColor="@color/cyan_custom"
-                            android:textStyle="bold"
-                            android:textSize="16sp" />
+                            android:textColor="@color/cyan_custom" />
 
-                        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:layout_marginTop="8dp">
+                        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:layout_marginTop="@dimen/margin_small">
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_filter"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
@@ -1112,21 +1059,22 @@
                                     android:value="0"
                                     app:thumbRadius="10dp"
                                     app:haloRadius="24dp"
-                                    app:haloColor="@color/cyan_custom"
+                                    app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
                                     app:trackColorActive="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
-                                    app:labelBehavior="gone" />
-                                <TextView android:id="@+id/tv_bass_filter_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                    app:labelBehavior="gone"
+                                    app:thumbHeight="@dimen/thumb_height"/>
+                                <TextView android:id="@+id/tv_bass_filter_front_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_boost"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
@@ -1140,39 +1088,56 @@
                                     android:value="0"
                                     app:thumbRadius="10dp"
                                     app:haloRadius="24dp"
-                                    app:haloColor="@color/cyan_custom"
+                                    app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
-                                    app:labelBehavior="gone" />
-                                <TextView android:id="@+id/tv_bass_boost_front_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                    app:labelBehavior="gone"
+                                    app:thumbHeight="@dimen/thumb_height"/>
+                                <TextView android:id="@+id/tv_bass_boost_front_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_freq"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
-                            <Spinner android:id="@+id/spinner_bass_freq_front" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/cyan_custom" />
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layout_spinner_bass_freq_front"
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:boxStrokeColor="@color/cyan_custom"
+                                app:hintTextColor="@color/cyan_custom"
+                                app:endIconTint="@color/cyan_custom">
+                                <AutoCompleteTextView
+                                    android:id="@+id/spinner_bass_freq_front"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="none"
+                                    android:paddingVertical="10dp"
+                                    android:textColor="@color/cyan_custom"
+                                    android:focusable="false"
+                                    tools:ignore="LabelFor" />
+                            </com.google.android.material.textfield.TextInputLayout>
                         </GridLayout>
 
                         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1A000000" android:layout_marginVertical="12dp" />
 
                         <TextView
+                            style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/rear_speaker_bass"
-                            android:textColor="@color/cyan_custom"
-                            android:textStyle="bold"
-                            android:textSize="16sp" />
-                        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:layout_marginTop="8dp">
+                            android:textColor="@color/cyan_custom" />
+                        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:layout_marginTop="@dimen/margin_small">
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_filter"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
@@ -1186,21 +1151,22 @@
                                     android:value="0"
                                     app:thumbRadius="10dp"
                                     app:haloRadius="24dp"
-                                    app:haloColor="@color/cyan_custom"
+                                    app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
                                     app:trackColorActive="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
-                                    app:labelBehavior="gone" />
-                                <TextView android:id="@+id/tv_bass_filter_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                    app:labelBehavior="gone"
+                                    app:thumbHeight="@dimen/thumb_height"/>
+                                <TextView android:id="@+id/tv_bass_filter_rear_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_boost"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
@@ -1214,35 +1180,50 @@
                                     android:value="0"
                                     app:thumbRadius="10dp"
                                     app:haloRadius="24dp"
-                                    app:haloColor="@color/cyan_custom"
+                                    app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
-                                    app:trackColorActive="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
-                                    app:labelBehavior="gone" />
-                                <TextView android:id="@+id/tv_bass_boost_rear_db" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textStyle="bold" />
+                                    app:labelBehavior="gone"
+                                    app:thumbHeight="@dimen/thumb_height"/>
+                                <TextView android:id="@+id/tv_bass_boost_rear_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_freq"
-                                android:textColor="@color/text_theme_aware"
                                 android:layout_gravity="center_vertical" />
-                            <Spinner android:id="@+id/spinner_bass_freq_rear" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/cyan_custom" />
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layout_spinner_bass_freq_rear"
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:boxStrokeColor="@color/cyan_custom"
+                                app:hintTextColor="@color/cyan_custom"
+                                app:endIconTint="@color/cyan_custom">
+                                <AutoCompleteTextView
+                                    android:id="@+id/spinner_bass_freq_rear"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="none"
+                                    android:paddingVertical="10dp"
+                                    android:textColor="@color/cyan_custom"
+                                    android:focusable="false"
+                                    tools:ignore="LabelFor" />
+                            </com.google.android.material.textfield.TextInputLayout>
                         </GridLayout>
                     </LinearLayout>
 
                     <!-- Fader Section -->
                     <TextView
+                        style="@style/TextTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
-                        android:text="@string/fader_balance"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:text="@string/fader_balance" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -1251,7 +1232,7 @@
                         android:gravity="center_horizontal"
                         android:orientation="vertical">
 
-                        <TextView android:id="@+id/tv_fader_lr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_fader_lr_val" style="@style/TextValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="18sp" />
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fader_lr"
                             android:layout_width="match_parent"
@@ -1262,13 +1243,14 @@
                             android:value="12"
                             app:thumbRadius="10dp"
                             app:haloRadius="24dp"
-                            app:haloColor="@color/cyan_custom"
+                            app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
                             app:trackColorActive="@color/cyan_custom"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
 
                         <LinearLayout android:layout_width="match_parent" android:layout_height="320dp" android:orientation="horizontal" android:layout_marginTop="12dp" android:gravity="center">
                             <FrameLayout android:layout_width="64dp" android:layout_height="match_parent">
@@ -1284,13 +1266,14 @@
                                     android:rotation="270"
                                     app:thumbRadius="10dp"
                                     app:haloRadius="24dp"
-                                    app:haloColor="@color/cyan_custom"
+                                    app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
-                                    app:trackColorActive="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/cyan_custom"
                                     app:trackHeight="@dimen/slider_track_height"
-                                    app:labelBehavior="gone" />
+                                    app:labelBehavior="gone"
+                                    app:thumbHeight="@dimen/thumb_height"/>
                             </FrameLayout>
                             <ImageView android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
                                 android:contentDescription="@null"
@@ -1298,7 +1281,7 @@
                             <View android:layout_width="64dp" android:layout_height="match_parent" />
                         </LinearLayout>
 
-                        <TextView android:id="@+id/tv_fader_fr_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/value_default" android:textColor="@color/text_theme_aware_2" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_fader_fr_val" style="@style/TextValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="18sp" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -1314,19 +1297,18 @@
 
             <TextView
                 android:id="@+id/tv_gala_title"
+                style="@style/TextTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_margin="@dimen/margin_standard"
                 android:text="@string/gala_title"
-                android:textColor="@color/text_theme_aware"
-                android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:fillViewport="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_gala_title">
 
@@ -1334,7 +1316,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/padding_standard">
 
                     <!-- Master Switch -->
                     <LinearLayout
@@ -1346,14 +1328,12 @@
                         android:padding="12dp"
                         android:background="@color/visualizer_container_bg">
                         <TextView
+                            style="@style/TextHeader"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/enable_gala_feature"
-                            android:textColor="@color/text_theme_aware"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                        <androidx.appcompat.widget.SwitchCompat
+                            android:text="@string/enable_gala" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_gala_enable"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1375,20 +1355,20 @@
                             android:gravity="center"
                             android:padding="8dp"
                             android:layout_marginEnd="4dp"
-                            android:background="#0D000000">
+                            android:background="@color/visualizer_container_bg">
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/gps_speed_label"
-                                android:textSize="12sp"
-                                android:textColor="@color/text_theme_aware_2" />
+                                android:textSize="12sp" />
                             <TextView
                                 android:id="@+id/tv_gala_speed"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
                                 android:textSize="22sp"
-                                android:textStyle="bold"
                                 android:textColor="@color/cyan_custom" />
                         </LinearLayout>
 
@@ -1400,31 +1380,30 @@
                             android:gravity="center"
                             android:padding="8dp"
                             android:layout_marginStart="4dp"
-                            android:background="#0D000000">
+                            android:background="@color/visualizer_container_bg">
                             <TextView
+                                style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/vol_offset_label"
-                                android:textSize="12sp"
-                                android:textColor="@color/text_theme_aware_2" />
+                                android:textSize="12sp" />
                             <TextView
                                 android:id="@+id/tv_gala_offset"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
                                 android:textSize="22sp"
-                                android:textStyle="bold"
                                 android:textColor="@color/cyan_custom" />
                         </LinearLayout>
                     </LinearLayout>
 
                     <!-- Controls -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/sensitivity_settings"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textAllCaps="true"
                         android:layout_marginBottom="8dp"/>
@@ -1434,13 +1413,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="12dp"
-                        android:background="#05000000">
+                        android:background="@color/visualizer_container_bg">
 
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/vol_step_interval"
-                            android:textColor="@color/text_theme_aware" />
+                            android:text="@string/vol_step_every" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_increment"
@@ -1453,29 +1432,28 @@
                                 android:value="15"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
-                                app:haloColor="@color/cyan_custom"
+                                app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
                                 app:trackColorActive="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:thumbHeight="@dimen/thumb_height"/>
                             <TextView
                                 android:id="@+id/tv_gala_increment_val"
+                                style="@style/TextValue"
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
-                                android:gravity="end"
-                                android:text="@string/value_default"
-                                android:textColor="@color/text_theme_aware_2"
-                                android:textStyle="bold" />
+                                android:gravity="end" />
                         </LinearLayout>
 
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="@string/standstill_threshold"
-                            android:textColor="@color/text_theme_aware" />
+                            android:text="@string/standstill_speed" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_minspeed"
@@ -1488,64 +1466,28 @@
                                 android:value="0"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
-                                app:haloColor="@color/cyan_custom"
+                                app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
                                 app:trackColorActive="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:thumbHeight="@dimen/thumb_height"/>
                             <TextView
                                 android:id="@+id/tv_gala_minspeed_val"
+                                style="@style/TextValue"
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
-                                android:gravity="end"
-                                android:text="@string/value_default"
-                                android:textColor="@color/text_theme_aware_2"
-                                android:textStyle="bold" />
+                                android:gravity="end" />
                         </LinearLayout>
 
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="@string/max_speed_limit"
-                            android:textColor="@color/text_theme_aware" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                            <com.google.android.material.slider.Slider
-                                android:id="@+id/seek_gala_maxspeed"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:valueFrom="0"
-                                android:valueTo="60"
-                                android:stepSize="1"
-                                android:value="30"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/cyan_custom"
-                                app:thumbColor="@color/cyan_custom"
-                                app:trackColorActive="@color/cyan_custom"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
-                            <TextView
-                                android:id="@+id/tv_gala_maxspeed_val"
-                                android:layout_width="70dp"
-                                android:layout_height="wrap_content"
-                                android:gravity="end"
-                                android:text="@string/value_default"
-                                android:textColor="@color/text_theme_aware_2"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:text="@string/max_vol_adj"
-                            android:textColor="@color/text_theme_aware" />
+                            android:text="@string/max_adjustment" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_gala_max_adj"
@@ -1558,21 +1500,20 @@
                                 android:value="12"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
-                                app:haloColor="@color/cyan_custom"
+                                app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
                                 app:trackColorActive="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:thumbHeight="@dimen/thumb_height"/>
                             <TextView
                                 android:id="@+id/tv_gala_max_adj_val"
+                                style="@style/TextValue"
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
-                                android:gravity="end"
-                                android:text="@string/value_default"
-                                android:textColor="@color/text_theme_aware_2"
-                                android:textStyle="bold" />
+                                android:gravity="end" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -1580,11 +1521,10 @@
 
                     <!-- Debug Section -->
                     <TextView
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/simulation_debug"
-                        android:textColor="@color/simulate_speed_color"
-                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textAllCaps="true"
                         android:layout_marginBottom="8dp" />
@@ -1596,10 +1536,11 @@
                         android:padding="12dp"
                         android:background="#05FF5722">
                         <TextView
+                            style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/simulate_vehicle_speed"
-                            android:textColor="@color/simulate_speed_color" />
+                            android:text="@string/simulate_speed"
+                            android:textColor="#FF5722" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <com.google.android.material.slider.Slider
                                 android:id="@+id/seek_simulate_speed"
@@ -1612,21 +1553,21 @@
                                 android:value="0"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
-                                app:haloColor="@color/simulate_speed_color"
-                                app:thumbColor="@color/simulate_speed_color"
-                                app:trackColorActive="@color/simulate_speed_color"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="#FF5722"
+                                app:trackColorActive="#FF5722"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:thumbHeight="@dimen/thumb_height"/>
                             <TextView
                                 android:id="@+id/tv_simulate_speed_val"
+                                style="@style/TextValue"
                                 android:layout_width="70dp"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
-                                android:text="@string/value_default"
-                                android:textColor="@color/simulate_speed_color"
-                                android:textStyle="bold" />
+                                android:textColor="#FF5722" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -1648,26 +1589,28 @@
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="0dp"
-            android:layout_height="72dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
             app:elevation="0dp"
             app:backgroundTint="@android:color/transparent"
             app:menu="@menu/bottom_nav_menu"
+            app:itemActiveIndicatorStyle="@style/IndicatorSquare"
             app:labelVisibilityMode="labeled"
-            app:itemIconTint="@color/cyan_custom"
-            app:itemTextColor="@color/cyan_custom" />
+            app:itemIconTint="@color/text_theme_aware_3"
+            app:itemTextColor="@color/text_theme_aware_2"
+            app:itemTextAppearanceActiveBoldEnabled="false"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_apply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="@dimen/margin_standard"
             android:backgroundTint="@color/cyan_custom"
-            android:text="@string/btn_apply"
+            android:text="@string/btn_reapply"
             android:textAllCaps="false"
             android:textColor="@color/colored_button_text"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_log"
             android:textStyle="bold"
             android:visibility="gone" />
 
