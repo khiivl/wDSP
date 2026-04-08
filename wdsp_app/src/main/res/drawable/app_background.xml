@@ -1,14 +1,38 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:width="1920dp"
-    android:height="1080dp"
-    android:viewportWidth="1920"
-    android:viewportHeight="1080"
-    tools:ignore="VectorRaster">
-    <path
-        android:pathData="M-5.4,-8h1929.8v1108.1h-1929.8z"
-        android:strokeAlpha="0"
-        android:strokeWidth="4.015"
-        android:strokeColor="#000000">
-    </path>
-</vector>
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 1. Deep Base Gradient (Linear) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#1A1A1C"
+                android:endColor="#0F0F10"
+                android:angle="270" />
+        </shape>
+    </item>
+
+    <!-- 2. Subtle Top-Left Ambient Light (Radial) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="600dp"
+                android:centerX="10%"
+                android:centerY="10%"
+                android:startColor="#0DFFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- 3. Bottom "Bass" Glow (Radial) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="800dp"
+                android:centerX="50%"
+                android:centerY="110%"
+                android:startColor="#12FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>

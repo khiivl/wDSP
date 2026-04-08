@@ -274,7 +274,7 @@ public class McuService extends Service implements LocationListener {
         applyCurrentSettings();
 
         if (showToast && isBootStart) {
-            mainHandler.post(() -> Toast.makeText(getApplicationContext(), "Preset Applied: " + currentPresetName, Toast.LENGTH_SHORT).show());
+            mainHandler.post(() -> Toaster.show(getApplicationContext(), "Preset Applied: " + currentPresetName));
         }
     }
 
@@ -467,13 +467,17 @@ public class McuService extends Service implements LocationListener {
 
     private void checkPlayer() {
         String currentPlayer = getSystemProperty();
+
+        // Process the naming convention for the "unknown" preset.
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }
+        // If btcall_type, set the Player to be "Call".
         if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
         }
+        // If the last Player doesn't match the new Player, process the switch.
         else if (!Objects.equals(currentPlayer, lastPlayerSource)) {
             lastPlayerSource = currentPlayer;
             processPlayerSwitch(currentPlayer);
@@ -482,22 +486,38 @@ public class McuService extends Service implements LocationListener {
 
     private void processPlayerSwitch(String currentPlayer) {
         String presetToLoad = playerMap.get(currentPlayer);
-//        if (presetToLoad == null && (currentPlayer.isEmpty() || currentPlayer.equals("Unknown"))) {
-//            presetToLoad = playerMap.get("Unknown");
-//        }
-//        if (presetToLoad == null) {
-//            presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
-//        }
-        if (currentPlayer.equals("Call")) {
+        String defaultPreset = playerMap.get("Default");
+
+        // Redundant logic for the Default preset in old versions.
+        //if (presetToLoad == null && (currentPlayer.isEmpty() || currentPlayer.equals("Unknown"))) {
+        //    presetToLoad = playerMap.get("Unknown");
+        //}
+        //if (presetToLoad == null) {
+        //    presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
+        //}
+
+        // Process Call switch; If Call is the Player and the current Preset is not Call, queue to Call preset,
+        // save last applied preset
+        if (currentPlayer.equals("Call") && !currentPresetName.equals("Call")) {
             presetBeforeCall = currentPresetName;
             presetToLoad = "Call";
         }
-        if (currentPresetName.equals("Call") && !currentPlayer.equals("Call") && presetToLoad == null) {
-            presetToLoad = presetBeforeCall;
+        // If Call is not the Player, queue to the preset that was active before Call if the Default preset doesn't exist
+        // or queue to Default if it does
+        else if (currentPresetName.equals("Call") && !currentPlayer.equals("Call") && presetToLoad == null) {
+            if (defaultPreset == null) {
+                presetToLoad = presetBeforeCall;
+            }
+            else {
+                presetToLoad = defaultPreset;
+            }
         }
+
+        // Process the switch if the current preset doesn't already match the Player.
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
             if (!isUiVisible) {
-                Toast.makeText(McuService.this, "Auto applied preset: " + presetToLoad, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(McuService.this, "Auto applied preset: " + presetToLoad, Toast.LENGTH_SHORT).show();
+                Toaster.show(this, "wDSP: " + presetToLoad);
             }
             prefs.edit().putString(PREF_LAST_SELECTED, presetToLoad).apply();
             presetChangedIntent.putExtra("preset", presetToLoad);

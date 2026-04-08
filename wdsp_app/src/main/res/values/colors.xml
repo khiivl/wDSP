@@ -36,4 +36,8 @@
     <color name="stroke_color_top">#66FFFFFF</color>
 
     <color name="status_bar">#FFFFFF</color>
+
+    <!-- Toast Colors -->
+    <color name="toast_bg">#FFFFFF</color>
+    <color name="toast_stroke">#FFFFFF</color>
 </resources>

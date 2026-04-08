@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             if ("com.radiorubka.wdsp.PRESET_CHANGED".equals(action)) {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
-                    Toast.makeText(MainActivity.this, "Auto applied preset: " + name, Toast.LENGTH_SHORT).show();
+                    Toaster.show(MainActivity.this, "Auto: " + name);
                     spinnerPresets.setText(name, false);
                     loadPreset(name);
                 }
@@ -379,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_apply).setOnClickListener(v -> {
             autoSaveCurrent();
 //            applyAllToMcu();
-            Toast.makeText(this, R.string.toast_settings_applied, Toast.LENGTH_SHORT).show();
+            Toaster.show(this, getString(R.string.toast_settings_applied));
         });
         findViewById(R.id.btn_auto_preset).setOnClickListener(v -> showAutoPresetDialog());
         findViewById(R.id.btn_add_preset).setOnClickListener(v -> addNewPreset());
@@ -655,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
             if (isFullyInitialized && switchFmSubComp.isChecked() && pos > 5) {
                 // Revert the text back to 80Hz (Index 5)
                 spinnerSubFreq.setText(SUB_FREQS[5], false);
-                Toast.makeText(MainActivity.this, R.string.toast_sub_comp_limit, Toast.LENGTH_SHORT).show();
+                Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
 
                 // Re-sync Global just in case
                 Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
@@ -930,7 +930,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Prevent renaming the protected "Call" preset immediately
         if ("Call".equals(oldName)) {
-            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show(); // Ensure this string exists or use a literal
+            Toaster.show(this, "ERROR"); // Ensure this string exists or use a literal
             return;
         }
 
@@ -969,7 +969,7 @@ public class MainActivity extends AppCompatActivity {
                     String newName = Objects.requireNonNull(editText.getText()).toString().trim();
                     if (!newName.isEmpty() && !newName.equals(oldName)) {
                         if (presetNames.contains(newName)) {
-                            Toast.makeText(this, R.string.toast_exists, Toast.LENGTH_SHORT).show();
+                            Toaster.show(this, getString(R.string.toast_exists));
                         } else {
                             performRename(oldName, newName);
                         }
@@ -1052,7 +1052,10 @@ public class MainActivity extends AppCompatActivity {
         String curr = spinnerPresets.getText().toString();
         int currindex = presetNames.indexOf(curr);
         if ("Call".equals(curr)) return;
-        if (presetNames.size() <= 1) { Toast.makeText(this, R.string.toast_cannot_delete_last, Toast.LENGTH_SHORT).show(); return; }
+        if (presetNames.size() <= 1) {
+            Toaster.show(this, getString(R.string.toast_cannot_delete_last));
+            return;
+        }
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
         for (String key : p.getAll().keySet()) if (key.startsWith(curr + "_")) e.remove(key);
@@ -1278,7 +1281,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAutoPresetDialog() {
         String ass = getSystemProperty();
-        if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
+        if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
+            ass = "Call";
+        }
+        else if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
             ass = "Default";
         }
         String p = ass;
@@ -1387,11 +1393,11 @@ public class MainActivity extends AppCompatActivity {
 
             // 4. Save only this filtered map to the file
             os.write(new Gson().toJson(filteredData).getBytes());
-            Toast.makeText(this, R.string.toast_exported, Toast.LENGTH_SHORT).show();
+            Toaster.show(this, getString(R.string.toast_exported));
         }
         catch (IOException e) {
             Log.e(TAG, "Export error", e);
-            Toast.makeText(this, "Export failed", Toast.LENGTH_SHORT).show();
+            Toaster.show(this, "ERROR");
         }
     }
     private void loadPresetFromFile(Uri u) {
@@ -1452,11 +1458,11 @@ public class MainActivity extends AppCompatActivity {
             spinnerPresets.setText(newPresetName, false);
             loadPreset(newPresetName);
 
-            Toast.makeText(this, getString(R.string.toast_imported) + ": " + newPresetName, Toast.LENGTH_SHORT).show();
+            Toaster.show(this, getString(R.string.toast_imported) + ": " + newPresetName);
 
         } catch (Exception e) {
             Log.e(TAG, "Import error", e);
-            Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toaster.show(this, "Import failed: " + e.getMessage());
         }
     }
 

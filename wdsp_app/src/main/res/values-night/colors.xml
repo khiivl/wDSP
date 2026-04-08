@@ -26,4 +26,8 @@
     <color name="btn_import_bg">#8f5d8d</color>
     <color name="btn_delete_bg">#944460</color>
     <color name="btn_lower_bg">#00000000</color>
+
+    <!-- Toast Colors -->
+    <color name="toast_bg">#1A1A1C</color>
+    <color name="toast_stroke">#0F0F10</color>
 </resources>

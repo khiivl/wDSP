@@ -11,7 +11,7 @@ android {
         minSdk 28
         targetSdk 28
         versionCode 1
-        versionName "0.4"
+        versionName "0.5"
 
         resConfigs "en"
     }
