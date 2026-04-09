@@ -27,7 +27,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.activity.SystemBarStyle;
@@ -254,20 +253,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMcuService() {
-        List<String> permissions = new ArrayList<>();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+        String[] permissions = {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION // Works bundled on API 29
+        };
+
+        boolean allGranted = true;
+        for (String p : permissions) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false;
+                break;
+            }
         }
 
-        if (!permissions.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), 102);
-            return;
+        if (!allGranted) {
+            // This is where your bug was: you requested but didn't wait for the result
+            ActivityCompat.requestPermissions(this, permissions, 102);
+        } else {
+            // Permissions already exist (second launch)
+            Intent intent = new Intent(this, McuService.class);
+            startForegroundService(intent);
         }
+    }
 
-        startForegroundService(new Intent(this, McuService.class));
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 102) {
+            // Check if Fine Location was granted (at minimum)
+            boolean fineLocationGranted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    fineLocationGranted = true;
+                    break;
+                }
+            }
+
+            if (fineLocationGranted) {
+                Log.d(TAG, "Permission granted on first launch. Starting McuService...");
+                Intent intent = new Intent(this, McuService.class);
+                startForegroundService(intent);
+            } else {
+                Toaster.show(this, "Location permission is required for GALA features.");
+            }
+        }
     }
 
     @Override
