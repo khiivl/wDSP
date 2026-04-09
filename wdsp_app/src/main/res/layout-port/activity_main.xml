@@ -363,7 +363,8 @@
                     app:thumbRadius="10dp"
                     app:tickColorActive="@color/tick_color_active"
                     app:tickColorInactive="@color/tick_color_inactive"
-                    app:trackColorActive="@color/cyan_custom"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
                     app:trackHeight="@dimen/slider_track_height"
                     app:thumbHeight="@dimen/thumb_height"/>
 
@@ -574,7 +575,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -609,7 +611,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -697,7 +700,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -726,7 +730,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -755,7 +760,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -784,7 +790,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -813,7 +820,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -864,7 +872,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -893,7 +902,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -922,7 +932,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -951,7 +962,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -980,7 +992,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -1061,13 +1074,20 @@
                                     app:haloRadius="24dp"
                                     app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
-                                    app:trackColorActive="@color/cyan_custom"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
-                                <TextView android:id="@+id/tv_bass_filter_front_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
+                                <TextView
+                                    android:id="@+id/tv_bass_filter_front_db"
+                                    style="@style/TextValue"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="start"
+                                    android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
@@ -1090,12 +1110,20 @@
                                     app:haloRadius="24dp"
                                     app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
-                                <TextView android:id="@+id/tv_bass_boost_front_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
+                                <TextView
+                                    android:id="@+id/tv_bass_boost_front_db"
+                                    style="@style/TextValue"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="start"
+                                    android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
@@ -1153,13 +1181,20 @@
                                     app:haloRadius="24dp"
                                     app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
-                                    app:trackColorActive="@color/cyan_custom"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
-                                <TextView android:id="@+id/tv_bass_filter_rear_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
+                                <TextView
+                                    android:id="@+id/tv_bass_filter_rear_db"
+                                    style="@style/TextValue"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="start"
+                                    android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
@@ -1182,12 +1217,20 @@
                                     app:haloRadius="24dp"
                                     app:haloColor="@color/transparent"
                                     app:thumbColor="@color/cyan_custom"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
-                                <TextView android:id="@+id/tv_bass_boost_rear_db" style="@style/TextValue" android:layout_width="80dp" android:layout_height="wrap_content" android:gravity="end" android:text="@string/value_default" />
+                                <TextView
+                                    android:id="@+id/tv_bass_boost_rear_db"
+                                    style="@style/TextValue"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="start"
+                                    android:text="@string/value_default" />
                             </LinearLayout>
 
                             <TextView
@@ -1235,7 +1278,7 @@
                         <TextView android:id="@+id/tv_fader_lr_val" style="@style/TextValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="18sp" />
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fader_lr"
-                            android:layout_width="match_parent"
+                            android:layout_width="@dimen/slider_max_width"
                             android:layout_height="wrap_content"
                             android:valueFrom="0"
                             android:valueTo="24"
@@ -1245,7 +1288,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:tickColorActive="@color/tick_color_active"
                             app:tickColorInactive="@color/tick_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
@@ -1256,7 +1300,7 @@
                             <FrameLayout android:layout_width="64dp" android:layout_height="match_parent">
                                 <com.google.android.material.slider.Slider
                                     android:id="@+id/seek_fader_fr"
-                                    android:layout_width="280dp"
+                                    android:layout_width="@dimen/slider_max_width"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
                                     android:valueFrom="0"
@@ -1270,14 +1314,16 @@
                                     app:thumbColor="@color/cyan_custom"
                                     app:tickColorActive="@color/tick_color_active"
                                     app:tickColorInactive="@color/tick_color_inactive"
-                                    app:trackColorActive="@color/cyan_custom"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
                                     app:trackHeight="@dimen/slider_track_height"
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
                             </FrameLayout>
-                            <ImageView android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                            <ImageView
+                                android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
                                 android:contentDescription="@null"
-                                android:scaleType="fitCenter" app:srcCompat="@drawable/car" />
+                                android:scaleType="fitCenter" app:srcCompat="@drawable/fabka" />
                             <View android:layout_width="64dp" android:layout_height="match_parent" />
                         </LinearLayout>
 
@@ -1434,7 +1480,8 @@
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
@@ -1468,7 +1515,8 @@
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
@@ -1502,7 +1550,8 @@
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
                                 app:thumbColor="@color/cyan_custom"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
