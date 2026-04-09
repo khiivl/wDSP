@@ -517,7 +517,7 @@ public class McuService extends Service implements LocationListener {
         if (presetToLoad != null && !presetToLoad.equals(currentPresetName)) {
             if (!isUiVisible) {
                 //Toast.makeText(McuService.this, "Auto applied preset: " + presetToLoad, Toast.LENGTH_SHORT).show();
-                Toaster.show(this, "wDSP: " + presetToLoad);
+                Toaster.show(this, presetToLoad);
             }
             prefs.edit().putString(PREF_LAST_SELECTED, presetToLoad).apply();
             presetChangedIntent.putExtra("preset", presetToLoad);

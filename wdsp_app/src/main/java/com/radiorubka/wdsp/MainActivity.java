@@ -524,7 +524,8 @@ public class MainActivity extends AppCompatActivity {
             s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
-            s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
+            s.setTrackActiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_active)));
+            s.setTrackInactiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_inactive)));
             s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
             s.setRotation(270f);
 

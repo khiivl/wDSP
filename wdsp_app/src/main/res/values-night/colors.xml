@@ -11,8 +11,13 @@
     <color name="band_label">#80FFFFFF</color>
     <color name="q_switch_text">#FFFFFF</color>
     <color name="seek_track">#40FFFFFF</color>
+
+    <!-- Slider colors -->
     <color name="tick_color_inactive">#66000000</color>
     <color name="tick_color_active">#99000000</color>
+    <color name="track_color_active">#79bcbd</color>
+    <color name="track_color_inactive">#66BDBDBD</color>
+
     <!-- Text color for colored buttons in Dark Theme -->
     <color name="colored_button_text">#000000</color>
     <color name="status_bar">#000000</color>
@@ -29,5 +34,5 @@
 
     <!-- Toast Colors -->
     <color name="toast_bg">#1A1A1C</color>
-    <color name="toast_stroke">#0F0F10</color>
+    <color name="toast_stroke">#66000000</color>
 </resources>

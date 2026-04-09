@@ -303,7 +303,8 @@
                     app:haloRadius="24dp"
                     app:haloColor="@color/transparent"
                     app:thumbColor="@color/cyan_custom"
-                    app:trackColorActive="@color/cyan_custom"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
                     android:theme="@style/Widget.Material3.Slider"
                     app:trackHeight="@dimen/slider_track_height"
                     app:labelBehavior="gone"
@@ -607,7 +608,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
                             app:labelBehavior="gone"
                             app:tickColorActive="@color/tick_color_active"
@@ -661,7 +663,8 @@
                             app:haloRadius="24dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
                             app:trackHeight="@dimen/slider_track_height"
                             app:labelBehavior="gone"
                             app:tickColorActive="@color/tick_color_active"
@@ -796,7 +799,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_fl_val" />
@@ -841,7 +845,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_fr_val" />
@@ -886,7 +891,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_rl_val" />
@@ -932,7 +938,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_rr_val" />
@@ -978,7 +985,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay_sub_val" />
@@ -1054,7 +1062,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_fl_val" />
@@ -1099,7 +1108,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_fr_val" />
@@ -1144,7 +1154,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rl_val" />
@@ -1189,7 +1200,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rr_val" />
@@ -1234,7 +1246,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rsse_val" />
@@ -1353,7 +1366,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_filter_front_db" />
@@ -1398,7 +1412,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_boost_front_db" />
@@ -1484,7 +1499,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_filter_rear_db" />
@@ -1529,7 +1545,8 @@
                                 app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/cyan_custom"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_bass_boost_rear_db" />
@@ -1608,7 +1625,8 @@
                     app:haloRadius="24dp"
                     app:haloColor="@color/transparent"
                     app:thumbColor="@color/cyan_custom"
-                    app:trackColorActive="@color/cyan_custom"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
                     app:trackHeight="@dimen/slider_track_height"
                     app:labelBehavior="gone"
                     app:tickColorActive="@color/tick_color_active"
@@ -1657,7 +1675,8 @@
                         app:thumbColor="@color/cyan_custom"
                         app:tickColorActive="@color/tick_color_active"
                         app:tickColorInactive="@color/tick_color_inactive"
-                        app:trackColorActive="@color/cyan_custom"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
                         app:trackHeight="@dimen/slider_track_height"
                         app:labelBehavior="gone" />
                 </FrameLayout>
@@ -1741,7 +1760,8 @@
                     app:thumbColor="@color/cyan_custom"
                     app:tickColorActive="@color/tick_color_active"
                     app:tickColorInactive="@color/tick_color_inactive"
-                    app:trackColorActive="@color/cyan_custom"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
                     app:trackHeight="@dimen/slider_track_height"
                     app:labelBehavior="gone" />
 
@@ -1811,7 +1831,8 @@
                         app:thumbColor="@color/cyan_custom"
                         app:tickColorActive="@color/tick_color_active"
                         app:tickColorInactive="@color/tick_color_inactive"
-                        app:trackColorActive="@color/cyan_custom"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
                         app:trackHeight="@dimen/slider_track_height"
                         app:labelBehavior="gone" />
 
@@ -1917,7 +1938,8 @@
                         app:thumbColor="@color/cyan_custom"
                         app:tickColorActive="@color/tick_color_active"
                         app:tickColorInactive="@color/tick_color_inactive"
-                        app:trackColorActive="@color/cyan_custom"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
                         app:trackHeight="@dimen/slider_track_height"
                         app:labelBehavior="gone" />
 
@@ -1965,6 +1987,7 @@
                         app:tickColorInactive="@color/tick_color_inactive"
                         app:tickVisibilityMode="hidden"
                         app:trackColorActive="#ff5722"
+                        app:trackColorInactive="@color/track_color_inactive"
                         app:trackStopIndicatorSize="0dp"
                         app:trackHeight="@dimen/slider_track_height"
                         app:labelBehavior="gone" />

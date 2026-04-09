@@ -4,35 +4,9 @@
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#1A1A1C"
-                android:endColor="#0F0F10"
+                android:startColor="#FFFFFF"
+                android:endColor="#FFFF"
                 android:angle="270" />
-        </shape>
-    </item>
-
-    <!-- 2. Subtle Top-Left Ambient Light (Radial) -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:type="radial"
-                android:gradientRadius="600dp"
-                android:centerX="10%"
-                android:centerY="10%"
-                android:startColor="#0DFFFFFF"
-                android:endColor="#00000000" />
-        </shape>
-    </item>
-
-    <!-- 3. Bottom "Bass" Glow (Radial) -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:type="radial"
-                android:gradientRadius="800dp"
-                android:centerX="50%"
-                android:centerY="110%"
-                android:startColor="#12FFFFFF"
-                android:endColor="#00000000" />
         </shape>
     </item>
 </layer-list>

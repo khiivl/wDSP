@@ -26,6 +26,8 @@
     <!-- Slider Colors -->
     <color name="tick_color_inactive">#99FFFFFF</color>
     <color name="tick_color_active">#99FFFFFF</color>
+    <color name="track_color_active">#028889</color>
+    <color name="track_color_inactive">#66757575</color>
     <color name="halo_color">#00000000</color>
 
     <color name="visualizer_container_bg">#1A000000</color>
@@ -39,5 +41,5 @@
 
     <!-- Toast Colors -->
     <color name="toast_bg">#FFFFFF</color>
-    <color name="toast_stroke">#FFFFFF</color>
+    <color name="toast_stroke">#66000000</color>
 </resources>
