@@ -76,7 +76,7 @@
     <!-- General -->
     <string name="btn_apply">Apply</string>
     <string name="btn_reapply">Reapply if reset</string>
-    <string name="value_default">None</string>
+    <string name="value_default">Not set</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancel</string>
     <string name="none">None</string>

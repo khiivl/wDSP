@@ -95,7 +95,7 @@ public class VolumeHelper {
         if (activeState != null && mSetVolumeVal != null) {
             try {
                 mSetVolumeVal.invoke(activeState, val);
-                success = true;
+                Log.d(TAG, "[VolumeSender2000] Volume has been set to " + val);
             } catch (Exception ignored) {}
         }
 

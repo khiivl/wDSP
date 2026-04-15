@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
@@ -18,7 +17,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 import java.util.Locale;
 
-public class EqVisualizerView extends View {
+public class FmVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;
     private Paint gridPaint;
@@ -32,17 +31,6 @@ public class EqVisualizerView extends View {
     private float[] xCoords;
     private float[] yCoords;
 
-    // Define the labels and grouping logic
-    private final String[] FREQ_LABELS = {
-            "20", "31.5", "50", "80", "125", "200", "315", "500",
-            "800", "1.25k", "2k", "3.15k", "5k", "8k", "12.5k", "20k"
-    };
-
-    private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
-    private int[] GROUP_COLORS;
-    // Defines which band indices belong to which group
-    private final int[][] GROUP_RANGES = {{0,2}, {3,4}, {5,6}, {7,9}, {10,12}, {13,15}};
-
     // Pre-allocated Path objects
     private final Path fullPath = new Path();
     private final Path fillPath = new Path();
@@ -51,9 +39,9 @@ public class EqVisualizerView extends View {
 
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final float TOP_OFFSET_RATIO = 0.25555555555555f;
+    private final float TOP_OFFSET_RATIO = 0.23f;
     @SuppressWarnings("FieldCanBeLocal")
-    private final float DRAW_HEIGHT_RATIO = 0.72222222222222f;
+    private final float DRAW_HEIGHT_RATIO = 0.90f;
 
     private int colorFill;
     private float thumbRadiusOffset;
@@ -63,34 +51,16 @@ public class EqVisualizerView extends View {
     private float lastDrawStartY = -1;
     private float lastGridBottom = -1;
 
-    private String[] freqLabels = null;
-
     private Drawable customBackground;
 
-    private Paint boxPaint;
-
-    public EqVisualizerView(Context context, AttributeSet attrs) {
+    public FmVisualizerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
-    public void setFreqLabels(String[] labels) {
-        this.freqLabels = labels;
-        invalidate();
-    }
-
 
     private void init() {
         customBackground = ContextCompat.getDrawable(getContext(), R.drawable.app_background_fm);
         float density = getContext().getResources().getDisplayMetrics().density;
-
-        GROUP_COLORS = new int[]{
-                ContextCompat.getColor(getContext(), R.color.btn_auto_bg), // Use ContextCompat
-                ContextCompat.getColor(getContext(), R.color.btn_add_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_export_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_import_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_delete_bg)
-        };
 
         int colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);
         colorFill = ContextCompat.getColor(getContext(), R.color.visualizer_fill);
@@ -131,10 +101,6 @@ public class EqVisualizerView extends View {
         warningPaint.setFakeBoldText(true);
 
         warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
-
-        boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        boxPaint.setStyle(Paint.Style.STROKE);
-        boxPaint.setStrokeWidth(1 * density);
     }
 
     public void setGains(int[] newGains) {
@@ -173,7 +139,7 @@ public class EqVisualizerView extends View {
         // ADJUST THESE VALUES
         float bgPadding = 25 * density;   // How much wider than the sliders (in dp)
         float cornerRadius = 15 * density; // How rounded the corners are (in dp)
-        int shiftUp = 6;                  // Vertical alignment shift
+        int shiftUp = 0;                  // Vertical alignment shift
 
         float topArea = totalH * TOP_OFFSET_RATIO;
         float sliderAreaH = totalH * DRAW_HEIGHT_RATIO;
@@ -220,67 +186,7 @@ public class EqVisualizerView extends View {
             // Draw from the left edge of the rounded BG to the right edge
             canvas.drawLine(bgLeft, y, bgRight, y, gridPaint);
         }
-
-        // --- Frequency Band Labels and Group Boxes ---
-        float boxHeight = 20 * density;
-        float marginToGrid = 10 * density;
-        float groupNameBottomY = drawStartY - marginToGrid;
-
-        // ADJUST THIS: Increase to pull boxes away from the screen edges
-        float edgeMargin = 13 * density;
-
-        // Dynamic padding between sliders
-        float stepX2 = w / (float)AudioConfig.NUM_BANDS;
-        float boxPaddingDynamic = stepX2 * 0.42f; // Slightly reduced to prevent overlap
-
-        float boxBottom = groupNameBottomY - (14 * density);
-        float boxTop = boxBottom - boxHeight;
-        float boxCornerRadius = getResources().getDimension(R.dimen.button_radius);
-
-        for (int g = 0; g < GROUP_RANGES.length; g++) {
-            int startIdx = GROUP_RANGES[g][0];
-            int endIdx = GROUP_RANGES[g][1];
-            int color = GROUP_COLORS[g];
-
-            // Calculate boundaries
-            float left = xCoords[startIdx] - boxPaddingDynamic;
-            float right = xCoords[endIdx] + boxPaddingDynamic;
-
-            // CONSTRAINT: Ensure the first and last boxes don't touch the screen edges
-            if (g == 0) {
-                left = Math.max(left, edgeMargin);
-            }
-            if (g == GROUP_RANGES.length - 1) {
-                right = Math.min(right, w - edgeMargin);
-            }
-
-            int alpha = 200;
-            boxPaint.setColor(color);
-            boxPaint.setAlpha(alpha);
-            RectF rect = new RectF(left, boxTop, right, boxBottom);
-            canvas.drawRoundRect(rect, boxCornerRadius, boxCornerRadius, boxPaint);
-
-            // 3. Draw individual frequency labels (Grey)
-            textPaint.setColor(ContextCompat.getColor(getContext(), R.color.band_label));
-            textPaint.setTextSize(getResources().getDimension(R.dimen.text_size_small));
-            textPaint.setFakeBoldText(false);
-            float labelY = boxTop + (boxHeight / 2f) + (textPaint.getTextSize() / 3f);
-
-            for (int i = startIdx; i <= endIdx; i++) {
-                canvas.drawText(FREQ_LABELS[i], xCoords[i], labelY, textPaint);
-            }
-
-            // 4. Draw group name
-            textPaint.setColor(color);
-            textPaint.setAlpha(alpha);
-            textPaint.setFakeBoldText(true);
-            float groupNamePaddingTop = 15 * density; // Increase this to move "low bass" further down
-            float groupNameY = boxBottom + groupNamePaddingTop;
-
-            canvas.drawText(GROUP_NAMES[g], (left + right) / 2f, groupNameY, textPaint);
-            textPaint.setFakeBoldText(false);
-        }
-        // ----------------------------------------------
+        // ------------------------------------
 
         // 4. Update EQ Line to start and end at the NEW background edges
         fullPath.reset();
@@ -334,7 +240,5 @@ public class EqVisualizerView extends View {
                 canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
             }
         }
-
-
     }
 }

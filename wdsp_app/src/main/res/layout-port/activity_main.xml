@@ -495,7 +495,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
                         android:background="@color/visualizer_container_bg">
-                        <com.radiorubka.wdsp.EqVisualizerView
+                        <com.radiorubka.wdsp.FmVisualizerView
                             android:id="@+id/fm_visualizer"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent" />

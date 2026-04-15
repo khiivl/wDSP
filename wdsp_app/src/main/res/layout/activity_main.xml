@@ -22,7 +22,9 @@
             android:id="@+id/layout_eq"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible">
+            android:visibility="visible"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <LinearLayout
                 android:id="@+id/layout_presets"
@@ -43,6 +45,7 @@
                     android:layout_width="300dp"
                     android:layout_height="wrap_content"
                     android:hint="@string/default_preset_name_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
                     android:translationY="-2dp"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
@@ -175,7 +178,10 @@
                 app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/layout_presets">
+                app:layout_constraintTop_toBottomOf="@+id/layout_presets"
+                android:paddingTop="6dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <com.radiorubka.wdsp.EqVisualizerView
                     android:id="@+id/eq_visualizer"
@@ -206,13 +212,13 @@
 
                 <TextView
                     android:id="@+id/lbl_pwr"
-                    style="@style/TextHeader"
+                    style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
                     android:layout_marginEnd="@dimen/margin_tiny"
                     android:text="@string/lbl_pwr"
-                    android:textColor="@color/text_theme_aware"
+                    android:textColor="@color/text_theme_aware_2"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
                     app:layout_constraintHorizontal_chainStyle="packed"
@@ -221,7 +227,7 @@
 
                 <TextView
                     android:id="@+id/tv_pwr_db"
-                    style="@style/TextHeader"
+                    style="@style/TextValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_tiny"
@@ -280,7 +286,7 @@
                 <!-- SUB LABEL (Updated to start after Power Vol Plus) -->
                 <TextView
                     android:id="@+id/lbl_sub"
-                    style="@style/TextHeader"
+                    style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/lbl_sub"
@@ -319,7 +325,7 @@
 
                 <TextView
                     android:id="@+id/tv_sub_db"
-                    style="@style/TextHeader"
+                    style="@style/TextValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -336,13 +342,14 @@
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/margin_small"
+                    android:layout_marginStart="@dimen/margin_small"
                     android:layout_marginEnd="@dimen/margin_large"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
                     app:endIconTint="@color/cyan_custom"
                     android:translationY="-2dp"
                     android:hint="@string/lbl_freq"
+                    android:textColorHint="@color/text_theme_aware_2"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_minus"
                     app:layout_constraintStart_toEndOf="@id/tv_sub_db"
@@ -505,10 +512,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="180dp"
                         android:layout_marginTop="@dimen/margin_standard"
-                        android:background="@color/visualizer_container_bg"
                         app:layout_constraintTop_toBottomOf="@id/layout_fm_toggles">
 
-                        <com.radiorubka.wdsp.EqVisualizerView
+                        <com.radiorubka.wdsp.FmVisualizerView
                             android:id="@+id/fm_visualizer"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent" />
@@ -1433,6 +1439,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:hint="@string/lbl_freq"
+                                android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
@@ -1566,6 +1573,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:hint="@string/lbl_freq"
+                                android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"

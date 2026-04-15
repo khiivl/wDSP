@@ -126,9 +126,11 @@ public class McuService extends Service implements LocationListener {
         backgroundHandler.post(() -> {
             if (key.equals(PREF_PLAYER_MAP)) {
                 loadPlayerMap();
-            } else if (key.equals(PREF_LAST_SELECTED)) {
+            }
+            else if (key.equals(PREF_LAST_SELECTED)) {
                 syncPreset(false);
-            } else if (currentPresetName != null && key.startsWith(currentPresetName)) {
+            }
+            else if (currentPresetName != null && key.startsWith(currentPresetName)) {
 
                 // Reload the data first
                 loadPresetData(currentPresetName);
@@ -231,7 +233,10 @@ public class McuService extends Service implements LocationListener {
         backgroundHandler.post(() -> {
             VolumeHelper.init(this);
             initReflection();
-            prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            currentPresetName = prefs.getString("Preset 1", "Preset 1");
+            sendBroadcast(presetChangedIntent);
+            loadPresetData(currentPresetName);
             prefs.registerOnSharedPreferenceChangeListener(prefListener);
             loadPlayerMap();
             syncPreset(true);
@@ -363,7 +368,7 @@ public class McuService extends Service implements LocationListener {
 
         // alright. step-by step.
         // this gets the speed
-        float speed = simulatedSpeedKmh >= 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+        float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
 
         // this gets the volume and the mute state
         int hardwareVol = VolumeHelper.getVolume();

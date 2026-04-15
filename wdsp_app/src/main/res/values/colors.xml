@@ -18,9 +18,9 @@
     <color name="btn_auto_bg">#028889</color>
     <color name="btn_add_bg">#0085a4</color>
     <color name="btn_rename_bg">#2b7db6</color>
-    <color name="btn_delete_bg">#b95076</color>
     <color name="btn_export_bg">#6f70b4</color>
     <color name="btn_import_bg">#9f5e9d</color>
+    <color name="btn_delete_bg">#b95076</color>
     <color name="btn_lower_bg">#00000000</color>
 
     <!-- Slider Colors -->

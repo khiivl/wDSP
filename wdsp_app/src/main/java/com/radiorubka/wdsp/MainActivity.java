@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     private SwitchCompat switchFmEnable, switchFatigueEnable, switchFmSubComp;
     private Slider seekFmCalVol, seekFmStrength;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
-    private EqVisualizerView fmVisualizer;
+    private FmVisualizerView fmVisualizer;
     
     // GALA Controls
     private SwitchCompat switchGalaEnable;
@@ -130,10 +131,18 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUpdatingUi = false;
     private boolean isFullyInitialized = false;
 
+    private String defaultPreset;
+
     private Method getPropMethod;
     public static class Globals {
         public static int currentSubFreqHz = 0;
     }
+
+    private final int[] GROUP_COLORS = {0xFF028889, 0xFF0085a4, 0xFF0085a4, 0xFF6f70b4, 0xFF9f5e9d, 0xFFb95076};
+    private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
+    // Indices where each group starts: 0(20Hz), 3(80Hz), 5(200Hz), 7(500Hz), 10(2kHz), 13(8kHz)
+    private final int[] GROUP_STARTS = {0, 3, 5, 7, 10, 13};
+
 
     private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
@@ -146,12 +155,15 @@ public class MainActivity extends AppCompatActivity {
                     spinnerPresets.setText(name, false);
                     loadPreset(name);
                 }
-            } else if ("com.radiorubka.wdsp.VOLUME_CHANGED".equals(action)) {
+            }
+            else if ("com.radiorubka.wdsp.VOLUME_CHANGED".equals(action)) {
                 currentEffectiveVolume = intent.getIntExtra("volume", -1);
                 if (isFullyInitialized && findViewById(R.id.layout_fm_curve).getVisibility() == View.VISIBLE) {
                     updateFmVisualizer();
                 }
-            } else if ("com.radiorubka.wdsp.GALA_UPDATE".equals(action)) {
+            }
+            else if ("com.radiorubka.wdsp.GALA_UPDATE".equals(action)) {
+//                Log.e("MainActivity", "RECEIVED GALA UPDATE INTENT");
                 float speed = intent.getFloatExtra("speed", 0.0f);
                 int offset = intent.getIntExtra("waveOffset", 0);
                 if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
@@ -181,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         
         // 1. Instant UI: Minimal views needed for the first screen
         initPrimaryViews();
+        registerServiceReceiver();
 
         if (savedInstanceState != null) {
             BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
@@ -195,8 +208,7 @@ public class MainActivity extends AppCompatActivity {
         // 2. Background Tasks: Reflection and Service
         new Thread(() -> {
             bypassHiddenApiRestrictions();
-            VolumeHelper.init(MainActivity.this);
-            startMcuService();
+            VolumeHelper.init(getApplicationContext());
         }).start();
 
         // 3. Delayed UI Initialization: EQ Bands are heavy
@@ -208,13 +220,13 @@ public class MainActivity extends AppCompatActivity {
         // 4. Lazy Logic: Everything else can wait a few ms
         handler.postDelayed(() -> {
             setupLogic();
-            registerServiceReceiver();
             isFullyInitialized = true;
             sendUiSignal(true);
-            refreshAllUiValues();
             requestBatteryOptimization();
             initReflection();
             ensureCallPresetExists();
+            startMcuService();
+            refreshAllUiValues();
         }, 50);
     }
 
@@ -253,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMcuService() {
+
         String[] permissions = {
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -272,9 +285,16 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, permissions, 102);
         } else {
             // Permissions already exist (second launch)
-            Intent intent = new Intent(this, McuService.class);
-            startForegroundService(intent);
+            startMcuActualService();
         }
+    }
+
+    public void startMcuActualService() {
+        Intent intent = new Intent(this, McuService.class);
+        startForegroundService(intent);
+        handler.postDelayed(() -> {
+            sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
+        }, 1000);
     }
 
     @Override
@@ -295,9 +315,11 @@ public class MainActivity extends AppCompatActivity {
             if (fineLocationGranted) {
                 Log.d(TAG, "Permission granted on first launch. Starting McuService...");
                 Intent intent = new Intent(this, McuService.class);
-                startForegroundService(intent);
+                startMcuActualService();
             } else {
                 Toaster.show(this, "Location permission is required for GALA features.");
+                Intent intent = new Intent(this, McuService.class);
+                startMcuActualService();
             }
         }
     }
@@ -317,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Only run this if presetNames is actually ready
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            String current = prefs.getString("last_selected_preset", "Call");
+            String current = prefs.getString("last_selected_preset", defaultPreset);
             int index = presetNames.indexOf(current);
             if (index >= 0 && index < presetNames.size()) {
                 String newName = presetNames.get(index);
@@ -504,6 +526,20 @@ public class MainActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         sendBroadcast(intent);
     }
+
+    private GradientDrawable getGroupDrawable(int index) {
+        int groupIdx = 0;
+        for (int i = 0; i < GROUP_STARTS.length; i++) {
+            if (index >= GROUP_STARTS[i]) groupIdx = i;
+        }
+
+        GradientDrawable gd = new GradientDrawable();
+        gd.setShape(GradientDrawable.RECTANGLE);
+        gd.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), GROUP_COLORS[groupIdx]);
+        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+        return gd;
+    }
+
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
         container.removeAllViews();
@@ -527,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
 
             q.setTextOn(getString(R.string.q_high)); q.setTextOff(getString(R.string.q_low)); q.setChecked(false);
             q.setTextColor(cQ); q.setBackgroundColor(Color.TRANSPARENT);
-            q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize); 
+            q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
             q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
             q.setOnCheckedChangeListener((bv, checked) -> {
@@ -538,12 +574,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            db.setText("0"); db.setTextColor(accentColor); 
+            db.setText("0"); db.setTextColor(accentColor);
             db.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             db.setGravity(Gravity.CENTER); db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
 
             TextView label = new TextView(this);
-            label.setText(AudioConfig.BAND_LABELS[i]); label.setTextColor(cL); 
+            label.setText(AudioConfig.BAND_LABELS[i]); label.setTextColor(getColor(R.color.transparent));
             label.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             label.setGravity(Gravity.CENTER); label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
 
@@ -594,9 +630,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            layout.addView(q); layout.addView(db); layout.addView(label);
-            seekBox.addView(s); layout.addView(seekBox);
-            container.addView(layout); updateDbLabel(i, 6);
+            layout.addView(q);
+            layout.addView(db);
+            layout.addView(label);
+            seekBox.addView(s);
+            layout.addView(seekBox);
+            container.addView(layout);
+            updateDbLabel(i, 6);
         }
     }
 
@@ -905,7 +945,7 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(presetNames);
         }
 
-        String defaultPreset = getString(R.string.default_preset_name);
+        defaultPreset = getString(R.string.default_preset_name);
         if (presetNames.isEmpty()) {
             presetNames.add(defaultPreset);
             savePresetList();
@@ -1337,8 +1377,10 @@ public class MainActivity extends AppCompatActivity {
                     map.put(p, cur);
                     prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
                 })
-//                .setNeutralButton(R.string.btn_set_default, (d, w) ->
-//                        prefs.edit().putString(PREF_DEFAULT_PRESET, cur).apply())
+                .setNeutralButton(R.string.btn_set_default, (d, w) -> {
+                        map.put("Default", cur);
+                        prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+                })
                 .setNegativeButton(R.string.btn_unassign, (d, w) -> {
                     if (map.containsKey(p)) {
                         map.remove(p);
@@ -1359,7 +1401,12 @@ public class MainActivity extends AppCompatActivity {
 //                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
             else if (slider == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
             else if (slider == seekSimulateSpeed) {
-                tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
+                if (p == 0) {
+                    tvSimulateSpeedVal.setText(getString(R.string.value_default));
+                }
+                else {
+                    tvSimulateSpeedVal.setText(getString(R.string.speed_kmh_format, p));
+                }
                 if (fromUser) {
                     Intent intent = new Intent("com.radiorubka.wdsp.SIMULATE_SPEED");
                     intent.putExtra("speed", (float) p);
