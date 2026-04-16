@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 2. A transparent/tinted overlay with rounded corners -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- Adjust color and transparency (e.g., #80 is 50% alpha) -->
+            <solid android:color="#f0EBEBEA" />
+            <corners android:radius="15dp" />
+        </shape>
+    </item>
+</layer-list>

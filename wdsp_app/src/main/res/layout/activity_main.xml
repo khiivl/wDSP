@@ -744,6 +744,8 @@
                         app:layout_constraintEnd_toStartOf="@+id/guideline_delays"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
+                        android:background="@drawable/ui_bg_layer"
+                        android:padding="16dp"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
                         <LinearLayout
@@ -1007,6 +1009,8 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/guideline_delays"
                         app:layout_constraintTop_toTopOf="parent"
+                        android:background="@drawable/ui_bg_layer"
+                        android:padding="16dp"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
                         <LinearLayout
@@ -1282,7 +1286,7 @@
                 android:layout_width="1dp"
                 android:layout_height="0dp"
                 android:alpha="0.3"
-                android:background="@color/cyan_custom"
+                android:background="@color/text_theme_aware_3"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/guideline_right"
                 app:layout_constraintStart_toStartOf="@id/guideline_right"
@@ -1318,11 +1322,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingEnd="@dimen/padding_standard"
-                        android:paddingStart="0dp"
+                        android:padding="@dimen/padding_standard"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
+                        android:background="@drawable/ui_bg_layer"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
                         <TextView
@@ -1614,7 +1618,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_small"
                     android:text="@string/value_default"
-                    android:textColor="@color/text_theme_aware_2"
+                    android:textColor="@color/text_theme_aware"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -1647,7 +1651,7 @@
                     android:id="@+id/imageView"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_margin="0dp"
+                    android:layout_marginBottom="8dp"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
                     app:layout_constraintBottom_toTopOf="@+id/tv_fader_fr_val"
@@ -1694,9 +1698,8 @@
                     style="@style/TextHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/margin_small"
                     android:text="@string/value_default"
-                    android:textColor="@color/text_theme_aware_2"
+                    android:textColor="@color/text_theme_aware"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
@@ -1709,12 +1712,12 @@
             android:padding="16dp"
             android:visibility="gone"
             android:layout_width="match_parent"
+            android:background="@drawable/ui_bg_layer"
+            android:layout_margin="@dimen/margin_standard"
             android:layout_height="match_parent">
 
             <TextView
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_theme_aware"
+                style="@style/TextTitle"
                 android:id="@+id/tv_gala_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -1732,8 +1735,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/tv_gala_title">
 
                 <TextView
-                    android:textSize="18sp"
-                    android:textColor="@color/text_theme_aware"
+                    style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/enable_gala"/>
@@ -1745,8 +1747,7 @@
                     android:layout_marginStart="8dp"/>
 
                 <TextView
-                    android:textSize="18sp"
-                    android:textColor="@color/text_theme_aware"
+                    style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/vol_step_every"
@@ -1774,9 +1775,7 @@
                     app:labelBehavior="gone" />
 
                 <TextView
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_theme_aware_2"
+                    style="@style/TextValue"
                     android:id="@+id/tv_gala_increment_val"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -1799,16 +1798,13 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/current_gps_speed"/>
 
                     <TextView
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/cyan_custom"
+                        style="@style/TextValue"
                         android:id="@+id/tv_gala_speed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -1816,8 +1812,7 @@
                         android:layout_marginStart="16dp"/>
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/standstill_speed"
@@ -1845,9 +1840,7 @@
                         app:labelBehavior="gone" />
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_theme_aware_2"
+                        style="@style/TextValue"
                         android:id="@+id/tv_gala_minspeed_val"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -1864,16 +1857,13 @@
                     android:layout_marginTop="16dp">
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/applied_vol_offset"/>
 
                     <TextView
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/cyan_custom"
+                        style="@style/TextValue"
                         android:id="@+id/tv_gala_offset"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -1924,8 +1914,7 @@
                     android:layout_marginTop="32dp">
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
+                        style="@style/TextLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/max_adjustment"/>
@@ -1952,9 +1941,7 @@
                         app:labelBehavior="gone" />
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_theme_aware_2"
+                        style="@style/TextValue"
                         android:id="@+id/tv_gala_max_adj_val"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -1971,8 +1958,7 @@
                     android:layout_marginTop="32dp">
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textColor="@color/text_theme_aware"
+                        style="@style/TextLabel"
                         android:layout_width="160dp"
                         android:layout_height="wrap_content"
                         android:text="@string/simulate_speed"/>
@@ -1980,13 +1966,12 @@
                     <com.google.android.material.slider.Slider
                         app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_simulate_speed"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/slider_max_width_big"
                         android:layout_height="wrap_content"
                         android:valueFrom="0"
                         android:valueTo="200"
                         android:stepSize="1"
                         android:value="0"
-                        android:layout_weight="1"
                         app:thumbRadius="10dp"
                         app:haloRadius="24dp"
                         app:haloColor="@color/transparent"
@@ -2001,12 +1986,10 @@
                         app:labelBehavior="gone" />
 
                     <TextView
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/cyan_custom"
+                        style="@style/TextValue"
                         android:gravity="end"
                         android:id="@+id/tv_simulate_speed_val"
-                        android:layout_width="80dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/value_default"/>
 

@@ -59,7 +59,7 @@ public class FmVisualizerView extends View {
     }
 
     private void init() {
-        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.app_background_fm);
+        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.ui_bg_layer);
         float density = getContext().getResources().getDisplayMetrics().density;
 
         int colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);

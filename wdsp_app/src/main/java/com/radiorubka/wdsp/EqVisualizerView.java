@@ -80,7 +80,7 @@ public class EqVisualizerView extends View {
 
 
     private void init() {
-        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.app_background_fm);
+        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.ui_bg_layer);
         float density = getContext().getResources().getDisplayMetrics().density;
 
         GROUP_COLORS = new int[]{
@@ -227,7 +227,7 @@ public class EqVisualizerView extends View {
         float groupNameBottomY = drawStartY - marginToGrid;
 
         // ADJUST THIS: Increase to pull boxes away from the screen edges
-        float edgeMargin = 13 * density;
+        float edgeMargin = 15 * density;
 
         // Dynamic padding between sliders
         float stepX2 = w / (float)AudioConfig.NUM_BANDS;
