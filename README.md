@@ -1,5 +1,7 @@
 <img width="1280" height="646" alt="wDSP_repo" src="https://github.com/user-attachments/assets/13869fb3-748f-4d1f-aa26-e6bf8a090b9e" />
 
+----------------------------------------------------------------------------------------------------------------------
+
 This is a free and open-source DSP app designed to fully replace the stock DSP app on K706/QF Android head units. 
 
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
