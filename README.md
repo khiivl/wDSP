@@ -17,8 +17,6 @@ Screenshots:
 
 <img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
 
-----------------------------------------------------------------------------------------------------------------------
-
 <details>
 
 <summary>More screenshots</summary>
