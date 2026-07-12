@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Background service to handle MCU communication, 
+ * Background service to handle MCU communication,
  * dynamic Fletcher-Munson EQ adjustment,
  * player-based preset switching,
  * and GALA (Speed Sensitive Volume).
@@ -42,12 +42,12 @@ public class McuService extends Service implements LocationListener {
 
     private static final int NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "wDSP_Background_Service";
-    
+
     private static final String PREFS_NAME = "EqPresets";
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
     private static final String PREF_PLAYER_MAP = "player_preset_map";
 //    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
-    
+
     private SharedPreferences prefs;
     private HandlerThread workerThread;
     private Handler backgroundHandler;
@@ -56,7 +56,7 @@ public class McuService extends Service implements LocationListener {
     private boolean isPolling = false;
     private int lastVolumeRead = -1;
     private int lastAppliedVolume = -1;
-    private String lastPlayerSource = null; 
+    private String lastPlayerSource = null;
     private Method getPropMethod;
     private Object mcuManagerInstance;
     private Method setEqDataMethod;
@@ -76,10 +76,19 @@ public class McuService extends Service implements LocationListener {
     private int cachedGalaMinV;
     // private int cachedGalaMaxV;
     private int cachedGalaMaxAdj;
-    
+    private int cachedGalaFadeDelayMs; // ms between each ±1 fade step (default 100)
+    private int cachedGalaHoldMs;      // ms a tier must be stable before being applied (default 1000)
+
     private float currentSpeedKmh = 0.0f;
     private float simulatedSpeedKmh = -1.0f;
     private int baseStandstillVolume = -1;
+
+    // GALA fade & hold-timer state
+    private int currentAppliedOffset = -1; // the offset currently SET on the hardware
+    private int pendingTargetOffset  = -1; // the offset we want to reach (after hold timer)
+    private int lastGalaTier         = -1; // last confirmed tier index
+    private long tierChangeTimestamp = 0;   // when the current pending tier was first seen
+    private long lastFadeStepTime    = 0;   // last time we moved applied offset by ±1
 
     private boolean wasMuted = false;
 
@@ -97,7 +106,7 @@ public class McuService extends Service implements LocationListener {
     private LocationManager locationManager;
     private Map<String, String> playerMap = new HashMap<>();
     private final Map<Byte, byte[]> mcuCache = new HashMap<>();
-    
+
     private final float[] fmOffsets = new float[16];
     private final byte[] eqData = new byte[12];
     private final byte[] subData = new byte[2];
@@ -202,9 +211,11 @@ public class McuService extends Service implements LocationListener {
     };
 
     private void forceUiUpdate() {
-        float speed = simulatedSpeedKmh >= 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+        // >= 0.0f → > 0.0f
+        // consistent with checkVolumeAndGala(); 0.0f == Simulation off
+        float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
         int hardwareVol = VolumeHelper.getVolume();
-        
+
         galaUpdateIntent.putExtra("speed", speed);
         int effectiveOffset = (baseStandstillVolume != -1) ? Math.max(0, hardwareVol - baseStandstillVolume) : 0;
         galaUpdateIntent.putExtra("waveOffset", effectiveOffset);
@@ -219,7 +230,7 @@ public class McuService extends Service implements LocationListener {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        
+
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
         galaUpdateIntent.setPackage(getPackageName());
@@ -296,13 +307,15 @@ public class McuService extends Service implements LocationListener {
         cachedFatEn = prefs.getBoolean(preset + "_fat_en", false);
         cachedFmCal = prefs.getInt(preset + "_fm_cal", 25);
         cachedFmStr = prefs.getInt(preset + "_fm_str", 100);
-        
+
         // GALA
         cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
         cachedGalaMinV = prefs.getInt(preset + "_gala_min_speed", 0);
 //        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
+        cachedGalaFadeDelayMs = prefs.getInt(preset + "_gala_fade_ms", 100);
+        cachedGalaHoldMs = prefs.getInt(preset + "_gala_hold_ms", 1000);
     }
 
     @Override
@@ -390,7 +403,7 @@ public class McuService extends Service implements LocationListener {
             return;
         }
 
-        // 2. PRE-CALCULATE OFFSET: Calculate what the GALA boost should be right now.
+        // 2. PRE-CALCULATE RAW OFFSET: What should the GALA boost be at the current speed?
         int rawOffset = 0;
         if (cachedGalaEn) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
@@ -402,57 +415,117 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
-        // immediately force the volume to (Base + Current Offset).
-        if (wasMuted && rawOffset != 0) {
+        // skip fade & timer — jump directly to the correct offset.
+        if (wasMuted) {
             wasMuted = false;
-            if (baseStandstillVolume != -1) {
+            currentAppliedOffset = rawOffset;
+            pendingTargetOffset  = rawOffset;
+            lastGalaTier         = rawOffset;
+            tierChangeTimestamp  = System.currentTimeMillis();
+            if (baseStandstillVolume != -1 && rawOffset != 0) {
                 int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
                 VolumeHelper.setVolume(targetVol);
-                lastAppliedVolume = targetVol;
-                lastReadHardwareVol = targetVol;
+                lastAppliedVolume   = targetVol;
+                lastReadHardwareVol = targetVol; // set Tracking-Vars to targetVol. No wrong Manual-Adjust in next cycle
                 Log.d(TAG, "Unmuted: Restoring Base(" + baseStandstillVolume + ") + Offset(" + rawOffset + ") = " + targetVol);
                 return; // Exit this poll to let the hardware stabilize
             }
+            lastReadHardwareVol = hardwareVol;
+            lastAppliedVolume   = hardwareVol;
         }
 
         // 4. INITIALIZE BASE: If this is the first run after service start.
+        // pendingTargetOffset is set directly to rawOffset here, which bypasses the hold timer
+        // for the first cycle. This is intentional, GALA should take effect immediately upon boot,
+        // without waiting 3 seconds for GPS stabilization. The hold timer takes effect starting with the second tier change.
         if (baseStandstillVolume == -1) {
-            baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
-            lastReadHardwareVol = hardwareVol;
-            lastAppliedVolume = hardwareVol;
+            int initApplied = (currentAppliedOffset >= 0) ? currentAppliedOffset : rawOffset;
+            baseStandstillVolume = Math.max(0, hardwareVol - initApplied);
+            lastReadHardwareVol  = hardwareVol;
+            lastAppliedVolume    = hardwareVol;
+            currentAppliedOffset = initApplied;
+            pendingTargetOffset  = rawOffset;
+            lastGalaTier         = rawOffset;
+            tierChangeTimestamp  = System.currentTimeMillis();
         }
 
         // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
         // We detect this because the hardware volume changed, but NOT by our script.
         if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
-            baseStandstillVolume = Math.max(0, hardwareVol - rawOffset);
-            if (hardwareVol < rawOffset) {
+            baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
+            if (hardwareVol < currentAppliedOffset) {
                 baseStandstillVolume = 0;
             }
             Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
         }
 
-        // 6. GALA APPLICATION: Apply speed-based volume if needed.
+        // 6. GALA APPLICATION with Hold-Timer and Fade
         if (cachedGalaEn) {
-            int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
+            long now = System.currentTimeMillis();
 
-            if (hardwareVol != targetVol && rawOffset != 0) {
+            // 6a. HOLD-TIMER: Has the tier changed?
+            if (rawOffset != lastGalaTier) {
+                // New tier seen — record the timestamp and remember it
+                lastGalaTier        = rawOffset;
+                tierChangeTimestamp = now;
+                // pendingTargetOffset stays at the OLD value until the hold expires
+            }
+
+            // 6b. Only release the new target after it has been stable for cachedGalaHoldMs
+            if (now - tierChangeTimestamp >= cachedGalaHoldMs) {
+                pendingTargetOffset = lastGalaTier;
+            }
+
+            // 6c. FADE: move currentAppliedOffset one step towards pendingTargetOffset
+            if (currentAppliedOffset < 0) currentAppliedOffset = 0; // first-run safety
+            if (currentAppliedOffset != pendingTargetOffset) {
+                long fadeDelay = Math.max(0, cachedGalaFadeDelayMs);
+                if (now - lastFadeStepTime >= fadeDelay) {
+                    currentAppliedOffset += (currentAppliedOffset < pendingTargetOffset) ? 1 : -1;
+                    lastFadeStepTime = now;
+                    Log.v(TAG, "GALA Fade: appliedOffset=" + currentAppliedOffset + " target=" + pendingTargetOffset);
+                }
+            }
+
+            // 6d. Apply the faded offset to the hardware
+            int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
+            if (hardwareVol != targetVol) {
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
                 hardwareVol = targetVol;
-                Log.v(TAG, "GALA Update: " + lastReadHardwareVol + " -> " + targetVol);
+                Log.v(TAG, "GALA Update: vol=" + lastReadHardwareVol + " -> " + targetVol + " (offset=" + currentAppliedOffset + ")");
             }
 
             if (isUiVisible) {
-                int effectiveOffset = Math.max(0, targetVol - baseStandstillVolume);
                 galaUpdateIntent.putExtra("speed", speed);
-                galaUpdateIntent.putExtra("waveOffset", effectiveOffset);
+                galaUpdateIntent.putExtra("waveOffset", currentAppliedOffset);
                 sendBroadcast(galaUpdateIntent);
             }
         } else {
-            // If GALA is disabled, the base is simply the current volume.
-            baseStandstillVolume = hardwareVol;
-            lastAppliedVolume = hardwareVol;
+            pendingTargetOffset = 0;
+            lastGalaTier        = 0;
+
+            if (currentAppliedOffset < 0) currentAppliedOffset = 0;
+
+            if (currentAppliedOffset > 0) {
+                long now = System.currentTimeMillis();
+                long fadeDelay = Math.max(0, cachedGalaFadeDelayMs);
+                if (now - lastFadeStepTime >= fadeDelay) {
+                    currentAppliedOffset--;
+                    lastFadeStepTime = now;
+                    Log.v(TAG, "GALA Fade-Out (disabled): appliedOffset=" + currentAppliedOffset);
+                }
+                int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
+                if (hardwareVol != targetVol) {
+                    VolumeHelper.setVolume(targetVol);
+                    lastAppliedVolume = targetVol;
+                    hardwareVol = targetVol;
+                }
+            } else {
+                currentAppliedOffset = 0;
+                baseStandstillVolume = hardwareVol;
+                lastAppliedVolume    = hardwareVol;
+            }
         }
 
         // 7. TRACKING: Update last seen volume and handle UI volume sync.
@@ -546,16 +619,16 @@ public class McuService extends Service implements LocationListener {
     private void updateEqWithFm(int currentVol) {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
-        
+
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
             float db1 = (cachedGains[b1] - 6) * 2 + fmOffsets[b1];
             int idx1 = Math.max(0, Math.min(12, Math.round((db1 / 2.0f) + 6)));
-            
+
             int b2 = i * 2 + 1;
             float db2 = (cachedGains[b2] - 6) * 2 + fmOffsets[b2];
             int idx2 = Math.max(0, Math.min(12, Math.round((db2 / 2.0f) + 6)));
-            
+
             eqData[i + 1] = (byte) ((idx2 << 4) | (idx1 & 0x0F));
         }
         eqData[9] = cachedQByte1;
@@ -607,7 +680,7 @@ public class McuService extends Service implements LocationListener {
     private float getMaxBassBoost() {
         int[] freqs = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
         int freq = (cachedSubFreq >= 0 && cachedSubFreq < freqs.length) ? freqs[cachedSubFreq] : 80;
-        
+
         if (freq == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
         if (freq == 63 || freq == 50) return AudioConfig.ISO_MAX_OFFSETS[2];
         if (freq == 40 || freq == 32) return AudioConfig.ISO_MAX_OFFSETS[1];
@@ -663,7 +736,7 @@ public class McuService extends Service implements LocationListener {
 
     private void applyStaticSettings() {
         if (currentPresetName == null) return;
-        
+
         applyBassBoost();
 
         applyFaderLoud();
