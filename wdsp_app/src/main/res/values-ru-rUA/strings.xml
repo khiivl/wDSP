@@ -72,6 +72,10 @@
     <string name="simulation_debug">Моделирование и отладка</string>
     <string name="simulate_vehicle_speed">Симуляция скорости:</string>
     <string name="simulate_speed">Симуляция скорости:</string>
+    <string name="gala_fade_delay">Скорость плавн. перехода (задержка/шаг):</string>
+    <string name="gala_hold_timer">Таймер удержания порогового значения (время удержания порогового значения скорости перед плавным снижением)</string>
+    <string name="gala_ms_fmt">%d мс</string>
+    <string name="gala_s_fmt">%.1f с</string>
 
     <!-- General -->
     <string name="btn_apply">Применить</string>

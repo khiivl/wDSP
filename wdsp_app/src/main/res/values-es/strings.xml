@@ -69,6 +69,10 @@
     <string name="simulation_debug">Simulación &amp; Depuración</string>
     <string name="simulate_vehicle_speed">Simular Velocidad del Vehículo</string>
     <string name="simulate_speed">Simular Velocidad:</string>
+    <string name="gala_fade_delay">Velocidad de transición (retardo por paso):</string>
+    <string name="gala_hold_timer">Temporizador de mantenimiento del umbral (tiempo durante el que se mantiene el umbral de velocidad antes de la disminución gradual)</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
 
     <!-- General -->
     <string name="btn_apply">Aplicar</string>

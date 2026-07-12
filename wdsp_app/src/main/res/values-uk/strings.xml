@@ -70,6 +70,10 @@
     <string name="simulation_debug">Симуляція та налагодження</string>
     <string name="simulate_vehicle_speed">Симулювати швидкість авто</string>
     <string name="simulate_speed">Симулювати швидкість:</string>
+    <string name="gala_fade_delay">Швидкість плавного переходу (затримка/крок):</string>
+    <string name="gala_hold_timer">Таймер утримання порогу (час утримання порогу швидкості перед поступовим зменшенням)</string>
+    <string name="gala_ms_fmt">%d мс</string>
+    <string name="gala_s_fmt">%.1f с</string>
 
     <!-- General -->
     <string name="btn_apply">Застосувати</string>

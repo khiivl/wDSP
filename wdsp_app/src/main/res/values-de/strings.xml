@@ -69,6 +69,10 @@
     <string name="simulation_debug">Simulation &amp; Debug</string>
     <string name="simulate_vehicle_speed">Fahrzeuggeschw. simulieren</string>
     <string name="simulate_speed">Geschw. simulieren:</string>
+    <string name="gala_fade_delay">Einblend-Geschwindigkeit (Verzögerung/Schritt):</string>
+    <string name="gala_hold_timer">Schwellenwert-Haltezeit (Zeit, in der der Geschwindigkeitsschwellenwert vor dem Abklingen beibehalten wird)</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
 
     <!-- General -->
     <string name="btn_apply">Anwenden</string>
