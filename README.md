@@ -1,3 +1,7 @@
+<img width="1280" height="646" alt="wDSP_repo" src="https://github.com/user-attachments/assets/13869fb3-748f-4d1f-aa26-e6bf8a090b9e" />
+
+----------------------------------------------------------------------------------------------------------------------
+
 This is a free and open-source DSP app designed to fully replace the stock DSP app on K706/QF Android head units. 
 
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
@@ -6,6 +10,26 @@ Compatible with vertical and horizontal head units.
 Telegram group for discussion: https://t.me/wDSPapp
 
 If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp
+
+----------------------------------------------------------------------------------------------------------------------
+
+Screenshots:
+
+<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
+
+<details>
+
+<summary>More screenshots</summary>
+
+<img width="1024" height="600" alt="Screenshot_20260531_220716" src="https://github.com/user-attachments/assets/1a3dea59-97b6-4a31-8bc0-b4fe709b7fa9" />
+
+<img width="1024" height="600" alt="Screenshot_20260531_220719" src="https://github.com/user-attachments/assets/32da504c-c540-469c-9679-902174cb4cc0" />
+
+<img width="1024" height="600" alt="Screenshot_20260531_220724" src="https://github.com/user-attachments/assets/37ff2c4a-df97-4209-9a51-da6a6e68fe2b" />
+
+<img width="1024" height="600" alt="Screenshot_20260531_220728" src="https://github.com/user-attachments/assets/1055af53-7c7b-43cc-9975-af0a485cb8b5" />
+
+</details>
 
 ----------------------------------------------------------------------------------------------------------------------
 
