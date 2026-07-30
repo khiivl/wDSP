@@ -78,7 +78,7 @@ public class McuService extends Service implements LocationListener {
     private int cachedGalaMaxAdj;
     
     private float currentSpeedKmh = 0.0f;
-    private float simulatedSpeedKmh = -1.0f;
+    private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
 
     private boolean wasMuted = false;
@@ -202,7 +202,7 @@ public class McuService extends Service implements LocationListener {
     };
 
     private void forceUiUpdate() {
-        float speed = simulatedSpeedKmh >= 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+        float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
         int hardwareVol = VolumeHelper.getVolume();
         
         galaUpdateIntent.putExtra("speed", speed);
