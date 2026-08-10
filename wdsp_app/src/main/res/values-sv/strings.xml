@@ -129,6 +129,5 @@
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
     <string name="lbl_pwr">" Förstärkar:"</string>
-    <string name="hint_sub_freq">Frekv</string>
 
 </resources>

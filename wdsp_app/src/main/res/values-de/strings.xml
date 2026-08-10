@@ -129,5 +129,4 @@
     <string name="GLtab">GALA</string>
     <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
-    <string name="hint_sub_freq">Freq</string>
 </resources>

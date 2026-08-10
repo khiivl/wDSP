@@ -129,5 +129,4 @@
     <string name="OTtab">Інше</string>
     <string name="GLtab">Адапт. Гучн.</string>
     <string name="lbl_pwr">Підсилення:</string>
-    <string name="hint_sub_freq">Частота</string>
 </resources>
