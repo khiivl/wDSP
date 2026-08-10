@@ -10,7 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
+//import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,6 +41,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -138,8 +139,10 @@ public class MainActivity extends AppCompatActivity {
         public static int currentSubFreqHz = 0;
     }
 
-    private final int[] GROUP_COLORS = {0xFF028889, 0xFF0085a4, 0xFF0085a4, 0xFF6f70b4, 0xFF9f5e9d, 0xFFb95076};
-    private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
+    // Populated in onCreate() from theme-aware color resources (light/night) instead of hardcoded
+    // hex, so it stays in sync with EqVisualizerView's band-group palette (bass=warm, treble=cool).
+    private int[] GROUP_COLORS;
+    //private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
     // Indices where each group starts: 0(20Hz), 3(80Hz), 5(200Hz), 7(500Hz), 10(2kHz), 13(8kHz)
     private final int[] GROUP_STARTS = {0, 3, 5, 7, 10, 13};
 
@@ -192,7 +195,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
-        
+
+        // Same reversed order as EqVisualizerView's GROUP_COLORS: low bass -> upper treble
+        // goes warm (red) to cool (blue/teal).
+        GROUP_COLORS = new int[]{
+                ContextCompat.getColor(this, R.color.btn_delete_bg),
+                ContextCompat.getColor(this, R.color.btn_import_bg),
+                ContextCompat.getColor(this, R.color.btn_export_bg),
+                ContextCompat.getColor(this, R.color.btn_rename_bg),
+                ContextCompat.getColor(this, R.color.btn_add_bg),
+                ContextCompat.getColor(this, R.color.btn_auto_bg)
+        };
+
         // 1. Instant UI: Minimal views needed for the first screen
         initPrimaryViews();
         registerServiceReceiver();
@@ -294,9 +308,7 @@ public class MainActivity extends AppCompatActivity {
     public void startMcuActualService() {
         Intent intent = new Intent(this, McuService.class);
         startForegroundService(intent);
-        handler.postDelayed(() -> {
-            sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
-        }, 1000);
+        handler.postDelayed(() -> sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName())), 1000);
     }
 
     @Override
@@ -316,11 +328,11 @@ public class MainActivity extends AppCompatActivity {
 
             if (fineLocationGranted) {
                 Log.d(TAG, "Permission granted on first launch. Starting McuService...");
-                Intent intent = new Intent(this, McuService.class);
+                //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             } else {
                 Toaster.show(this, "Location permission is required for GALA features.");
-                Intent intent = new Intent(this, McuService.class);
+                //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             }
         }
@@ -529,18 +541,18 @@ public class MainActivity extends AppCompatActivity {
         sendBroadcast(intent);
     }
 
-    private GradientDrawable getGroupDrawable(int index) {
-        int groupIdx = 0;
-        for (int i = 0; i < GROUP_STARTS.length; i++) {
-            if (index >= GROUP_STARTS[i]) groupIdx = i;
-        }
-
-        GradientDrawable gd = new GradientDrawable();
-        gd.setShape(GradientDrawable.RECTANGLE);
-        gd.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), GROUP_COLORS[groupIdx]);
-        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
-        return gd;
-    }
+//    private GradientDrawable getGroupDrawable(int index) {
+//        int groupIdx = 0;
+//        for (int i = 0; i < GROUP_STARTS.length; i++) {
+//            if (index >= GROUP_STARTS[i]) groupIdx = i;
+//        }
+//
+//        GradientDrawable gd = new GradientDrawable();
+//        gd.setShape(GradientDrawable.RECTANGLE);
+//        gd.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), GROUP_COLORS[groupIdx]);
+//        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+//        return gd;
+//    }
 
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
@@ -549,7 +561,7 @@ public class MainActivity extends AppCompatActivity {
         qSwitches.clear();
         dbLabels.clear();
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
-        int cL = ContextCompat.getColor(this, R.color.band_label);
+        //int cL = ContextCompat.getColor(this, R.color.band_label);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
@@ -557,13 +569,18 @@ public class MainActivity extends AppCompatActivity {
             ToggleButton q = new ToggleButton(this);
             TextView db = new TextView(this);
             Slider s = new Slider(this, null);
-            gainSliders.add(s); qSwitches.add(q); dbLabels.add(db);
+            gainSliders.add(s);
+            qSwitches.add(q);
+            dbLabels.add(db);
 
             LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL); layout.setGravity(Gravity.CENTER_HORIZONTAL);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setGravity(Gravity.CENTER_HORIZONTAL);
             layout.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1f));
 
-            q.setTextOn(getString(R.string.q_high)); q.setTextOff(getString(R.string.q_low)); q.setChecked(false);
+            q.setTextOn(getString(R.string.q_high));
+            q.setTextOff(getString(R.string.q_low));
+            q.setChecked(false);
             q.setTextColor(cQ); q.setBackgroundColor(Color.TRANSPARENT);
             q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
@@ -594,8 +611,16 @@ public class MainActivity extends AppCompatActivity {
             s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
-            s.setTrackActiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_active)));
-            s.setTrackInactiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_inactive)));
+
+            // Color-code the track per band group (same palette as the EQ visualizer curve)
+            int groupIdx = 0;
+            for (int g = 0; g < GROUP_STARTS.length; g++) {
+                if (idx >= GROUP_STARTS[g]) groupIdx = g;
+            }
+            int bandColor = GROUP_COLORS[groupIdx];
+            s.setTrackActiveTintList(ColorStateList.valueOf(bandColor));
+            s.setThumbTintList(ColorStateList.valueOf(bandColor));
+            s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(bandColor, 70)));
             s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
             s.setRotation(270f);
 
