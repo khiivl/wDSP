@@ -46,6 +46,7 @@
     <string name="lbl_filter">Filtro</string>
     <string name="lbl_boost">Realce</string>
     <string name="lbl_freq">Frecuencia</string>
+    <string name="lbl_freq_boost">Frec. Realce</string>
     <string name="lbl_center">Centro</string>
     <string name="fader_balance">Fader &amp; Balance</string>
 

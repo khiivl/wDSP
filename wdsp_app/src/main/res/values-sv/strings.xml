@@ -47,6 +47,7 @@
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
     <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq_boost">Boost Frekv</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balans</string>
 

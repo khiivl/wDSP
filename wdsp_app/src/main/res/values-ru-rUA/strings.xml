@@ -11,9 +11,6 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Саб:</string>
-    <string name="btn_plus">+</string>
-    <string name="btn_minus">-</string>
-    <string name="btn_center" translatable="false">0</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -49,6 +46,7 @@
     <string name="lbl_filter">Фильтр</string>
     <string name="lbl_boost">Усиление</string>
     <string name="lbl_freq">Частота</string>
+    <string name="lbl_freq_boost">Част. Усил.</string>
     <string name="lbl_center">Центр</string>
     <string name="fader_balance">Регул. громк; Баланс</string>
 

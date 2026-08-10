@@ -1292,16 +1292,6 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switch_loud"
-                style="@style/TextLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/built_in_loudness_legacy"
-                app:layout_constraintEnd_toStartOf="@+id/guideline_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <!-- Left Side Controls (Bass) -->
             <ScrollView
                 android:layout_width="0dp"
@@ -1312,7 +1302,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/switch_loud">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -1442,7 +1432,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:hint="@string/lbl_freq"
+                                android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1576,7 +1566,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:hint="@string/lbl_freq"
+                                android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1596,8 +1586,20 @@
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_loud"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/built_in_loudness_legacy"
+                            android:layout_marginTop="16dp"
+                            android:layout_gravity="center_horizontal" />
+
                     </LinearLayout>
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
             </ScrollView>
 
             <!-- Fader Controls (Right Side) -->

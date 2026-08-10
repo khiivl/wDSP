@@ -1023,14 +1023,6 @@
                     android:orientation="vertical"
                     android:padding="@dimen/padding_standard">
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switch_loud"
-                        style="@style/TextLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/margin_standard"
-                        android:text="@string/built_in_loudness_legacy" />
-
                     <!-- Bass Controls -->
                     <TextView
                         style="@style/TextTitle"
@@ -1130,7 +1122,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/lbl_freq"
+                                android:text="@string/lbl_freq_boost"
                                 android:layout_gravity="center_vertical" />
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_front"
@@ -1237,7 +1229,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/lbl_freq"
+                                android:text="@string/lbl_freq_boost"
                                 android:layout_gravity="center_vertical" />
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_rear"
@@ -1329,6 +1321,14 @@
 
                         <TextView android:id="@+id/tv_fader_fr_val" style="@style/TextValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="18sp" />
                     </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switch_loud"
+                        style="@style/TextLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        android:text="@string/built_in_loudness_legacy" />
 
                 </LinearLayout>
             </ScrollView>

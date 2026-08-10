@@ -47,6 +47,7 @@
     <string name="lbl_filter">Фільтр</string>
     <string name="lbl_boost">Підсил.</string>
     <string name="lbl_freq">Част.</string>
+    <string name="lbl_freq_boost">Част. Підс.</string>
     <string name="lbl_center">Центр</string>
     <string name="fader_balance">Фейдер та Баланс</string>
 
