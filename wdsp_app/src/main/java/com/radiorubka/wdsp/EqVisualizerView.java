@@ -28,8 +28,8 @@ public class EqVisualizerView extends View {
     private Paint warningPaint;
 
     private final int[] gains = new int[AudioConfig.NUM_BANDS];
-    private float[] offsets = null;
-    private float[] warnings = null;
+    private final float[] offsets = null;
+    private final float[] warnings = null;
 
     private float[] xCoords;
     private float[] yCoords;

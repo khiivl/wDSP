@@ -189,7 +189,7 @@ public class FmVisualizerView extends View {
             bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
             canvas.clipPath(bgPath); // This "cuts" the drawable into a rounded shape
 
-            customBackground.setBounds((int)bgLeft, (int)bgTop, (int)bgRight, (int)bgBottom);
+            customBackground.setBounds((int)bgLeft, 0, (int)bgRight, (int)bgBottom);
             customBackground.draw(canvas);
             canvas.restore();
         }
