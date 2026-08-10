@@ -353,21 +353,17 @@ public class EqVisualizerView extends View {
 
         // 8. Draw Text/Warnings (unchanged)
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (offsets != null) {
-                float val = offsets[i];
-                if (Math.abs(val) > 0.05f) {
-                    // Note: String.format still allocates, but it's necessary for dynamic text.
-                    // To optimize further, one could use a StringBuilder or specialized formatter.
-                    String label = String.format(Locale.getDefault(), "%s%.1f", (val > 0 ? "+" : ""), val);
-                    canvas.drawText(label, xCoords[i], yCoords[i] - pointRadius - 8, textPaint);
-                }
+            float val = offsets[i];
+            if (Math.abs(val) > 0.05f) {
+                // Note: String.format still allocates, but it's necessary for dynamic text.
+                // To optimize further, one could use a StringBuilder or specialized formatter.
+                String label = String.format(Locale.getDefault(), "%s%.1f", (val > 0 ? "+" : ""), val);
+                canvas.drawText(label, xCoords[i], yCoords[i] - pointRadius - 8, textPaint);
             }
 
-            if (warnings != null && Math.abs(warnings[i]) > 0.05f) {
-                String warningLabel = String.format(Locale.getDefault(), "-%.1f", warnings[i]);
-                float yOffset = (offsets != null && Math.abs(offsets[i]) > 0.05f) ? 24 : 8;
-                canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
-            }
+            String warningLabel = String.format(Locale.getDefault(), "-%.1f", warnings[i]);
+            float yOffset = 8;
+            canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
         }
 
 
