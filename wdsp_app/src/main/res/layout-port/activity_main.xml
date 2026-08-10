@@ -745,7 +745,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_left"
-                        android:layout_marginTop="@dimen/margin_tiny" />
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        tools:ignore="TooManyViews" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_rl"

@@ -1,5 +1,6 @@
 package com.radiorubka.wdsp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,7 +17,6 @@ import androidx.core.content.ContextCompat;
  * image in the Fader (Positioning) screen. It renders the current L/R (x-axis) and
  * Front/Rear (y-axis) balance as a single point, and lets the user drag it to set both
  * axes at once instead of operating the two separate sliders.
- *
  * This view owns no state of its own beyond the normalized position it's told to show;
  * MainActivity is still the source of truth (the two Slider values). Call setBalance()
  * whenever those sliders change from any source, and set an OnBalanceChangeListener to
@@ -38,20 +38,9 @@ public class BalancePointerView extends View {
     private Paint haloPaint;
 
     private float dotRadius;
-    private float ringWidth;
     private float haloRadius;
     private float grabRadius;
     private float edgeInset;
-
-    // --- Tweak these to match the car artwork ---
-    // How far the dot is allowed to travel from the image center, as a fraction of the
-    // available half-width/half-height (after edgeInset). 1.0 = can reach all the way out
-    // to edgeInset from the view's edge (the old, unconstrained behavior). Lower this per
-    // axis to pull the travel range in to roughly the car's actual body/cabin footprint.
-    // These are percentages of the view size, not fixed dp, so they hold up across
-    // different screen sizes/orientations without retuning.
-    private float rangeXPercent = 0.3f;
-    private float rangeYPercent = 0.5f;
 
     private boolean dragging = false;
     private OnBalanceChangeListener listener;
@@ -67,7 +56,7 @@ public class BalancePointerView extends View {
         int ring = ContextCompat.getColor(getContext(), R.color.stroke_color);
 
         dotRadius = 7 * density;
-        ringWidth = 2 * density;
+        float ringWidth = 2 * density;
         haloRadius = 18 * density;
         grabRadius = 28 * density; // generous touch target for a car head unit screen
         edgeInset = 12 * density;  // keeps the dot from visually clipping at the image edge
@@ -126,10 +115,19 @@ public class BalancePointerView extends View {
     // Max horizontal/vertical travel distance from the image center, in pixels.
     // Combines the fixed cosmetic edgeInset with the tunable rangeX/YPercent above.
     private float halfRangeX() {
+        // --- Tweak these to match the car artwork ---
+        // How far the dot is allowed to travel from the image center, as a fraction of the
+        // available half-width/half-height (after edgeInset). 1.0 = can reach all the way out
+        // to edgeInset from the view's edge (the old, unconstrained behavior). Lower this per
+        // axis to pull the travel range in to roughly the car's actual body/cabin footprint.
+        // These are percentages of the view size, not fixed dp, so they hold up across
+        // different screen sizes/orientations without retuning.
+        float rangeXPercent = 0.3f;
         return Math.max(0f, (getWidth() / 2f - edgeInset) * rangeXPercent);
     }
 
     private float halfRangeY() {
+        float rangeYPercent = 0.5f;
         return Math.max(0f, (getHeight() / 2f - edgeInset) * rangeYPercent);
     }
 
@@ -157,6 +155,7 @@ public class BalancePointerView extends View {
         canvas.drawCircle(cx, cy, dotRadius, ringPaint);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {

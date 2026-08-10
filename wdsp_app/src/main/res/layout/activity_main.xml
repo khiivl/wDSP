@@ -85,7 +85,8 @@
                             app:strokeWidth="@dimen/stroke_width"
                             app:strokeColor="@color/stroke_color_top"
                             android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                            android:textSize="@dimen/text_size_small"
+                            tools:ignore="NestedWeights" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_add_preset"
@@ -910,7 +911,8 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="12dp"
+                            tools:ignore="TooManyViews">
 
                             <TextView
                                 style="@style/TextLabel"
