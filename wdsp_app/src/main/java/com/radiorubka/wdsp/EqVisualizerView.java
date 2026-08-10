@@ -18,18 +18,13 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import java.util.Locale;
-
 public class EqVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;
     private Paint gridPaint;
     private Paint textPaint;
-    private Paint warningPaint;
 
     private final int[] gains = new int[AudioConfig.NUM_BANDS];
-    private final float[] offsets = null;
-    private final float[] warnings = null;
 
     private float[] xCoords;
     private float[] yCoords;
@@ -61,7 +56,6 @@ public class EqVisualizerView extends View {
 
     private int colorFill;
     private float thumbRadiusOffset;
-    private float pointRadius;
 
     // Cache for gradient parameters to avoid reallocation
     private float lastDrawStartY = -1;
@@ -79,10 +73,6 @@ public class EqVisualizerView extends View {
         super(context, attrs);
         init();
     }
-//    public void setFreqLabels(String[] labels) {
-//        this.freqLabels = labels;
-//        invalidate();
-//    }
 
 
     private void init() {
@@ -105,7 +95,6 @@ public class EqVisualizerView extends View {
         int colorGrid = ContextCompat.getColor(getContext(), R.color.visualizer_grid);
 
         thumbRadiusOffset = 10 * density;
-        pointRadius = 6 * density;
 
         // Pre-allocate coordinate arrays based on config
         xCoords = new float[AudioConfig.NUM_BANDS];
@@ -132,14 +121,6 @@ public class EqVisualizerView extends View {
 
         textPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
 
-        warningPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        warningPaint.setColor(Color.RED);
-        warningPaint.setTextSize(12 * density);
-        warningPaint.setTextAlign(Paint.Align.CENTER);
-        warningPaint.setFakeBoldText(true);
-
-        warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
-
         boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         boxPaint.setStyle(Paint.Style.STROKE);
         boxPaint.setStrokeWidth(1 * density);
@@ -149,26 +130,6 @@ public class EqVisualizerView extends View {
         System.arraycopy(newGains, 0, this.gains, 0, AudioConfig.NUM_BANDS);
         invalidate();
     }
-
-//    public void setOffsets(float[] newOffsets) {
-//        if (newOffsets == null) {
-//            this.offsets = null;
-//        } else {
-//            if (this.offsets == null) this.offsets = new float[AudioConfig.NUM_BANDS];
-//            System.arraycopy(newOffsets, 0, this.offsets, 0, AudioConfig.NUM_BANDS);
-//        }
-//        invalidate();
-//    }
-
-//    public void setWarnings(float[] newWarnings) {
-//        if (newWarnings == null) {
-//            this.warnings = null;
-//        } else {
-//            if (this.warnings == null) this.warnings = new float[AudioConfig.NUM_BANDS];
-//            System.arraycopy(newWarnings, 0, this.warnings, 0, AudioConfig.NUM_BANDS);
-//        }
-//        invalidate();
-//    }
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
@@ -350,21 +311,6 @@ public class EqVisualizerView extends View {
 
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
-
-        // 8. Draw Text/Warnings (unchanged)
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float val = offsets[i];
-            if (Math.abs(val) > 0.05f) {
-                // Note: String.format still allocates, but it's necessary for dynamic text.
-                // To optimize further, one could use a StringBuilder or specialized formatter.
-                String label = String.format(Locale.getDefault(), "%s%.1f", (val > 0 ? "+" : ""), val);
-                canvas.drawText(label, xCoords[i], yCoords[i] - pointRadius - 8, textPaint);
-            }
-
-            String warningLabel = String.format(Locale.getDefault(), "-%.1f", warnings[i]);
-            float yOffset = 8;
-            canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
-        }
 
 
     }
