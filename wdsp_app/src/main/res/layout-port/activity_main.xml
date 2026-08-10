@@ -1312,10 +1312,16 @@
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
                             </FrameLayout>
-                            <ImageView
-                                android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-                                android:contentDescription="@null"
-                                android:scaleType="fitCenter" app:srcCompat="@drawable/fabka" />
+                            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
+                                <ImageView
+                                    android:id="@+id/imageView" android:layout_width="match_parent" android:layout_height="match_parent"
+                                    android:contentDescription="@null"
+                                    android:scaleType="fitCenter" app:srcCompat="@drawable/fabka" />
+                                <com.radiorubka.wdsp.BalancePointerView
+                                    android:id="@+id/balance_pointer"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+                            </FrameLayout>
                             <View android:layout_width="64dp" android:layout_height="match_parent" />
                         </LinearLayout>
 

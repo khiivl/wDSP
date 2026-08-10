@@ -104,6 +104,7 @@ public class McuService extends Service implements LocationListener {
     private final Intent volumeChangedIntent = new Intent("com.radiorubka.wdsp.VOLUME_CHANGED");
     private final Intent presetChangedIntent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
     private final Intent galaUpdateIntent = new Intent("com.radiorubka.wdsp.GALA_UPDATE");
+    private final Intent subGainChangedIntent = new Intent("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
 
     private boolean isUiVisible = false;
     private boolean isBootStart = true;
@@ -196,9 +197,33 @@ public class McuService extends Service implements LocationListener {
                 else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
                 }
+                else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
+                    adjustSubGain(1);
+                }
+                else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
+                    adjustSubGain(-1);
+                }
             });
         }
     };
+
+    /**
+     * Bumps the subwoofer gain up/down by one step (matching seek_sub_gain's stepSize).
+     * Persists to SharedPreferences so the existing prefListener picks it up and pushes
+     * the change to the MCU (same path as the on-screen slider), and broadcasts the new
+     * value so a running Activity can reflect it in the UI. Safe to call whether or not
+     * the app's Activity is alive - the service is what starts with the system.
+     */
+    private void adjustSubGain(int delta) {
+        backgroundHandler.post(() -> {
+            if (currentPresetName == null) return;
+            int newValue = Math.max(0, Math.min(12, cachedSubGain + delta));
+            if (newValue == cachedSubGain) return;
+            prefs.edit().putInt(currentPresetName + "_sub_g", newValue).apply();
+            subGainChangedIntent.putExtra("subGain", newValue);
+            sendBroadcast(subGainChangedIntent);
+        });
+    }
 
     private void forceUiUpdate() {
         float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
@@ -222,6 +247,7 @@ public class McuService extends Service implements LocationListener {
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
         galaUpdateIntent.setPackage(getPackageName());
+        subGainChangedIntent.setPackage(getPackageName());
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -260,6 +286,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.UI_INACTIVE");
         controlFilter.addAction("com.radiorubka.wdsp.SIMULATE_SPEED");
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
+        controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
+        controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         return controlFilter;
     }
 

@@ -1663,6 +1663,16 @@
                     android:layerType="hardware"
                     app:srcCompat="@drawable/fabka_smooth" />
 
+                <com.radiorubka.wdsp.BalancePointerView
+                    android:id="@+id/balance_pointer"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginBottom="8dp"
+                    app:layout_constraintBottom_toTopOf="@+id/tv_fader_fr_val"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/seek_fader_lr" />
+
                 <FrameLayout
                     android:layout_width="110dp"
                     android:layout_height="@dimen/fader_length"

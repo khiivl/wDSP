@@ -17,6 +17,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.transition.Fade;
+import android.transition.TransitionManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -104,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
     // Fader & Delays
     private Slider seekFaderLr;
     private Slider seekFaderFr;
+    private BalancePointerView balancePointer;
     private TextView tvFaderLrVal, tvFaderFrVal;
     private SwitchCompat switchLoud;
     private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
@@ -172,10 +175,19 @@ public class MainActivity extends AppCompatActivity {
                 if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
                 if (tvGalaOffset != null) tvGalaOffset.setText(String.format(Locale.getDefault(), "+%d", offset));
             }
+            // Sub gain was adjusted by McuService (e.g. via an external HID key daemon
+            // broadcast, handled even while this Activity/app isn't running). Reflect it
+            // in the UI if we're alive to see it.
+            else if ("com.radiorubka.wdsp.SUB_GAIN_CHANGED".equals(action)) {
+                int subGain = intent.getIntExtra("subGain", -1);
+                if (subGain >= 0 && seekSubGain != null) {
+                    isUpdatingUi = true;
+                    seekSubGain.setValue(subGain);
+                    isUpdatingUi = false;
+                }
+            }
         }
     };
-
-
 
     private final ActivityResultLauncher<Intent> exportLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) saveCurrentPresetToFile(r.getData().getData()); });
@@ -426,7 +438,8 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction("com.radiorubka.wdsp.PRESET_CHANGED");
         filter.addAction("com.radiorubka.wdsp.VOLUME_CHANGED");
         filter.addAction("com.radiorubka.wdsp.GALA_UPDATE");
-        
+        filter.addAction("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
+
         registerReceiver(serviceReceiver, filter);
     }
 
@@ -470,6 +483,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerBassFreqRear = findViewById(R.id.spinner_bass_freq_rear);
         seekFaderLr = findViewById(R.id.seek_fader_lr);
         seekFaderFr = findViewById(R.id.seek_fader_fr);
+        balancePointer = findViewById(R.id.balance_pointer);
         tvFaderLrVal = findViewById(R.id.tv_fader_lr_val);
         tvFaderFrVal = findViewById(R.id.tv_fader_fr_val);
         switchLoud = findViewById(R.id.switch_loud);
@@ -828,6 +842,17 @@ public class MainActivity extends AppCompatActivity {
 //                updateFaderMcu();
             }
         });
+
+        // Draggable balance dot on top of the car image: drives both fader sliders at once.
+        if (balancePointer != null) {
+            balancePointer.setOnBalanceChangeListener((lrNorm, frNorm) -> {
+                int lr = Math.max(0, Math.min(24, Math.round(12 + lrNorm * 12)));
+                int fr = Math.max(0, Math.min(24, Math.round(12 + frNorm * 12)));
+                seekFaderLr.setValue(lr);
+                seekFaderFr.setValue(fr);
+                if (!isUpdatingUi) autoSaveCurrent();
+            });
+        }
         switchLoud.jumpDrawablesToCurrentState();
         switchLoud.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
@@ -1320,6 +1345,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Put them in an array for easy looping
         final View[] allLayouts = {eq, fm, dly, ftr, gl};
+        final ViewGroup tabContainer = (ViewGroup) eq.getParent(); // shared parent of all tab layouts
 
         bn.setOnItemSelectedListener(it -> {
             int id = it.getItemId();
@@ -1333,6 +1359,14 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.nav_gala) target = gl;
 
             if (target != null) {
+                // Only animate an actual tab change. Without this guard, SelectTab()
+                // re-firing the same selection in onStart() (to force a redraw on resume)
+                // would replay a visible crossfade every time the app comes to the
+                // foreground, since the hide/show loop below still runs either way.
+                if (target.getVisibility() != View.VISIBLE) {
+                    TransitionManager.beginDelayedTransition(tabContainer, new Fade());
+                }
+
                 // 3. Hide EVERYTHING first
                 for (View layout : allLayouts) {
                     layout.setVisibility(View.GONE);
@@ -1576,6 +1610,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateFaderLabels() {
         int lr = getIntSlider(seekFaderLr); tvFaderLrVal.setText(lr == 12 ? getString(R.string.lbl_center) : (lr < 12 ? "L " + (12-lr) : "R " + (lr-12)));
         int fr = getIntSlider(seekFaderFr); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
+        if (balancePointer != null) balancePointer.setBalance((lr - 12) / 12f, (fr - 12) / 12f);
     }
 
     private void resetUiInternal() {
