@@ -13,13 +13,13 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 
 ----------------------------------------------------------------------------------------------------------------------
 
-Screenshots:
-
-<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
+<img width="3072" height="4080" alt="Photo" src="https://github.com/user-attachments/assets/fa7350bd-d498-4407-be1d-725bb1247761" />
 
 <details>
 
-<summary>More screenshots</summary>
+<summary>Screenshots</summary>
+
+<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
 
 <img width="1024" height="600" alt="Screenshot_20260531_220716" src="https://github.com/user-attachments/assets/1a3dea59-97b6-4a31-8bc0-b4fe709b7fa9" />
 
