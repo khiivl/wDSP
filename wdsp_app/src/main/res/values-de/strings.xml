@@ -54,7 +54,7 @@
     <string name="gala_title">GALA (Geschwindigkeitsabh. Lautstärke)</string>
     <string name="enable_gala">GALA aktivieren</string>
     <string name="enable_gala_feature">GALA-Funktion aktivieren</string>
-    <string name="vol_step_interval">Lautstärke-Schrittintervall</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Lautstärke-Schritt alle:</string>
     <string name="gps_speed_label">GPS GESCHWINDIGKEIT</string>
     <string name="current_gps_speed">Aktuelle GPS-Geschw.:</string>

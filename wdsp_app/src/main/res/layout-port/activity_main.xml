@@ -1391,6 +1391,27 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <!-- Global GALA -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:background="@color/visualizer_container_bg">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/gala_global" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_gala_global"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
                     <!-- Status Display -->
                     <LinearLayout
                         android:layout_width="match_parent"

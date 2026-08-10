@@ -54,7 +54,7 @@
     <string name="gala_title">GALA (Ajuste de Volumen por Velocidad)</string>
     <string name="enable_gala">Habilitar GALA</string>
     <string name="enable_gala_feature">Habilitar Función GALA</string>
-    <string name="vol_step_interval">Salto de Volumen</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Salto de Volumen cada:</string>
     <string name="gps_speed_label">VELOCIDAD GPS</string>
     <string name="current_gps_speed">Velocidad Actual GPS:</string>

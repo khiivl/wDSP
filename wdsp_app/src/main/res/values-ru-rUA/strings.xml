@@ -54,7 +54,7 @@
     <string name="gala_title">GALA (Громкость от скорости)</string>
     <string name="enable_gala">Вкл. GALA:</string>
     <string name="enable_gala_feature">Использование GALA</string>
-    <string name="vol_step_interval">Шаг громкости</string>
+    <string name="gala_global">Глобально</string>
     <string name="vol_step_every">Шаг громк. каждые:</string>
     <string name="gps_speed_label">Скорость GPS</string>
     <string name="current_gps_speed">Текущ. скор. GPS:</string>

@@ -55,7 +55,7 @@
     <string name="gala_title">GALA (Адаптивна гучність)</string>
     <string name="enable_gala">Увімкнути GALA</string>
     <string name="enable_gala_feature">Активувати функцію GALA</string>
-    <string name="vol_step_interval">Інтервал кроку гучності</string>
+    <string name="gala_global">Глобально</string>
     <string name="vol_step_every">Крок гучності кожні:</string>
     <string name="gps_speed_label">ШВИДКІСТЬ GPS</string>
     <string name="current_gps_speed">Поточна швидкість GPS:</string>

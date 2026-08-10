@@ -57,7 +57,7 @@
     <string name="gala_title">GALA (Speed Dependent Volume)</string>
     <string name="enable_gala">Enable GALA</string>
     <string name="enable_gala_feature">Enable GALA Feature</string>
-    <string name="vol_step_interval">Volume Step Interval</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Volume Step every:</string>
     <string name="gps_speed_label">GPS SPEED</string>
     <string name="current_gps_speed">Current GPS Speed:</string>

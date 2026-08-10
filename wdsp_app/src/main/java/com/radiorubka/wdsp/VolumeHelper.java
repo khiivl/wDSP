@@ -51,7 +51,8 @@ public class VolumeHelper {
             mGetMuteState = vsClass.getMethod("getVolumeStateMute");
 
             Log.d(TAG, "Hardware volume control linked via reflection.");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Log.i(TAG, "Hardware volume not found. Using standard Android AudioManager.");
         }
     }

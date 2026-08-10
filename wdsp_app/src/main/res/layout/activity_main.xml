@@ -1756,14 +1756,27 @@
                     android:id="@+id/switch_gala_enable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"/>
+                    android:layout_marginStart="16dp"/>
+
+                <TextView
+                    style="@style/TextLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gala_global"
+                    android:layout_marginStart="16dp"/>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switch_gala_global"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"/>
 
                 <TextView
                     style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/vol_step_every"
-                    android:layout_marginStart="32dp"/>
+                    android:layout_marginStart="16dp"/>
 
                 <com.google.android.material.slider.Slider
                     app:thumbHeight="@dimen/thumb_height"
@@ -1828,7 +1841,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/standstill_speed"
-                        android:layout_marginStart="32dp"/>
+                        android:layout_marginStart="16dp"/>
 
                     <com.google.android.material.slider.Slider
                         app:thumbHeight="@dimen/thumb_height"
@@ -1971,7 +1984,7 @@
 
                     <TextView
                         style="@style/TextLabel"
-                        android:layout_width="160dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/simulate_speed"/>
 

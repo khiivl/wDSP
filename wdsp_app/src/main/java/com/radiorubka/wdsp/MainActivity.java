@@ -80,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
     private static final String PREF_PLAYER_MAP = "player_preset_map";
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
+    private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
+    private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -122,9 +124,12 @@ public class MainActivity extends AppCompatActivity {
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private SwitchCompat switchGalaEnable;
+    private SwitchCompat switchGalaEnable, switchGalaGlobal;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal;
+    // Whether GALA's on/off state is shared across all presets instead of per-preset.
+    // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
+    private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
     private int currentEffectiveVolume = -1;
@@ -523,6 +528,7 @@ public class MainActivity extends AppCompatActivity {
         
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
+        switchGalaGlobal = findViewById(R.id.switch_gala_global);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -1250,7 +1256,12 @@ public class MainActivity extends AppCompatActivity {
             e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
             
             // GALA
-            e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+            if (galaGlobalMode) {
+                // Shared across all presets - not part of this preset's own data.
+                e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+            } else {
+                e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+            }
             e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
             e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
 //            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
@@ -1317,7 +1328,9 @@ public class MainActivity extends AppCompatActivity {
             switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
             
             // GALA
-            switchGalaEnable.setChecked(p.getBoolean(name + "_gala_enabled", false));
+            switchGalaEnable.setChecked(galaGlobalMode
+                    ? p.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
+                    : p.getBoolean(name + "_gala_enabled", false));
             seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
             seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
@@ -1454,7 +1467,28 @@ public class MainActivity extends AppCompatActivity {
     private void setupGalaControls() {
         switchGalaEnable.jumpDrawablesToCurrentState();
         switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
-        
+
+        // Global GALA: not tied to any preset, so it's loaded/wired once here rather than
+        // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
+        // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
+        // see the GALA sections of savePreset()/loadPreset().
+        switchGalaGlobal.jumpDrawablesToCurrentState();
+        SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+        switchGalaGlobal.setChecked(galaGlobalMode);
+        switchGalaGlobal.setOnCheckedChangeListener((bv, checked) -> {
+            if (isUpdatingUi) return;
+            galaGlobalMode = checked;
+            SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                    .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
+            if (checked) {
+                // Seed the global value from whatever's on screen right now, so flipping
+                // this on doesn't silently reset GALA to off.
+                ed.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+            }
+            ed.apply();
+        });
+
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
             int p = (int) value;
             if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));

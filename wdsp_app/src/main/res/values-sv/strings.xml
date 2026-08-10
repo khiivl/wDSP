@@ -55,7 +55,7 @@
     <string name="gala_title">GALA (Hastighetsberoende volym)</string>
     <string name="enable_gala">Aktivera GALA</string>
     <string name="enable_gala_feature">Aktivera GALA-funktion</string>
-    <string name="vol_step_interval">Volymstegsintervall</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Volymsteg per:</string>
     <string name="gps_speed_label">GPS-HASTIGHET</string>
     <string name="current_gps_speed">Nuvarande GPS-hastighet:</string>

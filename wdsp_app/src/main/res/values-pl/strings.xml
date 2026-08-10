@@ -55,7 +55,7 @@
     <string name="gala_title">GALA (Głośność zależna od prędkości)</string>
     <string name="enable_gala">Włącz GALA</string>
     <string name="enable_gala_feature">Aktywuj funkcję GALA</string>
-    <string name="vol_step_interval">Interwał kroku głośności</string>
+    <string name="gala_global">Globalne</string>
     <string name="vol_step_every">Krok głośności co:</string>
     <string name="gps_speed_label">PRĘDKOŚĆ GPS</string>
     <string name="current_gps_speed">Aktualna prędkość GPS:</string>
