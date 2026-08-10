@@ -19,6 +19,8 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 
 <summary>Screenshots</summary>
 
+<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
+
 <img width="1024" height="600" alt="Screenshot_20260531_220716" src="https://github.com/user-attachments/assets/1a3dea59-97b6-4a31-8bc0-b4fe709b7fa9" />
 
 <img width="1024" height="600" alt="Screenshot_20260531_220719" src="https://github.com/user-attachments/assets/32da504c-c540-469c-9679-902174cb4cc0" />
