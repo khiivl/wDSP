@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
-    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal; tvGalaFadeMsVal, tvGalaHoldMsVal;
+    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal, tvGalaFadeMsVal, tvGalaHoldMsVal;
     
     // Whether GALA's on/off state is shared across all presets instead of per-preset.
     // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
