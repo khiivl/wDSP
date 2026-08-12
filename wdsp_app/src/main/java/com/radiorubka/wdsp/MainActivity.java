@@ -126,7 +126,10 @@ public class MainActivity extends AppCompatActivity {
     // GALA Controls
     private SwitchCompat switchGalaEnable, switchGalaGlobal;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
-    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal;
+    private Slider seekGalaFadeMs, seekGalaHoldMs;
+  
+    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal; tvGalaFadeMsVal, tvGalaHoldMsVal;
+    
     // Whether GALA's on/off state is shared across all presets instead of per-preset.
     // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
     private boolean galaGlobalMode = false;
@@ -539,6 +542,10 @@ public class MainActivity extends AppCompatActivity {
         tvSimulateSpeedVal = findViewById(R.id.tv_simulate_speed_val);
         seekGalaMaxAdj = findViewById(R.id.seek_gala_max_adj);
         tvGalaMaxAdjVal = findViewById(R.id.tv_gala_max_adj_val);
+        seekGalaFadeMs = findViewById(R.id.seek_gala_fade_ms);
+        tvGalaFadeMsVal = findViewById(R.id.tv_gala_fade_ms_val);
+        seekGalaHoldMs = findViewById(R.id.seek_gala_hold_ms);
+        tvGalaHoldMsVal = findViewById(R.id.tv_gala_hold_ms_val);
     }
 
     @Override
@@ -1168,7 +1175,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_power_vol"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -1266,6 +1273,8 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
 //            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
             e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
+            e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
+            e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
 
             e.putInt(name + "_power_vol", -Integer.parseInt(tvPowerDb.getText().toString()));
 
@@ -1337,6 +1346,10 @@ public class MainActivity extends AppCompatActivity {
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
             seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
+            seekGalaFadeMs.setValue((float) p.getInt(name + "_gala_fade_ms", 100));    // Changed from 300ms
+            tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
+            seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));   // Changed from 3000ms
+            tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
 
             // Power
             tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
@@ -1493,8 +1506,9 @@ public class MainActivity extends AppCompatActivity {
             int p = (int) value;
             if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
             else if (slider == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
-//                else if (sb == seekGalaMaxSpeed) tvGalaMaxSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
             else if (slider == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
+            else if (slider == seekGalaFadeMs) tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, p));
+            else if (slider == seekGalaHoldMs) tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), p / 1000f));
             else if (slider == seekSimulateSpeed) {
                 if (p == 0) {
                     tvSimulateSpeedVal.setText(getString(R.string.value_default));
@@ -1504,6 +1518,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (fromUser) {
                     Intent intent = new Intent("com.radiorubka.wdsp.SIMULATE_SPEED");
+                    intent.setPackage(getPackageName());
                     intent.putExtra("speed", (float) p);
                     sendBroadcast(intent);
                 }
@@ -1512,9 +1527,10 @@ public class MainActivity extends AppCompatActivity {
         };
         seekGalaInc.addOnChangeListener(galal);
         seekGalaMinSpeed.addOnChangeListener(galal);
-//        seekGalaMaxSpeed.setOnSeekBarChangeListener(galal);
-        seekSimulateSpeed.addOnChangeListener(galal);
         seekGalaMaxAdj.addOnChangeListener(galal);
+        seekGalaFadeMs.addOnChangeListener(galal);
+        seekGalaHoldMs.addOnChangeListener(galal);
+        seekSimulateSpeed.addOnChangeListener(galal);
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
@@ -1661,6 +1677,10 @@ public class MainActivity extends AppCompatActivity {
             seekGalaMinSpeed.setValue(0);
 //            seekGalaMaxSpeed.setProgress(30);
             seekGalaMaxAdj.setValue(12);
+            seekGalaFadeMs.setValue(100);
+            tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, 100));
+            seekGalaHoldMs.setValue(1000);
+            tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), 1.0f));
         }
         isUpdatingUi = false; updateVisualizer(); updateFmVisualizer();
     }

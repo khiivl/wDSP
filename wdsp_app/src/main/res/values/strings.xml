@@ -73,6 +73,10 @@
     <string name="simulation_debug">Simulation &amp; Debug</string>
     <string name="simulate_vehicle_speed">Simulate Vehicle Speed</string>
     <string name="simulate_speed">Simulate Speed:</string>
+    <string name="gala_fade_delay">Fade Speed (delay per step):</string>
+    <string name="gala_hold_timer">Threshold Hold Timer (Time to hold speed threshold before fading):</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
 
     <!-- General -->
     <string name="btn_apply">Apply</string>
