@@ -745,7 +745,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/rear_left"
-                        android:layout_marginTop="@dimen/margin_tiny" />
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        tools:ignore="TooManyViews" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_delay_rl"
@@ -1023,14 +1024,6 @@
                     android:orientation="vertical"
                     android:padding="@dimen/padding_standard">
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switch_loud"
-                        style="@style/TextLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/margin_standard"
-                        android:text="@string/built_in_loudness_legacy" />
-
                     <!-- Bass Controls -->
                     <TextView
                         style="@style/TextTitle"
@@ -1130,7 +1123,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/lbl_freq"
+                                android:text="@string/lbl_freq_boost"
                                 android:layout_gravity="center_vertical" />
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_front"
@@ -1237,7 +1230,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/lbl_freq"
+                                android:text="@string/lbl_freq_boost"
                                 android:layout_gravity="center_vertical" />
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_rear"
@@ -1320,15 +1313,29 @@
                                     app:labelBehavior="gone"
                                     app:thumbHeight="@dimen/thumb_height"/>
                             </FrameLayout>
-                            <ImageView
-                                android:id="@+id/imageView" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-                                android:contentDescription="@null"
-                                android:scaleType="fitCenter" app:srcCompat="@drawable/fabka" />
+                            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
+                                <ImageView
+                                    android:id="@+id/imageView" android:layout_width="match_parent" android:layout_height="match_parent"
+                                    android:contentDescription="@null"
+                                    android:scaleType="fitCenter" app:srcCompat="@drawable/fabka" />
+                                <com.radiorubka.wdsp.BalancePointerView
+                                    android:id="@+id/balance_pointer"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+                            </FrameLayout>
                             <View android:layout_width="64dp" android:layout_height="match_parent" />
                         </LinearLayout>
 
                         <TextView android:id="@+id/tv_fader_fr_val" style="@style/TextValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="18sp" />
                     </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switch_loud"
+                        style="@style/TextLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        android:text="@string/built_in_loudness_legacy" />
 
                 </LinearLayout>
             </ScrollView>
@@ -1381,6 +1388,27 @@
                             android:text="@string/enable_gala" />
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_gala_enable"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Global GALA -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:background="@color/visualizer_container_bg">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/gala_global" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_gala_global"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </LinearLayout>

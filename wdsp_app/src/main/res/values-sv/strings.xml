@@ -47,6 +47,7 @@
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
     <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq_boost">Boost Frekv</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balans</string>
 
@@ -54,7 +55,7 @@
     <string name="gala_title">GALA (Hastighetsberoende volym)</string>
     <string name="enable_gala">Aktivera GALA</string>
     <string name="enable_gala_feature">Aktivera GALA-funktion</string>
-    <string name="vol_step_interval">Volymstegsintervall</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Volymsteg per:</string>
     <string name="gps_speed_label">GPS-HASTIGHET</string>
     <string name="current_gps_speed">Nuvarande GPS-hastighet:</string>
@@ -132,6 +133,5 @@
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
     <string name="lbl_pwr">" Förstärkar:"</string>
-    <string name="hint_sub_freq">Frekv</string>
 
 </resources>

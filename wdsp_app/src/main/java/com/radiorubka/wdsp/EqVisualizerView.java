@@ -3,9 +3,11 @@ package com.radiorubka.wdsp;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
@@ -16,21 +18,18 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import java.util.Locale;
-
 public class EqVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;
     private Paint gridPaint;
     private Paint textPaint;
-    private Paint warningPaint;
 
     private final int[] gains = new int[AudioConfig.NUM_BANDS];
-    private float[] offsets = null;
-    private float[] warnings = null;
 
     private float[] xCoords;
     private float[] yCoords;
+
+    private final RectF rect = new RectF();
 
     // Define the labels and grouping logic
     private final String[] FREQ_LABELS = {
@@ -43,7 +42,7 @@ public class EqVisualizerView extends View {
     // Defines which band indices belong to which group
     private final int[][] GROUP_RANGES = {{0,2}, {3,4}, {5,6}, {7,9}, {10,12}, {13,15}};
 
-    // Pre-allocated Path objects
+     // Pre-allocated Path objects
     private final Path fullPath = new Path();
     private final Path fillPath = new Path();
 
@@ -57,13 +56,14 @@ public class EqVisualizerView extends View {
 
     private int colorFill;
     private float thumbRadiusOffset;
-    private float pointRadius;
 
     // Cache for gradient parameters to avoid reallocation
     private float lastDrawStartY = -1;
     private float lastGridBottom = -1;
+    private float lastLineGradLeft = -1;
+    private float lastLineGradRight = -1;
 
-    private String[] freqLabels = null;
+    //private String[] freqLabels = null;
 
     private Drawable customBackground;
 
@@ -73,23 +73,21 @@ public class EqVisualizerView extends View {
         super(context, attrs);
         init();
     }
-    public void setFreqLabels(String[] labels) {
-        this.freqLabels = labels;
-        invalidate();
-    }
 
 
     private void init() {
         customBackground = ContextCompat.getDrawable(getContext(), R.drawable.ui_bg_layer);
         float density = getContext().getResources().getDisplayMetrics().density;
 
+        // Reversed vs. the button palette order so bass reads warm (red) and treble reads cool (blue/teal),
+        // matching the GROUP_NAMES/GROUP_RANGES order which goes low-bass -> upper-treble left to right.
         GROUP_COLORS = new int[]{
-                ContextCompat.getColor(getContext(), R.color.btn_auto_bg), // Use ContextCompat
-                ContextCompat.getColor(getContext(), R.color.btn_add_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_export_bg),
+                ContextCompat.getColor(getContext(), R.color.btn_delete_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_import_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_delete_bg)
+                ContextCompat.getColor(getContext(), R.color.btn_export_bg),
+                ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
+                ContextCompat.getColor(getContext(), R.color.btn_add_bg),
+                ContextCompat.getColor(getContext(), R.color.btn_auto_bg)
         };
 
         int colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);
@@ -97,7 +95,6 @@ public class EqVisualizerView extends View {
         int colorGrid = ContextCompat.getColor(getContext(), R.color.visualizer_grid);
 
         thumbRadiusOffset = 10 * density;
-        pointRadius = 6 * density;
 
         // Pre-allocate coordinate arrays based on config
         xCoords = new float[AudioConfig.NUM_BANDS];
@@ -124,14 +121,6 @@ public class EqVisualizerView extends View {
 
         textPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
 
-        warningPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        warningPaint.setColor(Color.RED);
-        warningPaint.setTextSize(12 * density);
-        warningPaint.setTextAlign(Paint.Align.CENTER);
-        warningPaint.setFakeBoldText(true);
-
-        warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
-
         boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         boxPaint.setStyle(Paint.Style.STROKE);
         boxPaint.setStrokeWidth(1 * density);
@@ -139,26 +128,6 @@ public class EqVisualizerView extends View {
 
     public void setGains(int[] newGains) {
         System.arraycopy(newGains, 0, this.gains, 0, AudioConfig.NUM_BANDS);
-        invalidate();
-    }
-
-    public void setOffsets(float[] newOffsets) {
-        if (newOffsets == null) {
-            this.offsets = null;
-        } else {
-            if (this.offsets == null) this.offsets = new float[AudioConfig.NUM_BANDS];
-            System.arraycopy(newOffsets, 0, this.offsets, 0, AudioConfig.NUM_BANDS);
-        }
-        invalidate();
-    }
-
-    public void setWarnings(float[] newWarnings) {
-        if (newWarnings == null) {
-            this.warnings = null;
-        } else {
-            if (this.warnings == null) this.warnings = new float[AudioConfig.NUM_BANDS];
-            System.arraycopy(newWarnings, 0, this.warnings, 0, AudioConfig.NUM_BANDS);
-        }
         invalidate();
     }
 
@@ -257,7 +226,7 @@ public class EqVisualizerView extends View {
             int alpha = 200;
             boxPaint.setColor(color);
             boxPaint.setAlpha(alpha);
-            RectF rect = new RectF(left, boxTop, right, boxBottom);
+            rect.set(left, boxTop, right, boxBottom);
             canvas.drawRoundRect(rect, boxCornerRadius, boxCornerRadius, boxPaint);
 
             // 3. Draw individual frequency labels (Grey)
@@ -305,35 +274,43 @@ public class EqVisualizerView extends View {
             canvas.drawLine(xCoords[i], drawStartY, xCoords[i], gridBottom, gridPaint);
         }
 
-        // 7. Update Shader & Draw
-        if (drawStartY != lastDrawStartY || gridBottom != lastGridBottom) {
-            fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom,
-                    colorFill, Color.TRANSPARENT, Shader.TileMode.CLAMP));
+        // 7. Update gradients (horizontal band-color for line & fill, vertical fade for fill) & Draw
+        if (bgLeft != lastLineGradLeft || bgRight != lastLineGradRight
+                || drawStartY != lastDrawStartY || gridBottom != lastGridBottom) {
+            float totalW = bgRight - bgLeft;
+            float[] positions = new float[GROUP_COLORS.length];
+            int[] fillColors = new int[GROUP_COLORS.length];
+            int fillAlpha = Color.alpha(colorFill);
+            for (int g = 0; g < GROUP_RANGES.length; g++) {
+                int startIdx = GROUP_RANGES[g][0];
+                int endIdx = GROUP_RANGES[g][1];
+                float midX = (xCoords[startIdx] + xCoords[endIdx]) / 2f;
+                positions[g] = (midX - bgLeft) / totalW;
+
+                int c = GROUP_COLORS[g];
+                fillColors[g] = Color.argb(fillAlpha, Color.red(c), Color.green(c), Color.blue(c));
+            }
+
+            // Horizontal gradient for the EQ line, following band group colors
+            linePaint.setShader(new LinearGradient(bgLeft, 0, bgRight, 0,
+                    GROUP_COLORS, positions, Shader.TileMode.CLAMP));
+
+            // Horizontal gradient for the fill, same band group colors at the fill's own alpha,
+            // composited with a vertical opaque->transparent mask so it still fades out downward.
+            Shader fillColorShader = new LinearGradient(bgLeft, 0, bgRight, 0,
+                    fillColors, positions, Shader.TileMode.CLAMP);
+            Shader fadeMaskShader = new LinearGradient(0, drawStartY, 0, gridBottom,
+                    Color.BLACK, Color.TRANSPARENT, Shader.TileMode.CLAMP);
+            fillPaint.setShader(new ComposeShader(fillColorShader, fadeMaskShader, PorterDuff.Mode.DST_IN));
+
+            lastLineGradLeft = bgLeft;
+            lastLineGradRight = bgRight;
             lastDrawStartY = drawStartY;
             lastGridBottom = gridBottom;
         }
 
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
-
-        // 8. Draw Text/Warnings (unchanged)
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (offsets != null) {
-                float val = offsets[i];
-                if (Math.abs(val) > 0.05f) {
-                    // Note: String.format still allocates, but it's necessary for dynamic text.
-                    // To optimize further, one could use a StringBuilder or specialized formatter.
-                    String label = String.format(Locale.getDefault(), "%s%.1f", (val > 0 ? "+" : ""), val);
-                    canvas.drawText(label, xCoords[i], yCoords[i] - pointRadius - 8, textPaint);
-                }
-            }
-
-            if (warnings != null && Math.abs(warnings[i]) > 0.05f) {
-                String warningLabel = String.format(Locale.getDefault(), "-%.1f", warnings[i]);
-                float yOffset = (offsets != null && Math.abs(offsets[i]) > 0.05f) ? 24 : 8;
-                canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
-            }
-        }
 
 
     }

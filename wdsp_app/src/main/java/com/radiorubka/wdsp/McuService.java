@@ -18,7 +18,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -48,6 +47,9 @@ public class McuService extends Service implements LocationListener {
     private static final String PREF_PLAYER_MAP = "player_preset_map";
 //    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
 
+    private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
+    private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
+    
     private SharedPreferences prefs;
     private HandlerThread workerThread;
     private Handler backgroundHandler;
@@ -79,8 +81,14 @@ public class McuService extends Service implements LocationListener {
     private int cachedGalaFadeDelayMs; // ms between each ±1 fade step (default 100)
     private int cachedGalaHoldMs;      // ms a tier must be stable before being applied (default 1000)
 
+
+    // When galaGlobalMode is on, GALA's on/off state is shared across all presets
+    // (galaGlobalEnabled) instead of read from cachedGalaEn per-preset - see isGalaEnabled().
+    private boolean galaGlobalMode;
+    private boolean galaGlobalEnabled;
+    
     private float currentSpeedKmh = 0.0f;
-    private float simulatedSpeedKmh = -1.0f;
+    private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
 
     // GALA fade & hold-timer state
@@ -114,10 +122,18 @@ public class McuService extends Service implements LocationListener {
     private final Intent volumeChangedIntent = new Intent("com.radiorubka.wdsp.VOLUME_CHANGED");
     private final Intent presetChangedIntent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
     private final Intent galaUpdateIntent = new Intent("com.radiorubka.wdsp.GALA_UPDATE");
+    private final Intent subGainChangedIntent = new Intent("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
 
     private boolean isUiVisible = false;
     private boolean isBootStart = true;
     private String presetBeforeCall;
+
+    private String galavoltype_last = VolumeHelper.getActivePlayerType();
+
+    private int media_standstill = -1;
+    private int btcall_standstill = -1;
+    private int aux_standstill = -1;
+    private int radio_standstill = -1;
 
     private void initReflection() {
         try {
@@ -138,6 +154,12 @@ public class McuService extends Service implements LocationListener {
             }
             else if (key.equals(PREF_LAST_SELECTED)) {
                 syncPreset(false);
+            }
+            else if (key.equals(PREF_GALA_GLOBAL_MODE)) {
+                galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+            }
+            else if (key.equals(PREF_GALA_GLOBAL_ENABLED)) {
+                galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
             }
             else if (currentPresetName != null && key.startsWith(currentPresetName)) {
 
@@ -206,9 +228,33 @@ public class McuService extends Service implements LocationListener {
                 else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
                 }
+                else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
+                    adjustSubGain(1);
+                }
+                else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
+                    adjustSubGain(-1);
+                }
             });
         }
     };
+
+    /**
+     * Bumps the subwoofer gain up/down by one step (matching seek_sub_gain's stepSize).
+     * Persists to SharedPreferences so the existing prefListener picks it up and pushes
+     * the change to the MCU (same path as the on-screen slider), and broadcasts the new
+     * value so a running Activity can reflect it in the UI. Safe to call whether or not
+     * the app's Activity is alive - the service is what starts with the system.
+     */
+    private void adjustSubGain(int delta) {
+        backgroundHandler.post(() -> {
+            if (currentPresetName == null) return;
+            int newValue = Math.max(0, Math.min(12, cachedSubGain + delta));
+            if (newValue == cachedSubGain) return;
+            prefs.edit().putInt(currentPresetName + "_sub_g", newValue).apply();
+            subGainChangedIntent.putExtra("subGain", newValue);
+            sendBroadcast(subGainChangedIntent);
+        });
+    }
 
     private void forceUiUpdate() {
         // >= 0.0f → > 0.0f
@@ -234,6 +280,7 @@ public class McuService extends Service implements LocationListener {
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
         galaUpdateIntent.setPackage(getPackageName());
+        subGainChangedIntent.setPackage(getPackageName());
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -248,6 +295,8 @@ public class McuService extends Service implements LocationListener {
             currentPresetName = prefs.getString("Preset 1", "Preset 1");
             sendBroadcast(presetChangedIntent);
             loadPresetData(currentPresetName);
+            galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+            galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
             prefs.registerOnSharedPreferenceChangeListener(prefListener);
             loadPlayerMap();
             syncPreset(true);
@@ -272,6 +321,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.UI_INACTIVE");
         controlFilter.addAction("com.radiorubka.wdsp.SIMULATE_SPEED");
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
+        controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
+        controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         return controlFilter;
     }
 
@@ -376,10 +427,69 @@ public class McuService extends Service implements LocationListener {
     }
 
 
+    // True/false state actually used by GALA processing - the shared global switch when
+    // galaGlobalMode is on, otherwise whatever the current preset has stored.
+    private boolean isGalaEnabled() {
+        return galaGlobalMode ? galaGlobalEnabled : cachedGalaEn;
+    }
+
     // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.
     private void checkVolumeAndGala() {
 
-        // alright. step-by step.
+        // gets the player type that is currently active
+        String galavoltype = VolumeHelper.getActivePlayerType();
+
+        // if the player has changed since the last run
+        if (!galavoltype.equals(galavoltype_last)) {
+            // and the base volume is already established
+            if (baseStandstillVolume != -1) {
+                // save the last standstill volume recorded by the algorithm
+                if (galavoltype_last.equals("media_type")) {
+                    media_standstill = baseStandstillVolume;
+                }
+                if (galavoltype_last.equals("btcall_type")) {
+                    btcall_standstill = baseStandstillVolume;
+                }
+                if (galavoltype_last.equals("aux_type")) {
+                    aux_standstill = baseStandstillVolume;
+                }
+                if (galavoltype_last.equals("radio_type")) {
+                    radio_standstill = baseStandstillVolume;
+                }
+                // set the base volume to the last known volume for this type
+                // if not known, set to current for this type
+                if (galavoltype.equals("media_type")) {
+                    if (media_standstill != -1) {
+                        baseStandstillVolume = media_standstill;
+                    }
+                    else {
+                        baseStandstillVolume = VolumeHelper.getVolume();
+                    }
+                }
+                if (galavoltype.equals("btcall_type")) {
+                    if (btcall_standstill != -1) {
+                        baseStandstillVolume = btcall_standstill;
+                    }
+                    else {
+                        baseStandstillVolume = VolumeHelper.getVolume();
+                    }
+                }
+                if (galavoltype.equals("aux_type")) {
+                    if (aux_standstill != -1) {
+                        baseStandstillVolume = aux_standstill;
+                    }
+                }
+                if (galavoltype.equals("radio_type")) {
+                    if (radio_standstill != -1) {
+                        baseStandstillVolume = radio_standstill;
+                    }
+                    else {
+                        baseStandstillVolume = VolumeHelper.getVolume();
+                    }
+                }
+            }
+        }
+
         // this gets the speed
         float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
 
@@ -405,7 +515,7 @@ public class McuService extends Service implements LocationListener {
 
         // 2. PRE-CALCULATE RAW OFFSET: What should the GALA boost be at the current speed?
         int rawOffset = 0;
-        if (cachedGalaEn) {
+        if (isGalaEnabled()) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
             int minSpeed = cachedGalaMinV * 5;
             if (speed >= minSpeed) {
@@ -541,6 +651,8 @@ public class McuService extends Service implements LocationListener {
                 sendBroadcast(volumeChangedIntent);
             }
         }
+
+        galavoltype_last = VolumeHelper.getActivePlayerType();
     }
 
     private void checkPlayer() {

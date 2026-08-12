@@ -85,7 +85,8 @@
                             app:strokeWidth="@dimen/stroke_width"
                             app:strokeColor="@color/stroke_color_top"
                             android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                            android:textSize="@dimen/text_size_small"
+                            tools:ignore="NestedWeights" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_add_preset"
@@ -910,7 +911,8 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="12dp"
+                            tools:ignore="TooManyViews">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1292,16 +1294,6 @@
                 app:layout_constraintStart_toStartOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switch_loud"
-                style="@style/TextLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/built_in_loudness_legacy"
-                app:layout_constraintEnd_toStartOf="@+id/guideline_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <!-- Left Side Controls (Bass) -->
             <ScrollView
                 android:layout_width="0dp"
@@ -1312,7 +1304,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/switch_loud">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -1442,7 +1434,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:hint="@string/lbl_freq"
+                                android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1576,7 +1568,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
-                                android:hint="@string/lbl_freq"
+                                android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1596,8 +1588,20 @@
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_loud"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/built_in_loudness_legacy"
+                            android:layout_marginTop="16dp"
+                            android:layout_gravity="center_horizontal" />
+
                     </LinearLayout>
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
             </ScrollView>
 
             <!-- Fader Controls (Right Side) -->
@@ -1660,6 +1664,16 @@
                     app:layout_constraintTop_toBottomOf="@id/seek_fader_lr"
                     android:layerType="hardware"
                     app:srcCompat="@drawable/fabka_smooth" />
+
+                <com.radiorubka.wdsp.BalancePointerView
+                    android:id="@+id/balance_pointer"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginBottom="8dp"
+                    app:layout_constraintBottom_toTopOf="@+id/tv_fader_fr_val"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/seek_fader_lr" />
 
                 <FrameLayout
                     android:layout_width="110dp"
@@ -1744,14 +1758,27 @@
                     android:id="@+id/switch_gala_enable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"/>
+                    android:layout_marginStart="16dp"/>
+
+                <TextView
+                    style="@style/TextLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gala_global"
+                    android:layout_marginStart="16dp"/>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switch_gala_global"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"/>
 
                 <TextView
                     style="@style/TextLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/vol_step_every"
-                    android:layout_marginStart="32dp"/>
+                    android:layout_marginStart="16dp"/>
 
                 <com.google.android.material.slider.Slider
                     app:thumbHeight="@dimen/thumb_height"
@@ -1816,7 +1843,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/standstill_speed"
-                        android:layout_marginStart="32dp"/>
+                        android:layout_marginStart="16dp"/>
 
                     <com.google.android.material.slider.Slider
                         app:thumbHeight="@dimen/thumb_height"
@@ -1959,7 +1986,7 @@
 
                     <TextView
                         style="@style/TextLabel"
-                        android:layout_width="160dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/gala_fade_delay"/>
 

@@ -46,6 +46,7 @@
     <string name="lbl_filter">Filtro</string>
     <string name="lbl_boost">Realce</string>
     <string name="lbl_freq">Frecuencia</string>
+    <string name="lbl_freq_boost">Frec. Realce</string>
     <string name="lbl_center">Centro</string>
     <string name="fader_balance">Fader &amp; Balance</string>
 
@@ -53,7 +54,7 @@
     <string name="gala_title">GALA (Ajuste de Volumen por Velocidad)</string>
     <string name="enable_gala">Habilitar GALA</string>
     <string name="enable_gala_feature">Habilitar Función GALA</string>
-    <string name="vol_step_interval">Salto de Volumen</string>
+    <string name="gala_global">Global</string>
     <string name="vol_step_every">Salto de Volumen cada:</string>
     <string name="gps_speed_label">VELOCIDAD GPS</string>
     <string name="current_gps_speed">Velocidad Actual GPS:</string>
@@ -133,6 +134,5 @@
     <string name="OTtab">Otros</string>
     <string name="GLtab">Velocidad</string>
     <string name="lbl_pwr">Potencia:</string>
-    <string name="hint_sub_freq">Frec</string>
 
 </resources>

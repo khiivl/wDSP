@@ -10,13 +10,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
+//import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.transition.Fade;
+import android.transition.TransitionManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -41,6 +43,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
     private static final String PREF_PLAYER_MAP = "player_preset_map";
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
+    private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
+    private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -103,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
     // Fader & Delays
     private Slider seekFaderLr;
     private Slider seekFaderFr;
+    private BalancePointerView balancePointer;
     private TextView tvFaderLrVal, tvFaderFrVal;
     private SwitchCompat switchLoud;
     private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
@@ -118,11 +124,15 @@ public class MainActivity extends AppCompatActivity {
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private SwitchCompat switchGalaEnable;
+    private SwitchCompat switchGalaEnable, switchGalaGlobal;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
-    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal;
-    private TextView tvGalaFadeMsVal, tvGalaHoldMsVal;
+  
+    private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal; tvGalaFadeMsVal, tvGalaHoldMsVal;
+    
+    // Whether GALA's on/off state is shared across all presets instead of per-preset.
+    // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
+    private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
     private int currentEffectiveVolume = -1;
@@ -140,8 +150,10 @@ public class MainActivity extends AppCompatActivity {
         public static int currentSubFreqHz = 0;
     }
 
-    private final int[] GROUP_COLORS = {0xFF028889, 0xFF0085a4, 0xFF0085a4, 0xFF6f70b4, 0xFF9f5e9d, 0xFFb95076};
-    private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
+    // Populated in onCreate() from theme-aware color resources (light/night) instead of hardcoded
+    // hex, so it stays in sync with EqVisualizerView's band-group palette (bass=warm, treble=cool).
+    private int[] GROUP_COLORS;
+    //private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
     // Indices where each group starts: 0(20Hz), 3(80Hz), 5(200Hz), 7(500Hz), 10(2kHz), 13(8kHz)
     private final int[] GROUP_STARTS = {0, 3, 5, 7, 10, 13};
 
@@ -171,10 +183,19 @@ public class MainActivity extends AppCompatActivity {
                 if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
                 if (tvGalaOffset != null) tvGalaOffset.setText(String.format(Locale.getDefault(), "+%d", offset));
             }
+            // Sub gain was adjusted by McuService (e.g. via an external HID key daemon
+            // broadcast, handled even while this Activity/app isn't running). Reflect it
+            // in the UI if we're alive to see it.
+            else if ("com.radiorubka.wdsp.SUB_GAIN_CHANGED".equals(action)) {
+                int subGain = intent.getIntExtra("subGain", -1);
+                if (subGain >= 0 && seekSubGain != null) {
+                    isUpdatingUi = true;
+                    seekSubGain.setValue(subGain);
+                    isUpdatingUi = false;
+                }
+            }
         }
     };
-
-
 
     private final ActivityResultLauncher<Intent> exportLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), r -> { if (r.getResultCode() == RESULT_OK && r.getData() != null) saveCurrentPresetToFile(r.getData().getData()); });
@@ -194,7 +215,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
-        
+
+        // Same reversed order as EqVisualizerView's GROUP_COLORS: low bass -> upper treble
+        // goes warm (red) to cool (blue/teal).
+        GROUP_COLORS = new int[]{
+                ContextCompat.getColor(this, R.color.btn_delete_bg),
+                ContextCompat.getColor(this, R.color.btn_import_bg),
+                ContextCompat.getColor(this, R.color.btn_export_bg),
+                ContextCompat.getColor(this, R.color.btn_rename_bg),
+                ContextCompat.getColor(this, R.color.btn_add_bg),
+                ContextCompat.getColor(this, R.color.btn_auto_bg)
+        };
+
         // 1. Instant UI: Minimal views needed for the first screen
         initPrimaryViews();
         registerServiceReceiver();
@@ -296,9 +328,7 @@ public class MainActivity extends AppCompatActivity {
     public void startMcuActualService() {
         Intent intent = new Intent(this, McuService.class);
         startForegroundService(intent);
-        handler.postDelayed(() -> {
-            sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
-        }, 1000);
+        handler.postDelayed(() -> sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName())), 1000);
     }
 
     @Override
@@ -318,11 +348,11 @@ public class MainActivity extends AppCompatActivity {
 
             if (fineLocationGranted) {
                 Log.d(TAG, "Permission granted on first launch. Starting McuService...");
-                Intent intent = new Intent(this, McuService.class);
+                //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             } else {
                 Toaster.show(this, "Location permission is required for GALA features.");
-                Intent intent = new Intent(this, McuService.class);
+                //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             }
         }
@@ -416,7 +446,8 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction("com.radiorubka.wdsp.PRESET_CHANGED");
         filter.addAction("com.radiorubka.wdsp.VOLUME_CHANGED");
         filter.addAction("com.radiorubka.wdsp.GALA_UPDATE");
-        
+        filter.addAction("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
+
         registerReceiver(serviceReceiver, filter);
     }
 
@@ -460,6 +491,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerBassFreqRear = findViewById(R.id.spinner_bass_freq_rear);
         seekFaderLr = findViewById(R.id.seek_fader_lr);
         seekFaderFr = findViewById(R.id.seek_fader_fr);
+        balancePointer = findViewById(R.id.balance_pointer);
         tvFaderLrVal = findViewById(R.id.tv_fader_lr_val);
         tvFaderFrVal = findViewById(R.id.tv_fader_fr_val);
         switchLoud = findViewById(R.id.switch_loud);
@@ -499,6 +531,7 @@ public class MainActivity extends AppCompatActivity {
         
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
+        switchGalaGlobal = findViewById(R.id.switch_gala_global);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -535,18 +568,18 @@ public class MainActivity extends AppCompatActivity {
         sendBroadcast(intent);
     }
 
-    private GradientDrawable getGroupDrawable(int index) {
-        int groupIdx = 0;
-        for (int i = 0; i < GROUP_STARTS.length; i++) {
-            if (index >= GROUP_STARTS[i]) groupIdx = i;
-        }
-
-        GradientDrawable gd = new GradientDrawable();
-        gd.setShape(GradientDrawable.RECTANGLE);
-        gd.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), GROUP_COLORS[groupIdx]);
-        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
-        return gd;
-    }
+//    private GradientDrawable getGroupDrawable(int index) {
+//        int groupIdx = 0;
+//        for (int i = 0; i < GROUP_STARTS.length; i++) {
+//            if (index >= GROUP_STARTS[i]) groupIdx = i;
+//        }
+//
+//        GradientDrawable gd = new GradientDrawable();
+//        gd.setShape(GradientDrawable.RECTANGLE);
+//        gd.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), GROUP_COLORS[groupIdx]);
+//        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+//        return gd;
+//    }
 
     private void setupEqBands() {
         LinearLayout container = findViewById(R.id.eq_container);
@@ -555,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
         qSwitches.clear();
         dbLabels.clear();
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
-        int cL = ContextCompat.getColor(this, R.color.band_label);
+        //int cL = ContextCompat.getColor(this, R.color.band_label);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
@@ -563,13 +596,18 @@ public class MainActivity extends AppCompatActivity {
             ToggleButton q = new ToggleButton(this);
             TextView db = new TextView(this);
             Slider s = new Slider(this, null);
-            gainSliders.add(s); qSwitches.add(q); dbLabels.add(db);
+            gainSliders.add(s);
+            qSwitches.add(q);
+            dbLabels.add(db);
 
             LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL); layout.setGravity(Gravity.CENTER_HORIZONTAL);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setGravity(Gravity.CENTER_HORIZONTAL);
             layout.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1f));
 
-            q.setTextOn(getString(R.string.q_high)); q.setTextOff(getString(R.string.q_low)); q.setChecked(false);
+            q.setTextOn(getString(R.string.q_high));
+            q.setTextOff(getString(R.string.q_low));
+            q.setChecked(false);
             q.setTextColor(cQ); q.setBackgroundColor(Color.TRANSPARENT);
             q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
@@ -600,8 +638,16 @@ public class MainActivity extends AppCompatActivity {
             s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
-            s.setTrackActiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_active)));
-            s.setTrackInactiveTintList(ColorStateList.valueOf(getColor(R.color.track_color_inactive)));
+
+            // Color-code the track per band group (same palette as the EQ visualizer curve)
+            int groupIdx = 0;
+            for (int g = 0; g < GROUP_STARTS.length; g++) {
+                if (idx >= GROUP_STARTS[g]) groupIdx = g;
+            }
+            int bandColor = GROUP_COLORS[groupIdx];
+            s.setTrackActiveTintList(ColorStateList.valueOf(bandColor));
+            s.setThumbTintList(ColorStateList.valueOf(bandColor));
+            s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(bandColor, 70)));
             s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
             s.setRotation(270f);
 
@@ -809,6 +855,17 @@ public class MainActivity extends AppCompatActivity {
 //                updateFaderMcu();
             }
         });
+
+        // Draggable balance dot on top of the car image: drives both fader sliders at once.
+        if (balancePointer != null) {
+            balancePointer.setOnBalanceChangeListener((lrNorm, frNorm) -> {
+                int lr = Math.max(0, Math.min(24, Math.round(12 + lrNorm * 12)));
+                int fr = Math.max(0, Math.min(24, Math.round(12 + frNorm * 12)));
+                seekFaderLr.setValue(lr);
+                seekFaderFr.setValue(fr);
+                if (!isUpdatingUi) autoSaveCurrent();
+            });
+        }
         switchLoud.jumpDrawablesToCurrentState();
         switchLoud.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
@@ -1206,7 +1263,12 @@ public class MainActivity extends AppCompatActivity {
             e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
             
             // GALA
-            e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+            if (galaGlobalMode) {
+                // Shared across all presets - not part of this preset's own data.
+                e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+            } else {
+                e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+            }
             e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
             e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
 //            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
@@ -1275,7 +1337,9 @@ public class MainActivity extends AppCompatActivity {
             switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
             
             // GALA
-            switchGalaEnable.setChecked(p.getBoolean(name + "_gala_enabled", false));
+            switchGalaEnable.setChecked(galaGlobalMode
+                    ? p.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
+                    : p.getBoolean(name + "_gala_enabled", false));
             seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
             seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
@@ -1307,6 +1371,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Put them in an array for easy looping
         final View[] allLayouts = {eq, fm, dly, ftr, gl};
+        final ViewGroup tabContainer = (ViewGroup) eq.getParent(); // shared parent of all tab layouts
 
         bn.setOnItemSelectedListener(it -> {
             int id = it.getItemId();
@@ -1320,6 +1385,14 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.nav_gala) target = gl;
 
             if (target != null) {
+                // Only animate an actual tab change. Without this guard, SelectTab()
+                // re-firing the same selection in onStart() (to force a redraw on resume)
+                // would replay a visible crossfade every time the app comes to the
+                // foreground, since the hide/show loop below still runs either way.
+                if (target.getVisibility() != View.VISIBLE) {
+                    TransitionManager.beginDelayedTransition(tabContainer, new Fade());
+                }
+
                 // 3. Hide EVERYTHING first
                 for (View layout : allLayouts) {
                     layout.setVisibility(View.GONE);
@@ -1407,7 +1480,28 @@ public class MainActivity extends AppCompatActivity {
     private void setupGalaControls() {
         switchGalaEnable.jumpDrawablesToCurrentState();
         switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
-        
+
+        // Global GALA: not tied to any preset, so it's loaded/wired once here rather than
+        // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
+        // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
+        // see the GALA sections of savePreset()/loadPreset().
+        switchGalaGlobal.jumpDrawablesToCurrentState();
+        SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+        switchGalaGlobal.setChecked(galaGlobalMode);
+        switchGalaGlobal.setOnCheckedChangeListener((bv, checked) -> {
+            if (isUpdatingUi) return;
+            galaGlobalMode = checked;
+            SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                    .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
+            if (checked) {
+                // Seed the global value from whatever's on screen right now, so flipping
+                // this on doesn't silently reset GALA to off.
+                ed.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+            }
+            ed.apply();
+        });
+
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
             int p = (int) value;
             if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
@@ -1566,6 +1660,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateFaderLabels() {
         int lr = getIntSlider(seekFaderLr); tvFaderLrVal.setText(lr == 12 ? getString(R.string.lbl_center) : (lr < 12 ? "L " + (12-lr) : "R " + (lr-12)));
         int fr = getIntSlider(seekFaderFr); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
+        if (balancePointer != null) balancePointer.setBalance((lr - 12) / 12f, (fr - 12) / 12f);
     }
 
     private void resetUiInternal() {

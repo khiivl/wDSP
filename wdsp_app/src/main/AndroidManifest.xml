@@ -54,6 +54,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
+        <!-- Sub gain +/- is now handled by McuService's dynamically-registered
+             controlReceiver (see getIntentFilter()/adjustSubGain() there), so it works
+             even if this app's Activity/process isn't running - only the boot-started
+             service needs to be alive. Trigger via the action form:
+               am broadcast -a com.radiorubka.wdsp.SUB_GAIN_UP
+               am broadcast -a com.radiorubka.wdsp.SUB_GAIN_DOWN
+             Explicit-component targeting (-n .../.SubGainUpReceiver) no longer works;
+             there's no manifest-declared receiver class for this anymore. -->
     </application>
 
 </manifest>
