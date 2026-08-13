@@ -52,6 +52,10 @@
     <string name="lbl_freq_boost">Boost Freq</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balance</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
 
     <!-- GALA Tab -->
     <string name="gala_title">GALA (Speed Dependent Volume)</string>

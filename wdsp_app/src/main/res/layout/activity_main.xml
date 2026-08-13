@@ -1274,7 +1274,6 @@
             android:id="@+id/layout_filters"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="@dimen/padding_standard"
             android:visibility="gone">
 
             <androidx.constraintlayout.widget.Guideline
@@ -1608,31 +1607,22 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:paddingStart="@dimen/padding_standard"
-                android:paddingEnd="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/tv_fader_lr_val"
-                    style="@style/TextHeader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_small"
-                    android:text="@string/value_default"
-                    android:textColor="@color/text_theme_aware"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
+                <!-- No permanent center labels. Each arrow is a plain borderless icon
+                     (ic_arrow, rotated per direction) with its own step-count number
+                     next to it, further out from the car than the arrow. That number
+                     is blank at center and only appears on the side the fader has
+                     moved toward - see updateFaderLabels() in MainActivity. -->
                 <com.google.android.material.slider.Slider
                     app:thumbHeight="@dimen/thumb_height"
                     android:id="@+id/seek_fader_lr"
+                    android:visibility="gone"
                     android:layout_width="@dimen/fader_length"
                     android:layout_height="48dp"
-                    android:layout_marginTop="@dimen/margin_tiny"
                     android:valueFrom="0"
                     android:valueTo="24"
                     android:stepSize="1"
@@ -1649,19 +1639,23 @@
                     app:tickColorInactive="@color/tick_color_inactive"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_fader_lr_val" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageView
                     android:id="@+id/imageView"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginStart="@dimen/fader_arrow_gap_h"
+                    android:layout_marginTop="@dimen/fader_arrow_gap_v"
+                    android:layout_marginEnd="@dimen/fader_arrow_gap_h"
+                    android:layout_marginBottom="@dimen/fader_arrow_gap_v"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
-                    app:layout_constraintBottom_toTopOf="@+id/tv_fader_fr_val"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/seek_fader_lr"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintDimensionRatio="W,945:1781"
                     android:layerType="hardware"
                     app:srcCompat="@drawable/fabka_smooth" />
 
@@ -1669,13 +1663,17 @@
                     android:id="@+id/balance_pointer"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_marginBottom="8dp"
-                    app:layout_constraintBottom_toTopOf="@+id/tv_fader_fr_val"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/seek_fader_lr" />
+                    app:layout_constraintBottom_toBottomOf="@id/imageView"
+                    app:layout_constraintEnd_toEndOf="@id/imageView"
+                    app:layout_constraintStart_toStartOf="@id/imageView"
+                    app:layout_constraintTop_toTopOf="@id/imageView" />
 
+                <!-- Visibility gone (not just its child slider) so its old 110dp-wide
+                     footprint can't intercept touches meant for the new left arrow button
+                     occupying the same region now. -->
                 <FrameLayout
+                    android:id="@+id/frame_fader_fr"
+                    android:visibility="gone"
                     android:layout_width="110dp"
                     android:layout_height="@dimen/fader_length"
                     app:layout_constraintBottom_toBottomOf="@+id/imageView"
@@ -1685,6 +1683,7 @@
                     <com.google.android.material.slider.Slider
                         app:thumbHeight="@dimen/thumb_height"
                         android:id="@+id/seek_fader_fr"
+                        android:visibility="gone"
                         android:layout_width="@dimen/fader_length"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
@@ -1707,16 +1706,137 @@
                         app:labelBehavior="gone" />
                 </FrameLayout>
 
+                <!-- TOP: number above arrow, arrow above the car (front). -->
                 <TextView
-                    android:id="@+id/tv_fader_fr_val"
+                    android:id="@+id/tv_fader_fr_front_val"
                     style="@style/TextHeader"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/fader_arrow_label_size"
                     android:layout_height="wrap_content"
-                    android:text="@string/value_default"
+                    android:textAlignment="center"
                     android:textColor="@color/text_theme_aware"
+                    android:textSize="@dimen/text_size_button"
+                    android:text=""
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/btn_fader_fr_plus"
+                    app:layout_constraintStart_toStartOf="@id/imageView"
+                    app:layout_constraintEnd_toEndOf="@id/imageView"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <ImageView
+                    android:id="@+id/btn_fader_fr_plus"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
+                    android:background="@drawable/ripple_arrow"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:scaleType="fitCenter"
+                    android:rotation="0"
+                    android:contentDescription="@string/btn_front"
+                    android:src="@drawable/ic_arrow"
+                    app:layout_constraintTop_toBottomOf="@id/tv_fader_fr_front_val"
+                    app:layout_constraintBottom_toTopOf="@id/imageView"
+                    app:layout_constraintStart_toStartOf="@id/imageView"
+                    app:layout_constraintEnd_toEndOf="@id/imageView" />
+
+                <!-- BOTTOM: arrow below the car (rear), number below the arrow. -->
+                <ImageView
+                    android:id="@+id/btn_fader_fr_minus"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
+                    android:background="@drawable/ripple_arrow"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:scaleType="fitCenter"
+                    android:rotation="180"
+                    android:contentDescription="@string/btn_rear"
+                    android:src="@drawable/ic_arrow"
+                    app:layout_constraintTop_toBottomOf="@id/imageView"
+                    app:layout_constraintBottom_toTopOf="@id/tv_fader_fr_rear_val"
+                    app:layout_constraintStart_toStartOf="@id/imageView"
+                    app:layout_constraintEnd_toEndOf="@id/imageView"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/tv_fader_fr_rear_val"
+                    style="@style/TextHeader"
+                    android:layout_width="@dimen/fader_arrow_label_size"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@color/text_theme_aware"
+                    android:textSize="@dimen/text_size_button"
+                    android:text=""
+                    app:layout_constraintTop_toBottomOf="@id/btn_fader_fr_minus"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/imageView"
+                    app:layout_constraintEnd_toEndOf="@id/imageView" />
+
+                <!-- LEFT: number, then arrow, then the car. -->
+                <TextView
+                    android:id="@+id/tv_fader_lr_left_val"
+                    style="@style/TextHeader"
+                    android:layout_width="@dimen/fader_arrow_label_size"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@color/text_theme_aware"
+                    android:textSize="@dimen/text_size_button"
+                    android:text=""
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/btn_fader_lr_minus"
+                    app:layout_constraintTop_toTopOf="@id/imageView"
+                    app:layout_constraintBottom_toBottomOf="@id/imageView"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintHorizontal_bias="1" />
+
+                <ImageView
+                    android:id="@+id/btn_fader_lr_minus"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
+                    android:background="@drawable/ripple_arrow"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:scaleType="fitCenter"
+                    android:rotation="270"
+                    android:contentDescription="@string/btn_left"
+                    android:src="@drawable/ic_arrow"
+                    app:layout_constraintStart_toEndOf="@id/tv_fader_lr_left_val"
+                    app:layout_constraintEnd_toStartOf="@id/imageView"
+                    app:layout_constraintTop_toTopOf="@id/imageView"
+                    app:layout_constraintBottom_toBottomOf="@id/imageView"
+                    android:layout_marginEnd="@dimen/margin_tiny" />
+
+                <!-- RIGHT: the car, then arrow, then number. -->
+                <ImageView
+                    android:id="@+id/btn_fader_lr_plus"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
+                    android:background="@drawable/ripple_arrow"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:scaleType="fitCenter"
+                    android:rotation="90"
+                    android:contentDescription="@string/btn_right"
+                    android:src="@drawable/ic_arrow"
+                    app:layout_constraintStart_toEndOf="@id/imageView"
+                    app:layout_constraintEnd_toStartOf="@id/tv_fader_lr_right_val"
+                    app:layout_constraintTop_toTopOf="@id/imageView"
+                    app:layout_constraintBottom_toBottomOf="@id/imageView"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintHorizontal_bias="0"
+                    android:layout_marginStart="@dimen/margin_tiny" />
+
+                <TextView
+                    android:id="@+id/tv_fader_lr_right_val"
+                    style="@style/TextHeader"
+                    android:layout_width="@dimen/fader_arrow_label_size"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@color/text_theme_aware"
+                    android:textSize="@dimen/text_size_button"
+                    android:text=""
+                    app:layout_constraintStart_toEndOf="@id/btn_fader_lr_plus"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    app:layout_constraintTop_toTopOf="@id/imageView"
+                    app:layout_constraintBottom_toBottomOf="@id/imageView" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

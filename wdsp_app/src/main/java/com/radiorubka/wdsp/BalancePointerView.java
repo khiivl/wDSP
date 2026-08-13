@@ -122,7 +122,7 @@ public class BalancePointerView extends View {
         // axis to pull the travel range in to roughly the car's actual body/cabin footprint.
         // These are percentages of the view size, not fixed dp, so they hold up across
         // different screen sizes/orientations without retuning.
-        float rangeXPercent = 0.3f;
+        float rangeXPercent = 0.9f;
         return Math.max(0f, (getWidth() / 2f - edgeInset) * rangeXPercent);
     }
 

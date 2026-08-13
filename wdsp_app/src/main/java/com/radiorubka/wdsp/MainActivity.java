@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekFaderLr;
     private Slider seekFaderFr;
     private BalancePointerView balancePointer;
-    private TextView tvFaderLrVal, tvFaderFrVal;
+    private TextView tvFaderLrLeftVal, tvFaderLrRightVal, tvFaderFrFrontVal, tvFaderFrRearVal;
     private SwitchCompat switchLoud;
     private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
     private Slider seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE;
@@ -465,6 +465,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_center).setOnClickListener(v -> resetAllBands());
         findViewById(R.id.btn_pwr_vol_minus).setOnClickListener(v -> setPowerVolume(101));
         findViewById(R.id.btn_pwr_vol_plus).setOnClickListener(v -> setPowerVolume(102));
+        findViewById(R.id.btn_fader_lr_minus).setOnClickListener(v -> adjustFaderStep(seekFaderLr, -1));
+        findViewById(R.id.btn_fader_lr_plus).setOnClickListener(v -> adjustFaderStep(seekFaderLr, 1));
+        findViewById(R.id.btn_fader_fr_minus).setOnClickListener(v -> adjustFaderStep(seekFaderFr, -1));
+        findViewById(R.id.btn_fader_fr_plus).setOnClickListener(v -> adjustFaderStep(seekFaderFr, 1));
         findViewById(R.id.btn_apply).setOnClickListener(v -> {
             autoSaveCurrent();
 //            applyAllToMcu();
@@ -492,8 +496,10 @@ public class MainActivity extends AppCompatActivity {
         seekFaderLr = findViewById(R.id.seek_fader_lr);
         seekFaderFr = findViewById(R.id.seek_fader_fr);
         balancePointer = findViewById(R.id.balance_pointer);
-        tvFaderLrVal = findViewById(R.id.tv_fader_lr_val);
-        tvFaderFrVal = findViewById(R.id.tv_fader_fr_val);
+        tvFaderLrLeftVal = findViewById(R.id.tv_fader_lr_left_val);
+        tvFaderLrRightVal = findViewById(R.id.tv_fader_lr_right_val);
+        tvFaderFrFrontVal = findViewById(R.id.tv_fader_fr_front_val);
+        tvFaderFrRearVal = findViewById(R.id.tv_fader_fr_rear_val);
         switchLoud = findViewById(R.id.switch_loud);
         seekDelayFl = findViewById(R.id.seek_delay_fl);
         seekDelayFr = findViewById(R.id.seek_delay_fr);
@@ -760,6 +766,18 @@ public class MainActivity extends AppCompatActivity {
         tvPowerDb.setText(String.valueOf(-currentVal));
 
         prefs.edit().putInt(key, currentVal).apply();
+    }
+
+    // Steps a fader slider (L/R or F/R) by one increment via the small +/- buttons next
+    // to it. Slider.setValue() doesn't fire the "fromUser" branch of the slider's own
+    // OnChangeListener (see setupFilterControls()), so the label refresh and autosave
+    // that would normally happen on a user drag are done explicitly here instead.
+    private void adjustFaderStep(Slider slider, int delta) {
+        float newValue = Math.max(slider.getValueFrom(), Math.min(slider.getValueTo(), slider.getValue() + delta));
+        if (newValue == slider.getValue()) return;
+        slider.setValue(newValue);
+        updateFaderLabels();
+        if (!isUpdatingUi) autoSaveCurrent();
     }
 
     private void setupSubControls() {
@@ -1658,8 +1676,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateFaderLabels() {
-        int lr = getIntSlider(seekFaderLr); tvFaderLrVal.setText(lr == 12 ? getString(R.string.lbl_center) : (lr < 12 ? "L " + (12-lr) : "R " + (lr-12)));
-        int fr = getIntSlider(seekFaderFr); tvFaderFrVal.setText(fr == 12 ? getString(R.string.lbl_center) : (fr < 12 ? "Rear " + (12-fr) : "Front " + (fr-12)));
+        // Center labels stay blank; only the arrow on the side the fader has
+        // moved toward shows its step count, the opposite arrow's label clears.
+        int lr = getIntSlider(seekFaderLr);
+        tvFaderLrLeftVal.setText(lr < 12 ? String.valueOf(12 - lr) : "");
+        tvFaderLrRightVal.setText(lr > 12 ? String.valueOf(lr - 12) : "");
+        int fr = getIntSlider(seekFaderFr);
+        tvFaderFrFrontVal.setText(fr > 12 ? String.valueOf(fr - 12) : "");
+        tvFaderFrRearVal.setText(fr < 12 ? String.valueOf(12 - fr) : "");
         if (balancePointer != null) balancePointer.setBalance((lr - 12) / 12f, (fr - 12) / 12f);
     }
 
