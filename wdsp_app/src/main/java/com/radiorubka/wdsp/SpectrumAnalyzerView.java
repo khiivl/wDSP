@@ -520,7 +520,7 @@ public class SpectrumAnalyzerView extends View {
             // boost/cut asymmetry. renderLevels[i] already reflects it.
             float level = renderLevels[i];
 
-            float barHeight = level * drawHeight;
+            float barHeight = level * drawHeight * 1.15f;
             float left = i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = gridBottom - barHeight;
