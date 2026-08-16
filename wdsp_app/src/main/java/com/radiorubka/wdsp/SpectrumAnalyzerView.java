@@ -79,7 +79,7 @@ public class SpectrumAnalyzerView extends View {
     private static final float RISE_SMOOTHING = 0.55f; // fast attack
     private static final float FALL_SMOOTHING = 0.12f; // slow release (classic VU-meter feel)
 
-    private static final float band_mult = 2f;
+    private static final float band_mult = 2.5f;
     // Same top-padding fractions as EqVisualizerView's TOP_OFFSET_RATIO/DRAW_HEIGHT_RATIO,
     // so bars are bounded to the same plot area as the curve/grid and can never grow up
     // into the frequency-label row above it.
@@ -520,7 +520,7 @@ public class SpectrumAnalyzerView extends View {
             // boost/cut asymmetry. renderLevels[i] already reflects it.
             float level = renderLevels[i];
 
-            float barHeight = level * drawHeight * 1.35f;
+            float barHeight = level * drawHeight;
             float left = i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = gridBottom - barHeight;
