@@ -74,6 +74,36 @@ public class SpectrumAnalyzerView extends View {
             632.5f, 1000f, 1581.1f, 2506.0f, 3969.1f, 6299.6f, 10000f, 15849f, 25198f
     };
 
+    // Nominal center frequency of each of the 16 bands - same values as
+    // AudioConfig.BAND_LABELS, just numeric. Only used for PINK_NOISE_TILT's
+    // per-band dB/octave calculation below.
+    private static final float[] BAND_CENTER_HZ = {
+            20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
+            800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
+    };
+
+    // --- Pink noise tilt compensation (mode switch) ---
+    // Real music approximates pink noise: roughly equal energy per OCTAVE,
+    // which - because this view measures average FFT-bin magnitude, i.e.
+    // energy per Hz, not per octave - shows up as a downward slope of about
+    // 3dB/octave toward the treble (confirmed: a white-noise test signal,
+    // which IS flat per Hz, renders as flat bars; real music does not).
+    // That's a genuine property of the signal, not a measurement bug.
+    // Enabling PINK_NOISE_TILT adds a compensating UPWARD slope of
+    // TILT_DB_PER_OCTAVE per octave above/below TILT_REF_HZ, so pink-noise-
+    // like content (most real music) reads roughly flat across all 16 bands
+    // instead of tapering off after the mid-bass. Trade-off: with this on, a
+    // true white-noise signal will now read as tilting UP toward the treble
+    // instead of flat, since the display is calibrated against the pink
+    // reference instead of the Hz-linear one - this is a deliberate choice,
+    // not a bug, matching how RTA/tuning tools (REW etc.) treat pink noise
+    // as the "flat" reference rather than white noise.
+    // Compile-time switch for now, per band_mult/etc. convention in this
+    // file - flip to true and rebuild to try it, no UI toggle yet.
+    private static final boolean PINK_NOISE_TILT = true;
+    private static final float TILT_DB_PER_OCTAVE = 3f; // the standard pink-noise correction figure
+    private static final float TILT_REF_HZ = 1000f; // pivot frequency - doesn't change the overall look much, ATTENUATION_DB absorbs any net offset
+
     private static final float REF_MIN_DB = 0f;   // magnitude at/below this reads as silence
     private static final float REF_MAX_DB = 50f;  // magnitude at/above this reads as full-height
     private static final float RISE_SMOOTHING = 0.55f; // fast attack
@@ -90,7 +120,7 @@ public class SpectrumAnalyzerView extends View {
     // size - use this when the bars are simply too loud/tall overall but the
     // existing compression (how much a given dB change moves the bar) looks
     // right as-is.
-    private static final float ATTENUATION_DB = 10f;
+    private static final float ATTENUATION_DB = 5f;
 
     // How many dB above REF_MIN_DB a band's gain reactivity fades in over,
     // instead of switching on the instant rawDb ticks above REF_MIN_DB. A
@@ -385,6 +415,17 @@ public class SpectrumAnalyzerView extends View {
             // it currently sits, so boost and cut feel symmetric. Scaled by
             // presence so silent bands don't react to it.
             float db = smoothedContentDb[i] + presence * (gains[i] - 6) * 2f * band_mult;
+            // Pink-noise tilt compensation - see PINK_NOISE_TILT's
+            // declaration comment for what this does and why. Scaled by the
+            // same presence fade as the gain shift: without it, a silent
+            // treble band would get several dB of tilt boost added to
+            // literal near-zero content, making it look like there's real
+            // energy there when there isn't - same "conjuring a bar out of
+            // nothing" problem the gain shift has if left ungated.
+            if (PINK_NOISE_TILT) {
+                float octaves = (float) (Math.log(BAND_CENTER_HZ[i] / TILT_REF_HZ) / Math.log(2));
+                db += presence * TILT_DB_PER_OCTAVE * octaves;
+            }
             // Flat attenuation applied last, still in dB-space and before
             // normalization - always applied, even to silent bands, since it
             // only ever pulls level down and can't conjure a bar out of
