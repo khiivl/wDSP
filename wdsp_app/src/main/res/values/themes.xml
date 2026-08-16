@@ -8,6 +8,19 @@
         <item name="android:fontFamily">@font/main_font</item>
         <item name="fontFamily">@font/main_font</item>
 
+        <!-- Disables the default click "boop" sound effect for every View
+             in the app in one place, instead of calling
+             setSoundEffectsEnabled(false) on each button individually. This
+             works because View's constructor resolves any attribute it
+             doesn't get explicitly (from XML or code) through the current
+             theme - including for widgets created programmatically with
+             `new Foo(context)`, like the per-band EQ sliders/toggles built
+             at runtime in MainActivity.setupEqBands(). Matters here because
+             those UI click sounds were getting captured by the spectrum
+             analyzer's Visualizer (session 0 sees the whole output mix,
+             including UI sound effects, not just music). -->
+        <item name="android:soundEffectsEnabled">false</item>
+
     </style>
 
     <style name="Theme.WDSP" parent="Base.Theme.WDSP" />

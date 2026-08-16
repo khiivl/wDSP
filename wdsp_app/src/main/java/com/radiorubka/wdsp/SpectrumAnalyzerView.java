@@ -75,11 +75,34 @@ public class SpectrumAnalyzerView extends View {
     };
 
     private static final float REF_MIN_DB = 0f;   // magnitude at/below this reads as silence
-    private static final float REF_MAX_DB = 75f;  // magnitude at/above this reads as full-height
+    private static final float REF_MAX_DB = 50f;  // magnitude at/above this reads as full-height
     private static final float RISE_SMOOTHING = 0.55f; // fast attack
     private static final float FALL_SMOOTHING = 0.12f; // slow release (classic VU-meter feel)
+    // Both apply only to smoothedContentDb[] (real captured audio), not to
+    // the gain/attenuation offset - see processFft() for why that split
+    // exists.
 
-    private static final float band_mult = 2.5f;
+    // Uniformly pulls every band down by this many dB before normalization,
+    // independent of REF_MAX_DB. The difference: raising REF_MAX_DB also
+    // widens the REF_MIN_DB..REF_MAX_DB window, which compresses/stretches
+    // the whole visible dynamic range as a side effect. ATTENUATION_DB just
+    // shifts everything down by a flat amount without touching that window's
+    // size - use this when the bars are simply too loud/tall overall but the
+    // existing compression (how much a given dB change moves the bar) looks
+    // right as-is.
+    private static final float ATTENUATION_DB = 10f;
+
+    // How many dB above REF_MIN_DB a band's gain reactivity fades in over,
+    // instead of switching on the instant rawDb ticks above REF_MIN_DB. A
+    // hard on/off cutoff there flickers: the underlying magnitude is an 8-bit
+    // integer scale, so a near-silent bin bounces between reading exactly 0
+    // and reading 1 from one capture to the next just from quantization
+    // noise, and each bounce would snap the gain shift fully on/off. With a
+    // fade, that same noise only nudges the shift's strength by a hair
+    // instead of popping it from 0% to 100%.
+    private static final float SILENCE_FADE_DB = 3f;
+
+    private static final float band_mult = 2f;
     // Same top-padding fractions as EqVisualizerView's TOP_OFFSET_RATIO/DRAW_HEIGHT_RATIO,
     // so bars are bounded to the same plot area as the curve/grid and can never grow up
     // into the frequency-label row above it.
@@ -115,9 +138,14 @@ public class SpectrumAnalyzerView extends View {
 
     private Visualizer visualizer;
 
-    private final float[] rawLevels = new float[AudioConfig.NUM_BANDS];     // this frame's captured level, 0..1
-    private final float[] displayLevels = new float[AudioConfig.NUM_BANDS]; // smoothed level as of the last audio capture
+    private final float[] rawLevels = new float[AudioConfig.NUM_BANDS];     // this capture's final level (content ballistics + instant gain/attenuation), 0..1
+    private final float[] displayLevels = new float[AudioConfig.NUM_BANDS]; // == rawLevels as of the last audio capture; kept separate only for the prevLevels/frameCallback interpolation below
     private final int[] gains = new int[AudioConfig.NUM_BANDS];             // raw slider values, 0..12 (6 = 0dB)
+    // Fast-attack/slow-release ballistics live HERE now, applied to the raw
+    // captured dB per band before gain/attenuation are added - see the
+    // ballistics comment inside processFft() for why they moved off the
+    // final (gain-inclusive) value.
+    private final float[] smoothedContentDb = new float[AudioConfig.NUM_BANDS];
 
     // --- 60fps render interpolation ---
     // Audio captures only arrive at ~20Hz (or whatever the device reports),
@@ -318,7 +346,35 @@ public class SpectrumAnalyzerView extends View {
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float avgMag = bandCount[i] > 0 ? bandSum[i] / bandCount[i] : 0f;
-            float db = (float) (20 * Math.log10(avgMag + 1f));
+            float rawDb = (float) (20 * Math.log10(avgMag + 1f));
+
+            // Fast attack, slow release - classic spectrum analyzer
+            // ballistics - applied ONLY to the real captured content, in
+            // dB-space, before gain/attenuation are added below. This used
+            // to be applied to the final gain-inclusive value instead, which
+            // meant every gain/attenuation change had to "catch up" through
+            // the same slow-release ballistics as real audio - since content
+            // naturally dips and recovers every capture, that made the
+            // *entire* graph look like it was bouncing/settling for a moment
+            // after every +/- press (most visible there because +/- moves
+            // every band's gain at once). Gain and attenuation are UI
+            // settings, not signal to smooth, so they're added after this
+            // step and take effect on the very next capture instead.
+            float prevContentDb = smoothedContentDb[i];
+            float contentSmoothing = rawDb > prevContentDb ? RISE_SMOOTHING : FALL_SMOOTHING;
+            smoothedContentDb[i] = prevContentDb + (rawDb - prevContentDb) * contentSmoothing;
+
+            // A band with no/near-no real captured energy shouldn't have its
+            // slider gain conjure a bar out of nothing - that misrepresents
+            // what's actually playing. "presence" ramps 0..1 as rawDb rises
+            // through the SILENCE_FADE_DB range just above REF_MIN_DB, so a
+            // truly silent band (presence 0) ignores the gain shift entirely
+            // while a band with genuine signal (presence 1) reacts fully -
+            // see SILENCE_FADE_DB's declaration comment for why this is a
+            // fade and not a hard cutoff. Based on the instantaneous rawDb,
+            // not the smoothed content, so silence is detected promptly.
+            float presence = (rawDb - REF_MIN_DB) / SILENCE_FADE_DB;
+            presence = Math.max(0f, Math.min(1f, presence));
             // Gain-reactive shift applied here, in dB-space, BEFORE normalizing -
             // not as a multiplier on the already-clamped-to-[0,1] level (that was
             // the bug: multiplying a bounded value is wildly asymmetric depending
@@ -326,17 +382,29 @@ public class SpectrumAnalyzerView extends View {
             // has nowhere to go, a cut near the floor barely moves). Adding a
             // fixed dB offset before normalizing shifts every band by the same
             // fraction of the REF_MIN_DB..REF_MAX_DB window regardless of where
-            // it currently sits, so boost and cut feel symmetric.
-            db += (gains[i] - 6) * 2f * band_mult;
+            // it currently sits, so boost and cut feel symmetric. Scaled by
+            // presence so silent bands don't react to it.
+            float db = smoothedContentDb[i] + presence * (gains[i] - 6) * 2f * band_mult;
+            // Flat attenuation applied last, still in dB-space and before
+            // normalization - always applied, even to silent bands, since it
+            // only ever pulls level down and can't conjure a bar out of
+            // nothing the way the gain shift could - see ATTENUATION_DB's
+            // declaration comment for why this is not the same knob as
+            // REF_MAX_DB.
+            db -= ATTENUATION_DB;
             float normalized = (db - REF_MIN_DB) / (REF_MAX_DB - REF_MIN_DB);
             rawLevels[i] = Math.max(0f, Math.min(1f, normalized));
         }
 
         // Snapshot the outgoing values as the interpolation start point, and
         // re-estimate the gap between captures, before overwriting
-        // displayLevels[] with the new smoothed target - see frameCallback,
+        // displayLevels[] with this capture's new levels - see frameCallback,
         // which animates renderLevels[] from prevLevels[] to displayLevels[]
-        // over this interval instead of jumping on every capture.
+        // over this interval instead of jumping on every capture. This is
+        // pure sub-frame visual interpolation between two already-final
+        // capture values now, not ballistics (that happened above, on
+        // content only) - so displayLevels[] is just a direct copy of
+        // rawLevels[], no further smoothing/lag here.
         long now = System.currentTimeMillis();
         if (lastCaptureTime != 0) {
             long observed = now - lastCaptureTime;
@@ -344,14 +412,7 @@ public class SpectrumAnalyzerView extends View {
         }
         System.arraycopy(displayLevels, 0, prevLevels, 0, AudioConfig.NUM_BANDS);
         lastCaptureTime = now;
-
-        // Fast attack, slow release - classic spectrum analyzer ballistics.
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float target = rawLevels[i];
-            float current = displayLevels[i];
-            float smoothing = target > current ? RISE_SMOOTHING : FALL_SMOOTHING;
-            displayLevels[i] = current + (target - current) * smoothing;
-        }
+        System.arraycopy(rawLevels, 0, displayLevels, 0, AudioConfig.NUM_BANDS);
         // No invalidate() here - the Choreographer frame callback (see
         // frameCallback field) drives all redraws now, at display refresh
         // rate, interpolating toward this new target.
@@ -520,7 +581,7 @@ public class SpectrumAnalyzerView extends View {
             // boost/cut asymmetry. renderLevels[i] already reflects it.
             float level = renderLevels[i];
 
-            float barHeight = level * drawHeight * 1.15f;
+            float barHeight = level * drawHeight * 1f;
             float left = i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = gridBottom - barHeight;
