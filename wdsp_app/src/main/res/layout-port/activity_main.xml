@@ -196,6 +196,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout_presetbuttons">
 
+                <com.radiorubka.wdsp.SpectrumAnalyzerView
+                    android:id="@+id/spectrum_analyzer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:focusable="false" />
+
                 <com.radiorubka.wdsp.EqVisualizerView
                     android:id="@+id/eq_visualizer"
                     android:layout_width="match_parent"

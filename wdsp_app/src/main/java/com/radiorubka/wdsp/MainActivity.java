@@ -90,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
     private final List<TextView> dbLabels = new ArrayList<>();
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
-    
+    private SpectrumAnalyzerView spectrumAnalyzer;
+
     private Slider seekSubGain;
     private AutoCompleteTextView spinnerSubFreq;
     private TextView tvSubDb;
@@ -355,6 +356,13 @@ public class MainActivity extends AppCompatActivity {
                 //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             }
+        } else if (requestCode == 103) {
+            boolean recordAudioGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (recordAudioGranted && spectrumAnalyzer != null) {
+                spectrumAnalyzer.start();
+            } else {
+                Log.w(TAG, "RECORD_AUDIO denied - spectrum analyzer stays disabled.");
+            }
         }
     }
 
@@ -381,12 +389,24 @@ public class MainActivity extends AppCompatActivity {
                 loadPreset(newName);
             }
         }
+        checkAndStartSpectrumAnalyzer();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_INACTIVE").setPackage(getPackageName()));
+        if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+    }
+
+    // --- Spectrum analyzer (pre-EQ, visual-only; see SpectrumAnalyzerView javadoc) ---
+    private void checkAndStartSpectrumAnalyzer() {
+        if (spectrumAnalyzer == null) return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            spectrumAnalyzer.start();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 103);
+        }
     }
 
     private void SelectTab() {
@@ -433,6 +453,7 @@ public class MainActivity extends AppCompatActivity {
     private void initPrimaryViews() {
         spinnerPresets = findViewById(R.id.spinner_presets);
         eqVisualizer = findViewById(R.id.eq_visualizer);
+        spectrumAnalyzer = findViewById(R.id.spectrum_analyzer);
         seekSubGain = findViewById(R.id.seek_sub_gain);
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);
@@ -705,6 +726,7 @@ public class MainActivity extends AppCompatActivity {
         int[] gs = new int[AudioConfig.NUM_BANDS];
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = getIntSlider(gainSliders.get(i));
         eqVisualizer.setGains(gs);
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setGains(gs);
     }
 
     private void updateDbLabel(int i, int p) {
@@ -1561,6 +1583,7 @@ public class MainActivity extends AppCompatActivity {
     @Override protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
+        if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
         try {
             unregisterReceiver(serviceReceiver);
         }

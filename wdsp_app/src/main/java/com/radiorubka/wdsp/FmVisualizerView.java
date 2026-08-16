@@ -191,7 +191,6 @@ public class FmVisualizerView extends View {
 
             customBackground.setBounds((int)bgLeft, 0, (int)bgRight, (int)bgBottom);
             customBackground.draw(canvas);
-            canvas.restore();
         }
 
         gridPaint.setAlpha(8);
@@ -286,5 +285,6 @@ public class FmVisualizerView extends View {
                 canvas.drawText(warningLabel, xCoords[i], yCoords[i] - pointRadius - yOffset - 8, warningPaint);
             }
         }
+        canvas.restore();
     }
 }

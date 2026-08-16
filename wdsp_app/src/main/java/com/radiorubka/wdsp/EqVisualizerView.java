@@ -166,17 +166,17 @@ public class EqVisualizerView extends View {
         float bgBottom = totalH - shiftUp;
 
         // 3. Draw Background with Rounded Corners
-        if (customBackground != null) {
-            canvas.save();
-            // Create a rounded path for the background
-            bgPath.reset();
-            bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
-            canvas.clipPath(bgPath); // This "cuts" the drawable into a rounded shape
-
-            customBackground.setBounds((int)bgLeft, (int)bgTop, (int)bgRight, (int)bgBottom);
-            customBackground.draw(canvas);
-            canvas.restore();
-        }
+//        if (customBackground != null) {
+//            canvas.save();
+//            // Create a rounded path for the background
+//            bgPath.reset();
+//            bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
+//            canvas.clipPath(bgPath); // This "cuts" the drawable into a rounded shape
+//
+//            customBackground.setBounds((int)bgLeft, (int)bgTop, (int)bgRight, (int)bgBottom);
+//            customBackground.draw(canvas);
+//            canvas.restore();
+//        }
 
         gridPaint.setAlpha(8);
 
