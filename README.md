@@ -13,54 +13,59 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 
 ----------------------------------------------------------------------------------------------------------------------
 
-<img width="3072" height="4080" alt="Photo" src="https://github.com/user-attachments/assets/fa7350bd-d498-4407-be1d-725bb1247761" />
+### ✨ Features (kostyamat mod v0.4.2):
 
-<details>
+#### 🎛️ Equalization & Sound Tuning:
+- **True-to-hardware 16-band EQ** with 2dB step (-12dB .. +12dB), precise Q-factor controls (2.2 / 4.7) per band.
+- **Subwoofer Control**: Discrete crossover frequency selection (25 Hz to 250 Hz) and independent Subwoofer Gain (+0dB to +12dB).
+- **Loudness & Dynamic Fletcher-Munson (ISO 226)**: Realistic low-volume loudness curve with automatic Subwoofer low-frequency compensation.
+- **Bass Filters & Bass Boost**: Front and rear independent high-pass filters and bass enhancement with accurate cutoff frequencies.
+- **Power Volume Amp Control**: Hardware pre-amplifier gain adjustment.
 
-<summary>Screenshots</summary>
+#### 🚗 Time Alignment & Spatial Balance:
+- **Speaker Fader & Balance**: Precision 4-channel balance with intuitive cabriolet acoustic diagram and hollow quick-tap speaker buttons.
+- **Positioning Delays**: 0.5 ms fine adjustment step (up to 5.0 ms) for FL, FR, RL, RR, and Subwoofer (calculated in ms and cm).
+- **Surround / Haas Effect**: Up to 10 ms delay and RSSE surround widening.
+- **Speed-Compensated Volume (GALA)**: Adaptive speed volume control with min speed, increment, maximum adjustment, and smooth fade/hold timings.
 
-<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
+#### 🌈 Visualizers & Spectrum Analysis:
+- **Physical Optical Dispersion Spectrum**: 16 frequency bands mapped to true physical optical wavelengths (700 nm Deep Red at 20 Hz down to 390 nm Pure Deep Violet at 20 kHz).
+- **Real-time Live Audio Spectrum Analyzer**: Smooth peak decay, rounded capsules, and dynamic height scaling.
+- **Dynamic Fletcher-Munson Response Curve**: Live gradient visualizer showing real-time acoustic loudness compensation.
+- **Status Bar Overlay Visualizer**: Highly customizable top status bar visualizer (width %, center position %, hue angle rotation, and presets: Physical Spectrum, EQ Groups, Auto Day/Night, Fire, Neon, Monochrome).
 
-<img width="1024" height="600" alt="Screenshot_20260531_220716" src="https://github.com/user-attachments/assets/1a3dea59-97b6-4a31-8bc0-b4fe709b7fa9" />
+#### 🎨 Modern Design & Theme Engine:
+- **Theme Modes**: Day, Night, and Auto (automatic switching with car illumination).
+- **Custom Color Palette**: 4 interactive circular Hue Wheels with brightness sliders (Accent, Primary Text, Secondary Labels, On-Accent).
+- **Wallpaper System**: Built-in dark/light background textures, custom user photo picker via SAF, or procedural solid color generator.
+- **Animated Accordion Settings**: Smooth collapsible/expandable cards in Settings with interactive touch-glow effects.
 
-<img width="1024" height="600" alt="Screenshot_20260531_220719" src="https://github.com/user-attachments/assets/32da504c-c540-469c-9679-902174cb4cc0" />
+#### 💾 Presets, Full Backup & Restore:
+- **Preset Management**: Create, duplicate, rename, auto-switch based on audio source (Media, Radio, AUX, BT Calls), and export/import individual presets (.json).
+- **Full Settings Backup & Restore**: One-click export/import of all appearance preferences, theme colors, wallpapers, visualizer configurations, and complete preset databases.
+- **Robust Persistence**: Key prefix normalization on import and auto-save state flushing.
 
-<img width="1024" height="600" alt="Screenshot_20260531_220724" src="https://github.com/user-attachments/assets/37ff2c4a-df97-4209-9a51-da6a6e68fe2b" />
-
-<img width="1024" height="600" alt="Screenshot_20260531_220728" src="https://github.com/user-attachments/assets/1055af53-7c7b-43cc-9975-af0a485cb8b5" />
-
-</details>
-
-----------------------------------------------------------------------------------------------------------------------
-
-How to use:
-
-1. Install, launch, give all the permissions, add to sleep whitelist in 8888. Ready to use. Don't use the stock DSP app, since it will reset your settings if launched and closed.
-2. If you want to disable the stock DSP app, run the 'adb shell pm disable com.qf.soundeffect' command to disable it. Use 'adb shell pm enable com.qf.soundeffect' to enable it back.
-3. (Root only) You can install the wDSP-Proxy as an update to the stock DSP app to have the button in the quick settings open wDSP. You need to have PMPatch3.zip Magisk module installed, if you have disabled it, you need to enable it again. https://github.com/vova7878-modules/PMPatch/releases
-
-----------------------------------------------------------------------------------------------------------------------
-
-Features:
-
-Equalization:
-- EQ that is true-to-hardware (16 bands with 2dB per step), correctly labeled, with Q control with presets of 2.2 and 4.7. Subwoofer control on the same page.
-- Customizable loudness curve to make music sound better at low volumes. Calibration and subwoofer tweaking included.
-- Bass filtering and boost just like in the stock DSP, but with correctly labeled values.
-
-Other:
-- "Positioning" delays for careful tweaking of the sound center with 0.5ms step up to 5ms for all the speakers and subwoofer, also expressed in centimeters for convenience.
-or
-- "Surround" delays more suited for Haas effect, no subwoofer tweaking.
-- Faders for speaker balance.
-
-Presets:
-- All the settings in the app are saved to a preset that the user is able to duplicate, export, import and rename.
-- Automatic preset switching system that makes it possible to apply presets to different audio types, like Media, AUX, Radio and Bluetooth calls.
+#### 🌍 Multi-language Localization:
+- Complete support for 30 languages with fully spelled-out headers and labels across all screens.
 
 ----------------------------------------------------------------------------------------------------------------------
 
-Written on Java, set to target API29. Reverse-engineered proprietary MCU communication protocol. Communicates with the framework.jar service using reflections.
+### 📖 How to use:
 
-The app is licensed with the GPLv3 license. 
-If you improve the program and share it, you must share the source code too.
+1. Install, launch, grant required permissions (Audio Record, GPS Location, Battery Optimization), and add to the sleep whitelist in system factory settings (password `8888`).
+2. Do not use the stock DSP app, as launching it may overwrite hardware registers with stock settings.
+3. If you want to disable the stock DSP app, run:
+   ```bash
+   adb shell pm disable com.qf.soundeffect
+   ```
+   To enable it back:
+   ```bash
+   adb shell pm enable com.qf.soundeffect
+   ```
+4. *(Root only)* You can install `wDSP-Proxy` as an update to the stock DSP app to open wDSP from the system quick settings panel. (Requires `PMPatch3` Magisk module).
+
+----------------------------------------------------------------------------------------------------------------------
+
+Written in Java, targeting Android 10 (API 29). Reverse-engineered proprietary MCU communication protocol via reflections.
+
+Licensed under **GPLv3**.
