@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -10,7 +10,7 @@
     <string name="btn_import">Импортиране</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Суб:</string>
+    <string name="lbl_sub">Субуфер:</string>
     <string name="btn_plus" translatable="false">＋</string>
     <string name="btn_minus" translatable="false">－</string>
     <string name="btn_center" translatable="false">０</string>
@@ -48,7 +48,7 @@
     <string name="rear_speaker_bass">Заден бас</string>
     <string name="lbl_filter">Филтър</string>
     <string name="lbl_boost">Усилване</string>
-    <string name="lbl_freq">Чест.</string>
+    <string name="lbl_freq">Честота</string>
     <string name="lbl_freq_boost">Чест. усилване</string>
     <string name="lbl_center">Център</string>
     <string name="fader_balance">Фейдър &amp; Баланс</string>
@@ -172,4 +172,36 @@
     <string name="status_bar_theme_fire">Огън</string>
     <string name="status_bar_theme_neon">Неон</string>
 
+
+    <string name="settings_title">wDSP Settings</string>
+    <string name="settings_appearance">Appearance &amp; Themes</string>
+    <string name="settings_theme_day">Day</string>
+    <string name="settings_theme_night">Night</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Accent</string>
+    <string name="settings_primary_text_title">Main Text</string>
+    <string name="settings_label_color_title">Labels</string>
+    <string name="settings_on_accent_title">On Accent</string>
+    <string name="settings_wallpaper_title">Wallpaper</string>
+    <string name="settings_wallpaper_none">Built-in / Default</string>
+    <string name="settings_wallpaper_load">Pick Photo</string>
+    <string name="settings_wallpaper_default">Reset</string>
+    <string name="settings_wallpaper_solid_switch">Solid Color</string>
+    <string name="settings_wallpaper_status_solid">Solid Color Active</string>
+    <string name="settings_solid_hue">Solid Color HUE</string>
+    <string name="settings_solid_val">Solid Brightness</string>
+    <string name="settings_permissions">Permissions &amp; System</string>
+    <string name="settings_app_details">App Details</string>
+    <string name="eq_visualizer_title">Визуализатор на еквалайзера</string>
+    <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
+    <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_mode_spectrum">Frequency - Color</string>
+    <string name="eq_vis_enable_label">Display spectrum bars</string>
+
+    <string name="settings_backup_btn">Backup All Settings</string>
+    <string name="settings_restore_btn">Restore Settings</string>
+    <string name="toast_backup_success">Settings backed up successfully</string>
+    <string name="toast_backup_failed">Backup failed: %s</string>
+    <string name="toast_restore_success">Settings restored successfully</string>
+    <string name="toast_restore_failed">Restore failed: %s</string>
 </resources>

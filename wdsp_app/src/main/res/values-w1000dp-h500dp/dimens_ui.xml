@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    РОЗМІР КВАДРАТНОГО СЛОТА — ШИРОКІ, АЛЕ НЕВИСОКІ (≥1000dp × 500…579dp).
+
+    Це 1024x600 (18 моделей) і 2K-панелі 1000x600 при 320dpi. Виміряно на живій
+    магнітолі через wm size 1024x600: після економії з values-h500dp каруселі
+    доступно 194dp, отже квадрат 168dp плюс margin 10×2 = 188dp влазить із
+    запасом 6dp.
+
+    Менше за 176dp (як на 720p) — свідомо: 176 + 20 = 196dp лишало нуль запасу,
+    а вимога «слот ніколи не міняє висоту» означає, що на цьому екрані він мусить
+    бути стабільним, а не на межі обрізання.
+-->
+<resources>
+    <dimen name="card_size">168dp</dimen>
+    <dimen name="card_margin">10dp</dimen>
+    <dimen name="card_name_text">22sp</dimen>
+    <dimen name="card_freq_text">15sp</dimen>
+    <dimen name="carousel_min_height">188dp</dimen>
+</resources>

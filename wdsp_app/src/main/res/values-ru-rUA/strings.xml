@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -10,7 +10,7 @@
     <string name="btn_import">Импорт</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Саб:</string>
+    <string name="lbl_sub">Сабвуфер:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -164,4 +164,36 @@
     <string name="status_bar_theme_fire">Огонь</string>
     <string name="status_bar_theme_neon">Неон</string>
 
+
+    <string name="settings_title">Настройки wDSP</string>
+    <string name="settings_appearance">Оформление и Темы</string>
+    <string name="settings_theme_day">День</string>
+    <string name="settings_theme_night">Ночь</string>
+    <string name="settings_theme_auto">Авто</string>
+    <string name="settings_accent_title">Акцент</string>
+    <string name="settings_primary_text_title">Осн. текст</string>
+    <string name="settings_label_color_title">Надписи</string>
+    <string name="settings_on_accent_title">На акценте</string>
+    <string name="settings_wallpaper_title">Обои</string>
+    <string name="settings_wallpaper_none">Встроенные / Дефолт</string>
+    <string name="settings_wallpaper_load">Выбрать фото</string>
+    <string name="settings_wallpaper_default">Сбросить</string>
+    <string name="settings_wallpaper_solid_switch">Сплошной цвет</string>
+    <string name="settings_wallpaper_status_solid">Сплошной цвет</string>
+    <string name="settings_solid_hue">Оттенок HUE</string>
+    <string name="settings_solid_val">Яркость фона</string>
+    <string name="settings_permissions">Разрешения и Система</string>
+    <string name="settings_app_details">О приложении</string>
+    <string name="eq_visualizer_title">Визуализатор эквалайзера</string>
+    <string name="eq_vis_color_mode_label">Режим цвета визуализатора:</string>
+    <string name="eq_vis_mode_monochrome">Однотонный акцент</string>
+    <string name="eq_vis_mode_spectrum">Частота - Цвет</string>
+    <string name="eq_vis_enable_label">Отображать столбики спектра</string>
+
+    <string name="settings_backup_btn">Backup All Settings</string>
+    <string name="settings_restore_btn">Restore Settings</string>
+    <string name="toast_backup_success">Settings backed up successfully</string>
+    <string name="toast_backup_failed">Backup failed: %s</string>
+    <string name="toast_restore_success">Settings restored successfully</string>
+    <string name="toast_restore_failed">Restore failed: %s</string>
 </resources>

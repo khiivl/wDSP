@@ -20,10 +20,31 @@ android {
         multiDexEnabled true
     }
 
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader ->
+            localProperties.load(reader)
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(localProperties.getProperty('keystore.file', ''))
+            storePassword localProperties.getProperty('keystore.password', '')
+            keyAlias localProperties.getProperty('key.alias', '')
+            keyPassword localProperties.getProperty('key.password', '')
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

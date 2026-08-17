@@ -36,6 +36,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.radiorubka.wdsp.SettingsActivity"
+            android:exported="false" />
+
         <service
             android:name="com.radiorubka.wdsp.McuService"
             android:enabled="true"

@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -10,7 +10,7 @@
     <string name="btn_import">Importar</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="btn_plus" translatable="false">＋</string>
     <string name="btn_minus" translatable="false">－</string>
     <string name="btn_center" translatable="false">０</string>
@@ -48,7 +48,7 @@
     <string name="rear_speaker_bass">Graves Traseira</string>
     <string name="lbl_filter">Filtro</string>
     <string name="lbl_boost">Realce</string>
-    <string name="lbl_freq">Freq</string>
+    <string name="lbl_freq">Frequência</string>
     <string name="lbl_freq_boost">Freq Realce</string>
     <string name="lbl_center">Centro</string>
     <string name="fader_balance">Fader e Balanço</string>
@@ -170,4 +170,36 @@
     <string name="status_bar_theme_fire">Fogo</string>
     <string name="status_bar_theme_neon">Néon</string>
 
+
+    <string name="settings_title">Definições wDSP</string>
+    <string name="settings_appearance">Aparência e Temas</string>
+    <string name="settings_theme_day">Dia</string>
+    <string name="settings_theme_night">Noite</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Acento</string>
+    <string name="settings_primary_text_title">Texto princ.</string>
+    <string name="settings_label_color_title">Rótulos</string>
+    <string name="settings_on_accent_title">Sobre acento</string>
+    <string name="settings_wallpaper_title">Fundo de ecrã</string>
+    <string name="settings_wallpaper_none">Predefinido</string>
+    <string name="settings_wallpaper_load">Escolher foto</string>
+    <string name="settings_wallpaper_default">Repor</string>
+    <string name="settings_wallpaper_solid_switch">Cor sólida</string>
+    <string name="settings_wallpaper_status_solid">Cor sólida ativa</string>
+    <string name="settings_solid_hue">Matiz HUE</string>
+    <string name="settings_solid_val">Brilho do fundo</string>
+    <string name="settings_permissions">Permissões e Sistema</string>
+    <string name="settings_app_details">Detalhes da aplicação</string>
+    <string name="eq_visualizer_title">Visualizador do equalizador</string>
+    <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
+    <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_mode_spectrum">Frequency - Color</string>
+    <string name="eq_vis_enable_label">Display spectrum bars</string>
+
+    <string name="settings_backup_btn">Backup All Settings</string>
+    <string name="settings_restore_btn">Restore Settings</string>
+    <string name="toast_backup_success">Settings backed up successfully</string>
+    <string name="toast_backup_failed">Backup failed: %s</string>
+    <string name="toast_restore_success">Settings restored successfully</string>
+    <string name="toast_restore_failed">Restore failed: %s</string>
 </resources>

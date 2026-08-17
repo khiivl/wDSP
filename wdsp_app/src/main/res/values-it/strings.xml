@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -10,7 +10,7 @@
     <string name="btn_import">Importa</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="btn_plus" translatable="false">＋</string>
     <string name="btn_minus" translatable="false">－</string>
     <string name="btn_center" translatable="false">０</string>
@@ -48,7 +48,7 @@
     <string name="rear_speaker_bass">Bassi Posteriori</string>
     <string name="lbl_filter">Filtro</string>
     <string name="lbl_boost">Incremento</string>
-    <string name="lbl_freq">Freq</string>
+    <string name="lbl_freq">Frequenza</string>
     <string name="lbl_freq_boost">Freq Incremento</string>
     <string name="lbl_center">Centro</string>
     <string name="fader_balance">Fader &amp; Bilanciamento</string>
@@ -172,4 +172,36 @@ Predefinito globale: %1$s</string>
     <string name="status_bar_theme_fire">Fuoco</string>
     <string name="status_bar_theme_neon">Neon</string>
 
+
+    <string name="settings_title">Impostazioni wDSP</string>
+    <string name="settings_appearance">Aspetto &amp; Temi</string>
+    <string name="settings_theme_day">Giorno</string>
+    <string name="settings_theme_night">Notte</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Accento</string>
+    <string name="settings_primary_text_title">Testo princ.</string>
+    <string name="settings_label_color_title">Etichette</string>
+    <string name="settings_on_accent_title">Su accento</string>
+    <string name="settings_wallpaper_title">Sfondo</string>
+    <string name="settings_wallpaper_none">Predefinito</string>
+    <string name="settings_wallpaper_load">Scegli foto</string>
+    <string name="settings_wallpaper_default">Ripristina</string>
+    <string name="settings_wallpaper_solid_switch">Tinta unita</string>
+    <string name="settings_wallpaper_status_solid">Tinta unita attiva</string>
+    <string name="settings_solid_hue">Tonalità HUE</string>
+    <string name="settings_solid_val">Luminosità sfondo</string>
+    <string name="settings_permissions">Permessi &amp; Sistema</string>
+    <string name="settings_app_details">Info app</string>
+    <string name="eq_visualizer_title">Visualizzatore equalizzatore</string>
+    <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
+    <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_mode_spectrum">Frequency - Color</string>
+    <string name="eq_vis_enable_label">Display spectrum bars</string>
+
+    <string name="settings_backup_btn">Backup impostazioni</string>
+    <string name="settings_restore_btn">Ripristina impostazioni</string>
+    <string name="toast_backup_success">Backup salvato con successo</string>
+    <string name="toast_backup_failed">Backup non riuscito: %s</string>
+    <string name="toast_restore_success">Impostazioni ripristinate con successo</string>
+    <string name="toast_restore_failed">Ripristino non riuscito: %s</string>
 </resources>

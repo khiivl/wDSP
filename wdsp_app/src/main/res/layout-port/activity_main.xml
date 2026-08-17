@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/app_background"
+    android:background="@android:color/transparent"
     tools:context=".MainActivity"
     android:fitsSystemWindows="true">
 
@@ -41,6 +42,12 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_presets"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -388,6 +395,12 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_sub_freq"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_small"
@@ -1135,6 +1148,12 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_front"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1242,6 +1261,12 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_rear"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1315,9 +1340,9 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintDimensionRatio="W,945:1781"
+                            app:layout_constraintDimensionRatio="W,300:520"
                             android:layerType="hardware"
-                            app:srcCompat="@drawable/fabka_smooth" />
+                            app:srcCompat="@drawable/ic_car_cabriolet" />
 
                         <com.radiorubka.wdsp.BalancePointerView
                             android:id="@+id/balance_pointer"
@@ -1641,6 +1666,12 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_sb_theme"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <!-- Presets -->
@@ -10,7 +10,7 @@
     <string name="btn_import">Imp.</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -45,7 +45,7 @@
     <string name="rear_speaker_bass">Rear-Lautsprecher Bass</string>
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
-    <string name="lbl_freq">Freq</string>
+    <string name="lbl_freq">Frequenz</string>
     <string name="lbl_freq_boost">Boost Freq</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balance</string>
@@ -160,4 +160,36 @@
     <string name="status_bar_theme_monochrome_black">Immer Schwarz</string>
     <string name="status_bar_theme_fire">Feuer</string>
     <string name="status_bar_theme_neon">Neon</string>
+
+    <string name="settings_title">wDSP Einstellungen</string>
+    <string name="settings_appearance">Design &amp; Themen</string>
+    <string name="settings_theme_day">Tag</string>
+    <string name="settings_theme_night">Nacht</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Akzent</string>
+    <string name="settings_primary_text_title">Haupttext</string>
+    <string name="settings_label_color_title">Beschriftung</string>
+    <string name="settings_on_accent_title">Auf Akzent</string>
+    <string name="settings_wallpaper_title">Hintergrundbild</string>
+    <string name="settings_wallpaper_none">Standard</string>
+    <string name="settings_wallpaper_load">Foto wählen</string>
+    <string name="settings_wallpaper_default">Zurücksetzen</string>
+    <string name="settings_wallpaper_solid_switch">Einfarbig</string>
+    <string name="settings_wallpaper_status_solid">Einfarbig aktiv</string>
+    <string name="settings_solid_hue">Farbton HUE</string>
+    <string name="settings_solid_val">Hintergrund-Helligkeit</string>
+    <string name="settings_permissions">Berechtigungen &amp; System</string>
+    <string name="settings_app_details">App-Info</string>
+    <string name="eq_visualizer_title">Equalizer-Visualizer</string>
+    <string name="eq_vis_color_mode_label">Farbmodus des Visualizers:</string>
+    <string name="eq_vis_mode_monochrome">Einfarbiger Akzent</string>
+    <string name="eq_vis_mode_spectrum">Frequenz - Farbe</string>
+    <string name="eq_vis_enable_label">Spektrumbalken anzeigen</string>
+
+    <string name="settings_backup_btn">Einstellungen sichern</string>
+    <string name="settings_restore_btn">Einstellungen wiederherstellen</string>
+    <string name="toast_backup_success">Einstellungen erfolgreich gesichert</string>
+    <string name="toast_backup_failed">Sicherung fehlgeschlagen: %s</string>
+    <string name="toast_restore_success">Einstellungen erfolgreich wiederhergestellt</string>
+    <string name="toast_restore_failed">Wiederherstellung fehlgeschlagen: %s</string>
 </resources>

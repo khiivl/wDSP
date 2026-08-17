@@ -30,24 +30,24 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     public static final int THEME_FIRE = 6;
     public static final int THEME_NEON = 7;
 
-    // 16-band base colors for the standard frequency spectrum theme (sub-bass -> treble)
+    // 16-band base colors following the physical optical spectrum (700 nm Red -> 390 nm Violet)
     private static final int[] SPECTRUM_BASE_COLORS = {
-            0xFFFF1744, // 20 Hz (Red)
-            0xFFFF5252, // 31.5 Hz
-            0xFFFF6E40, // 50 Hz (Orange-Red)
-            0xFFFF9100, // 80 Hz (Orange)
-            0xFFFFC400, // 125 Hz (Amber)
-            0xFFFFEA00, // 200 Hz (Yellow)
-            0xFFC6FF00, // 315 Hz (Lime)
-            0xFF76FF03, // 500 Hz (Light Green)
-            0xFF00E676, // 800 Hz (Green)
-            0xFF1DE9B6, // 1.25 kHz (Teal)
-            0xFF00E5FF, // 2 kHz (Cyan)
-            0xFF00B0FF, // 3.15 kHz (Light Blue)
-            0xFF2979FF, // 5 kHz (Blue)
-            0xFF651FFF, // 8 kHz (Indigo)
-            0xFFD500F9, // 12.5 kHz (Purple/Magenta)
-            0xFFF50057  // 20 kHz (Pink)
+            0xFFD50000, // 20 Hz   (700 nm - Deep Red)
+            0xFFFF1744, // 31.5 Hz (680 nm - Bright Red)
+            0xFFFF3D00, // 50 Hz   (650 nm - Red-Orange)
+            0xFFFF6D00, // 80 Hz   (620 nm - Orange)
+            0xFFFF9100, // 125 Hz  (600 nm - Amber-Orange)
+            0xFFFFC400, // 200 Hz  (585 nm - Amber-Yellow)
+            0xFFFFEA00, // 315 Hz  (570 nm - Yellow)
+            0xFFAEEA00, // 500 Hz  (550 nm - Lime)
+            0xFF00E676, // 800 Hz  (530 nm - Pure Green)
+            0xFF00BFA5, // 1.25 kHz (510 nm - Teal / Spring Green)
+            0xFF00E5FF, // 2 kHz   (490 nm - Cyan)
+            0xFF00B0FF, // 3.15 kHz (475 nm - Sky Blue)
+            0xFF2979FF, // 5 kHz   (460 nm - Pure Blue)
+            0xFF3D5AFE, // 8 kHz   (440 nm - Deep Blue/Indigo)
+            0xFF651FFF, // 12.5 kHz (420 nm - Violet)
+            0xFF6200EA  // 20 kHz  (390 nm - Pure Deep Violet)
     };
 
     // 6-group color ranges matching wDSP EQ styling

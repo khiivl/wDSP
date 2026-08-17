@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -11,7 +11,7 @@
     <string name="btn_import">Import</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -160,4 +160,36 @@
     <string name="status_bar_theme_monochrome_black">Zawsze czarny</string>
     <string name="status_bar_theme_fire">Ogień</string>
     <string name="status_bar_theme_neon">Neon</string>
+
+    <string name="settings_title">Ustawienia wDSP</string>
+    <string name="settings_appearance">Wygląd i Motywy</string>
+    <string name="settings_theme_day">Dzień</string>
+    <string name="settings_theme_night">Noc</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Akcent</string>
+    <string name="settings_primary_text_title">Tekst główny</string>
+    <string name="settings_label_color_title">Etykiety</string>
+    <string name="settings_on_accent_title">Na akcencie</string>
+    <string name="settings_wallpaper_title">Tapeta</string>
+    <string name="settings_wallpaper_none">Domyślna</string>
+    <string name="settings_wallpaper_load">Wybierz zdjęcie</string>
+    <string name="settings_wallpaper_default">Resetuj</string>
+    <string name="settings_wallpaper_solid_switch">Jednolity kolor</string>
+    <string name="settings_wallpaper_status_solid">Jednolity kolor aktywny</string>
+    <string name="settings_solid_hue">Odcień HUE</string>
+    <string name="settings_solid_val">Jasność tła</string>
+    <string name="settings_permissions">Uprawnienia i System</string>
+    <string name="settings_app_details">O aplikacji</string>
+    <string name="eq_visualizer_title">Wizualizator korektora</string>
+    <string name="eq_vis_color_mode_label">Tryb kolorów wizualizatora:</string>
+    <string name="eq_vis_mode_monochrome">Jednolity akcent</string>
+    <string name="eq_vis_mode_spectrum">Częstotliwość - Kolor</string>
+    <string name="eq_vis_enable_label">Pokaż słupki widma</string>
+
+    <string name="settings_backup_btn">Kopia zapasowa ustawień</string>
+    <string name="settings_restore_btn">Przywróć ustawienia</string>
+    <string name="toast_backup_success">Kopia zapasowa została zapisana</string>
+    <string name="toast_backup_failed">Błąd tworzenia kopii zapasowej: %s</string>
+    <string name="toast_restore_success">Ustawienia zostały przywrócone</string>
+    <string name="toast_restore_failed">Błąd przywracania: %s</string>
 </resources>

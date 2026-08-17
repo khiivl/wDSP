@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -11,9 +11,10 @@
     <string name="btn_import">Імпорт</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Саб:</string>
+    <string name="lbl_sub">Субвуфер:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
+    <string name="eq_visualizer_title">Візуалізатор еквалайзера</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Тонкомпенсація (Крива Флетчера-Менсона)</string>
@@ -46,7 +47,7 @@
     <string name="rear_speaker_bass">Бас задніх динаміків</string>
     <string name="lbl_filter">Фільтр</string>
     <string name="lbl_boost">Підсил.</string>
-    <string name="lbl_freq">Част.</string>
+    <string name="lbl_freq">Частота</string>
     <string name="lbl_freq_boost">Част. Підс.</string>
     <string name="lbl_center">Центр</string>
     <string name="fader_balance">Фейдер та Баланс</string>
@@ -160,4 +161,35 @@
     <string name="status_bar_theme_monochrome_black">Завжди чорний</string>
     <string name="status_bar_theme_fire">Вогонь</string>
     <string name="status_bar_theme_neon">Неон</string>
+
+    <string name="settings_title">Налаштування wDSP</string>
+    <string name="settings_appearance">Оформлення та Теми</string>
+    <string name="settings_theme_day">День</string>
+    <string name="settings_theme_night">Ніч</string>
+    <string name="settings_theme_auto">Авто</string>
+    <string name="settings_accent_title">Акцент</string>
+    <string name="settings_primary_text_title">Осн. текст</string>
+    <string name="settings_label_color_title">Написи</string>
+    <string name="settings_on_accent_title">На акценті</string>
+    <string name="settings_wallpaper_title">Шпалери</string>
+    <string name="settings_wallpaper_none">Вбудовані / Дефолт</string>
+    <string name="settings_wallpaper_load">Вибрати фото</string>
+    <string name="settings_wallpaper_default">Скинути</string>
+    <string name="settings_wallpaper_solid_switch">Суцільний колір</string>
+    <string name="settings_wallpaper_status_solid">Суцільний колір</string>
+    <string name="settings_solid_hue">Відтінок HUE</string>
+    <string name="settings_solid_val">Яскравість фону</string>
+    <string name="settings_permissions">Дозволи та Система</string>
+    <string name="settings_app_details">Про додаток</string>
+    <string name="eq_vis_color_mode_label">Режим кольору візуалізатора:</string>
+    <string name="eq_vis_mode_monochrome">Однотонний акцент</string>
+    <string name="eq_vis_mode_spectrum">Частота - Колір</string>
+    <string name="eq_vis_enable_label">Відображати стовпчики спектру</string>
+
+    <string name="settings_backup_btn">Резервна копія налаштувань</string>
+    <string name="settings_restore_btn">Відновити налаштування</string>
+    <string name="toast_backup_success">Резервну копію збережено</string>
+    <string name="toast_backup_failed">Помилка створення бекапу: %s</string>
+    <string name="toast_restore_success">Налаштування успішно відновлено</string>
+    <string name="toast_restore_failed">Помилка відновлення: %s</string>
 </resources>

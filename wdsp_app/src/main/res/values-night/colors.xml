@@ -1,38 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_theme_aware">#E0E0E0</color>
-    <color name="text_theme_aware_2">#BDBDBD</color>
-    <color name="text_theme_aware_3">#CCBDBDBD</color>
-    <color name="cyan_custom">#79bcbd</color>
-    <color name="custom_square">#15BDBDBD</color>
-    <color name="visualizer_grid">#18FFFFFF</color>
-    <color name="visualizer_line">#AAFFFFFF</color>
-    <color name="visualizer_fill">#80028889</color>
+    <color name="text_theme_aware">#FFFFFF</color>
+    <color name="text_theme_aware_2">#8B9198</color>
+    <color name="text_theme_aware_3">#808B9198</color>
+    <color name="cyan_custom">#1FE7C4</color>
+    <color name="custom_square">#261FE7C4</color>
+    <color name="visualizer_grid">#26FFFFFF</color>
+    <color name="visualizer_line">#991FE7C4</color>
+    <color name="visualizer_fill">#401FE7C4</color>
     <color name="band_label">#80FFFFFF</color>
-    <color name="q_switch_text">#FFFFFF</color>
-    <color name="seek_track">#40FFFFFF</color>
+    <color name="q_switch_text">#1FE7C4</color>
+    <color name="seek_track">#33808080</color>
+    <color name="colored_button_text">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
 
-    <!-- Slider colors -->
-    <color name="tick_color_inactive">#66000000</color>
-    <color name="tick_color_active">#99000000</color>
-    <color name="track_color_active">#79bcbd</color>
-    <color name="track_color_inactive">#66BDBDBD</color>
+    <color name="tick_color_inactive">#80FFFFFF</color>
+    <color name="tick_color_active">#FFFFFF</color>
+    <color name="track_color_active">#1FE7C4</color>
+    <color name="track_color_inactive">#33808080</color>
+    <color name="halo_color">#00000000</color>
 
-    <!-- Text color for colored buttons in Dark Theme -->
-    <color name="colored_button_text">#000000</color>
-    <color name="status_bar">#000000</color>
-    <color name="stroke_color">#66000000</color>
-    <color name="stroke_color_top">#66000000</color>
+    <color name="visualizer_container_bg">#40000000</color>
+    <color name="simulate_speed_color">#FF5722</color>
 
-    <color name="btn_auto_bg">#79bcbd</color>
-    <color name="btn_add_bg">#61a9c2</color>
-    <color name="btn_rename_bg">#6593bf</color>
-    <color name="btn_export_bg">#7b79ae</color>
-    <color name="btn_import_bg">#8f5d8d</color>
-    <color name="btn_delete_bg">#944460</color>
+    <color name="status_bar">#FFFFFF</color>
+    <color name="stroke_color">#4D1FE7C4</color>
+    <color name="stroke_color_top">#801FE7C4</color>
+
+    <color name="btn_auto_bg">#1FE7C4</color>
+    <color name="btn_add_bg">#00B4D8</color>
+    <color name="btn_rename_bg">#0077B6</color>
+    <color name="btn_export_bg">#6F70B4</color>
+    <color name="btn_import_bg">#9F5E9D</color>
+    <color name="btn_delete_bg">#E63946</color>
     <color name="btn_lower_bg">#00000000</color>
 
     <!-- Toast Colors -->
-    <color name="toast_bg">#1A1A1C</color>
-    <color name="toast_stroke">#66000000</color>
+    <color name="toast_bg">#12161B</color>
+    <color name="toast_stroke">#801FE7C4</color>
 </resources>

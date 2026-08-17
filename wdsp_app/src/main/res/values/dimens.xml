@@ -27,14 +27,14 @@
     <!-- Gap left/right and top/bottom of the car image so a borderless arrow
          icon plus its step-count label fit stacked/side-by-side in the
          margin, centered around the car. -->
-    <dimen name="fader_arrow_gap_h">84dp</dimen>
-    <dimen name="fader_arrow_gap_v">88dp</dimen>
-    <dimen name="fader_arrow_icon_size">40dp</dimen>
+    <dimen name="fader_arrow_gap_h">28dp</dimen>
+    <dimen name="fader_arrow_gap_v">24dp</dimen>
+    <dimen name="fader_arrow_icon_size">36dp</dimen>
     <dimen name="fader_arrow_label_size">28dp</dimen>
 
     <!-- Button Sizes -->
-    <dimen name="button_radius">5dp</dimen>
-    <dimen name="stroke_width">1.3dp</dimen>
+    <dimen name="button_radius">10dp</dimen>
+    <dimen name="stroke_width">1.5dp</dimen>
     <dimen name="button_width">45dp</dimen>
     <dimen name="button_height">55dp</dimen>
     <dimen name="button_top_height">43dp</dimen>
