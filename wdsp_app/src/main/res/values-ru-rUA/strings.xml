@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -126,6 +126,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d км/ч</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Авто: %1$s</string>
+    <string name="toast_location_permission_needed">Для работы функции адаптивной громкости (GALA) требуется разрешение на геолокацию.</string>
+    <string name="toast_import_failed">Ошибка импорта: %1$s</string>
+    <string name="error">Ошибка</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -136,5 +145,23 @@
 
     <!-- PowerVolume -->
     <string name="lbl_pwr">Мощн. усилит.:</string>
+    <string name="hint_sub_freq">Частота</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Визуализатор статус-бара</string>
+    <string name="status_bar_visualizer_enable">Визуализатор статус-бара</string>
+    <string name="status_bar_visualizer_width">Ширина</string>
+    <string name="status_bar_visualizer_offset_x">Положение</string>
+    <string name="status_bar_visualizer_theme">Тема</string>
+    <string name="status_bar_visualizer_hue">Сдвиг HUE / Цвет</string>
+    <string name="status_bar_visualizer_permission_needed">Требуется разрешение поверх других приложений</string>
+    <string name="status_bar_theme_spectrum">Спектр (Вращение HUE)</string>
+    <string name="status_bar_theme_solid_hue">Единый цвет из HUE</string>
+    <string name="status_bar_theme_auto_day_night">Авто День/Ночь (Белый/Черный)</string>
+    <string name="status_bar_theme_eq_groups">Группы EQ (Вращение HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Всегда белый</string>
+    <string name="status_bar_theme_monochrome_black">Всегда черный</string>
+    <string name="status_bar_theme_fire">Огонь</string>
+    <string name="status_bar_theme_neon">Неон</string>
 
 </resources>

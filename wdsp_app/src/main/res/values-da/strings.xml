@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Forvalg</string>
+    <string name="btn_add">Dupliker</string>
+    <string name="btn_rename">Omdøb</string>
+    <string name="btn_delete">Slet</string>
+    <string name="btn_export">Eksporter</string>
+    <string name="btn_import">Importer</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Loudness Kompensationskurve</string>
+    <string name="enable_loudness">Aktiver Loudness</string>
+    <string name="trim_highs">Dæmp diskant</string>
+    <string name="sub_tweaking">Subwoofer finjustering</string>
+    <string name="fm_visualizer_label">Kompensationsforhåndsvisning i realtid</string>
+    <string name="lbl_volume">Lydstyrke:</string>
+    <string name="lbl_sub_offset">Sub-forskydning:</string>
+    <string name="lbl_lower_sub_by">Sænk sub med:</string>
+    <string name="lbl_calibration_point">Kalibreringspunkt (~80 dB):</string>
+    <string name="lbl_correction_strength">Korrektionsstyrke:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Højttaler Tidsjustering (Forsinkelser)</string>
+    <string name="spatial_correction">Rumlig korrektion</string>
+    <string name="surround_mode">Surround-tilstand</string>
+    <string name="front_left">Venstre for</string>
+    <string name="front_right">Højre for</string>
+    <string name="rear_left">Venstre bag</string>
+    <string name="rear_right">Højre bag</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Baghøjttaler forbedring (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Indbygget Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Højttaler Baskontrol</string>
+    <string name="front_speaker_bass">Bas Foran</string>
+    <string name="rear_speaker_bass">Bas Bagved</string>
+    <string name="lbl_filter">Filter</string>
+    <string name="lbl_boost">Boost</string>
+    <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq_boost">Boost Frekv</string>
+    <string name="lbl_center">Center</string>
+    <string name="fader_balance">Fader &amp; Balance</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Hastighedsafhængig lydstyrke)</string>
+    <string name="enable_gala">Aktiver GALA</string>
+    <string name="enable_gala_feature">Aktiver GALA-funktion</string>
+    <string name="gala_global">Global</string>
+    <string name="vol_step_every">Lydstyrketrin for hver:</string>
+    <string name="gps_speed_label">GPS-HASTIGHED</string>
+    <string name="current_gps_speed">Nuværende GPS-hastighed:</string>
+    <string name="vol_offset_label">LYDSTYRKEFORSKYDNING</string>
+    <string name="applied_vol_offset">Anvendt forskydning:</string>
+    <string name="standstill_threshold">Stilstandstærskel</string>
+    <string name="standstill_speed">Stilstandshastighed:</string>
+    <string name="max_speed_limit">Maksimal Hastighedsgrænse</string>
+    <string name="max_speed_label">Maksimal hastighed:</string>
+    <string name="max_vol_adj">Maks. Lydstyrkejustering</string>
+    <string name="max_adjustment">Maksimal justering:</string>
+    <string name="sensitivity_settings">Følsomhedsindstillinger</string>
+    <string name="simulation_debug">Simulering &amp; Fejlfinding</string>
+    <string name="simulate_vehicle_speed">Simuler hastighed</string>
+    <string name="simulate_speed">Simuleret hastighed:</string>
+    <string name="gala_fade_delay">Overgangshastighed (forsinkelse pr. trin):</string>
+    <string name="gala_hold_timer">Tærskelholdetimer:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Anvend</string>
+    <string name="btn_reapply">Genanvend ved nulstilling</string>
+    <string name="value_default">Ikke indstillet</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Annuller</string>
+    <string name="none">Ingen</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Indstillinger anvendt</string>
+    <string name="toast_exists">Findes allerede</string>
+    <string name="toast_cannot_delete_last">Kan ikke slette det sidste forvalg</string>
+    <string name="toast_exported">Eksporteret</string>
+    <string name="toast_imported">Importeret</string>
+    <string name="toast_sub_comp_limit">Sub-komp. begrænset til 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Hold wDSP kørende</string>
+    <string name="battery_dialog_message">For at sikre at dynamisk EQ fungerer i baggrunden, skal wDSP undtages fra batterioptimering.</string>
+    <string name="btn_allow">Tillad</string>
+    <string name="btn_later">Senere</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardware: Registrerer…</string>
+    <string name="hw_demo_mode">Kan ikke oprette forbindelse til MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Omdøb</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatisering: %1$s</string>
+    <string name="active_player_fmt">Aktiv afspiller: %1$s</string>
+    <string name="current_associations">Nuværende tilknytninger:
+</string>
+    <string name="global_default_fmt">
+Global standard: %1$s</string>
+    <string name="btn_assign">Tilknyt</string>
+    <string name="btn_set_default">Indstil standard</string>
+    <string name="btn_unassign">Fjern tilknytning</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Forvalg 1</string>
+    <string name="default_preset_name_hint">Forvalg</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/t</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Placeringstilladelse er påkrævet for GALA.</string>
+    <string name="toast_import_failed">Import mislykkedes: %1$s</string>
+    <string name="error">Fejl</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Forsinkelser</string>
+    <string name="OTtab">Andet</string>
+    <string name="GLtab">Hastighed</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Forstærkerstyrke:</string>
+    <string name="hint_sub_freq">Frekv</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statuslinje Visualisator</string>
+    <string name="status_bar_visualizer_enable">Statuslinje Visualisator</string>
+    <string name="status_bar_visualizer_width">Bredde</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Tema</string>
+    <string name="status_bar_visualizer_hue">HUE-forskydning / Farve</string>
+    <string name="status_bar_visualizer_permission_needed">Overlejringstilladelse er påkrævet</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE-rotation)</string>
+    <string name="status_bar_theme_solid_hue">Ensfarvet fra HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Dag/Nat (Hvid/Sort)</string>
+    <string name="status_bar_theme_eq_groups">EQ-grupper (HUE-rotation)</string>
+    <string name="status_bar_theme_monochrome_white">Altid hvid</string>
+    <string name="status_bar_theme_monochrome_black">Altid sort</string>
+    <string name="status_bar_theme_fire">Ild</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+</resources>

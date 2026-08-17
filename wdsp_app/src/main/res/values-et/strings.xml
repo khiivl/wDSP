@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Eelseadistus</string>
+    <string name="btn_add">Kopeeri</string>
+    <string name="btn_rename">Nimeta ümber</string>
+    <string name="btn_delete">Kustuta</string>
+    <string name="btn_export">Ekspordi</string>
+    <string name="btn_import">Impordi</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Bassikõlar:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Loudness kompensatsioonikõver</string>
+    <string name="enable_loudness">Luba Loudness</string>
+    <string name="trim_highs">Kõrgete helide kärpimine</string>
+    <string name="sub_tweaking">Bassikõlari peenhäälestus</string>
+    <string name="fm_visualizer_label">Kompensatsiooni reaalajas eelvaade</string>
+    <string name="lbl_volume">Helitugevus:</string>
+    <string name="lbl_sub_offset">Bassikõlari nihe:</string>
+    <string name="lbl_lower_sub_by">Vähenda bassi:</string>
+    <string name="lbl_calibration_point">Kalibreerimispunkt (~80 dB):</string>
+    <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Kõlarite ajaline joondus (Viivitused)</string>
+    <string name="spatial_correction">Ruumiline korrektsioon</string>
+    <string name="surround_mode">Surround režiim</string>
+    <string name="front_left">Ees vasakul</string>
+    <string name="front_right">Ees paremal</string>
+    <string name="rear_left">Taga vasakul</string>
+    <string name="rear_right">Taga paremal</string>
+    <string name="subwoofer">Bassikõlar</string>
+    <string name="rear_fill_enhancement">Tagakõlarite täide (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Sisseehitatud Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Kõlarite bassi reguleerimine</string>
+    <string name="front_speaker_bass">Esikõlarite bass</string>
+    <string name="rear_speaker_bass">Tagakõlarite bass</string>
+    <string name="lbl_filter">Filter</string>
+    <string name="lbl_boost">Võimendus</string>
+    <string name="lbl_freq">Sagedus</string>
+    <string name="lbl_freq_boost">Võimenduse sagedus</string>
+    <string name="lbl_center">Keskosa</string>
+    <string name="fader_balance">Fader &amp; Balanss</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Kiirusest sõltuv helitugevus)</string>
+    <string name="enable_gala">Luba GALA</string>
+    <string name="enable_gala_feature">Luba GALA funktsioon</string>
+    <string name="gala_global">Üldine</string>
+    <string name="vol_step_every">Helitugevuse samm iga:</string>
+    <string name="gps_speed_label">GPS KIIRUS</string>
+    <string name="current_gps_speed">Praegune GPS kiirus:</string>
+    <string name="vol_offset_label">HELI NIHE</string>
+    <string name="applied_vol_offset">Rakendatud nihe:</string>
+    <string name="standstill_threshold">Seisaku lävi</string>
+    <string name="standstill_speed">Seisaku kiirus:</string>
+    <string name="max_speed_limit">Maksimaalne kiiruspiirang</string>
+    <string name="max_speed_label">Maksimaalne kiirus:</string>
+    <string name="max_vol_adj">Maks. helitugevuse reguleerimine</string>
+    <string name="max_adjustment">Maksimaalne reguleerimine:</string>
+    <string name="sensitivity_settings">Tundlikkuse seaded</string>
+    <string name="simulation_debug">Simulatsioon &amp; Silumine</string>
+    <string name="simulate_vehicle_speed">Simuleeri kiirust</string>
+    <string name="simulate_speed">Simuleeritud kiirus:</string>
+    <string name="gala_fade_delay">Ülemineku kiirus (viivitus sammu kohta):</string>
+    <string name="gala_hold_timer">Läve hoidmise taimer:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Rakenda</string>
+    <string name="btn_reapply">Rakenda uuesti lähtestamisel</string>
+    <string name="value_default">Määramata</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Tühista</string>
+    <string name="none">Puudub</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Seaded rakendatud</string>
+    <string name="toast_exists">On juba olemas</string>
+    <string name="toast_cannot_delete_last">Viimast eelseadistust ei saa kustutada</string>
+    <string name="toast_exported">Eksporditud</string>
+    <string name="toast_imported">Imporditud</string>
+    <string name="toast_sub_comp_limit">Bassikõlari komp. piiratud 80 Hz-ga</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Hoia wDSP töös</string>
+    <string name="battery_dialog_message">Usaldusväärseks tausttööks tuleb wDSP vabastada aku optimeerimisest.</string>
+    <string name="btn_allow">Luba</string>
+    <string name="btn_later">Hiljem</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Riistvara: Tuvastamine…</string>
+    <string name="hw_demo_mode">Ühenduse loomine MCU_SERVICE-ga ebaõnnestus</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Nimeta ümber</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatiseerimine: %1$s</string>
+    <string name="active_player_fmt">Aktiivne mängija: %1$s</string>
+    <string name="current_associations">Praegused seosed:
+</string>
+    <string name="global_default_fmt">
+Üldine vaikeväärtus: %1$s</string>
+    <string name="btn_assign">Määra</string>
+    <string name="btn_set_default">Määra vaikimisi</string>
+    <string name="btn_unassign">Eemalda määramine</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Eelseadistus 1</string>
+    <string name="default_preset_name_hint">Eelseadistus</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">GALA vajab asukoha luba.</string>
+    <string name="toast_import_failed">Import ebaõnnestus: %1$s</string>
+    <string name="error">Viga</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Viivitused</string>
+    <string name="OTtab">Muu</string>
+    <string name="GLtab">Kiirus</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Võimendi võimsus:</string>
+    <string name="hint_sub_freq">Sagedus</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Olekuriba visualiseerija</string>
+    <string name="status_bar_visualizer_enable">Olekuriba visualiseerija</string>
+    <string name="status_bar_visualizer_width">Laius</string>
+    <string name="status_bar_visualizer_offset_x">Asukoht</string>
+    <string name="status_bar_visualizer_theme">Teema</string>
+    <string name="status_bar_visualizer_hue">HUE nihe / Värv</string>
+    <string name="status_bar_visualizer_permission_needed">Vajalik on ülekatte luba</string>
+    <string name="status_bar_theme_spectrum">Spekter (HUE pöörlemine)</string>
+    <string name="status_bar_theme_solid_hue">Ühevärviline HUE-st</string>
+    <string name="status_bar_theme_auto_day_night">Auto Päev/Öö (Valge/Must)</string>
+    <string name="status_bar_theme_eq_groups">EQ rühmad (HUE pöörlemine)</string>
+    <string name="status_bar_theme_monochrome_white">Alati valge</string>
+    <string name="status_bar_theme_monochrome_black">Alati must</string>
+    <string name="status_bar_theme_fire">Tuli</string>
+    <string name="status_bar_theme_neon">Neoon</string>
+
+</resources>

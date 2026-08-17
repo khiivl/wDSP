@@ -1,0 +1,170 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Preajuste Auto</string>
+    <string name="btn_add">Duplicar</string>
+    <string name="btn_rename">Renombrar</string>
+    <string name="btn_delete">Eliminar</string>
+    <string name="btn_export">Exportar</string>
+    <string name="btn_import">Importar</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Curva de Compensación de Loudness</string>
+    <string name="enable_loudness">Activar Loudness</string>
+    <string name="trim_highs">Atenuar Agudos</string>
+    <string name="sub_tweaking">Ajuste de Subwoofer</string>
+    <string name="fm_visualizer_label">Vista Previa de Compensación en Tiempo Real</string>
+    <string name="lbl_volume">Volumen:</string>
+    <string name="lbl_sub_offset">Desplazamiento Sub:</string>
+    <string name="lbl_lower_sub_by">Bajar sub en:</string>
+    <string name="lbl_calibration_point">Punto de Calibración (~80 dB):</string>
+    <string name="lbl_correction_strength">Fuerza de Corrección:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Alineación Temporal de Parlantes (Retardos)</string>
+    <string name="spatial_correction">Corrección Espacial</string>
+    <string name="surround_mode">Modo Surround</string>
+    <string name="front_left">Delantero Izquierdo</string>
+    <string name="front_right">Delantero Derecho</string>
+    <string name="rear_left">Trasero Izquierdo</string>
+    <string name="rear_right">Trasero Derecho</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Realce Trasero (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Loudness Integrado (LEGACY)</string>
+    <string name="speaker_bass_controls">Control de Graves de Parlantes</string>
+    <string name="front_speaker_bass">Graves Delanteros</string>
+    <string name="rear_speaker_bass">Graves Traseros</string>
+    <string name="lbl_filter">Filtro</string>
+    <string name="lbl_boost">Realce</string>
+    <string name="lbl_freq">Frec</string>
+    <string name="lbl_freq_boost">Frec Realce</string>
+    <string name="lbl_center">Centro</string>
+    <string name="fader_balance">Fader y Balance</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Volumen Dependiente de la Velocidad)</string>
+    <string name="enable_gala">Activar GALA</string>
+    <string name="enable_gala_feature">Activar Función GALA</string>
+    <string name="gala_global">Global</string>
+    <string name="vol_step_every">Paso de volumen cada:</string>
+    <string name="gps_speed_label">VELOCIDAD GPS</string>
+    <string name="current_gps_speed">Velocidad GPS Actual:</string>
+    <string name="vol_offset_label">AJUSTE VOLUMEN</string>
+    <string name="applied_vol_offset">Ajuste Aplicado:</string>
+    <string name="standstill_threshold">Umbral de Detención</string>
+    <string name="standstill_speed">Velocidad de detención:</string>
+    <string name="max_speed_limit">Límite Máximo de Velocidad</string>
+    <string name="max_speed_label">Velocidad máxima:</string>
+    <string name="max_vol_adj">Ajuste Máximo de Volumen</string>
+    <string name="max_adjustment">Ajuste máximo:</string>
+    <string name="sensitivity_settings">Configuración de Sensibilidad</string>
+    <string name="simulation_debug">Simulación y Depuración</string>
+    <string name="simulate_vehicle_speed">Simular Velocidad</string>
+    <string name="simulate_speed">Velocidad simulada:</string>
+    <string name="gala_fade_delay">Velocidad de transición (demora por paso):</string>
+    <string name="gala_hold_timer">Temporizador de retención de umbral:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Aplicar</string>
+    <string name="btn_reapply">Reaplicar si se restablece</string>
+    <string name="value_default">No establecido</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="none">Ninguno</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Configuración Aplicada</string>
+    <string name="toast_exists">Ya existe</string>
+    <string name="toast_cannot_delete_last">No se puede eliminar el último preajuste</string>
+    <string name="toast_exported">Exportado</string>
+    <string name="toast_imported">Importado</string>
+    <string name="toast_sub_comp_limit">Compensación de Sub limitada a 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Mantener wDSP en Ejecución</string>
+    <string name="battery_dialog_message">Para asegurar que los ajustes de EQ funcionen en segundo plano, wDSP debe estar exento de las optimizaciones de batería.</string>
+    <string name="btn_allow">Permitir</string>
+    <string name="btn_later">Más tarde</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardware: Detectando…</string>
+    <string name="hw_demo_mode">No se pudo conectar a MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Renombrar</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatización: %1$s</string>
+    <string name="active_player_fmt">Reproductor Activo: %1$s</string>
+    <string name="current_associations">Asociaciones Actuales:\n</string>
+    <string name="global_default_fmt">\nPredeterminado Global: %1$s</string>
+    <string name="btn_assign">Asignar</string>
+    <string name="btn_set_default">Definir Predeterminado</string>
+    <string name="btn_unassign">Quitar Asignación</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Preajuste 1</string>
+    <string name="default_preset_name_hint">Preajuste</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Se requiere permiso de ubicación para GALA.</string>
+    <string name="toast_import_failed">Error al importar: %1$s</string>
+    <string name="error">Error</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Curva F-M</string>
+    <string name="DLtab">Retardos</string>
+    <string name="OTtab">Otros</string>
+    <string name="GLtab">Velocidad</string>
+    <string name="lbl_pwr">Potencia:</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Visualizador de Barra de Estado</string>
+    <string name="status_bar_visualizer_enable">Visualizador de Barra de Estado</string>
+    <string name="status_bar_visualizer_width">Ancho</string>
+    <string name="status_bar_visualizer_offset_x">Posición</string>
+    <string name="status_bar_visualizer_theme">Tema</string>
+    <string name="status_bar_visualizer_hue">Desplazamiento HUE / Color</string>
+    <string name="status_bar_visualizer_permission_needed">Se requiere permiso de superposición</string>
+    <string name="status_bar_theme_spectrum">Espectro (Rotación HUE)</string>
+    <string name="status_bar_theme_solid_hue">Color Sólido desde HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Día/Noche (Blanco/Negro)</string>
+    <string name="status_bar_theme_eq_groups">Grupos EQ (Rotación HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Siempre Blanco</string>
+    <string name="status_bar_theme_monochrome_black">Siempre Negro</string>
+    <string name="status_bar_theme_fire">Fuego</string>
+    <string name="status_bar_theme_neon">Neón</string>
+
+</resources>

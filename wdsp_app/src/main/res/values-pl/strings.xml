@@ -125,6 +125,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Wymagane jest uprawnienie do lokalizacji dla GALA.</string>
+    <string name="toast_import_failed">Błąd importu: %1$s</string>
+    <string name="error">Błąd</string>
 
     <!-- Menu -->
     <string name="EQtab">Equalizer</string>
@@ -134,4 +143,21 @@
     <string name="GLtab">GALA</string>
     <string name="lbl_pwr">Moc Ampa:</string>
     <string name="hint_sub_freq">Częstot.</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Wizualizator paska stanu</string>
+    <string name="status_bar_visualizer_enable">Wizualizator paska stanu</string>
+    <string name="status_bar_visualizer_width">Szerokość</string>
+    <string name="status_bar_visualizer_offset_x">Pozycja</string>
+    <string name="status_bar_visualizer_theme">Motyw</string>
+    <string name="status_bar_visualizer_hue">Przesunięcie HUE / Kolor</string>
+    <string name="status_bar_visualizer_permission_needed">Wymagane uprawnienie do nakładki</string>
+    <string name="status_bar_theme_spectrum">Widmo (Obrót HUE)</string>
+    <string name="status_bar_theme_solid_hue">Jednolity kolor z HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Dzień/Noc (Biały/Czarny)</string>
+    <string name="status_bar_theme_eq_groups">Grupy EQ (Obrót HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Zawsze biały</string>
+    <string name="status_bar_theme_monochrome_black">Zawsze czarny</string>
+    <string name="status_bar_theme_fire">Ogień</string>
+    <string name="status_bar_theme_neon">Neon</string>
 </resources>

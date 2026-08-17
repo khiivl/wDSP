@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Ауто-профил</string>
+    <string name="btn_add">Дуплирај</string>
+    <string name="btn_rename">Преименуј</string>
+    <string name="btn_delete">Обриши</string>
+    <string name="btn_export">Извези</string>
+    <string name="btn_import">Увези</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Суб:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Крива тонкомпензације (Loudness)</string>
+    <string name="enable_loudness">Омогући Loudness</string>
+    <string name="trim_highs">Подрезивање високих</string>
+    <string name="sub_tweaking">Подешавање субвуфера</string>
+    <string name="fm_visualizer_label">Преглед компензације у реалном времену</string>
+    <string name="lbl_volume">Јачина звука:</string>
+    <string name="lbl_sub_offset">Помак субвуфера:</string>
+    <string name="lbl_lower_sub_by">Смањи суб за:</string>
+    <string name="lbl_calibration_point">Тачка калибрације (~80 dB):</string>
+    <string name="lbl_correction_strength">Снага корекције:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Временска кашњења звучника (Delays)</string>
+    <string name="spatial_correction">Просторна корекција</string>
+    <string name="surround_mode">Surround режим</string>
+    <string name="front_left">Предњи леви</string>
+    <string name="front_right">Предњи десни</string>
+    <string name="rear_left">Задњи леви</string>
+    <string name="rear_right">Задњи десни</string>
+    <string name="subwoofer">Субвуфер</string>
+    <string name="rear_fill_enhancement">Задње испуњавање (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Уграђени Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Контрола баса звучника</string>
+    <string name="front_speaker_bass">Предњи бас</string>
+    <string name="rear_speaker_bass">Задњи бас</string>
+    <string name="lbl_filter">Филтер</string>
+    <string name="lbl_boost">Појачање</string>
+    <string name="lbl_freq">Фрекв</string>
+    <string name="lbl_freq_boost">Фрекв појачања</string>
+    <string name="lbl_center">Центар</string>
+    <string name="fader_balance">Фејдер &amp; Баланс</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Јачина звука зависна од брзине)</string>
+    <string name="enable_gala">Омогући GALA</string>
+    <string name="enable_gala_feature">Омогући функцију GALA</string>
+    <string name="gala_global">Глобално</string>
+    <string name="vol_step_every">Корак јачине звука на сваких:</string>
+    <string name="gps_speed_label">GPS БРЗИНА</string>
+    <string name="current_gps_speed">Тренутна GPS брзина:</string>
+    <string name="vol_offset_label">ПОМАК ЈАЧИНЕ</string>
+    <string name="applied_vol_offset">Примењени помак:</string>
+    <string name="standstill_threshold">Праг мировања</string>
+    <string name="standstill_speed">Брзина мировања:</string>
+    <string name="max_speed_limit">Максимално ограничење брзине</string>
+    <string name="max_speed_label">Максимална брзина:</string>
+    <string name="max_vol_adj">Макс. подешавање јачине</string>
+    <string name="max_adjustment">Максимално подешавање:</string>
+    <string name="sensitivity_settings">Подешавања осетљивости</string>
+    <string name="simulation_debug">Симулација &amp; Дијагностика</string>
+    <string name="simulate_vehicle_speed">Симулирај брзину</string>
+    <string name="simulate_speed">Симулирана брзина:</string>
+    <string name="gala_fade_delay">Брзина прелаза (кашњење по кораку):</string>
+    <string name="gala_hold_timer">Тајмер задржавања прага:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Примени</string>
+    <string name="btn_reapply">Поново примени при ресетовању</string>
+    <string name="value_default">Није постављено</string>
+    <string name="btn_ok">У реду</string>
+    <string name="btn_cancel">Откажи</string>
+    <string name="none">Ништа</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Подешавања су примењена</string>
+    <string name="toast_exists">Већ постоји</string>
+    <string name="toast_cannot_delete_last">Није могуће обрисати последњи профил</string>
+    <string name="toast_exported">Извезено</string>
+    <string name="toast_imported">Увезено</string>
+    <string name="toast_sub_comp_limit">Суб компензација ограничена на 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Одржи wDSP покренутим</string>
+    <string name="battery_dialog_message">За поуздан рад у позадини искључите wDSP из оптимизације батерије.</string>
+    <string name="btn_allow">Дозволи</string>
+    <string name="btn_later">Касније</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Хардвер: Откривање…</string>
+    <string name="hw_demo_mode">Није могуће повезивање са MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Преименуј</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Аутоматизација: %1$s</string>
+    <string name="active_player_fmt">Активни плејер: %1$s</string>
+    <string name="current_associations">Тренутне везе:
+</string>
+    <string name="global_default_fmt">
+Глобално подразумевано: %1$s</string>
+    <string name="btn_assign">Додели</string>
+    <string name="btn_set_default">Постави као подразумевано</string>
+    <string name="btn_unassign">Уклони доделу</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Профил 1</string>
+    <string name="default_preset_name_hint">Профил</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Потребна је дозвола за локацију за GALA.</string>
+    <string name="toast_import_failed">Увоз није успео: %1$s</string>
+    <string name="error">Грешка</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Кашњења</string>
+    <string name="OTtab">Остало</string>
+    <string name="GLtab">Брзина</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Снага појачала:</string>
+    <string name="hint_sub_freq">Фрекв</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Визуелизатор статусне траке</string>
+    <string name="status_bar_visualizer_enable">Визуелизатор статусне траке</string>
+    <string name="status_bar_visualizer_width">Ширина</string>
+    <string name="status_bar_visualizer_offset_x">Положај</string>
+    <string name="status_bar_visualizer_theme">Тема</string>
+    <string name="status_bar_visualizer_hue">HUE помак / Боја</string>
+    <string name="status_bar_visualizer_permission_needed">Потребна је дозвола за преклапање</string>
+    <string name="status_bar_theme_spectrum">Спектар (HUE ротација)</string>
+    <string name="status_bar_theme_solid_hue">Једнобојно из HUE</string>
+    <string name="status_bar_theme_auto_day_night">Ауто Дан/Ноћ (Бело/Црно)</string>
+    <string name="status_bar_theme_eq_groups">EQ групе (HUE ротација)</string>
+    <string name="status_bar_theme_monochrome_white">Увек бело</string>
+    <string name="status_bar_theme_monochrome_black">Увек црно</string>
+    <string name="status_bar_theme_fire">Ватра</string>
+    <string name="status_bar_theme_neon">Неон</string>
+
+</resources>

@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Předvolba</string>
+    <string name="btn_add">Duplikovat</string>
+    <string name="btn_rename">Přejmenovat</string>
+    <string name="btn_delete">Smazat</string>
+    <string name="btn_export">Exportovat</string>
+    <string name="btn_import">Importovat</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Křivka fyziologické regulace (Loudness)</string>
+    <string name="enable_loudness">Zapnout Loudness</string>
+    <string name="trim_highs">Oříznutí výšek</string>
+    <string name="sub_tweaking">Doladění subwooferu</string>
+    <string name="fm_visualizer_label">Náhled kompenzace v reálném čase</string>
+    <string name="lbl_volume">Hlasitost:</string>
+    <string name="lbl_sub_offset">Posun subwooferu:</string>
+    <string name="lbl_lower_sub_by">Snížit subwoofer o:</string>
+    <string name="lbl_calibration_point">Kalibrační bod (~80 dB):</string>
+    <string name="lbl_correction_strength">Síla korekce:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Časové zpoždění reproduktorů (Delays)</string>
+    <string name="spatial_correction">Prostorová korekce</string>
+    <string name="surround_mode">Režim Surround</string>
+    <string name="front_left">Přední levý</string>
+    <string name="front_right">Přední pravý</string>
+    <string name="rear_left">Zadní levý</string>
+    <string name="rear_right">Zadní pravý</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Zadní výplň (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Vestavěný Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Ovládání basů reproduktorů</string>
+    <string name="front_speaker_bass">Přední basy</string>
+    <string name="rear_speaker_bass">Zadní basy</string>
+    <string name="lbl_filter">Filtr</string>
+    <string name="lbl_boost">Zesílení</string>
+    <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq_boost">Frekv zesílení</string>
+    <string name="lbl_center">Střed</string>
+    <string name="fader_balance">Fader &amp; Balance</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Hlasitost dle rychlosti)</string>
+    <string name="enable_gala">Zapnout GALA</string>
+    <string name="enable_gala_feature">Zapnout funkci GALA</string>
+    <string name="gala_global">Globální</string>
+    <string name="vol_step_every">Krok hlasitosti každých:</string>
+    <string name="gps_speed_label">GPS RYCHLOST</string>
+    <string name="current_gps_speed">Aktuální GPS rychlost:</string>
+    <string name="vol_offset_label">POSUN HLASITOSTI</string>
+    <string name="applied_vol_offset">Použitý posun:</string>
+    <string name="standstill_threshold">Práh zastavení</string>
+    <string name="standstill_speed">Rychlost zastavení:</string>
+    <string name="max_speed_limit">Maximální rychlost</string>
+    <string name="max_speed_label">Maximální rychlost:</string>
+    <string name="max_vol_adj">Max. úprava hlasitosti</string>
+    <string name="max_adjustment">Maximální úprava:</string>
+    <string name="sensitivity_settings">Nastavení citlivosti</string>
+    <string name="simulation_debug">Simulace &amp; Ladění</string>
+    <string name="simulate_vehicle_speed">Simulovat rychlost</string>
+    <string name="simulate_speed">Simulovaná rychlost:</string>
+    <string name="gala_fade_delay">Rychlost přechodu (zpoždění na krok):</string>
+    <string name="gala_hold_timer">Časovač podržení prahu:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Použít</string>
+    <string name="btn_reapply">Znovu použít při resetu</string>
+    <string name="value_default">Nenastaveno</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Zrušit</string>
+    <string name="none">Žádný</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Nastavení použita</string>
+    <string name="toast_exists">Již existuje</string>
+    <string name="toast_cannot_delete_last">Nelze smazat poslední předvolbu</string>
+    <string name="toast_exported">Exportováno</string>
+    <string name="toast_imported">Importováno</string>
+    <string name="toast_sub_comp_limit">Komp. sub omezena na 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Udržet wDSP spuštěné</string>
+    <string name="battery_dialog_message">Pro spolehlivou funkci dynamického ekvalizéru na pozadí je třeba vyloučit wDSP z optimalizace baterie.</string>
+    <string name="btn_allow">Povolit</string>
+    <string name="btn_later">Později</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardware: Zjišťování…</string>
+    <string name="hw_demo_mode">Nelze se připojit k MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Přejmenovat</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatizace: %1$s</string>
+    <string name="active_player_fmt">Aktivní přehrávač: %1$s</string>
+    <string name="current_associations">Aktuální přiřazení:
+</string>
+    <string name="global_default_fmt">
+Globální výchozí: %1$s</string>
+    <string name="btn_assign">Přiřadit</string>
+    <string name="btn_set_default">Nastavit výchozí</string>
+    <string name="btn_unassign">Zrušit přiřazení</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Předvolba 1</string>
+    <string name="default_preset_name_hint">Předvolba</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Pro funkci GALA je vyžadováno oprávnění k poloze.</string>
+    <string name="toast_import_failed">Import selhal: %1$s</string>
+    <string name="error">Chyba</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Zpoždění</string>
+    <string name="OTtab">Ostatní</string>
+    <string name="GLtab">Rychlost</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Výkon zesilovače:</string>
+    <string name="hint_sub_freq">Frekv</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Vizualizér stavového řádku</string>
+    <string name="status_bar_visualizer_enable">Vizualizér stavového řádku</string>
+    <string name="status_bar_visualizer_width">Šířka</string>
+    <string name="status_bar_visualizer_offset_x">Pozice</string>
+    <string name="status_bar_visualizer_theme">Motiv</string>
+    <string name="status_bar_visualizer_hue">Posun HUE / Barva</string>
+    <string name="status_bar_visualizer_permission_needed">Vyžadováno oprávnění k překrytí</string>
+    <string name="status_bar_theme_spectrum">Spektrum (Rotace HUE)</string>
+    <string name="status_bar_theme_solid_hue">Jednolitá barva z HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Den/Noc (Bílá/Černá)</string>
+    <string name="status_bar_theme_eq_groups">Skupiny EQ (Rotace HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Vždy bílá</string>
+    <string name="status_bar_theme_monochrome_black">Vždy černá</string>
+    <string name="status_bar_theme_fire">Oheň</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+</resources>

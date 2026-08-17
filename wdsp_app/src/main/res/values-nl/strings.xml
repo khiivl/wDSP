@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Voorinstelling</string>
+    <string name="btn_add">Dupliceren</string>
+    <string name="btn_rename">Hernoemen</string>
+    <string name="btn_delete">Verwijderen</string>
+    <string name="btn_export">Exporteren</string>
+    <string name="btn_import">Importeren</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Loudness Compensatiecurve</string>
+    <string name="enable_loudness">Loudness inschakelen</string>
+    <string name="trim_highs">Hoge tonen dempen</string>
+    <string name="sub_tweaking">Subwoofer fijnafstemming</string>
+    <string name="fm_visualizer_label">Real-time compensatievoorbeeld</string>
+    <string name="lbl_volume">Volume:</string>
+    <string name="lbl_sub_offset">Sub-verschuiving:</string>
+    <string name="lbl_lower_sub_by">Verlaag sub met:</string>
+    <string name="lbl_calibration_point">Kalibratiepunt (~80 dB):</string>
+    <string name="lbl_correction_strength">Correctiesterkte:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Luidspreker Tijdsuitlijning (Vertragingen)</string>
+    <string name="spatial_correction">Ruimtelijke correctie</string>
+    <string name="surround_mode">Surround-modus</string>
+    <string name="front_left">Linksvoor</string>
+    <string name="front_right">Rechtsvoor</string>
+    <string name="rear_left">Linksachter</string>
+    <string name="rear_right">Rechtsachter</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Achteraanvulling (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Ingebouwde Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Luidspreker Basregeling</string>
+    <string name="front_speaker_bass">Bas Voorzijde</string>
+    <string name="rear_speaker_bass">Bas Achterzijde</string>
+    <string name="lbl_filter">Filter</string>
+    <string name="lbl_boost">Versterking</string>
+    <string name="lbl_freq">Freq</string>
+    <string name="lbl_freq_boost">Versterkingsfreq</string>
+    <string name="lbl_center">Midden</string>
+    <string name="fader_balance">Fader &amp; Balans</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Snelheidsafhankelijk Volume)</string>
+    <string name="enable_gala">GALA inschakelen</string>
+    <string name="enable_gala_feature">GALA-functie inschakelen</string>
+    <string name="gala_global">Globaal</string>
+    <string name="vol_step_every">Volumestap elke:</string>
+    <string name="gps_speed_label">GPS-SNELHEID</string>
+    <string name="current_gps_speed">Huidige GPS-snelheid:</string>
+    <string name="vol_offset_label">VOL. VERSCHUIVING</string>
+    <string name="applied_vol_offset">Toegepaste verschuiving:</string>
+    <string name="standstill_threshold">Stilstanddrempel</string>
+    <string name="standstill_speed">Stilstandsnelheid:</string>
+    <string name="max_speed_limit">Maximale Snelheidslimiet</string>
+    <string name="max_speed_label">Maximale snelheid:</string>
+    <string name="max_vol_adj">Max. Volumeaanpassing</string>
+    <string name="max_adjustment">Maximale aanpassing:</string>
+    <string name="sensitivity_settings">Gevoeligheidsinstellingen</string>
+    <string name="simulation_debug">Simulatie &amp; Foutopsporing</string>
+    <string name="simulate_vehicle_speed">Snelheid simuleren</string>
+    <string name="simulate_speed">Gesimuleerde snelheid:</string>
+    <string name="gala_fade_delay">Overgangssnelheid (vertraging per stap):</string>
+    <string name="gala_hold_timer">Drempel vasthoudtimer:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Toepassen</string>
+    <string name="btn_reapply">Opnieuw toepassen bij reset</string>
+    <string name="value_default">Niet ingesteld</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Annuleren</string>
+    <string name="none">Geen</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Instellingen toegepast</string>
+    <string name="toast_exists">Bestaat al</string>
+    <string name="toast_cannot_delete_last">Kan de laatste voorinstelling niet verwijderen</string>
+    <string name="toast_exported">Geëxporteerd</string>
+    <string name="toast_imported">Geïmporteerd</string>
+    <string name="toast_sub_comp_limit">Sub-comp. beperkt tot 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">wDSP Actief Houden</string>
+    <string name="battery_dialog_message">Om ervoor te zorgen dat dynamische EQ-aanpassingen op de achtergrond werken, moet wDSP worden uitgezonderd van batterijoptimalisaties.</string>
+    <string name="btn_allow">Toestaan</string>
+    <string name="btn_later">Later</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardware: Detecteren…</string>
+    <string name="hw_demo_mode">Kan geen verbinding maken met MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Hernoemen</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatisering: %1$s</string>
+    <string name="active_player_fmt">Actieve speler: %1$s</string>
+    <string name="current_associations">Huidige toewijzingen:
+</string>
+    <string name="global_default_fmt">
+Globale standaard: %1$s</string>
+    <string name="btn_assign">Toewijzen</string>
+    <string name="btn_set_default">Als standaard</string>
+    <string name="btn_unassign">Toewijzing opheffen</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Voorinstelling 1</string>
+    <string name="default_preset_name_hint">Voorinstelling</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/u</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Locatietoestemming is vereist voor GALA.</string>
+    <string name="toast_import_failed">Importeren mislukt: %1$s</string>
+    <string name="error">Fout</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Vertragingen</string>
+    <string name="OTtab">Overige</string>
+    <string name="GLtab">Snelheid</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Amp Vermogen:</string>
+    <string name="hint_sub_freq">Freq</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statusbalk Visualisator</string>
+    <string name="status_bar_visualizer_enable">Statusbalk Visualisator</string>
+    <string name="status_bar_visualizer_width">Breedte</string>
+    <string name="status_bar_visualizer_offset_x">Positie</string>
+    <string name="status_bar_visualizer_theme">Thema</string>
+    <string name="status_bar_visualizer_hue">HUE-verschuiving / Kleur</string>
+    <string name="status_bar_visualizer_permission_needed">Overlay-toestemming vereist</string>
+    <string name="status_bar_theme_spectrum">Spectrum (HUE-rotatie)</string>
+    <string name="status_bar_theme_solid_hue">Effen kleur uit HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Dag/Nacht (Wit/Zwart)</string>
+    <string name="status_bar_theme_eq_groups">EQ-groepen (HUE-rotatie)</string>
+    <string name="status_bar_theme_monochrome_white">Altijd Wit</string>
+    <string name="status_bar_theme_monochrome_black">Altijd Zwart</string>
+    <string name="status_bar_theme_fire">Vuur</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+</resources>

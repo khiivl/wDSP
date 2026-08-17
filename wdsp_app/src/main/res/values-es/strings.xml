@@ -126,6 +126,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Se requiere permiso de ubicación para GALA.</string>
+    <string name="toast_import_failed">Error al importar: %1$s</string>
+    <string name="error">Error</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -135,4 +144,20 @@
     <string name="GLtab">Velocidad</string>
     <string name="lbl_pwr">Potencia:</string>
 
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Visualizador de barra de estado</string>
+    <string name="status_bar_visualizer_enable">Visualizador de barra de estado</string>
+    <string name="status_bar_visualizer_width">Ancho</string>
+    <string name="status_bar_visualizer_offset_x">Posición</string>
+    <string name="status_bar_visualizer_theme">Tema</string>
+    <string name="status_bar_visualizer_hue">Desplazamiento HUE / Color</string>
+    <string name="status_bar_visualizer_permission_needed">Se requiere permiso de superposición</string>
+    <string name="status_bar_theme_spectrum">Espectro (Rotación HUE)</string>
+    <string name="status_bar_theme_solid_hue">Color sólido desde HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Día/Noche (Blanco/Negro)</string>
+    <string name="status_bar_theme_eq_groups">Grupos EQ (Rotación HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Siempre blanco</string>
+    <string name="status_bar_theme_monochrome_black">Siempre negro</string>
+    <string name="status_bar_theme_fire">Fuego</string>
+    <string name="status_bar_theme_neon">Neón</string>
 </resources>

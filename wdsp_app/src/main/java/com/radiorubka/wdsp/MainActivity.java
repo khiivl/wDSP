@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Rect;
 //import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -44,6 +45,9 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -130,6 +134,12 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal, tvGalaFadeMsVal, tvGalaHoldMsVal;
+
+    // Status Bar Visualizer Controls
+    private SwitchCompat switchStatusBarVis;
+    private Slider seekSbWidth, seekSbPos, seekSbHue;
+    private TextView tvSbWidthVal, tvSbPosVal, tvSbHueVal;
+    private AutoCompleteTextView spinnerSbTheme;
     
     // Whether GALA's on/off state is shared across all presets instead of per-preset.
     // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
@@ -166,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
             if ("com.radiorubka.wdsp.PRESET_CHANGED".equals(action)) {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
-                    Toaster.show(MainActivity.this, "Auto: " + name);
+                    Toaster.show(MainActivity.this, getString(R.string.toast_auto_preset, name));
                     spinnerPresets.setText(name, false);
                     loadPreset(name);
                 }
@@ -352,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
                 //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             } else {
-                Toaster.show(this, "Location permission is required for GALA features.");
+                Toaster.show(this, getString(R.string.toast_location_permission_needed));
                 //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             }
@@ -387,6 +397,16 @@ public class MainActivity extends AppCompatActivity {
                 String newName = presetNames.get(index);
                 spinnerPresets.setText(newName, false);
                 loadPreset(newName);
+            }
+        }
+        if (switchStatusBarVis != null) {
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            boolean visEnabled = prefs.getBoolean("sb_vis_enabled", false);
+            if (visEnabled && !Settings.canDrawOverlays(this)) {
+                switchStatusBarVis.setChecked(false);
+                prefs.edit().putBoolean("sb_vis_enabled", false).apply();
+            } else if (visEnabled && Settings.canDrawOverlays(this)) {
+                switchStatusBarVis.setChecked(true);
             }
         }
         checkAndStartSpectrumAnalyzer();
@@ -480,6 +500,7 @@ public class MainActivity extends AppCompatActivity {
         setupDelayControls();
         setupDelay1Controls();
         setupGalaControls();
+        setupStatusBarVisualizerControls();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
@@ -573,6 +594,16 @@ public class MainActivity extends AppCompatActivity {
         tvGalaFadeMsVal = findViewById(R.id.tv_gala_fade_ms_val);
         seekGalaHoldMs = findViewById(R.id.seek_gala_hold_ms);
         tvGalaHoldMsVal = findViewById(R.id.tv_gala_hold_ms_val);
+
+        // Status Bar Visualizer
+        switchStatusBarVis = findViewById(R.id.switch_status_bar_vis);
+        seekSbWidth = findViewById(R.id.seek_sb_width);
+        tvSbWidthVal = findViewById(R.id.tv_sb_width_val);
+        seekSbPos = findViewById(R.id.seek_sb_pos);
+        tvSbPosVal = findViewById(R.id.tv_sb_pos_val);
+        spinnerSbTheme = findViewById(R.id.spinner_sb_theme);
+        seekSbHue = findViewById(R.id.seek_sb_hue);
+        tvSbHueVal = findViewById(R.id.tv_sb_hue_val);
     }
 
     @Override
@@ -1039,6 +1070,108 @@ public class MainActivity extends AppCompatActivity {
         return offs;
     }
 
+    private void setupStatusBarVisualizerControls() {
+        if (switchStatusBarVis == null) return;
+
+        SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // Theme spinner setup
+        String[] themes = {
+                getString(R.string.status_bar_theme_spectrum),
+                getString(R.string.status_bar_theme_solid_hue),
+                getString(R.string.status_bar_theme_auto_day_night),
+                getString(R.string.status_bar_theme_eq_groups),
+                getString(R.string.status_bar_theme_monochrome_white),
+                getString(R.string.status_bar_theme_monochrome_black),
+                getString(R.string.status_bar_theme_fire),
+                getString(R.string.status_bar_theme_neon)
+        };
+        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, themes);
+        spinnerSbTheme.setAdapter(themeAdapter);
+
+        // Load saved preferences
+        boolean enabled = p.getBoolean("sb_vis_enabled", false);
+        float widthF = p.getFloat("sb_vis_width_f", 0.40f);
+        float posF = p.getFloat("sb_vis_pos_f", 0.50f);
+        int themeIdx = p.getInt("sb_vis_theme", 0);
+        int hue = p.getInt("sb_vis_hue", 0);
+
+        int widthPct = Math.round(widthF * 100f);
+        int posPct = Math.round(posF * 100f);
+
+        switchStatusBarVis.jumpDrawablesToCurrentState();
+        switchStatusBarVis.setChecked(enabled);
+        seekSbWidth.setValue(Math.max(10, Math.min(100, widthPct)));
+        tvSbWidthVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), widthPct));
+
+        seekSbPos.setValue(Math.max(0, Math.min(100, posPct)));
+        tvSbPosVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), posPct));
+
+        if (themeIdx >= 0 && themeIdx < themes.length) {
+            spinnerSbTheme.setText(themes[themeIdx], false);
+        }
+
+        seekSbHue.setValue(Math.max(0, Math.min(360, hue)));
+        tvSbHueVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_degrees_fmt), hue));
+
+        // One-time calibration on first app start if not already cached
+        if (p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HEIGHT_PX, 0) == 0) {
+            View decorView = getWindow().getDecorView();
+            decorView.post(() -> {
+                Rect rect = new Rect();
+                decorView.getWindowVisibleDisplayFrame(rect);
+                if (rect.top > 0) {
+                    StatusBarVisualizerManager.getInstance(this).updateStatusBarHeight(rect.top);
+                }
+            });
+        }
+
+        // Listeners
+        switchStatusBarVis.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked && !Settings.canDrawOverlays(this)) {
+                switchStatusBarVis.setChecked(false);
+                Toaster.show(this, getString(R.string.status_bar_visualizer_permission_needed));
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to open overlay permission settings", e);
+                }
+                return;
+            }
+            p.edit().putBoolean("sb_vis_enabled", isChecked).apply();
+        });
+
+        seekSbWidth.addOnChangeListener((slider, value, fromUser) -> {
+            int pct = (int) value;
+            tvSbWidthVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), pct));
+            if (fromUser) {
+                p.edit().putFloat("sb_vis_width_f", pct / 100f).apply();
+            }
+        });
+
+        seekSbPos.addOnChangeListener((slider, value, fromUser) -> {
+            int pct = (int) value;
+            tvSbPosVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), pct));
+            if (fromUser) {
+                p.edit().putFloat("sb_vis_pos_f", pct / 100f).apply();
+            }
+        });
+
+        spinnerSbTheme.setOnItemClickListener((parent, view, position, id) -> {
+            p.edit().putInt("sb_vis_theme", position).apply();
+        });
+
+        seekSbHue.addOnChangeListener((slider, value, fromUser) -> {
+            int h = (int) value;
+            tvSbHueVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_degrees_fmt), h));
+            if (fromUser) {
+                p.edit().putInt("sb_vis_hue", h).apply();
+            }
+        });
+    }
+
     private void setupPresets() {
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Set<String> names = p.getStringSet(PREF_PRESET_NAMES, null);
@@ -1108,7 +1241,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Prevent renaming the protected "Call" preset immediately
         if ("Call".equals(oldName)) {
-            Toaster.show(this, "ERROR"); // Ensure this string exists or use a literal
+            Toaster.show(this, getString(R.string.error));
             return;
         }
 
@@ -1629,7 +1762,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (IOException e) {
             Log.e(TAG, "Export error", e);
-            Toaster.show(this, "ERROR");
+            Toaster.show(this, getString(R.string.error));
         }
     }
     private void loadPresetFromFile(Uri u) {
@@ -1694,7 +1827,7 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.e(TAG, "Import error", e);
-            Toaster.show(this, "Import failed: " + e.getMessage());
+            Toaster.show(this, getString(R.string.toast_import_failed, e.getMessage()));
         }
     }
 

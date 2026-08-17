@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Авто-профил</string>
+    <string name="btn_add">Дублиране</string>
+    <string name="btn_rename">Преименуване</string>
+    <string name="btn_delete">Изтриване</string>
+    <string name="btn_export">Експортиране</string>
+    <string name="btn_import">Импортиране</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Суб:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Крива на тонкомпенсация (Loudness)</string>
+    <string name="enable_loudness">Включване на Loudness</string>
+    <string name="trim_highs">Подрязване на високи</string>
+    <string name="sub_tweaking">Настройка на субуфера</string>
+    <string name="fm_visualizer_label">Преглед на компенсацията в реално време</string>
+    <string name="lbl_volume">Сила на звука:</string>
+    <string name="lbl_sub_offset">Изместване на суба:</string>
+    <string name="lbl_lower_sub_by">Намаляване на суба с:</string>
+    <string name="lbl_calibration_point">Точка на калибриране (~80 dB):</string>
+    <string name="lbl_correction_strength">Сила на корекцията:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Времеви закъснения на високоговорителите (Delays)</string>
+    <string name="spatial_correction">Пространствена корекция</string>
+    <string name="surround_mode">Режим Surround</string>
+    <string name="front_left">Преден ляв</string>
+    <string name="front_right">Преден десен</string>
+    <string name="rear_left">Заден ляв</string>
+    <string name="rear_right">Заден десен</string>
+    <string name="subwoofer">Субуфер</string>
+    <string name="rear_fill_enhancement">Задно запълване (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Вграден Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Управление на баса по говорители</string>
+    <string name="front_speaker_bass">Преден бас</string>
+    <string name="rear_speaker_bass">Заден бас</string>
+    <string name="lbl_filter">Филтър</string>
+    <string name="lbl_boost">Усилване</string>
+    <string name="lbl_freq">Чест.</string>
+    <string name="lbl_freq_boost">Чест. усилване</string>
+    <string name="lbl_center">Център</string>
+    <string name="fader_balance">Фейдър &amp; Баланс</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Сила на звука според скоростта)</string>
+    <string name="enable_gala">Включване на GALA</string>
+    <string name="enable_gala_feature">Включване на функция GALA</string>
+    <string name="gala_global">Глобално</string>
+    <string name="vol_step_every">Стъпка на звука на всеки:</string>
+    <string name="gps_speed_label">GPS СКОРОСТ</string>
+    <string name="current_gps_speed">Текуща GPS скорост:</string>
+    <string name="vol_offset_label">ИЗМЕСТВАНЕ ЗВУК</string>
+    <string name="applied_vol_offset">Приложено изместване:</string>
+    <string name="standstill_threshold">Праг на покой</string>
+    <string name="standstill_speed">Скорост на покой:</string>
+    <string name="max_speed_limit">Ограничение на макс. скорост</string>
+    <string name="max_speed_label">Максимална скорост:</string>
+    <string name="max_vol_adj">Макс. корекция на звука</string>
+    <string name="max_adjustment">Максимална корекция:</string>
+    <string name="sensitivity_settings">Настройки на чувствителност</string>
+    <string name="simulation_debug">Симулация &amp; Диагностика</string>
+    <string name="simulate_vehicle_speed">Симулиране на скорост</string>
+    <string name="simulate_speed">Симулирана скорост:</string>
+    <string name="gala_fade_delay">Скорост на преход (закъснение на стъпка):</string>
+    <string name="gala_hold_timer">Таймер за задържане на прага:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Прилагане</string>
+    <string name="btn_reapply">Повторно при нулиране</string>
+    <string name="value_default">Не е зададено</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Отказ</string>
+    <string name="none">Няма</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Настройките са приложени</string>
+    <string name="toast_exists">Вече съществува</string>
+    <string name="toast_cannot_delete_last">Не може да се изтрие последният профил</string>
+    <string name="toast_exported">Експортирано</string>
+    <string name="toast_imported">Импортирано</string>
+    <string name="toast_sub_comp_limit">Суб комп. ограничена до 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Поддържане на wDSP активен</string>
+    <string name="battery_dialog_message">За надеждна работа във фонов режим изключете wDSP от оптимизацията на батерията.</string>
+    <string name="btn_allow">Разрешаване</string>
+    <string name="btn_later">По-късно</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Хардуер: Откриване…</string>
+    <string name="hw_demo_mode">Няма връзка с MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Преименуване</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Автоматизация: %1$s</string>
+    <string name="active_player_fmt">Активен плейър: %1$s</string>
+    <string name="current_associations">Текущи асоциации:
+</string>
+    <string name="global_default_fmt">
+По подразбиране глобално: %1$s</string>
+    <string name="btn_assign">Задаване</string>
+    <string name="btn_set_default">По подразбиране</string>
+    <string name="btn_unassign">Премахване</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Профил 1</string>
+    <string name="default_preset_name_hint">Профил</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Изисква се разрешение за местоположение за GALA.</string>
+    <string name="toast_import_failed">Неуспешен импорт: %1$s</string>
+    <string name="error">Грешка</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Закъснения</string>
+    <string name="OTtab">Други</string>
+    <string name="GLtab">Скорост</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Мощност усилвател:</string>
+    <string name="hint_sub_freq">Чест.</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Визуализатор в статус бара</string>
+    <string name="status_bar_visualizer_enable">Визуализатор в статус бара</string>
+    <string name="status_bar_visualizer_width">Ширина</string>
+    <string name="status_bar_visualizer_offset_x">Позиция</string>
+    <string name="status_bar_visualizer_theme">Тема</string>
+    <string name="status_bar_visualizer_hue">HUE изместване / Цвят</string>
+    <string name="status_bar_visualizer_permission_needed">Изисква се разрешение за наслагване</string>
+    <string name="status_bar_theme_spectrum">Спектър (HUE ротация)</string>
+    <string name="status_bar_theme_solid_hue">Плътен цвят от HUE</string>
+    <string name="status_bar_theme_auto_day_night">Авто Ден/Нощ (Бяло/Черно)</string>
+    <string name="status_bar_theme_eq_groups">EQ групи (HUE ротация)</string>
+    <string name="status_bar_theme_monochrome_white">Винаги бяло</string>
+    <string name="status_bar_theme_monochrome_black">Винаги черно</string>
+    <string name="status_bar_theme_fire">Огън</string>
+    <string name="status_bar_theme_neon">Неон</string>
+
+</resources>

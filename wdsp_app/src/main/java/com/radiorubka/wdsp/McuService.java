@@ -130,6 +130,8 @@ public class McuService extends Service implements LocationListener {
 
     private String galavoltype_last = VolumeHelper.getActivePlayerType();
 
+    private StatusBarVisualizerManager statusBarManager;
+
     private int media_standstill = -1;
     private int btcall_standstill = -1;
     private int aux_standstill = -1;
@@ -149,7 +151,10 @@ public class McuService extends Service implements LocationListener {
     private final SharedPreferences.OnSharedPreferenceChangeListener prefListener = (p, key) -> {
         if (key == null) return;
         backgroundHandler.post(() -> {
-            if (key.equals(PREF_PLAYER_MAP)) {
+            if (key.startsWith("sb_vis_")) {
+                if (statusBarManager != null) statusBarManager.onPreferenceChanged(key);
+            }
+            else if (key.equals(PREF_PLAYER_MAP)) {
                 loadPlayerMap();
             }
             else if (key.equals(PREF_LAST_SELECTED)) {
@@ -208,6 +213,10 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                    if (statusBarManager != null) {
+                        statusBarManager.setScreenState(true);
+                        statusBarManager.evaluateVisibility();
+                    }
                     applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
@@ -215,6 +224,9 @@ public class McuService extends Service implements LocationListener {
                     }, 3000);
                 }
                 else if ("com.qf.action.ACC_OFF".equals(action)) {
+                    if (statusBarManager != null) {
+                        statusBarManager.setScreenState(false);
+                    }
                     stopPolling();
                     stopGps();
                 }
@@ -276,6 +288,9 @@ public class McuService extends Service implements LocationListener {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+
+        statusBarManager = StatusBarVisualizerManager.getInstance(this);
+        statusBarManager.evaluateVisibility();
 
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
@@ -657,13 +672,22 @@ public class McuService extends Service implements LocationListener {
 
     private void checkPlayer() {
         String currentPlayer = getSystemProperty();
+        String activeType = VolumeHelper.getActivePlayerType();
+
+        // Audio gating for status bar visualizer: Channel 2 (Radio) vs Channel 4 (Media)
+        boolean isRadio = "radio_type".equals(activeType) || (currentPlayer != null && currentPlayer.toLowerCase().contains("radio"));
+        boolean isMuted = (VolumeHelper.getVolume() <= 0 || VolumeHelper.isHardwareMuted());
+        int channel = isRadio ? 2 : 4;
+        if (statusBarManager != null) {
+            statusBarManager.setAudioGating(channel, isMuted);
+        }
 
         // Process the naming convention for the "unknown" preset.
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }
         // If btcall_type, set the Player to be "Call".
-        if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
+        if (activeType.equals("btcall_type")) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
         }
@@ -1049,6 +1073,9 @@ public class McuService extends Service implements LocationListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (statusBarManager != null) {
+            statusBarManager.removeOverlay();
+        }
         backgroundHandler.post(() -> {
             if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(prefListener);
             stopPolling();

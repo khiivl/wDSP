@@ -1604,6 +1604,201 @@
                             android:layout_marginTop="16dp"
                             android:layout_gravity="center_horizontal" />
 
+                        <!-- Status Bar Visualizer Block -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="16dp">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:alpha="0.2"
+                                android:background="@color/text_theme_aware_3"
+                                android:layout_marginBottom="12dp" />
+
+                            <TextView
+                                style="@style/TextHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp"
+                                android:text="@string/status_bar_visualizer_title" />
+
+                            <!-- Enable Switch -->
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_status_bar_vis"
+                                style="@style/TextLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/status_bar_visualizer_enable"
+                                android:layout_marginBottom="8dp" />
+
+                            <!-- Width Slider -->
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp">
+
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/status_bar_visualizer_width"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <TextView
+                                    android:id="@+id/tv_sb_width_val"
+                                    style="@style/TextValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/val_percent_default"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_sb_width"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:layout_marginTop="@dimen/margin_tiny"
+                                    android:valueFrom="10"
+                                    android:valueTo="100"
+                                    android:stepSize="1"
+                                    android:value="40"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    app:labelBehavior="gone"
+                                    app:layout_constraintTop_toBottomOf="@id/tv_sb_width_val" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <!-- Position X Slider -->
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp">
+
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/status_bar_visualizer_offset_x"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <TextView
+                                    android:id="@+id/tv_sb_pos_val"
+                                    style="@style/TextValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/val_pos_default"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_sb_pos"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:layout_marginTop="@dimen/margin_tiny"
+                                    android:valueFrom="0"
+                                    android:valueTo="100"
+                                    android:stepSize="1"
+                                    android:value="50"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    app:labelBehavior="gone"
+                                    app:layout_constraintTop_toBottomOf="@id/tv_sb_pos_val" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <!-- Theme Spinner -->
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layout_spinner_sb_theme"
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/margin_tiny"
+                                android:layout_marginBottom="8dp"
+                                android:hint="@string/status_bar_visualizer_theme"
+                                android:textColorHint="@color/text_theme_aware_2"
+                                app:boxStrokeColor="@color/cyan_custom"
+                                app:hintTextColor="@color/cyan_custom"
+                                app:endIconTint="@color/cyan_custom">
+
+                                <AutoCompleteTextView
+                                    android:id="@+id/spinner_sb_theme"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="none"
+                                    android:paddingVertical="10dp"
+                                    android:textColor="@color/cyan_custom"
+                                    android:focusable="false"
+                                    tools:ignore="LabelFor" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <!-- HUE Shift Slider -->
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp">
+
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/status_bar_visualizer_hue"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <TextView
+                                    android:id="@+id/tv_sb_hue_val"
+                                    style="@style/TextValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/val_degrees_default"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_sb_hue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:layout_marginTop="@dimen/margin_tiny"
+                                    android:valueFrom="0"
+                                    android:valueTo="360"
+                                    android:stepSize="5"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    app:labelBehavior="gone"
+                                    app:layout_constraintTop_toBottomOf="@id/tv_sb_hue_val" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        </LinearLayout>
+
                     </LinearLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>

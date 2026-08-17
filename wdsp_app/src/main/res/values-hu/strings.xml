@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Előbeállítás</string>
+    <string name="btn_add">Másolás</string>
+    <string name="btn_rename">Átnevezés</string>
+    <string name="btn_delete">Törlés</string>
+    <string name="btn_export">Exportálás</string>
+    <string name="btn_import">Importálás</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Mélynyomó:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Fiziológiai hangerő kompenzációs görbe (Loudness)</string>
+    <string name="enable_loudness">Loudness bekapcsolása</string>
+    <string name="trim_highs">Magashang vágás</string>
+    <string name="sub_tweaking">Mélynyomó finomhangolás</string>
+    <string name="fm_visualizer_label">Valós idejű kompenzációs előnézet</string>
+    <string name="lbl_volume">Hangerő:</string>
+    <string name="lbl_sub_offset">Mélynyomó eltolás:</string>
+    <string name="lbl_lower_sub_by">Mélynyomó csökkentése:</string>
+    <string name="lbl_calibration_point">Kalibrációs pont (~80 dB):</string>
+    <string name="lbl_correction_strength">Korrekció erőssége:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Hangszóró időkésleltetés (Delays)</string>
+    <string name="spatial_correction">Térbeli korrekció</string>
+    <string name="surround_mode">Térhangzás mód</string>
+    <string name="front_left">Bal első</string>
+    <string name="front_right">Jobb első</string>
+    <string name="rear_left">Bal hátsó</string>
+    <string name="rear_right">Jobb hátsó</string>
+    <string name="subwoofer">Mélynyomó</string>
+    <string name="rear_fill_enhancement">Hátsó térkitöltés (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Beépített Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Hangszóró mélyhang vezérlés</string>
+    <string name="front_speaker_bass">Első mélyhang</string>
+    <string name="rear_speaker_bass">Hátsó mélyhang</string>
+    <string name="lbl_filter">Szűrő</string>
+    <string name="lbl_boost">Kiemelés</string>
+    <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq_boost">Kiemelési frekv</string>
+    <string name="lbl_center">Közép</string>
+    <string name="fader_balance">Fader &amp; Balansz</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Sebességfüggő hangerő)</string>
+    <string name="enable_gala">GALA bekapcsolása</string>
+    <string name="enable_gala_feature">GALA funkció engedélyezése</string>
+    <string name="gala_global">Globális</string>
+    <string name="vol_step_every">Hangerőlépcső minden:</string>
+    <string name="gps_speed_label">GPS SEBESSÉG</string>
+    <string name="current_gps_speed">Jelenlegi GPS sebesség:</string>
+    <string name="vol_offset_label">HANGERŐ ELTOLÁS</string>
+    <string name="applied_vol_offset">Alkalmazott eltolás:</string>
+    <string name="standstill_threshold">Álló helyzeti küszöb</string>
+    <string name="standstill_speed">Álló helyzeti sebesség:</string>
+    <string name="max_speed_limit">Maximális sebességkorlát</string>
+    <string name="max_speed_label">Maximális sebesség:</string>
+    <string name="max_vol_adj">Max. hangerőbeállítás</string>
+    <string name="max_adjustment">Maximális korrekció:</string>
+    <string name="sensitivity_settings">Érzékenységi beállítások</string>
+    <string name="simulation_debug">Szimuláció &amp; Hibakeresés</string>
+    <string name="simulate_vehicle_speed">Sebesség szimulálása</string>
+    <string name="simulate_speed">Szimulált sebesség:</string>
+    <string name="gala_fade_delay">Átmeneti sebesség (késleltetés/lépés):</string>
+    <string name="gala_hold_timer">Küszöb megtartási időzítő:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Alkalmaz</string>
+    <string name="btn_reapply">Újraalkalmazás visszaállításkor</string>
+    <string name="value_default">Nincs megadva</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Mégse</string>
+    <string name="none">Nincs</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Beállítások alkalmazva</string>
+    <string name="toast_exists">Már létezik</string>
+    <string name="toast_cannot_delete_last">Az utolsó előbeállítás nem törölhető</string>
+    <string name="toast_exported">Exportálva</string>
+    <string name="toast_imported">Importálva</string>
+    <string name="toast_sub_comp_limit">Mélynyomó komp. 80 Hz-re korlátozva</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">wDSP futtatása a háttérben</string>
+    <string name="battery_dialog_message">A dinamikus hangszínszabályzó megbízható működéséhez fel kell menteni a wDSP-t az akkumulátor-optimalizálás alól.</string>
+    <string name="btn_allow">Engedélyezés</string>
+    <string name="btn_later">Később</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardver: Észlelés…</string>
+    <string name="hw_demo_mode">Nem lehet kapcsolódni a MCU_SERVICE-hez</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Átnevezés</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatizáció: %1$s</string>
+    <string name="active_player_fmt">Aktív lejátszó: %1$s</string>
+    <string name="current_associations">Jelenlegi hozzárendelések:
+</string>
+    <string name="global_default_fmt">
+Globális alapértelmezett: %1$s</string>
+    <string name="btn_assign">Hozzárendelés</string>
+    <string name="btn_set_default">Alapértelmezett</string>
+    <string name="btn_unassign">Hozzárendelés törlése</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Előbeállítás 1</string>
+    <string name="default_preset_name_hint">Előbeállítás</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Helymeghatározási engedély szükséges a GALA-hoz.</string>
+    <string name="toast_import_failed">Sikertelen importálás: %1$s</string>
+    <string name="error">Hiba</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Késleltetés</string>
+    <string name="OTtab">Egyéb</string>
+    <string name="GLtab">Sebesség</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Erősítő teljesítmény:</string>
+    <string name="hint_sub_freq">Frekv</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Állapotsor vizualizáció</string>
+    <string name="status_bar_visualizer_enable">Állapotsor vizualizáció</string>
+    <string name="status_bar_visualizer_width">Szélesség</string>
+    <string name="status_bar_visualizer_offset_x">Pozíció</string>
+    <string name="status_bar_visualizer_theme">Téma</string>
+    <string name="status_bar_visualizer_hue">HUE eltolás / Szín</string>
+    <string name="status_bar_visualizer_permission_needed">Átfedési engedély szükséges</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE forgatás)</string>
+    <string name="status_bar_theme_solid_hue">Egyszínű HUE-ból</string>
+    <string name="status_bar_theme_auto_day_night">Auto Nappal/Éjjel (Fehér/Fekete)</string>
+    <string name="status_bar_theme_eq_groups">EQ csoportok (HUE forgatás)</string>
+    <string name="status_bar_theme_monochrome_white">Mindig fehér</string>
+    <string name="status_bar_theme_monochrome_black">Mindig fekete</string>
+    <string name="status_bar_theme_fire">Tűz</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+</resources>

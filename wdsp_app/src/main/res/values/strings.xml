@@ -134,6 +134,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Location permission is required for GALA features.</string>
+    <string name="toast_import_failed">Import failed: %1$s</string>
+    <string name="error">Error</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -144,5 +153,23 @@
 
     <!-- PowerVolume -->
     <string name="lbl_pwr">Amp Power:</string>
+    <string name="hint_sub_freq">Frequency</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Status Bar Visualizer</string>
+    <string name="status_bar_visualizer_enable">Status Bar Visualizer</string>
+    <string name="status_bar_visualizer_width">Width</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Theme</string>
+    <string name="status_bar_visualizer_hue">HUE Shift / Color</string>
+    <string name="status_bar_visualizer_permission_needed">Overlay permission required to show in status bar</string>
+    <string name="status_bar_theme_spectrum">Spectrum (HUE Rotation)</string>
+    <string name="status_bar_theme_solid_hue">Custom Solid Color (HUE)</string>
+    <string name="status_bar_theme_auto_day_night">Auto Day/Night (White/Black)</string>
+    <string name="status_bar_theme_eq_groups">EQ Groups (HUE Rotation)</string>
+    <string name="status_bar_theme_monochrome_white">Always White</string>
+    <string name="status_bar_theme_monochrome_black">Always Black</string>
+    <string name="status_bar_theme_fire">Fire</string>
+    <string name="status_bar_theme_neon">Neon</string>
 
 </resources>

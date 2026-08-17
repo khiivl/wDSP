@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Αυτόματο Προφίλ</string>
+    <string name="btn_add">Αντιγραφή</string>
+    <string name="btn_rename">Μετονομασία</string>
+    <string name="btn_delete">Διαγραφή</string>
+    <string name="btn_export">Εξαγωγή</string>
+    <string name="btn_import">Εισαγωγή</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Sub:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Καμπύλη αντιστάθμισης Loudness</string>
+    <string name="enable_loudness">Ενεργοποίηση Loudness</string>
+    <string name="trim_highs">Περικοπή πρίμων</string>
+    <string name="sub_tweaking">Ρύθμιση Subwoofer</string>
+    <string name="fm_visualizer_label">Προεπισκόπηση αντιστάθμισης σε πραγματικό χρόνο</string>
+    <string name="lbl_volume">Ένταση:</string>
+    <string name="lbl_sub_offset">Μετατόπιση Sub:</string>
+    <string name="lbl_lower_sub_by">Μείωση sub κατά:</string>
+    <string name="lbl_calibration_point">Σημείο βαθμονόμησης (~80 dB):</string>
+    <string name="lbl_correction_strength">Ισχύς διόρθωσης:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Χρονική ευθυγράμμιση ηχείων (Καθυστερήσεις)</string>
+    <string name="spatial_correction">Χωρική διόρθωση</string>
+    <string name="surround_mode">Λειτουργία Surround</string>
+    <string name="front_left">Εμπρός Αριστερά</string>
+    <string name="front_right">Εμπρός Δεξιά</string>
+    <string name="rear_left">Πίσω Αριστερά</string>
+    <string name="rear_right">Πίσω Δεξιά</string>
+    <string name="subwoofer">Subwoofer</string>
+    <string name="rear_fill_enhancement">Ενίσχυση πίσω ηχείων (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Ενσωματωμένο Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Έλεγχος μπάσων ηχείων</string>
+    <string name="front_speaker_bass">Μπάσα εμπρός</string>
+    <string name="rear_speaker_bass">Μπάσα πίσω</string>
+    <string name="lbl_filter">Φίλτρο</string>
+    <string name="lbl_boost">Ενίσχυση</string>
+    <string name="lbl_freq">Συχν.</string>
+    <string name="lbl_freq_boost">Συχν. ενίσχυσης</string>
+    <string name="lbl_center">Κέντρο</string>
+    <string name="fader_balance">Fader &amp; Balance</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Ένταση βάσει ταχύτητας)</string>
+    <string name="enable_gala">Ενεργοποίηση GALA</string>
+    <string name="enable_gala_feature">Ενεργοποίηση λειτουργίας GALA</string>
+    <string name="gala_global">Γενικό</string>
+    <string name="vol_step_every">Βήμα έντασης ανά:</string>
+    <string name="gps_speed_label">ΤΑΧΥΤΗΤΑ GPS</string>
+    <string name="current_gps_speed">Τρέχουσα ταχύτητα GPS:</string>
+    <string name="vol_offset_label">ΜΕΤΑΤΟΠΙΣΗ ΕΝΤΑΣΗΣ</string>
+    <string name="applied_vol_offset">Εφαρμοσμένη μετατόπιση:</string>
+    <string name="standstill_threshold">Όριο στάσης</string>
+    <string name="standstill_speed">Ταχύτητα στάσης:</string>
+    <string name="max_speed_limit">Όριο μέγιστης ταχύτητας</string>
+    <string name="max_speed_label">Μέγιστη ταχύτητα:</string>
+    <string name="max_vol_adj">Μέγιστη ρύθμιση έντασης</string>
+    <string name="max_adjustment">Μέγιστη προσαρμογή:</string>
+    <string name="sensitivity_settings">Ρυθμίσεις ευαισθησίας</string>
+    <string name="simulation_debug">Προσομοίωση &amp; Αποσφαλμάτωση</string>
+    <string name="simulate_vehicle_speed">Προσομοίωση ταχύτητας</string>
+    <string name="simulate_speed">Προσομοιωμένη ταχύτητα:</string>
+    <string name="gala_fade_delay">Ταχύτητα μετάβασης (καθυστέρηση ανά βήμα):</string>
+    <string name="gala_hold_timer">Χρονόμετρο διατήρησης ορίου:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Εφαρμογή</string>
+    <string name="btn_reapply">Επανεφαρμογή σε επαναφορά</string>
+    <string name="value_default">Δεν ορίστηκε</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Άκυρο</string>
+    <string name="none">Κανένα</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Οι ρυθμίσεις εφαρμόστηκαν</string>
+    <string name="toast_exists">Υπάρχει ήδη</string>
+    <string name="toast_cannot_delete_last">Δεν είναι δυνατή η διαγραφή του τελευταίου προφίλ</string>
+    <string name="toast_exported">Εξήχθη</string>
+    <string name="toast_imported">Εισήχθη</string>
+    <string name="toast_sub_comp_limit">Η αντιστάθμιση sub περιορίζεται στα 80 Hz</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">Διατήρηση wDSP σε λειτουργία</string>
+    <string name="battery_dialog_message">Για αξιόπιστη λειτουργία στο παρασκήνιο, εξαιρέστε το wDSP από τη βελτιστοποίηση μπαταρίας.</string>
+    <string name="btn_allow">Επιτρέπεται</string>
+    <string name="btn_later">Αργότερα</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Υλικό: Εντοπισμός…</string>
+    <string name="hw_demo_mode">Αδυναμία σύνδεσης με το MCU_SERVICE</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Μετονομασία</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Αυτοματισμός: %1$s</string>
+    <string name="active_player_fmt">Ενεργός αναπαραγωγέας: %1$s</string>
+    <string name="current_associations">Τρέχουσες αντιστοιχίσεις:
+</string>
+    <string name="global_default_fmt">
+Καθολική προεπιλογή: %1$s</string>
+    <string name="btn_assign">Ανάθεση</string>
+    <string name="btn_set_default">Ορισμός προεπιλογής</string>
+    <string name="btn_unassign">Κατάργηση ανάθεσης</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Προφίλ 1</string>
+    <string name="default_preset_name_hint">Προφίλ</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Απαιτείται άδεια τοποθεσίας για το GALA.</string>
+    <string name="toast_import_failed">Αποτυχία εισαγωγής: %1$s</string>
+    <string name="error">Σφάλμα</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Καθυστερήσεις</string>
+    <string name="OTtab">Άλλα</string>
+    <string name="GLtab">Ταχύτητα</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Ισχύς ενισχυτή:</string>
+    <string name="hint_sub_freq">Συχν.</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Οπτικοποιητής γραμμής κατάστασης</string>
+    <string name="status_bar_visualizer_enable">Οπτικοποιητής γραμμής κατάστασης</string>
+    <string name="status_bar_visualizer_width">Πλάτος</string>
+    <string name="status_bar_visualizer_offset_x">Θέση</string>
+    <string name="status_bar_visualizer_theme">Θέμα</string>
+    <string name="status_bar_visualizer_hue">Μετατόπιση HUE / Χρώμα</string>
+    <string name="status_bar_visualizer_permission_needed">Απαιτείται άδεια επικάλυψης</string>
+    <string name="status_bar_theme_spectrum">Φάσμα (Περιστροφή HUE)</string>
+    <string name="status_bar_theme_solid_hue">Μονόχρωμο από HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Ημέρα/Νύχτα (Λευκό/Μαύρο)</string>
+    <string name="status_bar_theme_eq_groups">Ομάδες EQ (Περιστροφή HUE)</string>
+    <string name="status_bar_theme_monochrome_white">Πάντα λευκό</string>
+    <string name="status_bar_theme_monochrome_black">Πάντα μαύρο</string>
+    <string name="status_bar_theme_fire">Φωτιά</string>
+    <string name="status_bar_theme_neon">Νέον</string>
+
+</resources>

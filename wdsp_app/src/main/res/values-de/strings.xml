@@ -124,6 +124,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Standortberechtigung ist für GALA erforderlich.</string>
+    <string name="toast_import_failed">Import fehlgeschlagen: %1$s</string>
+    <string name="error">Fehler</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -134,4 +143,21 @@
     <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
     <string name="hint_sub_freq">Freq</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statusleisten-Visualisierer</string>
+    <string name="status_bar_visualizer_enable">Statusleisten-Visualisierer</string>
+    <string name="status_bar_visualizer_width">Breite</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Design</string>
+    <string name="status_bar_visualizer_hue">HUE-Verschiebung / Farbe</string>
+    <string name="status_bar_visualizer_permission_needed">Überlagerungsberechtigung erforderlich</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE-Drehung)</string>
+    <string name="status_bar_theme_solid_hue">Feste Farbe aus HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Tag/Nacht (Weiß/Schwarz)</string>
+    <string name="status_bar_theme_eq_groups">EQ-Gruppen (HUE-Drehung)</string>
+    <string name="status_bar_theme_monochrome_white">Immer Weiß</string>
+    <string name="status_bar_theme_monochrome_black">Immer Schwarz</string>
+    <string name="status_bar_theme_fire">Feuer</string>
+    <string name="status_bar_theme_neon">Neon</string>
 </resources>

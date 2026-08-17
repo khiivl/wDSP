@@ -125,6 +125,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Platsbehörighet krävs för GALA.</string>
+    <string name="toast_import_failed">Import misslyckades: %1$s</string>
+    <string name="error">Fel</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -134,4 +143,20 @@
     <string name="GLtab">Fart</string>
     <string name="lbl_pwr">" Förstärkar:"</string>
 
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statusfältsvisualiserare</string>
+    <string name="status_bar_visualizer_enable">Statusfältsvisualiserare</string>
+    <string name="status_bar_visualizer_width">Bredd</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Tema</string>
+    <string name="status_bar_visualizer_hue">HUE-förskjutning / Färg</string>
+    <string name="status_bar_visualizer_permission_needed">Överlagringsbehörighet krävs</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE-rotation)</string>
+    <string name="status_bar_theme_solid_hue">Enfärgad från HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Dag/Natt (Vit/Svart)</string>
+    <string name="status_bar_theme_eq_groups">EQ-grupper (HUE-rotation)</string>
+    <string name="status_bar_theme_monochrome_white">Alltid vit</string>
+    <string name="status_bar_theme_monochrome_black">Alltid svart</string>
+    <string name="status_bar_theme_fire">Eld</string>
+    <string name="status_bar_theme_neon">Neon</string>
 </resources>
