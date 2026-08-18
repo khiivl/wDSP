@@ -156,7 +156,6 @@ public class StatusBarVisualizerManager {
     }
 
     public void onPreferenceChanged(String key) {
-        if (key == null) return;
         mainHandler.post(() -> {
             loadPreferences();
             if (visualizerView != null) {

@@ -246,6 +246,18 @@ public class McuService extends Service implements LocationListener {
                 else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
                     adjustSubGain(-1);
                 }
+                else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
+                    Log.i(TAG, "SETTINGS_RESTORED received, reloading all prefs and syncing DSP");
+                    prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    loadPlayerMap();
+                    galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+                    galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+                    syncPreset(false);
+                    if (statusBarManager != null) {
+                        statusBarManager.loadPreferences();
+                        statusBarManager.evaluateVisibility();
+                    }
+                }
             });
         }
     };
@@ -339,6 +351,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
+        controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
         return controlFilter;
     }
 

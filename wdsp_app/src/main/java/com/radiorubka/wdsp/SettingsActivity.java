@@ -36,6 +36,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -46,6 +47,9 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 import com.radiorubka.wdsp.ui.views.HueWheelView;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -119,6 +123,29 @@ public class SettingsActivity extends AppCompatActivity {
         bindAccordion();
         loadSettings();
         applyTheme();
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent == null || intent.getAction() == null) return;
+        String action = intent.getAction();
+        if ("com.radiorubka.wdsp.ACTION_BACKUP".equals(action)) {
+            String path = intent.getStringExtra("path");
+            if (path != null) {
+                backupToFile(new File(path));
+            }
+        } else if ("com.radiorubka.wdsp.ACTION_RESTORE".equals(action)) {
+            String path = intent.getStringExtra("path");
+            if (path != null) {
+                restoreFromFile(new File(path));
+            }
+        }
     }
 
     @Override
@@ -789,24 +816,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void backupAllSettings(Uri uri) {
         try (OutputStream os = getContentResolver().openOutputStream(uri)) {
             if (os == null) return;
-            Map<String, Object> backupRoot = new HashMap<>();
-            backupRoot.put("version", 1);
-            backupRoot.put("app", "wDSP");
-            backupRoot.put("timestamp", System.currentTimeMillis());
-
-            // 1. Default preferences (Theme, wallpaper, statusbar, eq vis)
-            SharedPreferences defPrefs = ThemeManager.prefs(this);
-            backupRoot.put("default_preferences", defPrefs.getAll());
-
-            // 2. EqPresets preferences (EQ, Presets, GALA, Subwoofer, Fader, Delays)
-            SharedPreferences eqPrefs = getSharedPreferences("EqPresets", MODE_PRIVATE);
-            backupRoot.put("eq_preferences", eqPrefs.getAll());
-
-            // Write JSON
-            String json = new GsonBuilder().setPrettyPrinting().create().toJson(backupRoot);
-            os.write(json.getBytes(StandardCharsets.UTF_8));
-            os.flush();
-
+            backupToStream(os);
             Toast.makeText(this, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "Backup failed", e);
@@ -814,49 +824,176 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    public void backupToFile(File file) {
+        try {
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                backupToStream(fos);
+                Log.i(TAG, "Successfully backed up settings to " + file.getAbsolutePath());
+                Toast.makeText(this, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "backupToFile failed", e);
+            Toast.makeText(this, getString(R.string.toast_backup_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void backupToStream(OutputStream os) throws Exception {
+        JsonObject backupRoot = new JsonObject();
+        backupRoot.addProperty("version", 2);
+        backupRoot.addProperty("app", "wDSP");
+        backupRoot.addProperty("timestamp", System.currentTimeMillis());
+
+        // 1. Default preferences (Theme, wallpaper, statusbar, eq vis)
+        SharedPreferences defPrefs = ThemeManager.prefs(this);
+        backupRoot.add("default_preferences", serializePrefsToJson(defPrefs.getAll()));
+
+        // 2. EqPresets preferences (EQ, Presets, GALA, Subwoofer, Fader, Delays)
+        SharedPreferences eqPrefs = getSharedPreferences("EqPresets", MODE_PRIVATE);
+        backupRoot.add("eq_preferences", serializePrefsToJson(eqPrefs.getAll()));
+
+        // Write JSON
+        String json = new GsonBuilder().setPrettyPrinting().create().toJson(backupRoot);
+        os.write(json.getBytes(StandardCharsets.UTF_8));
+        os.flush();
+    }
+
+    private JsonObject serializePrefsToJson(Map<String, ?> map) {
+        JsonObject obj = new JsonObject();
+        if (map == null) return obj;
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (val == null) continue;
+            JsonObject item = new JsonObject();
+            if (val instanceof Boolean) {
+                item.addProperty("t", "b");
+                item.addProperty("v", (Boolean) val);
+            } else if (val instanceof Integer) {
+                item.addProperty("t", "i");
+                item.addProperty("v", (Integer) val);
+            } else if (val instanceof Long) {
+                item.addProperty("t", "l");
+                item.addProperty("v", (Long) val);
+            } else if (val instanceof Float) {
+                item.addProperty("t", "f");
+                item.addProperty("v", (Float) val);
+            } else if (val instanceof String) {
+                item.addProperty("t", "s");
+                item.addProperty("v", (String) val);
+            } else if (val instanceof Set) {
+                item.addProperty("t", "ss");
+                JsonArray arr = new JsonArray();
+                for (Object s : (Set<?>) val) {
+                    if (s != null) arr.add(s.toString());
+                }
+                item.add("v", arr);
+            }
+            obj.add(key, item);
+        }
+        return obj;
+    }
+
     private void restoreAllSettings(Uri uri) {
-        try (InputStream is = getContentResolver().openInputStream(uri);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            if (root == null || !root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
-                Toast.makeText(this, getString(R.string.toast_restore_failed, "Invalid backup"), Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            // 1. Restore Default preferences
-            if (root.has("default_preferences") && root.get("default_preferences").isJsonObject()) {
-                SharedPreferences.Editor defEditor = ThemeManager.prefs(this).edit();
-                restoreJsonToPrefs(root.getAsJsonObject("default_preferences"), defEditor);
-                defEditor.apply();
-            }
-
-            // 2. Restore Eq preferences
-            if (root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
-                SharedPreferences.Editor eqEditor = getSharedPreferences("EqPresets", MODE_PRIVATE).edit();
-                restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
-                eqEditor.apply();
-            }
-
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is == null) return;
+            restoreFromStream(is);
             Toast.makeText(this, R.string.toast_restore_success, Toast.LENGTH_SHORT).show();
-
-            // 3. Notify services & managers
-            StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
-            sendBroadcast(new Intent("com.radiorubka.wdsp.SETTINGS_RESTORED").setPackage(getPackageName()));
-
-            // 4. Reload activity settings
-            loadSettings();
-            applyTheme();
         } catch (Exception e) {
             Log.e(TAG, "Restore failed", e);
             Toast.makeText(this, getString(R.string.toast_restore_failed, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 
+    public void restoreFromFile(File file) {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            restoreFromStream(fis);
+            Log.i(TAG, "Successfully restored settings from " + file.getAbsolutePath());
+            Toast.makeText(this, R.string.toast_restore_success, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "restoreFromFile failed", e);
+            Toast.makeText(this, getString(R.string.toast_restore_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void restoreFromStream(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+        if (root == null || !root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
+            throw new IllegalArgumentException("Invalid wDSP backup format");
+        }
+
+        // 1. Restore Default preferences
+        if (root.has("default_preferences") && root.get("default_preferences").isJsonObject()) {
+            SharedPreferences.Editor defEditor = ThemeManager.prefs(this).edit();
+            defEditor.clear();
+            restoreJsonToPrefs(root.getAsJsonObject("default_preferences"), defEditor);
+            defEditor.apply();
+        }
+
+        // 2. Restore Eq preferences
+        if (root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
+            SharedPreferences.Editor eqEditor = getSharedPreferences("EqPresets", MODE_PRIVATE).edit();
+            eqEditor.clear();
+            restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
+            eqEditor.apply();
+        }
+
+        // 3. Notify status bar manager and all activities/services
+        StatusBarVisualizerManager.getInstance(this).loadPreferences();
+        StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
+        sendBroadcast(new Intent("com.radiorubka.wdsp.SETTINGS_RESTORED").setPackage(getPackageName()));
+
+        // 4. Reload activity settings & theme
+        loadSettings();
+        applyTheme();
+    }
+
     private void restoreJsonToPrefs(JsonObject jsonObj, SharedPreferences.Editor editor) {
         for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
             String key = entry.getKey();
             JsonElement elem = entry.getValue();
+            if (elem == null || elem.isJsonNull()) continue;
+
+            // V2 Format with explicit type tag "t" and value "v"
+            if (elem.isJsonObject()) {
+                JsonObject item = elem.getAsJsonObject();
+                if (item.has("t") && item.has("v")) {
+                    String type = item.get("t").getAsString();
+                    JsonElement val = item.get("v");
+                    switch (type) {
+                        case "b":
+                            editor.putBoolean(key, val.getAsBoolean());
+                            break;
+                        case "i":
+                            editor.putInt(key, val.getAsInt());
+                            break;
+                        case "l":
+                            editor.putLong(key, val.getAsLong());
+                            break;
+                        case "f":
+                            editor.putFloat(key, val.getAsFloat());
+                            break;
+                        case "s":
+                            editor.putString(key, val.getAsString());
+                            break;
+                        case "ss":
+                            Set<String> set = new HashSet<>();
+                            if (val.isJsonArray()) {
+                                for (JsonElement se : val.getAsJsonArray()) {
+                                    set.add(se.getAsString());
+                                }
+                            }
+                            editor.putStringSet(key, set);
+                            break;
+                    }
+                    continue;
+                }
+            }
+
+            // V1 Legacy Fallback
             if (elem.isJsonPrimitive()) {
                 JsonPrimitive prim = elem.getAsJsonPrimitive();
                 if (prim.isBoolean()) {
@@ -864,7 +1001,9 @@ public class SettingsActivity extends AppCompatActivity {
                 } else if (prim.isNumber()) {
                     Number num = prim.getAsNumber();
                     double d = num.doubleValue();
-                    if (d == Math.rint(d)) {
+                    if (isFloatKey(key)) {
+                        editor.putFloat(key, (float) d);
+                    } else if (d == Math.rint(d)) {
                         editor.putInt(key, (int) d);
                     } else {
                         editor.putFloat(key, (float) d);
@@ -880,6 +1019,11 @@ public class SettingsActivity extends AppCompatActivity {
                 editor.putStringSet(key, set);
             }
         }
+    }
+
+    private static boolean isFloatKey(String key) {
+        return StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F.equals(key)
+                || StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F.equals(key);
     }
 
     private void applyTheme() {

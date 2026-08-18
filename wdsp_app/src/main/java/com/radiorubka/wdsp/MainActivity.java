@@ -208,6 +208,16 @@ public class MainActivity extends AppCompatActivity {
                     isUpdatingUi = false;
                 }
             }
+            else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
+                Log.i("MainActivity", "SETTINGS_RESTORED received, reloading all UI components");
+                applyAppTheme();
+                setupPresets();
+                refreshAllUiValues();
+                SelectTab();
+                if (spectrumAnalyzer != null) {
+                    spectrumAnalyzer.invalidate();
+                }
+            }
         }
     };
 
@@ -752,6 +762,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction("com.radiorubka.wdsp.VOLUME_CHANGED");
         filter.addAction("com.radiorubka.wdsp.GALA_UPDATE");
         filter.addAction("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
+        filter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
 
         registerReceiver(serviceReceiver, filter);
     }
