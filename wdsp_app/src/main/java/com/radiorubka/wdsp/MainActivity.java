@@ -423,6 +423,7 @@ public class MainActivity extends AppCompatActivity {
                 loadPreset(newName);
             }
         }
+        updateVisualizer();
         applyAppTheme();
         checkAndStartSpectrumAnalyzer();
     }
@@ -1012,11 +1013,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateVisualizer() {
-        if (eqVisualizer == null) return;
+        if (eqVisualizer == null || gainSliders.size() < AudioConfig.NUM_BANDS) return;
         int[] gs = new int[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = getIntSlider(gainSliders.get(i));
+        boolean[] qn = new boolean[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            gs[i] = getIntSlider(gainSliders.get(i));
+            if (i < qSwitches.size()) {
+                qn[i] = qSwitches.get(i).isChecked();
+            }
+        }
         eqVisualizer.setGains(gs);
-        if (spectrumAnalyzer != null) spectrumAnalyzer.setGains(gs);
+        float[] offs = calculateFmOffsets();
+        AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
+        engine.setGains(gs);
+        engine.setQFactors(qn);
+        engine.setFmOffsets(offs);
     }
 
     private void updateDbLabel(int i, int p) {
@@ -1293,6 +1304,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateFmVisualizer() {
         if (fmVisualizer == null) return;
         float[] offs = calculateFmOffsets();
+        AudioSpectrumEngine.getInstance().setFmOffsets(offs);
         int[] gs = new int[AudioConfig.NUM_BANDS]; float[] actual = new float[AudioConfig.NUM_BANDS]; float[] warns = new float[AudioConfig.NUM_BANDS];
         int vol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume(); 
         tvSysVolumeVal.setText(String.valueOf(vol));
@@ -1314,12 +1326,15 @@ public class MainActivity extends AppCompatActivity {
 
     private float[] calculateFmOffsets() {
         float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
+        if (seekFmCalVol == null || seekFmStrength == null || switchFmEnable == null || switchFatigueEnable == null) {
+            return offs;
+        }
         int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
         int cal = getIntSlider(seekFmCalVol); float str = getIntSlider(seekFmStrength) / 100f;
         if (vol < cal && switchFmEnable.isChecked()) {
             float ratio = (float)(cal - vol) / (float)(cal - 1);
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
-            if (switchFmSubComp.isChecked()) {
+            if (switchFmSubComp != null && switchFmSubComp.isChecked()) {
                 int currentSubFreq = Globals.currentSubFreqHz;
                 if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[3] * ratio * str;
                 else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[2] * ratio * str;

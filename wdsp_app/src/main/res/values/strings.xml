@@ -211,4 +211,7 @@
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>
     <string name="toast_restore_failed">Restore failed: %s</string>
+    <string name="vis_normalization_label">Dynamic Normalization (AGC)</string>
+    <string name="vis_normalization_desc">Gentle dynamic range leveling for quiet audio tracks</string>
+    <string name="status_bar_bands_count">Number of bands:</string>
 </resources>

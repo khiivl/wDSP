@@ -199,4 +199,7 @@
     <string name="toast_backup_failed">Помилка створення бекапу: %s</string>
     <string name="toast_restore_success">Налаштування успішно відновлено</string>
     <string name="toast_restore_failed">Помилка відновлення: %s</string>
+    <string name="vis_normalization_label">Динамічна нормалізація (AGC)</string>
+    <string name="vis_normalization_desc">М\'яке вирівнювання динамічного діапазону для тихих треків</string>
+    <string name="status_bar_bands_count">Кількість смуг:</string>
 </resources>

@@ -289,6 +289,7 @@ public class McuService extends Service implements LocationListener {
         super.onCreate();
         createNotificationChannel();
 
+        AudioSpectrumEngine.getInstance().initContext(this);
         statusBarManager = StatusBarVisualizerManager.getInstance(this);
         statusBarManager.evaluateVisibility();
 
@@ -674,10 +675,10 @@ public class McuService extends Service implements LocationListener {
         String currentPlayer = getSystemProperty();
         String activeType = VolumeHelper.getActivePlayerType();
 
-        // Audio gating for status bar visualizer: Channel 2 (Radio) vs Channel 4 (Media)
+        // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
         boolean isRadio = "radio_type".equals(activeType) || (currentPlayer != null && currentPlayer.toLowerCase().contains("radio"));
         boolean isMuted = (VolumeHelper.getVolume() <= 0 || VolumeHelper.isHardwareMuted());
-        int channel = isRadio ? 2 : 4;
+        int channel = isRadio ? 2 : 0; // 2 = Radio (external DSP, no PCM), 0 = Android master mixer (all media)
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);
         }

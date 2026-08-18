@@ -104,9 +104,16 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
     }
 
     @Override
-    public void onSpectrumCapture(float[] displayLevels, float[] prevLevels, long lastCaptureTime, long captureIntervalMs) {
-        System.arraycopy(prevLevels, 0, this.prevLevels, 0, AudioConfig.NUM_BANDS);
-        System.arraycopy(displayLevels, 0, this.displayLevels, 0, AudioConfig.NUM_BANDS);
+    public void onSpectrumCapture(float[] displayLevels16, float[] displayLevels16Norm,
+                                   float[] prevLevels16, float[] prevLevels16Norm,
+                                   float[] displayLevels32, float[] displayLevels32Norm,
+                                   float[] prevLevels32, float[] prevLevels32Norm,
+                                   long lastCaptureTime, long captureIntervalMs) {
+        boolean norm = ThemeManager.prefs(getContext()).getBoolean("pref_eq_visualizer_normalization", false);
+        float[] srcDisplay = norm ? displayLevels16Norm : displayLevels16;
+        float[] srcPrev = norm ? prevLevels16Norm : prevLevels16;
+        System.arraycopy(srcPrev, 0, this.prevLevels, 0, AudioConfig.NUM_BANDS);
+        System.arraycopy(srcDisplay, 0, this.displayLevels, 0, AudioConfig.NUM_BANDS);
         this.lastCaptureTime = lastCaptureTime;
         this.captureIntervalMs = captureIntervalMs;
     }

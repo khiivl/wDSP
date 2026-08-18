@@ -16,6 +16,7 @@ import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -82,16 +83,17 @@ public class SettingsActivity extends AppCompatActivity {
     private View bgSolidHue, bgSolidVal, bgStatusBarHue;
 
     // Status Bar Visualizer
-    private SwitchCompat switchStatusBarVis;
+    private SwitchCompat switchStatusBarVis, switchStatusBarNormalization;
     private Slider seekStatusBarWidth, seekStatusBarPos;
     private SeekBar seekStatusBarHue;
     private TextView tvStatusBarWidth, tvStatusBarPos, tvStatusBarHue;
     private TextView btnThemeSpectrum, btnThemeSolidHue, btnThemeAutoDayNight, btnThemeEqGroups;
     private TextView btnThemeWhite, btnThemeBlack, btnThemeFire, btnThemeNeon;
+    private TextView btnStatusBarBands16, btnStatusBarBands32;
     private TextView btnOverlayPerm;
 
     // EQ Visualizer
-    private SwitchCompat switchEqVisualizerEnable;
+    private SwitchCompat switchEqVisualizerEnable, switchEqVisNormalization;
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
@@ -278,6 +280,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Status Bar Visualizer
         switchStatusBarVis = findViewById(R.id.switch_status_bar_vis);
+        switchStatusBarNormalization = findViewById(R.id.switch_status_bar_normalization);
         seekStatusBarWidth = findViewById(R.id.seek_status_bar_width);
         seekStatusBarPos = findViewById(R.id.seek_status_bar_pos);
         seekStatusBarHue = findViewById(R.id.seek_status_bar_hue);
@@ -294,6 +297,8 @@ public class SettingsActivity extends AppCompatActivity {
         btnThemeBlack = findViewById(R.id.btn_theme_black);
         btnThemeFire = findViewById(R.id.btn_theme_fire);
         btnThemeNeon = findViewById(R.id.btn_theme_neon);
+        btnStatusBarBands16 = findViewById(R.id.btn_status_bar_bands_16);
+        btnStatusBarBands32 = findViewById(R.id.btn_status_bar_bands_32);
 
         TouchGlow.attach(btnThemeSpectrum);
         TouchGlow.attach(btnThemeSolidHue);
@@ -303,11 +308,27 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(btnThemeBlack);
         TouchGlow.attach(btnThemeFire);
         TouchGlow.attach(btnThemeNeon);
+        TouchGlow.attach(btnStatusBarBands16);
+        TouchGlow.attach(btnStatusBarBands32);
+
+        if (btnStatusBarBands16 != null) {
+            btnStatusBarBands16.setOnClickListener(v -> {
+                StatusBarVisualizerManager.getInstance(this).setBandCount(16);
+                updateStatusBarBandsHighlights(16);
+            });
+        }
+        if (btnStatusBarBands32 != null) {
+            btnStatusBarBands32.setOnClickListener(v -> {
+                StatusBarVisualizerManager.getInstance(this).setBandCount(32);
+                updateStatusBarBandsHighlights(32);
+            });
+        }
 
         initStatusBarVisualizerControls();
 
         // EQ Spectrum Visualizer
         switchEqVisualizerEnable = findViewById(R.id.switch_eq_visualizer_enable);
+        switchEqVisNormalization = findViewById(R.id.switch_vis_normalization);
         btnEqVisSpectrum = findViewById(R.id.btn_eq_vis_spectrum);
         btnEqVisMonochrome = findViewById(R.id.btn_eq_vis_monochrome);
 
@@ -317,6 +338,18 @@ public class SettingsActivity extends AppCompatActivity {
         switchEqVisualizerEnable.setOnCheckedChangeListener((btn, isChecked) -> {
             ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_enabled", isChecked).apply();
         });
+
+        if (switchStatusBarNormalization != null) {
+            switchStatusBarNormalization.setOnCheckedChangeListener((btn, isChecked) -> {
+                ThemeManager.prefs(this).edit().putBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_NORMALIZATION, isChecked).apply();
+                StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_NORMALIZATION);
+            });
+        }
+        if (switchEqVisNormalization != null) {
+            switchEqVisNormalization.setOnCheckedChangeListener((btn, isChecked) -> {
+                ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_normalization", isChecked).apply();
+            });
+        }
 
         btnEqVisSpectrum.setOnClickListener(v -> {
             ThemeManager.prefs(this).edit().putInt("pref_eq_visualizer_mode", 0).apply();
@@ -686,7 +719,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         // Visualizer
-        switchStatusBarVis.setChecked(p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, false));
+        switchStatusBarVis.setChecked(p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, true));
         int w = Math.round(p.getFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F, 0.40f) * 100);
         int pos = Math.round(p.getFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F, 0.50f) * 100);
         int hue = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE, 0);
@@ -701,14 +734,30 @@ public class SettingsActivity extends AppCompatActivity {
         int currentTheme = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME, StatusBarVisualizerView.THEME_SPECTRUM);
         updateThemeButtonHighlights(currentTheme);
 
+        int bands = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_BANDS, StatusBarVisualizerManager.DEFAULT_BANDS);
+        updateStatusBarBandsHighlights(bands);
+
         // EQ Spectrum Visualizer
         boolean eqVisEnabled = p.getBoolean("pref_eq_visualizer_enabled", true);
         switchEqVisualizerEnable.setChecked(eqVisEnabled);
         int eqVisMode = p.getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
 
+        // Visualizer Normalization (AGC) - separate for Status Bar and EQ Visualizer
+        if (switchStatusBarNormalization != null) {
+            switchStatusBarNormalization.setChecked(p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_NORMALIZATION, false));
+        }
+        if (switchEqVisNormalization != null) {
+            switchEqVisNormalization.setChecked(p.getBoolean("pref_eq_visualizer_normalization", false));
+        }
+
         // Permissions
         updatePermissionButtons();
+    }
+
+    private void updateStatusBarBandsHighlights(int bands) {
+        styleToggleButton(btnStatusBarBands16, bands == 16);
+        styleToggleButton(btnStatusBarBands32, bands == 32);
     }
 
     private void updateEqVisModeHighlights(int mode) {
@@ -851,7 +900,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_theme_section, R.id.label_statusbar_section,
             R.id.label_eq_vis_section, R.id.label_permissions_section,
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
-            R.id.label_status_bar_theme, R.id.label_eq_vis_enable
+            R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
+            R.id.label_sb_vis_normalization, R.id.label_vis_normalization
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -864,7 +914,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_label_wheel, R.id.label_on_accent_wheel,
             R.id.wallpaper_name, R.id.label_solid_hue, R.id.label_solid_val,
             R.id.label_status_bar_width, R.id.label_status_bar_pos,
-            R.id.label_status_bar_hue, R.id.label_eq_vis_mode
+            R.id.label_status_bar_hue, R.id.label_eq_vis_mode,
+            R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);

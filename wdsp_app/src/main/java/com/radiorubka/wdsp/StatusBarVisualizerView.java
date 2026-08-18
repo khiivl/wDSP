@@ -77,6 +77,8 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             0xFFFF007F, 0xFFFF1744, 0xFFF50057, 0xFFFF4081
     };
 
+    public static final int MAX_BANDS = 32;
+
     private final Paint barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF barRect = new RectF();
     private final float[] hsvBuffer = new float[3];
@@ -84,11 +86,12 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private int theme = THEME_SPECTRUM;
     private int hueShift = 0; // 0..360
     private int alphaPercent = 100; // 0..100
-    private final int[] resolvedColors = new int[AudioConfig.NUM_BANDS];
+    private int bandCount = 32; // Default to 32 bands
+    private final int[] resolvedColors = new int[MAX_BANDS];
 
-    private final float[] displayLevels = new float[AudioConfig.NUM_BANDS];
-    private final float[] prevLevels = new float[AudioConfig.NUM_BANDS];
-    private final float[] renderLevels = new float[AudioConfig.NUM_BANDS];
+    private final float[] displayLevels = new float[MAX_BANDS];
+    private final float[] prevLevels = new float[MAX_BANDS];
+    private final float[] renderLevels = new float[MAX_BANDS];
 
     private long lastCaptureTime = 0;
     private long captureIntervalMs = 50;
@@ -101,7 +104,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             if (!frameCallbackActive) return;
             long elapsed = System.currentTimeMillis() - lastCaptureTime;
             float t = captureIntervalMs > 0 ? Math.min(1f, elapsed / (float) captureIntervalMs) : 1f;
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            for (int i = 0; i < bandCount; i++) {
                 renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
             }
             invalidate();
@@ -174,14 +177,25 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return false; // Default to dark background
     }
 
+    public void setBandCount(int count) {
+        this.bandCount = (count == 16) ? 16 : 32;
+        recalculateColors();
+        invalidate();
+    }
+
+    public int getBandCount() {
+        return this.bandCount;
+    }
+
     public void recalculateColors() {
         int baseAlpha = (int) ((alphaPercent / 100f) * 255);
         boolean isLightBar = isStatusBarLight();
+        int bands = this.bandCount;
 
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+        for (int i = 0; i < bands; i++) {
+            float frac = i / (float) Math.max(1, bands - 1);
             switch (theme) {
                 case THEME_AUTO_DAY_NIGHT:
-                    // Auto day/night: White on dark bar (night), Black on light bar (day)
                     int autoColor = isLightBar ? 0xFF1A1A1A : 0xFFFFFFFF;
                     resolvedColors[i] = Color.argb(baseAlpha, Color.red(autoColor), Color.green(autoColor), Color.blue(autoColor));
                     break;
@@ -195,17 +209,16 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                     break;
 
                 case THEME_SOLID_HUE:
-                    // Custom single uniform color for all bands from the HUE slider
                     hsvBuffer[0] = (float) hueShift;
-                    hsvBuffer[1] = 1.0f; // full saturation
-                    hsvBuffer[2] = 1.0f; // full brightness
+                    hsvBuffer[1] = 1.0f;
+                    hsvBuffer[2] = 1.0f;
                     int solidColor = Color.HSVToColor(hsvBuffer);
                     resolvedColors[i] = Color.argb(baseAlpha, Color.red(solidColor), Color.green(solidColor), Color.blue(solidColor));
                     break;
 
                 case THEME_EQ_GROUPS:
-                    int group = groupForBand(i);
-                    int groupBase = GROUP_BASE_COLORS[group];
+                    int group = (int) (i * 6f / bands);
+                    int groupBase = GROUP_BASE_COLORS[Math.min(5, group)];
                     if (hueShift != 0) {
                         Color.colorToHSV(groupBase, hsvBuffer);
                         hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
@@ -217,40 +230,34 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                     break;
 
                 case THEME_FIRE:
-                    int fireBase = FIRE_COLORS[i];
-                    if (hueShift != 0) {
-                        Color.colorToHSV(fireBase, hsvBuffer);
-                        hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
-                        int c = Color.HSVToColor(hsvBuffer);
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
-                    } else {
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(fireBase), Color.green(fireBase), Color.blue(fireBase));
-                    }
+                    float fireHue = frac * 55f; // 0 (Red) -> 55 (Yellow)
+                    if (hueShift != 0) fireHue = (fireHue + hueShift) % 360f;
+                    hsvBuffer[0] = fireHue;
+                    hsvBuffer[1] = 1.0f;
+                    hsvBuffer[2] = 1.0f;
+                    int fc = Color.HSVToColor(hsvBuffer);
+                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(fc), Color.green(fc), Color.blue(fc));
                     break;
 
                 case THEME_NEON:
-                    int neonBase = NEON_COLORS[i];
-                    if (hueShift != 0) {
-                        Color.colorToHSV(neonBase, hsvBuffer);
-                        hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
-                        int c = Color.HSVToColor(hsvBuffer);
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
-                    } else {
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(neonBase), Color.green(neonBase), Color.blue(neonBase));
-                    }
+                    float neonHue = 180f + frac * 140f; // 180 (Cyan) -> 320 (Magenta/Pink)
+                    if (hueShift != 0) neonHue = (neonHue + hueShift) % 360f;
+                    hsvBuffer[0] = neonHue;
+                    hsvBuffer[1] = 1.0f;
+                    hsvBuffer[2] = 1.0f;
+                    int nc = Color.HSVToColor(hsvBuffer);
+                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(nc), Color.green(nc), Color.blue(nc));
                     break;
 
                 case THEME_SPECTRUM:
                 default:
-                    int specBase = SPECTRUM_BASE_COLORS[i];
-                    if (hueShift != 0) {
-                        Color.colorToHSV(specBase, hsvBuffer);
-                        hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
-                        int c = Color.HSVToColor(hsvBuffer);
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
-                    } else {
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(specBase), Color.green(specBase), Color.blue(specBase));
-                    }
+                    float specHue = frac * 295f; // 0 (Red) -> 295 (Deep Violet)
+                    if (hueShift != 0) specHue = (specHue + hueShift) % 360f;
+                    hsvBuffer[0] = specHue;
+                    hsvBuffer[1] = 1.0f;
+                    hsvBuffer[2] = 1.0f;
+                    int sc = Color.HSVToColor(hsvBuffer);
+                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(sc), Color.green(sc), Color.blue(sc));
                     break;
             }
         }
@@ -261,6 +268,12 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             if (band >= GROUP_RANGES[g][0] && band <= GROUP_RANGES[g][1]) return g;
         }
         return 0;
+    }
+
+    private boolean normalizationEnabled = false;
+
+    public void setNormalizationEnabled(boolean enabled) {
+        this.normalizationEnabled = enabled;
     }
 
     public synchronized void start() {
@@ -279,7 +292,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         AudioSpectrumEngine.getInstance().unregisterListener(this);
         frameCallbackActive = false;
         Choreographer.getInstance().removeFrameCallback(frameCallback);
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+        for (int i = 0; i < MAX_BANDS; i++) {
             renderLevels[i] = 0f;
             displayLevels[i] = 0f;
             prevLevels[i] = 0f;
@@ -288,9 +301,23 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     }
 
     @Override
-    public void onSpectrumCapture(float[] displayLevels, float[] prevLevels, long lastCaptureTime, long captureIntervalMs) {
-        System.arraycopy(prevLevels, 0, this.prevLevels, 0, AudioConfig.NUM_BANDS);
-        System.arraycopy(displayLevels, 0, this.displayLevels, 0, AudioConfig.NUM_BANDS);
+    public void onSpectrumCapture(float[] displayLevels16, float[] displayLevels16Norm,
+                                   float[] prevLevels16, float[] prevLevels16Norm,
+                                   float[] displayLevels32, float[] displayLevels32Norm,
+                                   float[] prevLevels32, float[] prevLevels32Norm,
+                                   long lastCaptureTime, long captureIntervalMs) {
+        int count = this.bandCount;
+        if (count == 16) {
+            float[] srcDisplay = normalizationEnabled ? displayLevels16Norm : displayLevels16;
+            float[] srcPrev = normalizationEnabled ? prevLevels16Norm : prevLevels16;
+            System.arraycopy(srcPrev, 0, this.prevLevels, 0, 16);
+            System.arraycopy(srcDisplay, 0, this.displayLevels, 0, 16);
+        } else {
+            float[] srcDisplay = normalizationEnabled ? displayLevels32Norm : displayLevels32;
+            float[] srcPrev = normalizationEnabled ? prevLevels32Norm : prevLevels32;
+            System.arraycopy(srcPrev, 0, this.prevLevels, 0, 32);
+            System.arraycopy(srcDisplay, 0, this.displayLevels, 0, 32);
+        }
         this.lastCaptureTime = lastCaptureTime;
         this.captureIntervalMs = captureIntervalMs;
     }
@@ -302,18 +329,19 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         float totalH = getHeight();
         if (w <= 0 || totalH <= 0) return;
 
-        float stepX = w / (float) AudioConfig.NUM_BANDS;
-        float barGap = stepX * 0.22f;
+        int count = this.bandCount;
+        float stepX = w / (float) count;
+        float barGap = stepX * (count == 32 ? 0.20f : 0.22f);
         float barWidth = stepX - barGap;
         float cornerRadius = barWidth * 0.35f;
 
         float bottom = totalH;
 
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+        for (int i = 0; i < count; i++) {
             float level = renderLevels[i];
             if (level < 0.02f) level = 0.02f; // Keep a small visible baseline bar
 
-            float barHeight = level * totalH;
+            float barHeight = level * totalH * 0.88f;
             float left = i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = bottom - barHeight;

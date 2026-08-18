@@ -30,12 +30,15 @@ public class StatusBarVisualizerManager {
     public static final String PREF_STATUS_BAR_HUE     = "sb_vis_hue";
     public static final String PREF_STATUS_BAR_ALPHA   = "sb_vis_alpha";
     public static final String PREF_STATUS_BAR_HEIGHT_PX = "sb_vis_height_px";
+    public static final String PREF_STATUS_BAR_NORMALIZATION = "sb_vis_normalization";
+    public static final String PREF_STATUS_BAR_BANDS   = "sb_vis_bands";
 
     public static final float DEFAULT_WIDTH_F = 0.40f;
     public static final float DEFAULT_POS_F   = 0.50f;
     public static final int DEFAULT_THEME     = StatusBarVisualizerView.THEME_SPECTRUM;
     public static final int DEFAULT_HUE       = 0;
     public static final int DEFAULT_ALPHA     = 100;
+    public static final int DEFAULT_BANDS     = 32;
 
     private final Context context;
     private final WindowManager windowManager;
@@ -52,6 +55,7 @@ public class StatusBarVisualizerManager {
     private int theme = DEFAULT_THEME;
     private int hueShift = DEFAULT_HUE;
     private int alphaPercent = DEFAULT_ALPHA;
+    private int bandCount = DEFAULT_BANDS;
 
     // Audio gating: Channel 4 (Media) = Active, Channel 2 (Radio) = Inactive
     private int currentChannel = 4; // Default to Media
@@ -88,12 +92,13 @@ public class StatusBarVisualizerManager {
     }
 
     public void loadPreferences() {
-        isEnabled = prefs.getBoolean(PREF_STATUS_BAR_ENABLED, false);
+        isEnabled = prefs.getBoolean(PREF_STATUS_BAR_ENABLED, true);
         widthFraction = prefs.getFloat(PREF_STATUS_BAR_WIDTH_F, DEFAULT_WIDTH_F);
         posFraction = prefs.getFloat(PREF_STATUS_BAR_POS_F, DEFAULT_POS_F);
         theme = prefs.getInt(PREF_STATUS_BAR_THEME, DEFAULT_THEME);
         hueShift = prefs.getInt(PREF_STATUS_BAR_HUE, DEFAULT_HUE);
         alphaPercent = prefs.getInt(PREF_STATUS_BAR_ALPHA, DEFAULT_ALPHA);
+        bandCount = prefs.getInt(PREF_STATUS_BAR_BANDS, DEFAULT_BANDS);
     }
 
     public boolean canDrawOverlays() {
@@ -158,6 +163,8 @@ public class StatusBarVisualizerManager {
                 visualizerView.setTheme(theme);
                 visualizerView.setHueShift(hueShift);
                 visualizerView.setAlphaPercent(alphaPercent);
+                visualizerView.setBandCount(bandCount);
+                visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
             }
             updateWindowGeometry();
             evaluateVisibility();
@@ -193,6 +200,8 @@ public class StatusBarVisualizerManager {
             visualizerView.setTheme(theme);
             visualizerView.setHueShift(hueShift);
             visualizerView.setAlphaPercent(alphaPercent);
+            visualizerView.setBandCount(bandCount);
+            visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
         }
 
         if (layoutParams == null) {
@@ -319,9 +328,20 @@ public class StatusBarVisualizerManager {
         });
     }
 
+    public void setBandCount(int bands) {
+        this.bandCount = (bands == 16) ? 16 : 32;
+        prefs.edit().putInt(PREF_STATUS_BAR_BANDS, this.bandCount).apply();
+        mainHandler.post(() -> {
+            if (visualizerView != null) {
+                visualizerView.setBandCount(this.bandCount);
+            }
+        });
+    }
+
     public boolean isEnabled() { return isEnabled; }
     public float getWidthFraction() { return widthFraction; }
     public float getPosFraction() { return posFraction; }
     public int getTheme() { return theme; }
     public int getHueShift() { return hueShift; }
+    public int getBandCount() { return bandCount; }
 }
