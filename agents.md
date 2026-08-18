@@ -20,7 +20,7 @@
     - Gain: `0..12` (+0dB .. +12dB).
     - ISO 226 Fletcher-Munson dynamic compensation at low volume levels.
   - **Bass Boost & High-Pass Filter**: Command `0x88` for front and rear channels.
-  - **Fader & Balance & Loudness**: Command `0x82` (12 steps left/right, 12 steps front/rear).
+  - **Fader & Balance & Loudness**: Command `0x82` (12 steps left/right, 12 steps front/rear). Dynamic Day/Night adaptive car graphic (`ic_car_cabriolet_day.xml` pearl platinum / `ic_car_cabriolet_night.xml` dark titanium graphite).
   - **Delays (Time Alignment)**: 
     - Positioning: Command `0x84` (0..5.0 ms with 0.5 ms step for FL, FR, RL, RR, Sub).
     - Surround / Haas effect: Command `0x85` (0..10 ms delay and RSSE surround widening).
@@ -62,16 +62,26 @@ Both the **Equalizer Visualizer** (`SpectrumAnalyzerView.java`), the **Fletcher-
   - Built-in dynamic theme wallpaper
   - Custom photo wallpaper via SAF (`OpenDocument` with persistable URI permission)
   - Solid color background generator with real-time HUE and brightness adjustments
+- **Dynamic Theme Inheritance**:
+  - **Bottom Navigation Bar**: Icons and text dynamically follow active accent / inactive secondary text; capsule active indicator takes `ColorUtils.setAlphaComponent(accent, 40)`.
+  - **Dropdown Spinners**: All 4 `TextInputLayout` capsules (`layout_spinner_presets`, `layout_spinner_sub_freq`, `layout_spinner_bass_freq_front`, `layout_spinner_bass_freq_rear`) inherit dynamic `accent` border/arrow/text and `secondaryText` hint.
+  - **Labels & Headers**: All section headers inherit `primaryText`, field labels inherit `secondaryText`, and live dB/frequency/parameter values inherit `accent`.
 - **TouchGlow Effect**: Interactive ripple and button flash on all interactive controls.
 
 ---
 
-## 🎛️ Settings Accordion (`SettingsAccordion.java` & `SettingsActivity.java`)
-Categorized accordion cards with fluid collapse/expand animations:
-1. **Оформлення та Теми** (Theme Mode, 4 Color Wheels, Wallpaper)
-2. **Візуалізатор статус-бара** (Enable switch, Width %, Center Position %, Hue shift, Themes: Spectrum, Fire, Neon, EQ Groups, Monochrome White/Black)
-3. **Візуалізатор еквалайзера** (Enable switch, Color Mode: Frequency-Color Spectrum vs Solid Accent)
-4. **Дозволи та Система** (Battery Optimization, Audio Record permission, GPS Location, App Details, Full Backup & Restore)
+## 🎛️ Navigation & Settings Accordion (`SettingsAccordion.java` & `SettingsActivity.java`)
+- **Unified Bottom Navigation**: `BottomNavigationView` is shared across `MainActivity` and `SettingsActivity`. Selecting a tab in Settings smoothly transitions to `MainActivity` with the chosen tab open.
+- **Clean Header**: Removed legacy back button `←` in favor of full bottom navigation continuity and centered header.
+- **Uniform Slider Grid**: All sliders in `SettingsActivity` share a strict horizontal grid layout:
+  - Left Label: `160dp`
+  - SeekBar: `0dp` (weight 1)
+  - Right Value Label: `48dp` (end-aligned)
+- **Categorized Accordion Cards**:
+  1. **Оформлення та Теми** (Theme Mode, 4 Color Wheels, Wallpaper)
+  2. **Візуалізатор статус-бара** (Enable switch, Width %, Center Position %, Hue shift, Themes: Spectrum, Fire, Neon, EQ Groups, Monochrome White/Black)
+  3. **Візуалізатор еквалайзера** (Enable switch, Color Mode: Frequency-Color Spectrum vs Solid Accent)
+  4. **Дозволи та Система** (Battery Optimization, Audio Record permission, GPS Location, App Details, Full Backup & Restore)
 
 ---
 

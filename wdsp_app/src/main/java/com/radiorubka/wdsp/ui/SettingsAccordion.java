@@ -135,9 +135,12 @@ public final class SettingsAccordion {
         if (!(v instanceof TextView)) {
             return false;
         }
-        TextView t = (TextView) v;
-        Typeface tf = t.getTypeface();
-        return tf != null && tf.isBold() && t.getLayoutParams() != null
-                && t.getLayoutParams().width == LinearLayout.LayoutParams.MATCH_PARENT;
+        int id = v.getId();
+        for (int hId : ORDER) {
+            if (id == hId) {
+                return true;
+            }
+        }
+        return false;
     }
 }

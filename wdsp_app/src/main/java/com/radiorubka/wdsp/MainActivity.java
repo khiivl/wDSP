@@ -32,6 +32,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -58,6 +59,7 @@ import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.android.material.slider.Slider;
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import org.json.JSONObject;
 
@@ -97,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<Slider> gainSliders = new ArrayList<>();
     private final List<ToggleButton> qSwitches = new ArrayList<>();
     private final List<TextView> dbLabels = new ArrayList<>();
+    private final List<TextView> freqLabels = new ArrayList<>();
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
@@ -141,12 +144,6 @@ public class MainActivity extends AppCompatActivity {
   
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal, tvGalaFadeMsVal, tvGalaHoldMsVal;
 
-    // Status Bar Visualizer Controls
-    private MaterialButton switchStatusBarVis;
-    private Slider seekSbWidth, seekSbPos, seekSbHue;
-    private TextView tvSbWidthVal, tvSbPosVal, tvSbHueVal;
-    private AutoCompleteTextView spinnerSbTheme;
-    
     // Whether GALA's on/off state is shared across all presets instead of per-preset.
     // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
     private boolean galaGlobalMode = false;
@@ -383,9 +380,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleTargetTab(intent);
+    }
+
+    private void handleTargetTab(Intent intent) {
+        if (intent == null) return;
+        int targetTabId = intent.getIntExtra("target_tab_id", -1);
+        if (targetTabId != -1) {
+            BottomNavigationView bn = findViewById(R.id.bottom_navigation);
+            if (bn != null) {
+                bn.setSelectedItemId(targetTabId);
+            }
+            intent.removeExtra("target_tab_id");
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         applyAppTheme();
+        handleTargetTab(getIntent());
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
         if (isFullyInitialized) {
             refreshAllUiValues();
@@ -406,16 +423,7 @@ public class MainActivity extends AppCompatActivity {
                 loadPreset(newName);
             }
         }
-        if (switchStatusBarVis != null) {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            boolean visEnabled = prefs.getBoolean("sb_vis_enabled", false);
-            if (visEnabled && !Settings.canDrawOverlays(this)) {
-                switchStatusBarVis.setChecked(false);
-                prefs.edit().putBoolean("sb_vis_enabled", false).apply();
-            } else if (visEnabled && Settings.canDrawOverlays(this)) {
-                switchStatusBarVis.setChecked(true);
-            }
-        }
+        applyAppTheme();
         checkAndStartSpectrumAnalyzer();
     }
 
@@ -433,27 +441,37 @@ public class MainActivity extends AppCompatActivity {
         s.setTrackActiveTintList(csl);
         s.setTrackInactiveTintList(ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
         s.setHaloRadius(0);
-        s.setTrackHeight((int) (4 * density));
-        s.setThumbRadius((int) (7 * density));
+        s.setTrackHeight((int) (5 * density));
+        s.setThumbRadius((int) (10 * density));
+        s.setThumbWidth((int) (20 * density));
+        s.setThumbHeight((int) (20 * density));
+        s.setTrackStopIndicatorSize(0);
+        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
 
     private void updateToggleStyle(View v) {
         if (v == null) return;
         int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
-        int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this);
+        int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
+        int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
         int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
+
+        boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
+        int unselectedBg = isNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        int unselectedBorder = isNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
+        int onAccentColor = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
 
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
             boolean checked = mb.isChecked();
             if (checked) {
                 mb.setBackgroundTintList(ColorStateList.valueOf(accent));
-                mb.setTextColor(onAccent);
+                mb.setTextColor(onAccentColor);
                 mb.setStrokeColor(ColorStateList.valueOf(accent));
             } else {
-                mb.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#20121820")));
-                mb.setTextColor(accent);
-                mb.setStrokeColor(ColorStateList.valueOf(border));
+                mb.setBackgroundTintList(ColorStateList.valueOf(unselectedBg));
+                mb.setTextColor(textPrimary);
+                mb.setStrokeColor(ColorStateList.valueOf(unselectedBorder));
             }
             return;
         }
@@ -465,10 +483,10 @@ public class MainActivity extends AppCompatActivity {
             int radius = (int) (6 * density);
             if (checked) {
                 tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
-                tb.setTextColor(onAccent);
+                tb.setTextColor(onAccentColor);
             } else {
-                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, Color.parseColor("#20121820"), border, 1.2f));
-                tb.setTextColor(accent);
+                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
+                tb.setTextColor(textPrimary);
             }
             return;
         }
@@ -482,10 +500,10 @@ public class MainActivity extends AppCompatActivity {
             toggle.setGravity(Gravity.CENTER);
             if (checked) {
                 toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
-                toggle.setTextColor(onAccent);
+                toggle.setTextColor(onAccentColor);
             } else {
-                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, Color.parseColor("#20121820"), border, 1.2f));
-                toggle.setTextColor(accent);
+                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
+                toggle.setTextColor(textPrimary);
             }
         }
     }
@@ -504,6 +522,8 @@ public class MainActivity extends AppCompatActivity {
 
             int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
             int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this);
+            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
+            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this);
             int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
             float density = getResources().getDisplayMetrics().density;
 
@@ -517,6 +537,11 @@ public class MainActivity extends AppCompatActivity {
             for (TextView db : dbLabels) {
                 if (db != null) {
                     db.setTextColor(accent);
+                }
+            }
+            for (TextView l : freqLabels) {
+                if (l != null) {
+                    l.setTextColor(secondaryText);
                 }
             }
 
@@ -569,9 +594,87 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFmEnable);
             updateToggleStyle(switchFatigueEnable);
             updateToggleStyle(switchFmSubComp);
-            updateToggleStyle(switchStatusBarVis);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
+
+            // Spinners
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText);
+
+            // Primary Section Titles & Headers
+            int[] primaryTitles = {
+                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title
+            };
+            for (int id : primaryTitles) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(primaryText);
+            }
+
+            // Accent Values
+            boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
+            int valueColor = isNight ? accent : primaryText;
+            int faderIconTint = isNight ? accent : primaryText;
+            int[] accentValues = {
+                R.id.tv_pwr_db, R.id.tv_sub_db,
+                R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
+                R.id.tv_delay_fl_val, R.id.tv_delay_fr_val, R.id.tv_delay_rl_val, R.id.tv_delay_rr_val, R.id.tv_delay_sub_val,
+                R.id.tv_delay1_fl_val, R.id.tv_delay1_fr_val, R.id.tv_delay1_rl_val, R.id.tv_delay1_rr_val, R.id.tv_delay1_rsse_val,
+                R.id.tv_bass_filter_front_db, R.id.tv_bass_boost_front_db, R.id.tv_bass_filter_rear_db, R.id.tv_bass_boost_rear_db,
+                R.id.tv_fader_fr_front_val, R.id.tv_fader_fr_rear_val, R.id.tv_fader_lr_left_val, R.id.tv_fader_lr_right_val,
+                R.id.tv_gala_increment_val, R.id.tv_gala_speed, R.id.tv_gala_minspeed_val, R.id.tv_gala_offset,
+                R.id.tv_gala_max_adj_val, R.id.tv_gala_fade_ms_val, R.id.tv_gala_hold_ms_val, R.id.tv_simulate_speed_val
+            };
+            for (int id : accentValues) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(valueColor);
+            }
+
+            // Secondary Labels
+            int[] secondaryLabels = {
+                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength
+            };
+            for (int id : secondaryLabels) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(secondaryText);
+            }
+
+            // Fader Buttons
+            int[] faderArrows = {
+                R.id.btn_fader_fr_plus, R.id.btn_fader_fr_minus,
+                R.id.btn_fader_lr_plus, R.id.btn_fader_lr_minus
+            };
+            for (int id : faderArrows) {
+                ImageView iv = findViewById(id);
+                if (iv != null) iv.setImageTintList(ColorStateList.valueOf(faderIconTint));
+            }
+
+            // Power / Sub Buttons
+            int[] subButtons = {
+                R.id.btn_pwr_vol_plus, R.id.btn_pwr_vol_minus,
+                R.id.btn_plus, R.id.btn_minus
+            };
+            for (int id : subButtons) {
+                View btn = findViewById(id);
+                if (btn instanceof TextView) {
+                    ((TextView) btn).setTextColor(valueColor);
+                }
+            }
+
+            // Bottom Navigation Bar
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            if (bottomNav != null) {
+                ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this);
+                bottomNav.setItemIconTintList(navCsl);
+                bottomNav.setItemTextColor(navCsl);
+                bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+            }
+
+            ImageView carView = findViewById(R.id.imageView);
+            if (carView != null) {
+                carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+            }
 
             if (eqVisualizer != null) eqVisualizer.invalidate();
             if (spectrumAnalyzer != null) spectrumAnalyzer.invalidate();
@@ -660,7 +763,7 @@ public class MainActivity extends AppCompatActivity {
         setupDelayControls();
         setupDelay1Controls();
         setupGalaControls();
-        setupStatusBarVisualizerControls();
+        checkStatusBarHeightCalibration();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
@@ -770,16 +873,6 @@ public class MainActivity extends AppCompatActivity {
         tvGalaFadeMsVal = findViewById(R.id.tv_gala_fade_ms_val);
         seekGalaHoldMs = findViewById(R.id.seek_gala_hold_ms);
         tvGalaHoldMsVal = findViewById(R.id.tv_gala_hold_ms_val);
-
-        // Status Bar Visualizer
-        switchStatusBarVis = findViewById(R.id.switch_status_bar_vis);
-        seekSbWidth = findViewById(R.id.seek_sb_width);
-        tvSbWidthVal = findViewById(R.id.tv_sb_width_val);
-        seekSbPos = findViewById(R.id.seek_sb_pos);
-        tvSbPosVal = findViewById(R.id.tv_sb_pos_val);
-        spinnerSbTheme = findViewById(R.id.spinner_sb_theme);
-        seekSbHue = findViewById(R.id.seek_sb_hue);
-        tvSbHueVal = findViewById(R.id.tv_sb_hue_val);
     }
 
     @Override
@@ -821,6 +914,7 @@ public class MainActivity extends AppCompatActivity {
         gainSliders.clear();
         qSwitches.clear();
         dbLabels.clear();
+        freqLabels.clear();
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
         //int cL = ContextCompat.getColor(this, R.color.band_label);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
@@ -865,22 +959,25 @@ public class MainActivity extends AppCompatActivity {
 
             TextView label = new TextView(this);
             label.setText(AudioConfig.BAND_LABELS[i]);
-            label.setTextColor(Color.WHITE);
+            label.setTextColor(com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this));
             label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
             label.setGravity(Gravity.CENTER);
             label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            freqLabels.add(label);
 
             s.setValueFrom(0f);
             s.setValueTo(12f);
             s.setStepSize(1f);
-            s.setValue(6f);
-            s.setThumbHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
-            s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+            float density = getResources().getDisplayMetrics().density;
+            s.setThumbHeight((int) (20 * density));
+            s.setThumbWidth((int) (20 * density));
+            s.setThumbRadius((int) (10 * density));
+            s.setHaloRadius(0);
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
             s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
             s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accentColor, 70)));
-            s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()));
+            s.setTrackHeight((int) (5 * density));
             s.setRotation(270f);
             s.setTrackStopIndicatorSize(0);
             s.setLabelBehavior(LabelFormatter.LABEL_GONE);
@@ -996,10 +1093,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSubControls() {
-        // 1. Create the adapter (using a standard material-friendly layout)
-        ArrayAdapter<String> subAdapter = new ArrayAdapter<>(
+        // 1. Create the adapter (using themed QFRadio-styled dropdown layout)
+        ArrayAdapter<String> subAdapter = new ThemeManager.ThemedDropdownAdapter<>(
                 this,
-                android.R.layout.simple_list_item_1,
                 SUB_FREQS
         );
         spinnerSubFreq.setAdapter(subAdapter);
@@ -1042,8 +1138,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFilterControls() {
-        ArrayAdapter<String> bbAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1, BASS_BOOST_FREQS);
+        ArrayAdapter<String> bbAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, BASS_BOOST_FREQS);
 
         spinnerBassFreqFront.setAdapter(bbAdapter);
         spinnerBassFreqRear.setAdapter(bbAdapter);
@@ -1238,51 +1333,8 @@ public class MainActivity extends AppCompatActivity {
         return offs;
     }
 
-    private void setupStatusBarVisualizerControls() {
-        if (switchStatusBarVis == null) return;
-
-        SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-        // Theme spinner setup
-        String[] themes = {
-                getString(R.string.status_bar_theme_spectrum),
-                getString(R.string.status_bar_theme_solid_hue),
-                getString(R.string.status_bar_theme_auto_day_night),
-                getString(R.string.status_bar_theme_eq_groups),
-                getString(R.string.status_bar_theme_monochrome_white),
-                getString(R.string.status_bar_theme_monochrome_black),
-                getString(R.string.status_bar_theme_fire),
-                getString(R.string.status_bar_theme_neon)
-        };
-        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, themes);
-        spinnerSbTheme.setAdapter(themeAdapter);
-
-        // Load saved preferences
-        boolean enabled = p.getBoolean("sb_vis_enabled", false);
-        float widthF = p.getFloat("sb_vis_width_f", 0.40f);
-        float posF = p.getFloat("sb_vis_pos_f", 0.50f);
-        int themeIdx = p.getInt("sb_vis_theme", 0);
-        int hue = p.getInt("sb_vis_hue", 0);
-
-        int widthPct = Math.round(widthF * 100f);
-        int posPct = Math.round(posF * 100f);
-
-        switchStatusBarVis.jumpDrawablesToCurrentState();
-        switchStatusBarVis.setChecked(enabled);
-        seekSbWidth.setValue(Math.max(10, Math.min(100, widthPct)));
-        tvSbWidthVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), widthPct));
-
-        seekSbPos.setValue(Math.max(0, Math.min(100, posPct)));
-        tvSbPosVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), posPct));
-
-        if (themeIdx >= 0 && themeIdx < themes.length) {
-            spinnerSbTheme.setText(themes[themeIdx], false);
-        }
-
-        seekSbHue.setValue(Math.max(0, Math.min(360, hue)));
-        tvSbHueVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_degrees_fmt), hue));
-
-        // One-time calibration on first app start if not already cached
+    private void checkStatusBarHeightCalibration() {
+        SharedPreferences p = ThemeManager.prefs(this);
         if (p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HEIGHT_PX, 0) == 0) {
             View decorView = getWindow().getDecorView();
             decorView.post(() -> {
@@ -1293,52 +1345,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-        // Listeners
-        switchStatusBarVis.addOnCheckedChangeListener((buttonView, isChecked) -> {
-            updateToggleStyle(buttonView);
-            if (isChecked && !Settings.canDrawOverlays(this)) {
-                switchStatusBarVis.setChecked(false);
-                Toaster.show(this, getString(R.string.status_bar_visualizer_permission_needed));
-                try {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to open overlay permission settings", e);
-                }
-                return;
-            }
-            p.edit().putBoolean("sb_vis_enabled", isChecked).apply();
-        });
-
-        seekSbWidth.addOnChangeListener((slider, value, fromUser) -> {
-            int pct = (int) value;
-            tvSbWidthVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), pct));
-            if (fromUser) {
-                p.edit().putFloat("sb_vis_width_f", pct / 100f).apply();
-            }
-        });
-
-        seekSbPos.addOnChangeListener((slider, value, fromUser) -> {
-            int pct = (int) value;
-            tvSbPosVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_percent_fmt), pct));
-            if (fromUser) {
-                p.edit().putFloat("sb_vis_pos_f", pct / 100f).apply();
-            }
-        });
-
-        spinnerSbTheme.setOnItemClickListener((parent, view, position, id) -> {
-            p.edit().putInt("sb_vis_theme", position).apply();
-        });
-
-        seekSbHue.addOnChangeListener((slider, value, fromUser) -> {
-            int h = (int) value;
-            tvSbHueVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_degrees_fmt), h));
-            if (fromUser) {
-                p.edit().putInt("sb_vis_hue", h).apply();
-            }
-        });
     }
 
     private void setupPresets() {
@@ -1359,8 +1365,8 @@ public class MainActivity extends AppCompatActivity {
             savePreset(defaultPreset);
         }
 
-        // Use a simpler layout for the list items (standard Android or a custom one)
-        presetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, presetNames);
+        // Use themed QFRadio-styled layout for preset items
+        presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
         spinnerPresets.setAdapter(presetAdapter);
 
         // Initial load

@@ -2,6 +2,7 @@ package com.radiorubka.wdsp.ui.theme;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,9 +14,17 @@ import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.radiorubka.wdsp.R;
 
 import java.io.InputStream;
@@ -43,11 +52,11 @@ public final class ThemeManager {
 
     public static final int DEFAULT_ACCENT_COLOR = 0xFF1FE7C4;
     public static final int DEFAULT_PRIMARY_TEXT_COLOR_NIGHT = 0xFFFFFFFF;
-    public static final int DEFAULT_PRIMARY_TEXT_COLOR_DAY = 0xFF000000;
-    public static final int DEFAULT_SECONDARY_TEXT_COLOR_NIGHT = 0xFF8B9198;
-    public static final int DEFAULT_SECONDARY_TEXT_COLOR_DAY = 0xFF56626C;
-    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF000000;
-    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFFFFFFFF;
+    public static final int DEFAULT_PRIMARY_TEXT_COLOR_DAY = 0xFF101418;
+    public static final int DEFAULT_SECONDARY_TEXT_COLOR_NIGHT = 0xFFD0D8E0;
+    public static final int DEFAULT_SECONDARY_TEXT_COLOR_DAY = 0xFF303840;
+    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF101418;
+    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFF101418;
 
     private static String cachedWallpaperKey;
     private static Bitmap cachedWallpaper;
@@ -267,5 +276,165 @@ public final class ThemeManager {
             d.setStroke(Math.max(1, (int) Math.ceil(strokeWidthDp * density)), strokeColor);
         }
         return d;
+    }
+
+    public static ColorStateList bottomNavColorStateList(Context ctx) {
+        return bottomNavColorStateList(ctx, isNight(ctx));
+    }
+
+    public static ColorStateList bottomNavColorStateList(Context ctx, boolean night) {
+        int accent = accent(ctx, night);
+        int secondary = textSecondary(ctx, night);
+        int[][] states = new int[][]{
+            new int[]{android.R.attr.state_checked},
+            new int[]{-android.R.attr.state_checked}
+        };
+        int[] colors = new int[]{
+            accent,
+            secondary
+        };
+        return new ColorStateList(states, colors);
+    }
+
+    public static Drawable dropdownBackground(Context ctx) {
+        return dropdownBackground(ctx, isNight(ctx));
+    }
+
+    public static Drawable dropdownBackground(Context ctx, boolean night) {
+        int bg = night ? Color.parseColor("#F0121A24") : Color.parseColor("#F51E2838");
+        int border = ColorUtils.setAlphaComponent(accent(ctx, night), 100);
+        return roundedDrawable(ctx, 14f, bg, border, 1.2f);
+    }
+
+    public static class ThemedDropdownAdapter<T> extends android.widget.ArrayAdapter<T> {
+        private final Context context;
+
+        public ThemedDropdownAdapter(Context context, java.util.List<T> objects) {
+            super(context, R.layout.item_dropdown_spinner, objects);
+            this.context = context;
+        }
+
+        public ThemedDropdownAdapter(Context context, T[] objects) {
+            super(context, R.layout.item_dropdown_spinner, objects);
+            this.context = context;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            TextView tv = (TextView) super.getView(position, convertView, parent);
+            tv.setTextColor(ThemeManager.accent(context));
+            return tv;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+            TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+            tv.setTextColor(ThemeManager.textPrimary(context));
+            tv.setBackgroundResource(R.drawable.bg_icon_button);
+            return tv;
+        }
+    }
+
+    public static void tintTextInputLayout(TextInputLayout layout, AutoCompleteTextView spinner, int accent, int secondaryText) {
+        if (layout != null) {
+            layout.setBoxStrokeColor(accent);
+            layout.setHintTextColor(ColorStateList.valueOf(accent));
+            layout.setDefaultHintTextColor(ColorStateList.valueOf(secondaryText));
+            layout.setEndIconTintList(ColorStateList.valueOf(accent));
+            float radius = 12 * layout.getResources().getDisplayMetrics().density;
+            layout.setBoxCornerRadii(radius, radius, radius, radius);
+        }
+        if (spinner != null) {
+            spinner.setTextColor(accent);
+            spinner.setDropDownBackgroundDrawable(dropdownBackground(spinner.getContext()));
+        }
+    }
+
+    public static int getContrastingTextColor(int backgroundColor) {
+        double luminance = ColorUtils.calculateLuminance(backgroundColor);
+        return luminance > 0.45 ? 0xFF101418 : 0xFFFFFFFF;
+    }
+
+    public static Drawable whiteThumbDrawable(Context ctx) {
+        float d = ctx.getResources().getDisplayMetrics().density;
+        android.graphics.drawable.GradientDrawable thumb = new android.graphics.drawable.GradientDrawable();
+        thumb.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        thumb.setColor(Color.WHITE);
+        thumb.setStroke((int) Math.max(1, 1.5f * d), Color.parseColor("#40000000"));
+        int size = (int) (20 * d);
+        thumb.setSize(size, size);
+        return thumb;
+    }
+
+    public static android.graphics.drawable.GradientDrawable hueGradientDrawable(Context ctx, float radiusDp, int heightDp) {
+        float d = ctx.getResources().getDisplayMetrics().density;
+        int[] colors = new int[361];
+        for (int i = 0; i <= 360; i++) {
+            colors[i] = Color.HSVToColor(new float[]{i, 1f, 1f});
+        }
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT, colors);
+        g.setCornerRadius(radiusDp * d);
+        if (heightDp > 0) {
+            g.setSize(-1, (int) (heightDp * d));
+        }
+        return g;
+    }
+
+    public static android.graphics.drawable.GradientDrawable brightnessGradientDrawable(Context ctx, int color, float radiusDp, int heightDp) {
+        float d = ctx.getResources().getDisplayMetrics().density;
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT, new int[]{Color.BLACK, color});
+        g.setCornerRadius(radiusDp * d);
+        if (heightDp > 0) {
+            g.setSize(-1, (int) (heightDp * d));
+        }
+        return g;
+    }
+
+    public static void styleCustomSeekBar(SeekBar sb, int accent, boolean isNight) {
+        if (sb == null) return;
+        Context ctx = sb.getContext();
+        float d = ctx.getResources().getDisplayMetrics().density;
+
+        int inactiveColor = isNight ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000");
+
+        android.graphics.drawable.GradientDrawable bgTrack = new android.graphics.drawable.GradientDrawable();
+        bgTrack.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        bgTrack.setCornerRadius(2.5f * d);
+        bgTrack.setColor(inactiveColor);
+        bgTrack.setSize(-1, (int) (5 * d));
+
+        android.graphics.drawable.GradientDrawable progressTrack = new android.graphics.drawable.GradientDrawable();
+        progressTrack.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        progressTrack.setCornerRadius(2.5f * d);
+        progressTrack.setColor(accent);
+        progressTrack.setSize(-1, (int) (5 * d));
+
+        android.graphics.drawable.ClipDrawable clipProgress = new android.graphics.drawable.ClipDrawable(
+                progressTrack, android.view.Gravity.START, android.graphics.drawable.ClipDrawable.HORIZONTAL);
+
+        android.graphics.drawable.LayerDrawable trackDrawable = new android.graphics.drawable.LayerDrawable(
+                new android.graphics.drawable.Drawable[]{bgTrack, clipProgress});
+        trackDrawable.setId(0, android.R.id.background);
+        trackDrawable.setId(1, android.R.id.progress);
+
+        sb.setProgressDrawable(trackDrawable);
+
+        android.graphics.drawable.GradientDrawable thumb = new android.graphics.drawable.GradientDrawable();
+        thumb.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        thumb.setColor(accent);
+        thumb.setStroke((int) Math.max(1, 1.2f * d), Color.parseColor("#40000000"));
+        int thumbSize = (int) (20 * d);
+        thumb.setSize(thumbSize, thumbSize);
+
+        sb.setThumb(thumb);
+        sb.setSplitTrack(false);
+    }
+
+    public static void tintSeekBar(SeekBar sb, int accent) {
+        if (sb == null) return;
+        styleCustomSeekBar(sb, accent, isNight(sb.getContext()));
     }
 }

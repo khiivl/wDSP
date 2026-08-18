@@ -65,8 +65,12 @@
         <item name="trackColorInactive">#26FFFFFF</item>
         <item name="thumbColor">@color/cyan_custom</item>
         <item name="haloColor">@color/transparent</item>
-        <item name="thumbRadius">7dp</item>
-        <item name="trackHeight">4dp</item>
+        <item name="thumbRadius">10dp</item>
+        <item name="thumbWidth">20dp</item>
+        <item name="thumbHeight">20dp</item>
+        <item name="trackHeight">5dp</item>
+        <item name="trackStopIndicatorSize">0dp</item>
+        <item name="tickVisibilityMode">hidden</item>
         <item name="labelBehavior">gone</item>
     </style>
 

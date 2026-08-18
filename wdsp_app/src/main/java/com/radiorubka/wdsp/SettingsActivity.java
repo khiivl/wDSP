@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -21,13 +22,18 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.content.res.ColorStateList;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.slider.LabelFormatter;
+import com.google.android.material.slider.Slider;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -55,8 +61,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Settings";
 
-    private ScrollView rootSettings;
+    private View rootSettings;
     private LinearLayout settingsColumn;
+    private BottomNavigationView bottomNav;
 
     // Theme Mode
     private TextView btnThemeDay, btnThemeNight, btnThemeAuto;
@@ -69,13 +76,15 @@ public class SettingsActivity extends AppCompatActivity {
     // Wallpaper
     private TextView labelWallpaper, wallpaperName;
     private TextView btnWallpaperPick, btnWallpaperReset, btnSolidWallpaper;
-    private LinearLayout layoutSolidControls;
+    private View layoutSolidControls;
     private SeekBar seekSolidHue, seekSolidVal;
-    private View bgSolidHue, bgSolidVal;
+    private TextView tvSolidHueVal, tvSolidValVal;
+    private View bgSolidHue, bgSolidVal, bgStatusBarHue;
 
     // Status Bar Visualizer
     private SwitchCompat switchStatusBarVis;
-    private SeekBar seekStatusBarWidth, seekStatusBarPos, seekStatusBarHue;
+    private Slider seekStatusBarWidth, seekStatusBarPos;
+    private SeekBar seekStatusBarHue;
     private TextView tvStatusBarWidth, tvStatusBarPos, tvStatusBarHue;
     private TextView btnThemeSpectrum, btnThemeSolidHue, btnThemeAutoDayNight, btnThemeEqGroups;
     private TextView btnThemeWhite, btnThemeBlack, btnThemeFire, btnThemeNeon;
@@ -110,6 +119,13 @@ public class SettingsActivity extends AppCompatActivity {
         applyTheme();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadSettings();
+        applyTheme();
+    }
+
     private void initLauncher() {
         wallpaperPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
@@ -133,6 +149,7 @@ public class SettingsActivity extends AppCompatActivity {
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
+                    loadSettings();
                     applyTheme();
                 }
         );
@@ -157,12 +174,31 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        bottomNav = findViewById(R.id.bottom_navigation);
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_settings);
+            bottomNav.setOnItemSelectedListener(item -> {
+                int id = item.getItemId();
+                if (id == R.id.nav_settings) {
+                    return true;
+                }
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("target_tab", id);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+                return true;
+            });
+        }
 
         // Theme modes
         btnThemeDay = findViewById(R.id.btn_theme_day);
         btnThemeNight = findViewById(R.id.btn_theme_night);
         btnThemeAuto = findViewById(R.id.btn_theme_auto);
+
+        TouchGlow.attach(btnThemeDay);
+        TouchGlow.attach(btnThemeNight);
+        TouchGlow.attach(btnThemeAuto);
 
         btnThemeDay.setOnClickListener(v -> {
             ThemeManager.setThemeMode(this, ThemeManager.THEME_MODE_DAY);
@@ -207,8 +243,14 @@ public class SettingsActivity extends AppCompatActivity {
         layoutSolidControls = findViewById(R.id.layout_solid_controls);
         seekSolidHue = findViewById(R.id.seek_solid_hue);
         seekSolidVal = findViewById(R.id.seek_solid_val);
+        tvSolidHueVal = findViewById(R.id.tv_solid_hue_val);
+        tvSolidValVal = findViewById(R.id.tv_solid_val_val);
         bgSolidHue = findViewById(R.id.bg_solid_hue);
         bgSolidVal = findViewById(R.id.bg_solid_val);
+
+        TouchGlow.attach(btnWallpaperPick);
+        TouchGlow.attach(btnWallpaperReset);
+        TouchGlow.attach(btnSolidWallpaper);
 
         btnWallpaperPick.setOnClickListener(v -> {
             try {
@@ -242,6 +284,7 @@ public class SettingsActivity extends AppCompatActivity {
         tvStatusBarWidth = findViewById(R.id.tv_status_bar_width);
         tvStatusBarPos = findViewById(R.id.tv_status_bar_pos);
         tvStatusBarHue = findViewById(R.id.tv_status_bar_hue);
+        bgStatusBarHue = findViewById(R.id.bg_status_bar_hue);
 
         btnThemeSpectrum = findViewById(R.id.btn_theme_spectrum);
         btnThemeSolidHue = findViewById(R.id.btn_theme_solid_hue);
@@ -251,7 +294,15 @@ public class SettingsActivity extends AppCompatActivity {
         btnThemeBlack = findViewById(R.id.btn_theme_black);
         btnThemeFire = findViewById(R.id.btn_theme_fire);
         btnThemeNeon = findViewById(R.id.btn_theme_neon);
-        btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
+
+        TouchGlow.attach(btnThemeSpectrum);
+        TouchGlow.attach(btnThemeSolidHue);
+        TouchGlow.attach(btnThemeAutoDayNight);
+        TouchGlow.attach(btnThemeEqGroups);
+        TouchGlow.attach(btnThemeWhite);
+        TouchGlow.attach(btnThemeBlack);
+        TouchGlow.attach(btnThemeFire);
+        TouchGlow.attach(btnThemeNeon);
 
         initStatusBarVisualizerControls();
 
@@ -259,6 +310,9 @@ public class SettingsActivity extends AppCompatActivity {
         switchEqVisualizerEnable = findViewById(R.id.switch_eq_visualizer_enable);
         btnEqVisSpectrum = findViewById(R.id.btn_eq_vis_spectrum);
         btnEqVisMonochrome = findViewById(R.id.btn_eq_vis_monochrome);
+
+        TouchGlow.attach(btnEqVisSpectrum);
+        TouchGlow.attach(btnEqVisMonochrome);
 
         switchEqVisualizerEnable.setOnCheckedChangeListener((btn, isChecked) -> {
             ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_enabled", isChecked).apply();
@@ -276,6 +330,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Permissions & Backup
         btnBatteryOpt = findViewById(R.id.btn_battery_opt);
+        btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
         btnAudioPerm = findViewById(R.id.btn_audio_perm);
         btnLocationPerm = findViewById(R.id.btn_location_perm);
         btnAppDetails = findViewById(R.id.btn_app_details);
@@ -283,6 +338,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnRestoreSettings = findViewById(R.id.btn_restore_settings);
 
         TouchGlow.attach(btnBatteryOpt);
+        TouchGlow.attach(btnOverlayPerm);
         TouchGlow.attach(btnAudioPerm);
         TouchGlow.attach(btnLocationPerm);
         TouchGlow.attach(btnAppDetails);
@@ -290,6 +346,11 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(btnRestoreSettings);
 
         btnBatteryOpt.setOnClickListener(v -> requestBatteryOptimization());
+        btnOverlayPerm.setOnClickListener(v -> {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        });
         btnAudioPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO));
         btnLocationPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION));
         btnAppDetails.setOnClickListener(v -> {
@@ -314,8 +375,37 @@ public class SettingsActivity extends AppCompatActivity {
         SettingsAccordion.build(settingsColumn, accent);
     }
 
+    private void requestBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                try {
+                    startActivity(intent);
+                } catch (Exception e) {
+                    intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    try {
+                        startActivity(intent);
+                    } catch (Exception ignored) {}
+                }
+            } else {
+                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                try {
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
     private void setupColorWheel(HueWheelView wheel, SeekBar brightness, int slot) {
+        brightness.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
+        brightness.setThumb(ThemeManager.whiteThumbDrawable(this));
+        updateWheelBrightnessGradient(wheel, brightness);
+
         wheel.setListener((hue, sat, finished) -> {
+            updateWheelBrightnessGradient(wheel, brightness);
             float val = brightness.getProgress() / 100f;
             int color = Color.HSVToColor(new float[]{hue, sat, val});
             saveSlotColor(slot, color);
@@ -347,6 +437,12 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
+    private void updateWheelBrightnessGradient(HueWheelView wheel, SeekBar brightness) {
+        if (wheel == null || brightness == null) return;
+        int pureColor = Color.HSVToColor(new float[]{wheel.getHue(), wheel.getSat(), 1f});
+        brightness.setBackground(ThemeManager.brightnessGradientDrawable(this, pureColor, 14f, 14));
+    }
+
     private void saveSlotColor(int slot, int color) {
         switch (slot) {
             case 0:
@@ -365,13 +461,15 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initSolidControls() {
-        int[] hueColors = new int[361];
-        for (int i = 0; i <= 360; i++) {
-            hueColors[i] = Color.HSVToColor(new float[]{i, 1f, 1f});
+        if (bgSolidHue != null) {
+            bgSolidHue.setBackground(ThemeManager.hueGradientDrawable(this, 14f, 14));
         }
-        GradientDrawable hueDrawable = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, hueColors);
-        hueDrawable.setCornerRadius(16f);
-        bgSolidHue.setBackground(hueDrawable);
+
+        seekSolidHue.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
+        seekSolidHue.setThumb(ThemeManager.whiteThumbDrawable(this));
+
+        seekSolidVal.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
+        seekSolidVal.setThumb(ThemeManager.whiteThumbDrawable(this));
 
         SeekBar.OnSeekBarChangeListener solidListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -380,10 +478,13 @@ public class SettingsActivity extends AppCompatActivity {
                 float v = seekSolidVal.getProgress() / 100f;
                 int newColor = Color.HSVToColor(new float[]{h, 1f, v});
 
+                if (tvSolidHueVal != null) tvSolidHueVal.setText(getString(R.string.lbl_degrees_fmt, (int) h));
+                if (tvSolidValVal != null) tvSolidValVal.setText(getString(R.string.lbl_percent_fmt, (int) (v * 100)));
+
                 int pureColor = Color.HSVToColor(new float[]{h, 1f, 1f});
-                GradientDrawable valDrawable = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{Color.BLACK, pureColor});
-                valDrawable.setCornerRadius(16f);
-                bgSolidVal.setBackground(valDrawable);
+                if (bgSolidVal != null) {
+                    bgSolidVal.setBackground(ThemeManager.brightnessGradientDrawable(SettingsActivity.this, pureColor, 14f, 14));
+                }
 
                 if (fromUser) {
                     ThemeManager.setSolidWallpaperColor(SettingsActivity.this, editNight, newColor);
@@ -408,48 +509,35 @@ public class SettingsActivity extends AppCompatActivity {
     private void initStatusBarVisualizerControls() {
         SharedPreferences p = ThemeManager.prefs(this);
 
+        if (bgStatusBarHue != null) {
+            bgStatusBarHue.setBackground(ThemeManager.hueGradientDrawable(this, 14f, 14));
+        }
+        seekStatusBarHue.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
+        seekStatusBarHue.setThumb(ThemeManager.whiteThumbDrawable(this));
+
         switchStatusBarVis.setOnCheckedChangeListener((btn, isChecked) -> {
             p.edit().putBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, isChecked).apply();
-            StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
-            if (isChecked && !Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, R.string.status_bar_visualizer_permission_needed, Toast.LENGTH_SHORT).show();
+            StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
+        });
+
+        seekStatusBarWidth.addOnChangeListener((slider, value, fromUser) -> {
+            int progress = Math.round(value);
+            tvStatusBarWidth.setText(getString(R.string.lbl_percent_fmt, progress));
+            if (fromUser) {
+                float f = progress / 100f;
+                p.edit().putFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F, f).apply();
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F);
             }
         });
 
-        seekStatusBarWidth.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvStatusBarWidth.setText(getString(R.string.lbl_percent_fmt, progress));
-                if (fromUser) {
-                    float f = progress / 100f;
-                    p.edit().putFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F, f).apply();
-                    StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F);
-                }
+        seekStatusBarPos.addOnChangeListener((slider, value, fromUser) -> {
+            int progress = Math.round(value);
+            tvStatusBarPos.setText(getString(R.string.lbl_percent_fmt, progress));
+            if (fromUser) {
+                float f = progress / 100f;
+                p.edit().putFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F, f).apply();
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F);
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        seekStatusBarPos.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvStatusBarPos.setText(getString(R.string.lbl_percent_fmt, progress));
-                if (fromUser) {
-                    float f = progress / 100f;
-                    p.edit().putFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F, f).apply();
-                    StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         seekStatusBarHue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -477,12 +565,6 @@ public class SettingsActivity extends AppCompatActivity {
         setupThemeButton(btnThemeBlack, StatusBarVisualizerView.THEME_MONOCHROME_BLACK);
         setupThemeButton(btnThemeFire, StatusBarVisualizerView.THEME_FIRE);
         setupThemeButton(btnThemeNeon, StatusBarVisualizerView.THEME_NEON);
-
-        btnOverlayPerm.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
     }
 
     private void setupThemeButton(TextView btn, int themeIndex) {
@@ -496,16 +578,68 @@ public class SettingsActivity extends AppCompatActivity {
     private void updateThemeButtonHighlights(int currentTheme) {
         TextView[] btns = {btnThemeSpectrum, btnThemeSolidHue, btnThemeAutoDayNight, btnThemeEqGroups,
                 btnThemeWhite, btnThemeBlack, btnThemeFire, btnThemeNeon};
-        int accent = ThemeManager.accent(this, editNight);
-
         for (int i = 0; i < btns.length; i++) {
-            if (i == currentTheme) {
-                btns[i].setTextColor(accent);
-                btns[i].setBackgroundResource(R.drawable.bg_slider_layout);
-            } else {
-                btns[i].setTextColor(ThemeManager.textSecondary(this, editNight));
-                btns[i].setBackgroundResource(R.drawable.rds_btn_bg);
-            }
+            styleToggleButton(btns[i], i == currentTheme);
+        }
+    }
+
+    private void updateThemeModeButtons(int mode) {
+        styleToggleButton(btnThemeDay, mode == ThemeManager.THEME_MODE_DAY);
+        styleToggleButton(btnThemeNight, mode == ThemeManager.THEME_MODE_NIGHT);
+        styleToggleButton(btnThemeAuto, mode == ThemeManager.THEME_MODE_AUTO);
+    }
+
+    private void updatePermissionButtons() {
+        int accent = ThemeManager.accent(this, editNight);
+        int border = ThemeManager.panelBorder(this, editNight);
+
+        // 1. Battery Optimization
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        boolean batteryGranted = (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
+        stylePermissionButton(btnBatteryOpt, batteryGranted, getString(R.string.perm_battery_opt), accent, border);
+
+        // 2. Overlay Permission
+        boolean overlayGranted = Settings.canDrawOverlays(this);
+        stylePermissionButton(btnOverlayPerm, overlayGranted, getString(R.string.settings_perm_overlay), accent, border);
+
+        // 3. Audio Record
+        boolean audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        stylePermissionButton(btnAudioPerm, audioGranted, getString(R.string.perm_audio_record), accent, border);
+
+        // 4. GPS Location
+        boolean locationGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        stylePermissionButton(btnLocationPerm, locationGranted, getString(R.string.perm_gps_location), accent, border);
+    }
+
+    private void stylePermissionButton(TextView btn, boolean granted, String title, int accent, int border) {
+        if (btn == null) return;
+        int primaryText = editNight ? 0xFFFFFFFF : 0xFF101418;
+        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        int ungrantedBorder = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
+        if (granted) {
+            btn.setText("✓ " + title);
+            btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
+            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
+        } else {
+            btn.setText(title);
+            btn.setTextColor(primaryText);
+            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, ungrantedBorder, 1.2f));
+        }
+    }
+
+    private void styleToggleButton(TextView btn, boolean active) {
+        if (btn == null) return;
+        int accent = ThemeManager.accent(this, editNight);
+        int primaryText = editNight ? 0xFFFFFFFF : 0xFF101418;
+        int border = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
+        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+
+        if (active) {
+            btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
+            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
+        } else {
+            btn.setTextColor(primaryText);
+            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, border, 1.2f));
         }
     }
 
@@ -514,10 +648,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Theme mode
         int mode = ThemeManager.getThemeMode(this);
-        int accent = ThemeManager.accent(this, editNight);
-        btnThemeDay.setTextColor(mode == ThemeManager.THEME_MODE_DAY ? accent : ThemeManager.textSecondary(this, editNight));
-        btnThemeNight.setTextColor(mode == ThemeManager.THEME_MODE_NIGHT ? accent : ThemeManager.textSecondary(this, editNight));
-        btnThemeAuto.setTextColor(mode == ThemeManager.THEME_MODE_AUTO ? accent : ThemeManager.textSecondary(this, editNight));
+        updateThemeModeButtons(mode);
 
         // 4 Hue Wheels
         loadColorToWheel(ThemeManager.accent(this, editNight), pickerAccentWheel, pickerAccentBrightness);
@@ -539,12 +670,20 @@ public class SettingsActivity extends AppCompatActivity {
             wallpaperName.setText(R.string.settings_wallpaper_none);
             layoutSolidControls.setVisibility(View.GONE);
         }
+        styleToggleButton(btnSolidWallpaper, isSolid);
 
         int solidColor = ThemeManager.getSolidWallpaperColor(this, editNight);
         float[] hsv = new float[3];
         Color.colorToHSV(solidColor, hsv);
         seekSolidHue.setProgress((int) hsv[0]);
         seekSolidVal.setProgress((int) (hsv[2] * 100));
+        if (tvSolidHueVal != null) tvSolidHueVal.setText(getString(R.string.lbl_degrees_fmt, (int) hsv[0]));
+        if (tvSolidValVal != null) tvSolidValVal.setText(getString(R.string.lbl_percent_fmt, (int) (hsv[2] * 100)));
+
+        int pureColor = Color.HSVToColor(new float[]{hsv[0], 1f, 1f});
+        if (bgSolidVal != null) {
+            bgSolidVal.setBackground(ThemeManager.brightnessGradientDrawable(this, pureColor, 14f, 14));
+        }
 
         // Visualizer
         switchStatusBarVis.setChecked(p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, false));
@@ -552,8 +691,8 @@ public class SettingsActivity extends AppCompatActivity {
         int pos = Math.round(p.getFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F, 0.50f) * 100);
         int hue = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE, 0);
 
-        seekStatusBarWidth.setProgress(w);
-        seekStatusBarPos.setProgress(pos);
+        seekStatusBarWidth.setValue(w);
+        seekStatusBarPos.setValue(pos);
         seekStatusBarHue.setProgress(hue);
         tvStatusBarWidth.setText(getString(R.string.lbl_percent_fmt, w));
         tvStatusBarPos.setText(getString(R.string.lbl_percent_fmt, pos));
@@ -567,25 +706,14 @@ public class SettingsActivity extends AppCompatActivity {
         switchEqVisualizerEnable.setChecked(eqVisEnabled);
         int eqVisMode = p.getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
+
+        // Permissions
+        updatePermissionButtons();
     }
 
     private void updateEqVisModeHighlights(int mode) {
-        int accent = ThemeManager.accent(this);
-        int onAccent = ThemeManager.onAccent(this);
-        int normalBg = Color.parseColor("#15FFFFFF");
-        int normalText = ThemeManager.textPrimary(this);
-
-        if (mode == 0) {
-            btnEqVisSpectrum.setBackgroundColor(accent);
-            btnEqVisSpectrum.setTextColor(onAccent);
-            btnEqVisMonochrome.setBackgroundColor(normalBg);
-            btnEqVisMonochrome.setTextColor(normalText);
-        } else {
-            btnEqVisMonochrome.setBackgroundColor(accent);
-            btnEqVisMonochrome.setTextColor(onAccent);
-            btnEqVisSpectrum.setBackgroundColor(normalBg);
-            btnEqVisSpectrum.setTextColor(normalText);
-        }
+        styleToggleButton(btnEqVisSpectrum, mode == 0);
+        styleToggleButton(btnEqVisMonochrome, mode == 1);
     }
 
     private void loadColorToWheel(int color, HueWheelView wheel, SeekBar brightness) {
@@ -609,19 +737,6 @@ public class SettingsActivity extends AppCompatActivity {
         return name != null ? name : "wallpaper";
     }
 
-    private void requestBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Battery optimization already disabled", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     private void backupAllSettings(Uri uri) {
         try (OutputStream os = getContentResolver().openOutputStream(uri)) {
             if (os == null) return;
@@ -636,10 +751,13 @@ public class SettingsActivity extends AppCompatActivity {
 
             // 2. EqPresets preferences (EQ, Presets, GALA, Subwoofer, Fader, Delays)
             SharedPreferences eqPrefs = getSharedPreferences("EqPresets", MODE_PRIVATE);
-            backupRoot.put("eq_presets", eqPrefs.getAll());
+            backupRoot.put("eq_preferences", eqPrefs.getAll());
 
+            // Write JSON
             String json = new GsonBuilder().setPrettyPrinting().create().toJson(backupRoot);
             os.write(json.getBytes(StandardCharsets.UTF_8));
+            os.flush();
+
             Toast.makeText(this, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "Backup failed", e);
@@ -651,38 +769,31 @@ public class SettingsActivity extends AppCompatActivity {
         try (InputStream is = getContentResolver().openInputStream(uri);
              BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
-
-            JsonObject root = JsonParser.parseString(sb.toString()).getAsJsonObject();
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             if (root == null || !root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
-                Toast.makeText(this, R.string.toast_restore_failed, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_restore_failed, "Invalid backup"), Toast.LENGTH_LONG).show();
                 return;
             }
 
-            // 1. Restore Default Preferences
-            if (root.has("default_preferences")) {
-                JsonObject defObj = root.getAsJsonObject("default_preferences");
+            // 1. Restore Default preferences
+            if (root.has("default_preferences") && root.get("default_preferences").isJsonObject()) {
                 SharedPreferences.Editor defEditor = ThemeManager.prefs(this).edit();
-                restoreJsonToPrefs(defObj, defEditor);
+                restoreJsonToPrefs(root.getAsJsonObject("default_preferences"), defEditor);
                 defEditor.apply();
             }
 
-            // 2. Restore EqPresets
-            if (root.has("eq_presets")) {
-                JsonObject eqObj = root.getAsJsonObject("eq_presets");
+            // 2. Restore Eq preferences
+            if (root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
                 SharedPreferences.Editor eqEditor = getSharedPreferences("EqPresets", MODE_PRIVATE).edit();
-                restoreJsonToPrefs(eqObj, eqEditor);
+                restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
                 eqEditor.apply();
             }
 
-            // 3. Notify McuService
-            Intent syncIntent = new Intent("com.radiorubka.wdsp.UI_ACTIVE");
-            syncIntent.setPackage(getPackageName());
-            sendBroadcast(syncIntent);
-
             Toast.makeText(this, R.string.toast_restore_success, Toast.LENGTH_SHORT).show();
+
+            // 3. Notify services & managers
+            StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
+            sendBroadcast(new Intent("com.radiorubka.wdsp.SETTINGS_RESTORED").setPackage(getPackageName()));
 
             // 4. Reload activity settings
             loadSettings();
@@ -727,20 +838,102 @@ public class SettingsActivity extends AppCompatActivity {
         int primaryText = ThemeManager.textPrimary(this, editNight);
         int secondaryText = ThemeManager.textSecondary(this, editNight);
 
-        rootSettings.setBackground(ThemeManager.wallpaperBackground(this, editNight));
+        if (rootSettings != null) {
+            rootSettings.setBackground(ThemeManager.wallpaperBackground(this, editNight));
+        }
         SettingsAccordion.repaint(settingsColumn, accent);
 
         TextView title = findViewById(R.id.title);
         if (title != null) title.setTextColor(primaryText);
 
-        findViewById(R.id.btn_back).setBackgroundResource(R.drawable.rds_btn_bg);
-        ((TextView) findViewById(R.id.btn_back)).setTextColor(accent);
+        // Section labels & headers
+        int[] primaryLabels = {
+            R.id.label_theme_section, R.id.label_statusbar_section,
+            R.id.label_eq_vis_section, R.id.label_permissions_section,
+            R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
+            R.id.label_status_bar_theme, R.id.label_eq_vis_enable
+        };
+        for (int id : primaryLabels) {
+            TextView tv = findViewById(id);
+            if (tv != null) tv.setTextColor(primaryText);
+        }
 
-        if (btnBackupSettings != null) {
-            btnBackupSettings.setTextColor(primaryText);
+        // Secondary / Row labels
+        int[] secondaryLabels = {
+            R.id.label_accent_wheel, R.id.label_primary_text_wheel,
+            R.id.label_label_wheel, R.id.label_on_accent_wheel,
+            R.id.wallpaper_name, R.id.label_solid_hue, R.id.label_solid_val,
+            R.id.label_status_bar_width, R.id.label_status_bar_pos,
+            R.id.label_status_bar_hue, R.id.label_eq_vis_mode
+        };
+        for (int id : secondaryLabels) {
+            TextView tv = findViewById(id);
+            if (tv != null) tv.setTextColor(secondaryText);
         }
-        if (btnRestoreSettings != null) {
-            btnRestoreSettings.setTextColor(primaryText);
+
+        // Value text views
+        int valueColor = editNight ? accent : primaryText;
+        if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
+        if (tvStatusBarPos != null) tvStatusBarPos.setTextColor(valueColor);
+        if (tvStatusBarHue != null) tvStatusBarHue.setTextColor(valueColor);
+        if (tvSolidHueVal != null) tvSolidHueVal.setTextColor(valueColor);
+        if (tvSolidValVal != null) tvSolidValVal.setTextColor(valueColor);
+
+        // Tint status bar Sliders
+        tintSlider(seekStatusBarWidth, accent);
+        tintSlider(seekStatusBarPos, accent);
+
+        // Update wheel brightness backgrounds
+        updateWheelBrightnessGradient(pickerAccentWheel, pickerAccentBrightness);
+        updateWheelBrightnessGradient(pickerPrimaryTextWheel, pickerPrimaryTextBrightness);
+        updateWheelBrightnessGradient(pickerLabelWheel, pickerLabelBrightness);
+        updateWheelBrightnessGradient(pickerOnAccentWheel, pickerOnAccentBrightness);
+
+        // Tint Bottom Navigation Bar
+        if (bottomNav != null) {
+            ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this, editNight);
+            bottomNav.setItemIconTintList(navCsl);
+            bottomNav.setItemTextColor(navCsl);
+            bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
         }
+
+        // Action buttons styling
+        int actionBorder = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
+        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        TextView[] normalActionButtons = {
+            btnWallpaperPick, btnWallpaperReset, btnAppDetails,
+            btnBackupSettings, btnRestoreSettings
+        };
+        for (TextView btn : normalActionButtons) {
+            if (btn != null) {
+                btn.setTextColor(primaryText);
+                btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, actionBorder, 1.2f));
+            }
+        }
+
+        // Update toggle and permission button states
+        updateThemeModeButtons(ThemeManager.getThemeMode(this));
+        styleToggleButton(btnSolidWallpaper, ThemeManager.isSolidWallpaper(this, editNight));
+        int currentTheme = ThemeManager.prefs(this).getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME, StatusBarVisualizerView.THEME_SPECTRUM);
+        updateThemeButtonHighlights(currentTheme);
+        int eqVisMode = ThemeManager.prefs(this).getInt("pref_eq_visualizer_mode", 0);
+        updateEqVisModeHighlights(eqVisMode);
+        updatePermissionButtons();
+    }
+
+    private void tintSlider(Slider s, int accent) {
+        if (s == null) return;
+        ColorStateList csl = ColorStateList.valueOf(accent);
+        s.setThumbTintList(csl);
+        s.setTrackActiveTintList(csl);
+        s.setTrackInactiveTintList(ColorStateList.valueOf(editNight ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000")));
+        s.setHaloRadius(0);
+        s.setTrackStopIndicatorSize(0);
+        float density = getResources().getDisplayMetrics().density;
+        s.setTrackHeight((int) (5 * density));
+        s.setThumbRadius((int) (10 * density));
+        s.setThumbWidth((int) (20 * density));
+        s.setThumbHeight((int) (20 * density));
+        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
 }

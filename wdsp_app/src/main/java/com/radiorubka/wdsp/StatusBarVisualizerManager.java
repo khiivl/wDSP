@@ -14,6 +14,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
+
 /**
  * Manages the Status Bar Visualizer overlay lifecycle, positioning, and audio gating.
  * Follows the non-intrusive status bar overlay design from TopBarWidget.
@@ -21,7 +23,6 @@ import android.view.WindowManager;
 public class StatusBarVisualizerManager {
     private static final String TAG = "wDSP_StatusBarVisMgr";
 
-    public static final String PREFS_NAME = "EqPresets";
     public static final String PREF_STATUS_BAR_ENABLED = "sb_vis_enabled";
     public static final String PREF_STATUS_BAR_WIDTH_F = "sb_vis_width_f";
     public static final String PREF_STATUS_BAR_POS_F   = "sb_vis_pos_f";
@@ -69,7 +70,20 @@ public class StatusBarVisualizerManager {
     public StatusBarVisualizerManager(Context context) {
         this.context = context.getApplicationContext();
         this.windowManager = (WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE);
-        this.prefs = this.context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.prefs = ThemeManager.prefs(this.context);
+
+        // Migrate from old EqPresets if present
+        SharedPreferences oldPrefs = this.context.getSharedPreferences("EqPresets", Context.MODE_PRIVATE);
+        if (oldPrefs.contains(PREF_STATUS_BAR_ENABLED) && !prefs.contains(PREF_STATUS_BAR_ENABLED)) {
+            prefs.edit()
+                    .putBoolean(PREF_STATUS_BAR_ENABLED, oldPrefs.getBoolean(PREF_STATUS_BAR_ENABLED, false))
+                    .putFloat(PREF_STATUS_BAR_WIDTH_F, oldPrefs.getFloat(PREF_STATUS_BAR_WIDTH_F, DEFAULT_WIDTH_F))
+                    .putFloat(PREF_STATUS_BAR_POS_F, oldPrefs.getFloat(PREF_STATUS_BAR_POS_F, DEFAULT_POS_F))
+                    .putInt(PREF_STATUS_BAR_THEME, oldPrefs.getInt(PREF_STATUS_BAR_THEME, DEFAULT_THEME))
+                    .putInt(PREF_STATUS_BAR_HUE, oldPrefs.getInt(PREF_STATUS_BAR_HUE, DEFAULT_HUE))
+                    .apply();
+        }
+
         loadPreferences();
     }
 

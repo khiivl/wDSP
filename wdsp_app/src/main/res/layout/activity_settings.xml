@@ -1,299 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_settings"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_night"
-    android:fillViewport="true">
+    android:background="@drawable/bg_night">
 
-    <LinearLayout
-        android:id="@+id/settings_column"
+    <ScrollView
+        android:id="@+id/scroll_settings"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/settings_pad">
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_bar">
 
-        <!-- Головний заголовок -->
         <LinearLayout
+            android:id="@+id/settings_column"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:orientation="vertical"
+            android:padding="@dimen/settings_pad">
 
-            <TextView
-                android:id="@+id/btn_back"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:background="@drawable/rds_btn_bg"
-                android:text="←"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
+            <!-- Головний заголовок -->
             <TextView
                 android:id="@+id/title"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:gravity="center"
+                android:layout_marginBottom="8dp"
                 android:text="@string/settings_title"
                 android:textColor="#FFFFFF"
                 android:textSize="@dimen/settings_section_text"
                 android:textStyle="bold" />
 
-            <View
-                android:layout_width="48dp"
-                android:layout_height="1dp" />
-        </LinearLayout>
-
-        <!-- ════════════════════════════════════════════════════════════
-             СЕКЦІЯ 1: 🎨 Оформлення та Теми
-             ════════════════════════════════════════════════════════════ -->
-        <TextView
-            android:id="@+id/label_theme_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/settings_appearance"
-            android:textSize="@dimen/settings_row_text"
-            android:textStyle="bold" />
-
-        <!-- Перемикач День / Ніч / Авто -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 1: 🎨 Оформлення та Теми
+                 ════════════════════════════════════════════════════════════ -->
             <TextView
-                android:id="@+id/btn_theme_day"
-                android:layout_width="0dp"
+                android:id="@+id/label_theme_section"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/rds_btn_bg"
-                android:text="@string/settings_theme_day"
-                android:textSize="@dimen/settings_btn_text" />
+                android:layout_marginTop="12dp"
+                android:text="@string/settings_appearance"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/btn_theme_night"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/rds_btn_bg"
-                android:text="@string/settings_theme_night"
-                android:textSize="@dimen/settings_btn_text" />
-
-            <TextView
-                android:id="@+id/btn_theme_auto"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/rds_btn_bg"
-                android:text="@string/settings_theme_auto"
-                android:textSize="@dimen/settings_btn_text" />
-        </LinearLayout>
-
-        <!-- 4 HSV-диски палітри -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
-            android:weightSum="4">
-
-            <!-- 1. Акцентний колір -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_accent_wheel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/settings_accent_title"
-                    android:textSize="@dimen/wheel_label_text" />
-
-                <com.radiorubka.wdsp.ui.views.HueWheelView
-                    android:id="@+id/picker_accent_wheel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp" />
-
-                <SeekBar
-                    android:id="@+id/picker_accent_brightness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:max="100"
-                    android:progress="90" />
-            </LinearLayout>
-
-            <!-- 2. Основний текст -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_primary_text_wheel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/settings_primary_text_title"
-                    android:textSize="@dimen/wheel_label_text" />
-
-                <com.radiorubka.wdsp.ui.views.HueWheelView
-                    android:id="@+id/picker_primary_text_wheel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp" />
-
-                <SeekBar
-                    android:id="@+id/picker_primary_text_brightness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:max="100"
-                    android:progress="100" />
-            </LinearLayout>
-
-            <!-- 3. Другорядний текст -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_label_wheel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/settings_label_color_title"
-                    android:textSize="@dimen/wheel_label_text" />
-
-                <com.radiorubka.wdsp.ui.views.HueWheelView
-                    android:id="@+id/picker_label_wheel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp" />
-
-                <SeekBar
-                    android:id="@+id/picker_label_brightness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:max="100"
-                    android:progress="60" />
-            </LinearLayout>
-
-            <!-- 4. Текст на акценті -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_on_accent_wheel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/settings_on_accent_title"
-                    android:textSize="@dimen/wheel_label_text" />
-
-                <com.radiorubka.wdsp.ui.views.HueWheelView
-                    android:id="@+id/picker_on_accent_wheel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp" />
-
-                <SeekBar
-                    android:id="@+id/picker_on_accent_brightness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:max="100"
-                    android:progress="10" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Блок Шпалер -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_licence_card"
-            android:orientation="vertical"
-            android:padding="14dp">
-
+            <!-- Перемикач День / Ніч / Авто -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/label_wallpaper"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/settings_wallpaper_title"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/wallpaper_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_wallpaper_none"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_wallpaper_pick"
+                    android:id="@+id/btn_theme_day"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
                     android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_wallpaper_load"
-                    android:textSize="13sp" />
+                    android:text="@string/settings_theme_day"
+                    android:textSize="@dimen/settings_btn_text" />
 
                 <TextView
-                    android:id="@+id/btn_wallpaper_reset"
+                    android:id="@+id/btn_theme_night"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -301,11 +73,11 @@
                     android:gravity="center"
                     android:padding="10dp"
                     android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_wallpaper_default"
-                    android:textSize="13sp" />
+                    android:text="@string/settings_theme_night"
+                    android:textSize="@dimen/settings_btn_text" />
 
                 <TextView
-                    android:id="@+id/btn_solid_wallpaper"
+                    android:id="@+id/btn_theme_auto"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -313,524 +85,887 @@
                     android:gravity="center"
                     android:padding="10dp"
                     android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_wallpaper_solid_switch"
-                    android:textSize="13sp" />
+                    android:text="@string/settings_theme_auto"
+                    android:textSize="@dimen/settings_btn_text" />
             </LinearLayout>
 
-            <!-- Повзунки солід-кольору -->
+            <!-- 4 HSV-диски палітри -->
             <LinearLayout
-                android:id="@+id/layout_solid_controls"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="vertical">
+                android:layout_marginTop="14dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:weightSum="4">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- 1. Акцентний колір -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_solid_hue"
-                    android:textSize="12sp" />
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp">
+                    <TextView
+                        android:id="@+id/label_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
 
-                    <View
-                        android:id="@+id/bg_solid_hue"
-                        android:layout_width="match_parent"
-                        android:layout_height="14dp"
-                        android:layout_gravity="center_vertical" />
-
-                    <SeekBar
-                        android:id="@+id/seek_solid_hue"
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_accent_wheel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:max="360"
-                        android:progress="200" />
-                </FrameLayout>
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="90" />
+                </LinearLayout>
+
+                <!-- 2. Основний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_primary_text_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_primary_text_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_primary_text_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_primary_text_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="100" />
+                </LinearLayout>
+
+                <!-- 3. Другорядний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_label_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_label_color_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_label_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_label_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="60" />
+                </LinearLayout>
+
+                <!-- 4. Текст на акценті -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_on_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_on_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_on_accent_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_on_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="10" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Блок Шпалер -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_wallpaper_title"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/wallpaper_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_wallpaper_none"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_pick"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_load"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_reset"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_default"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_solid_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_solid_switch"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Повзунки солід-кольору (динамічні через ConstraintLayout + Barrier) -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_solid_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/label_solid_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_solid_hue"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <TextView
+                        android:id="@+id/label_solid_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/settings_solid_val"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toBottomOf="@id/frame_solid_hue"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier_solid_labels"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="end"
+                        app:constraint_referenced_ids="label_solid_hue,label_solid_val" />
+
+                    <!-- HUE Slider Frame -->
+                    <FrameLayout
+                        android:id="@+id/frame_solid_hue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        app:layout_constraintStart_toEndOf="@id/barrier_solid_labels"
+                        app:layout_constraintEnd_toStartOf="@id/tv_solid_hue_val"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_hue"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_hue">
+
+                        <View
+                            android:id="@+id/bg_solid_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_solid_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="360"
+                            android:progress="200" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_solid_hue_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="200°"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_hue"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_hue" />
+
+                    <!-- Brightness Slider Frame -->
+                    <FrameLayout
+                        android:id="@+id/frame_solid_val"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        app:layout_constraintStart_toEndOf="@id/barrier_solid_labels"
+                        app:layout_constraintEnd_toStartOf="@id/tv_solid_val_val"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_val"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_val">
+
+                        <View
+                            android:id="@+id/bg_solid_val"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_solid_val"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="100"
+                            android:progress="20" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_solid_val_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="20%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_val"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_val" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 2: 🪟 Візуалізатор у статус-барі
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_statusbar_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/status_bar_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_visualizer_enable"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_status_bar_vis"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Параметри розміру та положення (динамічно через ConstraintLayout + Barrier) -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_width"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_bar_visualizer_width"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <TextView
+                        android:id="@+id/label_status_bar_pos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/status_bar_visualizer_offset_x"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toBottomOf="@id/seek_status_bar_width"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier_sb_params"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="end"
+                        app:constraint_referenced_ids="label_status_bar_width,label_status_bar_pos" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_status_bar_width"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:valueFrom="10"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="40"
+                        app:thumbHeight="20dp"
+                        app:thumbWidth="20dp"
+                        app:thumbRadius="10dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        app:trackHeight="5dp"
+                        app:trackStopIndicatorSize="0dp"
+                        app:tickVisibilityMode="hidden"
+                        app:labelBehavior="gone"
+                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
+                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_width"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_width"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="40%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_status_bar_pos"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:valueFrom="0"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="50"
+                        app:thumbHeight="20dp"
+                        app:thumbWidth="20dp"
+                        app:thumbRadius="10dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        app:trackHeight="5dp"
+                        app:trackStopIndicatorSize="0dp"
+                        app:tickVisibilityMode="hidden"
+                        app:labelBehavior="gone"
+                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
+                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_pos"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_pos"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="50%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- Тема візуалізатора (Сітка кнопок 4х2) -->
+                <TextView
+                    android:id="@+id/label_status_bar_theme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/status_bar_visualizer_theme"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_theme_spectrum"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_spectrum"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_solid_hue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_solid_hue"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_auto_day_night"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_auto_day_night"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_eq_groups"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_eq_groups"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_theme_white"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_monochrome_white"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_black"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_monochrome_black"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_fire"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_fire"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_neon"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_neon"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Зсув HUE для візуалізатора (динамічно) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_bar_visualizer_hue"
+                        android:textSize="13sp" />
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp">
+
+                        <View
+                            android:id="@+id/bg_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="360"
+                            android:progress="0"
+                            android:splitTrack="false" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="0°"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 3: 🎛️ Візуалізатор еквалайзера
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_eq_vis_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/eq_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_eq_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/eq_vis_enable_label"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_eq_visualizer_enable"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/label_eq_vis_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/eq_vis_color_mode_label"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_spectrum"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/eq_vis_mode_spectrum"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_monochrome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/eq_vis_mode_monochrome"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 4: 🔐 Дозволи та Система
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_permissions_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/settings_permissions"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_battery_opt"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/battery_dialog_title"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_overlay_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_perm_overlay"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/settings_solid_val"
-                    android:textSize="12sp" />
+                    android:orientation="horizontal">
 
-                <FrameLayout
+                    <TextView
+                        android:id="@+id/btn_audio_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="Audio Record"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_location_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="GPS Location"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/bg_solid_val"
-                        android:layout_width="match_parent"
-                        android:layout_height="14dp"
-                        android:layout_gravity="center_vertical" />
-
-                    <SeekBar
-                        android:id="@+id/seek_solid_val"
+                    <TextView
+                        android:id="@+id/btn_app_details"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:max="100"
-                        android:progress="20" />
-                </FrameLayout>
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_app_details"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_backup_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_backup_btn"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_restore_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_restore_btn"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
         </LinearLayout>
+    </ScrollView>
 
-        <!-- ════════════════════════════════════════════════════════════
-             СЕКЦІЯ 2: 🪟 Візуалізатор у статус-барі
-             ════════════════════════════════════════════════════════════ -->
-        <TextView
-            android:id="@+id/label_statusbar_section"
+    <LinearLayout
+        android:id="@+id/bottom_navigation_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/status_bar_visualizer_title"
-            android:textSize="@dimen/settings_row_text"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_licence_card"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/status_bar_visualizer_enable"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switch_status_bar_vis"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Ширина візуалізатора -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/status_bar_visualizer_width"
-                    android:textSize="13sp" />
-
-                <SeekBar
-                    android:id="@+id/seek_status_bar_width"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100"
-                    android:progress="40" />
-
-                <TextView
-                    android:id="@+id/tv_status_bar_width"
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="40%"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Позиція X -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/status_bar_visualizer_offset_x"
-                    android:textSize="13sp" />
-
-                <SeekBar
-                    android:id="@+id/seek_status_bar_pos"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100"
-                    android:progress="50" />
-
-                <TextView
-                    android:id="@+id/tv_status_bar_pos"
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="50%"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Тема візуалізатора (Сітка кнопок 4х2) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/status_bar_visualizer_theme"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_theme_spectrum"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_spectrum"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_solid_hue"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_solid_hue"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_auto_day_night"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_auto_day_night"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_eq_groups"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_eq_groups"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_theme_white"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_monochrome_white"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_black"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_monochrome_black"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_fire"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_fire"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/btn_theme_neon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/status_bar_theme_neon"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <!-- Зсув HUE для візуалізатора -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/status_bar_visualizer_hue"
-                    android:textSize="13sp" />
-
-                <SeekBar
-                    android:id="@+id/seek_status_bar_hue"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="360"
-                    android:progress="0" />
-
-                <TextView
-                    android:id="@+id/tv_status_bar_hue"
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="0°"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btn_overlay_perm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/rds_btn_bg"
-                android:text="@string/status_bar_visualizer_permission_needed"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- ════════════════════════════════════════════════════════════
-             СЕКЦІЯ 3: 🎛️ Візуалізатор еквалайзера
-             ════════════════════════════════════════════════════════════ -->
-        <TextView
-            android:id="@+id/label_eq_vis_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/eq_visualizer_title"
-            android:textSize="@dimen/settings_row_text"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_licence_card"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/eq_vis_enable_label"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switch_eq_visualizer_enable"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/eq_vis_color_mode_label"
-                android:textSize="13sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_eq_vis_spectrum"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/eq_vis_mode_spectrum"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_eq_vis_monochrome"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/eq_vis_mode_monochrome"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- ════════════════════════════════════════════════════════════
-             СЕКЦІЯ 4: 🔐 Дозволи та Система
-             ════════════════════════════════════════════════════════════ -->
-        <TextView
-            android:id="@+id/label_permissions_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/settings_permissions"
-            android:textSize="@dimen/settings_row_text"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_licence_card"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_battery_opt"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/battery_dialog_title"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_audio_perm"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="Audio Record"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_location_perm"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="GPS Location"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_app_details"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_app_details"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btn_backup_settings"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_backup_btn"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_restore_settings"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
-                    android:text="@string/settings_restore_btn"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="24dp" />
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:backgroundTint="@android:color/transparent"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemActiveIndicatorStyle="@style/IndicatorSquare"
+            app:labelVisibilityMode="labeled"
+            app:itemTextAppearanceActiveBoldEnabled="false" />
     </LinearLayout>
-</ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

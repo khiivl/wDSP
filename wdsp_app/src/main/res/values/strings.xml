@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -63,25 +63,28 @@
     <string name="enable_gala">Enable GALA</string>
     <string name="enable_gala_feature">Enable GALA Feature</string>
     <string name="gala_global">Global</string>
-    <string name="vol_step_every">Volume Step every:</string>
-    <string name="gps_speed_label">GPS SPEED</string>
-    <string name="current_gps_speed">Current GPS Speed:</string>
-    <string name="vol_offset_label">VOL OFFSET</string>
-    <string name="applied_vol_offset">Applied Volume Offset:</string>
-    <string name="standstill_threshold">Standstill Threshold</string>
-    <string name="standstill_speed">Standstill speed:</string>
-    <string name="max_speed_limit">Maximum Speed Limit</string>
-    <string name="max_speed_label">Maximum speed:</string>
-    <string name="max_vol_adj">Max Volume Adjustment</string>
-    <string name="max_adjustment">Max Adjustment:</string>
+    <string name="vol_step_every">Speed step:</string>
+    <string name="gps_speed_label">GPS Speed</string>
+    <string name="current_gps_speed">GPS Speed:</string>
+    <string name="vol_offset_label">Volume Offset</string>
+    <string name="applied_vol_offset">Offset:</string>
+    <string name="standstill_threshold">Activation Threshold</string>
+    <string name="standstill_speed">Activation threshold:</string>
+    <string name="max_speed_limit">Max Speed Limit</string>
+    <string name="max_speed_label">Max Speed:</string>
+    <string name="max_vol_adj">Max Compensation</string>
+    <string name="max_adjustment">Max gain:</string>
     <string name="sensitivity_settings">Sensitivity Settings</string>
     <string name="simulation_debug">Simulation &amp; Debug</string>
     <string name="simulate_vehicle_speed">Simulate Vehicle Speed</string>
-    <string name="simulate_speed">Simulate Speed:</string>
-    <string name="gala_fade_delay">Fade Speed (delay per step):</string>
-    <string name="gala_hold_timer">Threshold Hold Timer (Time to hold speed threshold before fading):</string>
+    <string name="simulate_speed">Speed simulation:</string>
+    <string name="gala_fade_delay">Fade smoothing:</string>
+    <string name="gala_hold_timer">Hold timer:</string>
     <string name="gala_ms_fmt">%d ms</string>
     <string name="gala_s_fmt">%.1f s</string>
+    <string name="gala_section_speed_gain">Speed &amp; Compensation</string>
+    <string name="gala_section_smoothing_sim">Smoothing &amp; Simulation</string>
+    <string name="settings_perm_overlay">Overlay Permission (Display over apps)</string>
 
     <!-- General -->
     <string name="btn_apply">Apply</string>
@@ -198,6 +201,10 @@
     <string name="eq_vis_mode_spectrum">Frequency - Color</string>
     <string name="eq_vis_enable_label">Display spectrum bars</string>
 
+    <string name="fm_controls_title">Calibration &amp; Correction Intensity</string>
+    <string name="perm_battery_opt">Battery Optimization</string>
+    <string name="perm_audio_record">Audio Record (EQ)</string>
+    <string name="perm_gps_location">GPS Location (GALA)</string>
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
