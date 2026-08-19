@@ -210,9 +210,27 @@ prefs.
   `SettingsActivity`) and `ui/theme/TouchGlow.java` (used fully-qualified by `MainActivity`). Fixing
   one does not fix the other.
 - **Two full copies of the main layout**: `layout/activity_main.xml` (landscape head units, ~2600
-  lines) and `layout-port/activity_main.xml` (vertical head units, ~1970 lines). Any new view id
-  referenced by `MainActivity` must be added to **both**, or the portrait units crash on
-  `findViewById`. Sizing also varies by `values-h500dp` / `values-h580dp`.
+  lines) and `layout-port/activity_main.xml` (vertical and near-square units, ~1970 lines). The
+  portrait file is the more dangerous of the two because it is edited far less often. A missing id
+  costs a null check; **the same id declared as a different widget type costs a crash in
+  `onCreate`** — `findViewById` returns whatever was inflated and the field it is assigned to has
+  the other type. Eight switches and six preset buttons had drifted apart exactly like that, and
+  the app died on every portrait and Tesla-shaped screen. Run this after touching either file:
+
+```bash
+python tools/layout_diff.py wdsp_app/src/main/res/layout/activity_main.xml wdsp_app/src/main/res/layout-port/activity_main.xml
+```
+
+- **Screen geometries**: the platform matrix lives in
+  `kostyamat_fmradio/.agents/SCREEN_MATRIX.md` — 132 panels, and the real set of UI geometries is
+  much smaller than the list of resolutions because density is only ever 160 or 320. Emulate with
+  `adb shell wm size WxH` + `wm density N`, and **always** `wm size reset` + `wm density reset`
+  afterwards. Known trouble: content overflows to the right below about 1100dp of width and
+  overlaps the bottom navigation below about 500dp of height. `values-h500dp` / `values-h580dp` /
+  `values-w1000dp` exist but 15 of their 20 dimens are dead leftovers from QFRadio — the main
+  screen still uses hardcoded dp and does not scale.
+- ⚠️ `uiautomator dump` returns nothing while the status bar visualizer is running: it waits for the
+  UI to go idle and that overlay animates continuously. Disable the widget first or use screenshots.
 - 30 locale folders (`values-uk` ... `values-pt-rBR`). Any new user-visible string needs a `values/`
   entry at minimum; some UI arrays (e.g. `SUB_FREQS` in `MainActivity`) are still hardcoded Ukrainian
   strings rather than resources.
