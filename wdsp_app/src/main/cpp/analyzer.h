@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -58,8 +59,33 @@ public:
     /** Response the hardware DSP will add, in dB, on the 16 hardware bands. */
     void setDspCurve(const float* curve16);
 
-    /** Feeds one polled Visualizer block. Returns the number of genuinely new samples. */
+    /**
+     * Feeds one polled Visualizer block. Returns the number of genuinely new samples.
+     *
+     * Deliberately cheap: it only stitches the block into the ring and wakes the analysis thread.
+     * Running the transforms here as well meant a long window - four times the work of the short
+     * one - could hold up the next poll, and a poll that arrives late is a poll that misses part
+     * of the rolling buffer, which is exactly what the stitcher then has to paper over.
+     */
     int pushWaveform(const uint8_t* block, int len);
+
+    /**
+     * Runs the analysis for whatever has accumulated, blocking until there is enough or the
+     * timeout expires. Meant to be called in a loop from a thread of its own.
+     */
+    void waitAndProcess(int timeoutMs);
+
+    /** Unblocks waitAndProcess so the thread can exit. */
+    void stop();
+
+    /**
+     * Sets how many samples pass between frames.
+     *
+     * The main analyser is worth 94 frames a second; the status bar widget, which is what is
+     * actually on screen almost all of the time, is not. Doubling the hop when nothing but the
+     * widget is listening halves the transform work for a picture nobody is studying.
+     */
+    void setHop(int hop);
 
     /**
      * Feeds signed 16-bit PCM, the format AudioRecord delivers.
@@ -96,7 +122,8 @@ private:
     };
 
     void buildBandPlan();
-    void processFrame();
+    /** One frame of analysis. Runs on the analysis thread, outside the ring lock. */
+    void processFrame(bool haveLong);
     /** Body of getLevelsDb, for callers that already hold the lock. */
     void readDelayedFrame(float* out32) const;
     void accumulate(const float* power, int binCount, float binWidth, bool longFft);
@@ -132,11 +159,14 @@ private:
     float frameMaxPower_;
 
     /**
-     * Capture and display run on different threads on purpose - measurements arrive when the audio
-     * buffer moves on, which is not a rate anyone should draw at. Everything they share is guarded
-     * here rather than left to chance.
+     * Three threads meet here and each has its own reason to exist: capture must keep a strict
+     * cadence, analysis is bursty and expensive, and the display wants a steady rate unrelated to
+     * either. Two locks rather than one so that a transform never blocks a poll.
      */
-    mutable std::mutex mutex_;
+    mutable std::mutex ringMutex_;   // the stitcher and its sample counters
+    mutable std::mutex mutex_;       // published frames, configuration, gain state
+    std::condition_variable ringSignal_;
+    bool running_;
 };
 
 } // namespace wdsp

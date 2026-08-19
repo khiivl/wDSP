@@ -712,8 +712,24 @@ public class McuService extends Service implements LocationListener {
         String activeType = VolumeHelper.getActivePlayerType();
 
         // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
-        boolean isRadio = "radio_type".equals(activeType) || (currentPlayer != null && currentPlayer.toLowerCase().contains("radio"));
-        boolean isMuted = (VolumeHelper.getVolume() <= 0 || VolumeHelper.isHardwareMuted());
+        // Our own package is com.radiorubka.wdsp, which contains "radio" - so a plain substring
+        // test decided the tuner was playing the moment our own UI came to the front, hid the
+        // status bar widget and, because the widget unregisters when hidden, left nothing
+        // listening to the analyser at all once the main screen was closed again.
+        boolean isOwnPackage = currentPlayer != null && currentPlayer.startsWith(getPackageName());
+        boolean isRadio = "radio_type".equals(activeType)
+                || (currentPlayer != null && !isOwnPackage
+                    && currentPlayer.toLowerCase().contains("radio"));
+        // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
+        // muted when this was measured. The problem is what hiding costs: the widget unregisters
+        // when hidden, and it is the only listener once the main screen is closed, so muting the
+        // amplifier tore down the whole measurement chain. Leaving it running instead shows the
+        // signal that genuinely exists upstream of the mute, and costs almost nothing now that
+        // the widget only redraws when the picture actually changes.
+        //
+        // Radio is still gated, and for a real reason: it bypasses AudioFlinger entirely, so there
+        // is nothing to measure and the bars would be a flat lie rather than a quiet truth.
+        boolean isMuted = false;
         int channel = isRadio ? 2 : 0; // 2 = Radio (external DSP, no PCM), 0 = Android master mixer (all media)
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);

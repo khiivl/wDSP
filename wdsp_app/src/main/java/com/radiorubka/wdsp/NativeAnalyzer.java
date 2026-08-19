@@ -64,6 +64,25 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativePush(handle, waveform, length);
     }
 
+    /**
+     * Runs analysis for whatever has been captured, blocking until there is enough or the timeout
+     * expires. Call from a thread of its own: keeping it off the capture thread means a transform
+     * can never delay a poll, and a late poll is how the stitcher loses its place.
+     */
+    public void process(int timeoutMs) {
+        if (handle != 0) nativeProcess(handle, timeoutMs);
+    }
+
+    /** Unblocks process() so its thread can exit. */
+    public void stop() {
+        if (handle != 0) nativeStop(handle);
+    }
+
+    /** Samples between frames: 512 gives 94 frames a second at 48 kHz, 1024 gives 47. */
+    public void setHop(int hop) {
+        if (handle != 0) nativeSetHop(handle, hop);
+    }
+
     public void setConfig(float attackMs, float releaseMs, float latencyMs,
                           float refMaxDb, float rangeDb) {
         if (handle != 0) nativeSetConfig(handle, attackMs, releaseMs, latencyMs, refMaxDb, rangeDb);
@@ -102,6 +121,12 @@ public final class NativeAnalyzer {
     private static native void nativeDestroy(long handle);
 
     private static native int nativePush(long handle, byte[] block, int len);
+
+    private static native void nativeProcess(long handle, int timeoutMs);
+
+    private static native void nativeStop(long handle);
+
+    private static native void nativeSetHop(long handle, int hop);
 
     private static native void nativeSetConfig(long handle, float attackMs, float releaseMs,
                                                float latencyMs, float refMaxDb, float rangeDb);

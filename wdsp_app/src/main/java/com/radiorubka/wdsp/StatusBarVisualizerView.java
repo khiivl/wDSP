@@ -99,7 +99,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private boolean isRunning = false;
 
     /** Redraw interval for the widget. It is decoration in a strip a few pixels tall; 30 is plenty. */
-    private static final long WIDGET_FRAME_MS = 32;
+    private static final long WIDGET_FRAME_MS = 40;
     /** Level change, in units of the 0..1 scale, below which a redraw would not be visible. */
     private static final float VISIBLE_CHANGE = 0.004f;
 

@@ -158,11 +158,30 @@ public class AudioSpectrumEngine {
 
     private NativeAnalyzer nativeAnalyzer;
     private Thread pollThread;
+    private Thread analysisThread;
     private Thread displayThread;
+
+    /** Frames a second while the main analyser is on screen. */
+    private static final int HOP_ACTIVE = 512;
+    /**
+     * Halved rate when only the status bar widget is listening. The main screen is opened rarely;
+     * heating the processor with a second visualizer that nobody is looking at buys nothing.
+     */
+    private static final int HOP_IDLE = 1024;
     private volatile boolean capturePolling = false;
 
-    /** Poll period. Must be shorter than one block (21 ms at 48 kHz) for the reads to overlap. */
+    /**
+     * Poll period while the main analyser is on screen. Must stay well under one block - 1024
+     * samples is 21 ms at 48 kHz - or consecutive reads stop overlapping and the stitcher has
+     * nothing to align against.
+     */
     private static final long POLL_PERIOD_MS = 9;
+    /**
+     * Poll period when only the status bar widget is listening. Still leaves 9 ms of overlap,
+     * comfortably more than the 256-sample window the alignment search compares, while making a
+     * third fewer crossings into native.
+     */
+    private static final long POLL_PERIOD_IDLE_MS = 12;
     /** Refresh while the main analyser is on screen: it is an instrument and deserves 60. */
     private static final long DISPLAY_PERIOD_MS = 16;
     /**
@@ -298,6 +317,7 @@ public class AudioSpectrumEngine {
         if (!listeners.isEmpty() && visualizer == null) {
             start();
         }
+        applyAnalysisProfile();
     }
 
     public synchronized void unregisterListener(OnSpectrumDataListener listener) {
@@ -307,6 +327,7 @@ public class AudioSpectrumEngine {
         if (listeners.isEmpty() && visualizer != null) {
             stop();
         }
+        applyAnalysisProfile();
     }
 
     public void setGains(int[] newGains) {
@@ -613,6 +634,7 @@ public class AudioSpectrumEngine {
         applyNativeSettings();
 
         capturePolling = true;
+        applyAnalysisProfile();
         final int size = captureSize;
 
         pollThread = new Thread(() -> {
@@ -629,7 +651,8 @@ public class AudioSpectrumEngine {
                     break;
                 }
                 try {
-                    Thread.sleep(POLL_PERIOD_MS);
+                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
+                            ? POLL_PERIOD_MS : POLL_PERIOD_IDLE_MS);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     break;
@@ -638,6 +661,23 @@ public class AudioSpectrumEngine {
         }, "wDSP_Capture");
         pollThread.setPriority(Thread.MAX_PRIORITY - 1);
         pollThread.start();
+
+        // Analysis on its own thread. The platform has four to eight cores, so the transforms and
+        // the polling genuinely run side by side rather than taking turns - and, more importantly,
+        // a long transform can no longer hold up a poll, which is how the stitcher used to lose
+        // its place and count a discontinuity.
+        analysisThread = new Thread(() -> {
+            while (capturePolling) {
+                NativeAnalyzer analyzer = nativeAnalyzer;
+                if (analyzer == null) break;
+                try {
+                    analyzer.process(20);
+                } catch (Throwable t) {
+                    break;
+                }
+            }
+        }, "wDSP_Analysis");
+        analysisThread.start();
 
         displayThread = new Thread(() -> {
             while (capturePolling) {
@@ -657,9 +697,12 @@ public class AudioSpectrumEngine {
 
     private void stopNativeCapture() {
         capturePolling = false;
+        if (nativeAnalyzer != null) nativeAnalyzer.stop();
         Thread poll = pollThread;
+        Thread analysis = analysisThread;
         Thread display = displayThread;
         pollThread = null;
+        analysisThread = null;
         displayThread = null;
         // Join before releasing: the native object must not vanish while a thread is inside it.
         // The wait is bounded by one poll period, so this costs milliseconds.
@@ -667,6 +710,10 @@ public class AudioSpectrumEngine {
             if (poll != null) {
                 poll.interrupt();
                 poll.join(200);
+            }
+            if (analysis != null) {
+                analysis.interrupt();
+                analysis.join(200);
             }
             if (display != null) {
                 display.interrupt();
@@ -690,6 +737,13 @@ public class AudioSpectrumEngine {
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
         analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
+    }
+
+    /** Picks the frame rate from who is actually watching. */
+    private void applyAnalysisProfile() {
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        if (analyzer == null || !analyzer.isValid()) return;
+        analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
     }
 
     private boolean hasListenerFor(int consumer) {

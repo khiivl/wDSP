@@ -723,7 +723,8 @@ public class MainActivity extends AppCompatActivity {
         if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
 
             // Show a quick explanation so the user isn't confused
-            new AlertDialog.Builder(this)
+            com.radiorubka.wdsp.ui.ThemedDialog.show(
+                    com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                     .setTitle(R.string.battery_dialog_title)
                     .setMessage(R.string.battery_dialog_message)
                     .setPositiveButton(R.string.btn_allow, (dialog, which) -> {
@@ -737,8 +738,7 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(intent);
                         }
                     })
-                    .setNegativeButton(R.string.btn_later, null)
-                    .show();
+                    .setNegativeButton(R.string.btn_later, null));
         }
     }
 
@@ -1484,7 +1484,8 @@ public class MainActivity extends AppCompatActivity {
         container.addView(inputLayout);
 
         // 4. Build using MaterialAlertDialogBuilder
-        new MaterialAlertDialogBuilder(this)
+        com.radiorubka.wdsp.ui.ThemedDialog.show(
+                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                 .setTitle(R.string.dialog_rename_title)
                 .setView(container)
                 .setPositiveButton(R.string.btn_ok, (d, w) -> {
@@ -1497,8 +1498,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 })
-                .setNegativeButton(R.string.btn_cancel, null)
-                .show();
+                .setNegativeButton(R.string.btn_cancel, null));
     }
 
     private void performRename(String o, String n) {
@@ -1901,7 +1901,8 @@ public class MainActivity extends AppCompatActivity {
         for (Map.Entry<String, String> entry : map.entrySet()) sb.append("- ").append(entry.getKey()).append(" -> ").append(entry.getValue()).append("\n");
 //        sb.append(getString(R.string.global_default_fmt, def));
 
-        new MaterialAlertDialogBuilder(this)
+        com.radiorubka.wdsp.ui.ThemedDialog.show(
+                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                 .setTitle(getString(R.string.automation_title_fmt, cur))
                 .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb)
                 .setPositiveButton(R.string.btn_assign, (d, w) -> {
@@ -1917,8 +1918,7 @@ public class MainActivity extends AppCompatActivity {
                         map.remove(p);
                         prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
                     }
-                })
-                .show();
+                }));
     }
 
     private void setupGalaControls() {

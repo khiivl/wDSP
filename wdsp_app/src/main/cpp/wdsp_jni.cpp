@@ -44,6 +44,25 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativePush(JNIEnv* env, jclass, jlong ha
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeProcess(JNIEnv*, jclass, jlong handle,
+                                                      jint timeoutMs) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->waitAndProcess(timeoutMs);
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeStop(JNIEnv*, jclass, jlong handle) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->stop();
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetHop(JNIEnv*, jclass, jlong handle, jint hop) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->setHop(hop);
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetConfig(JNIEnv*, jclass, jlong handle,
                                                         jfloat attackMs, jfloat releaseMs,
                                                         jfloat latencyMs, jfloat refMaxDb,

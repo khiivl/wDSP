@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstring>
 
 namespace wdsp {
@@ -46,7 +47,8 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
           frameCount_(0),
           lastProcessedSample_(0),
           longFftDueAt_(0),
-          frameMaxPower_(0.0f) {
+          frameMaxPower_(0.0f),
+          running_(true) {
     (void) captureSize;
     for (int i = 0; i < kBands; i++) {
         bandPower_[i] = 0.0f;
@@ -112,18 +114,57 @@ void Analyzer::setDspCurve(const float* curve16) {
 }
 
 int Analyzer::pushWaveform(const uint8_t* block, int len) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    int fresh = stitcher_.push(block, len);
-    while (stitcher_.totalSamples() - lastProcessedSample_ >= hop_) {
-        lastProcessedSample_ += hop_;
-        processFrame();
+    int fresh;
+    {
+        std::lock_guard<std::mutex> lock(ringMutex_);
+        fresh = stitcher_.push(block, len);
     }
+    ringSignal_.notify_one();
     return fresh;
+}
+
+void Analyzer::stop() {
+    {
+        std::lock_guard<std::mutex> lock(ringMutex_);
+        running_ = false;
+    }
+    ringSignal_.notify_all();
+}
+
+void Analyzer::setHop(int hop) {
+    if (hop < 128) hop = 128;
+    std::lock_guard<std::mutex> lock(ringMutex_);
+    hop_ = hop;
+}
+
+void Analyzer::waitAndProcess(int timeoutMs) {
+    for (;;) {
+        bool haveLong = false;
+        {
+            std::unique_lock<std::mutex> lock(ringMutex_);
+            if (!running_) return;
+            if (stitcher_.totalSamples() - lastProcessedSample_ < hop_) {
+                ringSignal_.wait_for(lock, std::chrono::milliseconds(timeoutMs));
+                if (!running_) return;
+                if (stitcher_.totalSamples() - lastProcessedSample_ < hop_) return;
+            }
+            lastProcessedSample_ += hop_;
+
+            // Copy the windows out under the lock, then let capture carry on while the transforms
+            // run. This is the whole point of the split.
+            if (!stitcher_.readNewest(shortInput_.data(), kShortFft)) return;
+            if (stitcher_.totalSamples() >= longFftDueAt_) {
+                haveLong = stitcher_.readNewest(longInput_.data(), kLongFft);
+                longFftDueAt_ = stitcher_.totalSamples() + hop_ * 4;
+            }
+        }
+        processFrame(haveLong);
+    }
 }
 
 void Analyzer::pushPcm16(const int16_t* samples, int count, int channels) {
     if (samples == nullptr || count <= 0) return;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(ringMutex_);
 
     if (channels < 1) channels = 1;
     int frames = count / channels;
@@ -139,10 +180,7 @@ void Analyzer::pushPcm16(const int16_t* samples, int count, int channels) {
     // Straight into the ring: a microphone stream is already continuous, so unlike the polled
     // Visualizer blocks there is no overlap to find and nothing to align.
     stitcher_.appendContinuous(mono.data(), frames);
-    while (stitcher_.totalSamples() - lastProcessedSample_ >= hop_) {
-        lastProcessedSample_ += hop_;
-        processFrame();
-    }
+    ringSignal_.notify_one();
 }
 
 void Analyzer::accumulate(const float* power, int binCount, float binWidth, bool longFft) {
@@ -172,10 +210,9 @@ void Analyzer::accumulate(const float* power, int binCount, float binWidth, bool
     }
 }
 
-void Analyzer::processFrame() {
-    bool haveShort = stitcher_.readNewest(shortInput_.data(), kShortFft);
-    if (!haveShort) return;
-
+void Analyzer::processFrame(bool haveLong) {
+    // No lock held here: the windows were copied out already, and everything touched below is
+    // either private to this thread or published at the end under mutex_.
     shortFft_.powerSpectrum(shortInput_.data(), shortPower_.data());
     accumulate(shortPower_.data(), kShortFft / 2 + 1,
                static_cast<float>(sampleRate_) / kShortFft, false);
@@ -183,13 +220,10 @@ void Analyzer::processFrame() {
     // The long transform is the most expensive thing here, and it covers the part of the spectrum
     // that physically cannot change quickly, so it runs at a quarter of the frame rate and its
     // values are held in between.
-    if (stitcher_.totalSamples() >= longFftDueAt_) {
-        if (stitcher_.readNewest(longInput_.data(), kLongFft)) {
-            longFft_.powerSpectrum(longInput_.data(), longPower_.data());
-            accumulate(longPower_.data(), kLongFft / 2 + 1,
-                       static_cast<float>(sampleRate_) / kLongFft, true);
-        }
-        longFftDueAt_ = stitcher_.totalSamples() + hop_ * 4;
+    if (haveLong) {
+        longFft_.powerSpectrum(longInput_.data(), longPower_.data());
+        accumulate(longPower_.data(), kLongFft / 2 + 1,
+                   static_cast<float>(sampleRate_) / kLongFft, true);
     }
 
     // Noise floor, learned only while nothing is playing. Learning it continuously would eat
@@ -202,10 +236,24 @@ void Analyzer::processFrame() {
     else frameMaxPower_ *= kFrameMaxDecay;
     bool quiet = frameMaxPower_ > 0.0f && frameTotal < frameMaxPower_ * kQuietFraction;
 
-    float framePeriodMs = 1000.0f * static_cast<float>(hop_) / static_cast<float>(sampleRate_);
-    float attack = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config_.attackMs));
-    float release = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config_.releaseMs));
+    Config config;
+    float curve[kBands];
+    int hop;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        config = config_;
+        std::copy(dspCurve_, dspCurve_ + kBands, curve);
+    }
+    {
+        std::lock_guard<std::mutex> lock(ringMutex_);
+        hop = hop_;
+    }
 
+    float framePeriodMs = 1000.0f * static_cast<float>(hop) / static_cast<float>(sampleRate_);
+    float attack = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.attackMs));
+    float release = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.releaseMs));
+
+    std::lock_guard<std::mutex> publish(mutex_);
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
     for (int i = 0; i < kBands; i++) {
         float power = bandPower_[i];
@@ -216,7 +264,7 @@ void Analyzer::processFrame() {
         float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
         if (signal < 0.0f) signal = 0.0f;
 
-        float db = toDb(signal) + dspCurve_[i];
+        float db = toDb(signal) + curve[i];
         float coeff = db > smoothedDb_[i] ? attack : release;
         smoothedDb_[i] += (db - smoothedDb_[i]) * coeff;
         frame[static_cast<size_t>(i)] = smoothedDb_[i];
@@ -241,6 +289,7 @@ void Analyzer::readDelayedFrame(float* out32) const {
     // Hold the display back by the playback latency. What we just captured has not reached the
     // speakers yet, so showing it immediately puts the picture ahead of the sound.
     float framePeriodMs = 1000.0f * static_cast<float>(hop_) / static_cast<float>(sampleRate_);
+    (void) 0;
     int delayFrames = static_cast<int>(config_.latencyMs / std::max(1.0f, framePeriodMs) + 0.5f);
     if (delayFrames < 0) delayFrames = 0;
     if (delayFrames > kFrameRingSize - 2) delayFrames = kFrameRingSize - 2;

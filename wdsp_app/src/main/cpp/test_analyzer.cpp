@@ -87,6 +87,8 @@ void feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRea
     while (!tap.exhausted()) {
         std::vector<uint8_t> block = tap.read(advancePerRead);
         analyzer.pushWaveform(block.data(), kCaptureSize);
+        // Analysis now lives on its own thread in the app; drain it synchronously here.
+        analyzer.waitAndProcess(0);
     }
 }
 
