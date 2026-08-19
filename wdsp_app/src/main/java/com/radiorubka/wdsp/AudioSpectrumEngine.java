@@ -596,6 +596,7 @@ public class AudioSpectrumEngine {
                 currentSessionId = target;
                 if (!listeners.isEmpty() && visualizer == null) {
                     startInternal(target);
+                    armWatchdog();
                 }
             }
         });
@@ -906,15 +907,28 @@ public class AudioSpectrumEngine {
         if (visualizer != null) return;
         // A resolution is in flight and has deliberately released the capture; its callback will
         // attach. Racing it here produces "setCaptureSize() called in wrong state".
+        //
+        // The watchdog is armed BEFORE that check on purpose. At boot the service resolves as
+        // soon as it has a context, and the status bar widget registers a moment later - so this
+        // early return was taken every single time the unit started, the capture was attached by
+        // the resolver's callback instead, and the watchdog was never scheduled at all. Nothing
+        // then noticed that the session was silent once music began, and the analyser sat on the
+        // empty session 0 until the visualizer was switched off and on by hand.
+        armWatchdog();
         if (sessionResolver != null && sessionResolver.isResolving()) return;
         startInternal(currentSessionId);
         lastSignalTime = System.currentTimeMillis();
+        requestResolve("capture started");
+    }
+
+    /** Schedules the silence watchdog. Safe to call repeatedly; it never stacks. */
+    private void armWatchdog() {
         if (watchdogHandler == null) {
             watchdogHandler = new Handler(Looper.getMainLooper());
         }
+        lastSignalTime = System.currentTimeMillis();
         watchdogHandler.removeCallbacks(watchdog);
         watchdogHandler.postDelayed(watchdog, WATCHDOG_PERIOD_MS);
-        requestResolve("capture started");
     }
 
     private void startInternal(int sessionId) {

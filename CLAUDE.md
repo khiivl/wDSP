@@ -230,7 +230,17 @@ python tools/layout_diff.py wdsp_app/src/main/res/layout/activity_main.xml wdsp_
   `values-w1000dp` exist but 15 of their 20 dimens are dead leftovers from QFRadio — the main
   screen still uses hardcoded dp and does not scale.
 - ⚠️ `uiautomator dump` returns nothing while the status bar visualizer is running: it waits for the
-  UI to go idle and that overlay animates continuously. Disable the widget first or use screenshots.
+  UI to go idle and that overlay animates continuously. Disable the widget first, or read real view
+  geometry from `adb shell dumpsys activity top -a`, which has no such limitation.
+- **Reproducing the boot path** matters, because it is not the same as launching the app: at boot
+  only `McuService` starts, with no `MainActivity` and therefore no views registering first. A bug
+  that only appears after a reboot lives there. Re-broadcasting `BOOT_COMPLETED` from the shell does
+  not work — the platform's power controller answers `Background execution not allowed` — but
+  starting the service directly does:
+
+```bash
+adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-service -n com.radiorubka.wdsp/.McuService
+```
 - 30 locale folders (`values-uk` ... `values-pt-rBR`). Any new user-visible string needs a `values/`
   entry at minimum; some UI arrays (e.g. `SUB_FREQS` in `MainActivity`) are still hardcoded Ukrainian
   strings rather than resources.
