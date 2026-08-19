@@ -156,11 +156,41 @@ day/night (`*_day` / `*_night` key suffixes) and applied **imperatively** to vie
 (`tintTextInputLayout`, nav bar tinting, label/value coloring). A new control is not themed until
 someone tints it explicitly — the XML colors are only the pre-theme defaults.
 
-`AudioSpectrumEngine` is a singleton over `android.media.audiofx.Visualizer` on session 0 (global
-output mix), with an extra 4096-point FFT ring buffer for low-frequency resolution and a pink-noise
-calibration table. All spectrum consumers (`SpectrumAnalyzerView`, `FmVisualizerView`,
-`StatusBarVisualizerView`) register as listeners on that one engine — **never open a second
-`Visualizer` session.** `StatusBarVisualizerManager` puts `StatusBarVisualizerView` into a
+`AudioSpectrumEngine` is a singleton over `android.media.audiofx.Visualizer`. All spectrum consumers
+(`SpectrumAnalyzerView`, `FmVisualizerView`, `StatusBarVisualizerView`) register as listeners on that
+one engine — **never open a second `Visualizer` session.** Which session it attaches to is decided by
+`SessionResolver`, not assumed; see below.
+
+### Native analyzer (`src/main/cpp`)
+
+The measurement chain is C++ (`libwdsp_native.so`, built by CMake, arm64 + armeabi-v7a). Java feeds
+it blocks and reads levels; everything else happens in native. Two things about it are load-bearing:
+
+**Capture is polled, not callback-driven.** `getMaxCaptureRate()` is 20 Hz on this platform and each
+callback carries 1024 samples — 21 ms of audio out of every 50, with the rest missing. `Stitcher`
+polls every 9 ms so consecutive reads overlap, then aligns them by normalised cross-correlation and
+appends only the new tail. `discontinuities()` counts failures; a rising count means the poll rate is
+too low. Without this there is no continuous stream, and no transform below the block rate means
+anything.
+
+**32 third-octave bands are measured and folded down to 16, never interpolated up.** Each analysis
+band is exactly half a hardware band (`HW/2^(1/6)` and `HW*2^(1/6)`), so folding pairs is an exact
+energy sum. Band energy is mean bin power times the number of bins the band *should* hold at that
+resolution — a plain sum biases narrow bands, an average per bin biases wide ones. Two window
+lengths run at once: 8192 below 800 Hz where resolution is needed, 1024 above where speed is.
+
+`test_analyzer.cpp` is a host-side harness, excluded from the app build. Run it after touching the
+band plan, the transforms or the stitcher:
+
+```bash
+g++ -O2 -std=c++17 -o /tmp/wdsp_test test_analyzer.cpp fft.cpp stitcher.cpp analyzer.cpp && /tmp/wdsp_test
+```
+
+It checks that pink noise reads flat with an empty correction table, that tones land in the right
+band, and that the stitcher loses nothing.
+
+⚠️ Draw rate is not measurement rate. `StatusBarVisualizerView` drives its own redraws through
+`Choreographer`; left unthrottled it costs nearly three times as much CPU as the whole analyzer. `StatusBarVisualizerManager` puts `StatusBarVisualizerView` into a
 `TYPE_APPLICATION_OVERLAY` window (needs `SYSTEM_ALERT_WINDOW`) sized and positioned by the `sb_vis_*`
 prefs.
 

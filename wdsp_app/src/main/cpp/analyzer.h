@@ -113,7 +113,8 @@ private:
     std::vector<float> shortPower_;
 
     BandPlan plan_[kBands];
-    float bandDb_[kBands];
+    /** Band energy, kept linear: the dB conversion happens once, at the end of the frame. */
+    float bandPower_[kBands];
     float smoothedDb_[kBands];
     float noiseFloor_[kBands];
     float dspCurve_[kBands];

@@ -49,7 +49,7 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
           frameMaxPower_(0.0f) {
     (void) captureSize;
     for (int i = 0; i < kBands; i++) {
-        bandDb_[i] = -120.0f;
+        bandPower_[i] = 0.0f;
         smoothedDb_[i] = -120.0f;
         noiseFloor_[i] = 0.0f;
         dspCurve_[i] = 0.0f;
@@ -168,8 +168,7 @@ void Analyzer::accumulate(const float* power, int binCount, float binWidth, bool
         }
         (void) binWidth;
 
-        double energy = density * p.expectedBins;
-        bandDb_[i] = toDb(static_cast<float>(energy));
+        bandPower_[i] = static_cast<float>(density * p.expectedBins);
     }
 }
 
@@ -181,15 +180,16 @@ void Analyzer::processFrame() {
     accumulate(shortPower_.data(), kShortFft / 2 + 1,
                static_cast<float>(sampleRate_) / kShortFft, false);
 
-    // The long transform is four times the work for a part of the spectrum that cannot change
-    // quickly anyway, so it runs at half the frame rate and its values are held in between.
+    // The long transform is the most expensive thing here, and it covers the part of the spectrum
+    // that physically cannot change quickly, so it runs at a quarter of the frame rate and its
+    // values are held in between.
     if (stitcher_.totalSamples() >= longFftDueAt_) {
         if (stitcher_.readNewest(longInput_.data(), kLongFft)) {
             longFft_.powerSpectrum(longInput_.data(), longPower_.data());
             accumulate(longPower_.data(), kLongFft / 2 + 1,
                        static_cast<float>(sampleRate_) / kLongFft, true);
         }
-        longFftDueAt_ = stitcher_.totalSamples() + hop_ * 2;
+        longFftDueAt_ = stitcher_.totalSamples() + hop_ * 4;
     }
 
     // Noise floor, learned only while nothing is playing. Learning it continuously would eat
@@ -197,7 +197,7 @@ void Analyzer::processFrame() {
     // settles onto the signal itself, and does so faster in the wide high bands than in the
     // narrow low ones, inventing a convincing high-frequency roll-off out of nothing.
     float frameTotal = 0.0f;
-    for (int i = 0; i < kBands; i++) frameTotal += std::pow(10.0f, bandDb_[i] / 10.0f);
+    for (int i = 0; i < kBands; i++) frameTotal += bandPower_[i];
     if (frameTotal > frameMaxPower_) frameMaxPower_ = frameTotal;
     else frameMaxPower_ *= kFrameMaxDecay;
     bool quiet = frameMaxPower_ > 0.0f && frameTotal < frameMaxPower_ * kQuietFraction;
@@ -208,7 +208,7 @@ void Analyzer::processFrame() {
 
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
     for (int i = 0; i < kBands; i++) {
-        float power = std::pow(10.0f, bandDb_[i] / 10.0f);
+        float power = bandPower_[i];
         if (quiet) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;

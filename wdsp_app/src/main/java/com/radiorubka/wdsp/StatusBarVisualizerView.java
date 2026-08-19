@@ -98,16 +98,39 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private boolean frameCallbackActive = false;
     private boolean isRunning = false;
 
+    /** Redraw interval for the widget. It is decoration in a strip a few pixels tall; 30 is plenty. */
+    private static final long WIDGET_FRAME_MS = 32;
+    /** Level change, in units of the 0..1 scale, below which a redraw would not be visible. */
+    private static final float VISIBLE_CHANGE = 0.004f;
+
+    private long lastDrawTime = 0;
+    private final float[] drawnLevels = new float[AudioSpectrumEngine.NUM_BANDS_32];
+
     private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
             if (!frameCallbackActive) return;
-            long elapsed = System.currentTimeMillis() - lastCaptureTime;
-            float t = captureIntervalMs > 0 ? Math.min(1f, elapsed / (float) captureIntervalMs) : 1f;
-            for (int i = 0; i < bandCount; i++) {
-                renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
+            long now = System.currentTimeMillis();
+
+            // Two brakes, both measured on the K706: this callback used to invalidate on every
+            // single display frame whether or not anything had changed, and redrawing the overlay
+            // that often cost nearly three times as much processor as the entire measurement
+            // chain behind it. The main analyser still runs at full rate; this is the status bar.
+            if (now - lastDrawTime >= WIDGET_FRAME_MS) {
+                long elapsed = now - lastCaptureTime;
+                float t = captureIntervalMs > 0
+                        ? Math.min(1f, elapsed / (float) captureIntervalMs) : 1f;
+                boolean changed = false;
+                for (int i = 0; i < bandCount; i++) {
+                    renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
+                    if (Math.abs(renderLevels[i] - drawnLevels[i]) > VISIBLE_CHANGE) changed = true;
+                }
+                if (changed) {
+                    System.arraycopy(renderLevels, 0, drawnLevels, 0, bandCount);
+                    lastDrawTime = now;
+                    invalidate();
+                }
             }
-            invalidate();
             Choreographer.getInstance().postFrameCallback(this);
         }
     };

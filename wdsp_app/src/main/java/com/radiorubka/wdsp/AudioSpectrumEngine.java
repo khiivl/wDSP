@@ -163,8 +163,13 @@ public class AudioSpectrumEngine {
 
     /** Poll period. Must be shorter than one block (21 ms at 48 kHz) for the reads to overlap. */
     private static final long POLL_PERIOD_MS = 9;
-    /** Display refresh, independent of how fast measurements arrive. */
+    /** Refresh while the main analyser is on screen: it is an instrument and deserves 60. */
     private static final long DISPLAY_PERIOD_MS = 16;
+    /**
+     * Refresh when only the status bar widget is listening. Measured on the K706, redrawing that
+     * overlay at 60 costs as much processor as the entire measurement chain, and it is decoration.
+     */
+    private static final long DISPLAY_PERIOD_IDLE_MS = 33;
 
     private final ConsumerFrames[] frames = {new ConsumerFrames(), new ConsumerFrames()};
 
@@ -638,7 +643,8 @@ public class AudioSpectrumEngine {
             while (capturePolling) {
                 try {
                     dispatchNativeFrame();
-                    Thread.sleep(DISPLAY_PERIOD_MS);
+                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
+                            ? DISPLAY_PERIOD_MS : DISPLAY_PERIOD_IDLE_MS);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     break;
@@ -686,6 +692,16 @@ public class AudioSpectrumEngine {
         analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
     }
 
+    private boolean hasListenerFor(int consumer) {
+        for (OnSpectrumDataListener l : listeners) {
+            Integer c = consumerOf.get(l);
+            int id = (c != null && c == NativeAnalyzer.CONSUMER_STATUS_BAR)
+                    ? NativeAnalyzer.CONSUMER_STATUS_BAR : NativeAnalyzer.CONSUMER_MAIN;
+            if (id == consumer) return true;
+        }
+        return false;
+    }
+
     private void dispatchNativeFrame() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid() || listeners.isEmpty()) return;
@@ -698,6 +714,9 @@ public class AudioSpectrumEngine {
         lastCaptureTime = now;
 
         for (int consumer = 0; consumer <= 1; consumer++) {
+            // Nobody is looking at this one - every call below is a lock taken away from the
+            // measurement thread for nothing.
+            if (!hasListenerFor(consumer)) continue;
             ConsumerFrames f = frames[consumer];
             // Absolute levels for the "no normalisation" view, and this consumer's gain profile
             // for the other. Two calls because the gain state is per consumer by design.
