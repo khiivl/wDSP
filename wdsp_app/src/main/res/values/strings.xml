@@ -223,4 +223,10 @@
     <string name="latency_trim_label">Picture / sound sync</string>
     <string name="latency_trim_desc">The base delay is measured automatically; every player buffers differently, so trim it by ear</string>
     <string name="range_db_label">Display range</string>
+    <string name="unit_hz">%1$s Hz</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_latency_ms">%1$+d ms</string>
+    <string name="format_range_db">%1$d dB</string>
+    <string name="placeholder_db">0.0 dB</string>
+    <string name="toast_saf_error">File picker error: %1$s</string>
 </resources>

@@ -110,7 +110,13 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvPowerDb;
     private final String[] SUB_FREQS_RAW = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
-    private final String[] SUB_FREQS = {"25 Гц", "32 Гц", "40 Гц", "50 Гц", "63 Гц", "80 Гц", "100 Гц", "125 Гц", "160 Гц", "200 Гц", "250 Гц"};
+    /**
+     * Built at runtime from SUB_FREQS_RAW and the localised hertz unit. It used to be a literal
+     * array of Ukrainian strings, which meant the subwoofer dropdown stayed Ukrainian in all
+     * thirty locales - and worse, the parsing code compares the spinner's text against these
+     * entries, so a translated build would have failed to match at all.
+     */
+    private final String[] SUB_FREQS = new String[SUB_FREQS_RAW.length];
 
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
@@ -237,6 +243,10 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
+            SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
+        }
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
 

@@ -5,6 +5,9 @@ plugins {
 android {
     namespace 'com.radiorubka.wdsp'
     compileSdk 36
+    // Pinned so Android Studio builds the native module with the same toolchain as the command
+    // line instead of picking whatever it finds or offering to download another one.
+    ndkVersion '28.2.13676358'
 
     defaultConfig {
         applicationId "com.radiorubka.wdsp"

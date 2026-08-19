@@ -211,4 +211,10 @@
     <string name="latency_trim_label">Синхронізація картинки і звуку</string>
     <string name="latency_trim_desc">Базову затримку міряємо самі; кожен плеєр буферизує по-своєму, тож доганяйте на слух</string>
     <string name="range_db_label">Діапазон відображення</string>
+    <string name="unit_hz">%1$s Гц</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_latency_ms">%1$+d мс</string>
+    <string name="format_range_db">%1$d дБ</string>
+    <string name="placeholder_db">0.0 дБ</string>
+    <string name="toast_saf_error">Помилка вибору файлу: %1$s</string>
 </resources>

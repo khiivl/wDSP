@@ -285,7 +285,8 @@ public class SettingsActivity extends AppCompatActivity {
             try {
                 wallpaperPickerLauncher.launch(new String[]{"image/*"});
             } catch (Exception e) {
-                Toast.makeText(this, "SAF error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_saf_error, e.getMessage()),
+                        Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -812,13 +813,14 @@ public class SettingsActivity extends AppCompatActivity {
                 AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, checked));
 
         bindAnalyzerSeek(seekAgcMainStrength, tvAgcMainStrength,
-                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 0, "%d%%");
+                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 0, getString(R.string.format_percent));
         bindAnalyzerSeek(seekAgcBarStrength, tvAgcBarStrength,
-                AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 0, "%d%%");
+                AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 0, getString(R.string.format_percent));
         bindAnalyzerSeek(seekLatencyTrim, tvLatencyTrim,
-                AudioSpectrumEngine.PREF_LATENCY_TRIM, LATENCY_TRIM_OFFSET, "%+d ms");
+                AudioSpectrumEngine.PREF_LATENCY_TRIM, LATENCY_TRIM_OFFSET,
+                getString(R.string.format_latency_ms));
         bindAnalyzerSeek(seekRangeDb, tvRangeDb,
-                AudioSpectrumEngine.PREF_RANGE_DB, 0, "%d dB");
+                AudioSpectrumEngine.PREF_RANGE_DB, 0, getString(R.string.format_range_db));
     }
 
     /**
