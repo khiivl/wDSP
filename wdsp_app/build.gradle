@@ -18,6 +18,24 @@ android {
         
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17'
+            }
+        }
+        ndk {
+            // The head units this targets are UIS7862/ums512, all 64-bit; the 32-bit slice is
+            // there only so an older board does not end up without a library at all.
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
     }
 
     def localProperties = new Properties()

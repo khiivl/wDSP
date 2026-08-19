@@ -352,6 +352,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         initStatusBarVisualizerControls();
+        initAnalyzerControls();
 
         // EQ Spectrum Visualizer
         switchEqVisualizerEnable = findViewById(R.id.switch_eq_visualizer_enable);
@@ -778,8 +779,96 @@ public class SettingsActivity extends AppCompatActivity {
             switchEqVisNormalization.setChecked(p.getBoolean("pref_eq_visualizer_normalization", false));
         }
 
+        loadAnalyzerSettings(p);
+
         // Permissions
         updatePermissionButtons();
+    }
+
+    // --- Точність аналізатора та синхронізація ---------------------------------------------------
+
+    private SwitchCompat switchAgcMain, switchAgcBar;
+    private SeekBar seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
+    private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
+
+    /** Trim slider spans +/-250 ms, stored centred on this offset because SeekBar has no sign. */
+    private static final int LATENCY_TRIM_OFFSET = 250;
+
+    private void initAnalyzerControls() {
+        switchAgcMain = findViewById(R.id.switch_agc_main);
+        switchAgcBar = findViewById(R.id.switch_agc_bar);
+        seekAgcMainStrength = findViewById(R.id.seek_agc_main_strength);
+        seekAgcBarStrength = findViewById(R.id.seek_agc_bar_strength);
+        seekLatencyTrim = findViewById(R.id.seek_latency_trim);
+        seekRangeDb = findViewById(R.id.seek_range_db);
+        tvAgcMainStrength = findViewById(R.id.tv_agc_main_strength);
+        tvAgcBarStrength = findViewById(R.id.tv_agc_bar_strength);
+        tvLatencyTrim = findViewById(R.id.tv_latency_trim);
+        tvRangeDb = findViewById(R.id.tv_range_db);
+
+        switchAgcMain.setOnCheckedChangeListener((btn, checked) -> saveAnalyzerPref(
+                AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, checked));
+        switchAgcBar.setOnCheckedChangeListener((btn, checked) -> saveAnalyzerPref(
+                AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, checked));
+
+        bindAnalyzerSeek(seekAgcMainStrength, tvAgcMainStrength,
+                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 0, "%d%%");
+        bindAnalyzerSeek(seekAgcBarStrength, tvAgcBarStrength,
+                AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 0, "%d%%");
+        bindAnalyzerSeek(seekLatencyTrim, tvLatencyTrim,
+                AudioSpectrumEngine.PREF_LATENCY_TRIM, LATENCY_TRIM_OFFSET, "%+d ms");
+        bindAnalyzerSeek(seekRangeDb, tvRangeDb,
+                AudioSpectrumEngine.PREF_RANGE_DB, 0, "%d dB");
+    }
+
+    /**
+     * @param offset added to the stored value to get the slider position, so a slider that only
+     *               counts upwards can carry a signed setting such as the latency trim
+     */
+    private void bindAnalyzerSeek(SeekBar seek, TextView label, String key, int offset,
+                                  String format) {
+        if (seek == null) return;
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                int value = progress - offset;
+                if (label != null) {
+                    label.setText(String.format(java.util.Locale.US, format, value));
+                }
+                if (fromUser) saveAnalyzerPref(key, value);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar bar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar bar) {
+            }
+        });
+    }
+
+    private void saveAnalyzerPref(String key, boolean value) {
+        ThemeManager.prefs(this).edit().putBoolean(key, value).apply();
+        AudioSpectrumEngine.getInstance().loadDisplaySettings(this);
+    }
+
+    private void saveAnalyzerPref(String key, int value) {
+        ThemeManager.prefs(this).edit().putInt(key, value).apply();
+        AudioSpectrumEngine.getInstance().loadDisplaySettings(this);
+    }
+
+    private void loadAnalyzerSettings(SharedPreferences p) {
+        if (switchAgcMain == null) return;
+        // The main analyser defaults to absolute levels: it is an instrument, and one that quietly
+        // rescales itself tells you nothing. The status bar widget defaults the other way.
+        switchAgcMain.setChecked(p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false));
+        switchAgcBar.setChecked(p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));
+        seekAgcMainStrength.setProgress(p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60));
+        seekAgcBarStrength.setProgress(p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100));
+        seekLatencyTrim.setProgress(
+                p.getInt(AudioSpectrumEngine.PREF_LATENCY_TRIM, 0) + LATENCY_TRIM_OFFSET);
+        seekRangeDb.setProgress(p.getInt(AudioSpectrumEngine.PREF_RANGE_DB, 60));
     }
 
     private void updateStatusBarBandsHighlights(int bands) {

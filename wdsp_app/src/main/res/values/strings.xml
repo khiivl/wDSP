@@ -214,4 +214,13 @@
     <string name="vis_normalization_label">Dynamic Normalization (AGC)</string>
     <string name="vis_normalization_desc">Gentle dynamic range leveling for quiet audio tracks</string>
     <string name="status_bar_bands_count">Number of bands:</string>
+    <string name="analyzer_section_title">Analyzer accuracy and sync</string>
+    <string name="agc_main_label">Auto gain: main analyzer</string>
+    <string name="agc_main_desc">Off means absolute levels. An instrument that silently rescales itself cannot be read</string>
+    <string name="agc_bar_label">Auto gain: status bar widget</string>
+    <string name="agc_bar_desc">Decoration rather than measurement, so leveling is usually welcome here</string>
+    <string name="agc_strength_label">Strength</string>
+    <string name="latency_trim_label">Picture / sound sync</string>
+    <string name="latency_trim_desc">The base delay is measured automatically; every player buffers differently, so trim it by ear</string>
+    <string name="range_db_label">Display range</string>
 </resources>

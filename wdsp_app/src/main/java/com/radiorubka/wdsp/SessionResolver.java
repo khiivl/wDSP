@@ -132,9 +132,9 @@ public final class SessionResolver {
      *
      * @param playerPackage active player from sys.qf.last_audio_src, may be null
      */
-    public void resolveAsync(final String playerPackage, final Callback callback) {
+    public boolean resolveAsync(final String playerPackage, final Callback callback) {
         synchronized (this) {
-            if (resolving) return;
+            if (resolving) return false;
             resolving = true;
         }
         new Thread(() -> {
@@ -148,6 +148,7 @@ public final class SessionResolver {
             }
             if (callback != null) callback.onSessionResolved(found);
         }, "wDSP_SessionResolver").start();
+        return true;
     }
 
     private int resolve(String playerPackage) {

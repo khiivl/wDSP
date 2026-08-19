@@ -138,6 +138,127 @@ public class AudioSpectrumEngine {
     }
 
     private final CopyOnWriteArrayList<OnSpectrumDataListener> listeners = new CopyOnWriteArrayList<>();
+    private final java.util.concurrent.ConcurrentHashMap<OnSpectrumDataListener, Integer> consumerOf
+            = new java.util.concurrent.ConcurrentHashMap<>();
+
+    // --- Native path ---------------------------------------------------------------------------
+    //
+    // When the shared library is present the whole measurement chain runs in C++ and the platform
+    // Visualizer is used only as a tap. Two things change fundamentally:
+    //
+    // Capture becomes polled instead of callback-driven. The callback rate is capped at 20 Hz and
+    // hands over 1024 samples each time, which at 48 kHz is 21 ms of audio out of every 50 - the
+    // rest is lost, and no transform over the stitched remains can be trusted below the block
+    // rate. Polling faster than the block duration makes consecutive reads overlap, and the native
+    // stitcher aligns them by cross-correlation into a genuinely continuous stream.
+    //
+    // Analysis becomes 32 third-octave bands folded down to the 16 hardware bands, rather than 16
+    // bands linearly interpolated up to 32 as before. Interpolation cannot create detail that was
+    // never measured, which is why the bottom of the display used to move as one lump.
+
+    private NativeAnalyzer nativeAnalyzer;
+    private Thread pollThread;
+    private Thread displayThread;
+    private volatile boolean capturePolling = false;
+
+    /** Poll period. Must be shorter than one block (21 ms at 48 kHz) for the reads to overlap. */
+    private static final long POLL_PERIOD_MS = 9;
+    /** Display refresh, independent of how fast measurements arrive. */
+    private static final long DISPLAY_PERIOD_MS = 16;
+
+    private final ConsumerFrames[] frames = {new ConsumerFrames(), new ConsumerFrames()};
+
+    // Display settings, read from preferences and pushed into native. Defaults are deliberately
+    // asymmetric: the main analyser starts with its automatic gain OFF, because a tool that
+    // silently rescales itself cannot be read, while the status bar widget starts with it ON,
+    // because there it is decoration and a flat line would just look broken.
+    public static final String PREF_AGC_MAIN_ENABLED = "spec_agc_main_enabled";
+    public static final String PREF_AGC_MAIN_STRENGTH = "spec_agc_main_strength";
+    public static final String PREF_AGC_MAIN_FLOOR = "spec_agc_main_floor_db";
+    public static final String PREF_AGC_BAR_ENABLED = "spec_agc_bar_enabled";
+    public static final String PREF_AGC_BAR_STRENGTH = "spec_agc_bar_strength";
+    public static final String PREF_AGC_BAR_FLOOR = "spec_agc_bar_floor_db";
+    public static final String PREF_LATENCY_TRIM = "spec_latency_trim_ms";
+    public static final String PREF_RANGE_DB = "spec_range_db";
+
+    private float nativeAttackMs = 25f;
+    private float nativeReleaseMs = 260f;
+    private float nativeLatencyMs = 0f;
+    private float nativeRefMaxDb = 0f;
+    private float nativeRangeDb = 60f;
+
+    private boolean mainAgcEnabled = false;
+    private float mainAgcStrength = 0.6f;
+    private float mainAgcFloorDb = -45f;
+    private boolean barAgcEnabled = true;
+    private float barAgcStrength = 1.0f;
+    private float barAgcFloorDb = -50f;
+
+    /** User trim on top of the measured playback latency, +/- 250 ms. */
+    private int latencyTrimMs = 0;
+
+    /** Re-reads the display preferences and pushes them into the native analyser. */
+    public void loadDisplaySettings(Context context) {
+        if (context == null) return;
+        android.content.SharedPreferences prefs =
+                com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(context.getApplicationContext());
+        mainAgcEnabled = prefs.getBoolean(PREF_AGC_MAIN_ENABLED, false);
+        mainAgcStrength = prefs.getInt(PREF_AGC_MAIN_STRENGTH, 60) / 100f;
+        mainAgcFloorDb = prefs.getInt(PREF_AGC_MAIN_FLOOR, -45);
+        barAgcEnabled = prefs.getBoolean(PREF_AGC_BAR_ENABLED, true);
+        barAgcStrength = prefs.getInt(PREF_AGC_BAR_STRENGTH, 100) / 100f;
+        barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
+        latencyTrimMs = prefs.getInt(PREF_LATENCY_TRIM, 0);
+        nativeRangeDb = prefs.getInt(PREF_RANGE_DB, 60);
+        nativeLatencyMs = Math.max(0f, measuredLatencyMs() + latencyTrimMs);
+        applyNativeSettings();
+    }
+
+    /**
+     * Best estimate of how long after capture the audio is actually heard.
+     *
+     * What the Visualizer hands us has not left the mixer yet: the track's own dump reports a
+     * latency of half a second, and on top of that sits the head unit's own path. Players differ
+     * wildly here - a streaming client buffers far more than the system player - so this is only
+     * ever a starting point, which is why the user gets a trim.
+     */
+    private float measuredLatencyMs() {
+        float outputMs = 0f;
+        try {
+            if (audioManager != null) {
+                // Framework-reported output latency, hidden API, present on this platform.
+                java.lang.reflect.Method m = audioManager.getClass()
+                        .getMethod("getOutputLatency", int.class);
+                Object result = m.invoke(audioManager, android.media.AudioManager.STREAM_MUSIC);
+                if (result instanceof Integer) outputMs = (Integer) result;
+            }
+        } catch (Throwable ignored) {
+        }
+        if (outputMs <= 0f) outputMs = DEFAULT_OUTPUT_LATENCY_MS;
+        return outputMs + BU32107_LATENCY_MS;
+    }
+
+    /** Used when the framework will not say. Measured on this platform as roughly half a second. */
+    private static final float DEFAULT_OUTPUT_LATENCY_MS = 480f;
+    /** Allowance for the hardware DSP itself. Small: it is a filter bank, not a buffer. */
+    private static final float BU32107_LATENCY_MS = 20f;
+
+    /** One set of display buffers per consumer, matching the shape the views already expect. */
+    private static final class ConsumerFrames {
+        final float[] level32 = new float[NUM_BANDS_32];
+        final float[] level16 = new float[NUM_BANDS_16];
+        final float[] level32Agc = new float[NUM_BANDS_32];
+        final float[] level16Agc = new float[NUM_BANDS_16];
+
+        final float[] display16 = new float[NUM_BANDS_16];
+        final float[] display16Norm = new float[NUM_BANDS_16];
+        final float[] prev16 = new float[NUM_BANDS_16];
+        final float[] prev16Norm = new float[NUM_BANDS_16];
+        final float[] display32 = new float[NUM_BANDS_32];
+        final float[] display32Norm = new float[NUM_BANDS_32];
+        final float[] prev32 = new float[NUM_BANDS_32];
+        final float[] prev32Norm = new float[NUM_BANDS_32];
+    }
 
     private static AudioSpectrumEngine instance;
 
@@ -155,7 +276,17 @@ public class AudioSpectrumEngine {
     }
 
     public synchronized void registerListener(OnSpectrumDataListener listener) {
+        registerListener(listener, NativeAnalyzer.CONSUMER_MAIN);
+    }
+
+    /**
+     * @param consumer which automatic-gain profile this listener wants - the main analyser is an
+     *                 instrument and may be asked to show absolute levels, while the status bar
+     *                 widget is decoration and is usually allowed to normalise.
+     */
+    public synchronized void registerListener(OnSpectrumDataListener listener, int consumer) {
         if (listener == null) return;
+        consumerOf.put(listener, consumer);
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
@@ -167,6 +298,7 @@ public class AudioSpectrumEngine {
     public synchronized void unregisterListener(OnSpectrumDataListener listener) {
         if (listener == null) return;
         listeners.remove(listener);
+        consumerOf.remove(listener);
         if (listeners.isEmpty() && visualizer != null) {
             stop();
         }
@@ -224,6 +356,25 @@ public class AudioSpectrumEngine {
                 + "; session=" + currentSessionId
                 + " captureRate=" + Visualizer.getMaxCaptureRate() + " mHz"
                 + " captureSizeRange=" + Arrays.toString(Visualizer.getCaptureSizeRange()));
+    }
+
+    private final float[] dumpDb32 = new float[NUM_BANDS_32];
+
+    /** Logs the 32 measured bands plus the health of the stitcher. */
+    private void dumpNativeBands(NativeAnalyzer analyzer) {
+        long now = System.currentTimeMillis();
+        if (now - lastDumpTime < 1000) return;
+        lastDumpTime = now;
+        analyzer.getLevelsDb(dumpDb32);
+        StringBuilder sb = new StringBuilder("NATIVE32 ");
+        for (int i = 0; i < NUM_BANDS_32; i++) {
+            sb.append(String.format(java.util.Locale.US, "%.0f ", dumpDb32[i]));
+        }
+        Log.i(TAG, sb.toString());
+        Log.i(TAG, "NATIVE frames=" + analyzer.frames()
+                + " discontinuities=" + analyzer.discontinuities()
+                + " latencyMs=" + nativeLatencyMs
+                + " agcMain=" + mainAgcEnabled + " agcBar=" + barAgcEnabled);
     }
 
     private void dumpBands(float[] contentDb, float[] curveDb) {
@@ -309,6 +460,7 @@ public class AudioSpectrumEngine {
         this.audioManager = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
         this.sessionResolver = SessionResolver.getInstance(appContext);
         this.sessionResolver.start();
+        loadDisplaySettings(appContext);
         if (watchdogHandler == null) {
             watchdogHandler = new Handler(Looper.getMainLooper());
         }
@@ -405,7 +557,7 @@ public class AudioSpectrumEngine {
             releaseCapture();
         }
 
-        sessionResolver.resolveAsync(getActivePlayerPackage(), sessionId -> {
+        boolean started = sessionResolver.resolveAsync(getActivePlayerPackage(), sessionId -> {
             synchronized (AudioSpectrumEngine.this) {
                 int target = sessionId >= 0 ? sessionId : previousSession;
                 lastResolveFoundNothing = sessionId < 0;
@@ -421,10 +573,169 @@ public class AudioSpectrumEngine {
                 }
             }
         });
+
+        // The capture is already released at this point. If the resolver refused the request -
+        // one was somehow still running - nobody would ever put it back, and the visualizer would
+        // stay dead until the app restarted. That is what "it never came back after Bluetooth"
+        // looked like from the outside.
+        if (!started) {
+            synchronized (this) {
+                if (!listeners.isEmpty() && visualizer == null) {
+                    Log.w(TAG, "Resolver busy; restoring capture on session " + previousSession);
+                    currentSessionId = previousSession;
+                    startInternal(previousSession);
+                }
+            }
+        }
+    }
+
+    /**
+     * Starts the two native-path threads: one polling the tap, one driving the display.
+     *
+     * They are deliberately separate. Measurements arrive whenever the audio buffer has moved on,
+     * which is not a rate anyone should be drawing at; the display wants a steady 60 and does not
+     * care how many measurements happened in between.
+     */
+    private void startNativeCapture(int captureSize, int samplingRateMilliHz) {
+        stopNativeCapture();
+
+        int sampleRate = samplingRateMilliHz > 0 ? samplingRateMilliHz / 1000 : 48000;
+        nativeAnalyzer = new NativeAnalyzer(sampleRate, captureSize);
+        if (!nativeAnalyzer.isValid()) {
+            Log.w(TAG, "Native analyser did not initialise; nothing will be measured");
+            return;
+        }
+        applyNativeSettings();
+
+        capturePolling = true;
+        final int size = captureSize;
+
+        pollThread = new Thread(() -> {
+            byte[] buffer = new byte[size];
+            while (capturePolling) {
+                Visualizer v = visualizer;
+                if (v == null) break;
+                try {
+                    if (v.getWaveForm(buffer) == Visualizer.SUCCESS) {
+                        noteSignal(buffer);
+                        nativeAnalyzer.push(buffer, size);
+                    }
+                } catch (Throwable t) {
+                    break;
+                }
+                try {
+                    Thread.sleep(POLL_PERIOD_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }, "wDSP_Capture");
+        pollThread.setPriority(Thread.MAX_PRIORITY - 1);
+        pollThread.start();
+
+        displayThread = new Thread(() -> {
+            while (capturePolling) {
+                try {
+                    dispatchNativeFrame();
+                    Thread.sleep(DISPLAY_PERIOD_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "wDSP_Display");
+        displayThread.start();
+    }
+
+    private void stopNativeCapture() {
+        capturePolling = false;
+        Thread poll = pollThread;
+        Thread display = displayThread;
+        pollThread = null;
+        displayThread = null;
+        // Join before releasing: the native object must not vanish while a thread is inside it.
+        // The wait is bounded by one poll period, so this costs milliseconds.
+        try {
+            if (poll != null) {
+                poll.interrupt();
+                poll.join(200);
+            }
+            if (display != null) {
+                display.interrupt();
+                display.join(200);
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+        if (nativeAnalyzer != null) {
+            nativeAnalyzer.release();
+            nativeAnalyzer = null;
+        }
+    }
+
+    /** Pushes the current settings - ballistics, latency and both gain profiles - into native. */
+    public void applyNativeSettings() {
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        if (analyzer == null || !analyzer.isValid()) return;
+        analyzer.setConfig(nativeAttackMs, nativeReleaseMs, nativeLatencyMs,
+                nativeRefMaxDb, nativeRangeDb);
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
+        analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
+    }
+
+    private void dispatchNativeFrame() {
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        if (analyzer == null || !analyzer.isValid() || listeners.isEmpty()) return;
+
+        long now = System.currentTimeMillis();
+        if (lastCaptureTime != 0) {
+            long observed = now - lastCaptureTime;
+            if (observed > 0) captureIntervalMs = observed;
+        }
+        lastCaptureTime = now;
+
+        for (int consumer = 0; consumer <= 1; consumer++) {
+            ConsumerFrames f = frames[consumer];
+            // Absolute levels for the "no normalisation" view, and this consumer's gain profile
+            // for the other. Two calls because the gain state is per consumer by design.
+            analyzer.setAgc(consumer, false, 0f, 0f);
+            analyzer.getLevels(consumer, f.level32, f.level16);
+            boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcEnabled : barAgcEnabled;
+            float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcStrength : barAgcStrength;
+            float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barAgcFloorDb;
+            analyzer.setAgc(consumer, enabled, strength, floorDb);
+            analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
+
+            System.arraycopy(f.display16, 0, f.prev16, 0, NUM_BANDS_16);
+            System.arraycopy(f.level16, 0, f.display16, 0, NUM_BANDS_16);
+            System.arraycopy(f.display16Norm, 0, f.prev16Norm, 0, NUM_BANDS_16);
+            System.arraycopy(f.level16Agc, 0, f.display16Norm, 0, NUM_BANDS_16);
+            System.arraycopy(f.display32, 0, f.prev32, 0, NUM_BANDS_32);
+            System.arraycopy(f.level32, 0, f.display32, 0, NUM_BANDS_32);
+            System.arraycopy(f.display32Norm, 0, f.prev32Norm, 0, NUM_BANDS_32);
+            System.arraycopy(f.level32Agc, 0, f.display32Norm, 0, NUM_BANDS_32);
+        }
+
+        if (debugDump) dumpNativeBands(analyzer);
+
+        for (OnSpectrumDataListener l : listeners) {
+            Integer c = consumerOf.get(l);
+            ConsumerFrames f = frames[c != null && c == NativeAnalyzer.CONSUMER_STATUS_BAR ? 1 : 0];
+            try {
+                l.onSpectrumCapture(f.display16, f.display16Norm, f.prev16, f.prev16Norm,
+                        f.display32, f.display32Norm, f.prev32, f.prev32Norm,
+                        lastCaptureTime, captureIntervalMs);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     /** Drops the Visualizer without touching listeners or the watchdog. */
     private synchronized void releaseCapture() {
+        stopNativeCapture();
         if (visualizer == null) return;
         try {
             visualizer.release();
@@ -444,8 +755,28 @@ public class AudioSpectrumEngine {
         }
     }
 
-    /** True when the platform reports at least one active MEDIA-ish player. */
+    /**
+     * True when something is playing - asked of the platform QF way first, then the Android way.
+     *
+     * Android's own answer is not sufficient here. Bluetooth audio on this head unit is produced by
+     * gocsdk_zj, a native daemon that opens its AudioTrack through libmedia and never creates a
+     * Java PlayerBase, so getActivePlaybackConfigurations() comes back empty while music is very
+     * much playing. Relying on it meant the watchdog never even looked, and the visualizer sat at
+     * zero for the whole of Bluetooth playback.
+     */
     private boolean isMediaPlaybackActive() {
+        String source = getActivePlayerPackage();
+        if (source != null && !source.isEmpty()
+                && !"nothing".equalsIgnoreCase(source) && !"Unknown".equalsIgnoreCase(source)) {
+            return true;
+        }
+        String type = VolumeHelper.getActivePlayerType();
+        if (type != null && !"radio_type".equals(type)) {
+            // Anything the hardware volume manager considers an active non-radio source counts:
+            // media, Bluetooth music, AUX. Radio is excluded because it bypasses AudioFlinger.
+            return true;
+        }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || audioManager == null) return false;
         try {
             List<AudioPlaybackConfiguration> configs = audioManager.getActivePlaybackConfigurations();
@@ -530,22 +861,32 @@ public class AudioSpectrumEngine {
             int rate = Visualizer.getMaxCaptureRate();
             if (rate <= 0) rate = 20000;
 
-            v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
-                @Override
-                public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                    noteSignal(waveform);
-                    processWaveform(waveform, samplingRate);
-                }
+            if (NativeAnalyzer.isAvailable()) {
+                // No capture listener at all: the 20 Hz callback is exactly what we are getting
+                // away from. The polling thread below reads the same buffer far more often.
+                v.setEnabled(true);
+                visualizer = v;
+                startNativeCapture(captureSize, v.getSamplingRate());
+            } else {
+                v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+                    @Override
+                    public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
+                        noteSignal(waveform);
+                        processWaveform(waveform, samplingRate);
+                    }
 
-                @Override
-                public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-                    processFft(fft, samplingRate);
-                }
-            }, rate, true, true);
+                    @Override
+                    public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+                        processFft(fft, samplingRate);
+                    }
+                }, rate, true, true);
 
-            v.setEnabled(true);
-            visualizer = v;
-            Log.d(TAG, "AudioSpectrumEngine attached to session " + sessionId + ", captureSize=" + captureSize);
+                v.setEnabled(true);
+                visualizer = v;
+            }
+            Log.d(TAG, "AudioSpectrumEngine attached to session " + sessionId
+                    + ", captureSize=" + captureSize
+                    + (NativeAnalyzer.isAvailable() ? ", native polled capture" : ", java callbacks"));
         } catch (Throwable t) {
             Log.w(TAG, "AudioSpectrumEngine session " + sessionId + " failed: " + t);
             if (sessionId != 0) {
@@ -565,6 +906,7 @@ public class AudioSpectrumEngine {
         if (watchdogHandler != null) {
             watchdogHandler.removeCallbacks(watchdog);
         }
+        stopNativeCapture();
         if (visualizer == null) return;
         try {
             visualizer.setEnabled(false);

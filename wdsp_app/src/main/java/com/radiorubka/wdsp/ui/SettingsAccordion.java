@@ -29,6 +29,7 @@ public final class SettingsAccordion {
             R.id.label_theme_section,
             R.id.label_statusbar_section,
             R.id.label_eq_vis_section,
+            R.id.label_analyzer_section,
             R.id.label_permissions_section,
     };
 

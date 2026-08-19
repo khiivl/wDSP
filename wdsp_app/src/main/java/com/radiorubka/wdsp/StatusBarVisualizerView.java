@@ -279,7 +279,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     public synchronized void start() {
         if (isRunning) return;
         isRunning = true;
-        AudioSpectrumEngine.getInstance().registerListener(this);
+        AudioSpectrumEngine.getInstance().registerListener(this, NativeAnalyzer.CONSUMER_STATUS_BAR);
         if (!frameCallbackActive) {
             frameCallbackActive = true;
             Choreographer.getInstance().postFrameCallback(frameCallback);

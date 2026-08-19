@@ -202,4 +202,13 @@
     <string name="vis_normalization_label">Динамічна нормалізація (AGC)</string>
     <string name="vis_normalization_desc">М\'яке вирівнювання динамічного діапазону для тихих треків</string>
     <string name="status_bar_bands_count">Кількість смуг:</string>
+    <string name="analyzer_section_title">Точність аналізатора та синхронізація</string>
+    <string name="agc_main_label">Авторівень: головний аналізатор</string>
+    <string name="agc_main_desc">Вимкнено — абсолютні рівні. Прилад, що сам себе перемасштабовує, читати неможливо</string>
+    <string name="agc_bar_label">Авторівень: віджет статус-бара</string>
+    <string name="agc_bar_desc">Це прикраса, а не вимір, тож вирівнювання тут доречне</string>
+    <string name="agc_strength_label">Сила</string>
+    <string name="latency_trim_label">Синхронізація картинки і звуку</string>
+    <string name="latency_trim_desc">Базову затримку міряємо самі; кожен плеєр буферизує по-своєму, тож доганяйте на слух</string>
+    <string name="range_db_label">Діапазон відображення</string>
 </resources>
