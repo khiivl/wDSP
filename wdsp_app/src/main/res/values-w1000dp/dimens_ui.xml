@@ -24,20 +24,7 @@
 -->
 <resources>
 
-    <dimen name="screen_pad_h">28dp</dimen>
-    <dimen name="top_button_min_width">96dp</dimen>
-    <dimen name="top_button_gap">10dp</dimen>
-    <dimen name="top_button_pad_h">22dp</dimen>
-    <dimen name="top_button_pad_v">12dp</dimen>
-    <dimen name="top_button_text">16sp</dimen>
-    <dimen name="top_row_gap">10dp</dimen>
 
-    <dimen name="ctl_button_size">64dp</dimen>
-    <dimen name="ctl_button_gap">8dp</dimen>
-    <dimen name="ctl_play_size">88dp</dimen>
-    <dimen name="ctl_play_gap">14dp</dimen>
-    <dimen name="ctl_icon_pad">16dp</dimen>
-    <dimen name="ctl_fine_text">36sp</dimen>
 
     <!-- ⚠️ card_size тут НЕМА навмисно: розмір квадратного слота залежить від
          ОБОХ осей (ширина визначає, скільки слотів видно; висота — чи вони

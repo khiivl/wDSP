@@ -17,26 +17,12 @@
 -->
 <resources>
 
-    <dimen name="screen_pad_v">20dp</dimen>
-    <dimen name="freq_row_margin_top">14dp</dimen>
-    <dimen name="band_label_text">28sp</dimen>
-    <dimen name="freq_text">48sp</dimen>
-    <dimen name="stereo_text">56sp</dimen>
-    <dimen name="station_name_text">36sp</dimen>
-    <dimen name="station_name_margin_top">4dp</dimen>
-    <dimen name="scale_strip_height">36dp</dimen>
-    <dimen name="scale_strip_margin_top">18dp</dimen>
-    <dimen name="carousel_margin_top">16dp</dimen>
-    <dimen name="controls_margin_top">16dp</dimen>
-    <dimen name="controls_margin_bottom">40dp</dimen>
     <!-- 720+: блок 296dp при доступних ~448dp. -->
     <dimen name="wheel_max_size">220dp</dimen>
     <dimen name="wheel_label_text">16sp</dimen>
 
     <dimen name="settings_pad">24dp</dimen>
-    <dimen name="settings_row_gap">24dp</dimen>
     <dimen name="settings_row_text">16sp</dimen>
-    <dimen name="settings_note_text">14sp</dimen>
     <dimen name="settings_section_text">24sp</dimen>
     <dimen name="settings_btn_text">14sp</dimen>
 </resources>

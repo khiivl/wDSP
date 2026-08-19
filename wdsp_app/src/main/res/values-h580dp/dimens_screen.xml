@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Screens 580dp and taller: the 720 group and above, 43 models plus the widescreens.
+    This is the reference geometry, so these are the numbers the equaliser tab was drawn with.
+-->
+<resources>
+    <dimen name="toggle_height">38dp</dimen>
+    <dimen name="ctl_button_height">48dp</dimen>
+    <dimen name="eq_value_text">13sp</dimen>
+    <dimen name="eq_small_text">11sp</dimen>
+    <dimen name="card_title_text">18sp</dimen>
+    <dimen name="eq_pad">8dp</dimen>
+    <dimen name="visualizer_height">170dp</dimen>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screens 500..579dp tall: the 600-pixel group, 18 models in the platform table. -->
+<resources>
+    <dimen name="toggle_height">34dp</dimen>
+    <dimen name="ctl_button_height">40dp</dimen>
+    <dimen name="eq_value_text">12sp</dimen>
+    <dimen name="eq_small_text">10sp</dimen>
+    <dimen name="card_title_text">16sp</dimen>
+    <dimen name="eq_pad">6dp</dimen>
+    <dimen name="visualizer_height">130dp</dimen>
+</resources>

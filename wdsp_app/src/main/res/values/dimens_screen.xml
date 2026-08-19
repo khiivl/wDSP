@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sizes that decide whether the screens fit.
+
+    The base set is the TIGHTEST case on purpose, so a panel nobody has tested gets a layout that
+    fits rather than one that overflows; the qualifier sets add room back. That is the opposite of
+    the usual habit of designing for the big screen and hoping, and it is what the platform matrix
+    in kostyamat_fmradio/.agents/SCREEN_MATRIX.md calls for - 132 panels, of which the tightest in
+    regular use are 1024x600 and the 480-tall ultrawides.
+
+    Reference geometry is 1280x720 at density 160, which lands in values-h580dp + values-w1000dp,
+    so those two carry today's numbers and the reference screen looks exactly as it always did.
+-->
+<resources>
+    <!-- Toggle and icon buttons: the Q switches, the preset row, the plus/minus pairs. There are
+         over thirty of them on the equaliser tab, so this one value moves the most height. -->
+    <dimen name="toggle_height">30dp</dimen>
+    <!-- Buttons in the control strip under the equaliser. -->
+    <dimen name="ctl_button_height">34dp</dimen>
+    <!-- Values above the sliders: gain in dB, Q factor. -->
+    <dimen name="eq_value_text">11sp</dimen>
+    <!-- Band captions under the sliders, and other fine print. -->
+    <dimen name="eq_small_text">9sp</dimen>
+    <!-- Section titles inside the cards. -->
+    <dimen name="card_title_text">15sp</dimen>
+    <!-- Padding inside the rows of the equaliser card. -->
+    <dimen name="eq_pad">4dp</dimen>
+    <!-- Height of the boxed visualizers on the loudness tab. -->
+    <dimen name="visualizer_height">96dp</dimen>
+</resources>

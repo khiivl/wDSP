@@ -12,9 +12,4 @@
     бути стабільним, а не на межі обрізання.
 -->
 <resources>
-    <dimen name="card_size">168dp</dimen>
-    <dimen name="card_margin">10dp</dimen>
-    <dimen name="card_name_text">22sp</dimen>
-    <dimen name="card_freq_text">15sp</dimen>
-    <dimen name="carousel_min_height">188dp</dimen>
 </resources>

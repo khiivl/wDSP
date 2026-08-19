@@ -8,9 +8,4 @@
     екрана.
 -->
 <resources>
-    <dimen name="card_size">176dp</dimen>
-    <dimen name="card_margin">10dp</dimen>
-    <dimen name="card_name_text">24sp</dimen>
-    <dimen name="card_freq_text">16sp</dimen>
-    <dimen name="carousel_min_height">196dp</dimen>
 </resources>
