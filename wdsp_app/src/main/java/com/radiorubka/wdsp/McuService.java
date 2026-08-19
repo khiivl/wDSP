@@ -119,6 +119,12 @@ public class McuService extends Service implements LocationListener {
     private final byte[] eqData = new byte[12];
     private final byte[] subData = new byte[2];
 
+    // Exactly what the DSP was last told - Fletcher-Munson already folded in, quantised and
+    // clamped the same way the hardware sees it. Handed to the spectrum analyser so it can show
+    // the processed sound instead of the slider positions.
+    private final int[] effectiveGainIdx = new int[16];
+    private int effectiveSubGainIdx = 0;
+
     private final Intent volumeChangedIntent = new Intent("com.radiorubka.wdsp.VOLUME_CHANGED");
     private final Intent presetChangedIntent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
     private final Intent galaUpdateIntent = new Intent("com.radiorubka.wdsp.GALA_UPDATE");
@@ -246,6 +252,22 @@ public class McuService extends Service implements LocationListener {
                 else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
                     adjustSubGain(-1);
                 }
+                else if ("com.radiorubka.wdsp.PROBE_SESSION".equals(action)) {
+                    // Diagnostic only - see SessionProbe. sid >= 0 probes one session,
+                    // sid < 0 scans downwards from the platform's session counter.
+                    int sid = intent.getIntExtra("sid", -1);
+                    int ms = intent.getIntExtra("ms", sid >= 0 ? 1000 : 120);
+                    if (intent.hasExtra("dump")) {
+                        AudioSpectrumEngine.getInstance()
+                                .setDebugDump(intent.getIntExtra("dump", 0) != 0);
+                    }
+                    else if (sid >= 0) {
+                        SessionProbe.probeAsync(sid, ms);
+                    } else {
+                        SessionProbe.scanAsync(getApplicationContext(),
+                                intent.getIntExtra("max", 64), ms);
+                    }
+                }
                 else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
                     Log.i(TAG, "SETTINGS_RESTORED received, reloading all prefs and syncing DSP");
                     prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -352,6 +374,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
+        controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
         return controlFilter;
     }
 
@@ -779,12 +802,32 @@ public class McuService extends Service implements LocationListener {
             float db2 = (cachedGains[b2] - 6) * 2 + fmOffsets[b2];
             int idx2 = Math.max(0, Math.min(12, Math.round((db2 / 2.0f) + 6)));
 
+            effectiveGainIdx[b1] = idx1;
+            effectiveGainIdx[b2] = idx2;
+
             eqData[i + 1] = (byte) ((idx2 << 4) | (idx1 & 0x0F));
         }
         eqData[9] = cachedQByte1;
         eqData[10] = cachedQByte2;
         eqData[11] = 0x00;
         sendEqThrottled(eqData);
+        publishDspStateToSpectrum();
+    }
+
+    /**
+     * Hands the spectrum analyser the state that was actually sent to the DSP, not the raw slider
+     * positions: the Fletcher-Munson curve is already baked into these indices, and so is the
+     * hardware's own quantisation to 2 dB steps and its clamp at +/-12 dB. Feeding the sliders and
+     * the curve separately would count the curve twice and hide the clamping.
+     */
+    private void publishDspStateToSpectrum() {
+        boolean[] q = new boolean[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < 8; i++) {
+            q[i] = (cachedQByte1 & (1 << i)) != 0;
+            q[i + 8] = (cachedQByte2 & (1 << i)) != 0;
+        }
+        AudioSpectrumEngine.getInstance().setDspState(
+                effectiveGainIdx, q, cachedSubFreq, effectiveSubGainIdx);
     }
 
     private void updateFmOffsets(int vol) {
@@ -823,8 +866,10 @@ public class McuService extends Service implements LocationListener {
         }
 
         int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset)));
+        effectiveSubGainIdx = finalGainIdx;
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
         sendSubThrottled(subData);
+        publishDspStateToSpectrum();
     }
 
     private float getMaxBassBoost() {
