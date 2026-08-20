@@ -133,6 +133,39 @@ pre-ringing of a band-limited impulse (a constant 202 samples early), and an inv
 envelope was upside down — which tilted every measurement by 6 dB per octave, and would have looked
 exactly like a car with no treble.
 
+### The instrument has been checked against itself
+
+There is a diagnostic that plays all four sweeps through the same routing, so the acoustics are
+held identical and anything still differing between the four windows belongs to the measurement:
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei same 1
+```
+
+Measured on a bench: `997.50, 997.48, 997.46, 997.44 ms` - **one sample between consecutive
+windows**, three samples of drift over ten and a half seconds, about six parts per million. The
+single-pass design holds, and a difference between channels can be believed to be acoustic.
+
+🪤 Use this before blaming the code. An earlier hypothesis - that the recording and playback clocks
+were drifting apart and faking a 1.3 ms difference - was wrong, and this test is what disproved it
+in one run.
+
+### What the instrument cannot fix: a loudspeaker the microphone cannot see
+
+The same bench measured its two front speakers 1.3 ms apart, repeatably to the sample, where a
+tape measure said 0.47 ms *the other way*. The instrument was not at fault. The left speaker had a
+shelf 30-40 cm to one side and the head unit body between it and the microphone, and its clarity
+came out at 10-12 dB against 23-33 dB for the right one: the microphone was hearing it mostly
+through reflections, and the loudest moment of a reflected arrival is not the direct sound.
+
+Every threshold from -30 dB to -6 dB below the peak was tried offline against that recording. None
+recovered the tape measure, because there was no earlier arrival to find - the response rose
+gradually rather than starting with a direct impulse.
+
+➡️ **Clarity is the honest guard here, not a cleverer arrival detector.** Below about 15 dB, treat
+a delay as measured but unproven, whatever its repeatability. Repeatable and true are different
+claims, and this bench produces the first without the second.
+
 ### Two things to be careful of in the field
 
 - **A channel that was never driven still produces an impulse response** — of the room noise — and

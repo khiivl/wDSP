@@ -188,6 +188,18 @@ public final class RoomMeasurement {
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
     private static volatile boolean running;
+    /**
+     * Diagnostic: play every sweep through the same routing.
+     *
+     * With the acoustics held identical, anything that still differs between the four windows
+     * belongs to the measurement rather than to the car - which is the only way to tell a real
+     * arrival difference from a drift between the recording clock and the playback clock.
+     */
+    private static volatile boolean sameRouting;
+
+    public static void setSameRouting(boolean same) {
+        sameRouting = same;
+    }
 
     private RoomMeasurement() {
     }
@@ -618,6 +630,10 @@ public final class RoomMeasurement {
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
     private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
+        if (sameRouting) {
+            Log.i(TAG, "--- " + channel.label + ": routing held for the drift test ---");
+            return;
+        }
         Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
                 + " fader=" + channel.frontRear + " ---");
         prefs.edit()

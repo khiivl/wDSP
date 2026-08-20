@@ -282,6 +282,7 @@ public class McuService extends Service implements LocationListener {
                     // Plays a sweep through each speaker in turn and reports what came
                     // back - see RoomMeasurement. Everything it changes is restored, and
                     // the recordings are kept so a tester can send them back.
+                    RoomMeasurement.setSameRouting(intent.getIntExtra("same", 0) != 0);
                     RoomMeasurement.measureAsync(getApplicationContext(),
                             intent.getFloatExtra("amp", 0.25f),
                             intent.getFloatExtra("sec", 3f), null);
