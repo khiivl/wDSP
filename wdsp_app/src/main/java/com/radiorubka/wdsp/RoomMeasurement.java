@@ -76,9 +76,10 @@ import java.util.Locale;
  *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ef amp 0.35 --ef sec 3
  * </pre>
  *
- * Everything is logged under the tag {@code wDSP_RoomMeasure}, and the recordings are kept as WAV
- * files next to the app's data, so a measurement made in somebody else's car can be sent back and
- * looked at properly rather than described over chat.
+ * Everything is logged under the tag {@code wDSP_RoomMeasure}, and the report and recordings are
+ * written to {@link #outputDir(Context)} so that a measurement made in somebody else's car can be
+ * sent back and examined properly rather than described over chat. Settings has a button that zips
+ * the lot and hands it to the system share sheet.
  */
 public final class RoomMeasurement {
     private static final String TAG = "wDSP_RoomMeasure";
@@ -132,6 +133,16 @@ public final class RoomMeasurement {
      * mean putting a second of silence into somebody's front speakers.
      */
     private static final float MAX_PLAUSIBLE_SPREAD_MS = 30f;
+
+    /**
+     * Where a measurement leaves its report and recordings.
+     *
+     * External cache rather than files, for two reasons: the system may reclaim it when space runs
+     * short, which is right for something a tester sends once and forgets, and it is the path
+     * declared in {@code res/xml/file_paths.xml} so that FileProvider is allowed to hand it to
+     * Telegram.
+     */
+    private static final String OUTPUT_DIR = "measurements";
 
     private static final String PREFS_NAME = "EqPresets";
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
@@ -618,9 +629,23 @@ public final class RoomMeasurement {
     // what the tester sends back
     // ---------------------------------------------------------------------------------------
 
+    /** The folder holding the last measurement, created if it is not there yet. */
+    public static File outputDir(Context context) {
+        File dir = new File(context.getExternalCacheDir(), OUTPUT_DIR);
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    /** True when there is a measurement on disk worth sending. */
+    public static boolean hasResult(Context context) {
+        File report = new File(outputDir(context), "room_measurement.txt");
+        return report.isFile() && report.length() > 0;
+    }
+
     private static String writeReport(Context context, Result result, String preset,
                                       float amplitude, float seconds) {
-        File file = new File(context.getExternalFilesDir(null), "room_measurement.txt");
+        File file = new File(outputDir(context), "room_measurement.txt");
         try (FileOutputStream out = new FileOutputStream(file)) {
             StringBuilder sb = new StringBuilder();
             sb.append("wDSP room measurement\n");
@@ -659,7 +684,7 @@ public final class RoomMeasurement {
     }
 
     private static void writeWav(Context context, String name, short[] samples, int count) {
-        File file = new File(context.getExternalFilesDir(null), name);
+        File file = new File(outputDir(context), name);
         try (FileOutputStream out = new FileOutputStream(file)) {
             out.write(new byte[44]);
             byte[] bytes = new byte[count * 2];

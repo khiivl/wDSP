@@ -237,4 +237,18 @@
     <string name="sync_measure_running">Mõõdan…</string>
     <string name="sync_measure_result">Mõõdetud: %1$d ms</string>
     <string name="sync_measure_failed">Mõõtmine ebaõnnestus</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Salongi mõõtmine</string>
+    <string name="room_measure_desc">Mängib kordamööda igast kolarist läbi sagedusluugi ja mõõdab, millal heli kohale jõudis ja kas see on faasis. Kestab umbes pool minutit. Mootor väljas, uksed kinni, tavaline helitugevus.</string>
+    <string name="room_measure_button">Mõõda</string>
+    <string name="room_measure_running">Mõõdan: %1$s</string>
+    <string name="room_measure_done">Valmis — kas saadan tulemuse?</string>
+    <string name="room_measure_failed">Mõõtmine ebaõnnestus</string>
+    <string name="room_measure_send">Saada</string>
+    <string name="room_measure_share_text">wDSP salongi mõõtmine, versioon %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Veel pole mõõdetud</string>
+    <string name="toast_saved_to">Salvestatud: %1$s</string>
 </resources>

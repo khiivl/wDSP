@@ -225,4 +225,18 @@
     <string name="sync_measure_running">Вимірюю…</string>
     <string name="sync_measure_result">Виміряно: %1$d мс</string>
     <string name="sync_measure_failed">Виміряти не вдалося</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Діагностика</string>
+    <string name="room_measure_label">Вимір салону</string>
+    <string name="room_measure_desc">По черзі програє свіп через кожен динамік і вимірює, коли прийшов звук і чи він у фазі. Триває близько півхвилини. Двигун вимкнений, двері зачинені, гучність звичайна.</string>
+    <string name="room_measure_button">Виміряти</string>
+    <string name="room_measure_running">Вимір: %1$s</string>
+    <string name="room_measure_done">Готово — надіслати результат?</string>
+    <string name="room_measure_failed">Виміряти не вдалося</string>
+    <string name="room_measure_send">Надіслати</string>
+    <string name="room_measure_share_text">Вимір салону wDSP, версія %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Вимірів ще немає</string>
+    <string name="toast_saved_to">Збережено в %1$s</string>
 </resources>

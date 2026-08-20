@@ -235,4 +235,18 @@
     <string name="sync_measure_running">Medindo…</string>
     <string name="sync_measure_result">Medido: %1$d ms</string>
     <string name="sync_measure_failed">Não foi possível medir</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnóstico</string>
+    <string name="room_measure_label">Medição do interior</string>
+    <string name="room_measure_desc">Reproduz uma varredura por cada alto-falante por vez e mede quando o som chegou e se está em fase. Leva cerca de meio minuto. Motor desligado, portas fechadas, volume normal.</string>
+    <string name="room_measure_button">Medir</string>
+    <string name="room_measure_running">Medindo: %1$s</string>
+    <string name="room_measure_done">Concluído — enviar o resultado?</string>
+    <string name="room_measure_failed">Não foi possível medir</string>
+    <string name="room_measure_send">Enviar</string>
+    <string name="room_measure_share_text">Medição de interior wDSP, versão %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Ainda nada medido</string>
+    <string name="toast_saved_to">Salvo em %1$s</string>
 </resources>

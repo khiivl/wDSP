@@ -1316,6 +1316,96 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 5: 🔬 Діагностика
+                 Вимір акустики салону і надсилання результату розробнику.
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_debug_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/debug_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/label_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_measure_label"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_measure_desc"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_measure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_measure_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_send"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_measure_send"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_telegram"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/room_measure_telegram"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="24dp" />

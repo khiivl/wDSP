@@ -237,4 +237,18 @@ Global standard: %1$s</string>
     <string name="sync_measure_running">Måler…</string>
     <string name="sync_measure_result">Målt: %1$d ms</string>
     <string name="sync_measure_failed">Målingen mislyktes</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostikk</string>
+    <string name="room_measure_label">Måling av kupeen</string>
+    <string name="room_measure_desc">Spiller en sweep gjennom hver høyttaler etter tur og måler når lyden kom fram og om den er i fase. Tar omtrent et halvt minutt. Motoren av, dørene lukket, vanlig lydstyrke.</string>
+    <string name="room_measure_button">Mål</string>
+    <string name="room_measure_running">Måler: %1$s</string>
+    <string name="room_measure_done">Ferdig — sende resultatet?</string>
+    <string name="room_measure_failed">Målingen mislyktes</string>
+    <string name="room_measure_send">Send</string>
+    <string name="room_measure_share_text">wDSP kupemåling, versjon %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Ingenting målt ennå</string>
+    <string name="toast_saved_to">Lagret i %1$s</string>
 </resources>

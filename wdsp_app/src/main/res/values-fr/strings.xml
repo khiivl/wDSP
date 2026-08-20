@@ -237,4 +237,18 @@ Par défaut global : %1$s</string>
     <string name="sync_measure_running">Mesure en cours…</string>
     <string name="sync_measure_result">Mesuré : %1$d ms</string>
     <string name="sync_measure_failed">Échec de la mesure</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostic</string>
+    <string name="room_measure_label">Mesure de l\'habitacle</string>
+    <string name="room_measure_desc">Émet un balayage par chaque haut-parleur à tour de rôle et mesure quand le son est arrivé et s\'il est en phase. Dure environ une demi-minute. Moteur coupé, portes fermées, volume habituel.</string>
+    <string name="room_measure_button">Mesurer</string>
+    <string name="room_measure_running">Mesure : %1$s</string>
+    <string name="room_measure_done">Terminé — envoyer le résultat ?</string>
+    <string name="room_measure_failed">Échec de la mesure</string>
+    <string name="room_measure_send">Envoyer</string>
+    <string name="room_measure_share_text">Mesure d\'habitacle wDSP, version %1$s</string>
+    <string name="room_measure_telegram">Telegram : @kostyamat</string>
+    <string name="room_measure_nothing">Rien de mesuré encore</string>
+    <string name="toast_saved_to">Enregistré dans %1$s</string>
 </resources>

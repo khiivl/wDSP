@@ -237,4 +237,18 @@ Globāli noklusējums: %1$s</string>
     <string name="sync_measure_running">Mēra…</string>
     <string name="sync_measure_result">Izmērīts: %1$d ms</string>
     <string name="sync_measure_failed">Mērījums neizdevās</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Salona mērījums</string>
+    <string name="room_measure_desc">Pēc kārtas atskaņo sweep caur katru skaļruni un izmēra, kad skaņa pienāca un vai tā ir fazē. Aizņem apmēram pusminūti. Dzinējs izslēgts, durvis aizvērtas, parasts skaļums.</string>
+    <string name="room_measure_button">Izmērīt</string>
+    <string name="room_measure_running">Mēra: %1$s</string>
+    <string name="room_measure_done">Gatavs — sūtīt rezultātu?</string>
+    <string name="room_measure_failed">Mērījums neizdevās</string>
+    <string name="room_measure_send">Sūtīt</string>
+    <string name="room_measure_share_text">wDSP salona mērījums, versija %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Vēl nekas nav mērīts</string>
+    <string name="toast_saved_to">Saglabāts: %1$s</string>
 </resources>

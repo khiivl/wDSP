@@ -69,6 +69,22 @@
                am broadcast -a com.radiorubka.wdsp.SUB_GAIN_DOWN
              Explicit-component targeting (-n .../.SubGainUpReceiver) no longer works;
              there's no manifest-declared receiver class for this anymore. -->
+
+        <!--
+            Hands the cabin measurement to whatever the tester wants to send it with. The archive
+            is written to external-cache/measurements, which is the only path declared in
+            file_paths.xml - an undeclared path makes getUriForFile throw, which is a configuration
+            mistake and not something to hide from the log.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.radiorubka.wdsp.logs"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

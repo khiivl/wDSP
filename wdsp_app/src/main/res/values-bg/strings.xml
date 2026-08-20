@@ -237,4 +237,18 @@
     <string name="sync_measure_running">Измерване…</string>
     <string name="sync_measure_result">Измерено: %1$d ms</string>
     <string name="sync_measure_failed">Неуспешно измерване</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Диагностика</string>
+    <string name="room_measure_label">Измерване на салона</string>
+    <string name="room_measure_desc">Пуска тонален сигнал през всеки говорител поред и измерва кога пристига звукът и дали е във фаза. Отнема около половин минута. Спрян двигател, затворени врати, обичайна сила на звука.</string>
+    <string name="room_measure_button">Измери</string>
+    <string name="room_measure_running">Измерване: %1$s</string>
+    <string name="room_measure_done">Готово — да изпратим ли резултата?</string>
+    <string name="room_measure_failed">Измерването е неуспешно</string>
+    <string name="room_measure_send">Изпрати</string>
+    <string name="room_measure_share_text">Измерване на салона wDSP, версия %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Още няма измерване</string>
+    <string name="toast_saved_to">Запазено в %1$s</string>
 </resources>

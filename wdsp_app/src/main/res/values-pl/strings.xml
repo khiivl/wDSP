@@ -225,4 +225,18 @@
     <string name="sync_measure_running">Pomiar…</string>
     <string name="sync_measure_result">Zmierzono: %1$d ms</string>
     <string name="sync_measure_failed">Pomiar się nie powiódł</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostyka</string>
+    <string name="room_measure_label">Pomiar kabiny</string>
+    <string name="room_measure_desc">Odtwarza sweep kolejno przez każdy głośnik i mierzy, kiedy dźwięk dotarł i czy jest w fazie. Trwa około pół minuty. Silnik wyłączony, drzwi zamknięte, zwykła głośność.</string>
+    <string name="room_measure_button">Zmierz</string>
+    <string name="room_measure_running">Pomiar: %1$s</string>
+    <string name="room_measure_done">Gotowe — wysłać wynik?</string>
+    <string name="room_measure_failed">Pomiar się nie powiódł</string>
+    <string name="room_measure_send">Wyślij</string>
+    <string name="room_measure_share_text">Pomiar kabiny wDSP, wersja %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Jeszcze nic nie zmierzono</string>
+    <string name="toast_saved_to">Zapisano w %1$s</string>
 </resources>

@@ -31,6 +31,7 @@ public final class SettingsAccordion {
             R.id.label_eq_vis_section,
             R.id.label_analyzer_section,
             R.id.label_permissions_section,
+            R.id.label_debug_section,
     };
 
     private static int orderOf(int id) {

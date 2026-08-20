@@ -225,4 +225,18 @@
     <string name="sync_measure_running">Messung läuft…</string>
     <string name="sync_measure_result">Gemessen: %1$d ms</string>
     <string name="sync_measure_failed">Messung fehlgeschlagen</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnose</string>
+    <string name="room_measure_label">Messung des Innenraums</string>
+    <string name="room_measure_desc">Spielt nacheinander einen Sweep über jeden Lautsprecher und misst, wann der Ton ankam und ob er phasenrichtig ist. Dauert etwa eine halbe Minute. Motor aus, Türen zu, normale Lautstärke.</string>
+    <string name="room_measure_button">Messen</string>
+    <string name="room_measure_running">Messung: %1$s</string>
+    <string name="room_measure_done">Fertig — Ergebnis senden?</string>
+    <string name="room_measure_failed">Messung fehlgeschlagen</string>
+    <string name="room_measure_send">Senden</string>
+    <string name="room_measure_share_text">wDSP-Innenraummessung, Version %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Noch nichts gemessen</string>
+    <string name="toast_saved_to">Gespeichert in %1$s</string>
 </resources>

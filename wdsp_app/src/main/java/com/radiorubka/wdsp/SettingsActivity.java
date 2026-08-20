@@ -425,7 +425,12 @@ public class SettingsActivity extends AppCompatActivity {
         btnBackupSettings.setOnClickListener(v -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US);
             String filename = "wDSP_backup_" + sdf.format(new Date()) + ".json";
-            backupLauncher.launch(filename);
+            // Straight to Download/wDSP rather than through a save dialog - see Downloads for why
+            // the dialog and the load dialog could never be the same app. The picker stays as a
+            // fallback for a ROM that refuses the media store.
+            if (!backupToDownloads(filename)) {
+                backupLauncher.launch(filename);
+            }
         });
 
         btnRestoreSettings.setOnClickListener(v -> {
@@ -793,6 +798,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SeekBar seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
+    private TextView tvRoomStatus;
 
     /** Trim slider spans +/-250 ms, stored centred on this offset because SeekBar has no sign. */
     private static final int LATENCY_TRIM_OFFSET = 250;
@@ -827,6 +833,143 @@ public class SettingsActivity extends AppCompatActivity {
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         showSyncStatus();
         findViewById(R.id.btn_sync_measure).setOnClickListener(v -> startLatencyMeasurement());
+
+        initDiagnostics();
+    }
+
+    // --- Diagnostics: cabin measurement ---------------------------------------------------------
+
+    /**
+     * The diagnostics fold: measure the car, then hand the result to whoever can look at it.
+     *
+     * The measurement is only half the job. It runs in someone else's car, hundreds of kilometres
+     * away, so the numbers are worth nothing unless they can come back - which is why the second
+     * button exists and why the recordings are kept rather than thrown away after analysis.
+     */
+    private void initDiagnostics() {
+        tvRoomStatus = findViewById(R.id.tv_room_status);
+        findViewById(R.id.btn_room_measure).setOnClickListener(v -> startRoomMeasurement());
+        findViewById(R.id.btn_room_send).setOnClickListener(v -> shareRoomMeasurement());
+        // The address is a link as well as a label: a tester who has never sent anything to a
+        // developer should not have to work out where it goes.
+        findViewById(R.id.tv_room_telegram).setOnClickListener(v -> openTelegram());
+        showRoomStatus();
+    }
+
+    private void showRoomStatus() {
+        if (tvRoomStatus == null) return;
+        tvRoomStatus.setText(RoomMeasurement.hasResult(this)
+                ? getString(R.string.room_measure_done)
+                : getString(R.string.room_measure_nothing));
+    }
+
+    private void startRoomMeasurement() {
+        if (RoomMeasurement.isRunning()) return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Without the microphone there is nothing to measure with, so ask rather than fail.
+            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+            return;
+        }
+        tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
+        RoomMeasurement.measureAsync(this, new RoomMeasurement.Listener() {
+            @Override
+            public void onProgress(String stage) {
+                runOnUiThread(() ->
+                        tvRoomStatus.setText(getString(R.string.room_measure_running, stage)));
+            }
+
+            @Override
+            public void onFinished(RoomMeasurement.Result result) {
+                runOnUiThread(() -> tvRoomStatus.setText(result != null && result.error == null
+                        ? getString(R.string.room_measure_done)
+                        : getString(R.string.room_measure_failed)));
+            }
+        });
+    }
+
+    /**
+     * Packs the report and the recordings into one archive and offers it to the share sheet.
+     *
+     * A single file rather than five: a tester picking attachments one by one in a car park will
+     * miss one, and a measurement missing a channel is not a measurement.
+     */
+    private void shareRoomMeasurement() {
+        if (!RoomMeasurement.hasResult(this)) {
+            Toaster.show(this, getString(R.string.room_measure_nothing));
+            return;
+        }
+        java.io.File dir = RoomMeasurement.outputDir(this);
+        java.io.File zip = new java.io.File(dir, "wdsp_room_measurement.zip");
+        int packed = 0;
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(
+                new java.io.FileOutputStream(zip))) {
+            byte[] buffer = new byte[8192];
+            java.io.File[] files = dir.listFiles();
+            if (files != null) {
+                for (java.io.File f : files) {
+                    if (!f.isFile() || f.getName().endsWith(".zip")) continue;
+                    zos.putNextEntry(new java.util.zip.ZipEntry(f.getName()));
+                    try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
+                        int n;
+                        while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
+                    }
+                    zos.closeEntry();
+                    packed++;
+                }
+            }
+        } catch (java.io.IOException e) {
+            android.util.Log.e("wDSP_Settings", "could not build the measurement archive", e);
+            Toaster.show(this, getString(R.string.room_measure_failed));
+            return;
+        }
+        if (packed == 0) {
+            Toaster.show(this, getString(R.string.room_measure_nothing));
+            return;
+        }
+
+        android.net.Uri uri;
+        try {
+            uri = androidx.core.content.FileProvider.getUriForFile(
+                    this, "com.radiorubka.wdsp.logs", zip);
+        } catch (IllegalArgumentException e) {
+            // The folder is not listed in file_paths.xml. That is our own configuration mistake
+            // and hiding it would only make it harder to find.
+            android.util.Log.e("wDSP_Settings", "FileProvider path not configured", e);
+            Toaster.show(this, zip.getAbsolutePath());
+            return;
+        }
+
+        Intent send = new Intent(Intent.ACTION_SEND)
+                .setType("application/zip")
+                .putExtra(Intent.EXTRA_STREAM, uri)
+                .putExtra(Intent.EXTRA_SUBJECT, zip.getName())
+                .putExtra(Intent.EXTRA_TEXT,
+                        getString(R.string.room_measure_share_text, appVersion())
+                                + "\n" + getString(R.string.room_measure_telegram))
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (send.resolveActivity(getPackageManager()) == null) {
+            Toaster.show(this, zip.getAbsolutePath());
+            return;
+        }
+        startActivity(Intent.createChooser(send, getString(R.string.room_measure_send)));
+    }
+
+    private void openTelegram() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://t.me/kostyamat")));
+        } catch (Exception e) {
+            Toaster.show(this, getString(R.string.room_measure_telegram));
+        }
+    }
+
+    private String appVersion() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "?";
+        }
     }
 
     /**
@@ -939,6 +1082,28 @@ public class SettingsActivity extends AppCompatActivity {
         } catch (Exception ignored) {
         }
         return name != null ? name : "wallpaper";
+    }
+
+    /**
+     * Writes the backup to the public Downloads folder without asking where.
+     *
+     * @return false if the platform would not have it, so the caller can fall back to a picker
+     */
+    private boolean backupToDownloads(String filename) {
+        Downloads.Pending pending = Downloads.create(this, filename, "application/json");
+        if (pending == null) return false;
+        try {
+            backupToStream(pending.stream);
+            Downloads.finish(this, pending);
+            Toast.makeText(this, getString(R.string.toast_saved_to, pending.displayPath),
+                    Toast.LENGTH_LONG).show();
+            return true;
+        } catch (Exception e) {
+            // A half-written backup is worse than none: it looks restorable and is not.
+            Downloads.discard(this, pending);
+            Log.e(TAG, "Backup to Downloads failed", e);
+            return false;
+        }
     }
 
     private void backupAllSettings(Uri uri) {

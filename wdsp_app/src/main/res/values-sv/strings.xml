@@ -225,4 +225,18 @@
     <string name="sync_measure_running">Mäter…</string>
     <string name="sync_measure_result">Uppmätt: %1$d ms</string>
     <string name="sync_measure_failed">Mätningen misslyckades</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostik</string>
+    <string name="room_measure_label">Mätning av kupén</string>
+    <string name="room_measure_desc">Spelar upp ett svep genom varje högtalare i tur och ordning och mäter när ljudet kom fram och om det är i fas. Tar ungefär en halv minut. Motorn av, dörrarna stängda, vanlig volym.</string>
+    <string name="room_measure_button">Mät</string>
+    <string name="room_measure_running">Mäter: %1$s</string>
+    <string name="room_measure_done">Klart — skicka resultatet?</string>
+    <string name="room_measure_failed">Mätningen misslyckades</string>
+    <string name="room_measure_send">Skicka</string>
+    <string name="room_measure_share_text">wDSP kupémätning, version %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Inget mätt ännu</string>
+    <string name="toast_saved_to">Sparat i %1$s</string>
 </resources>

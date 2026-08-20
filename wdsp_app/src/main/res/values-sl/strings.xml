@@ -237,4 +237,18 @@ Globalno privzeto: %1$s</string>
     <string name="sync_measure_running">Merjenje…</string>
     <string name="sync_measure_result">Izmerjeno: %1$d ms</string>
     <string name="sync_measure_failed">Merjenje ni uspelo</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Meritev kabine</string>
+    <string name="room_measure_desc">Po vrsti predvaja sweep skozi vsak zvočnik in izmeri, kdaj je zvok prispel in ali je v fazi. Traja približno pol minute. Motor ugasnjen, vrata zaprta, običajna glasnost.</string>
+    <string name="room_measure_button">Izmeri</string>
+    <string name="room_measure_running">Merjenje: %1$s</string>
+    <string name="room_measure_done">Končano — pošljem rezultat?</string>
+    <string name="room_measure_failed">Merjenje ni uspelo</string>
+    <string name="room_measure_send">Pošlji</string>
+    <string name="room_measure_share_text">Meritev kabine wDSP, različica %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Še nič izmerjeno</string>
+    <string name="toast_saved_to">Shranjeno v %1$s</string>
 </resources>

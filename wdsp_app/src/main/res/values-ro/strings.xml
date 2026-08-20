@@ -237,4 +237,18 @@ Implicit global: %1$s</string>
     <string name="sync_measure_running">Se măsoară…</string>
     <string name="sync_measure_result">Măsurat: %1$d ms</string>
     <string name="sync_measure_failed">Măsurarea a eșuat</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnosticare</string>
+    <string name="room_measure_label">Măsurarea habitaclului</string>
+    <string name="room_measure_desc">Redă pe rând un sweep prin fiecare difuzor și măsoară când a ajuns sunetul și dacă este în fază. Durează circa jumătate de minut. Motorul oprit, ușile închise, volum obișnuit.</string>
+    <string name="room_measure_button">Măsoară</string>
+    <string name="room_measure_running">Se măsoară: %1$s</string>
+    <string name="room_measure_done">Gata — trimitem rezultatul?</string>
+    <string name="room_measure_failed">Măsurarea a eșuat</string>
+    <string name="room_measure_send">Trimite</string>
+    <string name="room_measure_share_text">Măsurare habitaclu wDSP, versiunea %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Încă nimic măsurat</string>
+    <string name="toast_saved_to">Salvat în %1$s</string>
 </resources>

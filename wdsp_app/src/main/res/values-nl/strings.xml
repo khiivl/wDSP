@@ -237,4 +237,18 @@ Globale standaard: %1$s</string>
     <string name="sync_measure_running">Bezig met meten…</string>
     <string name="sync_measure_result">Gemeten: %1$d ms</string>
     <string name="sync_measure_failed">Meting mislukt</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnose</string>
+    <string name="room_measure_label">Meting van het interieur</string>
+    <string name="room_measure_desc">Speelt om de beurt een sweep door elke luidspreker en meet wanneer het geluid aankwam en of het in fase is. Duurt ongeveer een halve minuut. Motor uit, deuren dicht, normaal volume.</string>
+    <string name="room_measure_button">Meten</string>
+    <string name="room_measure_running">Bezig met meten: %1$s</string>
+    <string name="room_measure_done">Klaar — het resultaat versturen?</string>
+    <string name="room_measure_failed">Meting mislukt</string>
+    <string name="room_measure_send">Versturen</string>
+    <string name="room_measure_share_text">wDSP-interieurmeting, versie %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Nog niets gemeten</string>
+    <string name="toast_saved_to">Opgeslagen in %1$s</string>
 </resources>

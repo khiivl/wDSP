@@ -2003,10 +2003,31 @@ public class MainActivity extends AppCompatActivity {
     private void exportPresets() {
         autoSaveCurrent();
         String s = spinnerPresets.getText().toString();
+        // Saved straight to Download/wDSP so that the same file manager handles both saving and
+        // loading. Only the document picker offers a save dialog on these head units, and only a
+        // file manager offers a load one, which is why the two used to look different.
+        if (exportPresetToDownloads(s)) return;
         exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
                 .setType("application/json")
                 .putExtra(Intent.EXTRA_TITLE, s + ".json"));
+    }
+
+    /** @return false when the media store refused, so the caller can fall back to the picker */
+    private boolean exportPresetToDownloads(String presetName) {
+        Downloads.Pending pending =
+                Downloads.create(this, presetName + ".json", "application/json");
+        if (pending == null) return false;
+        try {
+            writeCurrentPresetTo(pending.stream);
+            Downloads.finish(this, pending);
+            Toaster.show(this, getString(R.string.toast_saved_to, pending.displayPath));
+            return true;
+        } catch (Exception e) {
+            Downloads.discard(this, pending);
+            Log.e(TAG, "Preset export to Downloads failed", e);
+            return false;
+        }
     }
 
     private void importPresets() {
@@ -2015,30 +2036,41 @@ public class MainActivity extends AppCompatActivity {
                 .setType("application/json"));
     }
 
+    /**
+     * Writes the selected preset as JSON.
+     *
+     * Shared by both ways of exporting - straight to the Downloads folder, and through the
+     * document picker when a ROM will not have the media store - so that the two can never drift
+     * apart and produce files that restore differently.
+     */
+    private void writeCurrentPresetTo(OutputStream os) throws java.io.IOException {
+        String currentPreset = spinnerPresets.getText().toString();
+        savePreset(currentPreset);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Map<String, ?> allEntries = prefs.getAll();
+
+        Map<String, Object> filteredData = new HashMap<>();
+        filteredData.put("is_single_preset", true);
+        filteredData.put("preset_name_label", currentPreset);
+
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(currentPreset + "_")) {
+                String suffix = key.substring(currentPreset.length());
+                filteredData.put(suffix, entry.getValue());
+                filteredData.put(key, entry.getValue());
+            }
+        }
+
+        os.write(new Gson().toJson(filteredData)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     private void saveCurrentPresetToFile(Uri u) {
         try (OutputStream os = getContentResolver().openOutputStream(u)) {
             if (os == null) return;
-
-            String currentPreset = spinnerPresets.getText().toString();
-            savePreset(currentPreset);
-
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            Map<String, ?> allEntries = prefs.getAll();
-
-            Map<String, Object> filteredData = new HashMap<>();
-            filteredData.put("is_single_preset", true);
-            filteredData.put("preset_name_label", currentPreset);
-
-            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                String key = entry.getKey();
-                if (key.startsWith(currentPreset + "_")) {
-                    String suffix = key.substring(currentPreset.length());
-                    filteredData.put(suffix, entry.getValue());
-                    filteredData.put(key, entry.getValue());
-                }
-            }
-
-            os.write(new Gson().toJson(filteredData).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            writeCurrentPresetTo(os);
             Toaster.show(this, getString(R.string.toast_exported));
         } catch (IOException e) {
             Log.e(TAG, "Export error", e);

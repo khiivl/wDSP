@@ -237,4 +237,18 @@ Bendras numatytasis: %1$s</string>
     <string name="sync_measure_running">Matuojama…</string>
     <string name="sync_measure_result">Išmatuota: %1$d ms</string>
     <string name="sync_measure_failed">Nepavyko išmatuoti</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Salono matavimas</string>
+    <string name="room_measure_desc">Paeiliui paleidžia sweep signą per kiekvieną garsiakalbį ir išmatuoja, kada garsas atkeliavo ir ar jis tos pačios fazės. Trunka apie pusę minutės. Variklis išjungtas, durelės uždarytos, įprastas garsumas.</string>
+    <string name="room_measure_button">Išmatuoti</string>
+    <string name="room_measure_running">Matuojama: %1$s</string>
+    <string name="room_measure_done">Baigta — siųsti rezultatą?</string>
+    <string name="room_measure_failed">Nepavyko išmatuoti</string>
+    <string name="room_measure_send">Siųsti</string>
+    <string name="room_measure_share_text">wDSP salono matavimas, versija %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Dar nieko neišmatuota</string>
+    <string name="toast_saved_to">Įrašyta į %1$s</string>
 </resources>

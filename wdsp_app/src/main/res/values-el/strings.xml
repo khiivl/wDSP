@@ -237,4 +237,18 @@
     <string name="sync_measure_running">Μέτρηση…</string>
     <string name="sync_measure_result">Μετρήθηκε: %1$d ms</string>
     <string name="sync_measure_failed">Η μέτρηση απέτυχε</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Διαγνωστικά</string>
+    <string name="room_measure_label">Μέτρηση καμπίνας</string>
+    <string name="room_measure_desc">Αναπαράγει ένα sweep από κάθε ηχείο με τη σειρά και μετρά πότε έφτασε ο ήχος και αν είναι σε φάση. Διαρκεί περίπου μισό λεπτό. Κινητήρας σβηστός, πόρτες κλειστές, κανονική ένταση.</string>
+    <string name="room_measure_button">Μέτρηση</string>
+    <string name="room_measure_running">Μέτρηση: %1$s</string>
+    <string name="room_measure_done">Έτοιμο — να σταλεί το αποτέλεσμα;</string>
+    <string name="room_measure_failed">Η μέτρηση απέτυχε</string>
+    <string name="room_measure_send">Αποστολή</string>
+    <string name="room_measure_share_text">Μέτρηση καμπίνας wDSP, έκδοση %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Δεν έχει μετρηθεί ακόμη</string>
+    <string name="toast_saved_to">Αποθηκεύτηκε στο %1$s</string>
 </resources>

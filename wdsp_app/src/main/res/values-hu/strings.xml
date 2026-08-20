@@ -237,4 +237,18 @@ Globális alapértelmezett: %1$s</string>
     <string name="sync_measure_running">Mérés…</string>
     <string name="sync_measure_result">Mért érték: %1$d ms</string>
     <string name="sync_measure_failed">A mérés nem sikerült</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnosztika</string>
+    <string name="room_measure_label">Utastér mérése</string>
+    <string name="room_measure_desc">Sorra megszólaltat egy sweepet minden hangszórón, és megméri, mikor érkezett meg a hang, és fázisban van-e. Körülbelül fél percig tart. Motor leállítva, ajtók becsukva, szokásos hangerő.</string>
+    <string name="room_measure_button">Mérés</string>
+    <string name="room_measure_running">Mérés: %1$s</string>
+    <string name="room_measure_done">Kész — elküldjük az eredményt?</string>
+    <string name="room_measure_failed">A mérés nem sikerült</string>
+    <string name="room_measure_send">Küldés</string>
+    <string name="room_measure_share_text">wDSP utastér-mérés, verzió %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Még nincs mérés</string>
+    <string name="toast_saved_to">Mentve ide: %1$s</string>
 </resources>

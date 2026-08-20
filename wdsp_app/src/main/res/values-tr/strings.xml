@@ -237,4 +237,18 @@ Genel Varsayılan: %1$s</string>
     <string name="sync_measure_running">Ölçülüyor…</string>
     <string name="sync_measure_result">Ölçülen: %1$d ms</string>
     <string name="sync_measure_failed">Ölçüm başarısız</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Tanılama</string>
+    <string name="room_measure_label">Kabin ölçümü</string>
+    <string name="room_measure_desc">Sırayla her hoparlörden bir süpürme sinyali çalar ve sesin ne zaman ulaştığını ve fazda olup olmadığını ölçer. Yaklaşık yarım dakika sürer. Motor kapalı, kapılar kapalı, normal ses seviyesi.</string>
+    <string name="room_measure_button">Ölç</string>
+    <string name="room_measure_running">Ölçülüyor: %1$s</string>
+    <string name="room_measure_done">Bitti — sonuç gönderilsin mi?</string>
+    <string name="room_measure_failed">Ölçüm başarısız</string>
+    <string name="room_measure_send">Gönder</string>
+    <string name="room_measure_share_text">wDSP kabin ölçümü, sürüm %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Henüz ölçüm yok</string>
+    <string name="toast_saved_to">Şuraya kaydedildi: %1$s</string>
 </resources>

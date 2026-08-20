@@ -237,4 +237,18 @@
     <string name="sync_measure_running">Measuring…</string>
     <string name="sync_measure_result">Measured: %1$d ms</string>
     <string name="sync_measure_failed">Measurement failed</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostics</string>
+    <string name="room_measure_label">Cabin measurement</string>
+    <string name="room_measure_desc">Plays a sweep through each speaker in turn and measures when the sound arrives and whether it is in phase. Takes about half a minute. Engine off, doors shut, normal listening volume.</string>
+    <string name="room_measure_button">Measure</string>
+    <string name="room_measure_running">Measuring: %1$s</string>
+    <string name="room_measure_done">Done — send the result?</string>
+    <string name="room_measure_failed">Measurement failed</string>
+    <string name="room_measure_send">Send</string>
+    <string name="room_measure_share_text">wDSP cabin measurement, version %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Nothing measured yet</string>
+    <string name="toast_saved_to">Saved to %1$s</string>
 </resources>

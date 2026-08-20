@@ -235,4 +235,18 @@
     <string name="sync_measure_running">Измеряю…</string>
     <string name="sync_measure_result">Измерено: %1$d мс</string>
     <string name="sync_measure_failed">Измерить не удалось</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Диагностика</string>
+    <string name="room_measure_label">Измерение салона</string>
+    <string name="room_measure_desc">По очереди проигрывает свип через каждый динамик и измеряет, когда пришёл звук и в фазе ли он. Занимает около полуминуты. Двигатель выключен, двери закрыты, громкость обычная.</string>
+    <string name="room_measure_button">Измерить</string>
+    <string name="room_measure_running">Измерение: %1$s</string>
+    <string name="room_measure_done">Готово — отправить результат?</string>
+    <string name="room_measure_failed">Измерить не удалось</string>
+    <string name="room_measure_send">Отправить</string>
+    <string name="room_measure_share_text">Измерение салона wDSP, версия %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Измерений ещё нет</string>
+    <string name="toast_saved_to">Сохранено в %1$s</string>
 </resources>

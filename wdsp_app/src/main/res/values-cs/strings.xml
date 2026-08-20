@@ -237,4 +237,18 @@ Globální výchozí: %1$s</string>
     <string name="sync_measure_running">Měření…</string>
     <string name="sync_measure_result">Naměřeno: %1$d ms</string>
     <string name="sync_measure_failed">Měření se nezdařilo</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Měření kabiny</string>
+    <string name="room_measure_desc">Přehraje rozmetaný tón postupně každým reproduktorem a změří, kdy zvuk dorazil a zda je ve fázi. Trvá asi půl minuty. Vypnutý motor, zavřené dveře, běžná hlasitost.</string>
+    <string name="room_measure_button">Změřit</string>
+    <string name="room_measure_running">Měření: %1$s</string>
+    <string name="room_measure_done">Hotovo — odeslat výsledek?</string>
+    <string name="room_measure_failed">Měření se nezdařilo</string>
+    <string name="room_measure_send">Odeslat</string>
+    <string name="room_measure_share_text">Měření kabiny wDSP, verze %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Zatím nic nezměřeno</string>
+    <string name="toast_saved_to">Uloženo do %1$s</string>
 </resources>

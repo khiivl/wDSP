@@ -237,4 +237,18 @@ Globálne predvolené: %1$s</string>
     <string name="sync_measure_running">Meranie…</string>
     <string name="sync_measure_result">Namerané: %1$d ms</string>
     <string name="sync_measure_failed">Meranie zlyhalo</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostika</string>
+    <string name="room_measure_label">Meranie kabiny</string>
+    <string name="room_measure_desc">Postupne prehrá sweep cez každý reproduktor a zmeria, kedy zvuk dorazil a či je vo fáze. Trvá asi pol minúty. Vypnutý motor, zatvorené dvere, bežná hlasitosť.</string>
+    <string name="room_measure_button">Zmerať</string>
+    <string name="room_measure_running">Meranie: %1$s</string>
+    <string name="room_measure_done">Hotovo — odoslať výsledok?</string>
+    <string name="room_measure_failed">Meranie zlyhalo</string>
+    <string name="room_measure_send">Odoslať</string>
+    <string name="room_measure_share_text">Meranie kabiny wDSP, verzia %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Zatiaľ nič nezmerané</string>
+    <string name="toast_saved_to">Uložené do %1$s</string>
 </resources>

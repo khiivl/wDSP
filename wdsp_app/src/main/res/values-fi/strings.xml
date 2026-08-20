@@ -237,4 +237,18 @@ Yleinen oletus: %1$s</string>
     <string name="sync_measure_running">Mitataan…</string>
     <string name="sync_measure_result">Mitattu: %1$d ms</string>
     <string name="sync_measure_failed">Mittaus epäonnistui</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostiikka</string>
+    <string name="room_measure_label">Ohjaamon mittaus</string>
+    <string name="room_measure_desc">Toistaa pyyhkäisyäänen jokaisesta kaiuttimesta vuorollaan ja mittaa, milloin ääni saapui ja onko se vaiheessa. Kestää noin puoli minuuttia. Moottori sammuksissa, ovet kiinni, tavallinen äänenvoimakkuus.</string>
+    <string name="room_measure_button">Mittaa</string>
+    <string name="room_measure_running">Mitataan: %1$s</string>
+    <string name="room_measure_done">Valmis — lähetetäänkö tulos?</string>
+    <string name="room_measure_failed">Mittaus epäonnistui</string>
+    <string name="room_measure_send">Lähetä</string>
+    <string name="room_measure_share_text">wDSP:n ohjaamomittaus, versio %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Ei vielä mitattu</string>
+    <string name="toast_saved_to">Tallennettu kohteeseen %1$s</string>
 </resources>
