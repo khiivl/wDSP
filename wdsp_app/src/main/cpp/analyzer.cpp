@@ -21,17 +21,16 @@ constexpr float kFrameMaxDecay = 0.999f;
 constexpr float kNoiseFloorRise = 0.0002f;
 constexpr float kNoiseFloorMargin = 1.2f;
 
-/** Centre frequency of each hardware equaliser band. */
-const float kHwCenters[kHwBands] = {
-        20.0f, 31.5f, 50.0f, 80.0f, 125.0f, 200.0f, 315.0f, 500.0f,
-        800.0f, 1250.0f, 2000.0f, 3150.0f, 5000.0f, 8000.0f, 12500.0f, 20000.0f
-};
-
 inline float toDb(float power) {
     return 10.0f * std::log10(power + kPowerFloor);
 }
 
 } // namespace
+
+const float kHwCenters[kHwBands] = {
+        20.0f, 31.5f, 50.0f, 80.0f, 125.0f, 200.0f, 315.0f, 500.0f,
+        800.0f, 1250.0f, 2000.0f, 3150.0f, 5000.0f, 8000.0f, 12500.0f, 20000.0f
+};
 
 Analyzer::Analyzer(int sampleRate, int captureSize)
         : sampleRate_(sampleRate > 0 ? sampleRate : 48000),

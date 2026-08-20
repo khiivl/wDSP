@@ -16,6 +16,9 @@ constexpr int kHwBands = 16;
 /** Analysis bands: every hardware band split in two, so folding pairs back is exact. */
 constexpr int kBands = 32;
 
+/** Centre frequency of each hardware equaliser band, shared with the room measurement. */
+extern const float kHwCenters[kHwBands];
+
 /**
  * The spectrum analyser.
  *

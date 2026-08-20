@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(wdsp_native)
 
+# test_analyzer.cpp and test_sweep.cpp are deliberately absent: they are host harnesses with
+# their own main(), built with plain g++ on a desktop, not part of the library.
 add_library(wdsp_native SHARED
         wdsp_jni.cpp
         fft.cpp
         stitcher.cpp
-        analyzer.cpp)
+        analyzer.cpp
+        sweep.cpp)
 
 target_compile_options(wdsp_native PRIVATE
         -O3
