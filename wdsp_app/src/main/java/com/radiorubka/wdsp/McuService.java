@@ -283,6 +283,7 @@ public class McuService extends Service implements LocationListener {
                     // back - see RoomMeasurement. Everything it changes is restored, and
                     // the recordings are kept so a tester can send them back.
                     RoomMeasurement.setSameRouting(intent.getIntExtra("same", 0) != 0);
+                    RoomMeasurement.setDelayTest(intent.getIntExtra("delaytest", 0) != 0);
                     RoomMeasurement.measureAsync(getApplicationContext(),
                             intent.getFloatExtra("amp", 0.25f),
                             intent.getFloatExtra("sec", 3f), null);
@@ -1116,11 +1117,15 @@ public class McuService extends Service implements LocationListener {
         if (cmd == (byte) 0x81) {
             turboSenderType = "[FADER_LOUD_LEGACY]: ";
         }
+        // These two were the wrong way round: 0x89 carries the surround/RSSE frame and 0x8C
+        // the positional delays. Harmless to the hardware, but it sends anyone reading the log
+        // looking at the wrong command - which is exactly what happened while measuring what the
+        // delay sliders really do.
         if (cmd == (byte) 0x89) {
-            turboSenderType = "[SPATIAL_DELAYS]: ";
+            turboSenderType = "[SURROUND_RSSE]: ";
         }
         if (cmd == (byte) 0x8c) {
-            turboSenderType = "[SURROUND_DELAYS]: ";
+            turboSenderType = "[SPATIAL_DELAYS]: ";
         }
         if (cmd == (byte) 0x80) {
             turboSenderType = "[EQ]: ";

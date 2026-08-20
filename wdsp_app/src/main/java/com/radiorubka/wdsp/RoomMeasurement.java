@@ -180,16 +180,33 @@ public final class RoomMeasurement {
     private static final float MAX_PLAUSIBLE_SPREAD_MS = 60f;
 
     /**
-     * The largest delay the hardware can actually apply, in slider steps.
+     * The largest delay that can currently be entered, in slider steps.
      *
-     * The positional delay sliders run 0..10 and each step is half a millisecond, so the whole
-     * range is five milliseconds - about a metre and seventy of path difference. That is enough
-     * for a saloon and not enough for a van, and there is no point pretending otherwise: a
-     * suggestion of nineteen steps cannot be entered, and quietly clamping it to ten would leave
-     * the user believing the alignment had been achieved.
+     * <p>Ten, because that is where the slider stops — <b>not</b> because that is what the
+     * hardware can do. Measured with {@code --ei delaytest 1}, which holds the routing still and
+     * moves the delay line between sweeps, so the shift it produces is read directly:
+     *
+     * <pre>
+     *   10 steps (register 50)  -> +4.979 ms    0.4990 ms per step
+     *   25 steps (register 125) -> +12.458 ms   0.4983 ms per step
+     *   30 steps (register 150) -> +14.979 ms   0.4993 ms per step
+     *   40 steps (register 200) -> +19.958 ms   0.4990 ms per step
+     *   45 steps (register 225) -> +21.271 ms   saturated
+     * </pre>
+     *
+     * So the register really is a tenth of a millisecond per unit and the slider really is half a
+     * millisecond per step — the labels inherited from the original firmware are right, to within
+     * two parts in a thousand. And the delay line runs linearly to <b>20 ms, about 6.9 metres</b>,
+     * saturating just above 21. The slider offers a quarter of that.
+     *
+     * <p>Raising the slider to 40 would let long vehicles be aligned at all. That is a change to
+     * the main screen rather than to the measurement, so it is proposed rather than made here.
      */
     private static final int MAX_DELAY_STEPS = 10;
+    /** Measured, not assumed: 0.4990 ms per step across the linear range. */
     private static final float DELAY_STEP_MS = 0.5f;
+    /** Where the hardware itself stops, in steps. Beyond this the delay line saturates. */
+    private static final int HARDWARE_DELAY_STEPS = 40;
 
     /**
      * Where a measurement leaves its report and recordings.
@@ -232,6 +249,29 @@ public final class RoomMeasurement {
 
     public static void setSameRouting(boolean same) {
         sameRouting = same;
+    }
+
+    /**
+     * Diagnostic: hold the routing still and change the delay line between sweeps instead.
+     *
+     * The sliders are labelled half a millisecond per step, and that label came from reading
+     * somebody else's code rather than from measuring anything. Here the label is not needed: the
+     * four sweeps go to the same loudspeaker with the delay set to {@link #DELAY_TEST_STEPS}, and
+     * because they share one recording the constant cancels, so the differences between their
+     * arrivals are exactly what the hardware added.
+     *
+     * <pre>
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 1
+     * </pre>
+     *
+     * Half a millisecond per step would show 0.0, 1.5, 3.0 and 5.0 ms. Anything else is the truth.
+     */
+    private static volatile boolean delayTest;
+    /** Slider values used by the delay test, one per sweep. */
+    private static final int[] DELAY_TEST_STEPS = {0, 10, 25, 40};
+
+    public static void setDelayTest(boolean test) {
+        delayTest = test;
     }
 
     private RoomMeasurement() {
@@ -510,6 +550,19 @@ public final class RoomMeasurement {
         int got = 0;
 
         try {
+            if (delayTest) {
+                // One loudspeaker, chosen once, and the delay line is what changes. The front
+                // right is used because on the bench this was written against it is the one the
+                // microphone hears directly - a smeared arrival would blur the very shift being
+                // measured.
+                Log.i(TAG, "delay test: routing fixed to the front right, delay steps "
+                        + java.util.Arrays.toString(DELAY_TEST_STEPS));
+                prefs.edit()
+                        .putInt(preset + "_f_lr", FADER_MAX)
+                        .putInt(preset + "_f_fr", FADER_MAX)
+                        .apply();
+                sleep(ROUTING_SETTLE_MS);
+            }
             // The first speaker is selected before anything starts, so its sweep is not the one
             // that has to wait for the routing to take effect.
             applyRouting(prefs, preset, channels[0]);
@@ -666,6 +719,15 @@ public final class RoomMeasurement {
             // the room repeating it. Prominence is still reported, because it costs nothing and a
             // second opinion is useful when a measurement looks odd.
             cr.ok = cr.clarityDb >= MIN_CLARITY_DB && cr.recordedPeak >= MIN_PEAK;
+            if (delayTest && k > 0 && result.channels[0] != null) {
+                // What the hardware actually did, against what the slider claims it would do.
+                final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
+                final int steps = DELAY_TEST_STEPS[k];
+                Log.i(TAG, String.format(Locale.US,
+                        "delay test: %2d steps moved the arrival by %+.3f ms  (%.4f ms per step; "
+                                + "the slider is labelled %.1f)",
+                        steps, moved, moved / steps, DELAY_STEP_MS));
+            }
 
             Log.i(TAG, String.format(Locale.US,
                     "%s: arrival %.2f ms in its window (sample %d), clarity %.1f dB, "
@@ -680,6 +742,16 @@ public final class RoomMeasurement {
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
     private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
+        if (delayTest) {
+            // The routing was set once before the pass and stays put; what moves is the delay.
+            final int steps = DELAY_TEST_STEPS[channel.ordinal()];
+            Log.i(TAG, "--- delay test: " + steps + " steps on the front right ---");
+            prefs.edit()
+                    .putBoolean(preset + "_d_en", true)
+                    .putInt(preset + "_d_fr", steps)
+                    .apply();
+            return;
+        }
         if (sameRouting) {
             Log.i(TAG, "--- " + channel.label + ": routing held for the drift test ---");
             return;
@@ -766,10 +838,15 @@ public final class RoomMeasurement {
                 // is not told will believe their car is aligned when it is not.
                 result.beyondHardware = true;
                 Log.w(TAG, String.format(Locale.US,
-                        "%s needs %.1f ms (%d steps) but the sliders stop at %d steps (%.1f ms) - "
-                                + "this vehicle is longer than the delay lines can correct",
+                        "%s needs %.1f ms (%d steps). The slider stops at %d steps (%.1f ms), "
+                                + "though the delay line itself runs to %d steps (%.1f ms) - so "
+                                + "%s",
                         c.label, result.suggestedDelayMs[i], wanted, MAX_DELAY_STEPS,
-                        MAX_DELAY_STEPS * DELAY_STEP_MS));
+                        MAX_DELAY_STEPS * DELAY_STEP_MS, HARDWARE_DELAY_STEPS,
+                        HARDWARE_DELAY_STEPS * DELAY_STEP_MS,
+                        wanted <= HARDWARE_DELAY_STEPS
+                                ? "this is a limit of the interface, not of the hardware"
+                                : "this vehicle is beyond what the hardware can correct"));
             }
         }
     }
@@ -972,9 +1049,10 @@ public final class RoomMeasurement {
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
             if (result.beyondHardware) {
-                sb.append("NOTE: at least one speaker needs more delay than the sliders can give "
-                        + "(they stop at 10 steps, 5 ms, about 1.7 m). Normal in a van; the "
-                        + "suggestion is capped at what can actually be set.\n");
+                sb.append("NOTE: at least one speaker needs more delay than the sliders allow. "
+                        + "They stop at 10 steps (5 ms, about 1.7 m), while the delay line itself "
+                        + "was measured to run linearly to 40 steps (20 ms, about 6.9 m). The "
+                        + "suggestion below is capped at what can be entered today.\n");
             }
             sb.append("The response includes the microphone's own curve and is NOT a calibration.\n");
             out.write(sb.toString().getBytes("UTF-8"));

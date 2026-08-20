@@ -67,8 +67,38 @@ All of these go through `RPC_SetEQData(byte[])`; the first byte is the command.
 | **`0x8B`** | 2 | subwoofer | `(freqIdx << 4) \| gainIdx`; frequencies `{25,32,40,50,63,80,100,125,160,200,250}` Hz |
 | **`0x88`** | 4 | bass boost and high-pass, front and rear | `((boostFreqIdx+8)<<4) \| boostLevel` per channel, then `(hpfFront<<4) \| hpfRear` |
 | **`0x81`** | 4 | fader / balance / loudness | L-R step, F-R step (**12 is centre**, range 0..24), loudness flag |
-| **`0x8C`** | 6 | time alignment | FL, FR, RL, RR, Sub, each stored value **× 5**; all zeroes when disabled. The UI shows 0.5 ms per step |
+| **`0x8C`** | 6 | time alignment | FL, FR, RL, RR, Sub, each stored value **× 5**; all zeroes when disabled. **Measured: one register unit = 0.1 ms**, so one slider step = 0.5 ms, linear to register 200 (20 ms), saturating just above 21 — see below |
 | **`0x89`** | 6 | surround / Haas + RSSE | `138 + (rsse − 10)`, then FL, FR, RL, RR; zeroes when disabled |
+
+### The delay line, measured rather than assumed
+
+The half-millisecond-per-step label was inherited from the original firmware by reverse
+engineering, so it was worth proving. `RoomMeasurement` can do it: hold the routing still, move the
+delay line between sweeps, and read the shift it produces. Because all four sweeps share one
+recording, the shift is exact.
+
+```
+ 10 steps (register  50) -> +4.979 ms    0.4990 ms per step
+ 25 steps (register 125) -> +12.458 ms   0.4983 ms per step
+ 30 steps (register 150) -> +14.979 ms   0.4993 ms per step
+ 40 steps (register 200) -> +19.958 ms   0.4990 ms per step
+ 45 steps (register 225) -> +21.271 ms   saturated
+```
+
+🟢 **The inherited interpretation is right** — one register unit is a tenth of a millisecond, one
+slider step is half a millisecond, to within two parts in a thousand.
+
+🔴 **The slider is the limit, not the hardware.** It stops at 10 steps, 5 ms, about 1.7 m of path
+difference. The delay line runs linearly to 20 ms, about 6.9 m. That matters: this app is used in
+vans and minibuses where a rear speaker can be five metres from the listener, and today they cannot
+be aligned at all through the interface even though the hardware could do it.
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 1
+```
+
+⚠️ The log labels for `0x89` and `0x8C` were swapped in `sendToHardware` — `[SPATIAL_DELAYS]` was
+printed for the surround frame. Corrected; it cost an hour of looking at the wrong command.
 
 Separately, **not** through `RPC_SetEQData`:
 
