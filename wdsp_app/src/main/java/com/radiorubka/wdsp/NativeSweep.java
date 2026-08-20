@@ -68,6 +68,16 @@ public final class NativeSweep implements AutoCloseable {
         return handle != 0 && nativeAnalyse(handle, recorded, length, result);
     }
 
+    /**
+     * How much of a recording sits above 8 kHz, relative to the band below, in decibels.
+     *
+     * The one reliable way to catch a microphone that is really running at 16 kHz: the platform
+     * reports the rate that was requested regardless, so only the content itself tells the truth.
+     */
+    public static float bandwidthRatioDb(float[] recorded, int length, int sampleRate) {
+        return isAvailable() ? nativeBandwidth(recorded, length, sampleRate) : 0f;
+    }
+
     @Override
     public void close() {
         if (handle != 0) {
@@ -87,4 +97,6 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native boolean nativeAnalyse(long handle, float[] recorded, int length,
                                                 float[] result);
+
+    private static native float nativeBandwidth(float[] recorded, int length, int sampleRate);
 }

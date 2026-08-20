@@ -190,6 +190,18 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeGenerate(JNIEnv* env, jclass, jlong h
  * The layout of the result array is fixed by NativeSweep: arrival in samples, how far the peak
  * stood above the rest, polarity, then sixteen band levels in decibels.
  */
+JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeBandwidth(JNIEnv* env, jclass, jfloatArray recorded,
+                                                     jint length, jint sampleRate) {
+    if (recorded == nullptr) return 0.0f;
+    if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
+    jfloat* data = env->GetFloatArrayElements(recorded, nullptr);
+    if (data == nullptr) return 0.0f;
+    const float ratio = wdsp::SweepMeasurement::bandwidthRatioDb(data, length, sampleRate);
+    env->ReleaseFloatArrayElements(recorded, data, JNI_ABORT);
+    return ratio;
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong handle,
                                                    jfloatArray recorded, jint length,

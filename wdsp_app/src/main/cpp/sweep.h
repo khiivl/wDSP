@@ -68,6 +68,19 @@ public:
     static int polarityAt(const float* impulse, int length, int arrival);
 
     /**
+     * How much of a recording lives above 8 kHz, relative to the band below it, in decibels.
+     *
+     * A stream that claims 48 kHz but is really 16 kHz resampled has nothing above 8 kHz at all,
+     * and the platform will not admit it: {@code AudioRecord.getSampleRate()} returns the rate that
+     * was asked for either way. Measuring is the only honest test, and it matters here because an
+     * assistant hotword holds the microphone from boot on some head units and quietly halves the
+     * bandwidth of every other recording.
+     *
+     * Around -10 dB is normal for a sweep. Below -25 dB the top of the sweep is simply missing.
+     */
+    static float bandwidthRatioDb(const float* signal, int length, int sampleRate);
+
+    /**
      * Band levels in dB from a window of the impulse response, on the hardware band grid.
      *
      * The window starts a little before the arrival and runs long enough for the bottom of the

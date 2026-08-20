@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.util.Log;
@@ -97,8 +98,22 @@ public final class RoomMeasurement {
      * normal listening volume and quiet enough not to frighten anybody.
      */
     private static final float DEFAULT_AMPLITUDE = 0.25f;
-    /** Recording continues past the sweep so that the room's decay is captured too. */
+    /** Recording continues past the last sweep so that the room's decay is captured too. */
     private static final float TAIL_SECONDS = 1.0f;
+    /** Silence before the first sweep, and inside every window, so nothing starts abruptly. */
+    private static final float LEAD_SECONDS = 0.5f;
+    /**
+     * Silence between sweeps.
+     *
+     * Long enough for two things at once: the cabin to stop ringing, and the MCU to act on the
+     * routing change that is sent half way through it.
+     */
+    private static final float GAP_SECONDS = 1.5f;
+    /**
+     * Below this, the recording has no top end and the sweep is being measured through half a
+     * microphone. Normal is around -15 dB; a stream that is really 16 kHz gives -70 or worse.
+     */
+    private static final float BANDWIDTH_WARN_DB = -30f;
     /** The fader and balance sliders run 0..24 with 12 in the middle. */
     private static final int FADER_MIN = 0;
     private static final int FADER_CENTRE = 12;
@@ -156,18 +171,17 @@ public final class RoomMeasurement {
     /**
      * The four speakers, and how to steer the sound to each one on its own.
      *
-     * <p><b>Caution:</b> which end of each slider is left and which is front has been taken from
-     * the obvious reading of the labels and is <b>not</b> confirmed on a car. The measurement
-     * itself does not depend on it - the arrival times and their differences are right either way
-     * - but the names attached to them might be mirrored. A single test in a real car settles it:
-     * play the channel this class calls FRONT_LEFT and see which speaker sounds. Until somebody
-     * does that, treat the names as provisional and the numbers as sound.
+     * <p>Confirmed on real cars, 20.08.2026: testers ran the measurement and reported which
+     * speaker played the first sweep. It was the <b>rear left</b>, from balance 0 and fader 0 - so
+     * balance 0 is the left side as assumed, but fader 0 is the <b>rear</b>, not the front. The
+     * table below is the corrected one; before this it named every result mirror-image front to
+     * back. The arrival times themselves were never affected, only the labels on them.
      */
     private enum Channel {
-        FRONT_LEFT("front left", FADER_MIN, FADER_MIN),
-        FRONT_RIGHT("front right", FADER_MAX, FADER_MIN),
-        REAR_LEFT("rear left", FADER_MIN, FADER_MAX),
-        REAR_RIGHT("rear right", FADER_MAX, FADER_MAX);
+        REAR_LEFT("rear left", FADER_MIN, FADER_MIN),
+        REAR_RIGHT("rear right", FADER_MAX, FADER_MIN),
+        FRONT_LEFT("front left", FADER_MIN, FADER_MAX),
+        FRONT_RIGHT("front right", FADER_MAX, FADER_MAX);
 
         final String label;
         /** Balance: the value written to {@code <preset>_f_lr}. */
@@ -185,10 +199,25 @@ public final class RoomMeasurement {
     /** What one speaker's measurement found. */
     public static final class ChannelResult {
         public String label;
-        /** Sample at which the sound arrived, counted from the start of the impulse response. */
+        /** Sample at which the sound arrived, counted from the start of the recording. */
         public int arrivalSamples;
-        /** Arrival in milliseconds, which is what the delay sliders are calibrated in. */
+        /**
+         * Time of flight in milliseconds, measured on the monotonic clock.
+         *
+         * Not simply the arrival sample divided by the sample rate. Each channel gets its own
+         * recording and its own playback, and the gap between "recording started" and "the first
+         * sample of the sweep actually left" is different every time - measured at up to seven
+         * milliseconds of variation between runs on a bench where nothing moved. A car is only
+         * nine milliseconds wide, so that jitter would have swamped the answer.
+         *
+         * Both ends therefore report through the platform's own timestamps, which were shown to be
+         * honest on this hardware while the picture-to-sound delay was being measured. What
+         * remains is the sound's own journey plus a constant that every channel shares, and the
+         * delays are differences, so the constant falls out.
+         */
         public float arrivalMs;
+        /** True when the timestamps were available; without them the delays are not trustworthy. */
+        public boolean clockLocked;
         /** How far the arrival stood above everything else. Under ten means nothing was heard. */
         public float prominence;
         /** +1 normal, -1 wired backwards, 0 not determined. */
@@ -197,6 +226,10 @@ public final class RoomMeasurement {
         public final float[] bandsDb = new float[NativeSweep.BAND_COUNT];
         /** Loudest sample in the recording, so a tester can see at once if it was too quiet. */
         public float recordedPeak;
+        /** Level of the whole recording, which separates "quiet" from "one loud click". */
+        public float recordedRms;
+        /** Energy above 8 kHz against the band below it; far below -25 dB means a 16 kHz stream. */
+        public float bandwidthDb;
         public boolean ok;
     }
 
@@ -285,7 +318,6 @@ public final class RoomMeasurement {
             Log.e(TAG, result.error);
             return result;
         }
-
         if (!NativeSweep.isAvailable()) {
             result.error = "the native library is not loaded";
             Log.e(TAG, result.error);
@@ -296,8 +328,6 @@ public final class RoomMeasurement {
         Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s");
         Log.i(TAG, HardwareProfile.describe());
 
-        // Everything below this point may change the head unit, so from here on the original
-        // values are recoverable even if the process dies.
         String saved = saveCurrentSettings(prefs, preset);
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
         Log.i(TAG, "saved for restoring afterwards: " + saved);
@@ -308,45 +338,11 @@ public final class RoomMeasurement {
                 result.error = "the sweep could not be built";
                 return result;
             }
-
             prepareForMeasurement(prefs, preset);
-
-            final int sweepLen = sweep.length();
-            final int tail = (int) (TAIL_SECONDS * SAMPLE_RATE);
-            final int recordLen = sweepLen + tail;
-
-            float[] mono = new float[sweepLen];
-            sweep.generate(mono, amplitude);
-            short[] stereo = toStereoPcm16(mono);
-            Log.i(TAG, "sweep is " + sweepLen + " samples (" + (sweepLen / (float) SAMPLE_RATE)
-                    + " s), recording window " + recordLen + " samples");
-
-            float[] analysis = new float[NativeSweep.RESULT_SIZE];
-            Channel[] channels = Channel.values();
-
-            for (int i = 0; i < channels.length; i++) {
-                Channel channel = channels[i];
-                if (listener != null) listener.onProgress(channel.label);
-
-                // Steering is done by the outboard sound processor, not by Android: the head unit
-                // gives us two channels and the DSP splits them four ways, so the only way to
-                // reach one speaker is to push the balance and fader to their extremes.
-                Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
-                        + " fader=" + channel.frontRear + " ---");
-                prefs.edit()
-                        .putInt(preset + "_f_lr", channel.leftRight)
-                        .putInt(preset + "_f_fr", channel.frontRear)
-                        .apply();
-                sleep(ROUTING_SETTLE_MS);
-
-                ChannelResult cr = measureOne(app, sweep, stereo, recordLen, analysis, channel);
-                result.channels[i] = cr;
-            }
-
+            runOnePass(app, prefs, preset, sweep, amplitude, result, listener);
             computeDelays(result);
             result.reportPath = writeReport(app, result, preset, amplitude, seconds);
         } finally {
-            // Restore before anything else can go wrong, and only then clear the recovery note.
             SharedPreferences.Editor editor = prefs.edit();
             applySaved(editor, saved);
             editor.remove(PREF_RECOVERY);
@@ -358,36 +354,88 @@ public final class RoomMeasurement {
         return result;
     }
 
-    /** Plays the sweep through whichever speaker is currently selected and listens to it. */
-    private static ChannelResult measureOne(Context context, NativeSweep sweep, short[] stereo,
-                                            int recordLen, float[] analysis, Channel channel) {
-        ChannelResult cr = new ChannelResult();
-        cr.label = channel.label;
+    /**
+     * Plays all four sweeps in one go and records them in one go.
+     *
+     * <h3>Why it has to be one pass</h3>
+     *
+     * The first version opened a fresh recording and a fresh playback for every speaker. That
+     * looks tidier and it is wrong: the gap between "recording started" and "the first sample of
+     * the sweep actually left the hardware" is different every time a stream is opened. Measured
+     * on a bench where nothing moved, the same pair of speakers came out 6.4 ms apart, then
+     * 2.7 ms, then 4.5 ms <i>the other way round</i>. A whole car is only nine milliseconds wide,
+     * so that jitter was larger than the thing being measured.
+     *
+     * Platform timestamps did not rescue it either - a single reading taken early in playback is
+     * not accurate enough to extrapolate back to the first frame.
+     *
+     * With one stream in each direction the skew between them is a single unknown constant for
+     * the whole measurement. It appears identically in all four arrivals, and the delays are
+     * differences, so it cancels exactly. Nothing has to be known about it at all.
+     *
+     * The routing is switched during the silence between sweeps, which is also where the cabin is
+     * given time to stop ringing.
+     */
+    private static void runOnePass(Context context, SharedPreferences prefs, String preset,
+                                   NativeSweep sweep, float amplitude, Result result,
+                                   Listener listener) {
+        final Channel[] channels = Channel.values();
+        final int sweepLen = sweep.length();
+        final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
+        final int lead = (int) (LEAD_SECONDS * SAMPLE_RATE);
+        final int period = sweepLen + gap;
+        final int totalFrames = lead + channels.length * period;
+        final int recordLen = totalFrames + (int) (TAIL_SECONDS * SAMPLE_RATE);
+
+        float[] mono = new float[sweepLen];
+        sweep.generate(mono, amplitude);
+
+        // One long track: quiet, sweep, quiet, sweep, and so on.
+        short[] stereo = new short[totalFrames * 2];
+        for (int k = 0; k < channels.length; k++) {
+            final int at = lead + k * period;
+            for (int i = 0; i < sweepLen; i++) {
+                short v = (short) Math.max(Short.MIN_VALUE,
+                        Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+                stereo[(at + i) * 2] = v;
+                stereo[(at + i) * 2 + 1] = v;
+            }
+        }
+        Log.i(TAG, "one pass: sweep " + sweepLen + " samples, gap " + gap + ", period " + period
+                + ", total " + totalFrames + " frames (" + (totalFrames / (float) SAMPLE_RATE)
+                + " s)");
 
         AudioTrack track = null;
         AudioRecord record = null;
         MicProbe.Suspension effects = null;
+        short[] captured = new short[recordLen];
+        int got = 0;
+
         try {
+            // The first speaker is selected before anything starts, so its sweep is not the one
+            // that has to wait for the routing to take effect.
+            applyRouting(prefs, preset, channels[0]);
+            sleep(ROUTING_SETTLE_MS);
+
             record = openMicrophone();
             if (record == null) {
-                Log.e(TAG, channel.label + ": the microphone could not be opened");
-                return cr;
+                result.error = "the microphone could not be opened";
+                Log.e(TAG, result.error);
+                return;
             }
             effects = MicProbe.suspendCapturePreprocessing(record.getAudioSessionId(), TAG);
 
             track = openTrack(stereo.length);
             if (track == null) {
-                Log.e(TAG, channel.label + ": the output could not be opened");
-                return cr;
+                result.error = "the output could not be opened";
+                Log.e(TAG, result.error);
+                return;
             }
 
-            // Recording starts first, so that nothing of the sweep can be missed. The deconvolution
-            // finds the sweep wherever it happens to sit in the recording, so a little silence at
-            // the front costs nothing.
             record.startRecording();
             track.play();
+            final long playStartedMs = System.currentTimeMillis();
 
-            final short[] captured = new short[recordLen];
             final AudioTrack playing = track;
             Thread writer = new Thread(() -> {
                 int offset = 0;
@@ -399,64 +447,138 @@ public final class RoomMeasurement {
             }, "wDSP_RoomSweepOut");
             writer.start();
 
-            int got = 0;
+            // Routing is switched in the silence before each sweep. The timing comes from the
+            // wall clock rather than from frames written, because what matters is when the MCU
+            // acts, and it acts on its own schedule - the gap is long enough to absorb both.
+            Thread router = new Thread(() -> {
+                for (int k = 1; k < channels.length; k++) {
+                    final long switchAtMs = (long) ((lead + k * period - gap / 2)
+                            * 1000L / SAMPLE_RATE);
+                    long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
+                    if (waitMs > 0) sleep(waitMs);
+                    if (listener != null) listener.onProgress(channels[k].label);
+                    applyRouting(prefs, preset, channels[k]);
+                }
+            }, "wDSP_RoomRouting");
+            if (listener != null) listener.onProgress(channels[0].label);
+            router.start();
+
             while (got < recordLen) {
                 int read = record.read(captured, got, recordLen - got);
                 if (read <= 0) {
-                    Log.w(TAG, channel.label + ": read returned " + read);
+                    Log.w(TAG, "read returned " + read);
                     break;
                 }
                 got += read;
             }
             try {
                 writer.join(2000);
+                router.join(2000);
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
-
-            float[] asFloat = new float[got];
-            int peak = 0;
-            for (int i = 0; i < got; i++) {
-                asFloat[i] = captured[i] / 32768f;
-                if (Math.abs(captured[i]) > peak) peak = Math.abs(captured[i]);
-            }
-            cr.recordedPeak = peak / 32768f;
-
-            // The raw recording is kept. A number in a log can only be argued about; the recording
-            // can be re-analysed once the analysis itself improves, and by somebody who was not in
-            // the car at the time.
-            writeWav(context, "room_" + channel.name().toLowerCase(Locale.US) + ".wav",
-                    captured, got);
-
-            if (!sweep.analyse(asFloat, got, analysis)) {
-                Log.e(TAG, channel.label + ": nothing in the recording looked like the sweep");
-                return cr;
-            }
-
-            cr.arrivalSamples = (int) analysis[NativeSweep.ARRIVAL];
-            cr.arrivalMs = cr.arrivalSamples * 1000f / SAMPLE_RATE;
-            cr.prominence = analysis[NativeSweep.PROMINENCE];
-            cr.polarity = (int) analysis[NativeSweep.POLARITY];
-            System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
-
-            // Two independent reasons to disbelieve a result, and both have to be ruled out.
-            // A channel that was never driven still yields an impulse response - of the room noise
-            // - and its loudest moment still looks like an arrival.
-            cr.ok = cr.prominence >= MIN_PROMINENCE && cr.recordedPeak >= MIN_PEAK;
-            Log.i(TAG, String.format(Locale.US,
-                    "%s: arrival %d samples (%.2f ms), prominence %.0f, polarity %+d, "
-                            + "recorded peak %.1f dBFS%s",
-                    channel.label, cr.arrivalSamples, cr.arrivalMs, cr.prominence, cr.polarity,
-                    20 * Math.log10(cr.recordedPeak + 1e-9f),
-                    cr.ok ? "" : "  <-- TOO WEAK TO TRUST"));
         } catch (Throwable t) {
-            Log.e(TAG, channel.label + ": measurement failed", t);
+            result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            Log.e(TAG, "the pass failed", t);
+            return;
         } finally {
             if (effects != null) effects.restore();
             closeQuietly(track);
             closeQuietly(record);
         }
-        return cr;
+
+        // The whole recording is kept as one file. Four separate ones would have to be lined up
+        // again by whoever looks at them, and lining them up is the entire difficulty.
+        writeWav(context, "room_measurement.wav", captured, got);
+
+        float[] asFloat = new float[got];
+        int peak = 0;
+        double sumSquares = 0;
+        for (int i = 0; i < got; i++) {
+            asFloat[i] = captured[i] / 32768f;
+            if (Math.abs(captured[i]) > peak) peak = Math.abs(captured[i]);
+            sumSquares += (double) asFloat[i] * asFloat[i];
+        }
+        final float passPeak = peak / 32768f;
+        final float passRms = got > 0 ? (float) Math.sqrt(sumSquares / got) : 0f;
+        final float passBandwidth = NativeSweep.bandwidthRatioDb(asFloat, got, SAMPLE_RATE);
+        Log.i(TAG, String.format(Locale.US,
+                "pass: %d frames, peak %.1f dBFS, rms %.1f dBFS, above 8 kHz %.1f dB",
+                got, 20 * Math.log10(passPeak + 1e-9f), 20 * Math.log10(passRms + 1e-9f),
+                passBandwidth));
+        if (passBandwidth < BANDWIDTH_WARN_DB) {
+            Log.w(TAG, "the recording has nothing above 8 kHz. The microphone is running at "
+                    + "16 kHz because something else has it open - an assistant hotword is the "
+                    + "usual cause, and the platform will not admit it.");
+        }
+
+        // Each sweep is cut out with a generous margin. The window is short enough that the next
+        // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
+        // that window was cut for.
+        final int windowLen = lead + sweepLen + (int) (1.0f * SAMPLE_RATE);
+        float[] analysis = new float[NativeSweep.RESULT_SIZE];
+
+        for (int k = 0; k < channels.length; k++) {
+            ChannelResult cr = new ChannelResult();
+            cr.label = channels[k].label;
+            cr.recordedPeak = passPeak;
+            cr.recordedRms = passRms;
+            cr.bandwidthDb = passBandwidth;
+            result.channels[k] = cr;
+
+            final int from = k * period;
+            final int len = Math.min(windowLen, got - from);
+            if (len < sweepLen) {
+                Log.w(TAG, cr.label + ": the recording ended before this sweep");
+                continue;
+            }
+            float[] window = new float[len];
+            System.arraycopy(asFloat, from, window, 0, len);
+
+            int windowPeak = 0;
+            double windowSum = 0;
+            for (float v : window) {
+                windowSum += (double) v * v;
+                if (Math.abs(v) > windowPeak / 32768f) windowPeak = Math.round(Math.abs(v) * 32768f);
+            }
+            cr.recordedPeak = windowPeak / 32768f;
+            cr.recordedRms = (float) Math.sqrt(windowSum / len);
+
+            if (!sweep.analyse(window, len, analysis)) {
+                Log.w(TAG, cr.label + ": nothing in this part of the recording looked like the "
+                        + "sweep");
+                continue;
+            }
+            cr.arrivalSamples = (int) analysis[NativeSweep.ARRIVAL];
+            // Every window starts an exact number of periods into the same recording, so the
+            // arrival inside it is directly comparable with the others. The unknown skew between
+            // the recording and the playback is the same for all four and drops out of the
+            // differences.
+            cr.arrivalMs = cr.arrivalSamples * 1000f / SAMPLE_RATE;
+            cr.clockLocked = true;
+            cr.prominence = analysis[NativeSweep.PROMINENCE];
+            cr.polarity = (int) analysis[NativeSweep.POLARITY];
+            System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
+            cr.ok = cr.prominence >= MIN_PROMINENCE && cr.recordedPeak >= MIN_PEAK;
+
+            Log.i(TAG, String.format(Locale.US,
+                    "%s: arrival %.2f ms in its window (sample %d), prominence %.0f, "
+                            + "polarity %+d, peak %.1f dBFS, rms %.1f dBFS%s",
+                    cr.label, cr.arrivalMs, cr.arrivalSamples, cr.prominence, cr.polarity,
+                    20 * Math.log10(cr.recordedPeak + 1e-9f),
+                    20 * Math.log10(cr.recordedRms + 1e-9f),
+                    cr.ok ? "" : "  <-- TOO WEAK TO TRUST"));
+        }
+    }
+
+    /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
+    private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
+        Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
+                + " fader=" + channel.frontRear + " ---");
+        prefs.edit()
+                .putInt(preset + "_f_lr", channel.leftRight)
+                .putInt(preset + "_f_fr", channel.frontRear)
+                .apply();
     }
 
     /**

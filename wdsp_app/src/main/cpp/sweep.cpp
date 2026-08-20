@@ -220,16 +220,81 @@ int SweepMeasurement::findArrival(const float* impulse, int length, float& promi
 
 int SweepMeasurement::polarityAt(const float* impulse, int length, int arrival) {
     if (impulse == nullptr || arrival < 0 || arrival >= length) return 0;
-    const int to = std::min(length, arrival + 64);
+
+    // Polarity is a question about the woofer, not the tweeter. At 10 kHz a wavelength is three
+    // centimetres, so the sign of the very first excursion up there says more about where the
+    // microphone happens to be than about how the speaker is wired - and on a quieter channel the
+    // largest excursion of the raw response is often a ringing lobe of the wrong sign.
+    //
+    // Measured on a bench with two correctly wired front speakers: the raw rule called the louder
+    // one +1 and the quieter one -1, every single run. Smoothing first, which keeps the judgement
+    // on the frequencies where "in phase" means anything, is what makes both of them agree.
+    constexpr int kSmooth = 48;          // a moving average this long rolls off around 1 kHz
+    constexpr int kLook = 512;           // ten milliseconds is the direct sound and no more
+
+    const int from = std::max(0, arrival - kSmooth);
+    const int to = std::min(length - kSmooth, arrival + kLook);
+    if (to <= from) return 0;
+
+    double running = 0.0;
+    for (int i = from; i < from + kSmooth && i < length; i++) running += impulse[i];
+
     float peak = 0.0f;
     int sign = 0;
-    for (int i = arrival; i < to; i++) {
-        if (std::fabs(impulse[i]) > peak) {
-            peak = std::fabs(impulse[i]);
-            sign = impulse[i] >= 0.0f ? 1 : -1;
+    for (int i = from; i < to; i++) {
+        const float smoothed = static_cast<float>(running / kSmooth);
+        if (std::fabs(smoothed) > peak) {
+            peak = std::fabs(smoothed);
+            sign = smoothed >= 0.0f ? 1 : -1;
         }
+        running -= impulse[i];
+        running += impulse[i + kSmooth];
     }
     return sign;
+}
+
+float SweepMeasurement::bandwidthRatioDb(const float* signal, int length, int sampleRate) {
+    constexpr int kWindow = 16384;
+    if (signal == nullptr || length < kWindow || sampleRate <= 0) return 0.0f;
+
+    // Take the window from where the recording is loudest, so the answer describes the sweep
+    // rather than the silence around it.
+    int best = 0;
+    double bestEnergy = -1.0;
+    const int stride = std::max(1, (length - kWindow) / 16);
+    for (int start = 0; start + kWindow <= length; start += stride) {
+        double energy = 0.0;
+        for (int i = start; i < start + kWindow; i += 8) {
+            const double v = signal[i];
+            energy += v * v;
+        }
+        if (energy > bestEnergy) {
+            bestEnergy = energy;
+            best = start;
+        }
+    }
+
+    std::vector<float> re(kWindow, 0.0f);
+    std::vector<float> im(kWindow, 0.0f);
+    for (int i = 0; i < kWindow; i++) {
+        const float w = 0.5f - 0.5f * std::cos(2.0f * kPi * static_cast<float>(i)
+                                               / static_cast<float>(kWindow - 1));
+        re[i] = signal[best + i] * w;
+    }
+    fft(re, im, false);
+
+    const float binHz = static_cast<float>(sampleRate) / static_cast<float>(kWindow);
+    double low = 0.0;
+    double high = 0.0;
+    for (int i = 1; i <= kWindow / 2; i++) {
+        const float hz = static_cast<float>(i) * binHz;
+        const double power = static_cast<double>(re[i]) * re[i] + static_cast<double>(im[i]) * im[i];
+        // Below 300 Hz is left out: road rumble and body resonance would swamp the comparison.
+        if (hz >= 300.0f && hz < 8000.0f) low += power;
+        else if (hz >= 8500.0f && hz < static_cast<float>(sampleRate) * 0.45f) high += power;
+    }
+    if (low <= 0.0) return 0.0f;
+    return 10.0f * std::log10(static_cast<float>(high / low) + 1e-12f);
 }
 
 void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arrival,

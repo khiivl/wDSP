@@ -695,6 +695,22 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Makes a button look like one, in either theme.
+     *
+     * The measurement and synchronise buttons started out with a plain drawable background, and in
+     * practice they disappeared: the author of the app had to hunt for the synchronise button on
+     * his own screen, knowing exactly where it was. Everything else on this screen that can be
+     * pressed is filled with the accent colour, so these are too, with text picked for contrast
+     * against whatever accent the user has chosen.
+     */
+    private void styleActionButton(TextView btn) {
+        if (btn == null) return;
+        int accent = ThemeManager.accent(this, editNight);
+        btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
+        btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
+    }
+
     private void styleToggleButton(TextView btn, boolean active) {
         if (btn == null) return;
         int accent = ThemeManager.accent(this, editNight);
@@ -832,7 +848,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         showSyncStatus();
-        findViewById(R.id.btn_sync_measure).setOnClickListener(v -> startLatencyMeasurement());
+        TextView syncButton = findViewById(R.id.btn_sync_measure);
+        TouchGlow.attach(syncButton);
+        syncButton.setOnClickListener(v -> startLatencyMeasurement());
 
         initDiagnostics();
     }
@@ -848,8 +866,13 @@ public class SettingsActivity extends AppCompatActivity {
      */
     private void initDiagnostics() {
         tvRoomStatus = findViewById(R.id.tv_room_status);
-        findViewById(R.id.btn_room_measure).setOnClickListener(v -> startRoomMeasurement());
-        findViewById(R.id.btn_room_send).setOnClickListener(v -> shareRoomMeasurement());
+        TextView measureButton = findViewById(R.id.btn_room_measure);
+        TextView sendButton = findViewById(R.id.btn_room_send);
+        TouchGlow.attach(measureButton);
+        TouchGlow.attach(sendButton);
+        measureButton.setOnClickListener(v -> startRoomMeasurement());
+        sendButton.setOnClickListener(v -> shareRoomMeasurement());
+        styleActionButtons();
         // The address is a link as well as a label: a tester who has never sent anything to a
         // developer should not have to work out where it goes.
         findViewById(R.id.tv_room_telegram).setOnClickListener(v -> openTelegram());
@@ -1407,6 +1430,14 @@ public class SettingsActivity extends AppCompatActivity {
         int eqVisMode = ThemeManager.prefs(this).getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
         updatePermissionButtons();
+        styleActionButtons();
+    }
+
+    /** Re-applies the accent to every button that performs an action rather than toggling one. */
+    private void styleActionButtons() {
+        styleActionButton(findViewById(R.id.btn_sync_measure));
+        styleActionButton(findViewById(R.id.btn_room_measure));
+        styleActionButton(findViewById(R.id.btn_room_send));
     }
 
     private void tintSlider(Slider s, int accent) {
