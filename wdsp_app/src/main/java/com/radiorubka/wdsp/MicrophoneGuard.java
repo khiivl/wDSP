@@ -83,6 +83,8 @@ public final class MicrophoneGuard {
         public final List<String> stopped = new ArrayList<>();
         public boolean wasHeld;
         public boolean freed;
+        /** True when the polite request failed and root was needed to finish the job. */
+        public boolean usedRoot;
 
         @Override
         public String toString() {
@@ -94,7 +96,7 @@ public final class MicrophoneGuard {
                     "microphone was held by another app (%.1f dB above 8 kHz); stopped %s; "
                             + "now %.1f dB - %s",
                     before, stopped.isEmpty() ? "nothing" : stopped.toString(), after,
-                    freed ? "released" : "STILL HELD");
+                    freed ? (usedRoot ? "released, root was needed" : "released") : "STILL HELD");
         }
     }
 
@@ -139,6 +141,25 @@ public final class MicrophoneGuard {
             outcome.after = measureBandwidth();
         }
         outcome.freed = outcome.after >= BANDWIDTH_OK_DB;
+
+        // The polite request does not work on a head unit where the assistant is a system app:
+        // killBackgroundProcesses will not touch one, and measured on such a unit the microphone
+        // stayed at 16 kHz however many times it was asked. Most of these head units are rooted,
+        // so if root is there, use it - a force-stop does what the polite request could not.
+        //
+        // Still nothing to restore: force-stop does not disable or uninstall anything, and the
+        // assistant comes back the next time the system starts it.
+        if (!outcome.freed && !outcome.stopped.isEmpty()) {
+            for (String pkg : HOTWORD_PACKAGES) {
+                if (!isInstalled(pm, pkg)) continue;
+                if (forceStopAsRoot(pkg)) outcome.usedRoot = true;
+            }
+            if (outcome.usedRoot) {
+                sleep(900);
+                outcome.after = measureBandwidth();
+                outcome.freed = outcome.after >= BANDWIDTH_OK_DB;
+            }
+        }
         Log.i(TAG, outcome.toString());
         if (!outcome.freed) {
             Log.w(TAG, "the microphone is still limited. Whatever holds it is not in the list, or "
@@ -184,6 +205,35 @@ public final class MicrophoneGuard {
                 } catch (Throwable ignored) {
                 }
             }
+        }
+    }
+
+    /**
+     * Force-stops a package through root, if root is there.
+     *
+     * Deliberately narrow: one command, one package, a short timeout, and no shell left open. If
+     * there is no root the call fails immediately and the measurement carries on with whatever
+     * microphone it has.
+     */
+    private static boolean forceStopAsRoot(String pkg) {
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(new String[]{"su", "-c", "am force-stop " + pkg});
+            boolean done = p.waitFor(20, java.util.concurrent.TimeUnit.SECONDS);
+            if (!done) {
+                p.destroy();
+                Log.w(TAG, "root force-stop of " + pkg + " did not finish in time - a root prompt may be waiting for somebody to tap it");
+                return false;
+            }
+            final boolean ok = p.exitValue() == 0;
+            Log.i(TAG, "root force-stop of " + pkg + (ok ? " succeeded" : " was refused"));
+            return ok;
+        } catch (Throwable t) {
+            Log.i(TAG, "no root available for stopping " + pkg + " (" + t.getClass().getSimpleName()
+                    + ")");
+            return false;
+        } finally {
+            if (p != null) p.destroy();
         }
     }
 

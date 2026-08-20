@@ -60,9 +60,50 @@ resampled up to 48.
 energy above 8.1 kHz        -30.0 dB            +1.3 dB
 ```
 
-🔴 **`AudioRecord.getSampleRate()` lies** — it returns 48000 either way. Detect it with
-`AudioManager.getActiveRecordingConfigurations()`, or by measuring: a hard wall at 8 kHz means the
-stream is really 16 kHz.
+🔴 **`AudioRecord.getSampleRate()` lies** — it returns 48000 either way. The only honest test is
+to listen: record half a second and compare the energy above 8 kHz with the band below it. Free
+microphone, about **−15 dB**; shared with a 16 kHz client, **−69 to −85 dB**. Two orders of
+magnitude apart, so the threshold does not need to be precise.
+`SweepMeasurement::bandwidthRatioDb` does the measuring, `MicrophoneGuard` does the deciding.
+
+### Getting it back, and what does not work
+
+| approach | outcome on a K706 |
+|---|---|
+| ask the user to turn the hotword off | they will not, and should not have to |
+| `AudioManager.getActiveRecordingConfigurations()` to find the culprit | the package name behind a recording is hidden from ordinary apps |
+| `ActivityManager.killBackgroundProcesses()` | 🔴 **no effect** — the Google app is a system app here and is not a "background process" |
+| `su -c "am force-stop <pkg>"` | 🟢 works, and needs a Magisk grant for the app |
+| choosing a different `AudioSource` | no effect, see below |
+
+`killBackgroundProcesses` needs only a normal permission and is worth trying first, because on a
+head unit where the assistant is an ordinary app it is enough. It was not enough on the one this
+was written for.
+
+🪤 When testing this, do not launch the assistant and measure straight away: a process in the
+foreground cannot be stopped by either route, and that will look like the method failing when it
+is the test that is wrong.
+
+🪤 A `su` request from an app is refused **silently** until it is granted. Magisk stores a policy
+per uid, and the default on some units is deny rather than prompt:
+
+```bash
+adb shell su -c 'magisk --sqlite "SELECT uid,policy FROM policies"'   # 1 = deny, 2 = allow
+```
+
+### When the microphone cannot be freed, sweep only where it hears
+
+Sweeping to 20 kHz through a 16 kHz stream throws away more than half the signal: the energy is
+emitted, never recorded, and the deconvolution has nothing to match it against. Stopping the sweep
+at 7 kHz instead puts all of it inside the microphone's range.
+
+Measured on a bench with an assistant that could not be stopped: before narrowing, the weaker
+channels could not be measured at all; after, clarity of 13.8 and 20.6 dB and a normal result.
+
+⚠️ The cost is not only sharpness. On a channel whose arrival is clean the answer does not move,
+but on a smeared one it does: the same bench gave 1.32 ms full-band and 2.0 ms narrowed. Where
+clarity is low, the bandwidth becomes part of the answer - one more reason to treat a low-clarity
+delay as measured rather than known.
 
 ### There is no way past the AGDSP with stock policies
 

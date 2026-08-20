@@ -1,11 +1,23 @@
 # Calibrating a car with a microphone nobody calibrated
 
-The goal is to set the sixteen equaliser bands and the four delays from a measurement instead of by
-ear. The obstacle is that the only microphone available is either the one built into the head unit
-or a cheap electret on a cable, and nobody knows the response of either.
+## Where this is going
 
-This file says which parts of that goal are reachable today, which are not, and why — so that the
-line between the two does not have to be rediscovered.
+The destination is a head unit that sets itself up: measure the microphone, then measure the car
+through it, then set the sixteen bands to a chosen target — flat, Harman, or whatever the owner
+likes — and go on to the crossovers, the subwoofer's corner frequency and its level. Everything the
+owner now sets by ear and by argument.
+
+Delays and polarity are step one, not the destination. They come first because they are exact
+without any calibration at all, so they can ship while the harder half is still being worked out —
+not because they are all that is wanted.
+
+The obstacle for the harder half is that the only microphone available is either the one built into
+the head unit or a cheap electret on a cable, and nobody knows the response of either. Calibrating
+the microphone is not a goal in itself; it is what stands between a measurement and an automatic
+equaliser that can be trusted.
+
+This file says which parts are reachable today, which are not, and why — so that the line between
+the two does not have to be rediscovered.
 
 ---
 
@@ -211,7 +223,19 @@ terms.
 | subwoofer polarity and phase | 🟢 exact | 🟢 exact | 🟢 exact |
 | left/right matching | 🟢 exact | 🟢 exact | 🟢 exact |
 | narrow bass modes | 🟢 reliable | 🟢 reliable | 🟢 reliable |
-| **overall tonal balance** | 🔴 impossible without a stored profile | 🟡 partly | 🟡 ±3 dB |
+| subwoofer corner frequency | 🟡 the crossing point is a shape, and shapes survive a tilt | 🟡 | 🟢 |
+| subwoofer level against the mains | 🔴 a level, so the microphone's error goes straight in | 🟡 | 🟢 ±3 dB |
+| **overall tonal balance, target curves** | 🔴 impossible without a stored profile | 🟡 partly | 🟡 ±3 dB |
 
 The first four are worth shipping on their own, and none of them needs the argument in §2 to be
-settled first.
+settled first. Everything below that line waits on the microphone being known.
+
+### The order the rest should come in
+
+1. **Left/right matching and narrow bass modes.** Differences and shapes, so the microphone
+   cancels. No new theory needed, only the analysis.
+2. **Crossover points.** Where the subwoofer and the mains cross is a shape in the response, and a
+   smooth tilt on the microphone moves a crossing point far less than it moves a level.
+3. **Subwoofer level, then the full target curve.** These are levels, and they need the microphone
+   itself to be known — by a stored profile for the built-in one, or by a phone for an external
+   one. This is the part §2 and §3 are about.

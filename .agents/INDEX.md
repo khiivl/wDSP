@@ -23,6 +23,8 @@ underneath it.
    echo as the user. (HARDWARE §4)
 3. **Numbers Android declares about latency are wrong here by a factor of seven.** Measure with
    `LatencyProbe` instead of trusting `getOutputLatency()`. (PLATFORM_AUDIO §3)
+4. **An assistant holds the microphone at 16 kHz and nothing in the API says so.** Half of every
+   recording is missing. Listen for it rather than asking. (PLATFORM_AUDIO §2)
 
 ## Diagnostics available at runtime
 
@@ -33,6 +35,7 @@ adb shell am broadcast -a com.radiorubka.wdsp.PROBE_SESSION --ei sid -1     # wh
 adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_LATENCY --ei mic 1    # picture-to-sound delay
 adb shell am broadcast -a com.radiorubka.wdsp.PROBE_MIC --ei src 6          # what the microphone really delivers
 adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ef amp 0.25    # sweep every speaker, one at a time
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei same 1      # same routing four times: checks the instrument, not the car
 adb shell am broadcast -a com.radiorubka.wdsp.SET_VOLUME --ei vol 12        # move the volume the way a person does
 adb shell am broadcast -a com.radiorubka.wdsp.SIMULATE_SPEED --ef speed 110 # pretend to be driving
 ```
