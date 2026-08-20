@@ -166,6 +166,31 @@ gradually rather than starting with a direct impulse.
 a delay as measured but unproven, whatever its repeatability. Repeatable and true are different
 claims, and this bench produces the first without the second.
 
+### Where the microphone is decides what the measurement is worth
+
+This is the single biggest variable, and it is not under the app's control.
+
+The standard place to fit a hands-free microphone is the **A-pillar beside the windscreen**, on
+the driver's side: there is room for it and the cable run is easy. Left pillar on a left-hand-drive
+car, right pillar on a right-hand-drive one. From there the near-side loudspeaker is heard directly
+and the far-side one largely through reflections - which is exactly the asymmetry the bench showed,
+with 23-33 dB of clarity on one channel and 10-12 dB on the other.
+
+**So a lopsided result is the normal case, not a faulty installation.** Waiting for "better" cars
+to arrive would be waiting for something that mostly does not exist.
+
+The installations that give a clean measurement are the ones with the microphone in the **front
+courtesy light**, roughly on the centre line, where all four loudspeakers are heard on comparable
+terms.
+
+➡️ Two consequences worth acting on:
+
+- **Ask where the microphone is.** A result read without knowing that is a result read wrong. Every
+  report should carry it, even if it arrives as a sentence in a chat message.
+- **Say what a pillar microphone can and cannot deliver.** The near side and the polarity of every
+  channel are sound. The far-side delays are measured through the room and should be offered as a
+  starting point rather than an answer.
+
 ### Two things to be careful of in the field
 
 - **A channel that was never driven still produces an impulse response** — of the room noise — and
