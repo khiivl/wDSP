@@ -217,4 +217,12 @@
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Fel vid filval: %1$s</string>
     <string name="hint_sub_freq">Frekvens</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synkronisering med ljudet</string>
+    <string name="sync_measure_desc">Spelar upp några korta pip och mäter hur mycket staplarna ligger före ljudet. Tar ungefär 15 sekunder.</string>
+    <string name="sync_measure_button">Synkronisera</string>
+    <string name="sync_measure_running">Mäter…</string>
+    <string name="sync_measure_result">Uppmätt: %1$d ms</string>
+    <string name="sync_measure_failed">Mätningen misslyckades</string>
 </resources>

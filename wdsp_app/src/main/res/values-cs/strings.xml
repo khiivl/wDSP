@@ -229,4 +229,12 @@ Globální výchozí: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Chyba výběru souboru: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synchronizace se zvukem</string>
+    <string name="sync_measure_desc">Přehraje několik krátkých pípnutí a změří, o kolik sloupce předbíhají zvuk. Trvá asi 15 sekund.</string>
+    <string name="sync_measure_button">Synchronizovat</string>
+    <string name="sync_measure_running">Měření…</string>
+    <string name="sync_measure_result">Naměřeno: %1$d ms</string>
+    <string name="sync_measure_failed">Měření se nezdařilo</string>
 </resources>

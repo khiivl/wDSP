@@ -229,4 +229,12 @@ Globalno zadano: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Pogreška pri odabiru datoteke: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sinkronizacija sa zvukom</string>
+    <string name="sync_measure_desc">Reproducira nekoliko kratkih signala i mjeri koliko stupci prethode zvuku. Traje oko 15 sekundi.</string>
+    <string name="sync_measure_button">Sinkroniziraj</string>
+    <string name="sync_measure_running">Mjerenje…</string>
+    <string name="sync_measure_result">Izmjereno: %1$d ms</string>
+    <string name="sync_measure_failed">Mjerenje nije uspjelo</string>
 </resources>

@@ -229,4 +229,12 @@ Yleinen oletus: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Virhe tiedoston valinnassa: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synkronointi ääneen</string>
+    <string name="sync_measure_desc">Toistaa muutaman lyhyen äänimerkin ja mittaa, kuinka paljon palkit edeltävät ääntä. Kestää noin 15 sekuntia.</string>
+    <string name="sync_measure_button">Synkronoi</string>
+    <string name="sync_measure_running">Mitataan…</string>
+    <string name="sync_measure_result">Mitattu: %1$d ms</string>
+    <string name="sync_measure_failed">Mittaus epäonnistui</string>
 </resources>

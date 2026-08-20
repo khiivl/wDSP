@@ -229,4 +229,12 @@ Globális alapértelmezett: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Hiba a fájl kiválasztásakor: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Szinkronizálás a hanggal</string>
+    <string name="sync_measure_desc">Lejátszik néhány rövid hangjelzést, és megméri, mennyivel siet a sávok kijelzése a hanghoz képest. Körülbelül 15 másodpercig tart.</string>
+    <string name="sync_measure_button">Szinkronizálás</string>
+    <string name="sync_measure_running">Mérés…</string>
+    <string name="sync_measure_result">Mért érték: %1$d ms</string>
+    <string name="sync_measure_failed">A mérés nem sikerült</string>
 </resources>

@@ -229,4 +229,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Σφάλμα επιλογής αρχείου: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Συγχρονισμός με τον ήχο</string>
+    <string name="sync_measure_desc">Αναπαράγει μερικούς σύντομους ήχους και μετρά πόσο προηγούνται οι μπάρες από τον ήχο. Διαρκεί περίπου 15 δευτερόλεπτα.</string>
+    <string name="sync_measure_button">Συγχρονισμός</string>
+    <string name="sync_measure_running">Μέτρηση…</string>
+    <string name="sync_measure_result">Μετρήθηκε: %1$d ms</string>
+    <string name="sync_measure_failed">Η μέτρηση απέτυχε</string>
 </resources>

@@ -229,4 +229,12 @@ Bendras numatytasis: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Failo pasirinkimo klaida: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sinchronizavimas su garsu</string>
+    <string name="sync_measure_desc">Paleidžia kelis trumpus signalus ir išmatuoja, kiek juostos aplenkia garsą. Trunka apie 15 sekundžių.</string>
+    <string name="sync_measure_button">Sinchronizuoti</string>
+    <string name="sync_measure_running">Matuojama…</string>
+    <string name="sync_measure_result">Išmatuota: %1$d ms</string>
+    <string name="sync_measure_failed">Nepavyko išmatuoti</string>
 </resources>

@@ -217,4 +217,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Fehler bei der Dateiauswahl: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synchronisierung mit dem Ton</string>
+    <string name="sync_measure_desc">Spielt einige kurze Töne ab und misst, wie weit die Balken dem Ton vorauslaufen. Dauert etwa 15 Sekunden.</string>
+    <string name="sync_measure_button">Synchronisieren</string>
+    <string name="sync_measure_running">Messung läuft…</string>
+    <string name="sync_measure_result">Gemessen: %1$d ms</string>
+    <string name="sync_measure_failed">Messung fehlgeschlagen</string>
 </resources>

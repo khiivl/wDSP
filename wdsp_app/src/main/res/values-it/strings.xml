@@ -229,4 +229,12 @@ Predefinito globale: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Errore nella scelta del file: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sincronizzazione con l\'audio</string>
+    <string name="sync_measure_desc">Riproduce alcuni brevi segnali e misura di quanto le barre anticipano il suono. Richiede circa 15 secondi.</string>
+    <string name="sync_measure_button">Sincronizza</string>
+    <string name="sync_measure_running">Misurazione…</string>
+    <string name="sync_measure_result">Misurato: %1$d ms</string>
+    <string name="sync_measure_failed">Misurazione non riuscita</string>
 </resources>

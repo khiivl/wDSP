@@ -227,4 +227,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Erro ao escolher o ficheiro: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sincronização com o som</string>
+    <string name="sync_measure_desc">Reproduz alguns sinais curtos e mede o quanto as barras se adiantam ao som. Demora cerca de 15 segundos.</string>
+    <string name="sync_measure_button">Sincronizar</string>
+    <string name="sync_measure_running">A medir…</string>
+    <string name="sync_measure_result">Medido: %1$d ms</string>
+    <string name="sync_measure_failed">Não foi possível medir</string>
 </resources>

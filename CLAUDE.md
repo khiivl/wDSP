@@ -144,6 +144,53 @@ Backup/restore can also be driven headlessly by starting `SettingsActivity` with
 `{version: 2, app, timestamp, default_preferences, eq_preferences}` — i.e. both stores — and restore
 ends with a `SETTINGS_RESTORED` broadcast that hot-reloads the UI and the service.
 
+### Measurement probes
+
+Three diagnostic classes, none of which run unless asked. They exist because every number this app
+used to trust about the audio path turned out to be a declaration rather than an observation.
+
+| class | answers | trigger |
+|---|---|---|
+| `SessionProbe` | which audio session, if any, we may tap | `PROBE_SESSION` |
+| `LatencyProbe` | how far the bars run ahead of the sound | `MEASURE_LATENCY` |
+| `MicProbe` | what the capture path actually delivers | `PROBE_MIC` |
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_LATENCY --ei mic 1
+adb shell am broadcast -a com.radiorubka.wdsp.PROBE_MIC --ei src 6 --ei ms 15000
+```
+
+`LatencyProbe` plays eight quiet 2 kHz bursts on its own session and times them three ways:
+`AudioTrack.getTimestamp()` says when a frame reached the hardware, a `Visualizer` on the same
+session says when we saw it, and — with `mic 1` — `AudioRecord.getTimestamp()` says when it came
+back through the cabin. On this head unit that is **53 ms** from capture to ear, where
+`getOutputLatency()` claims 125 and the track dump says 558. The result is stored in
+`spec_latency_base_ms` and the ±250 ms trim slider now sits on top of a measurement instead of a
+guess. Settings has a **Synchronise** button that runs the same thing.
+
+Both probes that touch the microphone borrow it through `MicProbe.suspendCapturePreprocessing()`
+and **hand it back exactly as they found it**. Echo cancellation and noise suppression have to be
+off while measuring — one exists to remove the sound we are playing, the other to remove steady
+signals, which is what a test tone is — but on a unit with the BitPerfect module they are on
+deliberately, so that phone calls are intelligible.
+
+`HardwareProfile` reads `persist.sys.qf.mcu.version` and tells the BU32107 from the BD37544 by the
+hardware code in its last group (`00xx21` is the BU32107). The MCU speaks one command set to both
+chips and makes the lesser one look complete, so nothing else can tell them apart. It also reports
+whether the capture path carries voice processing, which is what separates a unit with custom
+audio policies from a factory one.
+
+### Planned: the microphone as a source for radio
+
+Radio goes past AudioFlinger entirely, so the analyser has nothing to show while it plays. The
+microphone could fill that in, with two rules that must not be forgotten:
+
+- in the status bar it is decoration and may stay unlabelled; on the main screen it has to say
+  plainly that this is not a measurement;
+- what the microphone hears has **already been through the DSP and the room**, so it must not be
+  passed through `DspResponse` the way the digital signal is. Doing that would apply the equaliser
+  curve twice.
+
 ### UI
 
 `MainActivity` (~2100 lines) is a single activity holding **five sections in one layout**

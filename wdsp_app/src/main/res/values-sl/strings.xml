@@ -229,4 +229,12 @@ Globalno privzeto: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Napaka pri izbiri datoteke: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sinhronizacija z zvokom</string>
+    <string name="sync_measure_desc">Predvaja nekaj kratkih signalov in izmeri, koliko stolpci prehitevajo zvok. Traja približno 15 sekund.</string>
+    <string name="sync_measure_button">Sinhroniziraj</string>
+    <string name="sync_measure_running">Merjenje…</string>
+    <string name="sync_measure_result">Izmerjeno: %1$d ms</string>
+    <string name="sync_measure_failed">Merjenje ni uspelo</string>
 </resources>

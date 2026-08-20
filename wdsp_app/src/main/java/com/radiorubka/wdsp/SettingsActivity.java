@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -791,6 +792,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SwitchCompat switchAgcMain, switchAgcBar;
     private SeekBar seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
+    private TextView tvSyncStatus;
 
     /** Trim slider spans +/-250 ms, stored centred on this offset because SeekBar has no sign. */
     private static final int LATENCY_TRIM_OFFSET = 250;
@@ -821,6 +823,41 @@ public class SettingsActivity extends AppCompatActivity {
                 getString(R.string.format_latency_ms));
         bindAnalyzerSeek(seekRangeDb, tvRangeDb,
                 AudioSpectrumEngine.PREF_RANGE_DB, 0, getString(R.string.format_range_db));
+
+        tvSyncStatus = findViewById(R.id.tv_sync_status);
+        showSyncStatus();
+        findViewById(R.id.btn_sync_measure).setOnClickListener(v -> startLatencyMeasurement());
+    }
+
+    /**
+     * Measures how far the bars run ahead of the sound, and keeps the answer.
+     *
+     * With permission to record, the microphone hears the test bursts and the figure covers the
+     * whole journey to the cabin. Without it only the journey through Android can be timed and
+     * the rest is allowed for, so the result is coarser but still far closer than the platform's
+     * own declaration.
+     */
+    private void startLatencyMeasurement() {
+        if (LatencyProbe.isRunning()) return;
+        boolean canListen = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+        tvSyncStatus.setText(R.string.sync_measure_running);
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        LatencyProbe.measureAsync(audioManager, false, canListen, result -> runOnUiThread(() -> {
+            int ms = AudioSpectrumEngine.storeMeasuredLatency(getApplicationContext(), result);
+            if (ms < 0) {
+                tvSyncStatus.setText(R.string.sync_measure_failed);
+            } else {
+                tvSyncStatus.setText(getString(R.string.sync_measure_result, ms));
+            }
+        }));
+    }
+
+    /** Shows the figure this head unit was measured at, or nothing if it never has been. */
+    private void showSyncStatus() {
+        if (tvSyncStatus == null) return;
+        int stored = AudioSpectrumEngine.storedLatencyBaseMs(this);
+        tvSyncStatus.setText(stored >= 0 ? getString(R.string.sync_measure_result, stored) : "");
     }
 
     /**

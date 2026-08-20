@@ -221,4 +221,12 @@
     <string name="format_range_db">%1$d дБ</string>
     <string name="placeholder_db">0.0 дБ</string>
     <string name="toast_saf_error">Ошибка выбора файла: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Синхронизация со звуком</string>
+    <string name="sync_measure_desc">Проигрывает несколько коротких сигналов и измеряет, насколько столбики опережают звук. Занимает около 15 секунд.</string>
+    <string name="sync_measure_button">Синхронизировать</string>
+    <string name="sync_measure_running">Измеряю…</string>
+    <string name="sync_measure_result">Измерено: %1$d мс</string>
+    <string name="sync_measure_failed">Измерить не удалось</string>
 </resources>

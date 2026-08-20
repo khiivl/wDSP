@@ -217,4 +217,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Błąd wyboru pliku: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synchronizacja z dźwiękiem</string>
+    <string name="sync_measure_desc">Odtwarza kilka krótkich sygnałów i mierzy, o ile słupki wyprzedzają dźwięk. Trwa około 15 sekund.</string>
+    <string name="sync_measure_button">Synchronizuj</string>
+    <string name="sync_measure_running">Pomiar…</string>
+    <string name="sync_measure_result">Zmierzono: %1$d ms</string>
+    <string name="sync_measure_failed">Pomiar się nie powiódł</string>
 </resources>

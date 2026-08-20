@@ -229,4 +229,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Faili valimise viga: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Heliga sünkroonimine</string>
+    <string name="sync_measure_desc">Mängib mõned lühikesed piiksud ja mõõdab, kui palju tulbad helist ette jõuavad. Kestab umbes 15 sekundit.</string>
+    <string name="sync_measure_button">Sünkrooni</string>
+    <string name="sync_measure_running">Mõõdan…</string>
+    <string name="sync_measure_result">Mõõdetud: %1$d ms</string>
+    <string name="sync_measure_failed">Mõõtmine ebaõnnestus</string>
 </resources>

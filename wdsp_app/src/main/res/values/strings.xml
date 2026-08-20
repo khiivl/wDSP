@@ -229,4 +229,12 @@
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">File picker error: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sound sync</string>
+    <string name="sync_measure_desc">Plays a few short beeps and measures how far the bars run ahead of the sound. Takes about 15 seconds.</string>
+    <string name="sync_measure_button">Synchronise</string>
+    <string name="sync_measure_running">Measuring…</string>
+    <string name="sync_measure_result">Measured: %1$d ms</string>
+    <string name="sync_measure_failed">Measurement failed</string>
 </resources>

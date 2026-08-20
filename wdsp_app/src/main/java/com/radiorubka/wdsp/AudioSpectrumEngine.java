@@ -203,6 +203,8 @@ public class AudioSpectrumEngine {
     public static final String PREF_AGC_BAR_STRENGTH = "spec_agc_bar_strength";
     public static final String PREF_AGC_BAR_FLOOR = "spec_agc_bar_floor_db";
     public static final String PREF_LATENCY_TRIM = "spec_latency_trim_ms";
+    /** Written by {@link LatencyProbe}; absent until a measurement has actually been run. */
+    public static final String PREF_LATENCY_BASE = "spec_latency_base_ms";
     public static final String PREF_RANGE_DB = "spec_range_db";
 
     private float nativeAttackMs = 25f;
@@ -221,6 +223,45 @@ public class AudioSpectrumEngine {
     /** User trim on top of the measured playback latency, +/- 250 ms. */
     private int latencyTrimMs = 0;
 
+    /**
+     * Everything below the DAC: the outboard sound processor, the amplifier and the air.
+     *
+     * Measured indirectly - the microphone hears a burst about 38 ms after the HAL says it was
+     * presented, and that figure still carries the input path, so the true tail is smaller. Used
+     * only when a measurement was taken without the microphone.
+     */
+    private static final float OUTBOARD_LATENCY_MS = 38f;
+
+    /**
+     * Turns a measurement into the base the analyser will use from now on, and returns it.
+     *
+     * The acoustic figure wins when there is one: it is the distance from the moment a sample is
+     * seen to the moment it reaches the cabin, which is exactly what the bars have to wait for.
+     * Without a microphone only the journey through Android is known and the rest is allowed for.
+     * Returns -1 when the measurement produced nothing worth keeping.
+     */
+    public static int storeMeasuredLatency(Context context, LatencyProbe.Result result) {
+        if (context == null || result == null || !result.ok) return -1;
+        float base = !Float.isNaN(result.acousticMedianMs)
+                ? result.acousticMedianMs
+                : result.medianMs + OUTBOARD_LATENCY_MS;
+        int ms = Math.round(base);
+        com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(context.getApplicationContext())
+                .edit()
+                .putInt(PREF_LATENCY_BASE, ms)
+                .apply();
+        getInstance().loadDisplaySettings(context.getApplicationContext());
+        Log.i(TAG, "latency base stored: " + ms + " ms (" + result + ")");
+        return ms;
+    }
+
+    /** The stored base, or -1 when this head unit has never been measured. */
+    public static int storedLatencyBaseMs(Context context) {
+        if (context == null) return -1;
+        return com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(context.getApplicationContext())
+                .getInt(PREF_LATENCY_BASE, -1);
+    }
+
     /** Re-reads the display preferences and pushes them into the native analyser. */
     public void loadDisplaySettings(Context context) {
         if (context == null) return;
@@ -234,19 +275,24 @@ public class AudioSpectrumEngine {
         barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
         latencyTrimMs = prefs.getInt(PREF_LATENCY_TRIM, 0);
         nativeRangeDb = prefs.getInt(PREF_RANGE_DB, 60);
-        nativeLatencyMs = Math.max(0f, measuredLatencyMs() + latencyTrimMs);
+        int storedBase = prefs.getInt(PREF_LATENCY_BASE, -1);
+        float base = storedBase >= 0 ? storedBase : declaredLatencyMs();
+        nativeLatencyMs = Math.max(0f, base + latencyTrimMs);
         applyNativeSettings();
     }
 
     /**
-     * Best estimate of how long after capture the audio is actually heard.
-     *
-     * What the Visualizer hands us has not left the mixer yet: the track's own dump reports a
-     * latency of half a second, and on top of that sits the head unit's own path. Players differ
-     * wildly here - a streaming client buffers far more than the system player - so this is only
-     * ever a starting point, which is why the user gets a trim.
-     */
-    private float measuredLatencyMs() {
+      * Fallback for a head unit that has never been measured.
+      *
+      * This is the platform's declaration, not an observation, and on the unit this was written
+      * for it is wrong by a factor of seven: {@code getOutputLatency()} says 125 ms where the
+      * measured distance from capture to the listener's ear is about 53 ms. The declared figure
+      * counts buffering that has already elapsed by the time an effect sees the samples.
+      *
+      * So it is kept only until {@link LatencyProbe} has run once and written
+      * {@link #PREF_LATENCY_BASE}; after that the measurement wins.
+      */
+     private float declaredLatencyMs() {
         float outputMs = 0f;
         try {
             if (audioManager != null) {

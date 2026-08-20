@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.media.AudioManager;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -149,6 +150,9 @@ public class McuService extends Service implements LocationListener {
             Class<?> sp = Class.forName("android.os.SystemProperties");
             getPropMethod = sp.getMethod("get", String.class, String.class);
             Log.i(TAG, "Reflection initialized successfully.");
+            // One line that says which sound processor is fitted and whether the capture
+            // path carries voice processing - both change what this app may promise.
+            Log.i(TAG, HardwareProfile.describe());
         } catch (Exception e) {
             Log.e(TAG, "Critical Reflection Failure", e);
         }
@@ -268,6 +272,23 @@ public class McuService extends Service implements LocationListener {
                                 intent.getIntExtra("max", 64), ms);
                     }
                 }
+                else if ("com.radiorubka.wdsp.MEASURE_LATENCY".equals(action)) {
+                    // Diagnostic only - see LatencyProbe. Plays eight quiet bursts on its own
+                    // session and reports how far ahead of the speakers the analyser runs.
+                    LatencyProbe.measureAsync(
+                            (AudioManager) getSystemService(Context.AUDIO_SERVICE),
+                            intent.getIntExtra("fast", 0) != 0,
+                            intent.getIntExtra("mic", 0) != 0,
+                            McuService.this::storeMeasuredLatency);
+                }
+                else if ("com.radiorubka.wdsp.PROBE_MIC".equals(action)) {
+                    // Diagnostic only - see MicProbe. Records to a WAV so the capture path can
+                    // be inspected; src picks the audio source, 6 is VOICE_RECOGNITION.
+                    MicProbe.probeAsync(getApplicationContext(),
+                            intent.getIntExtra("src",
+                                    android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION),
+                            intent.getIntExtra("ms", 4000));
+                }
                 else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
                     Log.i(TAG, "SETTINGS_RESTORED received, reloading all prefs and syncing DSP");
                     prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -375,7 +396,23 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
+        controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
+        controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");
         return controlFilter;
+    }
+
+    /**
+     * Keeps what a latency measurement found, so the analyser stops guessing.
+     *
+     * The acoustic figure is preferred when there is one: it is the distance from the moment we
+     * see a sample to the moment it reaches the cabin, which is exactly what the bars have to
+     * wait for. Without a microphone we only know how far the samples got inside Android, and the
+     * stretch below the DAC has to be allowed for instead of measured.
+     */
+    private void storeMeasuredLatency(LatencyProbe.Result result) {
+        if (AudioSpectrumEngine.storeMeasuredLatency(getApplicationContext(), result) < 0) {
+            Log.w(TAG, "latency measurement did not produce a usable figure, keeping the old one");
+        }
     }
 
     private void loadPlayerMap() {

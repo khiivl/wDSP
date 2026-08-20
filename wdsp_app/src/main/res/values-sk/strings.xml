@@ -229,4 +229,12 @@ Globálne predvolené: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Chyba pri výbere súboru: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synchronizácia so zvukom</string>
+    <string name="sync_measure_desc">Prehrá niekoľko krátkych signálov a zmeria, o koľko stĺpce predbiehajú zvuk. Trvá približne 15 sekúnd.</string>
+    <string name="sync_measure_button">Synchronizovať</string>
+    <string name="sync_measure_running">Meranie…</string>
+    <string name="sync_measure_result">Namerané: %1$d ms</string>
+    <string name="sync_measure_failed">Meranie zlyhalo</string>
 </resources>

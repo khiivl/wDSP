@@ -229,4 +229,12 @@ Implicit global: %1$s</string>
     <string name="format_range_db">%1$d dB</string>
     <string name="placeholder_db">0.0 dB</string>
     <string name="toast_saf_error">Eroare la alegerea fișierului: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Sincronizare cu sunetul</string>
+    <string name="sync_measure_desc">Redă câteva semnale scurte și măsoară cu cât barele o iau înaintea sunetului. Durează circa 15 secunde.</string>
+    <string name="sync_measure_button">Sincronizează</string>
+    <string name="sync_measure_running">Se măsoară…</string>
+    <string name="sync_measure_result">Măsurat: %1$d ms</string>
+    <string name="sync_measure_failed">Măsurarea a eșuat</string>
 </resources>
