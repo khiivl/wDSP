@@ -155,6 +155,10 @@ public class McuService extends Service implements LocationListener {
             // One line that says which sound processor is fitted and whether the capture
             // path carries voice processing - both change what this app may promise.
             Log.i(TAG, HardwareProfile.describe());
+            // A room measurement borrows the equaliser, the fader and the delay
+            // lines. If the app died while it held them, give them back now rather
+            // than leaving somebody driving with the sound in one door.
+            RoomMeasurement.restoreIfInterrupted(getApplicationContext());
         } catch (Exception e) {
             Log.e(TAG, "Critical Reflection Failure", e);
         }
@@ -273,6 +277,14 @@ public class McuService extends Service implements LocationListener {
                         SessionProbe.scanAsync(getApplicationContext(),
                                 intent.getIntExtra("max", 64), ms);
                     }
+                }
+                else if ("com.radiorubka.wdsp.MEASURE_ROOM".equals(action)) {
+                    // Plays a sweep through each speaker in turn and reports what came
+                    // back - see RoomMeasurement. Everything it changes is restored, and
+                    // the recordings are kept so a tester can send them back.
+                    RoomMeasurement.measureAsync(getApplicationContext(),
+                            intent.getFloatExtra("amp", 0.25f),
+                            intent.getFloatExtra("sec", 3f), null);
                 }
                 else if ("com.radiorubka.wdsp.SET_VOLUME".equals(action)) {
                     // Diagnostic only: moves the volume the way a person does, without
@@ -408,6 +420,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
+        controlFilter.addAction("com.radiorubka.wdsp.MEASURE_ROOM");
         controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");

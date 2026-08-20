@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Platform notes
+
+`.agents/` holds what was learned about the head unit itself, as opposed to this app: how the audio
+path really behaves, how to reach the MCU, and what is and is not possible when measuring a car with
+an uncalibrated microphone. Everything there was measured on a device, because on this platform the
+documented behaviour and the actual behaviour differ often enough that only the wire settles it.
+Start at [.agents/INDEX.md](.agents/INDEX.md).
+
 ## Repository location
 
 The repo lives at `C:\Users\kosty\AndroidStudioProjects\wDSP` (an *additional* working directory in

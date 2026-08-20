@@ -1,13 +1,19 @@
 #include <jni.h>
 
 #include <memory>
+#include <vector>
 
 #include "analyzer.h"
+#include "sweep.h"
 
 namespace {
 
 inline wdsp::Analyzer* asAnalyzer(jlong handle) {
     return reinterpret_cast<wdsp::Analyzer*>(handle);
+}
+
+inline wdsp::SweepMeasurement* asSweep(jlong handle) {
+    return reinterpret_cast<wdsp::SweepMeasurement*>(handle);
 }
 
 } // namespace
@@ -144,6 +150,78 @@ JNIEXPORT jint JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeFrames(JNIEnv*, jclass, jlong handle) {
     auto* analyzer = asAnalyzer(handle);
     return analyzer == nullptr ? 0 : analyzer->framesProduced();
+}
+
+// --- room measurement by sweep -------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeCreate(JNIEnv*, jclass, jint sampleRate,
+                                                  jfloat startHz, jfloat endHz, jfloat seconds) {
+    return reinterpret_cast<jlong>(new wdsp::SweepMeasurement(sampleRate, startHz, endHz, seconds));
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeDestroy(JNIEnv*, jclass, jlong handle) {
+    delete asSweep(handle);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeLength(JNIEnv*, jclass, jlong handle) {
+    auto* sweep = asSweep(handle);
+    return sweep == nullptr ? 0 : sweep->sweepLength();
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeGenerate(JNIEnv* env, jclass, jlong handle,
+                                                    jfloatArray out, jfloat amplitude) {
+    auto* sweep = asSweep(handle);
+    if (sweep == nullptr || out == nullptr) return;
+    if (env->GetArrayLength(out) < sweep->sweepLength()) return;
+
+    jfloat* data = env->GetFloatArrayElements(out, nullptr);
+    if (data == nullptr) return;
+    sweep->generate(data, amplitude);
+    env->ReleaseFloatArrayElements(out, data, 0);
+}
+
+/**
+ * Deconvolves one recording and reports what it found.
+ *
+ * The layout of the result array is fixed by NativeSweep: arrival in samples, how far the peak
+ * stood above the rest, polarity, then sixteen band levels in decibels.
+ */
+JNIEXPORT jboolean JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong handle,
+                                                   jfloatArray recorded, jint length,
+                                                   jfloatArray result) {
+    auto* sweep = asSweep(handle);
+    if (sweep == nullptr || recorded == nullptr || result == nullptr) return JNI_FALSE;
+    if (env->GetArrayLength(result) < 3 + wdsp::kHwBands) return JNI_FALSE;
+    if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
+
+    jfloat* input = env->GetFloatArrayElements(recorded, nullptr);
+    if (input == nullptr) return JNI_FALSE;
+
+    std::vector<float> impulse;
+    const bool ok = sweep->deconvolve(input, length, impulse);
+    env->ReleaseFloatArrayElements(recorded, input, JNI_ABORT);
+    if (!ok || impulse.empty()) return JNI_FALSE;
+
+    float prominence = 0.0f;
+    const int arrival = wdsp::SweepMeasurement::findArrival(impulse.data(),
+                                                            (int) impulse.size(), prominence);
+    if (arrival < 0) return JNI_FALSE;
+    const int polarity = wdsp::SweepMeasurement::polarityAt(impulse.data(),
+                                                             (int) impulse.size(), arrival);
+
+    std::vector<float> out(3 + wdsp::kHwBands, 0.0f);
+    out[0] = static_cast<float>(arrival);
+    out[1] = prominence;
+    out[2] = static_cast<float>(polarity);
+    sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), arrival, out.data() + 3);
+
+    env->SetFloatArrayRegion(result, 0, (jsize) out.size(), out.data());
+    return JNI_TRUE;
 }
 
 } // extern "C"
