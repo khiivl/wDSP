@@ -18,3 +18,7 @@ agents.md
 
 # Native build intermediates
 wdsp_app/.cxx/
+
+# Release builds - the signed APK is an artefact, not source
+wdsp_app/release/
+*.apk
