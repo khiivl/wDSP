@@ -5,6 +5,14 @@
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!--
+        Lets the app stop a background hotword listener that is holding the microphone.
+        A normal permission, granted at install. Nothing is uninstalled or disabled: the
+        assistant restarts on its own the moment the system wants it again. Without this a
+        cabin measurement is made through a 16 kHz stream and half the sweep is missing,
+        with nothing in the API admitting it - see MicrophoneGuard.
+    -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>

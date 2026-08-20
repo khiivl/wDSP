@@ -89,6 +89,23 @@ public final class RoomMeasurement {
     /** 20 Hz is below anything a car door can reproduce, but the sweep costs nothing down there. */
     private static final float SWEEP_START_HZ = 20f;
     private static final float SWEEP_END_HZ = 20000f;
+    /**
+     * Where the sweep stops when the microphone is stuck at 16 kHz.
+     *
+     * An assistant hotword listener holds the microphone open on many head units and cannot always
+     * be stopped - on the one this was written for it is a system app, and
+     * {@code killBackgroundProcesses} does not touch it. Every other recording is then served from
+     * its 16 kHz stream, resampled, and nothing above 8 kHz survives.
+     *
+     * Sweeping to 20 kHz in that state wastes more than half the signal: the energy is emitted,
+     * never recorded, and the deconvolution has nothing to match it against. Sweeping to 7 kHz
+     * instead puts all of it where the microphone can hear it.
+     *
+     * The cost is only sharpness, and not much of it: a 7 kHz band gives an impulse whose main
+     * lobe is about 0.14 ms wide, while the delay sliders move in steps of 0.5 ms. What is lost is
+     * the top of the frequency response, which this measurement does not act on anyway.
+     */
+    private static final float SWEEP_END_NARROW_HZ = 7000f;
     private static final float DEFAULT_SECONDS = 3f;
     /**
      * Amplitude of the sweep, not of the head unit.
@@ -288,6 +305,10 @@ public final class RoomMeasurement {
         public final int[] suggestedDelaySteps = new int[4];
         public String error;
         public String reportPath;
+        /** What the microphone guard found and did, in one line for the report. */
+        public String microphone;
+        /** Where the sweep stopped - lower than usual when the microphone could not be freed. */
+        public float sweepTopHz = SWEEP_END_HZ;
 
         public boolean isUsable() {
             for (ChannelResult c : channels) {
@@ -374,6 +395,17 @@ public final class RoomMeasurement {
         Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s");
         Log.i(TAG, HardwareProfile.describe());
 
+        // Take the microphone back if something else has it, then sweep only as high as whatever
+        // we ended up with can actually hear.
+        MicrophoneGuard.Outcome mic = MicrophoneGuard.ensureOurs(app);
+        result.microphone = mic.toString();
+        final float topHz = (mic.wasHeld && !mic.freed) ? SWEEP_END_NARROW_HZ : SWEEP_END_HZ;
+        if (topHz < SWEEP_END_HZ) {
+            Log.w(TAG, "the microphone is limited to 16 kHz and could not be freed, so the sweep "
+                    + "stops at " + (int) topHz + " Hz instead of " + (int) SWEEP_END_HZ
+                    + " - delays are unaffected, the top of the response is not measured");
+        }
+
         // Only one thing of the user's is touched: which preset is selected. Everything else
         // happens inside a copy.
         String saved = "last_selected_preset=" + preset;
@@ -381,14 +413,14 @@ public final class RoomMeasurement {
         buildScratchPreset(prefs, preset);
         Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
 
-        try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, SWEEP_END_HZ,
-                seconds)) {
+        try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds)) {
             if (!sweep.isValid()) {
                 result.error = "the sweep could not be built";
                 return result;
             }
             runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
             computeDelays(result);
+            result.sweepTopHz = topHz;
             result.reportPath = writeReport(app, result, preset, amplitude, seconds);
         } finally {
             SharedPreferences.Editor editor = prefs.edit();
@@ -883,9 +915,11 @@ public final class RoomMeasurement {
             StringBuilder sb = new StringBuilder();
             sb.append("wDSP room measurement\n");
             sb.append(HardwareProfile.describe()).append('\n');
+            if (result.microphone != null) sb.append(result.microphone).append('\n');
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(amplitude)
-                    .append(" sweep=").append(seconds).append(" s\n\n");
+                    .append(" sweep=").append(seconds).append(" s")
+                    .append(" up to ").append((int) result.sweepTopHz).append(" Hz\n\n");
 
             for (int i = 0; i < result.channels.length; i++) {
                 ChannelResult c = result.channels[i];
