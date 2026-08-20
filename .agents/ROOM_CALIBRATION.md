@@ -206,9 +206,20 @@ terms.
 ### Two things to be careful of in the field
 
 - **A channel that was never driven still produces an impulse response** — of the room noise — and
-  its loudest moment still looks like an arrival. `RoomMeasurement` requires both a prominence above
-  200 and a recorded peak above −40 dBFS, and refuses a set of arrivals spanning more than 30 ms,
-  because sound covers a third of a metre per millisecond and no car is ten metres long.
+  its loudest moment still looks like an arrival. `RoomMeasurement` requires clarity above 9 dB and
+  a recorded peak above −40 dBFS, and rejects any channel arriving more than 60 ms from the
+  clearest one.
+
+  🪤 **Sixty, not thirty.** The first limit was set by reasoning about a saloon, and it was wrong:
+  this app runs in vans and minibuses, where a rear speaker really can be five or six metres from a
+  microphone on the windscreen pillar. Being generous costs nothing — a phantom channel does not
+  miss by metres, it misses by hundreds of milliseconds.
+
+- **The delay hardware reaches five milliseconds and no further.** The positional sliders run 0..10
+  at half a millisecond each, which is about a metre and seventy of path difference: enough for a
+  saloon, not enough for a van. A suggestion beyond that cannot be entered, so the measurement caps
+  it and says so plainly rather than clamping in silence and letting the user believe their car is
+  aligned. In a long vehicle, "cannot be corrected" is the honest answer.
 - **Which end of the fader is "front" is assumed, not confirmed.** The arrival times and their
   differences are right either way; only the labels could be mirrored. One test in a real car
   settles it.

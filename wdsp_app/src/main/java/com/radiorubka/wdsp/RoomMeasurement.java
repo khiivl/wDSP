@@ -165,15 +165,31 @@ public final class RoomMeasurement {
      */
     private static final float MIN_CLARITY_DB = 9f;
     /**
-     * The largest difference in arrival times a car can physically produce.
+     * The largest difference in arrival times a vehicle can physically produce.
      *
-     * Sound covers about thirty-four centimetres in a millisecond, so even a long estate car
-     * cannot separate its speakers by more than ten milliseconds or so. Thirty is generous to the
-     * point of absurdity, which is the point: anything beyond it did not come from geometry, it
-     * came from one of the channels not being heard, and offering it as a delay setting would
-     * mean putting a second of silence into somebody's front speakers.
+     * Sound covers about thirty-four centimetres in a millisecond, so sixty milliseconds is twenty
+     * metres - absurd for anything, which is exactly what makes it a safe limit. It is set that
+     * high on purpose: **this app runs in vans and minibuses as well as cars**, where a rear
+     * speaker really can be five or six metres from a microphone on the windscreen pillar, and a
+     * limit tuned to a saloon would throw away their most interesting measurement.
+     *
+     * Nothing is lost by being generous. A channel that was not heard at all does not miss by
+     * metres, it misses by hundreds of milliseconds: measured on a bench with the rear pair
+     * disconnected, the phantoms landed 700 ms from the reference.
      */
-    private static final float MAX_PLAUSIBLE_SPREAD_MS = 30f;
+    private static final float MAX_PLAUSIBLE_SPREAD_MS = 60f;
+
+    /**
+     * The largest delay the hardware can actually apply, in slider steps.
+     *
+     * The positional delay sliders run 0..10 and each step is half a millisecond, so the whole
+     * range is five milliseconds - about a metre and seventy of path difference. That is enough
+     * for a saloon and not enough for a van, and there is no point pretending otherwise: a
+     * suggestion of nineteen steps cannot be entered, and quietly clamping it to ten would leave
+     * the user believing the alignment had been achieved.
+     */
+    private static final int MAX_DELAY_STEPS = 10;
+    private static final float DELAY_STEP_MS = 0.5f;
 
     /**
      * Where a measurement leaves its report and recordings.
@@ -309,6 +325,8 @@ public final class RoomMeasurement {
         public String microphone;
         /** Where the sweep stopped - lower than usual when the microphone could not be freed. */
         public float sweepTopHz = SWEEP_END_HZ;
+        /** True when a channel needs more delay than the hardware can apply - a long vehicle. */
+        public boolean beyondHardware;
 
         public boolean isUsable() {
             for (ChannelResult c : channels) {
@@ -740,7 +758,19 @@ public final class RoomMeasurement {
             result.suggestedDelayMs[i] = latest - c.arrivalMs;
             // The hardware moves in half-millisecond steps, which is about seventeen centimetres
             // of air - finer than that would be pretending.
-            result.suggestedDelaySteps[i] = Math.round(result.suggestedDelayMs[i] / 0.5f);
+            final int wanted = Math.round(result.suggestedDelayMs[i] / DELAY_STEP_MS);
+            result.suggestedDelaySteps[i] = Math.min(wanted, MAX_DELAY_STEPS);
+            if (wanted > MAX_DELAY_STEPS) {
+                // Say it rather than clamp it silently. In a long vehicle this is the normal
+                // answer, and a user who is told will move the microphone or accept it; a user who
+                // is not told will believe their car is aligned when it is not.
+                result.beyondHardware = true;
+                Log.w(TAG, String.format(Locale.US,
+                        "%s needs %.1f ms (%d steps) but the sliders stop at %d steps (%.1f ms) - "
+                                + "this vehicle is longer than the delay lines can correct",
+                        c.label, result.suggestedDelayMs[i], wanted, MAX_DELAY_STEPS,
+                        MAX_DELAY_STEPS * DELAY_STEP_MS));
+            }
         }
     }
 
@@ -941,6 +971,11 @@ public final class RoomMeasurement {
             }
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
+            if (result.beyondHardware) {
+                sb.append("NOTE: at least one speaker needs more delay than the sliders can give "
+                        + "(they stop at 10 steps, 5 ms, about 1.7 m). Normal in a van; the "
+                        + "suggestion is capped at what can actually be set.\n");
+            }
             sb.append("The response includes the microphone's own curve and is NOT a calibration.\n");
             out.write(sb.toString().getBytes("UTF-8"));
             Log.i(TAG, "report written to " + file.getAbsolutePath());
