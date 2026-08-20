@@ -124,13 +124,13 @@ public final class RoomMeasurement {
     private static final long ROUTING_SETTLE_MS = 800;
 
     /**
-     * How far the arrival has to stand above the rest of the impulse response to be believed.
+     * Reported, no longer used to decide anything.
      *
-     * Measured on a bench where two of the four routings drove nothing: the silent ones came back
-     * with 19 and 24, the ones that actually played gave 2779 and 13798. Two orders of magnitude
-     * apart, which is what makes this a usable test rather than a guess - but the figure is from
-     * one desk, not from a fleet of cars, so it is deliberately generous and every measurement
-     * logs its own prominence. If real cars come back nearer the threshold, raise it with data.
+     * It looked like a good test on a bench - silent channels gave 19 and 24, driven ones gave
+     * thousands - and then the same driven speaker came back with 65 on one run and 2889 on the
+     * next, with its arrival time unchanged to the sample. The average it divides by depends on
+     * what else fell inside the window, which has nothing to do with whether a speaker was heard.
+     * Kept in the report as a second opinion; see MIN_CLARITY_DB for what actually decides.
      */
     private static final float MIN_PROMINENCE = 200f;
     /**
@@ -138,6 +138,15 @@ public final class RoomMeasurement {
      * an impulse response - of the room noise - and it can look convincing on its own.
      */
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
+    /**
+     * How far the direct sound has to stand above the room before its arrival time is believed.
+     *
+     * A speaker the microphone cannot see still produces an impulse response, and its peak is
+     * still repeatable to the sample - it is simply the loudest moment of a diffuse smear rather
+     * than the instant the sound arrived. Measured on a bench: the speaker facing the microphone
+     * gave +14 dB, the one behind it +1 dB, and only the first of the two described a distance.
+     */
+    private static final float MIN_CLARITY_DB = 9f;
     /**
      * The largest difference in arrival times a car can physically produce.
      *
@@ -159,7 +168,22 @@ public final class RoomMeasurement {
      */
     private static final String OUTPUT_DIR = "measurements";
 
-    private static final String PREFS_NAME = "EqPresets";
+    /**
+      * The preset a measurement runs through.
+      *
+      * Nothing is measured through the user's own preset any more. Their preset has an equaliser
+      * curve, and very likely delay lines, loudness, bass boost and a high-pass - and a high-pass
+      * is a real group delay at the bottom, which would be measured as if the loudspeaker were
+      * further away than it is. Every user would then get a different and slightly wrong answer,
+      * for reasons invisible in the result.
+      *
+      * So the measurement copies their preset, neutralises everything that colours or delays the
+      * sound, switches to the copy, and switches back afterwards. Their own settings are never
+      * written to at all, which also means a crash half way through cannot damage them.
+      */
+     private static final String SCRATCH_PRESET = "wDSP Flat";
+
+     private static final String PREFS_NAME = "EqPresets";
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
@@ -230,6 +254,16 @@ public final class RoomMeasurement {
         public float recordedRms;
         /** Energy above 8 kHz against the band below it; far below -25 dB means a 16 kHz stream. */
         public float bandwidthDb;
+        /**
+         * How far the direct sound stood above the room, in decibels.
+         *
+         * This is what separates a speaker the microphone can see from one it cannot. Measured on
+         * a bench: the speaker facing the microphone gave a sharp impulse and near silence after
+         * it; the one sitting behind it gave a smear eleven times weaker whose level was still
+         * within seven decibels of the peak a millisecond later. Both arrival times were
+         * repeatable to the sample; only one of them meant a distance.
+         */
+        public float clarityDb;
         public boolean ok;
     }
 
@@ -328,9 +362,12 @@ public final class RoomMeasurement {
         Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s");
         Log.i(TAG, HardwareProfile.describe());
 
-        String saved = saveCurrentSettings(prefs, preset);
+        // Only one thing of the user's is touched: which preset is selected. Everything else
+        // happens inside a copy.
+        String saved = "last_selected_preset=" + preset;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
-        Log.i(TAG, "saved for restoring afterwards: " + saved);
+        buildScratchPreset(prefs, preset);
+        Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
 
         try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, SWEEP_END_HZ,
                 seconds)) {
@@ -338,8 +375,7 @@ public final class RoomMeasurement {
                 result.error = "the sweep could not be built";
                 return result;
             }
-            prepareForMeasurement(prefs, preset);
-            runOnePass(app, prefs, preset, sweep, amplitude, result, listener);
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
             computeDelays(result);
             result.reportPath = writeReport(app, result, preset, amplitude, seconds);
         } finally {
@@ -347,7 +383,7 @@ public final class RoomMeasurement {
             applySaved(editor, saved);
             editor.remove(PREF_RECOVERY);
             editor.apply();
-            Log.i(TAG, "settings restored");
+            Log.i(TAG, "switched back to " + preset);
         }
 
         logResult(result);
@@ -558,13 +594,22 @@ public final class RoomMeasurement {
             cr.clockLocked = true;
             cr.prominence = analysis[NativeSweep.PROMINENCE];
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
+            cr.clarityDb = analysis[NativeSweep.CLARITY];
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
-            cr.ok = cr.prominence >= MIN_PROMINENCE && cr.recordedPeak >= MIN_PEAK;
+            // Clarity decides, not prominence. Prominence compares the loudest instant of the
+            // impulse response with its average, and the average moves with whatever else landed
+            // in the window - measured on a bench, the same speaker gave 2889 on one run and 65
+            // on the next while its arrival time stayed put to the sample. Clarity asks a
+            // physical question instead: did the microphone hear this speaker directly, or only
+            // the room repeating it. Prominence is still reported, because it costs nothing and a
+            // second opinion is useful when a measurement looks odd.
+            cr.ok = cr.clarityDb >= MIN_CLARITY_DB && cr.recordedPeak >= MIN_PEAK;
 
             Log.i(TAG, String.format(Locale.US,
-                    "%s: arrival %.2f ms in its window (sample %d), prominence %.0f, "
-                            + "polarity %+d, peak %.1f dBFS, rms %.1f dBFS%s",
-                    cr.label, cr.arrivalMs, cr.arrivalSamples, cr.prominence, cr.polarity,
+                    "%s: arrival %.2f ms in its window (sample %d), clarity %.1f dB, "
+                            + "prominence %.0f, polarity %+d, peak %.1f dBFS, rms %.1f dBFS%s",
+                    cr.label, cr.arrivalMs, cr.arrivalSamples, cr.clarityDb, cr.prominence,
+                    cr.polarity,
                     20 * Math.log10(cr.recordedPeak + 1e-9f),
                     20 * Math.log10(cr.recordedRms + 1e-9f),
                     cr.ok ? "" : "  <-- TOO WEAK TO TRUST"));
@@ -589,6 +634,39 @@ public final class RoomMeasurement {
      * exact no matter what the microphone's response is, because it comes entirely from timing.
      */
     private static void computeDelays(Result result) {
+        // The clearest channel is the reference. Every sweep is played at the same offset inside
+        // its own window, so a channel that was genuinely heard must arrive within a few
+        // milliseconds of it - the width of a car. A channel that was not driven at all still
+        // produces an impulse response, of room noise, and its loudest moment lands wherever it
+        // pleases: measured on a bench with the rear pair disconnected, the reference sat at
+        // 590 ms and the two phantoms at 1267 and 1309.
+        //
+        // This catches them whatever their clarity happens to be, which matters because clarity
+        // alone does not separate the two cleanly enough - the noisiest phantom measured 7.7 dB
+        // against 10.5 dB for the quietest real speaker.
+        ChannelResult anchor = null;
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok) continue;
+            if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
+        }
+        if (anchor == null) {
+            result.error = "no channel was heard clearly enough to measure";
+            Log.w(TAG, result.error);
+            return;
+        }
+
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok || c == anchor) continue;
+            final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
+            if (apart > MAX_PLAUSIBLE_SPREAD_MS) {
+                c.ok = false;
+                Log.w(TAG, String.format(Locale.US,
+                        "%s: arrived %.0f ms from the clearest channel, which no car can do "
+                                + "(%.0f ms is already ten metres) - not a real arrival",
+                        c.label, apart, apart));
+            }
+        }
+
         float latest = Float.NEGATIVE_INFINITY;
         float earliest = Float.POSITIVE_INFINITY;
         int heard = 0;
@@ -603,19 +681,9 @@ public final class RoomMeasurement {
             Log.w(TAG, result.error);
             return;
         }
-
-        // Sound travels about a third of a metre in a millisecond, so four speakers in one car
-        // cannot be more than a few milliseconds apart. A larger spread is not a wide car, it is
-        // a channel that was not heard, and turning it into a delay setting would be worse than
-        // offering nothing.
-        final float spread = latest - earliest;
-        if (spread > MAX_PLAUSIBLE_SPREAD_MS) {
-            result.error = String.format(Locale.US,
-                    "arrivals span %.0f ms, which no car can do (%.0f ms is already ten metres) - "
-                            + "at least one channel was not really heard", spread, spread);
-            Log.w(TAG, result.error);
-            return;
-        }
+        Log.i(TAG, String.format(Locale.US,
+                "%d channels agree, spread %.2f ms, reference is the %s at %.1f dB clarity",
+                heard, latest - earliest, anchor.label, anchor.clarityDb));
 
         for (int i = 0; i < result.channels.length; i++) {
             ChannelResult c = result.channels[i];
@@ -632,47 +700,15 @@ public final class RoomMeasurement {
     // borrowing and returning the head unit's settings
     // ---------------------------------------------------------------------------------------
 
-    /**
-     * Records every setting the measurement is about to change, as {@code key=value} pairs.
-     *
-     * A flat string rather than JSON on purpose: it has to survive being read back by a version of
-     * the app that may have changed in the meantime, and it has to be readable in a bug report.
-     */
-    private static String saveCurrentSettings(SharedPreferences prefs, String preset) {
-        StringBuilder sb = new StringBuilder();
-        append(sb, preset + "_f_lr", prefs.getInt(preset + "_f_lr", FADER_CENTRE));
-        append(sb, preset + "_f_fr", prefs.getInt(preset + "_f_fr", FADER_CENTRE));
-        append(sb, preset + "_d_en", prefs.getBoolean(preset + "_d_en", false) ? 1 : 0);
-        append(sb, preset + "_d1_en", prefs.getBoolean(preset + "_d1_en", false) ? 1 : 0);
-        for (int b = 0; b < 16; b++) {
-            append(sb, preset + "_g" + b, prefs.getInt(preset + "_g" + b, EQ_FLAT_INDEX));
-        }
-        return sb.toString();
-    }
-
-    private static void append(StringBuilder sb, String key, int value) {
-        if (sb.length() > 0) sb.append(';');
-        sb.append(key).append('=').append(value);
-    }
-
     private static void applySaved(SharedPreferences.Editor editor, String saved) {
         for (String pair : saved.split(";")) {
             int eq = pair.indexOf('=');
             if (eq <= 0) continue;
             String key = pair.substring(0, eq);
-            int value;
-            try {
-                value = Integer.parseInt(pair.substring(eq + 1));
-            } catch (NumberFormatException e) {
-                continue;
-            }
-            // The two switches were stored as 0/1 and have to go back as booleans, or the
-            // preference listener will read the wrong type and the setting will be lost.
-            if (key.endsWith("_d_en") || key.endsWith("_d1_en")) {
-                editor.putBoolean(key, value != 0);
-            } else {
-                editor.putInt(key, value);
-            }
+            String value = pair.substring(eq + 1);
+            // Only one key is ever recorded now - which preset was selected - and putting it back
+            // makes the service reload everything that belongs to it.
+            editor.putString(key, value);
         }
     }
 
@@ -684,17 +720,76 @@ public final class RoomMeasurement {
      * equaliser goes flat for the same reason - its curve would otherwise be indistinguishable
      * from the loudspeaker's own response.
      */
-    private static void prepareForMeasurement(SharedPreferences prefs, String preset) {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(preset + "_d_en", false);
-        editor.putBoolean(preset + "_d1_en", false);
-        for (int b = 0; b < 16; b++) {
-            editor.putInt(preset + "_g" + b, EQ_FLAT_INDEX);
-        }
-        editor.apply();
-        Log.i(TAG, "delay lines off and equaliser flattened for the duration of the measurement");
-        sleep(ROUTING_SETTLE_MS);
-    }
+    /**
+      * Copies the user's preset and neutralises everything that would be measured by mistake.
+      *
+      * What is switched off, and why each one matters:
+      *
+      * <ul>
+      *   <li><b>delay lines and surround</b> - they exist to compensate for the very distances
+      *       being measured, so leaving them on measures the correction instead of the problem;
+      *   <li><b>high-pass and bass boost</b> - a high-pass is a real group delay at the bottom of
+      *       the range, and it would look exactly like a loudspeaker standing further away;
+      *   <li><b>equaliser and loudness</b> - otherwise the preset's curve is measured as though it
+      *       were the loudspeaker's own;
+      *   <li><b>subwoofer</b> - it plays the same low frequencies as the speaker being measured,
+      *       from somewhere else in the car, and smears the arrival;
+      *   <li><b>GALA</b> - it changes the volume according to speed, and a volume change during a
+      *       sweep would be measured as part of the room.
+      * </ul>
+      *
+      * The power amplifier setting is copied rather than reset: it decides how loud the car is
+      * capable of being, and a measurement has no business changing that.
+      */
+     private static void buildScratchPreset(SharedPreferences prefs, String from) {
+         SharedPreferences.Editor e = prefs.edit();
+
+         // The type of every key matters and nothing enforces it: these preferences have no
+         // schema, and a value written as the wrong type crashes the service the moment it reads
+         // the preset. The gains are numbers; the Q flags are booleans, one bit per band, because
+         // the hardware only offers a wide setting and a narrow one.
+         for (int b = 0; b < 16; b++) {
+             e.putInt(SCRATCH_PRESET + "_g" + b, EQ_FLAT_INDEX);
+             e.putBoolean(SCRATCH_PRESET + "_q" + b, false);
+         }
+         e.putInt(SCRATCH_PRESET + "_f_lr", FADER_CENTRE);
+         e.putInt(SCRATCH_PRESET + "_f_fr", FADER_CENTRE);
+         e.putBoolean(SCRATCH_PRESET + "_loud", false);
+
+         e.putBoolean(SCRATCH_PRESET + "_d_en", false);
+         e.putBoolean(SCRATCH_PRESET + "_d1_en", false);
+         for (String ch : new String[]{"fl", "fr", "rl", "rr", "sub"}) {
+             e.putInt(SCRATCH_PRESET + "_d_" + ch, 0);
+         }
+         for (String ch : new String[]{"fl", "fr", "rl", "rr"}) {
+             e.putInt(SCRATCH_PRESET + "_d1_" + ch, 0);
+         }
+         e.putInt(SCRATCH_PRESET + "_rsse_val", 10);
+
+         e.putInt(SCRATCH_PRESET + "_sub_g", 0);
+         e.putInt(SCRATCH_PRESET + "_sub_f", 0);
+         e.putBoolean(SCRATCH_PRESET + "_sub_comp", false);
+
+         for (String k : new String[]{"_bb_f", "_bb_r", "_bf_f", "_bf_r",
+                                      "_bb_frq_f", "_bb_frq_r"}) {
+             e.putInt(SCRATCH_PRESET + k, 0);
+         }
+
+         e.putBoolean(SCRATCH_PRESET + "_fm_en", false);
+         e.putBoolean(SCRATCH_PRESET + "_fat_en", false);
+         e.putInt(SCRATCH_PRESET + "_fm_cal", 0);
+         e.putInt(SCRATCH_PRESET + "_fm_str", 0);
+         e.putBoolean(SCRATCH_PRESET + "_gala_enabled", false);
+
+         // Carried over rather than reset - see the note above.
+         e.putInt(SCRATCH_PRESET + "_power_vol", prefs.getInt(from + "_power_vol", 0));
+
+         e.putString("last_selected_preset", SCRATCH_PRESET);
+         e.apply();
+
+         // The service reloads on the preset change and then sends every frame; give it room.
+         sleep(ROUTING_SETTLE_MS * 2);
+     }
 
     // ---------------------------------------------------------------------------------------
     // audio plumbing
@@ -780,8 +875,9 @@ public final class RoomMeasurement {
                 ChannelResult c = result.channels[i];
                 if (c == null) continue;
                 sb.append(String.format(Locale.US,
-                        "%-12s arrival %8.2f ms  prominence %8.0f  polarity %+d  peak %6.1f dBFS%s\n",
-                        c.label, c.arrivalMs, c.prominence, c.polarity,
+                        "%-12s arrival %8.2f ms  clarity %5.1f dB  prominence %8.0f  "
+                                + "polarity %+d  peak %6.1f dBFS%s\n",
+                        c.label, c.arrivalMs, c.clarityDb, c.prominence, c.polarity,
                         20 * Math.log10(c.recordedPeak + 1e-9f), c.ok ? "" : "   NOT TRUSTED"));
                 sb.append("             suggested delay ")
                         .append(String.format(Locale.US, "%.1f ms (%d steps)",

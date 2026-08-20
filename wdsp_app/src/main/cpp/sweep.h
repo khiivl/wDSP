@@ -68,6 +68,19 @@ public:
     static int polarityAt(const float* impulse, int length, int arrival);
 
     /**
+     * How much the direct sound stands above what follows it, in decibels.
+     *
+     * A loudspeaker heard straight on gives one sharp impulse and near silence after it. A
+     * loudspeaker the microphone cannot see gives a smear: energy spread over milliseconds, with
+     * no single instant that deserves to be called the arrival.
+     *
+     * Measured on a bench where one speaker faced the microphone and the other sat behind it: the
+     * first gave +14 dB, the second +1 dB. The arrival time of the second is repeatable to the
+     * sample and still means nothing, so this number decides whether the delay is worth offering.
+     */
+    static float clarityDb(const float* impulse, int length, int arrival, int sampleRate);
+
+    /**
      * How much of a recording lives above 8 kHz, relative to the band below it, in decibels.
      *
      * A stream that claims 48 kHz but is really 16 kHz resampled has nothing above 8 kHz at all,

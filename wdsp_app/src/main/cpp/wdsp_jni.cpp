@@ -208,7 +208,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
                                                    jfloatArray result) {
     auto* sweep = asSweep(handle);
     if (sweep == nullptr || recorded == nullptr || result == nullptr) return JNI_FALSE;
-    if (env->GetArrayLength(result) < 3 + wdsp::kHwBands) return JNI_FALSE;
+    if (env->GetArrayLength(result) < 4 + wdsp::kHwBands) return JNI_FALSE;
     if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
 
     jfloat* input = env->GetFloatArrayElements(recorded, nullptr);
@@ -226,11 +226,13 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
     const int polarity = wdsp::SweepMeasurement::polarityAt(impulse.data(),
                                                              (int) impulse.size(), arrival);
 
-    std::vector<float> out(3 + wdsp::kHwBands, 0.0f);
+    std::vector<float> out(4 + wdsp::kHwBands, 0.0f);
     out[0] = static_cast<float>(arrival);
     out[1] = prominence;
     out[2] = static_cast<float>(polarity);
-    sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), arrival, out.data() + 3);
+    out[3] = wdsp::SweepMeasurement::clarityDb(impulse.data(), (int) impulse.size(), arrival,
+                                               sweep->sampleRate());
+    sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), arrival, out.data() + 4);
 
     env->SetFloatArrayRegion(result, 0, (jsize) out.size(), out.data());
     return JNI_TRUE;

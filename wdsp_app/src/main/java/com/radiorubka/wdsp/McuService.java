@@ -819,6 +819,12 @@ public class McuService extends Service implements LocationListener {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
         }
+        // A measurement selects its own preset and must keep it: our own sweeps make this app
+        // the active player, and a player-based switch would drop the flat preset half way
+        // through and measure the user's equaliser instead.
+        else if (RoomMeasurement.isRunning()) {
+            // deliberately nothing
+        }
         // If the last Player doesn't match the new Player, process the switch.
         else if (!Objects.equals(currentPlayer, lastPlayerSource)) {
             lastPlayerSource = currentPlayer;

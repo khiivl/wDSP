@@ -18,8 +18,15 @@ public final class NativeSweep implements AutoCloseable {
     public static final int PROMINENCE = 1;
     /** +1 or -1; negative means the loudspeaker is wired the wrong way round. */
     public static final int POLARITY = 2;
-    /** Sixteen band levels in dB start here, on the hardware equaliser's grid. */
-    public static final int BANDS = 3;
+    /**
+      * How far the direct sound stands above the room answering it, in decibels.
+      *
+      * Above about 8 dB the arrival is a real one. Near zero the microphone never heard the
+      * speaker directly, only the cabin, and the arrival time is repeatable without being true.
+      */
+     public static final int CLARITY = 3;
+     /** Sixteen band levels in dB start here, on the hardware equaliser's grid. */
+     public static final int BANDS = 4;
     public static final int BAND_COUNT = 16;
     public static final int RESULT_SIZE = BANDS + BAND_COUNT;
 

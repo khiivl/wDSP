@@ -253,6 +253,31 @@ int SweepMeasurement::polarityAt(const float* impulse, int length, int arrival) 
     return sign;
 }
 
+float SweepMeasurement::clarityDb(const float* impulse, int length, int arrival,
+                                  int sampleRate) {
+    if (impulse == nullptr || arrival < 0 || arrival >= length || sampleRate <= 0) return 0.0f;
+
+    const int direct = sampleRate / 1000;          // the first millisecond is the arrival itself
+    const int tail = sampleRate / 100;             // the ten after it are the room answering back
+    const int directTo = std::min(length, arrival + direct);
+    const int tailTo = std::min(length, arrival + direct + tail);
+
+    double directEnergy = 0.0;
+    for (int i = arrival; i < directTo; i++) {
+        directEnergy += static_cast<double>(impulse[i]) * impulse[i];
+    }
+    double tailEnergy = 0.0;
+    for (int i = directTo; i < tailTo; i++) {
+        tailEnergy += static_cast<double>(impulse[i]) * impulse[i];
+    }
+    if (directEnergy <= 0.0) return -60.0f;
+    // Per sample, so the two windows are comparable although one is ten times longer.
+    const double directPer = directEnergy / std::max(1, directTo - arrival);
+    const double tailPer = tailEnergy / std::max(1, tailTo - directTo);
+    if (tailPer <= 0.0) return 60.0f;
+    return 10.0f * std::log10(static_cast<float>(directPer / tailPer));
+}
+
 float SweepMeasurement::bandwidthRatioDb(const float* signal, int length, int sampleRate) {
     constexpr int kWindow = 16384;
     if (signal == nullptr || length < kWindow || sampleRate <= 0) return 0.0f;
