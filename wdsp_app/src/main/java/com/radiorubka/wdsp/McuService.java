@@ -103,6 +103,8 @@ public class McuService extends Service implements LocationListener {
 
     private int lastReadHardwareVol = -1;
 
+    // What the hardware last REPORTED, which is not the same thing as what we last sent it.
+
     private long lastEqWriteTime = 0;
     private byte[] pendingEqData = null;
     private boolean eqUpdatePending = false;
@@ -272,6 +274,16 @@ public class McuService extends Service implements LocationListener {
                                 intent.getIntExtra("max", 64), ms);
                     }
                 }
+                else if ("com.radiorubka.wdsp.SET_VOLUME".equals(action)) {
+                    // Diagnostic only: moves the volume the way a person does, without
+                    // telling GALA, so its manual-adjustment detector can be tested.
+                    int vol = intent.getIntExtra("vol", -1);
+                    if (vol >= 0) {
+                        Log.i(TAG, "SET_VOLUME debug: " + VolumeHelper.getVolume()
+                                + " -> " + vol);
+                        VolumeHelper.setVolume(vol);
+                    }
+                }
                 else if ("com.radiorubka.wdsp.MEASURE_LATENCY".equals(action)) {
                     // Diagnostic only - see LatencyProbe. Plays eight quiet bursts on its own
                     // session and reports how far ahead of the speakers the analyser runs.
@@ -396,6 +408,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
         controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
+        controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");
         return controlFilter;
@@ -584,6 +597,9 @@ public class McuService extends Service implements LocationListener {
 
         // this gets the volume and the mute state
         int hardwareVol = VolumeHelper.getVolume();
+        // Kept aside because hardwareVol is overwritten further down with whatever GALA decides
+        // to command, and step 7 has to remember the reading rather than the command.
+        final int reportedVolume = hardwareVol;
         boolean isCurrentlyMuted = (hardwareVol <= 0 || VolumeHelper.isHardwareMuted());
 
         // 1. THE GUARD: If muted or at volume 0, stop GALA processing immediately.
@@ -649,7 +665,16 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
-        // We detect this because the hardware volume changed, but NOT by our script.
+        // We detect this because the hardware volume changed since the last poll, and not by us.
+        //
+        // Both halves matter. lastReadHardwareVol must hold what the hardware REPORTED last time,
+        // never what we told it to be: the platform keeps its own volume curve per source and
+        // does not always hand back the number it was given. Storing our own command there made
+        // the first test true for ever, so every poll counted as a person turning the knob, and
+        // re-based GALA to whatever was already playing. Base plus offset then equals the current
+        // volume by construction - a fixed point - and the volume never moves again. That is the
+        // reported failure: GALA dies after one press of volume-down while music plays, and only
+        // then, because only then is anything writing volumes that read back differently.
         if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
             baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
             if (hardwareVol < currentAppliedOffset) {
@@ -728,7 +753,7 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 7. TRACKING: Update last seen volume and handle UI volume sync.
-        lastReadHardwareVol = hardwareVol;
+        lastReadHardwareVol = reportedVolume;
 
         if (hardwareVol != lastVolumeRead) {
             lastVolumeRead = hardwareVol;
