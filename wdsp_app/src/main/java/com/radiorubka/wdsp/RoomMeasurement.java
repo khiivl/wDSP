@@ -1107,7 +1107,15 @@ public final class RoomMeasurement {
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(amplitude)
                     .append(" sweep=").append(seconds).append(" s")
-                    .append(" up to ").append((int) result.sweepTopHz).append(" Hz\n\n");
+                    .append(" up to ").append((int) result.sweepTopHz).append(" Hz\n");
+            // The screen shows the user "measurement failed" and nothing else. If they send the
+            // archive anyway - and they do - the report has to say what went wrong, or the
+            // failure has to be diagnosed by reading the recordings, which is what happened the
+            // first time somebody sent one.
+            if (result.error != null) {
+                sb.append("THE APP REPORTED A FAILURE: ").append(result.error).append('\n');
+            }
+            sb.append('\n');
 
             for (int i = 0; i < result.channels.length; i++) {
                 ChannelResult c = result.channels[i];
