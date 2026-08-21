@@ -136,9 +136,23 @@ public class StatusBarVisualizerManager {
         return fallback;
     }
 
-    /** How far down the strip is drawn. See {@link #PREF_STATUS_BAR_OFFSET_Y}. */
+    /**
+     * How far down the strip is drawn, never far enough to lose it.
+     *
+     * <p>The stored number used to be taken as given, and the slider's travel was the whole screen
+     * height - so the last few pixels of travel pushed the strip entirely below the bottom edge,
+     * where it cannot be seen and cannot be grabbed back. The clamp lives here rather than only in
+     * the slider because the height can change afterwards: a strip parked at the bottom and then
+     * made taller would walk off the screen on its own.
+     */
     public int offsetY() {
-        return Math.max(0, prefs.getInt(PREF_STATUS_BAR_OFFSET_Y, 0));
+        int stored = Math.max(0, prefs.getInt(PREF_STATUS_BAR_OFFSET_Y, 0));
+        return Math.min(stored, maxOffsetY());
+    }
+
+    /** The lowest offset that still leaves the whole strip on the screen. */
+    public int maxOffsetY() {
+        return Math.max(0, getScreenHeight() - getStatusBarHeight());
     }
 
     public void setOffsetY(int px) {
@@ -312,7 +326,16 @@ public class StatusBarVisualizerManager {
         int width = calculateWidthPx();
         int freeSpace = Math.max(0, screenW - width);
         float clamped = Math.max(0.0f, Math.min(1.0f, posFraction));
-        return (int) (freeSpace * clamped);
+        // Clamped again on the way out. The arithmetic above already keeps the strip on screen,
+        // but it only does so while the width used here and the width the window actually gets
+        // are the same number - and this is the one place where both are known, so it is the
+        // cheapest place to guarantee it rather than assume it.
+        return Math.max(0, Math.min(freeSpace, (int) (freeSpace * clamped)));
+    }
+
+    private int getScreenHeight() {
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return dm.heightPixels;
     }
 
     public void removeOverlay() {

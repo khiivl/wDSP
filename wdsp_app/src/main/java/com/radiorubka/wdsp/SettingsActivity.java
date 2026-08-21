@@ -25,6 +25,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import android.content.res.ColorStateList;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -115,6 +117,16 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // The same call MainActivity makes, and the reason the status bar looked different here:
+        // without it the window stops below the bar and the system paints that strip itself. The
+        // theme asks for a transparent status bar, so what got painted was black - and a black
+        // band is exactly what you cannot align the visualiser against, because the icons you are
+        // lining it up with are the ones underneath.
+        EdgeToEdge.enable(this,
+                SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+        );
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
@@ -629,6 +641,10 @@ public class SettingsActivity extends AppCompatActivity {
                     : getString(R.string.lbl_px_fmt, px));
             if (fromUser) {
                 StatusBarVisualizerManager.getInstance(SettingsActivity.this).setManualHeight(px);
+                // A taller strip has less room to slide down, so the other slider's travel
+                // changes with this one. Without this, parking the strip at the bottom and then
+                // making it taller walks it off the screen.
+                syncOffsetSliderTravel();
             }
         });
 
@@ -838,9 +854,13 @@ public class SettingsActivity extends AppCompatActivity {
         // including along the bottom: it is the owner's dashboard.
         int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
         seekStatusBarHeight.setValueTo(screenHeightPx);
-        seekStatusBarOffsetY.setValueTo(screenHeightPx);
         seekStatusBarHeight.setValue(Math.min(manualHeight, screenHeightPx));
-        seekStatusBarOffsetY.setValue(Math.min(offsetY, screenHeightPx));
+        // The offset stops where the strip would start leaving the screen, not at the screen's
+        // own height: the last stretch of that travel put the strip entirely below the bottom
+        // edge, where it can be neither seen nor dragged back.
+        int maxOffset = Math.max(1, sbm.maxOffsetY());
+        seekStatusBarOffsetY.setValueTo(maxOffset);
+        seekStatusBarOffsetY.setValue(Math.min(offsetY, maxOffset));
         seekStatusBarAlpha.setValue(Math.max(10, Math.min(alpha, 100)));
         tvStatusBarHeight.setText(manualHeight <= 0
                 ? getString(R.string.settings_theme_auto)
@@ -1222,6 +1242,19 @@ public class SettingsActivity extends AppCompatActivity {
     private void saveAnalyzerPref(String key, int value) {
         ThemeManager.prefs(this).edit().putInt(key, value).apply();
         AudioSpectrumEngine.getInstance().loadDisplaySettings(this);
+    }
+
+    /**
+     * Re-fits the offset slider's travel to the current strip height.
+     *
+     * <p>Order matters: a Slider throws if its value is left above its new maximum, so the value
+     * comes down first and the ceiling second.
+     */
+    private void syncOffsetSliderTravel() {
+        if (seekStatusBarOffsetY == null) return;
+        int maxOffset = Math.max(1, StatusBarVisualizerManager.getInstance(this).maxOffsetY());
+        if (seekStatusBarOffsetY.getValue() > maxOffset) seekStatusBarOffsetY.setValue(maxOffset);
+        seekStatusBarOffsetY.setValueTo(maxOffset);
     }
 
     private void loadAnalyzerSettings(SharedPreferences p) {

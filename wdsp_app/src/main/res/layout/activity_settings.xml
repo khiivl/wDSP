@@ -4,7 +4,8 @@
     android:id="@+id/root_settings"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_night">
+    android:background="@drawable/bg_night"
+    android:fitsSystemWindows="true">
 
     <ScrollView
         android:id="@+id/scroll_settings"
