@@ -254,4 +254,9 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Még nincs mérés</string>
     <string name="toast_saved_to">Mentve ide: %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Átlátszatlanság</string>
+    <string name="status_bar_height_manual">Sáv magassága</string>
+    <string name="status_bar_offset_y">Távolság a tetejétől</string>
+    <string name="status_bar_placement_hint">Hagyja a magasságot 0-n, és az alkalmazás maga méri meg a sávot. Csak akkor állítsa be kézzel, ha a sáv rossz helyre kerül — egyes fejegységeken a felső sávot az indító (launcher) rajzolja, és az Android nem tud a létezéséről.</string>
 </resources>

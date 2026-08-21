@@ -254,4 +254,9 @@ Predefinito globale: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ancora nulla di misurato</string>
     <string name="toast_saved_to">Salvato in %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacità</string>
+    <string name="status_bar_height_manual">Altezza della striscia</string>
+    <string name="status_bar_offset_y">Distanza dall\'alto</string>
+    <string name="status_bar_placement_hint">Lascia l\'altezza a 0 e l\'app misura la barra da sola. Impostala manualmente solo se la striscia si trova nel posto sbagliato — su alcune autoradio la barra superiore è disegnata dal launcher e Android non sa che è lì.</string>
 </resources>

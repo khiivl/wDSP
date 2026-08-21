@@ -254,4 +254,9 @@ Globalno privzeto: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Še nič izmerjeno</string>
     <string name="toast_saved_to">Shranjeno v %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Neprosojnost</string>
+    <string name="status_bar_height_manual">Višina traku</string>
+    <string name="status_bar_offset_y">Razdalja od vrha</string>
+    <string name="status_bar_placement_hint">Pustite višino 0 in aplikacija sama izmeri vrstico. Ročno nastavite le, če trak pristane na napačnem mestu — pri nekaterih radiih zgornjo vrstico nariše zaganjalnik in Android sploh ne ve zanjo.</string>
 </resources>

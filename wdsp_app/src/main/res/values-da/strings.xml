@@ -254,4 +254,9 @@ Global standard: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Endnu ikke målt</string>
     <string name="toast_saved_to">Gemt i %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacitet</string>
+    <string name="status_bar_height_manual">Stribehøjde</string>
+    <string name="status_bar_offset_y">Afstand fra toppen</string>
+    <string name="status_bar_placement_hint">Lad højden være 0, så måler appen selv bjælken. Indstil den kun manuelt, hvis striben lander det forkerte sted — på nogle bilradioer tegnes den øverste bjælke af launcheren, og Android ved ikke, den er der.</string>
 </resources>

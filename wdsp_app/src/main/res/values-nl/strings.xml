@@ -254,4 +254,9 @@ Globale standaard: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Nog niets gemeten</string>
     <string name="toast_saved_to">Opgeslagen in %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Dekking</string>
+    <string name="status_bar_height_manual">Streephoogte</string>
+    <string name="status_bar_offset_y">Afstand vanaf de bovenkant</string>
+    <string name="status_bar_placement_hint">Laat de hoogte op 0 staan en de app meet de balk zelf. Stel het alleen handmatig in als de streep op de verkeerde plaats terechtkomt — op sommige autoradio\'s wordt de bovenste balk getekend door de launcher en weet Android niet dat deze er is.</string>
 </resources>

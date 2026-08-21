@@ -242,4 +242,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Noch nichts gemessen</string>
     <string name="toast_saved_to">Gespeichert in %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Deckkraft</string>
+    <string name="status_bar_height_manual">Streifenhöhe</string>
+    <string name="status_bar_offset_y">Abstand von oben</string>
+    <string name="status_bar_placement_hint">Lassen Sie die Höhe auf 0 und die App misst die Leiste selbst. Stellen Sie sie nur manuell ein, wenn der Streifen am falschen Ort landet — bei einigen Autoradios wird die obere Leiste vom Launcher gezeichnet, und Android weiß nichts davon.</string>
 </resources>

@@ -254,4 +254,9 @@ Globalno zadano: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Još ništa nije izmjereno</string>
     <string name="toast_saved_to">Spremljeno u %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Neprozirnost</string>
+    <string name="status_bar_height_manual">Visina trake</string>
+    <string name="status_bar_offset_y">Udaljenost od vrha</string>
+    <string name="status_bar_placement_hint">Ostavite visinu na 0 i aplikacija će sama izmjeriti traku. Postavite je ručno samo ako traka završi na pogrešnom mjestu — na nekim radijima gornju traku crta pokretač i Android ne zna da je tamo.</string>
 </resources>

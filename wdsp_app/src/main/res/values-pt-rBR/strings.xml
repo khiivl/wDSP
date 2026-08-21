@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -252,4 +252,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ainda nada medido</string>
     <string name="toast_saved_to">Salvo em %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacidade</string>
+    <string name="status_bar_height_manual">Altura da faixa</string>
+    <string name="status_bar_offset_y">Distância do topo</string>
+    <string name="status_bar_placement_hint">Deixe a altura em 0 e o aplicativo mede a barra por si mesmo. Defina manualmente apenas se a faixa ficar no lugar errado — em algumas centrais multimídia a barra superior é desenhada pelo launcher e o Android não sabe que ela está lá.</string>
 </resources>

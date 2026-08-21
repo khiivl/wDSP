@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -242,4 +242,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Jeszcze nic nie zmierzono</string>
     <string name="toast_saved_to">Zapisano w %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Krycie</string>
+    <string name="status_bar_height_manual">Wysokość paska</string>
+    <string name="status_bar_offset_y">Odległość od góry</string>
+    <string name="status_bar_placement_hint">Zostaw wysokość 0, a aplikacja sama zmierzy pasek. Ustaw ją ręcznie tylko wtedy, gdy pasek wyląduje w niewłaściwym miejscu — w niektórych stacjach multimedialnych górny pasek jest rysowany przez launcher, a Android nie wie o jego istnieniu.</string>
 </resources>

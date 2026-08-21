@@ -254,4 +254,9 @@ Globāli noklusējums: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Vēl nekas nav mērīts</string>
     <string name="toast_saved_to">Saglabāts: %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Nepietiekamība</string>
+    <string name="status_bar_height_manual">Joslas augstums</string>
+    <string name="status_bar_offset_y">Attālums no augšas</string>
+    <string name="status_bar_placement_hint">Atstājiet augstumu uz 0, un lietotne pati izmērīs joslu. Iestatiet to manuāli tikai tad, ja josla atrodas nepareizā vietā — dažos magnetolās augšējo joslu zīmē palaidējs, un Android nezina, ka tā tur ir.</string>
 </resources>

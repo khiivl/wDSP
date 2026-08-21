@@ -254,4 +254,9 @@ Par défaut global : %1$s</string>
     <string name="room_measure_telegram">Telegram : @kostyamat</string>
     <string name="room_measure_nothing">Rien de mesuré encore</string>
     <string name="toast_saved_to">Enregistré dans %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacité</string>
+    <string name="status_bar_height_manual">Hauteur de la bande</string>
+    <string name="status_bar_offset_y">Distance du haut</string>
+    <string name="status_bar_placement_hint">Laissez la hauteur à 0 et l\'application mesure la barre elle-même. Ne la définissez manuellement que si la bande tombe au mauvais endroit — sur certains autoradios, la barre supérieure est dessinée par le lanceur, et Android ignore sa présence.</string>
 </resources>

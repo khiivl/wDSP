@@ -254,4 +254,9 @@ Yleinen oletus: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ei vielä mitattu</string>
     <string name="toast_saved_to">Tallennettu kohteeseen %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Peittävyys</string>
+    <string name="status_bar_height_manual">Nauhan korkeus</string>
+    <string name="status_bar_offset_y">Etäisyys ylhäältä</string>
+    <string name="status_bar_placement_hint">Jätä korkeus arvoon 0, niin sovellus mittaa palkin itse. Aseta se manuaalisesti vain, jos nauha on väärässä paikassa — joissakin soittimissa yläpalkin piirtää launcher, eikä Android tiedä sen olemassaolosta.</string>
 </resources>

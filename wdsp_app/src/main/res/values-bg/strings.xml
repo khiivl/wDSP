@@ -254,4 +254,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Още няма измерване</string>
     <string name="toast_saved_to">Запазено в %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Непрозрачност</string>
+    <string name="status_bar_height_manual">Височина на лентата</string>
+    <string name="status_bar_offset_y">Разстояние от върха</string>
+    <string name="status_bar_placement_hint">Оставете височината 0 и приложението само ще измери лентата. Задайте я ръчно само ако лентата е на грешното място — при някои мултимедии горната лента се рисува от стартера и Android не знае за нея.</string>
 </resources>

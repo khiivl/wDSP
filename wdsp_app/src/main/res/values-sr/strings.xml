@@ -254,4 +254,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Још ништа није измерено</string>
     <string name="toast_saved_to">Сачувано у %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Непрозирност</string>
+    <string name="status_bar_height_manual">Висина траке</string>
+    <string name="status_bar_offset_y">Удаљеност од врха</string>
+    <string name="status_bar_placement_hint">Оставите висину на 0 и апликација ће сама измерити траку. Поставите је ручно само ако трака заврши на погрешном месту — на неким радио уређајима горњу траку црта покретач и Android не зна да је ту.</string>
 </resources>

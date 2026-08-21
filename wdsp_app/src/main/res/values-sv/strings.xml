@@ -242,4 +242,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Inget mätt ännu</string>
     <string name="toast_saved_to">Sparat i %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacitet</string>
+    <string name="status_bar_height_manual">Remsans höjd</string>
+    <string name="status_bar_offset_y">Avstånd från toppen</string>
+    <string name="status_bar_placement_hint">Låt höjden vara 0 så mäter appen fältet själv. Ställ in det manuellt bara om remsan hamnar på fel ställe — på vissa bilradioapparater ritas det översta fältet av launchern och Android vet inte att det finns där.</string>
 </resources>

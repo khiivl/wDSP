@@ -250,4 +250,9 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Aún sin medir</string>
     <string name="toast_saved_to">Guardado en %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacidad</string>
+    <string name="status_bar_height_manual">Altura de la tira</string>
+    <string name="status_bar_offset_y">Distancia desde arriba</string>
+    <string name="status_bar_placement_hint">Dejá la altura en 0 y la aplicación mide la barra sola. Ajustala a mano solo si la tira queda en el lugar equivocado — en algunas radios, la barra superior la dibuja el launcher y Android no sabe que está ahí.</string>
 </resources>

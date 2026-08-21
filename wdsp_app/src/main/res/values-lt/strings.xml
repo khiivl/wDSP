@@ -254,4 +254,9 @@ Bendras numatytasis: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Dar nieko neišmatuota</string>
     <string name="toast_saved_to">Įrašyta į %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Nepermatomumas</string>
+    <string name="status_bar_height_manual">Juostos aukštis</string>
+    <string name="status_bar_offset_y">Atstumas nuo viršaus</string>
+    <string name="status_bar_placement_hint">Palikite 0 aukštį ir programa pati išmatuos juostą. Nustatykite rankiniu būdu tik tada, jei juosta atsiduria netinkamoje vietoje — kai kuriuose grotuvuose viršutinę juostą piešia paleidiklis, o Android nežino, kad ji ten yra.</string>
 </resources>

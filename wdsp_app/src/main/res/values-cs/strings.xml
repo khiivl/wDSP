@@ -254,4 +254,9 @@ Globální výchozí: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Zatím nic nezměřeno</string>
     <string name="toast_saved_to">Uloženo do %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Krytí</string>
+    <string name="status_bar_height_manual">Výška pruhu</string>
+    <string name="status_bar_offset_y">Vzdálenost od shora</string>
+    <string name="status_bar_placement_hint">Nechte výšku 0 a aplikace si pruh změří sama. Ručně ji nastavte pouze tehdy, pokud je pruh na špatném místě — na některých autorádiích horní pruh kreslí launcher a Android o něm neví.</string>
 </resources>

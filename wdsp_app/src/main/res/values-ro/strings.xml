@@ -254,4 +254,9 @@ Implicit global: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Încă nimic măsurat</string>
     <string name="toast_saved_to">Salvat în %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacitate</string>
+    <string name="status_bar_height_manual">Înălțimea benzii</string>
+    <string name="status_bar_offset_y">Distanța de la vârf</string>
+    <string name="status_bar_placement_hint">Lăsați înălțimea la 0 și aplicația măsoară singură bara. Setați manual doar dacă banda ajunge în locul greșit — pe unele playere auto bara superioară este desenată de launcher, iar Android nu știe că există.</string>
 </resources>

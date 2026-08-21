@@ -254,4 +254,9 @@ Genel Varsayılan: %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Henüz ölçüm yok</string>
     <string name="toast_saved_to">Şuraya kaydedildi: %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opaklık</string>
+    <string name="status_bar_height_manual">Şerit yüksekliği</string>
+    <string name="status_bar_offset_y">Üstten uzaklık</string>
+    <string name="status_bar_placement_hint">Yüksekliği 0 bırakın, uygulama çubuğu kendisi ölçsün. Yalnızca şerit yanlış yere düşerse manuel ayarlayın — bazı araç radyolarında üst çubuk başlatıcı (launcher) tarafından çizilir ve Android bunun orada olduğunu bilmez.</string>
 </resources>
