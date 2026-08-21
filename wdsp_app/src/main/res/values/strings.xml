@@ -260,4 +260,13 @@
     <string name="room_measure_nothing">Nothing measured yet</string>
     <string name="toast_saved_to">Saved to %1$s</string>
     <string name="freq_off">Off</string>
+    <string name="system_report_label">System report</string>
+    <string name="system_report_desc">Writes down how this unit handles volume, routing and the microphone. Needed to fix the volume resetting after a Bluetooth call, quiet navigation prompts, and a measurement that will not start.</string>
+    <string name="system_report_button">Collect</string>
+    <string name="system_report_working">Collecting…</string>
+    <string name="system_report_title">System report</string>
+    <string name="system_report_saved">Saved to:\n\n%1$s\n\nTo also catch the volume bug: make one short phone call over Bluetooth, hang up, and collect the report a second time. The second file will contain what changed during the call.</string>
+    <string name="system_report_failed">The report could not be written.</string>
+    <string name="mic_denied_title">No microphone</string>
+    <string name="mic_denied">Android is not asking for the microphone any more, because the permission was refused earlier. Nothing can be measured without it.\n\nOpen Settings → Apps → wDSP → Permissions and allow the microphone, then try again.</string>
 </resources>

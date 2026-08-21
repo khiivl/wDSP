@@ -881,6 +881,13 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
     private TextView tvRoomStatus;
+    private TextView tvSystemReportStatus;
+
+    /**
+     * Remembers that the microphone has been asked for at least once, so that a later refusal can
+     * be told apart from never having asked. See {@link #ensureMicrophone()}.
+     */
+    private static final String PREF_ASKED_RECORD_AUDIO = "asked_record_audio";
 
     /** Trim slider spans +/-250 ms, stored centred on this offset because SeekBar has no sign. */
     private static final int LATENCY_TRIM_OFFSET = 250;
@@ -938,6 +945,12 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(sendButton);
         measureButton.setOnClickListener(v -> startRoomMeasurement());
         sendButton.setOnClickListener(v -> saveRoomMeasurement());
+
+        tvSystemReportStatus = findViewById(R.id.tv_system_report_status);
+        TextView reportButton = findViewById(R.id.btn_system_report);
+        TouchGlow.attach(reportButton);
+        reportButton.setOnClickListener(v -> collectSystemReport());
+
         styleActionButtons();
         // The address is a link as well as a label: a tester who has never sent anything to a
         // developer should not have to work out where it goes.
@@ -954,12 +967,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Without the microphone there is nothing to measure with, so ask rather than fail.
-            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
-            return;
-        }
+        if (!ensureMicrophone()) return;
         // Taken here rather than in the measurement, because the system-bar insets can only be
         // read from a window that exists - and the report is written from a background thread.
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
@@ -978,6 +986,88 @@ public class SettingsActivity extends AppCompatActivity {
                         : getString(R.string.room_measure_failed)));
             }
         });
+    }
+
+    /**
+     * Makes sure there is a microphone to work with, and says so when there is not.
+     *
+     * <p>This used to be two lines that asked for the permission and returned. That is fine the
+     * first time and silently broken afterwards: once a permission has been refused twice, Android
+     * stops showing the dialog and hands back a refusal immediately, so the button appeared
+     * completely dead - one tester reported pressing it and nothing happening at all, with no way
+     * to tell whether the app was broken or their unit was.
+     *
+     * <p>{@code shouldShowRequestPermissionRationale} cannot tell "never asked" from "asked and
+     * permanently refused" on its own - it is false in both cases - so a flag records that the ask
+     * has happened at least once, and the two are distinguishable from then on.
+     *
+     * @return true when the measurement may go ahead
+     */
+    private boolean ensureMicrophone() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        SharedPreferences p = ThemeManager.prefs(this);
+        boolean asked = p.getBoolean(PREF_ASKED_RECORD_AUDIO, false);
+        if (asked && !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+            ThemedDialog.notice(this, getString(R.string.mic_denied_title),
+                    getString(R.string.mic_denied));
+            return false;
+        }
+        p.edit().putBoolean(PREF_ASKED_RECORD_AUDIO, true).apply();
+        requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+        return false;
+    }
+
+    /**
+     * Collects everything known about this unit's audio and writes it next to the measurements.
+     *
+     * <p>Separate from the cabin measurement on purpose. The units that most need diagnosing are
+     * the ones where the measurement will not run, and a diagnostic that can only be produced by a
+     * working measurement is no use to them. This one needs nothing to work first.
+     *
+     * <p>The microphone probe is the slow part - it opens six audio sources in turn - so the whole
+     * thing runs off the UI thread.
+     */
+    private void collectSystemReport() {
+        final boolean withMicrophone = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        tvSystemReportStatus.setText(getString(R.string.system_report_working));
+        new Thread(() -> {
+            String report;
+            try {
+                report = SystemDiagnostics.report(this, withMicrophone);
+            } catch (Throwable t) {
+                Log.e("wDSP_Settings", "could not build the system report", t);
+                report = "the report failed while being collected: " + t;
+            }
+            final String name = "wdsp_system_report_"
+                    + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                    .format(new java.util.Date()) + ".txt";
+            // Straight into Download/wDSP rather than the app's own folder: this one is not packed
+            // into an archive afterwards, so where it lands is where the tester has to find it.
+            boolean written = false;
+            Downloads.Pending pending = Downloads.create(this, name, "text/plain");
+            if (pending != null) {
+                try {
+                    pending.stream.write(report.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    pending.stream.close();
+                    Downloads.finish(this, pending);
+                    written = true;
+                } catch (Throwable t) {
+                    Log.e("wDSP_Settings", "could not write the system report", t);
+                    Downloads.discard(this, pending);
+                }
+            }
+            final boolean ok = written;
+            runOnUiThread(() -> {
+                tvSystemReportStatus.setText("");
+                ThemedDialog.notice(this, getString(R.string.system_report_title),
+                        ok ? getString(R.string.system_report_saved, Downloads.pathFor(name))
+                           : getString(R.string.system_report_failed));
+            });
+        }, "wDSP_SystemReport").start();
     }
 
     /**
@@ -1521,6 +1611,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_sync_measure));
         styleActionButton(findViewById(R.id.btn_room_measure));
         styleActionButton(findViewById(R.id.btn_room_send));
+        styleActionButton(findViewById(R.id.btn_system_report));
     }
 
     private void tintSlider(Slider s, int accent) {

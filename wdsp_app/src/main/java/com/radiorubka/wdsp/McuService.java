@@ -420,6 +420,11 @@ public class McuService extends Service implements LocationListener {
 
         registerReceiver(controlReceiver, controlFilter);
 
+        // Armed here rather than when the diagnostic screen is opened, because the events worth
+        // recording - a Bluetooth call taking the audio path and giving it back - happen while
+        // nobody is looking at the app. It only listens; there is no polling behind this.
+        SystemDiagnostics.arm(this);
+
         applyCurrentSettings();
     }
 

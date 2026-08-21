@@ -45,6 +45,45 @@ public final class HardwareProfile {
     }
 
     /**
+     * Which AKM audio hub sits between the MCU and the amplifier, if any.
+     *
+     * <h2>Why this matters more than it looks</h2>
+     *
+     * Some units carry a second DSP - an AK7738 or an AK7604 - in front of the sound processor.
+     * On those, the radio and the second Bluetooth module are analogue inputs of that hub, Android
+     * is a digital input, and the MCU cross-fades between them. wDSP never talks to it, but almost
+     * every "the volume did something strange" report comes from units that have one: the hub's
+     * master volume is re-pushed on every source change, and the value pushed is whatever the
+     * platform's per-source volume property says at that instant.
+     *
+     * <h2>How the platform decides, and why this copies it exactly</h2>
+     *
+     * Not by probing. The framework reads the MCU version string, takes the part after the last
+     * dot, and looks at its <b>second character</b>: 2 means AK7738, 3 means AK7604, anything else
+     * means no hub at all. A letter counts on from 9. That is the whole test, and it is reproduced
+     * here character for character - a report that disagrees with the platform about which DSP is
+     * fitted is worse than no report.
+     *
+     * @return "AK7738", "AK7604" or "none"
+     */
+    public static synchronized String audioHub() {
+        if (audioHub == null) {
+            audioHub = "none";
+            String code = mcuCode();
+            if (code != null && code.length() >= 6) {
+                char c = code.charAt(1);
+                int type = Character.isDigit(c) ? c - '0' : c + 10 - 'a';
+                if (type == 2) audioHub = "AK7738";
+                else if (type == 3) audioHub = "AK7604";
+            }
+            Log.i(TAG, "audio hub=" + audioHub + " from MCU code=" + code);
+        }
+        return audioHub;
+    }
+
+    private static String audioHub;
+
+    /**
      * True when the unit carries the ROHM BU32107, false when it is the cut-down BD37544.
      *
      * The MCU speaks one command set to both chips and makes the lesser one look complete, so the
@@ -254,7 +293,8 @@ public final class HardwareProfile {
         return value == null || value.isEmpty() ? "?" : value;
     }
 
-    private static String systemProperty(String key) {
+    /** Package-visible: {@link SystemDiagnostics} reads a long list of these for its report. */
+    static String systemProperty(String key) {
         try {
             @SuppressWarnings("PrivateApi")
             Class<?> systemProperties = Class.forName("android.os.SystemProperties");

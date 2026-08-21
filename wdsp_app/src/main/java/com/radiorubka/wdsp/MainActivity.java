@@ -254,6 +254,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // The service arms this too, and normally gets there first. This is the second anchor:
+        // after an update the service is not running again until the unit is restarted, and a
+        // tester who opens the app and makes a call in that window would otherwise record nothing.
+        // Arming twice is a no-op.
+        SystemDiagnostics.arm(this);
+
         for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
             SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
         }
