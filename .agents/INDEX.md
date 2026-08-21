@@ -11,6 +11,7 @@ underneath it.
 |---|---|
 | [PLATFORM_AUDIO.md](PLATFORM_AUDIO.md) | touching the analyser, the visualiser, latency, or anything that records or plays for measurement |
 | [HARDWARE.md](HARDWARE.md) | touching the MCU, the equaliser frames, the volume, or the preferences that carry them |
+| [BU32107.md](BU32107.md) | touching anything the sound processor does: delays, equaliser, crossovers, subwoofer - it holds the chip register map and what each MCU command becomes |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | working on automatic equalisation, delays or anything involving the microphone as an instrument |
 
 ## The three things most likely to waste a day
