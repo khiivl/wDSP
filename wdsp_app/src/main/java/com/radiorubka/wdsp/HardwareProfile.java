@@ -146,19 +146,53 @@ public final class HardwareProfile {
         } catch (Throwable ignored) {
         }
 
+        int insetTop = -1;
         if (view != null && view.getRootWindowInsets() != null) {
             android.view.WindowInsets insets = view.getRootWindowInsets();
             // The deprecated accessors are used on purpose: this app targets API 29, where
             // getInsets(Type.systemBars()) does not exist yet.
+            insetTop = insets.getSystemWindowInsetTop();
             sb.append(String.format(Locale.US,
                     ", system bars: top=%d bottom=%d left=%d right=%d px",
-                    insets.getSystemWindowInsetTop(), insets.getSystemWindowInsetBottom(),
+                    insetTop, insets.getSystemWindowInsetBottom(),
                     insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetRight()));
             if (insets.getDisplayCutout() != null) {
                 sb.append(", cutout present");
             }
         } else {
             sb.append(", system bars: not sampled");
+        }
+
+        // What the overlay would actually be told, and what it is currently using.
+        int visibleTop = -1;
+        if (view != null) {
+            android.graphics.Rect frame = new android.graphics.Rect();
+            view.getWindowVisibleDisplayFrame(frame);
+            visibleTop = frame.top;
+            sb.append(", visible frame top=").append(visibleTop);
+        }
+        int stored = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                .getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HEIGHT_PX, 0);
+        sb.append(", overlay height in use=").append(stored > 0 ? stored : declared);
+
+        // 🔴 The Tesla case, stated rather than left to be worked out from four numbers.
+        //
+        // The status-bar visualiser is placed from the height Android reserves at the top. That is
+        // right wherever Android really owns a bar there - including this platform's own heavily
+        // customised one, which reports 72 px and works. It is wrong where the strip along the top
+        // belongs to the launcher instead: Android then reserves nothing, the calibration in
+        // MainActivity does nothing because it only acts when the visible frame starts below zero,
+        // and the overlay falls back to a resource that describes a bar which is not there.
+        //
+        // Some of these units carry a vendor modification that gives Android a real bar again, and
+        // on those the app is fine - which is exactly why the fault looks random from outside.
+        if (visibleTop == 0 && insetTop == 0) {
+            sb.append("  <-- NO ANDROID STATUS BAR: the strip on screen belongs to the launcher, "
+                    + "so no automatic height can be right here");
+        } else if (visibleTop >= 0 && declared > 0 && Math.abs(visibleTop - declared) > 4) {
+            sb.append(String.format(Locale.US,
+                    "  <-- MISMATCH: the resource says %d px and the window system says %d",
+                    declared, visibleTop));
         }
 
         String launcher = launcherPackage(context);
