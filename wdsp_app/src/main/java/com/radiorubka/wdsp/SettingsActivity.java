@@ -852,7 +852,10 @@ public class SettingsActivity extends AppCompatActivity {
         // portrait unit - which are exactly the machines that need the control in the first
         // place. Full height for both, so the strip can be put anywhere on the screen,
         // including along the bottom: it is the owner's dashboard.
-        int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+        // From the manager, not from this activity's resources. They are not the same number -
+        // an activity drawing behind the system bars reports a different screen from a service -
+        // and the strip is placed in display coordinates, so the display is the one that counts.
+        int screenHeightPx = sbm.screenHeight();
         seekStatusBarHeight.setValueTo(screenHeightPx);
         seekStatusBarHeight.setValue(Math.min(manualHeight, screenHeightPx));
         // The offset stops where the strip would start leaving the screen, not at the screen's

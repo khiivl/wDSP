@@ -152,7 +152,7 @@ public class StatusBarVisualizerManager {
 
     /** The lowest offset that still leaves the whole strip on the screen. */
     public int maxOffsetY() {
-        return Math.max(0, getScreenHeight() - getStatusBarHeight());
+        return Math.max(0, screenHeight() - getStatusBarHeight());
     }
 
     public void setOffsetY(int px) {
@@ -191,9 +191,52 @@ public class StatusBarVisualizerManager {
         }
     }
 
-    private int getScreenWidth() {
+    /**
+     * The display the overlay actually lives on, not the one the app was configured for.
+     *
+     * <h2>Why not getResources().getDisplayMetrics()</h2>
+     *
+     * Because there is more than one answer to "how big is the screen" and they disagree. Resource
+     * metrics describe the window a context was configured for, and an activity that draws behind
+     * the system bars gets a different number from a service that does not - so the slider's travel
+     * was computed against one screen and the overlay placed on another. After a few moves of the
+     * height slider the two drifted far enough apart to put the bottom of the strip below the
+     * edge, which is exactly the fault this was supposed to prevent.
+     *
+     * <p>An overlay window is positioned in display coordinates, so the display is the only
+     * measurement that can be right. Everything that places the strip - here and in the settings
+     * sliders - now asks this.
+     */
+    public int screenWidth() {
+        return realDisplaySize()[0];
+    }
+
+    public int screenHeight() {
+        return realDisplaySize()[1];
+    }
+
+    private int[] realDisplaySize() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Rect bounds =
+                        windowManager.getCurrentWindowMetrics().getBounds();
+                if (bounds.width() > 0 && bounds.height() > 0) {
+                    return new int[]{bounds.width(), bounds.height()};
+                }
+            } else {
+                android.graphics.Point point = new android.graphics.Point();
+                windowManager.getDefaultDisplay().getRealSize(point);
+                if (point.x > 0 && point.y > 0) return new int[]{point.x, point.y};
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not read the display size, falling back to resources", t);
+        }
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        return dm.widthPixels;
+        return new int[]{dm.widthPixels, dm.heightPixels};
+    }
+
+    private int getScreenWidth() {
+        return screenWidth();
     }
 
     public void setAudioGating(int channel, boolean muted) {
@@ -333,10 +376,6 @@ public class StatusBarVisualizerManager {
         return Math.max(0, Math.min(freeSpace, (int) (freeSpace * clamped)));
     }
 
-    private int getScreenHeight() {
-        DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        return dm.heightPixels;
-    }
 
     public void removeOverlay() {
         mainHandler.post(() -> {
