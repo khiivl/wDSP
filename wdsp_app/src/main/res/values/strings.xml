@@ -273,6 +273,10 @@
     <string name="screensaver_delay">Appears after</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Backdrop</string>
+    <string name="screensaver_width">Width</string>
+    <string name="screensaver_height">Height</string>
+    <string name="screensaver_bright_day">Brightness, day</string>
+    <string name="screensaver_bright_night">Brightness, night</string>
     <string name="screensaver_apps">Never over these apps</string>
     <string name="screensaver_apps_none">Nothing selected</string>
     <string name="screensaver_apps_count">%1$d selected</string>

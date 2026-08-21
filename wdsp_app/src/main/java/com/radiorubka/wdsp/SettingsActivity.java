@@ -908,7 +908,11 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvRoomStatus;
     private SwitchCompat switchScreensaver;
     private Slider seekScreensaverDelay, seekScreensaverBg;
+    private Slider seekScreensaverWidth, seekScreensaverHeight;
+    private Slider seekScreensaverBrightDay, seekScreensaverBrightNight;
     private TextView tvScreensaverDelay, tvScreensaverBg, tvScreensaverApps;
+    private TextView tvScreensaverWidth, tvScreensaverHeight;
+    private TextView tvScreensaverBrightDay, tvScreensaverBrightNight;
     private TextView tvSystemReportStatus;
 
     /**
@@ -973,6 +977,14 @@ public class SettingsActivity extends AppCompatActivity {
         tvScreensaverDelay = findViewById(R.id.tv_screensaver_delay);
         tvScreensaverBg = findViewById(R.id.tv_screensaver_bg);
         tvScreensaverApps = findViewById(R.id.tv_screensaver_apps);
+        seekScreensaverWidth = findViewById(R.id.seek_screensaver_width);
+        seekScreensaverHeight = findViewById(R.id.seek_screensaver_height);
+        seekScreensaverBrightDay = findViewById(R.id.seek_screensaver_bright_day);
+        seekScreensaverBrightNight = findViewById(R.id.seek_screensaver_bright_night);
+        tvScreensaverWidth = findViewById(R.id.tv_screensaver_width);
+        tvScreensaverHeight = findViewById(R.id.tv_screensaver_height);
+        tvScreensaverBrightDay = findViewById(R.id.tv_screensaver_bright_day);
+        tvScreensaverBrightNight = findViewById(R.id.tv_screensaver_bright_night);
         TextView pickButton = findViewById(R.id.btn_screensaver_apps);
         if (pickButton != null) {
             TouchGlow.attach(pickButton);
@@ -1011,6 +1023,38 @@ public class SettingsActivity extends AppCompatActivity {
                 if (fromUser) ss.setBackgroundAlpha(percent);
             });
         }
+
+        // Size and brightness. All four are percentages and all four resize or repaint the band
+        // while it is on screen, so they can be judged with the thing in front of you rather than
+        // by imagining it.
+        if (seekScreensaverWidth != null) {
+            seekScreensaverWidth.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverWidth.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setWidthFraction(percent / 100f);
+            });
+        }
+        if (seekScreensaverHeight != null) {
+            seekScreensaverHeight.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverHeight.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setHeightFraction(percent / 100f);
+            });
+        }
+        if (seekScreensaverBrightDay != null) {
+            seekScreensaverBrightDay.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverBrightDay.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setBrightness(false, percent);
+            });
+        }
+        if (seekScreensaverBrightNight != null) {
+            seekScreensaverBrightNight.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverBrightNight.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setBrightness(true, percent);
+            });
+        }
     }
 
     private void loadScreensaverSettings() {
@@ -1026,15 +1070,54 @@ public class SettingsActivity extends AppCompatActivity {
             seekScreensaverBg.setValue(alpha);
             tvScreensaverBg.setText(getString(R.string.lbl_percent_fmt, alpha));
         }
+        bindPercentSlider(seekScreensaverWidth, tvScreensaverWidth,
+                Math.round(ss.widthFraction() * 100f));
+        bindPercentSlider(seekScreensaverHeight, tvScreensaverHeight,
+                Math.round(ss.heightFraction() * 100f));
+        bindPercentSlider(seekScreensaverBrightDay, tvScreensaverBrightDay, ss.brightness(false));
+        bindPercentSlider(seekScreensaverBrightNight, tvScreensaverBrightNight, ss.brightness(true));
         showScreensaverAppCount();
     }
 
+    /** Sets a percentage slider and its readout, without letting a stale value fall outside. */
+    private void bindPercentSlider(Slider slider, TextView readout, int percent) {
+        if (slider == null) return;
+        int clamped = Math.max((int) slider.getValueFrom(),
+                Math.min((int) slider.getValueTo(), percent));
+        slider.setValue(clamped);
+        if (readout != null) readout.setText(getString(R.string.lbl_percent_fmt, clamped));
+    }
+
+    /**
+     * Names the chosen apps rather than counting them.
+     *
+     * <p>"3 selected" answers the question nobody has. The list is short by nature - a person
+     * blocks two or three things - so it fits, and being able to read it without opening anything
+     * is the only real advantage a row-per-app layout would have had.
+     */
     private void showScreensaverAppCount() {
         if (tvScreensaverApps == null) return;
-        int count = ScreensaverManager.getInstance(this).blockedPackages().size();
-        tvScreensaverApps.setText(count == 0
-                ? getString(R.string.screensaver_apps_none)
-                : getString(R.string.screensaver_apps_count, count));
+        java.util.Set<String> blocked = ScreensaverManager.getInstance(this).blockedPackages();
+        if (blocked.isEmpty()) {
+            tvScreensaverApps.setText(getString(R.string.screensaver_apps_none));
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String pkg : blocked) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(appLabel(pkg));
+        }
+        tvScreensaverApps.setText(sb.toString());
+    }
+
+    /** The app's own name, falling back to the package when it has none we can read. */
+    private String appLabel(String pkg) {
+        try {
+            android.content.pm.PackageManager pm = getPackageManager();
+            return pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
+        } catch (Throwable ignored) {
+            return pkg;
+        }
     }
 
     /**
@@ -1052,15 +1135,19 @@ public class SettingsActivity extends AppCompatActivity {
                     getString(R.string.screensaver_apps_none));
             return;
         }
-        android.content.pm.PackageManager pm = getPackageManager();
         java.util.List<String> labels = new java.util.ArrayList<>(packages.size());
-        for (String pkg : packages) {
-            String label = pkg;
-            try {
-                label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
-            } catch (Throwable ignored) {
-            }
-            labels.add(label);
+        for (String pkg : packages) labels.add(appLabel(pkg));
+        // Several launcher packages ship under the same name, and three rows reading "Launcher3"
+        // are three rows nobody can choose between. Where a label is not unique, the package goes
+        // with it - ugly, but only on the entries that need it.
+        java.util.Map<String, Integer> seen = new java.util.HashMap<>();
+        for (String label : labels) {
+            Integer n = seen.get(label);
+            seen.put(label, n == null ? 1 : n + 1);
+        }
+        for (int i = 0; i < labels.size(); i++) {
+            Integer n = seen.get(labels.get(i));
+            if (n != null && n > 1) labels.set(i, labels.get(i) + "  (" + packages.get(i) + ")");
         }
         java.util.Set<String> blocked = ss.blockedPackages();
         boolean[] checked = new boolean[packages.size()];
@@ -1724,7 +1811,9 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg,
-            R.id.label_screensaver_apps, R.id.tv_screensaver_apps
+            R.id.label_screensaver_apps,
+            R.id.label_screensaver_width, R.id.label_screensaver_height,
+            R.id.label_screensaver_bright_day, R.id.label_screensaver_bright_night
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
@@ -1749,6 +1838,14 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvSyncStatus != null) tvSyncStatus.setTextColor(secondaryText);
         if (tvScreensaverDelay != null) tvScreensaverDelay.setTextColor(valueColor);
         if (tvScreensaverBg != null) tvScreensaverBg.setTextColor(valueColor);
+        // The chosen apps are the user's own data, not an explanation of the control -
+        // secondary text made them too faint to read at a glance, which is the only way
+        // this line is ever read.
+        if (tvScreensaverApps != null) tvScreensaverApps.setTextColor(valueColor);
+        if (tvScreensaverWidth != null) tvScreensaverWidth.setTextColor(valueColor);
+        if (tvScreensaverHeight != null) tvScreensaverHeight.setTextColor(valueColor);
+        if (tvScreensaverBrightDay != null) tvScreensaverBrightDay.setTextColor(valueColor);
+        if (tvScreensaverBrightNight != null) tvScreensaverBrightNight.setTextColor(valueColor);
 
         // Tint status bar Sliders
         tintSlider(seekStatusBarWidth, accent);
@@ -1757,6 +1854,10 @@ public class SettingsActivity extends AppCompatActivity {
         tintSlider(seekStatusBarOffsetY, accent);
         tintSlider(seekScreensaverDelay, accent);
         tintSlider(seekScreensaverBg, accent);
+        tintSlider(seekScreensaverWidth, accent);
+        tintSlider(seekScreensaverHeight, accent);
+        tintSlider(seekScreensaverBrightDay, accent);
+        tintSlider(seekScreensaverBrightNight, accent);
         tintSlider(seekStatusBarAlpha, accent);
 
         // Update wheel brightness backgrounds

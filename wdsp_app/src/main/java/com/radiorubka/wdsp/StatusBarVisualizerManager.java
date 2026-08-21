@@ -321,14 +321,8 @@ public class StatusBarVisualizerManager {
                     PixelFormat.TRANSLUCENT
             );
             layoutParams.gravity = Gravity.TOP | Gravity.START;
-            layoutParams.x = calculateLeftPx();
-            layoutParams.y = offsetY();
-        } else {
-            layoutParams.height = getStatusBarHeight();
-            layoutParams.width = calculateWidthPx();
-            layoutParams.x = calculateLeftPx();
-            layoutParams.y = offsetY();
         }
+        fillGeometry();
 
         if (!isViewAttached) {
             try {
@@ -348,14 +342,87 @@ public class StatusBarVisualizerManager {
 
     private void updateWindowGeometry() {
         if (isViewAttached && visualizerView != null && layoutParams != null) {
-            layoutParams.height = getStatusBarHeight();
-            layoutParams.width = calculateWidthPx();
-            layoutParams.x = calculateLeftPx();
-            layoutParams.y = offsetY();
+            fillGeometry();
             try {
                 windowManager.updateViewLayout(visualizerView, layoutParams);
             } catch (Throwable ignored) {}
         }
+    }
+
+    /**
+     * Writes the strip's size and position into {@code layoutParams} - the only place that does.
+     *
+     * <p>There used to be two, one on the attach path and one on the update path, and they had to
+     * agree. They stopped agreeing the moment the screensaver could borrow the window: the update
+     * path learned about it and the attach path did not, so the next time anything re-evaluated
+     * visibility - and the audio gating does that constantly - the strip snapped back to its own
+     * size underneath the backdrop.
+     */
+    private void fillGeometry() {
+        if (layoutParams == null) return;
+        if (screensaverBounds != null) {
+            layoutParams.width = screensaverBounds[0];
+            layoutParams.height = screensaverBounds[1];
+            layoutParams.x = screensaverBounds[2];
+            layoutParams.y = screensaverBounds[3];
+            return;
+        }
+        layoutParams.height = getStatusBarHeight();
+        layoutParams.width = calculateWidthPx();
+        layoutParams.x = calculateLeftPx();
+        layoutParams.y = offsetY();
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // lending the strip to the screensaver
+    //
+    // The screensaver shows the same widget, larger. Not a copy of it - the same one. Two
+    // visualiser views would both be listening to the spectrum engine and both drawing, for one
+    // picture; and a copy would drift from the original the first time a theme or a band count
+    // changed in one place and not the other.
+    // -------------------------------------------------------------------------------------------
+
+    /** width, height, x, y while the screensaver has it; null the rest of the time. */
+    private int[] screensaverBounds;
+    private int alphaBeforeScreensaver = -1;
+
+    public boolean isAttached() {
+        return isViewAttached && visualizerView != null;
+    }
+
+    /**
+     * Hands the strip to the screensaver: new size, new brightness, and lifted above the backdrop.
+     *
+     * <p>Removing and re-adding the view is not laziness - {@code updateViewLayout} keeps a window
+     * where it is in the stacking order, and the backdrop was added after the strip, so without
+     * this the strip would be painted underneath it.
+     */
+    public void lendToScreensaver(int width, int height, int x, int y, int alphaPercent) {
+        if (!isAttached()) return;
+        screensaverBounds = new int[]{width, height, x, y};
+        if (alphaBeforeScreensaver < 0) alphaBeforeScreensaver = alphaPercent;
+        visualizerView.setAlphaPercent(alphaPercent);
+        try {
+            windowManager.removeView(visualizerView);
+            fillGeometry();
+            windowManager.addView(visualizerView, layoutParams);
+        } catch (Throwable t) {
+            Log.w(TAG, "could not lend the strip to the screensaver", t);
+            screensaverBounds = null;
+        }
+    }
+
+    /** Puts it back exactly as it was. */
+    public void takeBackFromScreensaver() {
+        screensaverBounds = null;
+        if (!isAttached()) return;
+        visualizerView.setAlphaPercent(alphaPercent);
+        alphaBeforeScreensaver = -1;
+        updateWindowGeometry();
+    }
+
+    public boolean isLentToScreensaver() {
+        return screensaverBounds != null;
     }
 
     private int calculateWidthPx() {

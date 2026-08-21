@@ -63,9 +63,19 @@ public final class ScreensaverManager {
     public static final String PREF_BG_ALPHA = "ss_bg_alpha";
     /** Packages that are never covered, stored as a string set. */
     public static final String PREF_BLOCKED = "ss_blocked_pkgs";
+    /** Width of the band, as a fraction of the screen. Edge to edge by default. */
+    public static final String PREF_WIDTH_F = "ss_width_f";
+    /** Height of the band, as a fraction of the screen height. See {@link #heightFraction()}. */
+    public static final String PREF_HEIGHT_F = "ss_height_f";
+    /** Brightness of the bars, kept separately for the two themes. */
+    public static final String PREF_BRIGHT_DAY = "ss_bright_day";
+    public static final String PREF_BRIGHT_NIGHT = "ss_bright_night";
 
     public static final int DEFAULT_DELAY_S = 60;
     public static final int DEFAULT_BG_ALPHA = 85;
+    public static final float DEFAULT_WIDTH_F = 1.0f;
+    public static final int DEFAULT_BRIGHT_DAY = 100;
+    public static final int DEFAULT_BRIGHT_NIGHT = 70;
 
     private static final long POLL_MS = 2000L;
 
@@ -81,7 +91,8 @@ public final class ScreensaverManager {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private FrameLayout overlayRoot;
-    private StatusBarVisualizerView visualizerView;
+    /** Only built when the owner has the status-bar strip switched off. */
+    private StatusBarVisualizerView standIn;
     private boolean attached = false;
 
     private boolean screenOn = true;
@@ -137,6 +148,97 @@ public final class ScreensaverManager {
         prefs.edit().putInt(PREF_BG_ALPHA, Math.max(0, Math.min(100, percent))).apply();
         handler.post(() -> {
             if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
+        });
+    }
+
+    public float widthFraction() {
+        return clamp01(prefs.getFloat(PREF_WIDTH_F, DEFAULT_WIDTH_F), 0.10f);
+    }
+
+    public void setWidthFraction(float fraction) {
+        prefs.edit().putFloat(PREF_WIDTH_F, clamp01(fraction, 0.10f)).apply();
+        applyGeometry();
+    }
+
+    /**
+     * How tall the band is, as a fraction of the screen height.
+     *
+     * <h2>Where the default comes from</h2>
+     *
+     * From the strip the owner has already set up, scaled to the width of the screen. Take its
+     * height and its width, stretch it edge to edge, and keep the shape: a 512 by 72 strip on a
+     * 1280 wide screen becomes 1280 by 180. That is the "same thing, bigger" a person expects
+     * before they touch anything, and it is why this is not simply a fixed number.
+     *
+     * <p>After the slider is moved the two are independent - moving the width does not drag the
+     * height around behind it, because a control that changes something you did not ask it to
+     * change is worse than one that needs two movements.
+     */
+    public float heightFraction() {
+        float stored = prefs.getFloat(PREF_HEIGHT_F, -1f);
+        if (stored > 0f) return clamp01(stored, 0.03f);
+        return clamp01(proportionalHeightFraction(), 0.03f);
+    }
+
+    private float proportionalHeightFraction() {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        int screenH = Math.max(1, strip.screenHeight());
+        float stripWidthF = Math.max(0.05f, prefs.getFloat(
+                StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F,
+                StatusBarVisualizerManager.DEFAULT_WIDTH_F));
+        float scaledHeightPx = strip.getStatusBarHeight() / stripWidthF;
+        return scaledHeightPx / screenH;
+    }
+
+    public void setHeightFraction(float fraction) {
+        prefs.edit().putFloat(PREF_HEIGHT_F, clamp01(fraction, 0.03f)).apply();
+        applyGeometry();
+    }
+
+    /** Bar brightness for the theme in force, 10..100. */
+    public int brightness() {
+        return brightness(ThemeManager.isNight(context));
+    }
+
+    public int brightness(boolean night) {
+        int stored = prefs.getInt(night ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
+                night ? DEFAULT_BRIGHT_NIGHT : DEFAULT_BRIGHT_DAY);
+        return Math.max(10, Math.min(100, stored));
+    }
+
+    public void setBrightness(boolean night, int percent) {
+        prefs.edit().putInt(night ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
+                Math.max(10, Math.min(100, percent))).apply();
+        applyGeometry();
+        handler.post(() -> {
+            if (standIn != null) standIn.setAlphaPercent(brightness());
+        });
+    }
+
+    private static float clamp01(float value, float min) {
+        return Math.max(min, Math.min(1.0f, value));
+    }
+
+    /** Re-sizes it in place, so a slider moves it while it is on screen. */
+    private void applyGeometry() {
+        handler.post(() -> {
+            if (!attached || overlayRoot == null) return;
+            StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+            int screenW = strip.screenWidth();
+            int screenH = strip.screenHeight();
+            int w = Math.max(1, Math.round(screenW * widthFraction()));
+            int h = Math.max(1, Math.round(screenH * heightFraction()));
+            if (strip.isLentToScreensaver()) {
+                strip.lendToScreensaver(w, h, Math.max(0, (screenW - w) / 2),
+                        Math.max(0, (screenH - h) / 2), brightness());
+                return;
+            }
+            if (standIn == null) return;
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) standIn.getLayoutParams();
+            if (lp == null) return;
+            lp.width = w;
+            lp.height = h;
+            standIn.setLayoutParams(lp);
         });
     }
 
@@ -265,6 +367,8 @@ public final class ScreensaverManager {
                 buildOverlay();
                 windowManager.addView(overlayRoot, overlayParams());
                 attached = true;
+                // Backdrop first, then the strip on top of it. Order is the z-order here.
+                lendStripOrBuildOwn();
                 Log.i(TAG, "screensaver shown over " + lastForeground);
             } catch (Throwable t) {
                 Log.w(TAG, "could not show the screensaver", t);
@@ -273,9 +377,38 @@ public final class ScreensaverManager {
         });
     }
 
+    /**
+     * Stretches the owner's own strip across the screen, or draws a stand-in if there is none.
+     *
+     * <p>The stand-in matters: somebody can have the status-bar strip switched off and still want
+     * a screensaver, and refusing to appear in that case would look like the feature is broken.
+     */
+    private void lendStripOrBuildOwn() {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        int screenW = strip.screenWidth();
+        int screenH = strip.screenHeight();
+        int w = Math.max(1, Math.round(screenW * widthFraction()));
+        int h = Math.max(1, Math.round(screenH * heightFraction()));
+        int x = Math.max(0, (screenW - w) / 2);
+        int y = Math.max(0, (screenH - h) / 2);
+
+        if (strip.isAttached()) {
+            strip.lendToScreensaver(w, h, x, y, brightness());
+            return;
+        }
+        standIn = buildVisualizer();
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
+        lp.gravity = Gravity.CENTER;
+        overlayRoot.addView(standIn, lp);
+    }
+
     public void hide() {
         handler.post(() -> {
             if (!attached || overlayRoot == null) return;
+            // The strip goes back first: if removing the backdrop threw, the thing the owner
+            // actually looks at every day is still the one that gets restored.
+            StatusBarVisualizerManager.getInstance(context).takeBackFromScreensaver();
+            standIn = null;
             try {
                 windowManager.removeView(overlayRoot);
             } catch (Throwable ignored) {
@@ -289,19 +422,6 @@ public final class ScreensaverManager {
         overlayRoot = new FrameLayout(context);
         overlayRoot.setBackgroundColor(backdropColor());
 
-        visualizerView = new StatusBarVisualizerView(context);
-        visualizerView.setTheme(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME,
-                StatusBarVisualizerManager.DEFAULT_THEME));
-        visualizerView.setHueShift(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE,
-                StatusBarVisualizerManager.DEFAULT_HUE));
-        visualizerView.setAlphaPercent(100);
-        visualizerView.setBandCount(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_BANDS,
-                StatusBarVisualizerManager.DEFAULT_BANDS));
-        visualizerView.setNormalizationEnabled(true);
-
-        overlayRoot.addView(visualizerView, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-
         // One touch anywhere puts it away. The window is focusable-free but touchable, so this is
         // the only thing it consumes - and consuming it is right: the tap was meant to wake the
         // screen up, not to press whatever happens to be underneath.
@@ -309,6 +429,19 @@ public final class ScreensaverManager {
             if (event.getActionMasked() == MotionEvent.ACTION_DOWN) hide();
             return true;
         });
+    }
+
+    private StatusBarVisualizerView buildVisualizer() {
+        StatusBarVisualizerView view = new StatusBarVisualizerView(context);
+        view.setTheme(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME,
+                StatusBarVisualizerManager.DEFAULT_THEME));
+        view.setHueShift(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE,
+                StatusBarVisualizerManager.DEFAULT_HUE));
+        view.setAlphaPercent(brightness());
+        view.setBandCount(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_BANDS,
+                StatusBarVisualizerManager.DEFAULT_BANDS));
+        view.setNormalizationEnabled(true);
+        return view;
     }
 
     private int backdropColor() {
