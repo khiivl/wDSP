@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Implicit global: %1$s</string>
     <string name="room_measure_running">Se măsoară: %1$s</string>
     <string name="room_measure_done">Gata — trimitem rezultatul?</string>
     <string name="room_measure_failed">Măsurarea a eșuat</string>
-    <string name="room_measure_send">Trimite</string>
+    <string name="room_measure_send">Salvare arhivă</string>
+    <string name="room_measure_saved_title">Măsurătoare salvată</string>
+    <string name="room_measure_saved">Arhiva cu %2$d fișiere a fost scrisă în:\n\n%1$s\n\nDeschideți-o cu un manager de fișiere sau copiați-o folosind un cablu USB sau un card de memorie.</string>
+    <string name="room_measure_save_failed">Arhiva nu a putut fi scrisă.</string>
     <string name="room_measure_share_text">Măsurare habitaclu wDSP, versiunea %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Încă nimic măsurat</string>

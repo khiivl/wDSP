@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Bendras numatytasis: %1$s</string>
     <string name="room_measure_running">Matuojama: %1$s</string>
     <string name="room_measure_done">Baigta — siųsti rezultatą?</string>
     <string name="room_measure_failed">Nepavyko išmatuoti</string>
-    <string name="room_measure_send">Siųsti</string>
+    <string name="room_measure_send">Išsaugoti archyvą</string>
+    <string name="room_measure_saved_title">Matavimas išsaugotas</string>
+    <string name="room_measure_saved">Archyvas su %2$d failų buvo įrašytas į:\n\n%1$s\n\nAtidarykite jį failų tvarkykle arba nukopijuokite naudodami USB laidą ar atminties kortelę.</string>
+    <string name="room_measure_save_failed">Nepavyko įrašyti archyvo.</string>
     <string name="room_measure_share_text">wDSP salono matavimas, versija %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Dar nieko neišmatuota</string>

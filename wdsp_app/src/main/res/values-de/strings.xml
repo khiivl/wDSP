@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <!-- Presets -->
@@ -234,7 +234,10 @@
     <string name="room_measure_running">Messung: %1$s</string>
     <string name="room_measure_done">Fertig — Ergebnis senden?</string>
     <string name="room_measure_failed">Messung fehlgeschlagen</string>
-    <string name="room_measure_send">Senden</string>
+    <string name="room_measure_send">Archiv speichern</string>
+    <string name="room_measure_saved_title">Messung gespeichert</string>
+    <string name="room_measure_saved">Das Archiv mit %2$d Dateien wurde geschrieben nach:\n\n%1$s\n\nÖffnen Sie es mit einem Dateimanager oder kopieren Sie es über ein USB-Kabel oder eine Speicherkarte.</string>
+    <string name="room_measure_save_failed">Das Archiv konnte nicht geschrieben werden.</string>
     <string name="room_measure_share_text">wDSP-Innenraummessung, Version %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Noch nichts gemessen</string>

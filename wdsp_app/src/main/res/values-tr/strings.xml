@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Genel Varsayılan: %1$s</string>
     <string name="room_measure_running">Ölçülüyor: %1$s</string>
     <string name="room_measure_done">Bitti — sonuç gönderilsin mi?</string>
     <string name="room_measure_failed">Ölçüm başarısız</string>
-    <string name="room_measure_send">Gönder</string>
+    <string name="room_measure_send">Arşivi kaydet</string>
+    <string name="room_measure_saved_title">Ölçüm kaydedildi</string>
+    <string name="room_measure_saved">%2$d dosya içeren arşiv şuraya yazıldı:\n\n%1$s\n\nBir dosya yöneticisi ile açın veya bir USB kablosu ya da hafıza kartı ile kopyalayın.</string>
+    <string name="room_measure_save_failed">Arşiv yazılamadı.</string>
     <string name="room_measure_share_text">wDSP kabin ölçümü, sürüm %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Henüz ölçüm yok</string>

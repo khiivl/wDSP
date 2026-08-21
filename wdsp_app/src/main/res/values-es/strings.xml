@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -235,7 +235,10 @@
     <string name="room_measure_running">Midiendo: %1$s</string>
     <string name="room_measure_done">Listo: ¿enviar el resultado?</string>
     <string name="room_measure_failed">No se pudo medir</string>
-    <string name="room_measure_send">Enviar</string>
+    <string name="room_measure_send">Guardar archivo</string>
+    <string name="room_measure_saved_title">Medición guardada</string>
+    <string name="room_measure_saved">El archivo con %2$d archivos se guardó en:\n\n%1$s\n\nÁbralo con un administrador de archivos o cópielo con un cable USB o una tarjeta de memoria.</string>
+    <string name="room_measure_save_failed">No se pudo escribir el archivo.</string>
     <string name="room_measure_share_text">Medición de habitáculo wDSP, versión %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Aún sin medir</string>

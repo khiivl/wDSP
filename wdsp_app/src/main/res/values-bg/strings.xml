@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@
     <string name="room_measure_running">Измерване: %1$s</string>
     <string name="room_measure_done">Готово — да изпратим ли резултата?</string>
     <string name="room_measure_failed">Измерването е неуспешно</string>
-    <string name="room_measure_send">Изпрати</string>
+    <string name="room_measure_send">Запазване на архива</string>
+    <string name="room_measure_saved_title">Измерването е запазено</string>
+    <string name="room_measure_saved">Архивът с %2$d файла беше записан в:\n\n%1$s\n\nОтворете го с файлов мениджър или го копирайте чрез USB кабел или карта с памет.</string>
+    <string name="room_measure_save_failed">Архивът не може да бъде записан.</string>
     <string name="room_measure_share_text">Измерване на салона wDSP, версия %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Още няма измерване</string>

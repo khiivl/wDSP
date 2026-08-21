@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Globāli noklusējums: %1$s</string>
     <string name="room_measure_running">Mēra: %1$s</string>
     <string name="room_measure_done">Gatavs — sūtīt rezultātu?</string>
     <string name="room_measure_failed">Mērījums neizdevās</string>
-    <string name="room_measure_send">Sūtīt</string>
+    <string name="room_measure_send">Saglabāt arhīvu</string>
+    <string name="room_measure_saved_title">Mērījums saglabāts</string>
+    <string name="room_measure_saved">Arhīvs ar %2$d failiem tika ierakstīts šeit:\n\n%1$s\n\nAtveriet to ar failu pārvaldnieku vai nokopējiet, izmantojot USB kabeli vai atmiņas karti.</string>
+    <string name="room_measure_save_failed">Neizdevās ierakstīt arhīvu.</string>
     <string name="room_measure_share_text">wDSP salona mērījums, versija %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Vēl nekas nav mērīts</string>

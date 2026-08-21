@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@
     <string name="room_measure_running">Μέτρηση: %1$s</string>
     <string name="room_measure_done">Έτοιμο — να σταλεί το αποτέλεσμα;</string>
     <string name="room_measure_failed">Η μέτρηση απέτυχε</string>
-    <string name="room_measure_send">Αποστολή</string>
+    <string name="room_measure_send">Αποθήκευση αρχείου</string>
+    <string name="room_measure_saved_title">Η μέτρηση αποθηκεύτηκε</string>
+    <string name="room_measure_saved">Το αρχείο με %2$d αρχεία γράφτηκε στο:\n\n%1$s\n\nΑνοίξτε το με έναν διαχειριστή αρχείων ή αντιγράψτε το με καλώδιο USB ή κάρτα μνήμης.</string>
+    <string name="room_measure_save_failed">Δεν ήταν δυνατή η εγγραφή του αρχείου.</string>
     <string name="room_measure_share_text">Μέτρηση καμπίνας wDSP, έκδοση %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Δεν έχει μετρηθεί ακόμη</string>

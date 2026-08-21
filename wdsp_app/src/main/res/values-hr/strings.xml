@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Globalno zadano: %1$s</string>
     <string name="room_measure_running">Mjerenje: %1$s</string>
     <string name="room_measure_done">Gotovo — poslati rezultat?</string>
     <string name="room_measure_failed">Mjerenje nije uspjelo</string>
-    <string name="room_measure_send">Pošalji</string>
+    <string name="room_measure_send">Spremi arhivu</string>
+    <string name="room_measure_saved_title">Mjerenje spremljeno</string>
+    <string name="room_measure_saved">Arhiva s %2$d datoteka zapisana je u:\n\n%1$s\n\nOtvorite je upraviteljem datoteka ili je kopirajte putem USB kabela ili memorijske kartice.</string>
+    <string name="room_measure_save_failed">Nije moguće zapisati arhivu.</string>
     <string name="room_measure_share_text">wDSP mjerenje kabine, verzija %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Još ništa nije izmjereno</string>

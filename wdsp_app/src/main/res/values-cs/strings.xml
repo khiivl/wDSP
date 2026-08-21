@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Globální výchozí: %1$s</string>
     <string name="room_measure_running">Měření: %1$s</string>
     <string name="room_measure_done">Hotovo — odeslat výsledek?</string>
     <string name="room_measure_failed">Měření se nezdařilo</string>
-    <string name="room_measure_send">Odeslat</string>
+    <string name="room_measure_send">Uložit archiv</string>
+    <string name="room_measure_saved_title">Měření uloženo</string>
+    <string name="room_measure_saved">Archiv s %2$d soubory byl zapsán do:\n\n%1$s\n\nOtevřete jej pomocí správce souborů nebo jej zkopírujte přes USB kabel či paměťovou kartu.</string>
+    <string name="room_measure_save_failed">Archiv se nepodařilo zapsat.</string>
     <string name="room_measure_share_text">Měření kabiny wDSP, verze %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Zatím nic nezměřeno</string>

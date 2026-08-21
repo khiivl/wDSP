@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Global standard: %1$s</string>
     <string name="room_measure_running">Måler: %1$s</string>
     <string name="room_measure_done">Ferdig — sende resultatet?</string>
     <string name="room_measure_failed">Målingen mislyktes</string>
-    <string name="room_measure_send">Send</string>
+    <string name="room_measure_send">Lagre arkiv</string>
+    <string name="room_measure_saved_title">Måling lagret</string>
+    <string name="room_measure_saved">Arkivet med %2$d filer ble skrevet til:\n\n%1$s\n\nÅpne det med en filbehandler, eller kopier det med en USB-kabel eller et minnekort.</string>
+    <string name="room_measure_save_failed">Kunne ikke skrive arkivet.</string>
     <string name="room_measure_share_text">wDSP kupemåling, versjon %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ingenting målt ennå</string>

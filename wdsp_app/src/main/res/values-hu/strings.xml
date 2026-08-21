@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_measure_running">Mérés: %1$s</string>
     <string name="room_measure_done">Kész — elküldjük az eredményt?</string>
     <string name="room_measure_failed">A mérés nem sikerült</string>
-    <string name="room_measure_send">Küldés</string>
+    <string name="room_measure_send">Archívum mentése</string>
+    <string name="room_measure_saved_title">Mérés mentve</string>
+    <string name="room_measure_saved">A(z) %2$d fájlt tartalmazó archívum ide lett írva:\n\n%1$s\n\nNyissa meg egy fájlkezelővel, vagy másolja le USB-kábellel vagy memóriakártyával.</string>
+    <string name="room_measure_save_failed">Az archívumot nem sikerült kiírni.</string>
     <string name="room_measure_share_text">wDSP utastér-mérés, verzió %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Még nincs mérés</string>

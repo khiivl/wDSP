@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Yleinen oletus: %1$s</string>
     <string name="room_measure_running">Mitataan: %1$s</string>
     <string name="room_measure_done">Valmis — lähetetäänkö tulos?</string>
     <string name="room_measure_failed">Mittaus epäonnistui</string>
-    <string name="room_measure_send">Lähetä</string>
+    <string name="room_measure_send">Tallenna arkisto</string>
+    <string name="room_measure_saved_title">Mittaus tallennettu</string>
+    <string name="room_measure_saved">Arkisto, jossa on %2$d tiedostoa, tallennettiin kohteeseen:\n\n%1$s\n\nAvaa se tiedostonhallinnassa tai kopioi se USB-kaapelilla tai muistikortilla.</string>
+    <string name="room_measure_save_failed">Arkiston tallentaminen epäonnistui.</string>
     <string name="room_measure_share_text">wDSP:n ohjaamomittaus, versio %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ei vielä mitattu</string>

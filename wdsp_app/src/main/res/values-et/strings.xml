@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@
     <string name="room_measure_running">Mõõdan: %1$s</string>
     <string name="room_measure_done">Valmis — kas saadan tulemuse?</string>
     <string name="room_measure_failed">Mõõtmine ebaõnnestus</string>
-    <string name="room_measure_send">Saada</string>
+    <string name="room_measure_send">Salvesta arhiiv</string>
+    <string name="room_measure_saved_title">Mõõtmine salvestati</string>
+    <string name="room_measure_saved">%2$d failiga arhiiv kirjutati asukohta:\n\n%1$s\n\nAvage see failihalduriga või kopeerige see USB-kaabli või mälukaardiga.</string>
+    <string name="room_measure_save_failed">Arhiivi ei õnnestunud kirjutada.</string>
     <string name="room_measure_share_text">wDSP salongi mõõtmine, versioon %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Veel pole mõõdetud</string>

@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -238,7 +238,10 @@
     <string name="room_measure_running">Измерение: %1$s</string>
     <string name="room_measure_done">Готово — отправить результат?</string>
     <string name="room_measure_failed">Измерить не удалось</string>
-    <string name="room_measure_send">Отправить</string>
+    <string name="room_measure_send">Сохранить архив</string>
+    <string name="room_measure_saved_title">Замер сохранён</string>
+    <string name="room_measure_saved">Архив из %2$d файлов записан сюда:\n\n%1$s\n\nОткройте его файловым менеджером или скопируйте на флешку либо по USB.</string>
+    <string name="room_measure_save_failed">Не удалось записать архив.</string>
     <string name="room_measure_share_text">Измерение салона wDSP, версия %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Измерений ещё нет</string>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -234,7 +234,10 @@
     <string name="room_measure_running">Mäter: %1$s</string>
     <string name="room_measure_done">Klart — skicka resultatet?</string>
     <string name="room_measure_failed">Mätningen misslyckades</string>
-    <string name="room_measure_send">Skicka</string>
+    <string name="room_measure_send">Spara arkiv</string>
+    <string name="room_measure_saved_title">Mätning sparad</string>
+    <string name="room_measure_saved">Arkivet med %2$d filer skrevs till:\n\n%1$s\n\nÖppna det med en filhanterare eller kopiera det med en USB-kabel eller ett minneskort.</string>
+    <string name="room_measure_save_failed">Det gick inte att skriva arkivet.</string>
     <string name="room_measure_share_text">wDSP kupémätning, version %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Inget mätt ännu</string>

@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Predefinito globale: %1$s</string>
     <string name="room_measure_running">Misurazione: %1$s</string>
     <string name="room_measure_done">Fatto — inviare il risultato?</string>
     <string name="room_measure_failed">Misurazione non riuscita</string>
-    <string name="room_measure_send">Invia</string>
+    <string name="room_measure_send">Salva l\'archivio</string>
+    <string name="room_measure_saved_title">Misurazione salvata</string>
+    <string name="room_measure_saved">L\'archivio con %2$d file è stato salvato in:\n\n%1$s\n\nAprilo con un file manager, o copialo con un cavo USB o una scheda di memoria.</string>
+    <string name="room_measure_save_failed">Impossibile scrivere l\'archivio.</string>
     <string name="room_measure_share_text">Misura abitacolo wDSP, versione %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ancora nulla di misurato</string>

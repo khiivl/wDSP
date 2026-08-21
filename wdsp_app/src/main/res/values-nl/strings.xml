@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -246,7 +246,10 @@ Globale standaard: %1$s</string>
     <string name="room_measure_running">Bezig met meten: %1$s</string>
     <string name="room_measure_done">Klaar — het resultaat versturen?</string>
     <string name="room_measure_failed">Meting mislukt</string>
-    <string name="room_measure_send">Versturen</string>
+    <string name="room_measure_send">Archief opslaan</string>
+    <string name="room_measure_saved_title">Meting opgeslagen</string>
+    <string name="room_measure_saved">Het archief met %2$d bestanden is weggeschreven naar:\n\n%1$s\n\nOpen het met een bestandsbeheerder of kopieer het via een USB-kabel of geheugenkaart.</string>
+    <string name="room_measure_save_failed">Het archief kon niet worden weggeschreven.</string>
     <string name="room_measure_share_text">wDSP-interieurmeting, versie %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Nog niets gemeten</string>

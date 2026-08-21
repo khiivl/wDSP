@@ -246,7 +246,10 @@ Par défaut global : %1$s</string>
     <string name="room_measure_running">Mesure : %1$s</string>
     <string name="room_measure_done">Terminé — envoyer le résultat ?</string>
     <string name="room_measure_failed">Échec de la mesure</string>
-    <string name="room_measure_send">Envoyer</string>
+    <string name="room_measure_send">Enregistrer l\'archive</string>
+    <string name="room_measure_saved_title">Mesure enregistrée</string>
+    <string name="room_measure_saved">L\'archive contenant %2$d fichiers a été écrite dans :\n\n%1$s\n\nOuvrez-la avec un gestionnaire de fichiers, ou copiez-la via un câble USB ou une carte mémoire.</string>
+    <string name="room_measure_save_failed">L\'archive n\'a pas pu être écrite.</string>
     <string name="room_measure_share_text">Mesure d\'habitacle wDSP, version %1$s</string>
     <string name="room_measure_telegram">Telegram : @kostyamat</string>
     <string name="room_measure_nothing">Rien de mesuré encore</string>
