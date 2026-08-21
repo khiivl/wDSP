@@ -257,8 +257,8 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
             SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
         }
-        // Index 0 is the "no boost" entry rather than a frequency, so it keeps its own word.
-        BASS_BOOST_FREQS_SHOWN[0] = BASS_BOOST_FREQS[0];
+        // Index 0 is the "no boost" entry rather than a frequency, so it is a word, translated.
+        BASS_BOOST_FREQS_SHOWN[0] = getString(R.string.freq_off);
         for (int i = 1; i < BASS_BOOST_FREQS.length; i++) {
             BASS_BOOST_FREQS_SHOWN[i] = getString(R.string.unit_hz, BASS_BOOST_FREQS[i]);
         }
