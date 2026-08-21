@@ -1391,10 +1391,15 @@
 
                             <TextView
                                 style="@style/TextLabel"
-                                android:layout_width="wrap_content"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/rear_fill_enhancement"
                                 app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/tv_delay1_rsse_val"
+                                app:layout_constraintHorizontal_bias="0"
                                 app:layout_constraintTop_toTopOf="parent" />
 
                             <TextView
