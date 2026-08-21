@@ -91,6 +91,8 @@ public class SettingsActivity extends AppCompatActivity {
     // Status Bar Visualizer
     private SwitchCompat switchStatusBarVis, switchStatusBarNormalization;
     private Slider seekStatusBarWidth, seekStatusBarPos;
+    private Slider seekStatusBarHeight, seekStatusBarOffsetY, seekStatusBarAlpha;
+    private TextView tvStatusBarHeight, tvStatusBarOffsetY, tvStatusBarAlpha;
     private SeekBar seekStatusBarHue;
     private TextView tvStatusBarWidth, tvStatusBarPos, tvStatusBarHue;
     private TextView btnThemeSpectrum, btnThemeSolidHue, btnThemeAutoDayNight, btnThemeEqGroups;
@@ -313,6 +315,12 @@ public class SettingsActivity extends AppCompatActivity {
         switchStatusBarNormalization = findViewById(R.id.switch_status_bar_normalization);
         seekStatusBarWidth = findViewById(R.id.seek_status_bar_width);
         seekStatusBarPos = findViewById(R.id.seek_status_bar_pos);
+        seekStatusBarHeight = findViewById(R.id.seek_status_bar_height);
+        seekStatusBarOffsetY = findViewById(R.id.seek_status_bar_offset_y);
+        seekStatusBarAlpha = findViewById(R.id.seek_status_bar_alpha);
+        tvStatusBarHeight = findViewById(R.id.tv_status_bar_height);
+        tvStatusBarOffsetY = findViewById(R.id.tv_status_bar_offset_y);
+        tvStatusBarAlpha = findViewById(R.id.tv_status_bar_alpha);
         seekStatusBarHue = findViewById(R.id.seek_status_bar_hue);
         tvStatusBarWidth = findViewById(R.id.tv_status_bar_width);
         tvStatusBarPos = findViewById(R.id.tv_status_bar_pos);
@@ -609,6 +617,41 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        // Placement by hand. Every default here reproduces exactly what the app did before these
+        // controls existed - height 0 means "measure it", offset 0 means "at the very top" - so a
+        // user who never touches them sees no change at all. They exist for the head units where
+        // the strip along the top is drawn by the launcher: Android reserves nothing there, no
+        // measurement can be right, and the only reliable source is the person looking at it.
+        seekStatusBarHeight.addOnChangeListener((slider, value, fromUser) -> {
+            int px = Math.round(value);
+            tvStatusBarHeight.setText(px <= 0
+                    ? getString(R.string.settings_theme_auto)
+                    : getString(R.string.lbl_px_fmt, px));
+            if (fromUser) {
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this).setManualHeight(px);
+            }
+        });
+
+        seekStatusBarOffsetY.addOnChangeListener((slider, value, fromUser) -> {
+            int px = Math.round(value);
+            tvStatusBarOffsetY.setText(getString(R.string.lbl_px_fmt, px));
+            if (fromUser) {
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this).setOffsetY(px);
+            }
+        });
+
+        // Opacity has been in the preferences since the visualiser was written, defaulting to
+        // fully opaque, with nothing anywhere that could change it.
+        seekStatusBarAlpha.addOnChangeListener((slider, value, fromUser) -> {
+            int percent = Math.round(value);
+            tvStatusBarAlpha.setText(getString(R.string.lbl_percent_fmt, percent));
+            if (fromUser) {
+                p.edit().putInt(StatusBarVisualizerManager.PREF_STATUS_BAR_ALPHA, percent).apply();
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this)
+                        .onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ALPHA);
+            }
+        });
+
         seekStatusBarHue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -782,6 +825,28 @@ public class SettingsActivity extends AppCompatActivity {
         tvStatusBarWidth.setText(getString(R.string.lbl_percent_fmt, w));
         tvStatusBarPos.setText(getString(R.string.lbl_percent_fmt, pos));
         tvStatusBarHue.setText(getString(R.string.lbl_degrees_fmt, hue));
+
+        StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
+        int manualHeight = sbm.manualHeight();
+        int offsetY = sbm.offsetY();
+        int alpha = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_ALPHA,
+                StatusBarVisualizerManager.DEFAULT_ALPHA);
+        // The travel of these two comes from the screen, not from a number typed in a layout.
+        // A fixed 200 px is a third of the height on this bench and a tenth of it on a tall
+        // portrait unit - which are exactly the machines that need the control in the first
+        // place. Full height for both, so the strip can be put anywhere on the screen,
+        // including along the bottom: it is the owner's dashboard.
+        int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+        seekStatusBarHeight.setValueTo(screenHeightPx);
+        seekStatusBarOffsetY.setValueTo(screenHeightPx);
+        seekStatusBarHeight.setValue(Math.min(manualHeight, screenHeightPx));
+        seekStatusBarOffsetY.setValue(Math.min(offsetY, screenHeightPx));
+        seekStatusBarAlpha.setValue(Math.max(10, Math.min(alpha, 100)));
+        tvStatusBarHeight.setText(manualHeight <= 0
+                ? getString(R.string.settings_theme_auto)
+                : getString(R.string.lbl_px_fmt, manualHeight));
+        tvStatusBarOffsetY.setText(getString(R.string.lbl_px_fmt, offsetY));
+        tvStatusBarAlpha.setText(getString(R.string.lbl_percent_fmt, alpha));
 
         int currentTheme = p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME, StatusBarVisualizerView.THEME_SPECTRUM);
         updateThemeButtonHighlights(currentTheme);
@@ -1403,6 +1468,9 @@ public class SettingsActivity extends AppCompatActivity {
         // Tint status bar Sliders
         tintSlider(seekStatusBarWidth, accent);
         tintSlider(seekStatusBarPos, accent);
+        tintSlider(seekStatusBarHeight, accent);
+        tintSlider(seekStatusBarOffsetY, accent);
+        tintSlider(seekStatusBarAlpha, accent);
 
         // Update wheel brightness backgrounds
         updateWheelBrightnessGradient(pickerAccentWheel, pickerAccentBrightness);

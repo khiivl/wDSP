@@ -213,6 +213,11 @@
     <string name="toast_restore_failed">Restore failed: %s</string>
     <string name="vis_normalization_label">Dynamic Normalization (AGC)</string>
     <string name="vis_normalization_desc">Gentle dynamic range leveling for quiet audio tracks</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacity</string>
+    <string name="status_bar_height_manual">Strip height</string>
+    <string name="status_bar_offset_y">Distance from the top</string>
+    <string name="status_bar_placement_hint">Leave the height at 0 and the app measures the bar itself. Set it by hand only if the strip lands in the wrong place — on some head units the bar along the top is drawn by the launcher, and Android does not know it is there.</string>
     <string name="status_bar_bands_count">Number of bands:</string>
     <string name="analyzer_section_title">Analyzer accuracy and sync</string>
     <string name="agc_main_label">Auto gain: main analyzer</string>

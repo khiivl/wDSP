@@ -30,6 +30,13 @@ public class StatusBarVisualizerManager {
     public static final String PREF_STATUS_BAR_HUE     = "sb_vis_hue";
     public static final String PREF_STATUS_BAR_ALPHA   = "sb_vis_alpha";
     public static final String PREF_STATUS_BAR_HEIGHT_PX = "sb_vis_height_px";
+    /**
+     * How far below the top edge the strip is drawn, in pixels.
+     *
+     * Zero everywhere the bar starts at the very top, which is nearly everywhere. It exists for
+     * the units where the strip on screen belongs to the launcher and does not begin at the edge.
+     */
+    public static final String PREF_STATUS_BAR_OFFSET_Y = "sb_vis_offset_y";
     public static final String PREF_STATUS_BAR_NORMALIZATION = "sb_vis_normalization";
     public static final String PREF_STATUS_BAR_BANDS   = "sb_vis_bands";
 
@@ -127,6 +134,37 @@ public class StatusBarVisualizerManager {
         int fallback = (int) (28 * dm.density);
         prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, fallback).apply();
         return fallback;
+    }
+
+    /** How far down the strip is drawn. See {@link #PREF_STATUS_BAR_OFFSET_Y}. */
+    public int offsetY() {
+        return Math.max(0, prefs.getInt(PREF_STATUS_BAR_OFFSET_Y, 0));
+    }
+
+    public void setOffsetY(int px) {
+        prefs.edit().putInt(PREF_STATUS_BAR_OFFSET_Y, Math.max(0, px)).apply();
+        updateWindowGeometry();
+    }
+
+    /**
+     * Sets the height by hand, or returns to measuring it.
+     *
+     * <p>Zero means automatic: the stored value is cleared and {@link #getStatusBarHeight()} goes
+     * back to asking the platform. That matters because a person experimenting needs a way back -
+     * and because on most units the automatic answer is the right one.
+     */
+    public void setManualHeight(int px) {
+        if (px <= 0) {
+            prefs.edit().remove(PREF_STATUS_BAR_HEIGHT_PX).apply();
+        } else {
+            prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, px).apply();
+        }
+        updateWindowGeometry();
+    }
+
+    /** The height set by hand, or 0 when it is being measured automatically. */
+    public int manualHeight() {
+        return prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
     }
 
     public void updateStatusBarHeight(int heightPx) {
@@ -227,12 +265,12 @@ public class StatusBarVisualizerManager {
             );
             layoutParams.gravity = Gravity.TOP | Gravity.START;
             layoutParams.x = calculateLeftPx();
-            layoutParams.y = 0;
+            layoutParams.y = offsetY();
         } else {
             layoutParams.height = getStatusBarHeight();
             layoutParams.width = calculateWidthPx();
             layoutParams.x = calculateLeftPx();
-            layoutParams.y = 0;
+            layoutParams.y = offsetY();
         }
 
         if (!isViewAttached) {
@@ -256,7 +294,7 @@ public class StatusBarVisualizerManager {
             layoutParams.height = getStatusBarHeight();
             layoutParams.width = calculateWidthPx();
             layoutParams.x = calculateLeftPx();
-            layoutParams.y = 0;
+            layoutParams.y = offsetY();
             try {
                 windowManager.updateViewLayout(visualizerView, layoutParams);
             } catch (Throwable ignored) {}
