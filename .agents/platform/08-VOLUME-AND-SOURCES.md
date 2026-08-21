@@ -359,6 +359,34 @@ releases a focus it never took**, several times per failed attempt, and Android 
 focus stack each time; the platform's audio service turns that re-evaluation into an
 `RPC_SetChannel`, and channel 2 drops for about 0.2 s.
 
+### Reproduced on our own unit, both ways
+
+📻 21.08.2026. Wrote `"auto_connect":"1"` into the conf file, rebooted with no phone in range,
+captured the log for 200 s:
+
+```
+14  abandonAudioFocus() from uid/pid 1000/8467   (com.qf.bluetooth, running as system)
+ 0  requestAudioFocus  from that pid
+ 7  onHfpStateChanged: state = 0   - and NEVER any other value
+ 1  "resume connect 88B951F88F62"
+```
+
+Restored `"0"`, rebooted, captured 120 s: **0 abandons, 0 connect attempts, 0 HFP state reports.**
+
+🔴 The decisive line is the third one. All seven HFP reports are **state 0**; there is no
+transition anywhere in the capture. The module keeps re-reporting "disconnected", and
+`setHfpConnectState(0)` runs the whole disconnect path every single time — **there is no
+already-in-this-state check** - so each repeat abandons both focuses again. It even does so with no
+listeners attached (`onHfpStateChanged: map size = 0`).
+
+📻 The cadence, from one page attempt: two abandons at +0.2 s, then eight more between +4.0 and
++4.6 s, then four more at +37 s. That is the "bursts of four every ~35 seconds" measured back in
+July, and it comes from **one** connect attempt, not from repeated ones.
+
+🧩 So this is not a design trade-off to be worked around. It is a missing equality check in a
+state setter, in a process running as `system`, whose fallout the platform's audio service turns
+into channel switching.
+
 🔬 `abandonBTPhoneAudioFocus()` is worth seeing: it is an `if (module == ANDROID_DEFAULT) { ... }`
 whose two branches are **character-for-character identical**. Somebody meant to gate it and did
 not.
