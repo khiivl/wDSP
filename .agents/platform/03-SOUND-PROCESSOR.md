@@ -368,5 +368,5 @@ and it should be decided deliberately rather than drifted into.
 - Command `0x80`'s handler, which sits behind a jump table Ghidra could not recover at
   `0x0800bc8e`.
 
-Related: [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) for how the delays are measured,
-[HARDWARE.md](HARDWARE.md) for the MCU side of the serial protocol.
+Related: [../ROOM_CALIBRATION.md](../ROOM_CALIBRATION.md) for how the delays are measured,
+[02-MCU.md](02-MCU.md) for the MCU side of the serial protocol.

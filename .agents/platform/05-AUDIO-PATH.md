@@ -233,3 +233,62 @@ discontinuity the stitcher then had to repair.
   a screenshot is more reliable for finding something to tap.
 - **CPU has to be measured per thread.** Drawing cost three times as much as the measurement
   (RenderThread 1142 ticks against Capture 425).
+
+---
+
+## 6. The player role is four independent things
+
+This section comes from the other application on this platform — a replacement radio — and it is
+platform knowledge rather than radio knowledge. Anything here that plays sound, or wants the media
+keys, or wants to appear in the launcher's media card, runs into it.
+
+📻 Being "the player" on this machine is **four separate mechanisms**, and none of them can be
+derived from the others:
+
+| what | who grants it | what breaks if you confuse it |
+|---|---|---|
+| **audio focus** | Android's `MediaFocusControl` | you get mode 4 (MPU) or mode 2 (radio) *by package name* — the radio channel cannot be asked for |
+| **the MCU mixer channel** | the MCU, on command | radio sound exists only on channel 2; the platform will undo `setChannel(2)`, but not a `tune` |
+| **the media session** | you | an active session is the claim on the buttons and the launcher card |
+| **a PCM stream that is not silent-looking** | you | without it the system ducks you after about 30 seconds, because a player that outputs nothing is treated as muted |
+
+🔴 **Do not derive one from another.** Three separate bugs in one day grew out of exactly that:
+`isPlaying()` implemented as "do I hold focus" left the play button stuck forever; session state
+computed from focus made the widget show the opposite of reality; and a watchdog with the rule
+"focus held, therefore the stream must be running" **cancelled the user's own pause** six seconds
+after they pressed it.
+
+Ask what you mean: *am I playing* is `playerActive && !userPaused`; *do I claim the buttons* is the
+session state; *is the radio audible* is the MCU channel.
+
+🔬 **The launcher chooses which widget to show purely by package name**, in one receiver, with no
+other logic anywhere:
+
+```java
+if (pkg.startsWith("com.qf.bluetooth") && streamType == 3) → Bluetooth widget
+else if (pkg.startsWith("com.android.fmradio"))            → radio widget
+else if (pkg.startsWith("com.qf.musicplayer"))             → the native music widget
+else if (checkAppIsThirdPartyMedia(pkg))                   → third-party media widget, with your icon
+// nothing matched → the widget does not change
+```
+
+🔬 And the audio path is granted the same way: `MediaFocusControl` compares
+`startsWith("com.android.fmradio")` in five places. A package that does not match gets channel 4
+put back under it every time anyone else releases focus.
+
+❌ **Faking the package name does not work.** Passing `com.android.fmradio` to the focus request
+technically reaches the platform, but `AppOpsManager` one level deeper throws
+`SecurityException: not allowed to perform TAKE_AUDIO_FOCUS` and the service dies at creation. The
+lesson is about method rather than code: the check was absent from `AudioService`, which was read
+first, and present in `MediaFocusControl`, which was not. **Read the chain to the end.**
+
+📻 **Bluetooth is a source of focus storms**: `com.qf.bluetooth` released focus 24 times in 110
+seconds during one scan. The platform then correctly moves the channel; an app that fights back on
+every *request* rather than on the *fact* of a change becomes the source of the spam itself. There
+is a proper event to listen for — the platform broadcasts `com.qf.action.VOLUME_CHANGED` **after**
+the channel actually changes.
+
+🤝 And when in doubt, yield. The owner's rule: *"better not to be pushy than to be guaranteed to
+wake up"*. Restore playback after ignition only if the path is free; do not take the channel back
+"just in case"; report `STOPPED` rather than `PAUSED` when somebody else is playing, because paused
+means "resume me" and makes you the target of the media keys.
