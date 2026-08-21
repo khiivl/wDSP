@@ -124,6 +124,16 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerBassFreqFront, spinnerBassFreqRear;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
+    /**
+     * What the bass-boost dropdowns actually show: the same frequencies with the hertz unit on
+     * them, built at runtime like {@link #SUB_FREQS}.
+     *
+     * <p>The raw array stays exactly as it was, because the parsing compares the dropdown's text
+     * against it - and because the preference stores an index into it. A number on its own in a
+     * list of frequencies is guessable but not readable; every other frequency control in the app
+     * carries its unit, and this one was the exception.
+     */
+    private final String[] BASS_BOOST_FREQS_SHOWN = new String[BASS_BOOST_FREQS.length];
 
     // Fader & Delays
     private Slider seekFaderLr;
@@ -246,6 +256,11 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
             SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
+        }
+        // Index 0 is the "no boost" entry rather than a frequency, so it keeps its own word.
+        BASS_BOOST_FREQS_SHOWN[0] = BASS_BOOST_FREQS[0];
+        for (int i = 1; i < BASS_BOOST_FREQS.length; i++) {
+            BASS_BOOST_FREQS_SHOWN[i] = getString(R.string.unit_hz, BASS_BOOST_FREQS[i]);
         }
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
@@ -1170,7 +1185,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFilterControls() {
-        ArrayAdapter<String> bbAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, BASS_BOOST_FREQS);
+        ArrayAdapter<String> bbAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, BASS_BOOST_FREQS_SHOWN);
 
         spinnerBassFreqFront.setAdapter(bbAdapter);
         spinnerBassFreqRear.setAdapter(bbAdapter);
@@ -1650,7 +1665,11 @@ public class MainActivity extends AppCompatActivity {
     private int resolveBassBoostFreqIndex(String text) {
         if (text == null || text.trim().isEmpty()) return 0;
         String trimmed = text.trim();
-        int idx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(trimmed);
+        // Both forms are accepted: what is on screen now, and the bare number a preset saved
+        // before the unit was added.
+        int idx = java.util.Arrays.asList(BASS_BOOST_FREQS_SHOWN).indexOf(trimmed);
+        if (idx >= 0) return idx;
+        idx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(trimmed);
         if (idx >= 0) return idx;
         String digits = trimmed.replaceAll("[^0-9]", "");
         if (!digits.isEmpty()) {
@@ -1772,8 +1791,8 @@ public class MainActivity extends AppCompatActivity {
             if (frontIdx < 0 || frontIdx >= BASS_BOOST_FREQS.length) frontIdx = 0;
             if (rearIdx < 0 || rearIdx >= BASS_BOOST_FREQS.length) rearIdx = 0;
 
-            spinnerBassFreqFront.setText(BASS_BOOST_FREQS[frontIdx], false);
-            spinnerBassFreqRear.setText(BASS_BOOST_FREQS[rearIdx], false);
+            spinnerBassFreqFront.setText(BASS_BOOST_FREQS_SHOWN[frontIdx], false);
+            spinnerBassFreqRear.setText(BASS_BOOST_FREQS_SHOWN[rearIdx], false);
 
             seekFaderLr.setValue((float) p.getInt(name + "_f_lr", 12));
             seekFaderFr.setValue((float) p.getInt(name + "_f_fr", 12));
