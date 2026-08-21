@@ -19,6 +19,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 
 | file | what |
 |---|---|
+| [BUILDING.md](BUILDING.md) | how a fresh clone builds itself, what is committed on purpose, and why R8 must stay off |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | the cabin measurement: sweep, deconvolution, what it can and cannot honestly tell a user, and where it is going |
 
 Read [../CLAUDE.md](../CLAUDE.md) first for how the app is put together.
