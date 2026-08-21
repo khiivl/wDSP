@@ -183,6 +183,59 @@ focus **24 times in 110 seconds**, in bursts of four every 35 seconds, and never
 Each burst reset the MCU channel, audible as the radio stuttering for about 0.2 s. The source was
 failed auto-connection to a phone that was not in the car.
 
+### What the unit is actually doing, and how often
+
+🔴 It is not searching. Inquiry — the broadcast "who is out there" — happens only while the
+pairing screen is open. Auto-connect calls `connect(address)` on **one** remembered address:
+`persist.sys.qf.last_bt_addr`, or the one recorded in `HFP_CONNECT_MAC_BEFORE_ACC_OFF` just before
+the last ACC-off. That is a **page**, directed at a single device. Paging a phone that is not in
+the car fails on the page timeout and costs nothing but the failure — except for what the failure
+does to the audio path here.
+
+🔬 Why it exists at all: this platform hibernates completely at ACC-off. On wake, the unit has to
+re-establish the link itself, because nothing on the phone side necessarily notices that the car
+came back. 🧩 Which is also why the phone reconnecting on its own — as it does on units where all
+of this is switched off — is not evidence that the feature is pointless; it is evidence that *that*
+phone is willing to page first.
+
+### The 40-second retry loop is a SEPARATE, hidden setting
+
+🔴 This is the one that causes the reports, and it is **not** `auto_connect`.
+
+🔬 `TechBTSettingManager.pollConnectRun`:
+
+```java
+if (isCarplayConnected())                       return;   // stops the loop
+if (hfpConnected || a2dpConnected)              return;   // stops the loop
+connectRun.run();                                         // page the last address
+mH.postDelayed(pollConnectRun, 40000L);                   // ... and again in 40 s
+```
+
+No backoff, no attempt limit. **While the phone is absent it pages every 40 seconds forever**, and
+the only thing that ends the loop is a successful connection.
+
+🔬 It is gated on its own key, `BT_AUTO_POLL_CONNECT`, default **0**, and there is no visible
+control for it. It is toggled by a **long press on the "Settings" tab button** inside the Bluetooth
+app, which shows a toast:
+
+```
+Open Bt poll connect per 40s!     /  Close Bt poll connect per 40s!
+Увімкнути опитування з'єднання Bluetooth кожні 40с!
+```
+
+🧩 So a unit that stutters every 40 seconds has that hidden flag on — shipped that way, or
+long-pressed by somebody who did not know what they had done. **Ask an affected owner to long-press
+the Settings tab in the Bluetooth app and read the toast.** That is a one-minute test that needs
+nothing from us, and it is the first thing to try.
+
+📻 Measured 26.07.2026 on our unit: bursts of four focus events every ~35 s. 🧩 One page attempt
+raises several profile connections — HFP, A2DP, AVRCP, PBAP — and each can flap the focus, which
+matches the burst shape against a 40-second period.
+
+🔬 With `auto_connect` off but the poll flag on, the loop still ticks: `connectRun` calls `loadBT()`
+*before* it checks the auto-connect flag, then returns without connecting. 🧩 Harmless on our unit,
+because `loadBT()` only does anything for the ChengQian module.
+
 ### The auto-connect property is a mirror, not a switch
 
 🔴 This one has cost time. `persist.sys.qf.bt_auto_connect` looks like the setting. It is not.
