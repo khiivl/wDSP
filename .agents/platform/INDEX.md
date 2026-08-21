@@ -40,7 +40,7 @@ files, mark what you add.
 Application-specific design lives outside this folder — for wDSP that is
 [../ROOM_CALIBRATION.md](../ROOM_CALIBRATION.md).
 
-## The seven things most likely to waste a day
+## The nine things most likely to waste a day
 
 1. **`Visualizer(0)` measures silence.** The platform's audio policy puts media on the *fast*
    output while the *primary* one sits idle, and AOSP hard-codes an output-mix effect onto primary.
@@ -57,6 +57,14 @@ Application-specific design lives outside this folder — for wDSP that is
 6. **R8 silently deletes hidden-API calls.** Debug works, signed release does nothing.
    (01 §5)
 7. **`am broadcast` without an explicit receiver goes nowhere and reports success.** (07 §2)
+8. **Volume is per source, not per Android stream, and the live values are throwaway properties.**
+   An unset `sys.radio.vol` reads back as `persist.sys.radio_volume` on every call — that *is* the
+   "volume reset itself" bug, there is no reset code. And a volume only reaches the hardware when
+   its source is the current one. (08 §1)
+9. **Half the fleet has a second DSP and half does not, and one character decides which.** The
+   platform reads the second character of the MCU code: 2 → AK7738, 3 → AK7604, anything else →
+   none. Units with one re-push the master volume on every source change; units without one never
+   do. Check it before reproducing, explaining or promising anything about volume. (08 §3)
 
 ## Diagnostics available at runtime in wDSP
 

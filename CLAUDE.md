@@ -8,7 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 path really behaves, how to reach the MCU, and what is and is not possible when measuring a car with
 an uncalibrated microphone. Everything there was measured on a device, because on this platform the
 documented behaviour and the actual behaviour differ often enough that only the wire settles it.
-Start at [.agents/INDEX.md](.agents/INDEX.md).
+Start at [.agents/INDEX.md](.agents/INDEX.md), and for anything that changes how loud something is
+— volume, source switching, the optional second DSP, or the vendor Bluetooth app disturbing the
+radio — [.agents/platform/08-VOLUME-AND-SOURCES.md](.agents/platform/08-VOLUME-AND-SOURCES.md)
+first: two units on the same firmware genuinely behave differently there, and the file says how to
+tell which one you have.
 
 ## Repository location
 
@@ -16,9 +20,11 @@ The repo lives at `C:\Users\kosty\AndroidStudioProjects\wDSP` (an *additional* w
 this session — the primary cwd `qf_fmradio` is an empty leftover folder). Always use absolute paths
 into `wDSP`. Working branch: `kostyfmat_mod` — work only there. Upstream is https://github.com/khiivl/wDSP.
 
-`rules.md` and `agents.md` at the repo root are **gitignored local docs** — they exist on disk but are
-not tracked. `agents.md` is a hand-written knowledge base and is partly stale (see "Known
-discrepancies" below); the Java source is the source of truth.
+`rules.md` and `agents.md` at the repo root **are tracked**, despite a `.gitignore` line that names
+them — an ignore rule does not un-track a file that is already committed, and this note used to
+claim the opposite. They reach anyone who clones the repo, so keep them correct. `agents.md` is a
+hand-written knowledge base of the app and is partly stale (see "Known discrepancies" below); the
+Java source is the source of truth for the app, and `.agents/platform/` for the machine.
 
 ## Build
 

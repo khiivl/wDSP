@@ -9,6 +9,29 @@
 
 ---
 
+## 🔴 Platform knowledge — read this before changing anything that makes sound
+
+This file describes **the app**. Everything about **the machine underneath** — and that is where
+most of the surprises live — is in [`.agents/platform/`](.agents/platform/INDEX.md), eight files,
+every claim carrying a provenance mark (🔬 read in firmware or decompiled code, 📻 measured on the
+wire, 🧩 inferred, ❓ unverified). If you add to them, mark what you add.
+
+Start at [`.agents/platform/INDEX.md`](.agents/platform/INDEX.md) — it opens with the things most
+likely to cost a day. The four that catch people hardest:
+
+- **`Visualizer(0)` measures silence.** Media goes to the *fast* output; AOSP pins the effect to
+  *primary*. Attach to the track's session. (`05-AUDIO-PATH.md`)
+- **Volume here is per source, not per Android stream**, and the live values are non-persistent
+  properties. An unset one reads back as a factory default — which is the entire mechanism behind
+  "the volume reset itself". (`08-VOLUME-AND-SOURCES.md`)
+- **Some units carry a second DSP (AK7738/AK7604) and some do not**, and the platform decides by
+  the *second character of the MCU code*. That one character separates two hardware classes; do not
+  promise behaviour across it. (`08-VOLUME-AND-SOURCES.md`)
+- **R8 silently deletes hidden-API calls.** Debug works, signed release does nothing.
+  (`01-SYSTEM.md`, and `.agents/BUILDING.md`)
+
+---
+
 ## 🛠️ Key Architectural Components
 
 ### 1. MCU & DSP Communication Bridge (`McuService.java`)
