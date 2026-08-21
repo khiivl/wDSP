@@ -258,4 +258,13 @@
     <string name="status_bar_offset_y">Distância do topo</string>
     <string name="status_bar_placement_hint">Deixe a altura em 0 e o aplicativo mede a barra por si mesmo. Defina manualmente apenas se a faixa ficar no lugar errado — em algumas centrais multimídia a barra superior é desenhada pelo launcher e o Android não sabe que ela está lá.</string>
     <string name="freq_off">Desl.</string>
+    <string name="system_report_label">Relatório do sistema</string>
+    <string name="system_report_desc">Registra como esta unidade lida com o volume, roteamento e o microfone. Necessário para corrigir a redefinição de volume após uma chamada Bluetooth, avisos de navegação silenciosos e uma medição que não inicia.</string>
+    <string name="system_report_button">Coletar</string>
+    <string name="system_report_working">Coletando…</string>
+    <string name="system_report_title">Relatório do sistema</string>
+    <string name="system_report_saved">Salvo em:\n\n%1$s\n\nPara também capturar o erro de volume: faça uma ligação curta por Bluetooth, desligue e colete o relatório uma segunda vez. O segundo arquivo conterá o que mudou durante a chamada.</string>
+    <string name="system_report_failed">Não foi possível gravar o relatório.</string>
+    <string name="mic_denied_title">Sem microfone</string>
+    <string name="mic_denied">O Android não está mais pedindo pelo microfone, pois a permissão foi negada anteriormente. Nada pode ser medido sem ele.\n\nAbra Configurações → Aplicativos → wDSP → Permissões e permita o microfone, depois tente novamente.</string>
 </resources>

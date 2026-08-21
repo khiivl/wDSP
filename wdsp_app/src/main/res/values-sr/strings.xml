@@ -260,4 +260,13 @@
     <string name="status_bar_offset_y">Удаљеност од врха</string>
     <string name="status_bar_placement_hint">Оставите висину на 0 и апликација ће сама измерити траку. Поставите је ручно само ако трака заврши на погрешном месту — на неким радио уређајима горњу траку црта покретач и Android не зна да је ту.</string>
     <string name="freq_off">Искљ.</string>
+    <string name="system_report_label">Sistemski izveštaj</string>
+    <string name="system_report_desc">Zapisuje kako ovaj uređaj upravlja jačinom zvuka, usmeravanjem i mikrofonom. Potrebno za popravku resetovanja jačine zvuka nakon Bluetooth poziva, tihih navigacionih uputstava i merenja koje se neće pokrenuti.</string>
+    <string name="system_report_button">Prikupi</string>
+    <string name="system_report_working">Prikupljanje…</string>
+    <string name="system_report_title">Sistemski izveštaj</string>
+    <string name="system_report_saved">Sačuvano u:\n\n%1$s\n\nDa biste takođe uhvatili grešku sa jačinom zvuka: obavite jedan kratki telefonski poziv preko Bluetooth-a, prekinite vezu i prikupite izveštaj po drugi put. Druga datoteka će sadržati ono što se promenilo tokom poziva.</string>
+    <string name="system_report_failed">Izveštaj se nije mogao zapisati.</string>
+    <string name="mic_denied_title">Nema mikrofona</string>
+    <string name="mic_denied">Android više ne traži mikrofon jer je dozvola ranije odbijena. Bez njega se ništa ne može izmeriti.\n\nOtvorite Podešavanja → Aplikacije → wDSP → Dozvole i dozvolite mikrofon, a zatim pokušajte ponovo.</string>
 </resources>

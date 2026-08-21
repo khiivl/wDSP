@@ -260,4 +260,13 @@ Implicit global: %1$s</string>
     <string name="status_bar_offset_y">Distanța de la vârf</string>
     <string name="status_bar_placement_hint">Lăsați înălțimea la 0 și aplicația măsoară singură bara. Setați manual doar dacă banda ajunge în locul greșit — pe unele playere auto bara superioară este desenată de launcher, iar Android nu știe că există.</string>
     <string name="freq_off">Oprit</string>
+    <string name="system_report_label">Raport de sistem</string>
+    <string name="system_report_desc">Scrie modul în care această unitate gestionează volumul, rutarea și microfonul. Necesar pentru a repara resetarea volumului după un apel Bluetooth, indicațiile de navigare silențioase și o măsurătoare care nu pornește.</string>
+    <string name="system_report_button">Colectare</string>
+    <string name="system_report_working">Se colectează…</string>
+    <string name="system_report_title">Raport de sistem</string>
+    <string name="system_report_saved">Salvat în:\n\n%1$s\n\nPentru a prinde și bug-ul de volum: efectuați un scurt apel telefonic prin Bluetooth, închideți și colectați raportul a doua oară. Al doilea fișier va conține ceea ce s-a schimbat în timpul apelului.</string>
+    <string name="system_report_failed">Raportul nu a putut fi scris.</string>
+    <string name="mic_denied_title">Fără microfon</string>
+    <string name="mic_denied">Android nu mai cere microfonul, deoarece permisiunea a fost refuzată anterior. Nimic nu poate fi măsurat fără el.\n\nDeschideți Setări → Aplicații → wDSP → Permisiuni și permiteți microfonul, apoi încercați din nou.</string>
 </resources>

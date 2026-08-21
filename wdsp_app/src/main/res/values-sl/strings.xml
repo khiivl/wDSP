@@ -260,4 +260,13 @@ Globalno privzeto: %1$s</string>
     <string name="status_bar_offset_y">Razdalja od vrha</string>
     <string name="status_bar_placement_hint">Pustite višino 0 in aplikacija sama izmeri vrstico. Ročno nastavite le, če trak pristane na napačnem mestu — pri nekaterih radiih zgornjo vrstico nariše zaganjalnik in Android sploh ne ve zanjo.</string>
     <string name="freq_off">Izkl.</string>
+    <string name="system_report_label">Sistemsko poročilo</string>
+    <string name="system_report_desc">Zapiše, kako ta enota obravnava glasnost, usmerjanje in mikrofon. Potrebno za popravek ponastavitve glasnosti po klicu Bluetooth, tihih navigacijskih pozivov in meritve, ki se ne zažene.</string>
+    <string name="system_report_button">Zberi</string>
+    <string name="system_report_working">Zbiranje…</string>
+    <string name="system_report_title">Sistemsko poročilo</string>
+    <string name="system_report_saved">Shranjeno v:\n\n%1$s\n\nDa ujamete tudi napako z glasnostjo: opravite en kratek telefonski klic prek Bluetootha, prekinite in drugič zberite poročilo. Druga datoteka bo vsebovala tisto, kar se je med klicem spremenilo.</string>
+    <string name="system_report_failed">Poročila ni bilo mogoče zapisati.</string>
+    <string name="mic_denied_title">Ni mikrofona</string>
+    <string name="mic_denied">Android ne zahteva več mikrofona, ker je bilo dovoljenje prej zavrnjeno. Brez njega ni mogoče izmeriti ničesar.\n\nOdprite Nastavitve → Aplikacije → wDSP → Dovoljenja in dovolite mikrofon, nato poskusite znova.</string>
 </resources>

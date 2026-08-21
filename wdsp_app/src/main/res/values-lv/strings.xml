@@ -260,4 +260,13 @@ Globāli noklusējums: %1$s</string>
     <string name="status_bar_offset_y">Attālums no augšas</string>
     <string name="status_bar_placement_hint">Atstājiet augstumu uz 0, un lietotne pati izmērīs joslu. Iestatiet to manuāli tikai tad, ja josla atrodas nepareizā vietā — dažos magnetolās augšējo joslu zīmē palaidējs, un Android nezina, ka tā tur ir.</string>
     <string name="freq_off">Izsl.</string>
+    <string name="system_report_label">Sistēmas atskaite</string>
+    <string name="system_report_desc">Pieraksta, kā šī ierīce apstrādā skaļumu, maršrutēšanu un mikrofonu. Nepieciešams, lai labotu skaļuma atiestatīšanu pēc Bluetooth zvana, klusas navigācijas uzvednes un mērījumu, kas nesākas.</string>
+    <string name="system_report_button">Apkopot</string>
+    <string name="system_report_working">Apkopošana…</string>
+    <string name="system_report_title">Sistēmas atskaite</string>
+    <string name="system_report_saved">Saglabāts:\n\n%1$s\n\nLai notvertu arī skaļuma kļūdu: veiciet vienu īsu tālruņa zvanu, izmantojot Bluetooth, nolieciet klausuli un apkopojiet atskaiti otru reizi. Otrais fails saturēs to, kas mainījās zvana laikā.</string>
+    <string name="system_report_failed">Atskaiti nevarēja ierakstīt.</string>
+    <string name="mic_denied_title">Nav mikrofona</string>
+    <string name="mic_denied">Android vairs neprasa mikrofonu, jo atļauja iepriekš tika atteikta. Bez tā neko nevar izmērīt.\n\nAtveriet Iestatījumi → Lietotnes → wDSP → Atļaujas un atļaujiet mikrofonu, pēc tam mēģiniet vēlreiz.</string>
 </resources>

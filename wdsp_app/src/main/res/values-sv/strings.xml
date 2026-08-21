@@ -248,4 +248,13 @@
     <string name="status_bar_offset_y">Avstånd från toppen</string>
     <string name="status_bar_placement_hint">Låt höjden vara 0 så mäter appen fältet själv. Ställ in det manuellt bara om remsan hamnar på fel ställe — på vissa bilradioapparater ritas det översta fältet av launchern och Android vet inte att det finns där.</string>
     <string name="freq_off">Av</string>
+    <string name="system_report_label">Systemrapport</string>
+    <string name="system_report_desc">Antecknar hur denna enhet hanterar volym, dirigering och mikrofonen. Behövs för att fixa volymåterställning efter ett Bluetooth-samtal, tysta navigeringsmeddelanden och en mätning som inte startar.</string>
+    <string name="system_report_button">Samla</string>
+    <string name="system_report_working">Samlar…</string>
+    <string name="system_report_title">Systemrapport</string>
+    <string name="system_report_saved">Sparad i:\n\n%1$s\n\nFör att även fånga volymfelet: ring ett kort telefonsamtal över Bluetooth, lägg på och samla rapporten en andra gång. Den andra filen kommer att innehålla vad som ändrades under samtalet.</string>
+    <string name="system_report_failed">Rapporten kunde inte skrivas.</string>
+    <string name="mic_denied_title">Ingen mikrofon</string>
+    <string name="mic_denied">Android ber inte om mikrofonen längre, eftersom behörigheten nekades tidigare. Ingenting kan mätas utan den.\n\nÖppna Inställningar → Appar → wDSP → Behörigheter och tillåt mikrofonen, försök sedan igen.</string>
 </resources>

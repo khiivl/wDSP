@@ -260,4 +260,13 @@
     <string name="status_bar_offset_y">Разстояние от върха</string>
     <string name="status_bar_placement_hint">Оставете височината 0 и приложението само ще измери лентата. Задайте я ръчно само ако лентата е на грешното място — при някои мултимедии горната лента се рисува от стартера и Android не знае за нея.</string>
     <string name="freq_off">Изкл.</string>
+    <string name="system_report_label">Системен отчет</string>
+    <string name="system_report_desc">Записва как това устройство управлява силата на звука, маршрутизирането и микрофона. Необходимо за поправяне на нулирането на звука след Bluetooth разговор, тихите навигационни съобщения и измерване, което не иска да стартира.</string>
+    <string name="system_report_button">Събиране</string>
+    <string name="system_report_working">Събиране…</string>
+    <string name="system_report_title">Системен отчет</string>
+    <string name="system_report_saved">Запазено в:\n\n%1$s\n\nЗа да хванете и бъга със силата на звука: направете един кратък телефонен разговор през Bluetooth, затворете и съберете отчета втори път. Вторият файл ще съдържа това, което се е променило по време на разговора.</string>
+    <string name="system_report_failed">Отчетът не можа да бъде записан.</string>
+    <string name="mic_denied_title">Няма микрофон</string>
+    <string name="mic_denied">Android вече не пита за микрофона, защото разрешението е било отказано по-рано. Без него нищо не може да бъде измерено.\n\nОтворете Настройки → Приложения → wDSP → Разрешения и разрешете микрофона, след което опитайте отново.</string>
 </resources>

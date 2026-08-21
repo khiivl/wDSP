@@ -260,4 +260,13 @@ Globale standaard: %1$s</string>
     <string name="status_bar_offset_y">Afstand vanaf de bovenkant</string>
     <string name="status_bar_placement_hint">Laat de hoogte op 0 staan en de app meet de balk zelf. Stel het alleen handmatig in als de streep op de verkeerde plaats terechtkomt — op sommige autoradio\'s wordt de bovenste balk getekend door de launcher en weet Android niet dat deze er is.</string>
     <string name="freq_off">Uit</string>
+    <string name="system_report_label">Systeemrapport</string>
+    <string name="system_report_desc">Noteert hoe dit apparaat omgaat met volume, routering en de microfoon. Nodig om het resetten van het volume na een Bluetooth-gesprek, stille navigatie-instructies en een meting die niet wil starten te verhelpen.</string>
+    <string name="system_report_button">Verzamelen</string>
+    <string name="system_report_working">Verzamelen…</string>
+    <string name="system_report_title">Systeemrapport</string>
+    <string name="system_report_saved">Opgeslagen in:\n\n%1$s\n\nOm ook de volumebruis te vangen: voer een kort telefoongesprek via Bluetooth, hang op en verzamel het rapport nog een keer. Het tweede bestand bevat wat er tijdens het gesprek is veranderd.</string>
+    <string name="system_report_failed">Het rapport kon niet worden geschreven.</string>
+    <string name="mic_denied_title">Geen microfoon</string>
+    <string name="mic_denied">Android vraagt niet meer om de microfoon, omdat de toestemming eerder is geweigerd. Zonder dit kan er niets worden gemeten.\n\nOpen Instellingen → Apps → wDSP → Rechten en sta de microfoon toe, probeer het daarna opnieuw.</string>
 </resources>

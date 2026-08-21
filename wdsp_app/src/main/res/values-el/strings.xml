@@ -260,4 +260,13 @@
     <string name="status_bar_offset_y">Απόσταση από την κορυφή</string>
     <string name="status_bar_placement_hint">Αφήστε το ύψος στο 0 και η εφαρμογή θα μετρήσει μόνη της τη γραμμή. Ορίστε το χειροκίνητα μόνο εάν η λωρίδα βρίσκεται σε λάθος θέση — σε ορισμένες οθόνες η επάνω γραμμή σχεδιάζεται από το launcher και το Android δεν γνωρίζει ότι υπάρχει.</string>
     <string name="freq_off">Απενεργ.</string>
+    <string name="system_report_label">Αναφορά συστήματος</string>
+    <string name="system_report_desc">Καταγράφει πώς αυτή η μονάδα χειρίζεται την ένταση, τη δρομολόγηση και το μικρόφωνο. Απαραίτητο για τη διόρθωση της επαναφοράς έντασης μετά από κλήση Bluetooth, των αθόρυβων οδηγιών πλοήγησης και μιας μέτρησης που δεν ξεκινά.</string>
+    <string name="system_report_button">Συλλογή</string>
+    <string name="system_report_working">Συλλογή…</string>
+    <string name="system_report_title">Αναφορά συστήματος</string>
+    <string name="system_report_saved">Αποθηκεύτηκε στο:\n\n%1$s\n\nΓια να πιάσετε επίσης το σφάλμα έντασης: κάντε μια σύντομη κλήση μέσω Bluetooth, κλείστε και συλλέξτε την αναφορά δεύτερη φορά. Το δεύτερο αρχείο θα περιέχει τι άλλαξε κατά τη διάρκεια της κλήσης.</string>
+    <string name="system_report_failed">Η αναφορά δεν μπόρεσε να γραφτεί.</string>
+    <string name="mic_denied_title">Χωρίς μικρόφωνο</string>
+    <string name="mic_denied">Το Android δεν ζητά πλέον το μικρόφωνο, επειδή η άδεια απορρίφθηκε νωρίτερα. Τίποτα δεν μπορεί να μετρηθεί χωρίς αυτό.\n\nΑνοίξτε Ρυθμίσεις → Εφαρμογές → wDSP → Άδειες και επιτρέψτε το μικρόφωνο, μετά δοκιμάστε ξανά.</string>
 </resources>

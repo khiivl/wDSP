@@ -260,4 +260,13 @@ Globálne predvolené: %1$s</string>
     <string name="status_bar_offset_y">Vzdialenosť od zhora</string>
     <string name="status_bar_placement_hint">Nechajte výšku na 0 a aplikácia si pruh zmeria sama. Ručne ho nastavte, len ak pruh skončí na nesprávnom mieste — na niektorých autorádiách horný pruh kreslí spúšťač (launcher) a Android nevie, že tam je.</string>
     <string name="freq_off">Vyp.</string>
+    <string name="system_report_label">Systémová správa</string>
+    <string name="system_report_desc">Zapisuje, ako táto jednotka spracováva hlasitosť, smerovanie a mikrofón. Potrebné na opravu resetovania hlasitosti po hovore cez Bluetooth, tichých navigačných pokynov a merania, ktoré sa nespustí.</string>
+    <string name="system_report_button">Zhromaždiť</string>
+    <string name="system_report_working">Zhromažďovanie…</string>
+    <string name="system_report_title">Systémová správa</string>
+    <string name="system_report_saved">Uložené do:\n\n%1$s\n\nAk chcete zachytiť aj chybu hlasitosti: uskutočnite jeden krátky telefonický hovor cez Bluetooth, zaveste a zhromaždite správu druhýkrát. Druhý súbor bude obsahovať to, čo sa počas hovoru zmenilo.</string>
+    <string name="system_report_failed">Správu sa nepodarilo zapísať.</string>
+    <string name="mic_denied_title">Žiadny mikrofón</string>
+    <string name="mic_denied">Android už nežiada o mikrofón, pretože oprávnenie bolo predtým zamietnuté. Bez neho sa nedá nič merať.\n\nOtvorte Nastavenia → Aplikácie → wDSP → Oprávnenia a povoľte mikrofón, potom to skúste znova.</string>
 </resources>

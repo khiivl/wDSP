@@ -260,4 +260,13 @@ Bendras numatytasis: %1$s</string>
     <string name="status_bar_offset_y">Atstumas nuo viršaus</string>
     <string name="status_bar_placement_hint">Palikite 0 aukštį ir programa pati išmatuos juostą. Nustatykite rankiniu būdu tik tada, jei juosta atsiduria netinkamoje vietoje — kai kuriuose grotuvuose viršutinę juostą piešia paleidiklis, o Android nežino, kad ji ten yra.</string>
     <string name="freq_off">Išj.</string>
+    <string name="system_report_label">Sistemos ataskaita</string>
+    <string name="system_report_desc">Užrašo, kaip šis įrenginys valdo garsumą, maršrutizavimą ir mikrofoną. Reikalinga norint ištaisyti garsumo atstatymą po „Bluetooth“ skambučio, tylius navigacijos raginimus ir matavimą, kuris neprasideda.</string>
+    <string name="system_report_button">Rinkti</string>
+    <string name="system_report_working">Renkama…</string>
+    <string name="system_report_title">Sistemos ataskaita</string>
+    <string name="system_report_saved">Išsaugota į:\n\n%1$s\n\nNorėdami taip pat užfiksuoti garsumo klaidą: atlikite vieną trumpą telefono skambutį per „Bluetooth“, padėkite ragelį ir surinkite ataskaitą antrą kartą. Antrajame faile bus tai, kas pasikeitė pokalbio metu.</string>
+    <string name="system_report_failed">Nepavyko įrašyti ataskaitos.</string>
+    <string name="mic_denied_title">Nėra mikrofona</string>
+    <string name="mic_denied">„Android“ nebeklausia dėl mikrofono, nes anksčiau buvo atsisakyta leisti. Be jo nieko negalima išmatuoti.\n\nAtidarykite Nustatymai → Programos → wDSP → Leidimai ir leiskite naudoti mikrofoną, tada bandykite dar kartą.</string>
 </resources>

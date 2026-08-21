@@ -260,4 +260,13 @@
     <string name="status_bar_offset_y">Kaugus ülaosast</string>
     <string name="status_bar_placement_hint">Jätke kõrgus 0 peale ja rakendus mõõdab riba ise. Määrake see käsitsi ainult siis, kui riba satub valesse kohta — mõnedes autoraadiotes joonistab ülemise riba käivitaja ja Android ei tea selle olemasolust.</string>
     <string name="freq_off">Väljas</string>
+    <string name="system_report_label">Süsteemi aruanne</string>
+    <string name="system_report_desc">Paneb kirja, kuidas see seade käsitleb helitugevust, marsruutimist ja mikrofoni. Vajalik helitugevuse lähtestamise parandamiseks pärast Bluetooth-kõnet, vaiksete navigeerimisviipade ja mõõtmise jaoks, mis ei käivitu.</string>
+    <string name="system_report_button">Kogu</string>
+    <string name="system_report_working">Kogumine…</string>
+    <string name="system_report_title">Süsteemi aruanne</string>
+    <string name="system_report_saved">Salvestatud:\n\n%1$s\n\nHelitugevuse vea tabamiseks tehke üks lühike telefonikõne Bluetoothi kaudu, lõpetage kõne ja koguge aruanne teist korda. Teine fail sisaldab kõne ajal toimunud muutusi.</string>
+    <string name="system_report_failed">Aruannet ei õnnestunud kirjutada.</string>
+    <string name="mic_denied_title">Mikrofoni pole</string>
+    <string name="mic_denied">Android ei küsi enam mikrofoni, sest luba keelduti varem. Ilma selleta ei saa midagi mõõta.\n\nAvage Seaded → Rakendused → wDSP → Load ja lubage mikrofon, seejärel proovige uuesti.</string>
 </resources>

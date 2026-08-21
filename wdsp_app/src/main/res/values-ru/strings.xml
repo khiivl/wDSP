@@ -258,4 +258,13 @@
     <string name="status_bar_offset_y">Отступ от верхнего края</string>
     <string name="status_bar_placement_hint">Оставьте высоту 0, и приложение само измерит панель. Задавайте вручную только если полоса попадает не туда — на некоторых магнитолах верхнюю панель рисует лаунчер, и Android о ней не знает.</string>
     <string name="freq_off">Выкл.</string>
+    <string name="system_report_label">Системный отчет</string>
+    <string name="system_report_desc">Записывает, как это устройство управляет громкостью, маршрутизацией и микрофоном. Нужно для исправления сброса громкости после звонка по Bluetooth, тихих подсказок навигатора и неработающих измерений.</string>
+    <string name="system_report_button">Собрать</string>
+    <string name="system_report_working">Сбор…</string>
+    <string name="system_report_title">Системный отчет</string>
+    <string name="system_report_saved">Сохранено в:\n\n%1$s\n\nЧтобы также поймать баг с громкостью: сделайте один короткий звонок по Bluetooth, повесьте трубку и соберите отчет еще раз. Второй файл будет содержать изменения, произошедшие во время звонка.</string>
+    <string name="system_report_failed">Не удалось записать отчет.</string>
+    <string name="mic_denied_title">Нет микрофона</string>
+    <string name="mic_denied">Android больше не запрашивает доступ к микрофону, так как ранее было отказано. Без него ничего измерить нельзя.\n\nОткройте Настройки → Приложения → wDSP → Разрешения и разрешите микрофон, затем попробуйте снова.</string>
 </resources>

@@ -260,4 +260,13 @@ Globális alapértelmezett: %1$s</string>
     <string name="status_bar_offset_y">Távolság a tetejétől</string>
     <string name="status_bar_placement_hint">Hagyja a magasságot 0-n, és az alkalmazás maga méri meg a sávot. Csak akkor állítsa be kézzel, ha a sáv rossz helyre kerül — egyes fejegységeken a felső sávot az indító (launcher) rajzolja, és az Android nem tud a létezéséről.</string>
     <string name="freq_off">Ki</string>
+    <string name="system_report_label">Rendszerjelentés</string>
+    <string name="system_report_desc">Feljegyzi, hogy az egység hogyan kezeli a hangerőt, az útválasztást és a mikrofont. Szükséges a Bluetooth-hívás utáni hangerő-visszaállítás, a halk navigációs utasítások és az el nem induló mérés javításához.</string>
+    <string name="system_report_button">Gyűjtés</string>
+    <string name="system_report_working">Gyűjtés…</string>
+    <string name="system_report_title">Rendszerjelentés</string>
+    <string name="system_report_saved">Mentve ide:\n\n%1$s\n\nA hangerőhibák elkapásához: indítson egy rövid telefonhívást Bluetooth-on, tegye le, majd gyűjtse be másodszor is a jelentést. A második fájl tartalmazza, mi változott a hívás során.</string>
+    <string name="system_report_failed">A jelentést nem sikerült kiírni.</string>
+    <string name="mic_denied_title">Nincs mikrofon</string>
+    <string name="mic_denied">Az Android már nem kéri a mikrofont, mert az engedélyt korábban megtagadták. Enélkül semmit sem lehet mérni.\n\nNyissa meg a Beállítások → Alkalmazások → wDSP → Engedélyek menüt, engedélyezze a mikrofont, majd próbálja újra.</string>
 </resources>

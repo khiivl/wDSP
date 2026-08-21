@@ -248,4 +248,13 @@
     <string name="status_bar_offset_y">Відступ від верхнього краю</string>
     <string name="status_bar_placement_hint">Залиште висоту 0, і застосунок сам виміряє панель. Встановлюйте вручну, лише якщо смуга потрапляє не туди — на деяких магнітолах верхню панель малює лаунчер, і Android про неї не знає.</string>
     <string name="freq_off">Вимк.</string>
+    <string name="system_report_label">Системний звіт</string>
+    <string name="system_report_desc">Записує, як цей пристрій керує гучністю, маршрутизацією та мікрофоном. Потрібно для виправлення скидання гучності після дзвінка по Bluetooth, тихих підказок навігатора та вимірювань, що не запускаються.</string>
+    <string name="system_report_button">Зібрати</string>
+    <string name="system_report_working">Збирання…</string>
+    <string name="system_report_title">Системний звіт</string>
+    <string name="system_report_saved">Збережено в:\n\n%1$s\n\nЩоб також зловити баг із гучністю: зробіть один короткий дзвінок по Bluetooth, покладіть слухавку і зберіть звіт ще раз. Другий файл міститиме те, що змінилося під час дзвінка.</string>
+    <string name="system_report_failed">Не вдалося записати звіт.</string>
+    <string name="mic_denied_title">Немає мікрофона</string>
+    <string name="mic_denied">Android більше не запитує доступ до мікрофона, оскільки раніше було відмовлено. Без нього нічого виміряти неможливо.\n\nВідкрийте Налаштування → Додатки → wDSP → Дозволи та дозвольте мікрофон, після чого спробуйте знову.</string>
 </resources>

@@ -260,4 +260,13 @@ Globalno zadano: %1$s</string>
     <string name="status_bar_offset_y">Udaljenost od vrha</string>
     <string name="status_bar_placement_hint">Ostavite visinu na 0 i aplikacija će sama izmjeriti traku. Postavite je ručno samo ako traka završi na pogrešnom mjestu — na nekim radijima gornju traku crta pokretač i Android ne zna da je tamo.</string>
     <string name="freq_off">Isklj.</string>
+    <string name="system_report_label">Izvješće sustava</string>
+    <string name="system_report_desc">Zapisuje kako ovaj uređaj upravlja glasnoćom, usmjeravanjem i mikrofonom. Potrebno za popravak resetiranja glasnoće nakon Bluetooth poziva, tihih navigacijskih uputa i mjerenja koje se neće pokrenuti.</string>
+    <string name="system_report_button">Prikupi</string>
+    <string name="system_report_working">Prikupljanje…</string>
+    <string name="system_report_title">Izvješće sustava</string>
+    <string name="system_report_saved">Spremljeno u:\n\n%1$s\n\nDa biste također uhvatili grešku s glasnoćom: obavite jedan kratki telefonski poziv preko Bluetootha, prekinite vezu i prikupite izvješće drugi put. Druga datoteka sadržavat će ono što se promijenilo tijekom poziva.</string>
+    <string name="system_report_failed">Izvješće se nije moglo zapisati.</string>
+    <string name="mic_denied_title">Nema mikrofona</string>
+    <string name="mic_denied">Android više ne traži mikrofon jer je dozvola ranije odbijena. Bez njega se ništa ne može izmjeriti.\n\nOtvorite Postavke → Aplikacije → wDSP → Dozvole i dopustite mikrofon, a zatim pokušajte ponovno.</string>
 </resources>

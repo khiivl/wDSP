@@ -260,4 +260,13 @@ Global standard: %1$s</string>
     <string name="status_bar_offset_y">Avstand fra toppen</string>
     <string name="status_bar_placement_hint">La høyden være 0, så måler appen bjelken selv. Still den inn manuelt bare hvis stripen havner på feil sted — på noen bilradioer tegnes topplinjen av launcheren, og Android vet ikke at den er der.</string>
     <string name="freq_off">Av</string>
+    <string name="system_report_label">Systemrapport</string>
+    <string name="system_report_desc">Skriver ned hvordan denne enheten håndterer volum, ruting og mikrofonen. Nødvendig for å fikse tilbakestilling av volum etter en Bluetooth-samtale, stille navigasjonsmeldinger og en måling som ikke vil starte.</string>
+    <string name="system_report_button">Samle</string>
+    <string name="system_report_working">Samler…</string>
+    <string name="system_report_title">Systemrapport</string>
+    <string name="system_report_saved">Lagret i:\n\n%1$s\n\nFor også å fange volumfeilen: ta en kort telefonsamtale over Bluetooth, legg på, og samle rapporten en gang til. Den andre filen vil inneholde det som endret seg under samtalen.</string>
+    <string name="system_report_failed">Rapporten kunne ikke skrives.</string>
+    <string name="mic_denied_title">Ingen mikrofon</string>
+    <string name="mic_denied">Android ber ikke om mikrofonen lenger, fordi tillatelsen ble nektet tidligere. Ingenting kan måles uten den.\n\nÅpne Innstillinger → Apper → wDSP → Tillatelser og tillat mikrofonen, prøv deretter igjen.</string>
 </resources>

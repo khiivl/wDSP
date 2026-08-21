@@ -260,4 +260,13 @@ Genel Varsayılan: %1$s</string>
     <string name="status_bar_offset_y">Üstten uzaklık</string>
     <string name="status_bar_placement_hint">Yüksekliği 0 bırakın, uygulama çubuğu kendisi ölçsün. Yalnızca şerit yanlış yere düşerse manuel ayarlayın — bazı araç radyolarında üst çubuk başlatıcı (launcher) tarafından çizilir ve Android bunun orada olduğunu bilmez.</string>
     <string name="freq_off">Kapalı</string>
+    <string name="system_report_label">Sistem raporu</string>
+    <string name="system_report_desc">Bu ünitenin sesi, yönlendirmeyi ve mikrofonu nasıl işlediğini kaydeder. Bir Bluetooth aramasından sonra sesin sıfırlanmasını, sessiz navigasyon uyarılarını ve başlamayan bir ölçümü düzeltmek için gereklidir.</string>
+    <string name="system_report_button">Topla</string>
+    <string name="system_report_working">Toplanıyor…</string>
+    <string name="system_report_title">Sistem raporu</string>
+    <string name="system_report_saved">Şuraya kaydedildi:\n\n%1$s\n\nSes hatasını da yakalamak için: Bluetooth üzerinden kısa bir telefon görüşmesi yapın, kapatın ve raporu ikinci kez toplayın. İkinci dosya görüşme sırasında nelerin değiştiğini içerecektir.</string>
+    <string name="system_report_failed">Rapor yazılamadı.</string>
+    <string name="mic_denied_title">Mikrofon yok</string>
+    <string name="mic_denied">Android artık mikrofonu sormuyor, çünkü izin daha önce reddedilmiş. O olmadan hiçbir şey ölçülemez.\n\nAyarlar → Uygulamalar → wDSP → İzinler\'i açın ve mikrofona izin verin, ardından tekrar deneyin.</string>
 </resources>

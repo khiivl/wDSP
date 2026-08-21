@@ -248,4 +248,13 @@
     <string name="status_bar_offset_y">Abstand von oben</string>
     <string name="status_bar_placement_hint">Lassen Sie die Höhe auf 0 und die App misst die Leiste selbst. Stellen Sie sie nur manuell ein, wenn der Streifen am falschen Ort landet — bei einigen Autoradios wird die obere Leiste vom Launcher gezeichnet, und Android weiß nichts davon.</string>
     <string name="freq_off">Aus</string>
+    <string name="system_report_label">Systembericht</string>
+    <string name="system_report_desc">Schreibt auf, wie dieses Gerät Lautstärke, Routing und das Mikrofon handhabt. Erforderlich, um das Zurücksetzen der Lautstärke nach einem Bluetooth-Anruf, leise Navigationsansagen und eine nicht startende Messung zu beheben.</string>
+    <string name="system_report_button">Sammeln</string>
+    <string name="system_report_working">Sammeln…</string>
+    <string name="system_report_title">Systembericht</string>
+    <string name="system_report_saved">Gespeichert in:\n\n%1$s\n\nUm auch den Lautstärkefehler zu erfassen: Machen Sie einen kurzen Anruf über Bluetooth, legen Sie auf und sammeln Sie den Bericht ein zweites Mal. Die zweite Datei enthält, was sich während des Anrufs geändert hat.</string>
+    <string name="system_report_failed">Der Bericht konnte nicht geschrieben werden.</string>
+    <string name="mic_denied_title">Kein Mikrofon</string>
+    <string name="mic_denied">Android fragt nicht mehr nach dem Mikrofon, da die Berechtigung zuvor verweigert wurde. Ohne dies kann nichts gemessen werden.\n\nÖffnen Sie Einstellungen → Apps → wDSP → Berechtigungen und erlauben Sie das Mikrofon, versuchen Sie es dann erneut.</string>
 </resources>

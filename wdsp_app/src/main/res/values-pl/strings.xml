@@ -248,4 +248,13 @@
     <string name="status_bar_offset_y">Odległość od góry</string>
     <string name="status_bar_placement_hint">Zostaw wysokość 0, a aplikacja sama zmierzy pasek. Ustaw ją ręcznie tylko wtedy, gdy pasek wyląduje w niewłaściwym miejscu — w niektórych stacjach multimedialnych górny pasek jest rysowany przez launcher, a Android nie wie o jego istnieniu.</string>
     <string name="freq_off">Wył.</string>
+    <string name="system_report_label">Raport systemowy</string>
+    <string name="system_report_desc">Zapisuje, w jaki sposób to urządzenie obsługuje głośność, routing i mikrofon. Niezbędne do naprawy resetowania głośności po rozmowie Bluetooth, cichych komunikatów nawigacji oraz pomiaru, który nie chce się uruchomić.</string>
+    <string name="system_report_button">Zbierz</string>
+    <string name="system_report_working">Zbieranie…</string>
+    <string name="system_report_title">Raport systemowy</string>
+    <string name="system_report_saved">Zapisano w:\n\n%1$s\n\nAby wyłapać również błąd głośności: wykonaj jedno krótkie połączenie telefoniczne przez Bluetooth, rozłącz się i zbierz raport po raz drugi. Drugi plik będzie zawierał to, co zmieniło się podczas połączenia.</string>
+    <string name="system_report_failed">Nie udało się zapisać raportu.</string>
+    <string name="mic_denied_title">Brak mikrofonu</string>
+    <string name="mic_denied">Android nie prosi już o mikrofon, ponieważ wcześniej odmówiono uprawnień. Bez niego nic nie można zmierzyć.\n\nOtwórz Ustawienia → Aplikacje → wDSP → Uprawnienia i zezwól na mikrofon, a następnie spróbuj ponownie.</string>
 </resources>

@@ -260,4 +260,13 @@ Par défaut global : %1$s</string>
     <string name="status_bar_offset_y">Distance du haut</string>
     <string name="status_bar_placement_hint">Laissez la hauteur à 0 et l\'application mesure la barre elle-même. Ne la définissez manuellement que si la bande tombe au mauvais endroit — sur certains autoradios, la barre supérieure est dessinée par le lanceur, et Android ignore sa présence.</string>
     <string name="freq_off">Arrêt</string>
+    <string name="system_report_label">Rapport système</string>
+    <string name="system_report_desc">Enregistre la façon dont cet appareil gère le volume, le routage et le microphone. Nécessaire pour corriger la réinitialisation du volume après un appel Bluetooth, les indications de navigation silencieuses et une mesure qui ne démarre pas.</string>
+    <string name="system_report_button">Collecter</string>
+    <string name="system_report_working">Collecte…</string>
+    <string name="system_report_title">Rapport système</string>
+    <string name="system_report_saved">Enregistré dans :\n\n%1$s\n\nPour attraper également le bug de volume : passez un court appel téléphonique via Bluetooth, raccrochez, et collectez le rapport une seconde fois. Le deuxième fichier contiendra ce qui a changé pendant l\'appel.</string>
+    <string name="system_report_failed">Le rapport n\'a pas pu être écrit.</string>
+    <string name="mic_denied_title">Pas de micro</string>
+    <string name="mic_denied">Android ne demande plus le microphone car l\'autorisation a été refusée précédemment. Rien ne peut être mesuré sans cela.\n\nOuvrez Paramètres → Applications → wDSP → Autorisations et autorisez le microphone, puis réessayez.</string>
 </resources>
