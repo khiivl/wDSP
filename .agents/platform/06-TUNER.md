@@ -107,3 +107,27 @@ asymmetry is inherited, not invented, and multiplying "to fix it" moves the band
 orders of magnitude and throws away every station found.
 
 📻 Below 0.05 MHz the hardware simply does not tune. Fine-tuning finer than that is not available.
+
+## 6. Why RadioText grows tails on `002121`
+
+🔬 Reported by the reverse-engineering assistant working the same image, and partly corroborated
+here: `FUN_0800643c` exists at `0x0800643c`, is reached when the MCU enters its tune state, and
+does clear a set of buffers.
+
+Its account: the function zeroes the RDS segment masks and counters and the PS buffer, but **not
+the 64-byte RadioText buffer** (`0x2000048C`, with `0x20000625` a second candidate). So when a new
+station sends a short RadioText, it overwrites only the front of the buffer and the tail of the
+previous station's text survives — which is exactly the symptom the radio application spent weeks
+cutting off by position.
+
+⚠️ **The exclusion itself is not independently verified here** — the function and its clearing
+behaviour are, the specific omission is not. Before acting on it, check which addresses that
+function writes.
+
+🧩 If it holds, it also explains why a retune makes the MCU resend the station name but not clean
+the RadioText, and why only a power cycle clears it.
+
+🧩 On `004121` (the NXP tuner) the reported behaviour is different and worse: a signal-quality check
+strict enough that any block error resets the state, which reads as "RDS disappears at the
+slightest provocation". That matches what a tester on that firmware reports — RadioText almost
+never arrives.

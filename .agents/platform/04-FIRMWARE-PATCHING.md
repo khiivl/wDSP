@@ -273,3 +273,22 @@ measurable in forty seconds; and only then the veneer.
 the `002121` tail of the version string (chip detection reads it), and building a raw UART-to-I2C
 bridge instead of the poke (two masters on one bus is a class of problem that can simply be
 declined).
+
+## 10. Techniques that work on this microcontroller
+
+Cortex-M3, Thumb, no symbols, Ghidra recovering most of it but not the dispatch tables.
+
+- **Jump tables have to be unpacked by hand.** Ghidra reports "could not recover jumptable" and
+  treats the indirect branch as a call, which makes every handler behind it unreachable code that
+  never appears in the decompilation. The table itself is plain: a count byte, then one byte per
+  entry, and the target is `entry × 2 + table_base` pointing at a 16-bit branch. §3 shows the whole
+  procedure on a real one.
+- **A trampoline is the way to add code.** Replace a 4-byte `BL`, or an `LDR.W PC`, with a branch
+  into the free space at `0x0800F63C`, put the new code there, and return to the original address.
+  The 452 bytes are enough for a small routine.
+- **To remove a check, do not write new code — erase the branch.** A 16-bit `NOP` is `BF 00`.
+  Overwriting a conditional with it is two bytes, trivially reversible, and cannot go wrong the way
+  inserted code can.
+- **Constants are usually one byte.** `movs rN, #imm8` puts the immediate in the low byte of the
+  instruction word, so changing a hard-coded value is a single-byte edit — which is why the
+  equaliser Q and front/rear patches are as small as they are.
