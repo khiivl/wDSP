@@ -1526,7 +1526,15 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_eq_vis_section, R.id.label_permissions_section,
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
             R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
-            R.id.label_sb_vis_normalization, R.id.label_vis_normalization
+            R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
+            // The analyzer and diagnostics folds were never on either list, so every label in them
+            // kept the layout's own colour and looked washed out next to the rest of the screen.
+            // The screen is themed by walking these arrays rather than by styles, so an id that is
+            // not here is not themed. 13sp bold is a heading; 11-12sp belongs in secondaryLabels.
+            R.id.label_analyzer_section, R.id.label_debug_section,
+            R.id.label_agc_main, R.id.label_agc_bar,
+            R.id.label_latency_trim, R.id.label_sync_measure,
+            R.id.label_room_measure, R.id.label_system_report
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -1542,7 +1550,11 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_status_bar_hue, R.id.label_eq_vis_mode,
             R.id.label_status_bar_height, R.id.label_status_bar_offset_y,
             R.id.label_status_bar_alpha, R.id.tv_status_bar_placement_hint,
-            R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization
+            R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization,
+            R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
+            R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_system_report,
+            R.id.label_agc_main_strength, R.id.label_agc_bar_strength, R.id.label_range_db,
+            R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
@@ -1559,6 +1571,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvStatusBarAlpha != null) tvStatusBarAlpha.setTextColor(valueColor);
         if (tvSolidHueVal != null) tvSolidHueVal.setTextColor(valueColor);
         if (tvSolidValVal != null) tvSolidValVal.setTextColor(valueColor);
+        // The analyzer fold's own values were missed the same way its labels were.
+        if (tvAgcMainStrength != null) tvAgcMainStrength.setTextColor(valueColor);
+        if (tvAgcBarStrength != null) tvAgcBarStrength.setTextColor(valueColor);
+        if (tvLatencyTrim != null) tvLatencyTrim.setTextColor(valueColor);
+        if (tvRangeDb != null) tvRangeDb.setTextColor(valueColor);
+        if (tvSyncStatus != null) tvSyncStatus.setTextColor(secondaryText);
 
         // Tint status bar Sliders
         tintSlider(seekStatusBarWidth, accent);
