@@ -207,11 +207,55 @@ service starts:
 `"0"`. **That**, not the property, is why auto-connect is off here — and why flipping the property
 from the radio app appeared to work when it was doing nothing.
 
-🧩 So the file is writable without root and is the only lever that actually moves the setting. But
-it is read at service start only, so it is a persistent preference, not a runtime toggle: it cannot
-be used to disable auto-connect while the radio plays and restore it afterwards.
+### What the app's own toggle does, and what it does not
 
-❓ Whether the Bluetooth service can be made to re-read it without a reboot is unknown.
+🔴 The settings toggle takes effect immediately, which looks like proof that something re-reads
+the property. It is not. 🔬 `SettingFragment` does exactly two things:
+
+```java
+TechBTSettingManager.getInstance().setAutoConnectState(i ^ 1);   // AT command, in-process
+ImportAndExportUtil.writeBtAutoConnect(i ^ 1);                   // the conf file above
+```
+
+and `setAutoConnectState` ends at `sendATCommand("AT#MG")` / `"AT#MH"` on the module itself
+(`/dev/goc_serial`, which on our unit is a symlink to `/dev/pts/0`). **The instant effect is an AT
+command, not a re-read.** The conf file is simply where that toggle keeps its answer, and
+`confMap` is loaded in a static initialiser - once per process, at class load.
+
+🧩 So writing the file from outside performs the *persistent* half of what the toggle does. The
+instant half is unreachable.
+
+### The external surface, enumerated - auto-connect is not on it
+
+Checked, so nobody has to check again. 🔬 Two binders are published in `ServiceManager` and 📻 both
+are live on our unit:
+
+```
+btBinderPool:      com.qf.btsdk.IBTBinderPool
+bluetooth_server:  com.qf.bluetoothsdk.aidl.BluetoothBinder
+```
+
+- `btBinderPool` serves exactly **one** sub-binder, `"btSettingBinder"` → `TechBTSettingServer`,
+  with five transactions: `1024` setBtEnable(boolean), `2048` connected name, `4096` isConnected,
+  `8192` address, `16384` enabled state;
+- `bluetooth_server` is call control - accept, reject, hang up, dial, name, state, callbacks - plus
+  `getBinderServerByName` and a generic `onCallMethodByName`. That dispatcher only reaches methods
+  annotated `@ServerMethod`, and those are all inter/extra Bluetooth device management: open,
+  close, reset, rename, discovery, pair, connect, PBAP sync;
+- no broadcast reaches auto-connect either: the app's dynamically registered actions are Android
+  Bluetooth profile events plus `com.qf.action.ACC_*`, `SCREEN_*`, `PHONE_CALL_*`, `READY_GO_SLEEP`
+  and `connect_pan`/`disconnect_pan`.
+
+🔴 **Auto-connect is not exposed anywhere.** The only caller outside `initSettingsConfig` is the
+app's own settings screen.
+
+### What that leaves
+
+🧩 Write `/great/protect_dir/btsetting.conf` and the setting is correct from the next time the
+Bluetooth SDK initialises, which is a process start. ❓ Whether ACC-off hibernation restarts that
+process - and therefore whether the file takes effect every drive - is untested and is the next
+thing to measure. Otherwise it is a reboot, or asking the owner to flip the toggle once, which
+writes the same file.
 
 ### The channel-breaking mute, and what gates it
 
