@@ -1,0 +1,358 @@
+package com.radiorubka.wdsp;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
+
+/**
+ * A full-screen visualiser that appears when the head unit has been left alone.
+ *
+ * <h2>What counts as "left alone"</h2>
+ *
+ * An ordinary app cannot see touches that land in other apps - that needs an accessibility
+ * service, which is a large permission to ask for a decoration. What it can see is which activity
+ * is in front, and the platform publishes exactly that in {@code sys.qf.current.activity} - the
+ * package and class, updated as it changes. So idle here means <b>the foreground has not changed
+ * for the chosen number of seconds</b>. Somebody reading a map, scrolling a list or watching a
+ * video is not touching anything either, which is why the two guards below exist.
+ *
+ * <p>Any touch on the screensaver dismisses it, and the clock starts again from that moment - so
+ * a person who does not want it can always push it away and it will not fight them.
+ *
+ * <h2>What keeps it out of the way</h2>
+ *
+ * <ul>
+ *   <li><b>Navigation.</b> Never over a live map. The platform says whether navigation is speaking
+ *       ({@code sys.qf.navi_state}) and whether the floating navigation bar or a floating video
+ *       window is up; any of those and the screensaver stays down.</li>
+ *   <li><b>The owner's own list.</b> Whatever packages they choose are simply never covered.</li>
+ *   <li><b>The screen being off</b>, and the overlay permission not being granted.</li>
+ * </ul>
+ *
+ * <h2>Cost</h2>
+ *
+ * One property read every two seconds while it is enabled and the screen is on, and nothing at all
+ * when it is off. The visualiser view is the same one the status-bar strip uses, so the spectrum is
+ * already being computed for it; drawing it larger costs nothing extra to produce.
+ */
+public final class ScreensaverManager {
+
+    private static final String TAG = "wDSP_Screensaver";
+
+    public static final String PREF_ENABLED = "ss_enabled";
+    /** Seconds of an unchanging foreground before it appears. */
+    public static final String PREF_DELAY_S = "ss_delay_s";
+    /** How black the backdrop is, 0..100. The visualiser is drawn on top of it. */
+    public static final String PREF_BG_ALPHA = "ss_bg_alpha";
+    /** Packages that are never covered, stored as a string set. */
+    public static final String PREF_BLOCKED = "ss_blocked_pkgs";
+
+    public static final int DEFAULT_DELAY_S = 60;
+    public static final int DEFAULT_BG_ALPHA = 85;
+
+    private static final long POLL_MS = 2000L;
+
+    /** The platform names the foreground activity here, as {@code package/class}. */
+    private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
+    private static final String PROP_NAVI_SPEAKING = "sys.qf.navi_state";
+    private static final String PROP_FLOAT_NAVI_BAR = "persist.sys.float_navi_bar";
+    private static final String PROP_FLOAT_VIDEO = "persist.sys.has.float.video";
+
+    private final Context context;
+    private final WindowManager windowManager;
+    private final SharedPreferences prefs;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private FrameLayout overlayRoot;
+    private StatusBarVisualizerView visualizerView;
+    private boolean attached = false;
+
+    private boolean screenOn = true;
+    private String lastForeground = "";
+    private long foregroundSince = 0L;
+
+    private static ScreensaverManager instance;
+
+    public static synchronized ScreensaverManager getInstance(Context context) {
+        if (instance == null) instance = new ScreensaverManager(context.getApplicationContext());
+        return instance;
+    }
+
+    private ScreensaverManager(Context context) {
+        this.context = context;
+        this.windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        this.prefs = ThemeManager.prefs(context);
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // settings
+    // -------------------------------------------------------------------------------------------
+
+    public boolean isEnabled() {
+        return prefs.getBoolean(PREF_ENABLED, false);
+    }
+
+    public void setEnabled(boolean enabled) {
+        prefs.edit().putBoolean(PREF_ENABLED, enabled).apply();
+        if (enabled) {
+            resetIdleClock();
+            startPolling();
+        } else {
+            stopPolling();
+            hide();
+        }
+    }
+
+    public int delaySeconds() {
+        return Math.max(5, prefs.getInt(PREF_DELAY_S, DEFAULT_DELAY_S));
+    }
+
+    public void setDelaySeconds(int seconds) {
+        prefs.edit().putInt(PREF_DELAY_S, Math.max(5, seconds)).apply();
+        resetIdleClock();
+    }
+
+    public int backgroundAlpha() {
+        return Math.max(0, Math.min(100, prefs.getInt(PREF_BG_ALPHA, DEFAULT_BG_ALPHA)));
+    }
+
+    public void setBackgroundAlpha(int percent) {
+        prefs.edit().putInt(PREF_BG_ALPHA, Math.max(0, Math.min(100, percent))).apply();
+        handler.post(() -> {
+            if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
+        });
+    }
+
+    /** Packages the screensaver is never shown over. */
+    public Set<String> blockedPackages() {
+        Set<String> stored = prefs.getStringSet(PREF_BLOCKED, null);
+        return stored == null ? new TreeSet<>() : new TreeSet<>(stored);
+    }
+
+    public void setBlockedPackages(Set<String> packages) {
+        prefs.edit().putStringSet(PREF_BLOCKED, new HashSet<>(packages)).apply();
+        resetIdleClock();
+    }
+
+    public boolean canDrawOverlays() {
+        return Settings.canDrawOverlays(context);
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // the idle clock
+    // -------------------------------------------------------------------------------------------
+
+    /** Called from the service, once, and whenever the screen goes on or off. */
+    public void setScreenState(boolean on) {
+        this.screenOn = on;
+        if (on) {
+            resetIdleClock();
+            startPolling();
+        } else {
+            stopPolling();
+            hide();
+        }
+    }
+
+    public void start() {
+        resetIdleClock();
+        startPolling();
+    }
+
+    private void resetIdleClock() {
+        foregroundSince = System.currentTimeMillis();
+    }
+
+    private void startPolling() {
+        stopPolling();
+        if (!isEnabled() || !screenOn) return;
+        handler.postDelayed(poll, POLL_MS);
+    }
+
+    private void stopPolling() {
+        handler.removeCallbacks(poll);
+    }
+
+    private final Runnable poll = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                tick();
+            } catch (Throwable t) {
+                Log.w(TAG, "screensaver tick failed", t);
+            }
+            if (isEnabled() && screenOn) handler.postDelayed(this, POLL_MS);
+        }
+    };
+
+    private void tick() {
+        String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
+        if (!foreground.equals(lastForeground)) {
+            lastForeground = foreground;
+            resetIdleClock();
+            // Something moved. If the screensaver was up it is no longer wanted - whatever put a
+            // new activity in front did so for a reason.
+            if (attached) hide();
+            return;
+        }
+        if (attached) return;
+        if (!mayShowOver(foreground)) {
+            resetIdleClock();
+            return;
+        }
+        long idleMs = System.currentTimeMillis() - foregroundSince;
+        if (idleMs >= delaySeconds() * 1000L) show();
+    }
+
+    /**
+     * Whether the screensaver is allowed on top of what is currently in front.
+     *
+     * <p>The navigation checks are deliberately generous: three different properties, any one of
+     * which vetoes. Covering a map in traffic is the one failure that would matter, so the cost of
+     * being wrong is not symmetric and neither is the test.
+     */
+    private boolean mayShowOver(String foreground) {
+        if (!isEnabled() || !screenOn || !canDrawOverlays()) return false;
+        if (isTrue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))) return false;
+        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))) return false;
+        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) return false;
+        String pkg = packageOf(foreground);
+        if (pkg.isEmpty()) return false;
+        // Never over our own settings screen: somebody is in there adjusting this very thing.
+        if (pkg.equals(context.getPackageName()) && foreground.contains("SettingsActivity")) {
+            return false;
+        }
+        return !blockedPackages().contains(pkg);
+    }
+
+    /** {@code com.example/.MainActivity} -> {@code com.example} */
+    public static String packageOf(String currentActivity) {
+        if (currentActivity == null) return "";
+        int slash = currentActivity.indexOf('/');
+        return slash > 0 ? currentActivity.substring(0, slash) : currentActivity;
+    }
+
+    /** What the platform says is in front right now, for the settings screen to offer as a hint. */
+    public String currentForegroundPackage() {
+        return packageOf(orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY)));
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // the overlay
+    // -------------------------------------------------------------------------------------------
+
+    private void show() {
+        handler.post(() -> {
+            if (attached) return;
+            try {
+                buildOverlay();
+                windowManager.addView(overlayRoot, overlayParams());
+                attached = true;
+                Log.i(TAG, "screensaver shown over " + lastForeground);
+            } catch (Throwable t) {
+                Log.w(TAG, "could not show the screensaver", t);
+                attached = false;
+            }
+        });
+    }
+
+    public void hide() {
+        handler.post(() -> {
+            if (!attached || overlayRoot == null) return;
+            try {
+                windowManager.removeView(overlayRoot);
+            } catch (Throwable ignored) {
+            }
+            attached = false;
+            resetIdleClock();
+        });
+    }
+
+    private void buildOverlay() {
+        overlayRoot = new FrameLayout(context);
+        overlayRoot.setBackgroundColor(backdropColor());
+
+        visualizerView = new StatusBarVisualizerView(context);
+        visualizerView.setTheme(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME,
+                StatusBarVisualizerManager.DEFAULT_THEME));
+        visualizerView.setHueShift(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE,
+                StatusBarVisualizerManager.DEFAULT_HUE));
+        visualizerView.setAlphaPercent(100);
+        visualizerView.setBandCount(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_BANDS,
+                StatusBarVisualizerManager.DEFAULT_BANDS));
+        visualizerView.setNormalizationEnabled(true);
+
+        overlayRoot.addView(visualizerView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        // One touch anywhere puts it away. The window is focusable-free but touchable, so this is
+        // the only thing it consumes - and consuming it is right: the tap was meant to wake the
+        // screen up, not to press whatever happens to be underneath.
+        overlayRoot.setOnTouchListener((v, event) -> {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) hide();
+            return true;
+        });
+    }
+
+    private int backdropColor() {
+        int alpha = Math.round(255f * backgroundAlpha() / 100f);
+        return Color.argb(alpha, 0, 0, 0);
+    }
+
+    private WindowManager.LayoutParams overlayParams() {
+        int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                : WindowManager.LayoutParams.TYPE_PHONE;
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                PixelFormat.TRANSLUCENT);
+        lp.gravity = Gravity.TOP | Gravity.START;
+        return lp;
+    }
+
+    private static String orEmpty(String s) {
+        return s == null ? "" : s;
+    }
+
+    private static boolean isTrue(String s) {
+        return "true".equalsIgnoreCase(s) || "1".equals(s);
+    }
+
+    /** For the settings screen: the packages worth offering, newest-looking first. */
+    public static Set<String> launchablePackages(Context context) {
+        Set<String> out = new TreeSet<>();
+        try {
+            android.content.Intent main = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+            main.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
+            for (android.content.pm.ResolveInfo info :
+                    context.getPackageManager().queryIntentActivities(main, 0)) {
+                if (info.activityInfo != null) out.add(info.activityInfo.packageName);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not list launchable packages", t);
+        }
+        return out;
+    }
+}

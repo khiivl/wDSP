@@ -267,6 +267,17 @@
     <string name="system_report_title">System report</string>
     <string name="system_report_saved">Saved to:\n\n%1$s\n\nTo also catch the volume bug: make one short phone call over Bluetooth, hang up, and collect the report a second time. The second file will contain what changed during the call.</string>
     <string name="system_report_failed">The report could not be written.</string>
+    <string name="screensaver_section_title">Screensaver</string>
+    <string name="screensaver_enable">Screensaver</string>
+    <string name="screensaver_enable_desc">A full-screen visualiser after the head unit has been left alone. Any touch puts it away.</string>
+    <string name="screensaver_delay">Appears after</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Backdrop</string>
+    <string name="screensaver_apps">Never over these apps</string>
+    <string name="screensaver_apps_none">Nothing selected</string>
+    <string name="screensaver_apps_count">%1$d selected</string>
+    <string name="screensaver_apps_pick">Choose</string>
+    <string name="screensaver_note">Navigation is never covered, whatever is chosen here.</string>
     <string name="mic_denied_title">No microphone</string>
     <string name="mic_denied">Android is not asking for the microphone any more, because the permission was refused earlier. Nothing can be measured without it.\n\nOpen Settings → Apps → wDSP → Permissions and allow the microphone, then try again.</string>
 </resources>

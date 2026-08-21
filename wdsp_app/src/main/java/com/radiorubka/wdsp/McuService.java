@@ -241,6 +241,7 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                    ScreensaverManager.getInstance(McuService.this).setScreenState(true);
                     if (statusBarManager != null) {
                         statusBarManager.setScreenState(true);
                         statusBarManager.evaluateVisibility();
@@ -252,6 +253,7 @@ public class McuService extends Service implements LocationListener {
                     }, 3000);
                 }
                 else if ("com.qf.action.ACC_OFF".equals(action)) {
+                    ScreensaverManager.getInstance(McuService.this).setScreenState(false);
                     if (statusBarManager != null) {
                         statusBarManager.setScreenState(false);
                     }
@@ -419,6 +421,10 @@ public class McuService extends Service implements LocationListener {
         IntentFilter controlFilter = getIntentFilter();
 
         registerReceiver(controlReceiver, controlFilter);
+
+        // The screensaver watches which activity is in front and needs to be running whether or
+        // not anybody has the app open - that is the whole point of it.
+        ScreensaverManager.getInstance(this).start();
 
         // Armed here rather than when the diagnostic screen is opened, because the events worth
         // recording - a Bluetooth call taking the audio path and giving it back - happen while

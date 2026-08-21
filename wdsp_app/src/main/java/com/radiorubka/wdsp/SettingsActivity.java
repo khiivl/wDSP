@@ -376,6 +376,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         initStatusBarVisualizerControls();
         initAnalyzerControls();
+        initScreensaverControls();
 
         // EQ Spectrum Visualizer
         switchEqVisualizerEnable = findViewById(R.id.switch_eq_visualizer_enable);
@@ -892,6 +893,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         loadAnalyzerSettings(p);
+        loadScreensaverSettings();
 
         // Permissions
         updatePermissionButtons();
@@ -904,6 +906,9 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
     private TextView tvRoomStatus;
+    private SwitchCompat switchScreensaver;
+    private Slider seekScreensaverDelay, seekScreensaverBg;
+    private TextView tvScreensaverDelay, tvScreensaverBg, tvScreensaverApps;
     private TextView tvSystemReportStatus;
 
     /**
@@ -949,6 +954,131 @@ public class SettingsActivity extends AppCompatActivity {
         syncButton.setOnClickListener(v -> startLatencyMeasurement());
 
         initDiagnostics();
+    }
+
+    // --- Screensaver -----------------------------------------------------------------------
+
+    /**
+     * The screensaver fold.
+     *
+     * <p>Four controls, and the fourth is the one that matters: the list of apps it must never
+     * cover. Navigation is already refused on its own, but only the owner knows which of their
+     * other apps are meant to be looked at rather than left running - a reversing camera view, a
+     * tyre-pressure display, a dashcam.
+     */
+    private void initScreensaverControls() {
+        switchScreensaver = findViewById(R.id.switch_screensaver);
+        seekScreensaverDelay = findViewById(R.id.seek_screensaver_delay);
+        seekScreensaverBg = findViewById(R.id.seek_screensaver_bg);
+        tvScreensaverDelay = findViewById(R.id.tv_screensaver_delay);
+        tvScreensaverBg = findViewById(R.id.tv_screensaver_bg);
+        tvScreensaverApps = findViewById(R.id.tv_screensaver_apps);
+        TextView pickButton = findViewById(R.id.btn_screensaver_apps);
+        if (pickButton != null) {
+            TouchGlow.attach(pickButton);
+            pickButton.setOnClickListener(v -> pickScreensaverApps());
+        }
+
+        ScreensaverManager ss = ScreensaverManager.getInstance(this);
+
+        if (switchScreensaver != null) {
+            switchScreensaver.setOnCheckedChangeListener((button, checked) -> {
+                if (!button.isPressed()) return;
+                if (checked && !ss.canDrawOverlays()) {
+                    // The same permission the status-bar strip needs. Asking here rather than
+                    // failing silently, because a switch that flips back on its own reads as a bug.
+                    button.setChecked(false);
+                    startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName())));
+                    return;
+                }
+                ss.setEnabled(checked);
+            });
+        }
+
+        if (seekScreensaverDelay != null) {
+            seekScreensaverDelay.addOnChangeListener((slider, value, fromUser) -> {
+                int seconds = Math.round(value);
+                tvScreensaverDelay.setText(getString(R.string.screensaver_delay_fmt, seconds));
+                if (fromUser) ss.setDelaySeconds(seconds);
+            });
+        }
+
+        if (seekScreensaverBg != null) {
+            seekScreensaverBg.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverBg.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setBackgroundAlpha(percent);
+            });
+        }
+    }
+
+    private void loadScreensaverSettings() {
+        ScreensaverManager ss = ScreensaverManager.getInstance(this);
+        if (switchScreensaver != null) switchScreensaver.setChecked(ss.isEnabled());
+        if (seekScreensaverDelay != null) {
+            int delay = Math.max(5, Math.min(600, ss.delaySeconds()));
+            seekScreensaverDelay.setValue(delay);
+            tvScreensaverDelay.setText(getString(R.string.screensaver_delay_fmt, delay));
+        }
+        if (seekScreensaverBg != null) {
+            int alpha = ss.backgroundAlpha();
+            seekScreensaverBg.setValue(alpha);
+            tvScreensaverBg.setText(getString(R.string.lbl_percent_fmt, alpha));
+        }
+        showScreensaverAppCount();
+    }
+
+    private void showScreensaverAppCount() {
+        if (tvScreensaverApps == null) return;
+        int count = ScreensaverManager.getInstance(this).blockedPackages().size();
+        tvScreensaverApps.setText(count == 0
+                ? getString(R.string.screensaver_apps_none)
+                : getString(R.string.screensaver_apps_count, count));
+    }
+
+    /**
+     * Offers every app with a launcher icon, ticked if it is already on the list.
+     *
+     * <p>Labels rather than package names: nobody chooses "com.autonavi.amapauto" from a list.
+     * The package is what gets stored, because that is what the platform reports.
+     */
+    private void pickScreensaverApps() {
+        ScreensaverManager ss = ScreensaverManager.getInstance(this);
+        java.util.List<String> packages =
+                new java.util.ArrayList<>(ScreensaverManager.launchablePackages(this));
+        if (packages.isEmpty()) {
+            ThemedDialog.notice(this, getString(R.string.screensaver_apps),
+                    getString(R.string.screensaver_apps_none));
+            return;
+        }
+        android.content.pm.PackageManager pm = getPackageManager();
+        java.util.List<String> labels = new java.util.ArrayList<>(packages.size());
+        for (String pkg : packages) {
+            String label = pkg;
+            try {
+                label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
+            } catch (Throwable ignored) {
+            }
+            labels.add(label);
+        }
+        java.util.Set<String> blocked = ss.blockedPackages();
+        boolean[] checked = new boolean[packages.size()];
+        for (int i = 0; i < packages.size(); i++) checked[i] = blocked.contains(packages.get(i));
+
+        ThemedDialog.show(ThemedDialog.builder(this)
+                .setTitle(R.string.screensaver_apps)
+                .setMultiChoiceItems(labels.toArray(new CharSequence[0]), checked,
+                        (dialog, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    java.util.Set<String> picked = new java.util.HashSet<>();
+                    for (int i = 0; i < packages.size(); i++) {
+                        if (checked[i]) picked.add(packages.get(i));
+                    }
+                    ss.setBlockedPackages(picked);
+                    showScreensaverAppCount();
+                })
+                .setNegativeButton(android.R.string.cancel, null));
     }
 
     // --- Diagnostics: cabin measurement ---------------------------------------------------------
@@ -1570,7 +1700,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_analyzer_section, R.id.label_debug_section,
             R.id.label_agc_main, R.id.label_agc_bar,
             R.id.label_latency_trim, R.id.label_sync_measure,
-            R.id.label_room_measure, R.id.label_system_report
+            R.id.label_room_measure, R.id.label_system_report,
+            R.id.label_screensaver_section, R.id.label_screensaver_enable
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -1590,7 +1721,10 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_system_report,
             R.id.label_agc_main_strength, R.id.label_agc_bar_strength, R.id.label_range_db,
-            R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status
+            R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
+            R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
+            R.id.label_screensaver_delay, R.id.label_screensaver_bg,
+            R.id.label_screensaver_apps, R.id.tv_screensaver_apps
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
@@ -1613,12 +1747,16 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvLatencyTrim != null) tvLatencyTrim.setTextColor(valueColor);
         if (tvRangeDb != null) tvRangeDb.setTextColor(valueColor);
         if (tvSyncStatus != null) tvSyncStatus.setTextColor(secondaryText);
+        if (tvScreensaverDelay != null) tvScreensaverDelay.setTextColor(valueColor);
+        if (tvScreensaverBg != null) tvScreensaverBg.setTextColor(valueColor);
 
         // Tint status bar Sliders
         tintSlider(seekStatusBarWidth, accent);
         tintSlider(seekStatusBarPos, accent);
         tintSlider(seekStatusBarHeight, accent);
         tintSlider(seekStatusBarOffsetY, accent);
+        tintSlider(seekScreensaverDelay, accent);
+        tintSlider(seekScreensaverBg, accent);
         tintSlider(seekStatusBarAlpha, accent);
 
         // Update wheel brightness backgrounds
@@ -1666,6 +1804,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_room_measure));
         styleActionButton(findViewById(R.id.btn_room_send));
         styleActionButton(findViewById(R.id.btn_system_report));
+        styleActionButton(findViewById(R.id.btn_screensaver_apps));
     }
 
     private void tintSlider(Slider s, int accent) {
