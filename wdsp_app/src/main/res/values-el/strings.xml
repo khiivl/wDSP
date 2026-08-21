@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Εφαρμογή</string>
     <string name="btn_reapply">Επανεφαρμογή σε επαναφορά</string>
-    <string name="value_default">Δεν ορίστηκε</string>
+    <string name="value_default">Τίποτα</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Άκυρο</string>
     <string name="none">Κανένα</string>
@@ -259,4 +259,5 @@
     <string name="status_bar_height_manual">Ύψος λωρίδας</string>
     <string name="status_bar_offset_y">Απόσταση από την κορυφή</string>
     <string name="status_bar_placement_hint">Αφήστε το ύψος στο 0 και η εφαρμογή θα μετρήσει μόνη της τη γραμμή. Ορίστε το χειροκίνητα μόνο εάν η λωρίδα βρίσκεται σε λάθος θέση — σε ορισμένες οθόνες η επάνω γραμμή σχεδιάζεται από το launcher και το Android δεν γνωρίζει ότι υπάρχει.</string>
+    <string name="freq_off">Απενεργ.</string>
 </resources>

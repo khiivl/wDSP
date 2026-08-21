@@ -78,7 +78,7 @@
     <!-- General -->
     <string name="btn_apply">Aplicar</string>
     <string name="btn_reapply">Reaplicar si se Restablece</string>
-    <string name="value_default">No Establecido</string>
+    <string name="value_default">Nada</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancelar</string>
     <string name="none">Ninguno</string>
@@ -248,4 +248,5 @@
     <string name="status_bar_height_manual">Altura de la tira</string>
     <string name="status_bar_offset_y">Distancia desde arriba</string>
     <string name="status_bar_placement_hint">Deje la altura en 0 y la aplicación medirá la barra por sí misma. Ajústela manualmente solo si la tira queda en el lugar equivocado — en algunas radios, la barra superior la dibuja el launcher y Android no sabe que está ahí.</string>
+    <string name="freq_off">Apag.</string>
 </resources>

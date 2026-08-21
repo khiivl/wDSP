@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Toepassen</string>
     <string name="btn_reapply">Opnieuw toepassen bij reset</string>
-    <string name="value_default">Niet ingesteld</string>
+    <string name="value_default">Niets</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Annuleren</string>
     <string name="none">Geen</string>
@@ -259,4 +259,5 @@ Globale standaard: %1$s</string>
     <string name="status_bar_height_manual">Streephoogte</string>
     <string name="status_bar_offset_y">Afstand vanaf de bovenkant</string>
     <string name="status_bar_placement_hint">Laat de hoogte op 0 staan en de app meet de balk zelf. Stel het alleen handmatig in als de streep op de verkeerde plaats terechtkomt — op sommige autoradio\'s wordt de bovenste balk getekend door de launcher en weet Android niet dat deze er is.</string>
+    <string name="freq_off">Uit</string>
 </resources>

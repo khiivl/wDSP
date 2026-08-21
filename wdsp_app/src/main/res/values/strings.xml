@@ -259,4 +259,5 @@
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Nothing measured yet</string>
     <string name="toast_saved_to">Saved to %1$s</string>
+    <string name="freq_off">Off</string>
 </resources>

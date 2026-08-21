@@ -78,7 +78,7 @@
     <!-- General -->
     <string name="btn_apply">Anwenden</string>
     <string name="btn_reapply">Erneut anwenden bei Reset</string>
-    <string name="value_default">Nicht gesetzt</string>
+    <string name="value_default">Nichts</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Abbrechen</string>
     <string name="none">Keine</string>
@@ -247,4 +247,5 @@
     <string name="status_bar_height_manual">Streifenhöhe</string>
     <string name="status_bar_offset_y">Abstand von oben</string>
     <string name="status_bar_placement_hint">Lassen Sie die Höhe auf 0 und die App misst die Leiste selbst. Stellen Sie sie nur manuell ein, wenn der Streifen am falschen Ort landet — bei einigen Autoradios wird die obere Leiste vom Launcher gezeichnet, und Android weiß nichts davon.</string>
+    <string name="freq_off">Aus</string>
 </resources>

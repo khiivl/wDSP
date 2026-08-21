@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Применить</string>
     <string name="btn_reapply">Повторить при сбросе</string>
-    <string name="value_default">Не задано</string>
+    <string name="value_default">Ничего</string>
     <string name="btn_ok">ОК</string>
     <string name="btn_cancel">Отмена</string>
     <string name="none">Нет</string>
@@ -257,4 +257,5 @@
     <string name="status_bar_height_manual">Высота полосы</string>
     <string name="status_bar_offset_y">Отступ от верхнего края</string>
     <string name="status_bar_placement_hint">Оставьте высоту 0, и приложение само измерит панель. Задавайте вручную только если полоса попадает не туда — на некоторых магнитолах верхнюю панель рисует лаунчер, и Android о ней не знает.</string>
+    <string name="freq_off">Выкл.</string>
 </resources>

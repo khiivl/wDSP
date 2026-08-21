@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Použiť</string>
     <string name="btn_reapply">Znovu použiť pri resete</string>
-    <string name="value_default">Nenastavené</string>
+    <string name="value_default">Nič</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Zrušiť</string>
     <string name="none">Žiadny</string>
@@ -259,4 +259,5 @@ Globálne predvolené: %1$s</string>
     <string name="status_bar_height_manual">Výška pruhu</string>
     <string name="status_bar_offset_y">Vzdialenosť od zhora</string>
     <string name="status_bar_placement_hint">Nechajte výšku na 0 a aplikácia si pruh zmeria sama. Ručne ho nastavte, len ak pruh skončí na nesprávnom mieste — na niektorých autorádiách horný pruh kreslí spúšťač (launcher) a Android nevie, že tam je.</string>
+    <string name="freq_off">Vyp.</string>
 </resources>

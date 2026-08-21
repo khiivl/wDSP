@@ -83,7 +83,7 @@
     <!-- General -->
     <string name="btn_apply">Застосувати</string>
     <string name="btn_reapply">Перезастосувати при скиданні</string>
-    <string name="value_default">Не встановлено</string>
+    <string name="value_default">Нічого</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Скасувати</string>
     <string name="none">Немає</string>
@@ -247,4 +247,5 @@
     <string name="status_bar_height_manual">Висота смуги</string>
     <string name="status_bar_offset_y">Відступ від верхнього краю</string>
     <string name="status_bar_placement_hint">Залиште висоту 0, і застосунок сам виміряє панель. Встановлюйте вручну, лише якщо смуга потрапляє не туди — на деяких магнітолах верхню панель малює лаунчер, і Android про неї не знає.</string>
+    <string name="freq_off">Вимк.</string>
 </resources>

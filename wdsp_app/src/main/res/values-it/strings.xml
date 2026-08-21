@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Applica</string>
     <string name="btn_reapply">Riapplica se reimpostato</string>
-    <string name="value_default">Non impostato</string>
+    <string name="value_default">Nessuno</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Annulla</string>
     <string name="none">Nessuno</string>
@@ -259,4 +259,5 @@ Predefinito globale: %1$s</string>
     <string name="status_bar_height_manual">Altezza della striscia</string>
     <string name="status_bar_offset_y">Distanza dall\'alto</string>
     <string name="status_bar_placement_hint">Lascia l\'altezza a 0 e l\'app misura la barra da sola. Impostala manualmente solo se la striscia si trova nel posto sbagliato — su alcune autoradio la barra superiore è disegnata dal launcher e Android non sa che è lì.</string>
+    <string name="freq_off">Spento</string>
 </resources>

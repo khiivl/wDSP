@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Primijeni</string>
     <string name="btn_reapply">Ponovno primijeni pri resetiranju</string>
-    <string name="value_default">Nije postavljeno</string>
+    <string name="value_default">Ništa</string>
     <string name="btn_ok">U redu</string>
     <string name="btn_cancel">Odustani</string>
     <string name="none">Nijedan</string>
@@ -259,4 +259,5 @@ Globalno zadano: %1$s</string>
     <string name="status_bar_height_manual">Visina trake</string>
     <string name="status_bar_offset_y">Udaljenost od vrha</string>
     <string name="status_bar_placement_hint">Ostavite visinu na 0 i aplikacija će sama izmjeriti traku. Postavite je ručno samo ako traka završi na pogrešnom mjestu — na nekim radijima gornju traku crta pokretač i Android ne zna da je tamo.</string>
+    <string name="freq_off">Isklj.</string>
 </resources>

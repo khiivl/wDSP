@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Прилагане</string>
     <string name="btn_reapply">Повторно при нулиране</string>
-    <string name="value_default">Не е зададено</string>
+    <string name="value_default">Нищо</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Отказ</string>
     <string name="none">Няма</string>
@@ -259,4 +259,5 @@
     <string name="status_bar_height_manual">Височина на лентата</string>
     <string name="status_bar_offset_y">Разстояние от върха</string>
     <string name="status_bar_placement_hint">Оставете височината 0 и приложението само ще измери лентата. Задайте я ръчно само ако лентата е на грешното място — при някои мултимедии горната лента се рисува от стартера и Android не знае за нея.</string>
+    <string name="freq_off">Изкл.</string>
 </resources>

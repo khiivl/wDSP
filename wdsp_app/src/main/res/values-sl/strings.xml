@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Uveljavi</string>
     <string name="btn_reapply">Ponovno uveljavi ob ponastavitvi</string>
-    <string name="value_default">Ni nastavljeno</string>
+    <string name="value_default">Nič</string>
     <string name="btn_ok">V redu</string>
     <string name="btn_cancel">Prekliči</string>
     <string name="none">Brez</string>
@@ -259,4 +259,5 @@ Globalno privzeto: %1$s</string>
     <string name="status_bar_height_manual">Višina traku</string>
     <string name="status_bar_offset_y">Razdalja od vrha</string>
     <string name="status_bar_placement_hint">Pustite višino 0 in aplikacija sama izmeri vrstico. Ročno nastavite le, če trak pristane na napačnem mestu — pri nekaterih radiih zgornjo vrstico nariše zaganjalnik in Android sploh ne ve zanjo.</string>
+    <string name="freq_off">Izkl.</string>
 </resources>

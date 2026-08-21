@@ -79,7 +79,7 @@
     <!-- General -->
     <string name="btn_apply">Zastosuj</string>
     <string name="btn_reapply">Zastosuj ponownie przy resecie</string>
-    <string name="value_default">Nie ustawiono</string>
+    <string name="value_default">Brak</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Anuluj</string>
     <string name="none">Brak</string>
@@ -247,4 +247,5 @@
     <string name="status_bar_height_manual">Wysokość paska</string>
     <string name="status_bar_offset_y">Odległość od góry</string>
     <string name="status_bar_placement_hint">Zostaw wysokość 0, a aplikacja sama zmierzy pasek. Ustaw ją ręcznie tylko wtedy, gdy pasek wyląduje w niewłaściwym miejscu — w niektórych stacjach multimedialnych górny pasek jest rysowany przez launcher, a Android nie wie o jego istnieniu.</string>
+    <string name="freq_off">Wył.</string>
 </resources>

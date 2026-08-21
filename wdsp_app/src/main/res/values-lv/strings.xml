@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Piemērot</string>
     <string name="btn_reapply">Piemērot atkārtoti pēc atiestatīšanas</string>
-    <string name="value_default">Nav iestatīts</string>
+    <string name="value_default">Nekas</string>
     <string name="btn_ok">Labi</string>
     <string name="btn_cancel">Atcelt</string>
     <string name="none">Nav</string>
@@ -259,4 +259,5 @@ Globāli noklusējums: %1$s</string>
     <string name="status_bar_height_manual">Joslas augstums</string>
     <string name="status_bar_offset_y">Attālums no augšas</string>
     <string name="status_bar_placement_hint">Atstājiet augstumu uz 0, un lietotne pati izmērīs joslu. Iestatiet to manuāli tikai tad, ja josla atrodas nepareizā vietā — dažos magnetolās augšējo joslu zīmē palaidējs, un Android nezina, ka tā tur ir.</string>
+    <string name="freq_off">Izsl.</string>
 </resources>

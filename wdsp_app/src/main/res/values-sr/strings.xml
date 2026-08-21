@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Примени</string>
     <string name="btn_reapply">Поново примени при ресетовању</string>
-    <string name="value_default">Није постављено</string>
+    <string name="value_default">Ништа</string>
     <string name="btn_ok">У реду</string>
     <string name="btn_cancel">Откажи</string>
     <string name="none">Ништа</string>
@@ -259,4 +259,5 @@
     <string name="status_bar_height_manual">Висина траке</string>
     <string name="status_bar_offset_y">Удаљеност од врха</string>
     <string name="status_bar_placement_hint">Оставите висину на 0 и апликација ће сама измерити траку. Поставите је ручно само ако трака заврши на погрешном месту — на неким радио уређајима горњу траку црта покретач и Android не зна да је ту.</string>
+    <string name="freq_off">Искљ.</string>
 </resources>

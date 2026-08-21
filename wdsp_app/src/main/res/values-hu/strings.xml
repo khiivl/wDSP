@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Alkalmaz</string>
     <string name="btn_reapply">Újraalkalmazás visszaállításkor</string>
-    <string name="value_default">Nincs megadva</string>
+    <string name="value_default">Semmi</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Mégse</string>
     <string name="none">Nincs</string>
@@ -259,4 +259,5 @@ Globális alapértelmezett: %1$s</string>
     <string name="status_bar_height_manual">Sáv magassága</string>
     <string name="status_bar_offset_y">Távolság a tetejétől</string>
     <string name="status_bar_placement_hint">Hagyja a magasságot 0-n, és az alkalmazás maga méri meg a sávot. Csak akkor állítsa be kézzel, ha a sáv rossz helyre kerül — egyes fejegységeken a felső sávot az indító (launcher) rajzolja, és az Android nem tud a létezéséről.</string>
+    <string name="freq_off">Ki</string>
 </resources>

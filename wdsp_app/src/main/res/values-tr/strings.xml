@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Uygula</string>
     <string name="btn_reapply">Sıfırlanırsa tekrar uygula</string>
-    <string name="value_default">Ayarlanmadı</string>
+    <string name="value_default">Yok</string>
     <string name="btn_ok">Tamam</string>
     <string name="btn_cancel">İptal</string>
     <string name="none">Yok</string>
@@ -259,4 +259,5 @@ Genel Varsayılan: %1$s</string>
     <string name="status_bar_height_manual">Şerit yüksekliği</string>
     <string name="status_bar_offset_y">Üstten uzaklık</string>
     <string name="status_bar_placement_hint">Yüksekliği 0 bırakın, uygulama çubuğu kendisi ölçsün. Yalnızca şerit yanlış yere düşerse manuel ayarlayın — bazı araç radyolarında üst çubuk başlatıcı (launcher) tarafından çizilir ve Android bunun orada olduğunu bilmez.</string>
+    <string name="freq_off">Kapalı</string>
 </resources>

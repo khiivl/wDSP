@@ -247,4 +247,5 @@
     <string name="status_bar_height_manual">Remsans höjd</string>
     <string name="status_bar_offset_y">Avstånd från toppen</string>
     <string name="status_bar_placement_hint">Låt höjden vara 0 så mäter appen fältet själv. Ställ in det manuellt bara om remsan hamnar på fel ställe — på vissa bilradioapparater ritas det översta fältet av launchern och Android vet inte att det finns där.</string>
+    <string name="freq_off">Av</string>
 </resources>

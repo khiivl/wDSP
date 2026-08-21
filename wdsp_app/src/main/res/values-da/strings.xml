@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Anvend</string>
     <string name="btn_reapply">Genanvend ved nulstilling</string>
-    <string name="value_default">Ikke indstillet</string>
+    <string name="value_default">Intet</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Annuller</string>
     <string name="none">Ingen</string>
@@ -259,4 +259,5 @@ Global standard: %1$s</string>
     <string name="status_bar_height_manual">Stribehøjde</string>
     <string name="status_bar_offset_y">Afstand fra toppen</string>
     <string name="status_bar_placement_hint">Lad højden være 0, så måler appen selv bjælken. Indstil den kun manuelt, hvis striben lander det forkerte sted — på nogle bilradioer tegnes den øverste bjælke af launcheren, og Android ved ikke, den er der.</string>
+    <string name="freq_off">Fra</string>
 </resources>

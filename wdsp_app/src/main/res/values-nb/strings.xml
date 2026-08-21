@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Bruk</string>
     <string name="btn_reapply">Bruk på nytt ved tilbakestilling</string>
-    <string name="value_default">Ikke angitt</string>
+    <string name="value_default">Ingen</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Avbryt</string>
     <string name="none">Ingen</string>
@@ -259,4 +259,5 @@ Global standard: %1$s</string>
     <string name="status_bar_height_manual">Stripehøyde</string>
     <string name="status_bar_offset_y">Avstand fra toppen</string>
     <string name="status_bar_placement_hint">La høyden være 0, så måler appen bjelken selv. Still den inn manuelt bare hvis stripen havner på feil sted — på noen bilradioer tegnes topplinjen av launcheren, og Android vet ikke at den er der.</string>
+    <string name="freq_off">Av</string>
 </resources>

@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Käytä</string>
     <string name="btn_reapply">Käytä uudelleen nollattaessa</string>
-    <string name="value_default">Ei asetettu</string>
+    <string name="value_default">Tyhjä</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Peruuta</string>
     <string name="none">Ei mitään</string>
@@ -259,4 +259,5 @@ Yleinen oletus: %1$s</string>
     <string name="status_bar_height_manual">Nauhan korkeus</string>
     <string name="status_bar_offset_y">Etäisyys ylhäältä</string>
     <string name="status_bar_placement_hint">Jätä korkeus arvoon 0, niin sovellus mittaa palkin itse. Aseta se manuaalisesti vain, jos nauha on väärässä paikassa — joissakin soittimissa yläpalkin piirtää launcher, eikä Android tiedä sen olemassaolosta.</string>
+    <string name="freq_off">Pois</string>
 </resources>

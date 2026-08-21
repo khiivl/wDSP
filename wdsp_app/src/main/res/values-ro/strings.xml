@@ -259,4 +259,5 @@ Implicit global: %1$s</string>
     <string name="status_bar_height_manual">Înălțimea benzii</string>
     <string name="status_bar_offset_y">Distanța de la vârf</string>
     <string name="status_bar_placement_hint">Lăsați înălțimea la 0 și aplicația măsoară singură bara. Setați manual doar dacă banda ajunge în locul greșit — pe unele playere auto bara superioară este desenată de launcher, iar Android nu știe că există.</string>
+    <string name="freq_off">Oprit</string>
 </resources>

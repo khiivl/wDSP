@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Rakenda</string>
     <string name="btn_reapply">Rakenda uuesti lähtestamisel</string>
-    <string name="value_default">Määramata</string>
+    <string name="value_default">Puudub</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Tühista</string>
     <string name="none">Puudub</string>
@@ -259,4 +259,5 @@
     <string name="status_bar_height_manual">Riba kõrgus</string>
     <string name="status_bar_offset_y">Kaugus ülaosast</string>
     <string name="status_bar_placement_hint">Jätke kõrgus 0 peale ja rakendus mõõdab riba ise. Määrake see käsitsi ainult siis, kui riba satub valesse kohta — mõnedes autoraadiotes joonistab ülemise riba käivitaja ja Android ei tea selle olemasolust.</string>
+    <string name="freq_off">Väljas</string>
 </resources>

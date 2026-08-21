@@ -85,7 +85,7 @@
     <!-- General -->
     <string name="btn_apply">Appliquer</string>
     <string name="btn_reapply">Réappliquer si réinitialisé</string>
-    <string name="value_default">Non défini</string>
+    <string name="value_default">Aucun</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Annuler</string>
     <string name="none">Aucun</string>
@@ -259,4 +259,5 @@ Par défaut global : %1$s</string>
     <string name="status_bar_height_manual">Hauteur de la bande</string>
     <string name="status_bar_offset_y">Distance du haut</string>
     <string name="status_bar_placement_hint">Laissez la hauteur à 0 et l\'application mesure la barre elle-même. Ne la définissez manuellement que si la bande tombe au mauvais endroit — sur certains autoradios, la barre supérieure est dessinée par le lanceur, et Android ignore sa présence.</string>
+    <string name="freq_off">Arrêt</string>
 </resources>
