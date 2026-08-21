@@ -180,11 +180,11 @@ public final class RoomMeasurement {
     private static final float MAX_PLAUSIBLE_SPREAD_MS = 60f;
 
     /**
-     * The largest delay that can currently be entered, in slider steps.
+     * The largest delay that can be entered, in slider steps.
      *
-     * <p>Ten, because that is where the slider stops — <b>not</b> because that is what the
-     * hardware can do. Measured with {@code --ei delaytest 1}, which holds the routing still and
-     * moves the delay line between sweeps, so the shift it produces is read directly:
+     * <p>Forty, and that figure is the hardware's rather than the interface's. It was measured
+     * with {@code --ei delaytest 1}, which holds the routing still and moves the delay line
+     * between sweeps instead, so the shift it produces is read off directly:
      *
      * <pre>
      *   10 steps (register 50)  -> +4.979 ms    0.4990 ms per step
@@ -197,15 +197,19 @@ public final class RoomMeasurement {
      * So the register really is a tenth of a millisecond per unit and the slider really is half a
      * millisecond per step — the labels inherited from the original firmware are right, to within
      * two parts in a thousand. And the delay line runs linearly to <b>20 ms, about 6.9 metres</b>,
-     * saturating just above 21. The slider offers a quarter of that.
+     * saturating just above 21.
      *
-     * <p>Raising the slider to 40 would let long vehicles be aligned at all. That is a change to
-     * the main screen rather than to the measurement, so it is proposed rather than made here.
+     * <p>Until this was measured the sliders stopped at ten, five milliseconds, a metre and
+     * seventy. Nobody chose that: it came down from the factory app and it is still what the
+     * upstream branch has. It is fine for a saloon and useless for a van, where a rear speaker
+     * really can be five metres away, so the sliders now go to forty as well — the two limits are
+     * raised together, because a suggestion that cannot be typed in is no suggestion at all.
+     * Presets written under the old range stay valid; nothing about the labelling changes.
      */
-    private static final int MAX_DELAY_STEPS = 10;
+    private static final int MAX_DELAY_STEPS = 40;
     /** Measured, not assumed: 0.4990 ms per step across the linear range. */
     private static final float DELAY_STEP_MS = 0.5f;
-    /** Where the hardware itself stops, in steps. Beyond this the delay line saturates. */
+    /** Where the delay line itself stops. Beyond this it saturates; the slider now matches it. */
     private static final int HARDWARE_DELAY_STEPS = 40;
 
     /**
@@ -838,15 +842,12 @@ public final class RoomMeasurement {
                 // is not told will believe their car is aligned when it is not.
                 result.beyondHardware = true;
                 Log.w(TAG, String.format(Locale.US,
-                        "%s needs %.1f ms (%d steps). The slider stops at %d steps (%.1f ms), "
-                                + "though the delay line itself runs to %d steps (%.1f ms) - so "
-                                + "%s",
+                        "%s needs %.1f ms (%d steps) but the delay line stops at %d steps "
+                                + "(%.1f ms, about %.1f m) - this vehicle is longer than the "
+                                + "hardware can correct, and the suggestion below is capped",
                         c.label, result.suggestedDelayMs[i], wanted, MAX_DELAY_STEPS,
-                        MAX_DELAY_STEPS * DELAY_STEP_MS, HARDWARE_DELAY_STEPS,
-                        HARDWARE_DELAY_STEPS * DELAY_STEP_MS,
-                        wanted <= HARDWARE_DELAY_STEPS
-                                ? "this is a limit of the interface, not of the hardware"
-                                : "this vehicle is beyond what the hardware can correct"));
+                        MAX_DELAY_STEPS * DELAY_STEP_MS,
+                        MAX_DELAY_STEPS * DELAY_STEP_MS * 0.343f));
             }
         }
     }
@@ -1049,10 +1050,10 @@ public final class RoomMeasurement {
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
             if (result.beyondHardware) {
-                sb.append("NOTE: at least one speaker needs more delay than the sliders allow. "
-                        + "They stop at 10 steps (5 ms, about 1.7 m), while the delay line itself "
-                        + "was measured to run linearly to 40 steps (20 ms, about 6.9 m). The "
-                        + "suggestion below is capped at what can be entered today.\n");
+                sb.append("NOTE: at least one speaker needs more delay than the hardware can "
+                        + "apply. The delay line was measured to run linearly to 40 steps (20 ms, "
+                        + "about 6.9 m) and to saturate just above that, so the suggestion is "
+                        + "capped there. Please say what vehicle this is.\n");
             }
             sb.append("The response includes the microphone's own curve and is NOT a calibration.\n");
             out.write(sb.toString().getBytes("UTF-8"));
