@@ -1254,6 +1254,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * What one step of a Surround delay slider is really worth, in milliseconds.
+     *
+     * <p>Not one millisecond, which is what these sliders said for as long as the app has existed.
+     * The MCU takes the slider value from the {@code 0x89} frame and multiplies it by 102 before it
+     * reaches the sound processor, and the processor counts delay in samples at 48 kHz - the ROHM
+     * datasheet gives the rule outright, "send data = time in ms x 48". So a step is 102/48 =
+     * 2.125 ms, and the ten steps the slider offers cover the 21.3 ms the chip can do, not 10 ms.
+     *
+     * <p>Measured on a head unit to be sure, by holding the routing still and moving this delay
+     * line between sweeps: 3 steps shifted the arrival by 6.354 ms, 6 steps by 12.688 ms, 10 steps
+     * by 21.167 ms. That is 2.117 ms per step, four parts in a thousand from the arithmetic, and
+     * nowhere near the 1.0 that was printed.
+     *
+     * <p>Only the label was wrong; the sliders always did this. So nothing about a saved preset
+     * changes - the same setting produces the same sound as before, and now says so honestly.
+     *
+     * <p>The positional delays ({@code _d_*}, command {@code 0x8C}) are a different line with a
+     * different scale, half a millisecond per step, and that one was measured to be correct.
+     */
+    private static final float SURROUND_DELAY_STEP_MS = 102f / 48f;
+
     private void setupDelay1Controls() {
         Slider.OnChangeListener dl = (slider, value, fromUser) -> {
             int p = (int) value;
@@ -1262,7 +1284,7 @@ public class MainActivity extends AppCompatActivity {
                 String text = (v > 0 ? "+" : "") + v;
                 tvDelay1RSSEVal.setText(text); 
             }
-            else { float ms = p * 1.0f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
+            else { float ms = p * SURROUND_DELAY_STEP_MS; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
                 if (slider == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (slider == seekDelay1Fr) tvDelay1FrVal.setText(val);
                 else if (slider == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (slider == seekDelay1Rr) tvDelay1RrVal.setText(val);
             }

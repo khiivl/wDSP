@@ -258,24 +258,48 @@ public final class RoomMeasurement {
     /**
      * Diagnostic: hold the routing still and change the delay line between sweeps instead.
      *
-     * The sliders are labelled half a millisecond per step, and that label came from reading
-     * somebody else's code rather than from measuring anything. Here the label is not needed: the
-     * four sweeps go to the same loudspeaker with the delay set to {@link #DELAY_TEST_STEPS}, and
-     * because they share one recording the constant cancels, so the differences between their
-     * arrivals are exactly what the hardware added.
+     * The sliders are labelled in milliseconds, and those labels came from reading somebody else's
+     * code rather than from measuring anything. Here the label is not needed: the four sweeps go to
+     * the same loudspeaker with the delay set to a known series of slider values, and because they
+     * share one recording the constant cancels, so the differences between their arrivals are
+     * exactly what the hardware added.
      *
      * <pre>
-     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 1
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 1  # positional
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 2  # surround
      * </pre>
      *
-     * Half a millisecond per step would show 0.0, 1.5, 3.0 and 5.0 ms. Anything else is the truth.
+     * Mode 1 tests the positional line, {@code _d_fr}, against its half-millisecond step; it has
+     * been run, and the label was right. Mode 2 tests the surround line, {@code _d1_fr}, against
+     * its one-millisecond step, which the firmware suggests is wrong by a factor of 2.125.
      */
-    private static volatile boolean delayTest;
-    /** Slider values used by the delay test, one per sweep. */
+    private static volatile int delayTest;
+    /** Slider values used by the positional delay test ({@code delaytest 1}), one per sweep. */
     private static final int[] DELAY_TEST_STEPS = {0, 10, 25, 40};
+    /**
+     * Slider values used by the surround delay test ({@code delaytest 2}), one per sweep.
+     *
+     * <p>Smaller numbers, because the question is different. The positional test asked how big the
+     * step is; this one asks whether the step is what the label says at all. The MCU firmware
+     * multiplies these slider values by 102 before they reach the chip, and the chip counts delay
+     * in samples at 48 kHz, which would make one step 2.125 ms rather than the 1.0 ms printed
+     * beside the slider. Ten steps therefore lands either at 10 ms or at 21.25 ms, and no
+     * measurement error confuses those two.
+     */
+    private static final int[] SURROUND_TEST_STEPS = {0, 3, 6, 10};
 
-    public static void setDelayTest(boolean test) {
-        delayTest = test;
+    public static void setDelayTest(int mode) {
+        delayTest = mode;
+    }
+
+    /** The slider values this run is stepping through, whichever delay line is being tested. */
+    private static int[] delayTestSteps() {
+        return delayTest == 2 ? SURROUND_TEST_STEPS : DELAY_TEST_STEPS;
+    }
+
+    /** What the interface claims a step is worth, for the line under test. */
+    private static float delayTestLabelMs() {
+        return delayTest == 2 ? 1.0f : DELAY_STEP_MS;
     }
 
     private RoomMeasurement() {
@@ -554,13 +578,13 @@ public final class RoomMeasurement {
         int got = 0;
 
         try {
-            if (delayTest) {
+            if (delayTest != 0) {
                 // One loudspeaker, chosen once, and the delay line is what changes. The front
                 // right is used because on the bench this was written against it is the one the
                 // microphone hears directly - a smeared arrival would blur the very shift being
                 // measured.
                 Log.i(TAG, "delay test: routing fixed to the front right, delay steps "
-                        + java.util.Arrays.toString(DELAY_TEST_STEPS));
+                        + java.util.Arrays.toString(delayTestSteps()));
                 prefs.edit()
                         .putInt(preset + "_f_lr", FADER_MAX)
                         .putInt(preset + "_f_fr", FADER_MAX)
@@ -723,14 +747,14 @@ public final class RoomMeasurement {
             // the room repeating it. Prominence is still reported, because it costs nothing and a
             // second opinion is useful when a measurement looks odd.
             cr.ok = cr.clarityDb >= MIN_CLARITY_DB && cr.recordedPeak >= MIN_PEAK;
-            if (delayTest && k > 0 && result.channels[0] != null) {
+            if (delayTest != 0 && k > 0 && result.channels[0] != null) {
                 // What the hardware actually did, against what the slider claims it would do.
                 final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
-                final int steps = DELAY_TEST_STEPS[k];
+                final int steps = delayTestSteps()[k];
                 Log.i(TAG, String.format(Locale.US,
                         "delay test: %2d steps moved the arrival by %+.3f ms  (%.4f ms per step; "
                                 + "the slider is labelled %.1f)",
-                        steps, moved, moved / steps, DELAY_STEP_MS));
+                        steps, moved, moved / steps, delayTestLabelMs()));
             }
 
             Log.i(TAG, String.format(Locale.US,
@@ -746,14 +770,26 @@ public final class RoomMeasurement {
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
     private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
-        if (delayTest) {
+        if (delayTest != 0) {
             // The routing was set once before the pass and stays put; what moves is the delay.
-            final int steps = DELAY_TEST_STEPS[channel.ordinal()];
-            Log.i(TAG, "--- delay test: " + steps + " steps on the front right ---");
-            prefs.edit()
-                    .putBoolean(preset + "_d_en", true)
-                    .putInt(preset + "_d_fr", steps)
-                    .apply();
+            final int steps = delayTestSteps()[channel.ordinal()];
+            Log.i(TAG, "--- delay test: " + steps + " steps on the front right ("
+                    + (delayTest == 2 ? "surround line, _d1_fr" : "positional line, _d_fr") + ") ---");
+            SharedPreferences.Editor e = prefs.edit();
+            if (delayTest == 2) {
+                // Surround mode is not a second set of sliders on top of the first: the firmware
+                // picks one source or the other for the same seven delay registers, on a flag that
+                // this frame carries. So the positional line has to be off, or the frame that
+                // arrives last decides which numbers the chip sees.
+                e.putBoolean(preset + "_d_en", false)
+                 .putBoolean(preset + "_d1_en", true)
+                 .putInt(preset + "_d1_fr", steps);
+            } else {
+                e.putBoolean(preset + "_d1_en", false)
+                 .putBoolean(preset + "_d_en", true)
+                 .putInt(preset + "_d_fr", steps);
+            }
+            e.apply();
             return;
         }
         if (sameRouting) {
