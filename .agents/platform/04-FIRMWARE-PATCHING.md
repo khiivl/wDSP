@@ -34,10 +34,10 @@ the **initial register values cannot** — they are not lying there as raw bytes
   patched file is transparent;
 - ❓ it remains possible that the bootloader keeps its own sum and refuses to start.
 
-Two ways to settle it, cheapest first: look at how the **Android side** updates the firmware
-(`mcu_services` and the updater app) — if it computes the sum itself, the question is closed; or
-disassemble `0x08000000..0x080037FF` from `mcu_full.bin` and see what it does before branching to
-`0x08003979`.
+The Android side has since been read — §8 — and it checks nothing about the image itself, only the
+download. So the question now belongs either to the bootloader, `0x08000000..0x080037FF` in
+`mcu_full.bin`, or to a single experiment: flash a marked image and see whether the progress
+broadcast answers `105` (rejected) or `103` (done).
 
 ⚠️ `mcu_full.bin` on disk is a dump from **August 2025** and matches the current image on only
 5 909 bytes out of 48 700. Take a fresh dump from the actual unit before trusting any of it.
@@ -134,6 +134,7 @@ Candidate patches on record, none applied:
 | 2 | `0x0800512C` | boost constant `0x60` → `0x40`: Q becomes 4.7 on boosts |
 | 3 | `0x08005112` | clear bit 6 on cuts: front and rear stop being mirrored |
 | 4 | `0x0800512C` | the same on boosts |
+| 5 | `0x08003A0C` | the version year `2025` → `2030`: marks the image as ours — see §8 |
 
 🧩 Patches 1 and 2 are self-sufficient one-byte changes and do work — but they replace a fixed 2.2
 with a fixed 4.7; the switch in the app still would not control anything. Making it *selectable*
