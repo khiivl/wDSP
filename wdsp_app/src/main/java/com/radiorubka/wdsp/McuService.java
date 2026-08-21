@@ -612,8 +612,8 @@ public class McuService extends Service implements LocationListener {
 
         // this gets the volume and the mute state
         int hardwareVol = VolumeHelper.getVolume();
-        // Kept aside because hardwareVol is overwritten further down with whatever GALA decides
-        // to command, and step 7 has to remember the reading rather than the command.
+        // Kept aside because hardwareVol is overwritten further down with whatever GALA decides to
+        // command, and step 7 has to remember what the hardware REPORTED, not what we sent it.
         final int reportedVolume = hardwareVol;
         boolean isCurrentlyMuted = (hardwareVol <= 0 || VolumeHelper.isHardwareMuted());
 
@@ -768,6 +768,14 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 7. TRACKING: Update last seen volume and handle UI volume sync.
+        //
+        // reportedVolume, not hardwareVol. The manual-adjustment test in step 5 asks whether the
+        // volume changed since the last poll and was not changed by us; storing our own command
+        // here made the first half true for ever, because the hardware does not read back the
+        // number it was given - it lags by a poll, and while music plays the platform runs its own
+        // volume curve per source and may differ permanently. Every poll then counted as a person
+        // turning the knob, the base was re-learned as volume - offset, and GALA set base + offset,
+        // which is the volume that is already there. A fixed point: the volume never moved again.
         lastReadHardwareVol = reportedVolume;
 
         if (hardwareVol != lastVolumeRead) {
