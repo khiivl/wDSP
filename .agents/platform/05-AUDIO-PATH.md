@@ -292,3 +292,66 @@ the channel actually changes.
 wake up"*. Restore playback after ignition only if the path is free; do not take the channel back
 "just in case"; report `STOPPED` rather than `PAUSED` when somebody else is playing, because paused
 means "resume me" and makes you the target of the media keys.
+
+---
+
+## 7. The same head unit has two audio configurations, and you can tell them apart
+
+Scattered facts about this are in the sections above; this is the summary, because it decides how a
+measurement should be interpreted and because the owner wants a utility that manages the module.
+
+**BitPerfect Audio** is a Magisk module some owners install. It replaces the audio policies. It is
+not a small cosmetic change — it moves where media plays, and it turns on capture processing that
+is off from the factory.
+
+| | factory policies | with BitPerfect |
+|---|---|---|
+| media output | `AudioOut_15`, **fast** | `AudioOut_D`, **primary** |
+| `Visualizer(0)` | 📻 measures silence | 📻 works |
+| `AcousticEchoCanceler.isAvailable()` | true | true |
+| **`NoiseSuppressor.isAvailable()`** | 📻 **false** | 📻 **true** |
+| `AutomaticGainControl.isAvailable()` | false | false |
+| capture effects on a fresh session | 📻 off | 📻 **on** |
+| capture → DAC | 📻 14.4 – 15.8 ms | 📻 8.4 – 12.3 ms |
+| capture → ear | 📻 52.8 – 54.0 ms | 📻 55.3 – 61.0 ms |
+
+🧩 **`NoiseSuppressor.isAvailable()` is a ready-made detector for custom policies** — no root, no
+permission, one call. Nothing else distinguishes the two configurations that cheaply.
+
+🧩 The module most likely removes or narrows the *fast* mixPort, leaving media nowhere to go but
+primary. That is why an output-mix effect, which AOSP hard-codes onto primary, suddenly starts
+seeing signal — it is a side effect, not a feature.
+
+### What follows for anything that measures
+
+🔴 **Do not branch the code on which configuration is present.** The difference by ear is about
+4 ms, smaller than the spread between runs. One measurement on the actual unit settles it; two code
+paths would be two things to maintain for nothing.
+
+🔴 **Do branch on the capture effects.** With BitPerfect the echo canceller and noise suppressor are
+**on** by default, and an echo canceller exists precisely to remove the sound you are playing. Any
+frequency-response or arrival measurement must disable them explicitly on its own session — and put
+them back afterwards, because on these units they were switched on deliberately:
+
+```java
+AcousticEchoCanceler aec = AcousticEchoCanceler.create(sessionId);
+aec.setEnabled(false);   // returns SUCCESS; getEnabled() confirms false
+```
+
+📻 Verified in both directions on a real unit: `AEC was ENABLED, now off` … `AEC restored to
+enabled`. This is what makes a utility to manage the module feasible at all — within your own
+session, the processing is yours to control.
+
+### Two things that are true in both configurations
+
+🔬 **`VOICE_RECOGNITION` does not reach PCM device 0** the way `/vendor/etc/audio_pcm.xml` promises.
+The HAL takes `mm_normal`, device 2, `FE_ST_CAPTURE_DSP`, through the AGDSP — visible as
+`HAL frame count: 1920`. Getting past the AGDSP is not available with stock policies.
+
+🔬 **`PERFORMANCE_MODE_LOW_LATENCY` is refused** — `getPerformanceMode()` returns 0 and the minimum
+`AudioTrack` buffer here is 23 080 bytes, about 120 ms. "Fast" is assigned by the policy, not
+requested by the application.
+
+⚠️ And on units fitted with the lesser sound processor, BitPerfect is essentially never installed —
+it produces digital noise instead of sound there. So a BD37544 unit is almost certainly on factory
+policies.
