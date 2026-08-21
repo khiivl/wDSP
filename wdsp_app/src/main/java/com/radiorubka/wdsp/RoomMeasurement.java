@@ -1103,6 +1103,12 @@ public final class RoomMeasurement {
             StringBuilder sb = new StringBuilder();
             sb.append("wDSP room measurement\n");
             sb.append(HardwareProfile.describe()).append('\n');
+            // The machine and the screen. A report is evidence about one particular head unit, and
+            // two units with the same MCU code can still be different computers. The screen line
+            // carries the system-bar insets as well - the only way to work out where the bar really
+            // is on the Tesla-style units, where the overlay currently lands in the wrong place.
+            sb.append(HardwareProfile.describeBoard()).append('\n');
+            sb.append(HardwareProfile.screenDescription(context)).append('\n');
             if (result.microphone != null) sb.append(result.microphone).append('\n');
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(amplitude)

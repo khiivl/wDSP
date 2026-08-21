@@ -895,6 +895,9 @@ public class SettingsActivity extends AppCompatActivity {
             requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
             return;
         }
+        // Taken here rather than in the measurement, because the system-bar insets can only be
+        // read from a window that exists - and the report is written from a background thread.
+        HardwareProfile.sampleScreen(this, getWindow().getDecorView());
         tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
         RoomMeasurement.measureAsync(this, new RoomMeasurement.Listener() {
             @Override
