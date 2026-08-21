@@ -155,3 +155,120 @@ patch 3+4 *and* a way to write `0620…062F` — see §5.
 6. 🧩 The first patch should be the smallest one that has an audible, measurable effect — not
    because the effect matters, but because it tests **the whole flashing chain** on something you
    can verify.
+
+## 8. How the head unit flashes the MCU 🔬
+
+Decompiled from `/system/priv-app/QF_OTAUpgrade/QF_OTAUpgrade.apk` (`com.qf.packageupgrade`).
+
+The path is short:
+
+```
+server → /sdcard/otapackage/BIN1          (BIN0 is the Android system image)
+       → SystemProperties.set("sys.qf.ota.upgrade.type", "BIN1")
+       → broadcast com.qf.action.ota.send, key_type 2001, action "qf.ota.upgrade"
+       → progress comes back on com.qf.action.ota.recv:
+            101 starting · 102 in progress · 103 success · 104 reboot
+            105 file is bad · 106 failed
+```
+
+🧩 **The integrity check is the server's, not the image's.** `FileUtils.checkBinFileIsExists`
+computes an MD5 of the downloaded file and compares it to a `verify` field the *server* sent with
+the package. There is no signature, no self-check and no checksum belonging to the image itself
+anywhere in this application. ❓ Whether the bootloader has its own check is still open — but
+nothing on the Android side would stop a locally placed `BIN1`.
+
+The network side of this — a server that decides whether an update exists, and a `force` mode that
+flashes after a three-second dialog — is **not in use on these units**: there is no server behind
+it. So it is neither a route in nor a threat to a patched image.
+
+🧩 **What is left is the useful half: a local flashing path we can drive ourselves.** Put the image
+at `/sdcard/otapackage/BIN1`, set the property, send the broadcast. No recovery, no USB stick, no
+server — and the same code the factory uses, so nothing unusual is being asked of the bootloader.
+
+⚠️ Not yet exercised. Before relying on it, watch `com.qf.action.ota.recv` for `105` (the file is
+rejected) versus `101/102/103`, and have the original image ready.
+
+### 🔬 The version string is parsed by fixed character positions
+
+`QF05.V02.13.20251124.002121` — 27 characters, and the OTA application indexes into it directly:
+
+| chars | field | means |
+|---|---|---|
+| `0..3` | `mcuPlatform` | `QF05` |
+| `7..10` | `subStrmcu` | `2.13`, the build line |
+| `12..19` | — | **the date, `20251124` — used only as part of the whole string** |
+| `21` | `mcuModel` | `0` |
+| `22` | `audioicModel` | `0` — the sound processor |
+| `23` | `radioModel` | `2` — the tuner chip, the same character `McuManagerService` reads |
+| `24` | `MPUAudio` | `1` |
+| `25` | `Externalhardwareinterfacetype` | `2` |
+
+🔬 In the firmware the string lives at **`0x08003A00`**, 27 bytes followed by exactly one `NUL`, and
+then used bytes. **It cannot be lengthened in place** — but any character can be replaced.
+
+### 🧩 Marking a patched image so software can tell
+
+Both requirements point at the same place. The marker must not move any index and must not lie
+about hardware, which rules out everything except the date; and the date is in no hardware field,
+so changing it cannot make the server match this unit to somebody else's package.
+
+**Keep the original date and move the year into the future.**
+
+```
+stock    QF05.V02.13.20251124.002121
+ours     QF05.V02.13.20301124.002121      year + 5  = our build 1
+         QF05.V02.13.20311124.002121      year + 6  = our build 2
+```
+
+- no factory build is dated five years ahead, so **one `getprop persist.sys.qf.mcu.version` tells
+  any application it is talking to a patched microcontroller**;
+- the month and day are untouched, so the stock build it was patched *from* stays legible — which
+  matters, because a patch is only valid against one base image;
+- the year offset counts our own builds, so the string says which of them is running;
+- all eight characters stay numeric, the length is unchanged, every index above still reads what it
+  read before, and `002121` is untouched — chip detection and the tuner-type character keep
+  working.
+
+**What exactly is inside a given build** is not in the string, and deliberately so: cramming a
+bitmask into the date would cost the base date, which is worth more. `mcupatch.py verify` reads any
+image and prints which patches are present, and it refuses to apply anything to an image it does
+not recognise. The string identifies the build; the harness describes it.
+
+❓ If self-describing turns out to matter more than provenance, the alternative is to keep the year
+as the marker and use the **day** as a five-bit mask — a day must stay in `01..31`, which is
+exactly five bits, so five patches can be encoded and the string still parses as a date. That
+trades away the original day.
+
+## 9. If we ever did patch it — what, for what, and at what risk
+
+Nothing below is applied. It is written down so the decision can be made on facts rather than on
+enthusiasm, and the order matters more than the list.
+
+**First, the question that gates everything: does the bootloader check a sum over the image?** ❓
+Still open, and it is the one place where being wrong costs a head unit rather than a setting.
+
+🧩 There is a cheap way to find out. The factory's own flashing path needs no server and no
+recovery: put the image at `/sdcard/otapackage/BIN1`, set `sys.qf.ota.upgrade.type`, send
+`com.qf.action.ota.send`, and watch `com.qf.action.ota.recv` — `105` means the file was rejected,
+`101/102/103` means it was not.
+
+| | what changes | what it buys | what it risks |
+|---|---|---|---|
+| **mark the build** | four bytes at `0x08003A0C`: the year `2025` → `2030` | one `getprop` tells any app it is talking to a patched MCU, while the month and day still say which stock build it came from | lowest of all — same length, still numeric, no hardware field touched |
+| **equaliser Q** | one byte each at `0x08005112` and `0x0800512C` | every band becomes Q = 4.7 instead of 2.2; narrower cuts, which is what room correction wants. And the two constants are separate, so **narrow cuts with wide boosts** is available — a deliberate tuning choice, not a compromise | small: one instruction, fully reversible, worst case is that it sounds wrong |
+| **front/rear split** | clear bit 6 in the same two constants | nothing on its own — ⚠️ **actively worse**: the rear stops being mirrored and nothing writes it, so it freezes | only useful together with the next row |
+| **a poke command** | a branch in the dispatcher plus a veneer in the 452 free bytes, writing one byte into the shadow image | all 129 registers reachable: the rear equaliser bands, the subsonic filter, the chip's own spectrum analyser, the noise generator, and **direct biquad coefficients** | the real one — this is our code in the firmware. A mistake here is not "it sounds wrong", it is "the MCU did not come up" |
+
+The last row is the only one that changes what the app can *be*. The equaliser we can reach today
+is the ceiling on room correction — sixteen bands, 2 dB steps, fixed Q, front and rear identical —
+and no amount of careful measurement gets past a ceiling.
+
+**Order:** settle the checksum; then flash the *marker alone*, because a change with no behavioural
+effect is the right way to test the flashing chain; then the Q constants, which are audible and
+measurable in forty seconds; and only then the veneer.
+
+**Not on the list, deliberately:** changing initial register values (they arrive from compressed
+`.data`), raising the Surround slider past 10 (ten steps is already 1020 of 1023 samples), touching
+the `002121` tail of the version string (chip detection reads it), and building a raw UART-to-I2C
+bridge instead of the poke (two masters on one bus is a class of problem that can simply be
+declined).
