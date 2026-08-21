@@ -377,7 +377,22 @@ public final class RoomMeasurement {
          * repeatable to the sample; only one of them meant a distance.
          */
         public float clarityDb;
+        /**
+         * The speaker was heard and its arrival is physically possible, so it takes part in the
+         * alignment. This is deliberately a low bar - see {@link #confident}.
+         */
         public boolean ok;
+        /**
+         * The direct sound stood clearly above what followed it, so this arrival is the speaker's
+         * own and not the cabin repeating it.
+         *
+         * <p>When this is false the channel is still used, because a delay computed from a
+         * reflection is far closer to the truth than no delay at all - but it may be optimistic,
+         * and the report says so rather than quietly presenting it as fact.
+         */
+        public boolean confident;
+        /** There was signal at all. Below this nothing can be said about the channel. */
+        public boolean heardAtAll;
     }
 
     /** Everything a full measurement produced, ready to be logged or shown. */
@@ -395,6 +410,12 @@ public final class RoomMeasurement {
         public float sweepTopHz = SWEEP_END_HZ;
         /** True when a channel needs more delay than the hardware can apply - a long vehicle. */
         public boolean beyondHardware;
+        /**
+         * At least one speaker was heard mainly through the cabin rather than directly, so its
+         * delay may be optimistic. Normal with the microphone on the dashboard; the report says
+         * so instead of presenting the number as if it were exact.
+         */
+        public boolean reflectionDominated;
 
         public boolean isUsable() {
             for (ChannelResult c : channels) {
@@ -746,7 +767,23 @@ public final class RoomMeasurement {
             // physical question instead: did the microphone hear this speaker directly, or only
             // the room repeating it. Prominence is still reported, because it costs nothing and a
             // second opinion is useful when a measurement looks odd.
-            cr.ok = cr.clarityDb >= MIN_CLARITY_DB && cr.recordedPeak >= MIN_PEAK;
+            // Two different questions, and conflating them threw away good measurements.
+            //
+            // "Was this speaker heard at all" is answered by the level: below MIN_PEAK there is
+            // nothing to work with. That is the bar for taking part in the alignment.
+            //
+            // "Is this arrival the speaker's own, or the cabin repeating it" is answered by
+            // clarity, and in a real car the answer is often no - which does not make the
+            // measurement useless. A microphone standing on the instrument binnacle sits a
+            // hand's width from the windscreen and from the top of the binnacle itself, so
+            // every speaker arrives with two strong reflections a fraction of a millisecond
+            // behind it. Measured in one: 15.7 dB for the nearest speaker and 3.9 to 4.7 dB for
+            // the other three. On a bench in the open air the same code gave 23 to 33 dB, and
+            // that is where the nine-decibel threshold came from - the least representative
+            // place it could have been calibrated.
+            cr.heardAtAll = cr.recordedPeak >= MIN_PEAK;
+            cr.confident = cr.clarityDb >= MIN_CLARITY_DB;
+            cr.ok = cr.heardAtAll;
             if (delayTest != 0 && k > 0 && result.channels[0] != null) {
                 // What the hardware actually did, against what the slider claims it would do.
                 final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
@@ -828,7 +865,8 @@ public final class RoomMeasurement {
             if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
         }
         if (anchor == null) {
-            result.error = "no channel was heard clearly enough to measure";
+            result.error = "no speaker was heard at all - check the volume and that the "
+                    + "microphone is not covered";
             Log.w(TAG, result.error);
             return;
         }
@@ -855,13 +893,19 @@ public final class RoomMeasurement {
             heard++;
         }
         if (heard < 2) {
-            result.error = "only " + heard + " channel(s) were heard clearly - nothing to align";
+            result.error = "only " + heard + " speaker(s) were heard - nothing to align against";
             Log.w(TAG, result.error);
             return;
         }
+        int confident = 0;
+        for (ChannelResult c : result.channels) {
+            if (c != null && c.ok && c.confident) confident++;
+        }
+        result.reflectionDominated = confident < heard;
         Log.i(TAG, String.format(Locale.US,
-                "%d channels agree, spread %.2f ms, reference is the %s at %.1f dB clarity",
-                heard, latest - earliest, anchor.label, anchor.clarityDb));
+                "%d speakers agree, spread %.2f ms, reference is the %s at %.1f dB clarity; "
+                        + "%d of them heard directly",
+                heard, latest - earliest, anchor.label, anchor.clarityDb, confident));
 
         for (int i = 0; i < result.channels.length; i++) {
             ChannelResult c = result.channels[i];
@@ -1072,7 +1116,10 @@ public final class RoomMeasurement {
                         "%-12s arrival %8.2f ms  clarity %5.1f dB  prominence %8.0f  "
                                 + "polarity %+d  peak %6.1f dBFS%s\n",
                         c.label, c.arrivalMs, c.clarityDb, c.prominence, c.polarity,
-                        20 * Math.log10(c.recordedPeak + 1e-9f), c.ok ? "" : "   NOT TRUSTED"));
+                        20 * Math.log10(c.recordedPeak + 1e-9f),
+                        !c.ok ? "   NOT HEARD"
+                              : c.confident ? "   heard directly"
+                                            : "   mostly reflections"));
                 sb.append("             suggested delay ")
                         .append(String.format(Locale.US, "%.1f ms (%d steps)",
                                 result.suggestedDelayMs[i], result.suggestedDelaySteps[i]))
@@ -1085,6 +1132,13 @@ public final class RoomMeasurement {
             }
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
+            if (result.reflectionDominated) {
+                sb.append("NOTE: some speakers were heard mainly through the cabin rather than "
+                        + "directly - the clarity figure says which. That is normal with the "
+                        + "microphone on the dashboard, where the windscreen sits a hand's width "
+                        + "away. Their delays are still much better than none, but they may be "
+                        + "short. Where the microphone is fitted matters here: please say.\n");
+            }
             if (result.beyondHardware) {
                 sb.append("NOTE: at least one speaker needs more delay than the hardware can "
                         + "apply. The delay line was measured to run linearly to 40 steps (20 ms, "
