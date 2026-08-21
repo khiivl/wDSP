@@ -1807,7 +1807,12 @@ public class MainActivity extends AppCompatActivity {
                     : p.getBoolean(name + "_gala_enabled", false));
             seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
-            seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
+            // Clamped, because the range used to reach 300 km/h and now stops at 200. A
+            // preset saved under the old range would otherwise throw out of setValue and
+            // take the screen down with it. Nothing audible is lost: a car that reaches
+            // 200 downhill still never crosses a threshold set above it.
+            seekGalaMinSpeed.setValue(Math.min(40f,
+                    p.getInt(name + "_gala_min_speed", 0)));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
             seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));

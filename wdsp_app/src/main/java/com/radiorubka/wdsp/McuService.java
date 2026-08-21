@@ -664,9 +664,10 @@ public class McuService extends Service implements LocationListener {
             // correctly does not move. Nothing is broken, the settings simply ask for no change -
             // and from the outside that is indistinguishable from a dead control.
             //
-            // Worth knowing while reading a report: the standstill slider reaches 300 km/h while
-            // the simulator stops at 200, so it is possible to set a threshold that neither the
-            // simulator nor any car will ever cross.
+            // The standstill slider used to reach 300 km/h - a threshold nothing carrying one of
+            // these head units ever crosses, so it was possible to set GALA to never engage and
+            // have nothing say so. It stops at 200 now, which an ordinary car can still reach
+            // downhill, and presets saved under the old range are clamped when they load.
             //
             // Once per change, not ten times a second: the log on these units is flooded by the
             // serial layer and scrolls away in minutes, and a diagnostic that buries itself is
