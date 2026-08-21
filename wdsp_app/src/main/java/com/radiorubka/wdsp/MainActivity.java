@@ -2043,7 +2043,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             writeCurrentPresetTo(pending.stream);
             Downloads.finish(this, pending);
-            Toaster.show(this, getString(R.string.toast_saved_to, pending.displayPath));
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_export),
+                    getString(R.string.toast_saved_to, pending.displayPath));
             return true;
         } catch (Exception e) {
             Downloads.discard(this, pending);
@@ -2053,9 +2054,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void importPresets() {
-        importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+        Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
-                .setType("application/json"));
+                .setType("application/json");
+        // Start where exporting puts things, instead of at the root of internal storage. It is a
+        // hint: a picker that ignores it opens where it would have anyway.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            pick.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI,
+                    Downloads.initialUri());
+        }
+        importLauncher.launch(pick);
     }
 
     /**
@@ -2093,7 +2101,8 @@ public class MainActivity extends AppCompatActivity {
         try (OutputStream os = getContentResolver().openOutputStream(u)) {
             if (os == null) return;
             writeCurrentPresetTo(os);
-            Toaster.show(this, getString(R.string.toast_exported));
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_export),
+                    getString(R.string.toast_exported));
         } catch (IOException e) {
             Log.e(TAG, "Export error", e);
             Toaster.show(this, getString(R.string.error));
@@ -2165,11 +2174,13 @@ public class MainActivity extends AppCompatActivity {
             spinnerPresets.setText(newPresetName, false);
             loadPreset(newPresetName);
 
-            Toaster.show(this, getString(R.string.toast_imported) + ": " + newPresetName);
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_import),
+                    getString(R.string.toast_imported) + ": " + newPresetName);
 
         } catch (Exception e) {
             Log.e(TAG, "Import error", e);
-            Toaster.show(this, getString(R.string.toast_import_failed, e.getMessage()));
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_import),
+                    getString(R.string.toast_import_failed, e.getMessage()));
         }
     }
 

@@ -245,8 +245,11 @@
     <string name="room_measure_button">Measure</string>
     <string name="room_measure_running">Measuring: %1$s</string>
     <string name="room_measure_done">Done — send the result?</string>
+    <string name="room_measure_saved_title">Measurement saved</string>
+    <string name="room_measure_saved">The archive with %2$d files was written to:\n\n%1$s\n\nOpen it with a file manager, or copy it off with a USB cable or a memory card.</string>
+    <string name="room_measure_save_failed">The archive could not be written.</string>
     <string name="room_measure_failed">Measurement failed</string>
-    <string name="room_measure_send">Send</string>
+    <string name="room_measure_send">Save archive</string>
     <string name="room_measure_share_text">wDSP cabin measurement, version %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Nothing measured yet</string>

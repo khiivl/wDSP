@@ -42,6 +42,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.radiorubka.wdsp.ui.ThemedDialog;
 import com.radiorubka.wdsp.ui.SettingsAccordion;
 import com.radiorubka.wdsp.ui.TouchGlow;
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
@@ -194,7 +195,7 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         restoreLauncher = registerForActivityResult(
-                new ActivityResultContracts.OpenDocument(),
+                new com.radiorubka.wdsp.ui.OpenInDownloads(),
                 uri -> {
                     if (uri != null) {
                         restoreAllSettings(uri);
@@ -871,7 +872,7 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(measureButton);
         TouchGlow.attach(sendButton);
         measureButton.setOnClickListener(v -> startRoomMeasurement());
-        sendButton.setOnClickListener(v -> shareRoomMeasurement());
+        sendButton.setOnClickListener(v -> saveRoomMeasurement());
         styleActionButtons();
         // The address is a link as well as a label: a tester who has never sent anything to a
         // developer should not have to work out where it goes.
@@ -912,21 +913,40 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * Packs the report and the recordings into one archive and offers it to the share sheet.
+     * Packs the report and the recordings into one archive and saves it where the user can find it.
      *
-     * A single file rather than five: a tester picking attachments one by one in a car park will
+     * <p>A single file rather than five: a tester picking attachments one by one in a car park will
      * miss one, and a measurement missing a channel is not a measurement.
+     *
+     * <p>It used to go straight to the share sheet, which assumed the head unit had something to
+     * share with. Many do not - no Telegram, no mail client, sometimes no browser - and the chooser
+     * then offered nothing or was swallowed, leaving the tester with a measurement they could not
+     * send and no idea where it was. So the archive is written to {@code Download/wDSP/} like
+     * everything else this app produces, and the user is told the path in a dialog they have to
+     * dismiss. Getting it off the unit is then a file manager, a USB cable or a memory card -
+     * whatever that particular car actually has.
      */
-    private void shareRoomMeasurement() {
+    private void saveRoomMeasurement() {
         if (!RoomMeasurement.hasResult(this)) {
-            Toaster.show(this, getString(R.string.room_measure_nothing));
+            ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                    getString(R.string.room_measure_nothing));
             return;
         }
         java.io.File dir = RoomMeasurement.outputDir(this);
-        java.io.File zip = new java.io.File(dir, "wdsp_room_measurement.zip");
+        // A timestamp, because a tester measures more than once and the second archive must not
+        // quietly replace the first - the interesting one is often the earlier attempt.
+        String name = "wdsp_room_measurement_"
+                + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+                        .format(new java.util.Date()) + ".zip";
+
+        Downloads.Pending pending = Downloads.create(this, name, "application/zip");
+        if (pending == null) {
+            ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                    getString(R.string.room_measure_save_failed));
+            return;
+        }
         int packed = 0;
-        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(
-                new java.io.FileOutputStream(zip))) {
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(pending.stream)) {
             byte[] buffer = new byte[8192];
             java.io.File[] files = dir.listFiles();
             if (files != null) {
@@ -943,39 +963,22 @@ public class SettingsActivity extends AppCompatActivity {
             }
         } catch (java.io.IOException e) {
             android.util.Log.e("wDSP_Settings", "could not build the measurement archive", e);
-            Toaster.show(this, getString(R.string.room_measure_failed));
+            Downloads.discard(this, pending);
+            ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                    getString(R.string.room_measure_save_failed));
             return;
         }
         if (packed == 0) {
-            Toaster.show(this, getString(R.string.room_measure_nothing));
+            Downloads.discard(this, pending);
+            ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                    getString(R.string.room_measure_nothing));
             return;
         }
-
-        android.net.Uri uri;
-        try {
-            uri = androidx.core.content.FileProvider.getUriForFile(
-                    this, "com.radiorubka.wdsp.logs", zip);
-        } catch (IllegalArgumentException e) {
-            // The folder is not listed in file_paths.xml. That is our own configuration mistake
-            // and hiding it would only make it harder to find.
-            android.util.Log.e("wDSP_Settings", "FileProvider path not configured", e);
-            Toaster.show(this, zip.getAbsolutePath());
-            return;
-        }
-
-        Intent send = new Intent(Intent.ACTION_SEND)
-                .setType("application/zip")
-                .putExtra(Intent.EXTRA_STREAM, uri)
-                .putExtra(Intent.EXTRA_SUBJECT, zip.getName())
-                .putExtra(Intent.EXTRA_TEXT,
-                        getString(R.string.room_measure_share_text, appVersion())
-                                + "\n" + getString(R.string.room_measure_telegram))
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        if (send.resolveActivity(getPackageManager()) == null) {
-            Toaster.show(this, zip.getAbsolutePath());
-            return;
-        }
-        startActivity(Intent.createChooser(send, getString(R.string.room_measure_send)));
+        Downloads.finish(this, pending);
+        ThemedDialog.notice(this, getString(R.string.room_measure_saved_title),
+                getString(R.string.room_measure_saved, pending.displayPath, packed)
+                        + System.lineSeparator() + System.lineSeparator()
+                        + getString(R.string.room_measure_telegram));
     }
 
     private void openTelegram() {
@@ -1118,8 +1121,8 @@ public class SettingsActivity extends AppCompatActivity {
         try {
             backupToStream(pending.stream);
             Downloads.finish(this, pending);
-            Toast.makeText(this, getString(R.string.toast_saved_to, pending.displayPath),
-                    Toast.LENGTH_LONG).show();
+            ThemedDialog.notice(this, getString(R.string.settings_backup_btn),
+                    getString(R.string.toast_saved_to, pending.displayPath));
             return true;
         } catch (Exception e) {
             // A half-written backup is worse than none: it looks restorable and is not.
@@ -1133,10 +1136,12 @@ public class SettingsActivity extends AppCompatActivity {
         try (OutputStream os = getContentResolver().openOutputStream(uri)) {
             if (os == null) return;
             backupToStream(os);
-            Toast.makeText(this, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
+            ThemedDialog.notice(this, getString(R.string.settings_backup_btn),
+                    getString(R.string.toast_backup_success));
         } catch (Exception e) {
             Log.e(TAG, "Backup failed", e);
-            Toast.makeText(this, getString(R.string.toast_backup_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+            ThemedDialog.notice(this, getString(R.string.settings_backup_btn),
+                    getString(R.string.toast_backup_failed, e.getMessage()));
         }
     }
 
@@ -1148,11 +1153,13 @@ public class SettingsActivity extends AppCompatActivity {
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 backupToStream(fos);
                 Log.i(TAG, "Successfully backed up settings to " + file.getAbsolutePath());
-                Toast.makeText(this, R.string.toast_backup_success, Toast.LENGTH_SHORT).show();
+                ThemedDialog.notice(this, getString(R.string.settings_backup_btn),
+                        getString(R.string.toast_saved_to, file.getAbsolutePath()));
             }
         } catch (Exception e) {
             Log.e(TAG, "backupToFile failed", e);
-            Toast.makeText(this, getString(R.string.toast_backup_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+            ThemedDialog.notice(this, getString(R.string.settings_backup_btn),
+                    getString(R.string.toast_backup_failed, e.getMessage()));
         }
     }
 

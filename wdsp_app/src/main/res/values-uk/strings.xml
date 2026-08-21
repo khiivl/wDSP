@@ -234,7 +234,10 @@
     <string name="room_measure_running">Вимір: %1$s</string>
     <string name="room_measure_done">Готово — надіслати результат?</string>
     <string name="room_measure_failed">Виміряти не вдалося</string>
-    <string name="room_measure_send">Надіслати</string>
+    <string name="room_measure_saved_title">Вимір збережено</string>
+    <string name="room_measure_saved">Архів із %2$d файлів записано сюди:\n\n%1$s\n\nВідкрийте його файловим менеджером або скопіюйте на флешку чи по USB.</string>
+    <string name="room_measure_save_failed">Не вдалося записати архів.</string>
+    <string name="room_measure_send">Зберегти архів</string>
     <string name="room_measure_share_text">Вимір салону wDSP, версія %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Вимірів ще немає</string>

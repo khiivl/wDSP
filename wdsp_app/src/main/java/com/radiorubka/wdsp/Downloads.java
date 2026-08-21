@@ -38,6 +38,20 @@ public final class Downloads {
     private Downloads() {
     }
 
+    /**
+     * The folder a file picker should open at, so restoring lands where saving put things.
+     *
+     * <p>Without this the picker opens wherever it feels like - usually the root of internal
+     * storage - and the user has to walk down to Download/wDSP every time, on a touchscreen, in a
+     * car. The document provider understands this form directly; if a particular head unit's
+     * picker ignores the hint it simply opens where it would have anyway, so there is nothing to
+     * fall back to.
+     */
+    public static Uri initialUri() {
+        return Uri.parse("content://com.android.externalstorage.documents/document/primary%3A"
+                + Environment.DIRECTORY_DOWNLOADS + "%2F" + FOLDER);
+    }
+
     /** Where a file will end up, in the form a person can look for. */
     public static String pathFor(String fileName) {
         return Environment.DIRECTORY_DOWNLOADS + "/" + FOLDER + "/" + fileName;

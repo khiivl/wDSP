@@ -234,7 +234,10 @@
     <string name="room_measure_running">Pomiar: %1$s</string>
     <string name="room_measure_done">Gotowe — wysłać wynik?</string>
     <string name="room_measure_failed">Pomiar się nie powiódł</string>
-    <string name="room_measure_send">Wyślij</string>
+    <string name="room_measure_saved_title">Pomiar zapisany</string>
+    <string name="room_measure_saved">Archiwum z %2$d plikami zapisano tutaj:\n\n%1$s\n\nOtwórz je menedżerem plików albo skopiuj na pendrive lub przez USB.</string>
+    <string name="room_measure_save_failed">Nie udało się zapisać archiwum.</string>
+    <string name="room_measure_send">Zapisz archiwum</string>
     <string name="room_measure_share_text">Pomiar kabiny wDSP, wersja %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Jeszcze nic nie zmierzono</string>

@@ -244,7 +244,10 @@
     <string name="room_measure_running">Medindo: %1$s</string>
     <string name="room_measure_done">Concluído — enviar o resultado?</string>
     <string name="room_measure_failed">Não foi possível medir</string>
-    <string name="room_measure_send">Enviar</string>
+    <string name="room_measure_saved_title">Medição salva</string>
+    <string name="room_measure_saved">O arquivo com %2$d itens foi gravado em:\n\n%1$s\n\nAbra-o com um gerenciador de arquivos, ou copie-o por cabo USB ou cartão de memória.</string>
+    <string name="room_measure_save_failed">Não foi possível gravar o arquivo.</string>
+    <string name="room_measure_send">Salvar arquivo</string>
     <string name="room_measure_share_text">Medição de interior wDSP, versão %1$s</string>
     <string name="room_measure_telegram">Telegram: @kostyamat</string>
     <string name="room_measure_nothing">Ainda nada medido</string>

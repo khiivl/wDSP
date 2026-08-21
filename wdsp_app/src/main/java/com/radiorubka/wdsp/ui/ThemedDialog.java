@@ -49,6 +49,25 @@ public final class ThemedDialog {
         return dialog;
     }
 
+    /**
+     * A dialog that says one thing and waits to be dismissed.
+     *
+     * <p>This exists to replace toasts on anything that reports the result of an action the user
+     * asked for. A toast on these head units is not reliable: it appears when it feels like it,
+     * it can be swallowed by the system entirely, and it is gone before somebody in a car park has
+     * looked up. Telling a person "your file was saved to Download/wDSP" in something that
+     * vanishes is the same as not telling them.
+     *
+     * <p>Toasts are still fine for the incidental — a value clamped, a preset auto-selected. The
+     * rule is whether the user is waiting to be told something.
+     */
+    public static AlertDialog notice(Context context, CharSequence title, CharSequence message) {
+        return show(builder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, (d, w) -> d.dismiss()));
+    }
+
     private static void apply(AlertDialog dialog) {
         Context context = dialog.getContext();
         dialog.setCancelable(true);
