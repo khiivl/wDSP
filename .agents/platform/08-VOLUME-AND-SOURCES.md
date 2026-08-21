@@ -328,6 +328,45 @@ the conf file already disables auto-connect, **and** the external Bluetooth modu
 mute path from running at all. A unit with `btmodel.choose=default` routes Bluetooth audio through
 AudioFlinger and takes the mute on every focus flap.
 
+### Which of the two radios does this, and why the module gate is only half a shield
+
+🔴 There are **two** Bluetooth radios on these units and they must not be confused:
+
+- the **Android one** (`com.android.bluetooth`), a normal master that does inquiry and carries
+  things like an ELM327 OBD dongle and PAN;
+- a **second module** on a serial link (`persist.sys.btmodel.choose` = `sd8761`, `cq8761`, `sd936`),
+  driven by `com.qf.bluetooth` over AT commands. **Calls and A2DP streaming go through this one**,
+  and it is the one auto-connect pages.
+
+🔴 The focus churn comes from the platform app attached to the **second** module, and the
+`ANDROID_DEFAULT` gate does not stop it. The gate protects only the MCU mute; the focus abandon is
+ungated. 🔬 The chain, for a failed page on an external-module unit:
+
+```
+pollConnectRun / ACC_ON  ->  connect(lastAddress)  ->  AT command to the module
+module reports HFP disconnected
+  TechBTSettingManager: setHfpConnectState(0)
+    abandonAllAudioFocusWhenHfpDisconnected()
+      -> AudioFocusMessage type 4  -> abandonBTMusicAudioFocus()
+      -> AudioFocusMessage type 2  -> abandonBTPhoneAudioFocus()
+        both end at audioManager.abandonAudioFocus(...)   <- NOT gated on the module
+```
+
+🔴 And the matching **requests** never happen on such a unit: `requestBTPhoneAudioFocus()` *is*
+wrapped in the `ANDROID_DEFAULT` check, and `requestBTMusicAudioFocus()` only runs when Bluetooth
+music actually plays. 📻 Which is exactly what was measured — 24 abandons, zero requests. **The app
+releases a focus it never took**, several times per failed attempt, and Android re-evaluates the
+focus stack each time; the platform's audio service turns that re-evaluation into an
+`RPC_SetChannel`, and channel 2 drops for about 0.2 s.
+
+🔬 `abandonBTPhoneAudioFocus()` is worth seeing: it is an `if (module == ANDROID_DEFAULT) { ... }`
+whose two branches are **character-for-character identical**. Somebody meant to gate it and did
+not.
+
+🧩 So on an external-module unit the two effects separate: the MCU mute does not fire, but the
+focus abandon does. Killing the source — the 40-second poll, or auto-connect itself — is the only
+lever that removes both.
+
 ### One hardcoded package name
 
 🔬 In `requestBTMusicAudioFocus`:
