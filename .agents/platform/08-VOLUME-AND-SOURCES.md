@@ -260,6 +260,26 @@ service starts:
 `"0"`. **That**, not the property, is why auto-connect is off here — and why flipping the property
 from the radio app appeared to work when it was doing nothing.
 
+### Measured, because "mirror" deserved proof
+
+📻 21.08.2026, three reboots, touching **only** the conf file and never the property:
+
+| conf file | `persist.sys.qf.bt_auto_connect` after the reboot |
+|---|---|
+| `"auto_connect":"0"` | `false` |
+| `"auto_connect":"1"` | `true` |
+| `"auto_connect":"0"` | `false` |
+
+Nothing else writes that property, so the app wrote it — from the conf value, in
+`initSettingsConfig`. 🔴 **The direction is conf → app → property, and the property is the output.**
+It changes at reboot because that is when the app re-reads the file and re-publishes the mirror,
+not because anything reads the property back.
+
+🔬 Searched the whole decompiled corpus — platform framework, launcher, OTA, CAN bus, both radio
+apps, the Bluetooth app: the string `persist.sys.qf.bt_auto_connect` appears in exactly one place,
+`MiscConstants`, and the only code that touches it writes it. Setting it from outside is
+overwritten at the next boot and read by nobody in between.
+
 ### What the app's own toggle does, and what it does not
 
 🔴 The settings toggle takes effect immediately, which looks like proof that something re-reads
