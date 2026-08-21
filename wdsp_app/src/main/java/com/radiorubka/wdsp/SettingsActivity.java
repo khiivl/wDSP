@@ -1450,6 +1450,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.wallpaper_name, R.id.label_solid_hue, R.id.label_solid_val,
             R.id.label_status_bar_width, R.id.label_status_bar_pos,
             R.id.label_status_bar_hue, R.id.label_eq_vis_mode,
+            R.id.label_status_bar_height, R.id.label_status_bar_offset_y,
+            R.id.label_status_bar_alpha, R.id.tv_status_bar_placement_hint,
             R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization
         };
         for (int id : secondaryLabels) {
@@ -1462,6 +1464,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
         if (tvStatusBarPos != null) tvStatusBarPos.setTextColor(valueColor);
         if (tvStatusBarHue != null) tvStatusBarHue.setTextColor(valueColor);
+        if (tvStatusBarHeight != null) tvStatusBarHeight.setTextColor(valueColor);
+        if (tvStatusBarOffsetY != null) tvStatusBarOffsetY.setTextColor(valueColor);
+        if (tvStatusBarAlpha != null) tvStatusBarAlpha.setTextColor(valueColor);
         if (tvSolidHueVal != null) tvSolidHueVal.setTextColor(valueColor);
         if (tvSolidValVal != null) tvSolidValVal.setTextColor(valueColor);
 

@@ -630,7 +630,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_height_manual"
-                        android:textColor="@color/text_theme_aware"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -681,7 +680,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_offset_y"
-                        android:textColor="@color/text_theme_aware"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -732,7 +730,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_alpha"
-                        android:textColor="@color/text_theme_aware"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
