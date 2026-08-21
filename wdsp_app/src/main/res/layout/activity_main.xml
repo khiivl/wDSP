@@ -2515,7 +2515,7 @@
                                 android:id="@+id/seek_simulate_speed"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="2dp"
                                 android:valueFrom="0"
                                 android:valueTo="200"
                                 android:stepSize="1"
@@ -2532,10 +2532,9 @@
                                 app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
                                 app:labelBehavior="gone"
-                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c2"
-                                app:layout_constraintEnd_toStartOf="@id/tv_simulate_speed_val"
-                                app:layout_constraintTop_toTopOf="@id/tv_lbl_simulate_speed"
-                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_simulate_speed" />
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/tv_lbl_simulate_speed" />
 
                             <!-- Value 3 -->
                             <TextView
