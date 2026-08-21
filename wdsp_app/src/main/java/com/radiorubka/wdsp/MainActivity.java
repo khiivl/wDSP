@@ -2057,13 +2057,9 @@ public class MainActivity extends AppCompatActivity {
         Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
                 .setType("application/json");
-        // Start where exporting puts things, instead of at the root of internal storage. It is a
-        // hint: a picker that ignores it opens where it would have anyway.
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            pick.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI,
-                    Downloads.initialUri());
-        }
-        importLauncher.launch(pick);
+        // Opens straight at Download/wDSP, where exporting puts things - see OpenInDownloads for
+        // why that needs the system picker and not just a hint.
+        importLauncher.launch(com.radiorubka.wdsp.ui.OpenInDownloads.aim(this, pick));
     }
 
     /**
