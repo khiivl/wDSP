@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,7 +89,18 @@ public class McuService extends Service implements LocationListener {
     private boolean galaGlobalMode;
     private boolean galaGlobalEnabled;
     
+    /**
+     * Speed in km/h - the real one from GPS, and the simulated one from the slider in Settings.
+     *
+     * <p>Both are read and written only on the worker thread, which is worth knowing before
+     * anyone reaches for {@code volatile} here: {@code controlReceiver} looks like it runs on the
+     * main thread, and its body does not - the whole of {@code onReceive} is posted to
+     * {@code backgroundHandler}. {@code onLocationChanged} posts as well. So there is one thread
+     * involved and no visibility problem to solve.
+     */
     private float currentSpeedKmh = 0.0f;
+    /** Last offset the simulator diagnostic reported, so it logs on change only. */
+    private int lastLoggedSimOffset = Integer.MIN_VALUE;
     private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
 
@@ -255,6 +267,10 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
+                    // Logged because when somebody says the simulator does nothing, the first
+                    // thing worth knowing is whether the value ever arrived at the service at all.
+                    Log.i(TAG, "SIMULATE_SPEED: " + simulatedSpeedKmh + " km/h"
+                            + (simulatedSpeedKmh > 0 ? "" : " (off, back to GPS)"));
                 }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
                     adjustSubGain(1);
@@ -642,6 +658,29 @@ public class McuService extends Service implements LocationListener {
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
             }
+            // Logged because this is where "the speed simulator does nothing" comes from, every
+            // time it has been looked into. The division is integer: with the standstill speed at
+            // 65 and the increment at 45, simulating 90 gives (90-65)/45 = 0 and the volume
+            // correctly does not move. Nothing is broken, the settings simply ask for no change -
+            // and from the outside that is indistinguishable from a dead control.
+            //
+            // Worth knowing while reading a report: the standstill slider reaches 300 km/h while
+            // the simulator stops at 200, so it is possible to set a threshold that neither the
+            // simulator nor any car will ever cross.
+            //
+            // Once per change, not ten times a second: the log on these units is flooded by the
+            // serial layer and scrolls away in minutes, and a diagnostic that buries itself is
+            // worse than none.
+            if (simulatedSpeedKmh > 0f && rawOffset != lastLoggedSimOffset) {
+                lastLoggedSimOffset = rawOffset;
+                Log.i(TAG, String.format(Locale.US,
+                        "GALA at %.0f km/h: standstill %d, increment %d, ceiling %d -> offset %d%s",
+                        speed, minSpeed, speedIncrement, cachedGalaMaxAdj, rawOffset,
+                        rawOffset == 0 ? "  (no change asked for - check these three numbers)" : ""));
+            }
+        } else if (simulatedSpeedKmh > 0f && lastLoggedSimOffset != Integer.MIN_VALUE) {
+            lastLoggedSimOffset = Integer.MIN_VALUE;
+            Log.i(TAG, "GALA is switched off, so the simulated speed changes nothing");
         }
 
         // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
