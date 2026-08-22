@@ -413,13 +413,14 @@ public class StatusBarVisualizerManager {
      * this the strip would be painted underneath it.
      */
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
-                                 int alphaPercent, View.OnTouchListener touchHandler) {
+                                 int alphaPercent, int bottomInset,
+                                 View.OnTouchListener touchHandler) {
         if (!isAttached()) return;
         screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
         visualizerView.setAlphaPercent(alphaPercent);
         visualizerView.setBackdrop(backdrop);
         visualizerView.setBandFractions(widthFraction, heightFraction);
-        visualizerView.setTopInset(systemStatusBarHeight());
+        visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
         // The strip normally lets every touch through. For as long as it is the screensaver it has
         // to catch them: the tap that puts it away must not also press what is underneath, and the
         // drag zones need the whole gesture, not just its first event.
@@ -447,7 +448,7 @@ public class StatusBarVisualizerManager {
         visualizerView.setAlphaPercent(alphaPercent);
         visualizerView.setBackdrop(0);
         visualizerView.setBandFractions(1f, 1f);
-        visualizerView.setTopInset(0);
+        visualizerView.setInsets(0, 0);
         visualizerView.setOnTouchListener(null);
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         updateWindowGeometry();

@@ -425,6 +425,8 @@ public class McuService extends Service implements LocationListener {
         // The screensaver watches which activity is in front and needs to be running whether or
         // not anybody has the app open - that is the whole point of it.
         ScreensaverManager.getInstance(this).start();
+        // Cheap: one broadcast filter, and media sessions only if the owner has allowed them.
+        NowPlaying.getInstance(this).start();
 
         // Armed here rather than when the diagnostic screen is opened, because the events worth
         // recording - a Bluetooth call taking the audio path and giving it back - happen while

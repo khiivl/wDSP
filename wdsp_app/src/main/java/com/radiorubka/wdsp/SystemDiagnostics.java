@@ -209,6 +209,8 @@ public final class SystemDiagnostics {
         appendDevices(sb, context);
         appendActiveAudio(sb, context);
 
+        appendNowPlaying(sb, context);
+
         if (withMicrophoneProbe) {
             sb.append(microphoneProbe());
         } else {
@@ -255,6 +257,29 @@ public final class SystemDiagnostics {
         } catch (Throwable t) {
             return "present but unreadable (" + t.getClass().getSimpleName() + ")";
         }
+    }
+
+    /**
+     * What the app can see about the music, and through which of the three doors.
+     *
+     * <p>Worth a block of its own because the answer differs per unit and per player: the built-in
+     * player broadcasts, everything else needs notification access, and without either there is
+     * only the package name. When somebody reports that the screensaver shows no track, this says
+     * which of those is the case without a single question being asked.
+     */
+    private static void appendNowPlaying(StringBuilder sb, Context context) {
+        NowPlaying np = NowPlaying.getInstance(context);
+        sb.append("NOW PLAYING\n");
+        sb.append(String.format(Locale.US, "  notification access = %b  (needed for anything but the built-in player)%n",
+                np.canReadSessions()));
+        sb.append(String.format(Locale.US, "  player      = %s%n", orUnset(np.playerLabel())));
+        sb.append(String.format(Locale.US, "  playing     = %b%n", np.isPlaying()));
+        sb.append(String.format(Locale.US, "  line        = %s%n", orUnset(np.line())));
+        sb.append(String.format(Locale.US, "  cover art   = %s%n", np.art() == null ? "none" : "yes"));
+        float p = np.progress();
+        sb.append(String.format(Locale.US, "  progress    = %s%n",
+                p < 0 ? "unknown" : String.format(Locale.US, "%.0f%%", p * 100f)));
+        sb.append('\n');
     }
 
     private static void appendProps(StringBuilder sb, String title, String[][] table) {

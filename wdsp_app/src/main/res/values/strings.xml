@@ -277,6 +277,7 @@
     <string name="screensaver_height">Height</string>
     <string name="screensaver_bright_day">Brightness, day</string>
     <string name="screensaver_bright_night">Brightness, night</string>
+    <string name="screensaver_info_h">Track strip</string>
     <string name="screensaver_apps">Never over these apps</string>
     <string name="screensaver_apps_none">Nothing selected</string>
     <string name="screensaver_apps_pick">Choose</string>

@@ -72,12 +72,24 @@ public final class ScreensaverManager {
     /** Brightness of the bars, kept separately for the two themes. */
     public static final String PREF_BRIGHT_DAY = "ss_bright_day";
     public static final String PREF_BRIGHT_NIGHT = "ss_bright_night";
+    /** Height of the now-playing strip along the bottom, as a fraction of the screen. */
+    public static final String PREF_INFO_H = "ss_info_h";
 
     public static final int DEFAULT_DELAY_S = 60;
     public static final int DEFAULT_BG_ALPHA = 85;
     public static final float DEFAULT_WIDTH_F = 1.0f;
     public static final int DEFAULT_BRIGHT_DAY = 100;
     public static final int DEFAULT_BRIGHT_NIGHT = 70;
+    public static final float DEFAULT_INFO_H = 0.14f;
+    /**
+     * What the strip is allowed to take.
+     *
+     * <p>Bounded on purpose. Below the floor there is no room for a cover and a line of text at a
+     * size anybody can read across a car; above the ceiling the spectrum stops being the thing on
+     * the screen, and this is a screensaver, not a now-playing page.
+     */
+    public static final float MIN_INFO_H = 0.08f;
+    public static final float MAX_INFO_H = 0.25f;
 
     private static final long POLL_MS = 2000L;
 
@@ -160,6 +172,24 @@ public final class ScreensaverManager {
         handler.post(() -> {
             if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
         });
+    }
+
+    /** How much of the screen the now-playing strip takes, within its limits. */
+    public float infoBarFraction() {
+        float stored = prefs.getFloat(PREF_INFO_H, DEFAULT_INFO_H);
+        return Math.max(MIN_INFO_H, Math.min(MAX_INFO_H, stored));
+    }
+
+    public void setInfoBarFraction(float fraction) {
+        prefs.edit().putFloat(PREF_INFO_H,
+                Math.max(MIN_INFO_H, Math.min(MAX_INFO_H, fraction))).apply();
+        applyGeometry();
+    }
+
+    /** Pixels the spectrum must keep clear at the bottom. */
+    private int infoBarPx() {
+        return Math.round(StatusBarVisualizerManager.getInstance(context).screenHeight()
+                * infoBarFraction());
     }
 
     public float widthFraction() {
@@ -482,7 +512,7 @@ public final class ScreensaverManager {
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
                 strip.lendToScreensaver(widthFraction(), heightFraction(),
-                        backdropColor(), brightness(), gestures());
+                        backdropColor(), brightness(), infoBarPx(), gestures());
                 return;
             }
             if (standIn == null) return;
@@ -622,7 +652,7 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), gestures());
+                            backdropColor(), brightness(), infoBarPx(), gestures());
                 } else {
                     buildOverlay();
                     windowManager.addView(overlayRoot, overlayParams());

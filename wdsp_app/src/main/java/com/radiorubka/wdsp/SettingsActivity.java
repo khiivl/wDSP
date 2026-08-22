@@ -910,6 +910,8 @@ public class SettingsActivity extends AppCompatActivity {
     private Slider seekScreensaverDelay, seekScreensaverBg;
     private Slider seekScreensaverWidth, seekScreensaverHeight;
     private Slider seekScreensaverBrightDay, seekScreensaverBrightNight;
+    private Slider seekScreensaverInfoH;
+    private TextView tvScreensaverInfoH;
     private TextView tvScreensaverDelay, tvScreensaverBg, tvScreensaverApps;
     private TextView tvScreensaverWidth, tvScreensaverHeight;
     private TextView tvScreensaverBrightDay, tvScreensaverBrightNight;
@@ -981,6 +983,8 @@ public class SettingsActivity extends AppCompatActivity {
         seekScreensaverHeight = findViewById(R.id.seek_screensaver_height);
         seekScreensaverBrightDay = findViewById(R.id.seek_screensaver_bright_day);
         seekScreensaverBrightNight = findViewById(R.id.seek_screensaver_bright_night);
+        seekScreensaverInfoH = findViewById(R.id.seek_screensaver_info_h);
+        tvScreensaverInfoH = findViewById(R.id.tv_screensaver_info_h);
         tvScreensaverWidth = findViewById(R.id.tv_screensaver_width);
         tvScreensaverHeight = findViewById(R.id.tv_screensaver_height);
         tvScreensaverBrightDay = findViewById(R.id.tv_screensaver_bright_day);
@@ -1055,6 +1059,13 @@ public class SettingsActivity extends AppCompatActivity {
                 if (fromUser) ss.setBrightness(true, percent);
             });
         }
+        if (seekScreensaverInfoH != null) {
+            seekScreensaverInfoH.addOnChangeListener((slider, value, fromUser) -> {
+                int percent = Math.round(value);
+                tvScreensaverInfoH.setText(getString(R.string.lbl_percent_fmt, percent));
+                if (fromUser) ss.setInfoBarFraction(percent / 100f);
+            });
+        }
     }
 
     private void loadScreensaverSettings() {
@@ -1076,6 +1087,8 @@ public class SettingsActivity extends AppCompatActivity {
                 Math.round(ss.heightFraction() * 100f));
         bindPercentSlider(seekScreensaverBrightDay, tvScreensaverBrightDay, ss.brightness(false));
         bindPercentSlider(seekScreensaverBrightNight, tvScreensaverBrightNight, ss.brightness(true));
+        bindPercentSlider(seekScreensaverInfoH, tvScreensaverInfoH,
+                Math.round(ss.infoBarFraction() * 100f));
         showScreensaverAppCount();
     }
 
@@ -1813,7 +1826,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_screensaver_delay, R.id.label_screensaver_bg,
             R.id.label_screensaver_apps,
             R.id.label_screensaver_width, R.id.label_screensaver_height,
-            R.id.label_screensaver_bright_day, R.id.label_screensaver_bright_night
+            R.id.label_screensaver_bright_day, R.id.label_screensaver_bright_night,
+            R.id.label_screensaver_info_h
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
@@ -1846,6 +1860,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvScreensaverHeight != null) tvScreensaverHeight.setTextColor(valueColor);
         if (tvScreensaverBrightDay != null) tvScreensaverBrightDay.setTextColor(valueColor);
         if (tvScreensaverBrightNight != null) tvScreensaverBrightNight.setTextColor(valueColor);
+        if (tvScreensaverInfoH != null) tvScreensaverInfoH.setTextColor(valueColor);
 
         // Tint status bar Sliders
         tintSlider(seekStatusBarWidth, accent);
@@ -1858,6 +1873,7 @@ public class SettingsActivity extends AppCompatActivity {
         tintSlider(seekScreensaverHeight, accent);
         tintSlider(seekScreensaverBrightDay, accent);
         tintSlider(seekScreensaverBrightNight, accent);
+        tintSlider(seekScreensaverInfoH, accent);
         tintSlider(seekStatusBarAlpha, accent);
 
         // Update wheel brightness backgrounds

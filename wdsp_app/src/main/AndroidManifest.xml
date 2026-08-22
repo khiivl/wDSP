@@ -48,6 +48,18 @@
             android:name="com.radiorubka.wdsp.SettingsActivity"
             android:exported="false" />
 
+        <!-- Listed so that MediaSessionManager will answer "what is playing"; it overrides
+             nothing and reads no notifications. See NotificationAccess. -->
+        <service
+            android:name="com.radiorubka.wdsp.NotificationAccess"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <service
             android:name="com.radiorubka.wdsp.McuService"
             android:enabled="true"

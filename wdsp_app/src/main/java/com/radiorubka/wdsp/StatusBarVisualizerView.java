@@ -370,10 +370,23 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
      * are covered. It also stopped a tall band from hiding its own top under the bar.
      */
     private int topInset = 0;
+    /**
+     * The strip at the bottom the now-playing bar owns.
+     *
+     * <p>Reserved whether or not there is a track to show, so the spectrum does not resize itself
+     * every time the music pauses. A band that jumps when a song ends looks broken even though
+     * nothing is wrong.
+     */
+    private int bottomInset = 0;
+
+    public void setInsets(int top, int bottom) {
+        this.topInset = Math.max(0, top);
+        this.bottomInset = Math.max(0, bottom);
+        invalidate();
+    }
 
     public void setTopInset(int px) {
-        this.topInset = Math.max(0, px);
-        invalidate();
+        setInsets(px, bottomInset);
     }
 
     public void setBackdrop(int color) {
@@ -396,7 +409,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         if (backdropColor != 0) canvas.drawColor(backdropColor);
 
         float usableTop = Math.min(topInset, viewH);
-        float usableH = viewH - usableTop;
+        float usableH = Math.max(1f, viewH - usableTop - Math.min(bottomInset, viewH - usableTop));
         float w = viewW * bandWidthF;
         float totalH = usableH * bandHeightF;
         float offsetX = (viewW - w) / 2f;
