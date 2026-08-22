@@ -165,6 +165,11 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     public void setAlphaPercent(int alphaPercent) {
         this.alphaPercent = Math.max(0, Math.min(100, alphaPercent));
+        // The alpha is baked into the colour table, so redrawing with the old table changes
+        // nothing. This asked for a repaint and not a recalculation, which is why brightness has
+        // never done anything - not from the screensaver, and not from its slider in settings
+        // either. It only ever appeared to work when something else happened to rebuild the table.
+        recalculateColors();
         invalidate();
     }
 

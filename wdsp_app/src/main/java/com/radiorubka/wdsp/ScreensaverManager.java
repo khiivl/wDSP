@@ -10,8 +10,10 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
@@ -272,14 +274,6 @@ public final class ScreensaverManager {
     // -------------------------------------------------------------------------------------------
 
     /**
-     * How far a finger has to travel before the drag commits to an axis, as a share of the screen.
-     *
-     * <p>Small enough that the control feels immediate, large enough that a tap meant to dismiss
-     * the screensaver is never mistaken for the beginning of a resize.
-     */
-    private static final float DECIDE_F = 0.03f;
-
-    /**
      * A vertical drag starting right of this is brightness rather than height.
      *
      * <p>A third of the screen, not a strip. The lesson from the first attempt at these gestures
@@ -297,6 +291,9 @@ public final class ScreensaverManager {
      */
     private static final float TOP_ZONE_DEPTH = 0.22f;
 
+    /** The left column, which belongs to height at any height of its own. */
+    private static final float SIDE_COLUMN = 0.25f;
+
     private static final int GRAB_NONE = 0;
     private static final int GRAB_HEIGHT = 1;
     private static final int GRAB_WIDTH = 2;
@@ -305,110 +302,142 @@ public final class ScreensaverManager {
     private static final int GRAB_BACKDROP = 5;
 
     private int grabbed = GRAB_NONE;
-    private float grabX, grabY, grabValue;
+    private float grabValue;
     private float liveWidthF = -1f, liveHeightF = -1f;
     private int liveBrightness = -1;
     private int liveBackdrop = -1;
     private View.OnTouchListener touchListener;
 
+    /**
+     * The whole gesture, handed to the framework.
+     *
+     * <p>This was written by hand first - own slop, own axis test, own idea of how far is far
+     * enough - and every one of those was wrong at least once. The system already knows the size
+     * of the screen, how the touch panel is oriented on it and what counts as a drag on this
+     * device; {@link GestureDetector} and {@link ViewConfiguration} are where those answers live,
+     * so the only things left here are which axis means what and how fast it moves.
+     *
+     * <p>Displacement is measured from the down event to the current one, so the sign is plain and
+     * there is no running total to get out of step: negative Y is upward, positive X is rightward.
+     */
+    private GestureDetector detector;
+
     private View.OnTouchListener gestures() {
-        if (touchListener == null) touchListener = this::onScreensaverTouch;
-        return touchListener;
-    }
-
-    private boolean onScreensaverTouch(View view, MotionEvent event) {
-        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
-        int screenW = strip.screenWidth();
-        int screenH = strip.screenHeight();
-        float x = event.getX();
-        float y = event.getY();
-
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                grabX = x;
-                grabY = y;
-                grabbed = GRAB_UNDECIDED;
-                return true;
-
-            case MotionEvent.ACTION_MOVE:
-                float dx = x - grabX;
-                float dy = y - grabY;
-                if (grabbed == GRAB_UNDECIDED) {
-                    float decide = Math.min(screenW, screenH) * DECIDE_F;
-                    if (Math.abs(dx) < decide && Math.abs(dy) < decide) return true;
-                    // Whichever way the finger went further is the one it meant. The drag starts
-                    // counting from here rather than from where the finger landed, so committing
-                    // to an axis does not jump the value.
-                    boolean vertical = Math.abs(dy) >= Math.abs(dx);
-                    float topBandEnd = strip.systemStatusBarHeight() + screenH * TOP_ZONE_DEPTH;
-                    if (!vertical) {
-                        grabbed = GRAB_WIDTH;
-                        grabValue = widthFraction();
-                    } else if (grabY < topBandEnd) {
-                        grabbed = GRAB_BACKDROP;
-                        grabValue = backgroundAlpha();
-                    } else if (grabX > screenW * BRIGHT_ZONE_FROM) {
-                        grabbed = GRAB_BRIGHT;
-                        grabValue = brightness();
-                    } else {
-                        grabbed = GRAB_HEIGHT;
-                        grabValue = heightFraction();
-                    }
-                    grabX = x;
-                    grabY = y;
+        if (touchListener == null) {
+            detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onDown(MotionEvent e) {
+                    grabbed = GRAB_UNDECIDED;
                     return true;
                 }
-                if (grabbed == GRAB_HEIGHT) {
-                    // Up is more. A full sweep of the screen covers the whole range, so the travel
-                    // feels the same however large the unit's screen happens to be.
-                    liveHeightF = clamp01(grabValue + (grabY - y) / screenH, 0.03f);
-                    applyGeometry();
-                } else if (grabbed == GRAB_WIDTH) {
-                    liveWidthF = clamp01(grabValue + (x - grabX) / screenW, 0.10f);
-                    applyGeometry();
-                } else if (grabbed == GRAB_BRIGHT) {
-                    // Whichever theme is in force. The same number the matching slider in settings
-                    // holds, so the two are one setting seen from two places.
-                    liveBrightness = Math.max(10, Math.min(100,
-                            Math.round(grabValue + (grabY - y) / screenH * 100f)));
-                    applyBrightness();
-                } else if (grabbed == GRAB_BACKDROP) {
-                    liveBackdrop = Math.max(0, Math.min(100,
-                            Math.round(grabValue + (grabY - y) / screenH * 100f)));
-                    applyBackdrop();
-                }
-                return true;
 
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                if (grabbed == GRAB_UNDECIDED || grabbed == GRAB_NONE) {
-                    // Never travelled far enough to be a drag, so it was a tap, and a tap means
-                    // put the screensaver away. Anything that did become a drag never dismisses,
-                    // however it ends - reaching for an invisible control and losing the picture
-                    // because of it is the worst thing this could do.
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
                     hide();
                     return true;
                 }
-                if (liveWidthF > 0f) prefs.edit().putFloat(PREF_WIDTH_F, liveWidthF).apply();
-                if (liveHeightF > 0f) prefs.edit().putFloat(PREF_HEIGHT_F, liveHeightF).apply();
-                if (liveBrightness > 0) {
-                    prefs.edit().putInt(ThemeManager.isNight(context)
-                            ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY, liveBrightness).apply();
-                }
-                if (liveBackdrop >= 0) {
-                    prefs.edit().putInt(PREF_BG_ALPHA, liveBackdrop).apply();
-                }
-                liveWidthF = -1f;
-                liveHeightF = -1f;
-                liveBrightness = -1;
-                liveBackdrop = -1;
-                grabbed = GRAB_NONE;
-                resetIdleClock();
-                return true;
 
-            default:
+                @Override
+                public boolean onScroll(MotionEvent down, MotionEvent now,
+                                        float distanceX, float distanceY) {
+                    if (down == null || now == null) return true;
+                    onDrag(now.getX() - down.getX(), now.getY() - down.getY(),
+                            down.getX(), down.getY());
+                    return true;
+                }
+            });
+            detector.setIsLongpressEnabled(false);
+            touchListener = (view, event) -> {
+                detector.onTouchEvent(event);
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    commitDrag();
+                }
                 return true;
+            };
         }
+        return touchListener;
+    }
+
+    /**
+     * @param dx  how far right of the starting point the finger is now
+     * @param dy  how far below it; upward is negative
+     */
+    private void onDrag(float dx, float dy, float downX, float downY) {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        int screenW = strip.screenWidth();
+        int screenH = strip.screenHeight();
+
+        if (grabbed == GRAB_UNDECIDED) {
+            int slop = ViewConfiguration.get(context).getScaledTouchSlop();
+            if (Math.abs(dx) < slop && Math.abs(dy) < slop) return;
+            if (Math.abs(dy) >= Math.abs(dx)) {
+                if (downX > screenW * BRIGHT_ZONE_FROM) {
+                    grabbed = GRAB_BRIGHT;
+                    grabValue = brightness();
+                } else if (downY < strip.systemStatusBarHeight() + screenH * TOP_ZONE_DEPTH
+                        && downX > screenW * SIDE_COLUMN) {
+                    grabbed = GRAB_BACKDROP;
+                    grabValue = backgroundAlpha();
+                } else {
+                    grabbed = GRAB_HEIGHT;
+                    grabValue = heightFraction();
+                }
+            } else {
+                grabbed = GRAB_WIDTH;
+                grabValue = widthFraction();
+            }
+        }
+
+        // Up is more, right is more. A sweep across the screen covers the whole range.
+        float up = -dy / screenH;
+        float right = dx / screenW;
+        switch (grabbed) {
+            case GRAB_HEIGHT:
+                liveHeightF = clamp01(grabValue + up, 0.03f);
+                applyGeometry();
+                break;
+            case GRAB_WIDTH:
+                liveWidthF = clamp01(grabValue + right, 0.10f);
+                applyGeometry();
+                break;
+            case GRAB_BRIGHT:
+                liveBrightness = clampPercent(Math.round(grabValue + up * 100f), 10);
+                applyBrightness();
+                break;
+            case GRAB_BACKDROP:
+                liveBackdrop = clampPercent(Math.round(grabValue + up * 100f), 0);
+                applyBackdrop();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void commitDrag() {
+        if (grabbed == GRAB_UNDECIDED || grabbed == GRAB_NONE) {
+            grabbed = GRAB_NONE;
+            return;
+        }
+        SharedPreferences.Editor editor = prefs.edit();
+        if (liveWidthF > 0f) editor.putFloat(PREF_WIDTH_F, liveWidthF);
+        if (liveHeightF > 0f) editor.putFloat(PREF_HEIGHT_F, liveHeightF);
+        if (liveBrightness > 0) {
+            editor.putInt(ThemeManager.isNight(context) ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
+                    liveBrightness);
+        }
+        if (liveBackdrop >= 0) editor.putInt(PREF_BG_ALPHA, liveBackdrop);
+        editor.apply();
+        liveWidthF = -1f;
+        liveHeightF = -1f;
+        liveBrightness = -1;
+        liveBackdrop = -1;
+        grabbed = GRAB_NONE;
+        resetIdleClock();
+    }
+
+    private static int clampPercent(int value, int min) {
+        return Math.max(min, Math.min(100, value));
     }
 
     private static float clamp01(float value, float min) {
