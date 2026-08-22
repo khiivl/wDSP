@@ -345,11 +345,41 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         this.captureIntervalMs = captureIntervalMs;
     }
 
+    /**
+     * A colour painted behind the bars, and how much of the view they occupy.
+     *
+     * <p>Both exist for the screensaver, which is this same strip stretched over the screen with
+     * everything else dimmed behind it. Drawing that here rather than in a second window is what
+     * lets the strip grow without being detached - and a detached visualiser has to find the audio
+     * session again, which takes long enough to see.
+     */
+    private int backdropColor = 0;
+    private float bandWidthF = 1f;
+    private float bandHeightF = 1f;
+
+    public void setBackdrop(int color) {
+        this.backdropColor = color;
+        invalidate();
+    }
+
+    public void setBandFractions(float widthFraction, float heightFraction) {
+        this.bandWidthF = Math.max(0.01f, Math.min(1f, widthFraction));
+        this.bandHeightF = Math.max(0.01f, Math.min(1f, heightFraction));
+        invalidate();
+    }
+
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        float w = getWidth();
-        float totalH = getHeight();
+        float viewW = getWidth();
+        float viewH = getHeight();
+        if (viewW <= 0 || viewH <= 0) return;
+        if (backdropColor != 0) canvas.drawColor(backdropColor);
+
+        float w = viewW * bandWidthF;
+        float totalH = viewH * bandHeightF;
+        float offsetX = (viewW - w) / 2f;
+        float offsetY = (viewH - totalH) / 2f;
         if (w <= 0 || totalH <= 0) return;
 
         int count = this.bandCount;
@@ -358,14 +388,14 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         float barWidth = stepX - barGap;
         float cornerRadius = barWidth * 0.35f;
 
-        float bottom = totalH;
+        float bottom = offsetY + totalH;
 
         for (int i = 0; i < count; i++) {
             float level = renderLevels[i];
             if (level < 0.02f) level = 0.02f; // Keep a small visible baseline bar
 
             float barHeight = level * totalH * 0.88f;
-            float left = i * stepX + barGap / 2f;
+            float left = offsetX + i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = bottom - barHeight;
 

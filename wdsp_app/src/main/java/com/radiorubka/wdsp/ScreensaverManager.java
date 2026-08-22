@@ -212,6 +212,7 @@ public final class ScreensaverManager {
         applyGeometry();
         handler.post(() -> {
             if (standIn != null) standIn.setAlphaPercent(brightness());
+            if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
         });
     }
 
@@ -222,15 +223,15 @@ public final class ScreensaverManager {
     /** Re-sizes it in place, so a slider moves it while it is on screen. */
     private void applyGeometry() {
         handler.post(() -> {
-            if (!attached || overlayRoot == null) return;
+            if (!attached) return;
             StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
             int screenW = strip.screenWidth();
             int screenH = strip.screenHeight();
             int w = Math.max(1, Math.round(screenW * widthFraction()));
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
-                strip.lendToScreensaver(w, h, Math.max(0, (screenW - w) / 2),
-                        Math.max(0, (screenH - h) / 2), brightness());
+                strip.lendToScreensaver(widthFraction(), heightFraction(),
+                        backdropColor(), brightness(), this::hide);
                 return;
             }
             if (standIn == null) return;
@@ -364,11 +365,19 @@ public final class ScreensaverManager {
         handler.post(() -> {
             if (attached) return;
             try {
-                buildOverlay();
-                windowManager.addView(overlayRoot, overlayParams());
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isAttached()) {
+                    // No window of our own: the strip grows to fill the screen and paints the
+                    // backdrop itself. One window, and - the point of it - no detach, so the bars
+                    // keep running instead of freezing while the audio session is found again.
+                    strip.lendToScreensaver(widthFraction(), heightFraction(),
+                            backdropColor(), brightness(), this::hide);
+                } else {
+                    buildOverlay();
+                    windowManager.addView(overlayRoot, overlayParams());
+                    lendStripOrBuildOwn();
+                }
                 attached = true;
-                // Backdrop first, then the strip on top of it. Order is the z-order here.
-                lendStripOrBuildOwn();
                 Log.i(TAG, "screensaver shown over " + lastForeground);
             } catch (Throwable t) {
                 Log.w(TAG, "could not show the screensaver", t);
@@ -385,17 +394,8 @@ public final class ScreensaverManager {
      */
     private void lendStripOrBuildOwn() {
         StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
-        int screenW = strip.screenWidth();
-        int screenH = strip.screenHeight();
-        int w = Math.max(1, Math.round(screenW * widthFraction()));
-        int h = Math.max(1, Math.round(screenH * heightFraction()));
-        int x = Math.max(0, (screenW - w) / 2);
-        int y = Math.max(0, (screenH - h) / 2);
-
-        if (strip.isAttached()) {
-            strip.lendToScreensaver(w, h, x, y, brightness());
-            return;
-        }
+        int w = Math.max(1, Math.round(strip.screenWidth() * widthFraction()));
+        int h = Math.max(1, Math.round(strip.screenHeight() * heightFraction()));
         standIn = buildVisualizer();
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
         lp.gravity = Gravity.CENTER;
@@ -404,14 +404,17 @@ public final class ScreensaverManager {
 
     public void hide() {
         handler.post(() -> {
-            if (!attached || overlayRoot == null) return;
+            if (!attached) return;
             // The strip goes back first: if removing the backdrop threw, the thing the owner
             // actually looks at every day is still the one that gets restored.
             StatusBarVisualizerManager.getInstance(context).takeBackFromScreensaver();
             standIn = null;
-            try {
-                windowManager.removeView(overlayRoot);
-            } catch (Throwable ignored) {
+            if (overlayRoot != null) {
+                try {
+                    windowManager.removeView(overlayRoot);
+                } catch (Throwable ignored) {
+                }
+                overlayRoot = null;
             }
             attached = false;
             resetIdleClock();

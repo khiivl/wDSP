@@ -384,7 +384,6 @@ public class StatusBarVisualizerManager {
 
     /** width, height, x, y while the screensaver has it; null the rest of the time. */
     private int[] screensaverBounds;
-    private int alphaBeforeScreensaver = -1;
 
     public boolean isAttached() {
         return isViewAttached && visualizerView != null;
@@ -397,19 +396,24 @@ public class StatusBarVisualizerManager {
      * where it is in the stacking order, and the backdrop was added after the strip, so without
      * this the strip would be painted underneath it.
      */
-    public void lendToScreensaver(int width, int height, int x, int y, int alphaPercent) {
+    public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
+                                 int alphaPercent, final Runnable onTouched) {
         if (!isAttached()) return;
-        screensaverBounds = new int[]{width, height, x, y};
-        if (alphaBeforeScreensaver < 0) alphaBeforeScreensaver = alphaPercent;
+        screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
         visualizerView.setAlphaPercent(alphaPercent);
-        try {
-            windowManager.removeView(visualizerView);
-            fillGeometry();
-            windowManager.addView(visualizerView, layoutParams);
-        } catch (Throwable t) {
-            Log.w(TAG, "could not lend the strip to the screensaver", t);
-            screensaverBounds = null;
-        }
+        visualizerView.setBackdrop(backdrop);
+        visualizerView.setBandFractions(widthFraction, heightFraction);
+        // The strip normally lets every touch through. For as long as it is the screensaver it has
+        // to catch one, so that the tap which puts it away does not also press whatever is under it.
+        layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        visualizerView.setOnTouchListener((view, event) -> {
+            if (event.getActionMasked() == android.view.MotionEvent.ACTION_DOWN
+                    && onTouched != null) {
+                onTouched.run();
+            }
+            return true;
+        });
+        updateWindowGeometry();
     }
 
     /** Puts it back exactly as it was. */
@@ -417,7 +421,10 @@ public class StatusBarVisualizerManager {
         screensaverBounds = null;
         if (!isAttached()) return;
         visualizerView.setAlphaPercent(alphaPercent);
-        alphaBeforeScreensaver = -1;
+        visualizerView.setBackdrop(0);
+        visualizerView.setBandFractions(1f, 1f);
+        visualizerView.setOnTouchListener(null);
+        layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         updateWindowGeometry();
     }
 
