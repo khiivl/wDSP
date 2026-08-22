@@ -125,6 +125,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                     renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
                     if (Math.abs(renderLevels[i] - drawnLevels[i]) > VISIBLE_CHANGE) changed = true;
                 }
+                if (advanceFade(now)) changed = true;
                 if (changed) {
                     System.arraycopy(renderLevels, 0, drawnLevels, 0, bandCount);
                     lastDrawTime = now;
@@ -379,6 +380,41 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
      */
     private int bottomInset = 0;
 
+    /**
+     * Where the picture is between the bars and the clock: 0 is playing, 1 is paused.
+     *
+     * <h2>Why a crossfade and not a swap</h2>
+     *
+     * Because the two are the same object as far as a person is concerned - the thing in the
+     * middle of the screen - and things that are one thing do not blink out and reappear as
+     * another. The bars sink into their own baseline as they go, which is what they do anyway when
+     * the sound stops; all the animation adds is that they keep doing it smoothly instead of
+     * freezing wherever the last frame of audio left them.
+     */
+    private float pauseT = 0f;
+    private boolean pausedTarget = false;
+    private boolean clockEnabled = false;
+    private long lastFadeTick = 0;
+    private String clockText = "";
+
+    /** Long enough to read as a movement, short enough not to feel like waiting. */
+    private static final long FADE_MS = 700;
+
+    private final Paint clockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /**
+     * Turns the clock on and says whether the music is stopped.
+     *
+     * <p>Called from the screensaver's own two-second tick, so it costs nothing of its own.
+     */
+    public void setScreensaverState(boolean showClock, boolean paused) {
+        this.clockEnabled = showClock;
+        this.pausedTarget = paused;
+        if (!showClock) {
+            pauseT = 0f;
+        }
+    }
+
     public void setInsets(int top, int bottom) {
         this.topInset = Math.max(0, top);
         this.bottomInset = Math.max(0, bottom);
@@ -400,6 +436,45 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         invalidate();
     }
 
+    /**
+     * Moves the crossfade along, and keeps the clock's own minute ticking.
+     *
+     * @return whether anything needs redrawing - the frame loop only invalidates when the bars
+     *         have moved, and a paused screen has no bars moving at all
+     */
+    private boolean advanceFade(long now) {
+        if (!clockEnabled) return false;
+        boolean dirty = false;
+        long since = lastFadeTick == 0 ? 0 : now - lastFadeTick;
+        lastFadeTick = now;
+        float target = pausedTarget ? 1f : 0f;
+        if (pauseT != target && since > 0) {
+            float step = since / (float) FADE_MS;
+            if (pauseT < target) {
+                pauseT = Math.min(target, pauseT + step);
+            } else {
+                pauseT = Math.max(target, pauseT - step);
+            }
+            dirty = true;
+        }
+        if (pauseT > 0f) {
+            String text = currentClockText();
+            if (!text.equals(clockText)) {
+                clockText = text;
+                dirty = true;
+            }
+        }
+        return dirty;
+    }
+
+    private String currentClockText() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        boolean h24 = android.text.format.DateFormat.is24HourFormat(getContext());
+        int hour = h24 ? c.get(java.util.Calendar.HOUR_OF_DAY) : c.get(java.util.Calendar.HOUR);
+        if (!h24 && hour == 0) hour = 12;
+        return String.format(java.util.Locale.US, "%d:%02d", hour, c.get(java.util.Calendar.MINUTE));
+    }
+
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
@@ -416,6 +491,9 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         float offsetY = usableTop + (usableH - totalH) / 2f;
         if (w <= 0 || totalH <= 0) return;
 
+        // The bars sink as the clock arrives, and stop being drawn once they have nothing left.
+        float barScale = 1f - pauseT;
+        if (barScale > 0.01f) {
         int count = this.bandCount;
         float stepX = w / (float) count;
         float barGap = stepX * (count == 32 ? 0.20f : 0.22f);
@@ -428,7 +506,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             float level = renderLevels[i];
             if (level < 0.02f) level = 0.02f; // Keep a small visible baseline bar
 
-            float barHeight = level * totalH * 0.88f;
+            float barHeight = level * totalH * 0.88f * barScale;
             float left = offsetX + i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = bottom - barHeight;
@@ -437,6 +515,34 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             barRect.set(left, top, right, bottom);
             canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
         }
+        }
+
+        if (clockEnabled && pauseT > 0.01f) {
+            drawClock(canvas, offsetX + w / 2f, offsetY + totalH / 2f, totalH);
+        }
+    }
+
+    /**
+     * The clock, rising into the space the bars are leaving.
+     *
+     * <p>Sized from the band rather than from a fixed number, so it is the same shape whatever the
+     * owner has done with the sliders, and on a tall screen it does not turn into a postage stamp.
+     * It grows the last few per cent as it appears, which is what makes it read as arriving rather
+     * than as being switched on.
+     */
+    private void drawClock(Canvas canvas, float cx, float cy, float bandHeight) {
+        if (clockText.isEmpty()) clockText = currentClockText();
+        float scale = 0.94f + 0.06f * pauseT;
+        float size = Math.max(24f, bandHeight * 0.62f) * scale;
+        clockPaint.setTextSize(size);
+        clockPaint.setTextAlign(Paint.Align.CENTER);
+        clockPaint.setFakeBoldText(true);
+        int alpha = (int) (255f * (alphaPercent / 100f) * pauseT);
+        clockPaint.setColor(android.graphics.Color.argb(Math.max(0, Math.min(255, alpha)),
+                255, 255, 255));
+        Paint.FontMetrics fm = clockPaint.getFontMetrics();
+        float baseline = cy - (fm.ascent + fm.descent) / 2f;
+        canvas.drawText(clockText, cx, baseline, clockPaint);
     }
 
     @Override

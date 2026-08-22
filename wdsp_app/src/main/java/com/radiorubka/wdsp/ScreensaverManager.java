@@ -596,7 +596,17 @@ public final class ScreensaverManager {
             if (attached) hide();
             return;
         }
-        if (attached) return;
+        if (attached) {
+            // While it is up, keep it told whether the music is running - the clock fades in when
+            // it stops and the bars come back when it starts, and this two-second tick is the
+            // cheapest place to notice either.
+            StatusBarVisualizerManager.getInstance(context)
+                    .setScreensaverNowPlaying(!NowPlaying.getInstance(context).isPlaying());
+            if (standIn != null) {
+                standIn.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
+            }
+            return;
+        }
         if (!mayShowOver(foreground)) {
             resetIdleClock();
             return;
@@ -678,6 +688,7 @@ public final class ScreensaverManager {
         int w = Math.max(1, Math.round(strip.screenWidth() * widthFraction()));
         int h = Math.max(1, Math.round(strip.screenHeight() * heightFraction()));
         standIn = buildVisualizer();
+        standIn.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
         lp.gravity = Gravity.CENTER;
         overlayRoot.addView(standIn, lp);

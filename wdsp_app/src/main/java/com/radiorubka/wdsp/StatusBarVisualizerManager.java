@@ -421,6 +421,7 @@ public class StatusBarVisualizerManager {
         visualizerView.setBackdrop(backdrop);
         visualizerView.setBandFractions(widthFraction, heightFraction);
         visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
+        visualizerView.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
         // The strip normally lets every touch through. For as long as it is the screensaver it has
         // to catch them: the tap that puts it away must not also press what is underneath, and the
         // drag zones need the whole gesture, not just its first event.
@@ -433,6 +434,12 @@ public class StatusBarVisualizerManager {
     public void setScreensaverBrightness(int alphaPercent) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setAlphaPercent(alphaPercent);
+    }
+
+    /** Tells the view whether the music is stopped, which is what drives the clock crossfade. */
+    public void setScreensaverNowPlaying(boolean paused) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setScreensaverState(true, paused);
     }
 
     /** Backdrop only, with no relayout - the screensaver's backdrop drag calls this. */
@@ -449,6 +456,7 @@ public class StatusBarVisualizerManager {
         visualizerView.setBackdrop(0);
         visualizerView.setBandFractions(1f, 1f);
         visualizerView.setInsets(0, 0);
+        visualizerView.setScreensaverState(false, false);
         visualizerView.setOnTouchListener(null);
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         updateWindowGeometry();
