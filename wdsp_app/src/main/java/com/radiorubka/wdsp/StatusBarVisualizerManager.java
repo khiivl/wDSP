@@ -413,7 +413,7 @@ public class StatusBarVisualizerManager {
      * this the strip would be painted underneath it.
      */
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
-                                 int alphaPercent, int bottomInset,
+                                 int alphaPercent, int bottomInset, boolean screensaverPaused,
                                  View.OnTouchListener touchHandler) {
         if (!isAttached()) return;
         screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
@@ -421,7 +421,9 @@ public class StatusBarVisualizerManager {
         visualizerView.setBackdrop(backdrop);
         visualizerView.setBandFractions(widthFraction, heightFraction);
         visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
-        visualizerView.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
+        // The screensaver owns this judgement - it waits out a gap between tracks before it
+        // calls the music stopped, and asking NowPlaying here would skip that wait.
+        visualizerView.setScreensaverState(true, screensaverPaused);
         // The strip normally lets every touch through. For as long as it is the screensaver it has
         // to catch them: the tap that puts it away must not also press what is underneath, and the
         // drag zones need the whole gesture, not just its first event.

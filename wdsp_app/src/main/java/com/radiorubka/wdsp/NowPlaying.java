@@ -75,6 +75,18 @@ public final class NowPlaying {
     private MediaController controller;
     private MediaController.Callback controllerCallback;
 
+    /**
+     * Told the moment playback starts, so the bars do not wait for the next poll.
+     *
+     * <p>Only for starting. Stopping is deliberately left to the poll, which sits on it for a few
+     * seconds before believing it - see the screensaver's PAUSE_HOLD_MS.
+     */
+    private Runnable onStarted;
+
+    public void setOnStarted(Runnable listener) {
+        this.onStarted = listener;
+    }
+
     private static NowPlaying instance;
 
     public static synchronized NowPlaying getInstance(Context context) {
@@ -343,11 +355,17 @@ public final class NowPlaying {
         artKey = null;
     }
 
-    private synchronized void acceptState(PlaybackState state) {
+    private void acceptState(PlaybackState state) {
         if (state == null) return;
-        playing = state.getState() == PlaybackState.STATE_PLAYING;
-        positionMs = state.getPosition();
-        positionTakenAt = System.currentTimeMillis();
+        boolean started;
+        synchronized (this) {
+            boolean was = playing;
+            playing = state.getState() == PlaybackState.STATE_PLAYING;
+            positionMs = state.getPosition();
+            positionTakenAt = System.currentTimeMillis();
+            started = playing && !was;
+        }
+        if (started && onStarted != null) main.post(onStarted);
     }
 
     private static boolean notEmpty(String s) {

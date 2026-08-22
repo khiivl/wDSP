@@ -93,6 +93,20 @@ public final class ScreensaverManager {
 
     private static final long POLL_MS = 2000L;
 
+    /**
+     * How long the music has to stay stopped before the clock takes over.
+     *
+     * <h2>Why it is one-sided</h2>
+     *
+     * A gap between tracks, a moment of buffering, a player rebuilding its session - all of them
+     * report "not playing" for a second or two, and a picture that swaps every time would be
+     * worse than either picture on its own. So stopping has to be believed before it is acted on.
+     *
+     * <p>Starting does not: sound arriving is never a mistake, and the bars belong back on screen
+     * the instant it does. Waiting symmetrically would mean staring at a clock over music.
+     */
+    private static final long PAUSE_HOLD_MS = 8000L;
+
     /** The platform names the foreground activity here, as {@code package/class}. */
     private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
     private static final String PROP_NAVI_SPEAKING = "sys.qf.navi_state";
@@ -110,6 +124,8 @@ public final class ScreensaverManager {
     private boolean attached = false;
 
     private boolean screenOn = true;
+    /** When the music was first seen stopped, or 0 while it is playing. */
+    private long stoppedSince = 0L;
     private String lastForeground = "";
     private long foregroundSince = 0L;
 
@@ -512,7 +528,7 @@ public final class ScreensaverManager {
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
                 strip.lendToScreensaver(widthFraction(), heightFraction(),
-                        backdropColor(), brightness(), infoBarPx(), gestures());
+                        backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures());
                 return;
             }
             if (standIn == null) return;
@@ -557,6 +573,12 @@ public final class ScreensaverManager {
 
     public void start() {
         resetIdleClock();
+        NowPlaying.getInstance(context).setOnStarted(() -> {
+            stoppedSince = 0L;
+            if (!attached) return;
+            StatusBarVisualizerManager.getInstance(context).setScreensaverNowPlaying(false);
+            if (standIn != null) standIn.setScreensaverState(true, false);
+        });
         startPolling();
     }
 
@@ -587,6 +609,7 @@ public final class ScreensaverManager {
     };
 
     private void tick() {
+        updatePlaybackBelief();
         String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
         if (!foreground.equals(lastForeground)) {
             lastForeground = foreground;
@@ -597,14 +620,11 @@ public final class ScreensaverManager {
             return;
         }
         if (attached) {
-            // While it is up, keep it told whether the music is running - the clock fades in when
-            // it stops and the bars come back when it starts, and this two-second tick is the
-            // cheapest place to notice either.
-            StatusBarVisualizerManager.getInstance(context)
-                    .setScreensaverNowPlaying(!NowPlaying.getInstance(context).isPlaying());
-            if (standIn != null) {
-                standIn.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
-            }
+            // While it is up, keep it told what the music is doing - the clock fades in when it
+            // has stopped for long enough and the bars come back the moment it starts.
+            boolean paused = believedStopped();
+            StatusBarVisualizerManager.getInstance(context).setScreensaverNowPlaying(paused);
+            if (standIn != null) standIn.setScreensaverState(true, paused);
             return;
         }
         if (!mayShowOver(foreground)) {
@@ -613,6 +633,26 @@ public final class ScreensaverManager {
         }
         long idleMs = System.currentTimeMillis() - foregroundSince;
         if (idleMs >= delaySeconds() * 1000L) show();
+    }
+
+    /**
+     * Notices when the music stopped, so that {@link #believedStopped()} can wait it out.
+     *
+     * <p>Runs on every tick whether or not the screensaver is showing, so that a screensaver
+     * appearing over music that has been off for a while starts on the clock rather than fading
+     * into it eight seconds later.
+     */
+    private void updatePlaybackBelief() {
+        boolean playing = NowPlaying.getInstance(context).isPlaying();
+        if (playing) {
+            stoppedSince = 0L;
+        } else if (stoppedSince == 0L) {
+            stoppedSince = System.currentTimeMillis();
+        }
+    }
+
+    private boolean believedStopped() {
+        return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
     }
 
     /**
@@ -662,7 +702,7 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), infoBarPx(), gestures());
+                            backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures());
                 } else {
                     buildOverlay();
                     windowManager.addView(overlayRoot, overlayParams());
@@ -688,7 +728,7 @@ public final class ScreensaverManager {
         int w = Math.max(1, Math.round(strip.screenWidth() * widthFraction()));
         int h = Math.max(1, Math.round(strip.screenHeight() * heightFraction()));
         standIn = buildVisualizer();
-        standIn.setScreensaverState(true, !NowPlaying.getInstance(context).isPlaying());
+        standIn.setScreensaverState(true, believedStopped());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
         lp.gravity = Gravity.CENTER;
         overlayRoot.addView(standIn, lp);
