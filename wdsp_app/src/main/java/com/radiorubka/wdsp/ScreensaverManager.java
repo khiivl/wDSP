@@ -374,28 +374,44 @@ public final class ScreensaverManager {
             // Deciding by direction alone came first and was worse: two of the four values had no
             // direction left to claim, and the two that shared an axis had to be told apart by a
             // zone anyway. An edge is a thing you can point at, even in the dark.
-            float edgeX = screenW * EDGE_F;
-            float edgeY = screenH * EDGE_F;
-            if (downY < strip.systemStatusBarHeight() + edgeY) {
+            //
+            // In a corner two edges both claim the touch, and the winner used to be whichever
+            // test came first - an answer nobody can predict by looking at the screen. The
+            // nearest edge wins instead, so the corners split along their diagonals.
+            //
+            // Distances are a share of their own dimension. Measured in pixels the top and bottom
+            // are always closer on a screen wider than it is tall, and most of the top-left
+            // quarter would end up belonging to the top edge.
+            float usableTop = strip.systemStatusBarHeight();
+            float usableH = Math.max(1f, screenH - usableTop);
+            float toTop = (downY - usableTop) / usableH;
+            float toBottom = (screenH - downY) / usableH;
+            float toLeft = downX / screenW;
+            float toRight = (screenW - downX) / screenW;
+            float nearest = Math.min(Math.min(toTop, toBottom), Math.min(toLeft, toRight));
+
+            if (nearest > EDGE_F) {
+                // Nowhere near an edge. The middle keeps the obvious meanings, so a drag that
+                // starts nowhere in particular still does something sensible.
+                if (Math.abs(dy) >= Math.abs(dx)) {
+                    grabbed = GRAB_HEIGHT;
+                    grabValue = heightFraction();
+                } else {
+                    grabbed = GRAB_WIDTH;
+                    grabValue = widthFraction();
+                }
+            } else if (nearest == toTop) {
                 grabbed = GRAB_BACKDROP;
                 grabValue = backgroundAlpha();
-            } else if (downY > screenH - edgeY) {
+            } else if (nearest == toBottom) {
                 grabbed = GRAB_WIDTH;
                 grabValue = widthFraction();
-            } else if (downX < edgeX) {
-                grabbed = GRAB_HEIGHT;
-                grabValue = heightFraction();
-            } else if (downX > screenW - edgeX) {
-                grabbed = GRAB_BRIGHT;
-                grabValue = brightness();
-            } else if (Math.abs(dy) >= Math.abs(dx)) {
-                // The middle keeps the obvious meanings, so a drag that starts nowhere in
-                // particular still does something sensible.
+            } else if (nearest == toLeft) {
                 grabbed = GRAB_HEIGHT;
                 grabValue = heightFraction();
             } else {
-                grabbed = GRAB_WIDTH;
-                grabValue = widthFraction();
+                grabbed = GRAB_BRIGHT;
+                grabValue = brightness();
             }
         }
 
