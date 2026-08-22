@@ -404,6 +404,30 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private boolean clockTypefaceTried = false;
 
     /**
+     * The now-playing strip along the bottom, and how far its text has scrolled.
+     *
+     * <p>Read straight from {@link NowPlaying} rather than pushed in: the marquee needs a fresh
+     * position on every frame anyway, and copying five fields across on a timer would only add a
+     * way for the two to disagree.
+     */
+    private NowPlaying nowPlaying;
+    private final Paint infoPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private float marqueeOffset = 0f;
+    private long lastMarqueeTick = 0;
+    private boolean marqueeRunning = false;
+
+    /** Slow enough to read at a glance across a car, fast enough not to feel stuck. */
+    private static final float MARQUEE_PX_PER_S = 55f;
+    /** Blank between the end of the line and where it starts again. */
+    private static final float MARQUEE_GAP_F = 0.35f;
+
+    public void setNowPlayingSource(NowPlaying source) {
+        this.nowPlaying = source;
+        this.marqueeOffset = 0f;
+    }
+
+    /**
      * Turns the clock on and says whether the music is stopped.
      *
      * <p>Called from the screensaver's own two-second tick, so it costs nothing of its own.
@@ -457,6 +481,13 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                 pauseT = Math.max(target, pauseT - step);
             }
             dirty = true;
+        }
+        if (marqueeRunning) {
+            float step = since * (MARQUEE_PX_PER_S / 1000f);
+            if (step > 0f) {
+                marqueeOffset += step;
+                dirty = true;
+            }
         }
         if (pauseT > 0f) {
             String text = currentClockText();
@@ -539,6 +570,90 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
         if (clockEnabled && pauseT > 0.01f) {
             drawClock(canvas, offsetX + w / 2f, offsetY + totalH / 2f, totalH);
+        }
+        if (nowPlaying != null && bottomInset > 8) {
+            drawNowPlaying(canvas, viewW, viewH);
+        }
+    }
+
+    /**
+     * The strip: who is playing it, its cover, the line, and how far through.
+     *
+     * <p>Everything is sized from the strip's own height, which the owner sets, so the whole row
+     * scales together instead of a fixed icon sitting in a band twice its size.
+     */
+    private void drawNowPlaying(Canvas canvas, float viewW, float viewH) {
+        float h = bottomInset;
+        float top = viewH - h;
+        float pad = h * 0.16f;
+        float alpha = alphaPercent / 100f;
+        float x = pad;
+
+        android.graphics.drawable.Drawable icon = nowPlaying.playerIcon();
+        if (icon != null) {
+            float size = h * 0.46f;
+            int left = Math.round(x);
+            int iconTop = Math.round(top + (h - size) / 2f);
+            icon.setBounds(left, iconTop, Math.round(left + size), Math.round(iconTop + size));
+            icon.setAlpha(Math.round(255 * alpha));
+            icon.draw(canvas);
+            x += size + pad;
+        }
+
+        android.graphics.Bitmap art = nowPlaying.art();
+        if (art != null && !art.isRecycled()) {
+            float size = h * 0.72f;
+            android.graphics.RectF dst = new android.graphics.RectF(
+                    x, top + (h - size) / 2f, x + size, top + (h + size) / 2f);
+            infoPaint.setAlpha(Math.round(255 * alpha));
+            canvas.drawBitmap(art, null, dst, infoPaint);
+            x += size + pad;
+        }
+
+        String line = nowPlaying.line();
+        if (line == null) line = nowPlaying.playerLabel();
+        float right = viewW - pad;
+        if (line != null && right > x) {
+            infoPaint.setTextSize(h * 0.38f);
+            infoPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            infoPaint.setColor(android.graphics.Color.argb(
+                    Math.round(235 * alpha), 255, 255, 255));
+            infoPaint.setTextAlign(Paint.Align.LEFT);
+            Paint.FontMetrics fm = infoPaint.getFontMetrics();
+            float baseline = top + h / 2f - (fm.ascent + fm.descent) / 2f;
+            float avail = right - x;
+            float textW = infoPaint.measureText(line);
+
+            canvas.save();
+            canvas.clipRect(x, top, right, viewH);
+            if (textW <= avail) {
+                // It fits, so it stays still. A line that scrolls when it does not need to is
+                // movement for its own sake, and this thing is meant to be glanced at.
+                marqueeRunning = false;
+                marqueeOffset = 0f;
+                canvas.drawText(line, x, baseline, infoPaint);
+            } else {
+                marqueeRunning = true;
+                float span = textW + avail * MARQUEE_GAP_F;
+                if (marqueeOffset > span) marqueeOffset -= span;
+                canvas.drawText(line, x - marqueeOffset, baseline, infoPaint);
+                canvas.drawText(line, x - marqueeOffset + span, baseline, infoPaint);
+            }
+            canvas.restore();
+        } else {
+            marqueeRunning = false;
+        }
+
+        float p = nowPlaying.progress();
+        if (p >= 0f) {
+            float lineH = Math.max(2f, h * 0.05f);
+            float y = viewH - lineH;
+            progressPaint.setColor(android.graphics.Color.argb(
+                    Math.round(60 * alpha), 255, 255, 255));
+            canvas.drawRect(0f, y, viewW, viewH, progressPaint);
+            progressPaint.setColor(android.graphics.Color.argb(
+                    Math.round(230 * alpha), 255, 255, 255));
+            canvas.drawRect(0f, y, viewW * p, viewH, progressPaint);
         }
     }
 

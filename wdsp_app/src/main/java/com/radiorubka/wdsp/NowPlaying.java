@@ -51,6 +51,21 @@ public final class NowPlaying {
     private static final String ACTION_QF_MUSIC = "com.qf.musicplayer.action.UPDATE_ACTION";
     private static final String EXTRA_QF_MUSIC = "com.qf.musicplayer.action.UPDATE_ACTION_musicinfo";
     private static final String PROP_AUDIO_SRC = "sys.qf.last_audio_src";
+    private static final String PROP_RADIO_STATUS = "sys.qf.radio.status";
+    private static final String PROP_SOUND_CHANNEL = "sys.qf.sound.channel";
+    /** The MCU channel that means the tuner is connected to the amplifier. */
+    private static final String CHANNEL_RADIO = "2";
+
+    /**
+     * Radio apps, by package. Prefix match, because the family shares a stem and the factory one
+     * ships under two names on different builds.
+     */
+    private static final String[] RADIO_PACKAGES = {
+            "com.android.fmradio",
+            "com.kostyamat.fmradio",
+            "com.qf.radio",
+            "com.qf.fmradio",
+    };
 
     /** What the platform's parcel calls "playing". Anything else is treated as stopped. */
     private static final int QF_STATUS_PLAYING = 16;
@@ -183,6 +198,39 @@ public final class NowPlaying {
         if (notEmpty(playerPackage)) return playerPackage;
         String prop = HardwareProfile.systemProperty(PROP_AUDIO_SRC);
         return prop == null ? "" : prop;
+    }
+
+    /**
+     * Whether the sound is coming from a tuner rather than from a file or a stream.
+     *
+     * <h2>Why the screensaver has to know</h2>
+     *
+     * Because there is nothing to draw. Radio does not pass through AudioFlinger on this platform
+     * - it is an analogue path from the tuner to the amplifier - so the spectrum engine is
+     * measuring silence and the bars would be an honest-looking lie.
+     *
+     * <p>And because the track line is not ours to show. The radio app has its own overlay with
+     * the station logo and the RDS line, and that is something its author sells; wDSP repeating it
+     * underneath, from the metadata that same app publishes by the standard, would be taking it.
+     * On radio the screensaver shows the clock and stops there.
+     *
+     * <p>Three signals, any one of which is enough: the app's own radio flag, the MCU's channel,
+     * and the package that owns the sound. They do not all work on every unit - the channel never
+     * changes on some, and a third-party tuner app is not in the list - so the test is generous
+     * rather than clever.
+     */
+    public boolean isRadioSource() {
+        if (isTrue(HardwareProfile.systemProperty(PROP_RADIO_STATUS))) return true;
+        if (CHANNEL_RADIO.equals(HardwareProfile.systemProperty(PROP_SOUND_CHANNEL))) return true;
+        String pkg = currentPackage();
+        for (String radio : RADIO_PACKAGES) {
+            if (pkg.startsWith(radio)) return true;
+        }
+        return false;
+    }
+
+    private static boolean isTrue(String s) {
+        return "true".equalsIgnoreCase(s) || "1".equals(s);
     }
 
     // -------------------------------------------------------------------------------------------

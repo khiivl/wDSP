@@ -623,8 +623,13 @@ public final class ScreensaverManager {
             // While it is up, keep it told what the music is doing - the clock fades in when it
             // has stopped for long enough and the bars come back the moment it starts.
             boolean paused = believedStopped();
-            StatusBarVisualizerManager.getInstance(context).setScreensaverNowPlaying(paused);
-            if (standIn != null) standIn.setScreensaverState(true, paused);
+            StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+            strip.setScreensaverNowPlaying(paused);
+            strip.setScreensaverInfoSource(infoSource());
+            if (standIn != null) {
+                standIn.setScreensaverState(true, paused);
+                standIn.setNowPlayingSource(infoSource());
+            }
             return;
         }
         if (!mayShowOver(foreground)) {
@@ -652,7 +657,16 @@ public final class ScreensaverManager {
     }
 
     private boolean believedStopped() {
+        // Radio counts as stopped straight away, with no waiting it out: there is no spectrum to
+        // lose, so there is nothing for the bars to be doing in the meantime.
+        if (NowPlaying.getInstance(context).isRadioSource()) return true;
         return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
+    }
+
+    /** The strip is for what we can honestly show, and on radio that is nothing. */
+    private NowPlaying infoSource() {
+        NowPlaying np = NowPlaying.getInstance(context);
+        return np.isRadioSource() ? null : np;
     }
 
     /**
@@ -729,6 +743,7 @@ public final class ScreensaverManager {
         int h = Math.max(1, Math.round(strip.screenHeight() * heightFraction()));
         standIn = buildVisualizer();
         standIn.setScreensaverState(true, believedStopped());
+        standIn.setNowPlayingSource(infoSource());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
         lp.gravity = Gravity.CENTER;
         overlayRoot.addView(standIn, lp);

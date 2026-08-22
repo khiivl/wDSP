@@ -424,6 +424,8 @@ public class StatusBarVisualizerManager {
         // The screensaver owns this judgement - it waits out a gap between tracks before it
         // calls the music stopped, and asking NowPlaying here would skip that wait.
         visualizerView.setScreensaverState(true, screensaverPaused);
+        NowPlaying np = NowPlaying.getInstance(context);
+        visualizerView.setNowPlayingSource(np.isRadioSource() ? null : np);
         // The strip normally lets every touch through. For as long as it is the screensaver it has
         // to catch them: the tap that puts it away must not also press what is underneath, and the
         // drag zones need the whole gesture, not just its first event.
@@ -436,6 +438,12 @@ public class StatusBarVisualizerManager {
     public void setScreensaverBrightness(int alphaPercent) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setAlphaPercent(alphaPercent);
+    }
+
+    /** Hands the view the track information, or null when there is nothing we may show. */
+    public void setScreensaverInfoSource(NowPlaying source) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setNowPlayingSource(source);
     }
 
     /** Tells the view whether the music is stopped, which is what drives the clock crossfade. */
@@ -459,6 +467,7 @@ public class StatusBarVisualizerManager {
         visualizerView.setBandFractions(1f, 1f);
         visualizerView.setInsets(0, 0);
         visualizerView.setScreensaverState(false, false);
+        visualizerView.setNowPlayingSource(null);
         visualizerView.setOnTouchListener(null);
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         updateWindowGeometry();
