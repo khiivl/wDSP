@@ -280,19 +280,15 @@ public final class ScreensaverManager {
      * is that an invisible target has to be one you cannot miss - and a hand reaching for an edge
      * rides the edge, so the zone runs all the way to it with nothing held back.
      */
-    private static final float BRIGHT_ZONE_FROM = 0.66f;
-
     /**
-     * A vertical drag that starts in this band, measured down from under the status bar, sets the
-     * backdrop instead of the height.
+     * How deep each edge reaches in, as a share of the screen.
      *
-     * <p>Under it, not in it: the system owns the status bar and takes every touch that lands
-     * there, so a gesture anchored to the very top would never reach us at all.
+     * <p>Generous on purpose. Nothing is drawn to aim at, so the target has to be one you cannot
+     * miss - and a hand reaching for an edge rides the edge itself, so each zone runs all the way
+     * out with nothing held back.
      */
-    private static final float TOP_ZONE_DEPTH = 0.22f;
+    private static final float EDGE_F = 0.18f;
 
-    /** The left column, which belongs to height at any height of its own. */
-    private static final float SIDE_COLUMN = 0.25f;
 
     private static final int GRAB_NONE = 0;
     private static final int GRAB_HEIGHT = 1;
@@ -371,42 +367,57 @@ public final class ScreensaverManager {
         if (grabbed == GRAB_UNDECIDED) {
             int slop = ViewConfiguration.get(context).getScaledTouchSlop();
             if (Math.abs(dx) < slop && Math.abs(dy) < slop) return;
-            if (Math.abs(dy) >= Math.abs(dx)) {
-                if (downX > screenW * BRIGHT_ZONE_FROM) {
-                    grabbed = GRAB_BRIGHT;
-                    grabValue = brightness();
-                } else if (downY < strip.systemStatusBarHeight() + screenH * TOP_ZONE_DEPTH
-                        && downX > screenW * SIDE_COLUMN) {
-                    grabbed = GRAB_BACKDROP;
-                    grabValue = backgroundAlpha();
-                } else {
-                    grabbed = GRAB_HEIGHT;
-                    grabValue = heightFraction();
-                }
+            // Which edge the finger started nearest decides what is being changed. Four edges,
+            // four values, and no need to remember whether this one wants an up-and-down or a
+            // left-and-right - the drag can go either way and the larger component drives it.
+            //
+            // Deciding by direction alone came first and was worse: two of the four values had no
+            // direction left to claim, and the two that shared an axis had to be told apart by a
+            // zone anyway. An edge is a thing you can point at, even in the dark.
+            float edgeX = screenW * EDGE_F;
+            float edgeY = screenH * EDGE_F;
+            if (downY < strip.systemStatusBarHeight() + edgeY) {
+                grabbed = GRAB_BACKDROP;
+                grabValue = backgroundAlpha();
+            } else if (downY > screenH - edgeY) {
+                grabbed = GRAB_WIDTH;
+                grabValue = widthFraction();
+            } else if (downX < edgeX) {
+                grabbed = GRAB_HEIGHT;
+                grabValue = heightFraction();
+            } else if (downX > screenW - edgeX) {
+                grabbed = GRAB_BRIGHT;
+                grabValue = brightness();
+            } else if (Math.abs(dy) >= Math.abs(dx)) {
+                // The middle keeps the obvious meanings, so a drag that starts nowhere in
+                // particular still does something sensible.
+                grabbed = GRAB_HEIGHT;
+                grabValue = heightFraction();
             } else {
                 grabbed = GRAB_WIDTH;
                 grabValue = widthFraction();
             }
         }
 
-        // Up is more, right is more. A sweep across the screen covers the whole range.
-        float up = -dy / screenH;
-        float right = dx / screenW;
+        // Up is more and right is more, whichever way the finger actually went.
+        float amount = Math.abs(dy) >= Math.abs(dx) ? -dy / screenH : dx / screenW;
         switch (grabbed) {
             case GRAB_HEIGHT:
-                liveHeightF = clamp01(grabValue + up, 0.03f);
+                liveHeightF = clamp01(grabValue + amount, 0.03f);
                 applyGeometry();
                 break;
             case GRAB_WIDTH:
-                liveWidthF = clamp01(grabValue + right, 0.10f);
+                liveWidthF = clamp01(grabValue + amount, 0.10f);
                 applyGeometry();
                 break;
             case GRAB_BRIGHT:
-                liveBrightness = clampPercent(Math.round(grabValue + up * 100f), 10);
+                liveBrightness = clampPercent(Math.round(grabValue + amount * 100f), 10);
                 applyBrightness();
                 break;
             case GRAB_BACKDROP:
-                liveBackdrop = clampPercent(Math.round(grabValue + up * 100f), 0);
+                // All the way to solid black at 100, so the screensaver can hide the screen
+                // completely if that is what somebody wants at night.
+                liveBackdrop = clampPercent(Math.round(grabValue + amount * 100f), 0);
                 applyBackdrop();
                 break;
             default:
