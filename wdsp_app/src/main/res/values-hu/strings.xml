@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globális alapértelmezett: %1$s</string>
     <string name="system_report_failed">A jelentést nem sikerült kiírni.</string>
     <string name="mic_denied_title">Nincs mikrofon</string>
     <string name="mic_denied">Az Android már nem kéri a mikrofont, mert az engedélyt korábban megtagadták. Enélkül semmit sem lehet mérni.\n\nNyissa meg a Beállítások → Alkalmazások → wDSP → Engedélyek menüt, engedélyezze a mikrofont, majd próbálja újra.</string>
+    <string name="screensaver_section_title">Képernyővédő</string>
+    <string name="screensaver_enable">Képernyővédő</string>
+    <string name="screensaver_enable_desc">Teljes képernyős vizualizáció inaktivitáskor. Érintésre eltűnik.</string>
+    <string name="screensaver_delay">Késleltetés</string>
+    <string name="screensaver_delay_fmt">%1$d mp</string>
+    <string name="screensaver_bg_alpha">Háttér</string>
+    <string name="screensaver_width">Szélesség</string>
+    <string name="screensaver_height">Magasság</string>
+    <string name="screensaver_bright_day">Fényerő nappal</string>
+    <string name="screensaver_bright_night">Fényerő éjjel</string>
+    <string name="screensaver_apps">Soha felette</string>
+    <string name="screensaver_apps_none">Nincs</string>
+    <string name="screensaver_apps_pick">Válassz</string>
+    <string name="screensaver_note">A navigációt sosem takarja el.</string>
 </resources>
+

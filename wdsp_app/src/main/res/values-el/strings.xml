@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@
     <string name="system_report_failed">Η αναφορά δεν μπόρεσε να γραφτεί.</string>
     <string name="mic_denied_title">Χωρίς μικρόφωνο</string>
     <string name="mic_denied">Το Android δεν ζητά πλέον το μικρόφωνο, επειδή η άδεια απορρίφθηκε νωρίτερα. Τίποτα δεν μπορεί να μετρηθεί χωρίς αυτό.\n\nΑνοίξτε Ρυθμίσεις → Εφαρμογές → wDSP → Άδειες και επιτρέψτε το μικρόφωνο, μετά δοκιμάστε ξανά.</string>
+    <string name="screensaver_section_title">Προστασία οθόνης</string>
+    <string name="screensaver_enable">Προστασία</string>
+    <string name="screensaver_enable_desc">Οπτικοποίηση πλήρους οθόνης λόγω αδράνειας. Κρύβεται με άγγιγμα.</string>
+    <string name="screensaver_delay">Καθυστέρηση</string>
+    <string name="screensaver_delay_fmt">%1$d δ</string>
+    <string name="screensaver_bg_alpha">Φόντο</string>
+    <string name="screensaver_width">Πλάτος</string>
+    <string name="screensaver_height">Ύψος</string>
+    <string name="screensaver_bright_day">Φωτεινότητα μέρα</string>
+    <string name="screensaver_bright_night">Φωτεινότητα νύχτα</string>
+    <string name="screensaver_apps">Ποτέ πάνω</string>
+    <string name="screensaver_apps_none">Κανένα</string>
+    <string name="screensaver_apps_pick">Επιλογή</string>
+    <string name="screensaver_note">Η πλοήγηση δεν καλύπτεται ποτέ.</string>
 </resources>
+

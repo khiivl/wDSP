@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@
     <string name="system_report_failed">Отчетът не можа да бъде записан.</string>
     <string name="mic_denied_title">Няма микрофон</string>
     <string name="mic_denied">Android вече не пита за микрофона, защото разрешението е било отказано по-рано. Без него нищо не може да бъде измерено.\n\nОтворете Настройки → Приложения → wDSP → Разрешения и разрешете микрофона, след което опитайте отново.</string>
+    <string name="screensaver_section_title">Скрийнсейвър</string>
+    <string name="screensaver_enable">Скрийнсейвър</string>
+    <string name="screensaver_enable_desc">Визуализатор на цял екран при неактивност. Докосване го скрива.</string>
+    <string name="screensaver_delay">Забавяне</string>
+    <string name="screensaver_delay_fmt">%1$d с</string>
+    <string name="screensaver_bg_alpha">Фон</string>
+    <string name="screensaver_width">Ширина</string>
+    <string name="screensaver_height">Височина</string>
+    <string name="screensaver_bright_day">Яркост денем</string>
+    <string name="screensaver_bright_night">Яркост нощем</string>
+    <string name="screensaver_apps">Никога над</string>
+    <string name="screensaver_apps_none">Няма избрани</string>
+    <string name="screensaver_apps_pick">Избери</string>
+    <string name="screensaver_note">Навигацията никога не се покрива.</string>
 </resources>
+

@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Yleinen oletus: %1$s</string>
     <string name="system_report_failed">Raporttia ei voitu kirjoittaa.</string>
     <string name="mic_denied_title">Ei mikrofonia</string>
     <string name="mic_denied">Android ei enää kysy mikrofonia, koska lupa evättiin aiemmin. Ilman sitä ei voida mitata mitään.\n\nAvaa Asetukset → Sovellukset → wDSP → Luvat ja salli mikrofonin käyttö, yritä sitten uudelleen.</string>
+    <string name="screensaver_section_title">Näytönsäästäjä</string>
+    <string name="screensaver_enable">Säästäjä</string>
+    <string name="screensaver_enable_desc">Koko näytön visualisoija inaktiivisuuden jälkeen. Piilotetaan kosketuksesta.</string>
+    <string name="screensaver_delay">Viive</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Tausta</string>
+    <string name="screensaver_width">Leveys</string>
+    <string name="screensaver_height">Korkeus</string>
+    <string name="screensaver_bright_day">Kirkkaus päivä</string>
+    <string name="screensaver_bright_night">Kirkkaus yö</string>
+    <string name="screensaver_apps">Ei koskaan</string>
+    <string name="screensaver_apps_none">Ei valittu</string>
+    <string name="screensaver_apps_pick">Valitse</string>
+    <string name="screensaver_note">Navigointia ei koskaan peitetä.</string>
 </resources>
+

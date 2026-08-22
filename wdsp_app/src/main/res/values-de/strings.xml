@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <!-- Presets -->
@@ -257,4 +257,19 @@
     <string name="system_report_failed">Der Bericht konnte nicht geschrieben werden.</string>
     <string name="mic_denied_title">Kein Mikrofon</string>
     <string name="mic_denied">Android fragt nicht mehr nach dem Mikrofon, da die Berechtigung zuvor verweigert wurde. Ohne dies kann nichts gemessen werden.\n\nÖffnen Sie Einstellungen → Apps → wDSP → Berechtigungen und erlauben Sie das Mikrofon, versuchen Sie es dann erneut.</string>
+    <string name="screensaver_section_title">Bildschirmschoner</string>
+    <string name="screensaver_enable">Schoner</string>
+    <string name="screensaver_enable_desc">Vollbild-Visualisierer bei Inaktivität. Verschwindet bei Berührung.</string>
+    <string name="screensaver_delay">Verzögerung</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Hintergrund</string>
+    <string name="screensaver_width">Breite</string>
+    <string name="screensaver_height">Höhe</string>
+    <string name="screensaver_bright_day">Helligkeit Tag</string>
+    <string name="screensaver_bright_night">Helligkeit Nacht</string>
+    <string name="screensaver_apps">Nie über</string>
+    <string name="screensaver_apps_none">Keine</string>
+    <string name="screensaver_apps_pick">Wählen</string>
+    <string name="screensaver_note">Navigation wird nie überdeckt.</string>
 </resources>
+

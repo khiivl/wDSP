@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Genel Varsayılan: %1$s</string>
     <string name="system_report_failed">Rapor yazılamadı.</string>
     <string name="mic_denied_title">Mikrofon yok</string>
     <string name="mic_denied">Android artık mikrofonu sormuyor, çünkü izin daha önce reddedilmiş. O olmadan hiçbir şey ölçülemez.\n\nAyarlar → Uygulamalar → wDSP → İzinler\'i açın ve mikrofona izin verin, ardından tekrar deneyin.</string>
+    <string name="screensaver_section_title">Ekran koruyucu</string>
+    <string name="screensaver_enable">Koruyucu</string>
+    <string name="screensaver_enable_desc">Hareketsizlik sonrası tam ekran görselleştirici. Dokunulduğunda gizlenir.</string>
+    <string name="screensaver_delay">Gecikme</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Arkaplan</string>
+    <string name="screensaver_width">Genişlik</string>
+    <string name="screensaver_height">Yükseklik</string>
+    <string name="screensaver_bright_day">Parlaklık gündüz</string>
+    <string name="screensaver_bright_night">Parlaklık gece</string>
+    <string name="screensaver_apps">Asla üstüne</string>
+    <string name="screensaver_apps_none">Hiçbiri</string>
+    <string name="screensaver_apps_pick">Seç</string>
+    <string name="screensaver_note">Navigasyon asla kapatılmaz.</string>
 </resources>
+

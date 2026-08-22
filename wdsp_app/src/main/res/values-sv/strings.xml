@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -257,4 +257,19 @@
     <string name="system_report_failed">Rapporten kunde inte skrivas.</string>
     <string name="mic_denied_title">Ingen mikrofon</string>
     <string name="mic_denied">Android ber inte om mikrofonen längre, eftersom behörigheten nekades tidigare. Ingenting kan mätas utan den.\n\nÖppna Inställningar → Appar → wDSP → Behörigheter och tillåt mikrofonen, försök sedan igen.</string>
+    <string name="screensaver_section_title">Skärmsläckare</string>
+    <string name="screensaver_enable">Skärmsläckare</string>
+    <string name="screensaver_enable_desc">Helskärmsvisualisering vid inaktivitet. Döljs vid beröring.</string>
+    <string name="screensaver_delay">Fördröjning</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Bakgrund</string>
+    <string name="screensaver_width">Bredd</string>
+    <string name="screensaver_height">Höjd</string>
+    <string name="screensaver_bright_day">Ljusstyrka dag</string>
+    <string name="screensaver_bright_night">Ljusstyrka natt</string>
+    <string name="screensaver_apps">Aldrig över</string>
+    <string name="screensaver_apps_none">Ingen</string>
+    <string name="screensaver_apps_pick">Välj</string>
+    <string name="screensaver_note">Navigering täcks aldrig.</string>
 </resources>
+

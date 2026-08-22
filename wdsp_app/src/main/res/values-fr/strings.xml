@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Par défaut global : %1$s</string>
     <string name="system_report_failed">Le rapport n\'a pas pu être écrit.</string>
     <string name="mic_denied_title">Pas de micro</string>
     <string name="mic_denied">Android ne demande plus le microphone car l\'autorisation a été refusée précédemment. Rien ne peut être mesuré sans cela.\n\nOuvrez Paramètres → Applications → wDSP → Autorisations et autorisez le microphone, puis réessayez.</string>
+    <string name="screensaver_section_title">Écran de veille</string>
+    <string name="screensaver_enable">Veille</string>
+    <string name="screensaver_enable_desc">Visualiseur plein écran après inactivité. Disparaît au toucher.</string>
+    <string name="screensaver_delay">Délai</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Fond</string>
+    <string name="screensaver_width">Largeur</string>
+    <string name="screensaver_height">Hauteur</string>
+    <string name="screensaver_bright_day">Luminosité jour</string>
+    <string name="screensaver_bright_night">Luminosité nuit</string>
+    <string name="screensaver_apps">Jamais sur</string>
+    <string name="screensaver_apps_none">Aucune</string>
+    <string name="screensaver_apps_pick">Choisir</string>
+    <string name="screensaver_note">La navigation n\'est jamais recouverte.</string>
 </resources>
+

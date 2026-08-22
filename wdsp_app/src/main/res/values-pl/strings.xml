@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -257,4 +257,19 @@
     <string name="system_report_failed">Nie udało się zapisać raportu.</string>
     <string name="mic_denied_title">Brak mikrofonu</string>
     <string name="mic_denied">Android nie prosi już o mikrofon, ponieważ wcześniej odmówiono uprawnień. Bez niego nic nie można zmierzyć.\n\nOtwórz Ustawienia → Aplikacje → wDSP → Uprawnienia i zezwól na mikrofon, a następnie spróbuj ponownie.</string>
+    <string name="screensaver_section_title">Wygaszacz</string>
+    <string name="screensaver_enable">Wygaszacz</string>
+    <string name="screensaver_enable_desc">Wizualizator pełnoekranowy po bezczynności. Znika po dotknięciu.</string>
+    <string name="screensaver_delay">Opóźnienie</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Tło</string>
+    <string name="screensaver_width">Szerokość</string>
+    <string name="screensaver_height">Wysokość</string>
+    <string name="screensaver_bright_day">Jasność dzień</string>
+    <string name="screensaver_bright_night">Jasność noc</string>
+    <string name="screensaver_apps">Nigdy na</string>
+    <string name="screensaver_apps_none">Brak</string>
+    <string name="screensaver_apps_pick">Wybierz</string>
+    <string name="screensaver_note">Nawigacja nigdy nie jest zasłaniana.</string>
 </resources>
+

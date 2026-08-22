@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Bendras numatytasis: %1$s</string>
     <string name="system_report_failed">Nepavyko įrašyti ataskaitos.</string>
     <string name="mic_denied_title">Nėra mikrofona</string>
     <string name="mic_denied">„Android“ nebeklausia dėl mikrofono, nes anksčiau buvo atsisakyta leisti. Be jo nieko negalima išmatuoti.\n\nAtidarykite Nustatymai → Programos → wDSP → Leidimai ir leiskite naudoti mikrofoną, tada bandykite dar kartą.</string>
+    <string name="screensaver_section_title">Ekrano užsklanda</string>
+    <string name="screensaver_enable">Užsklanda</string>
+    <string name="screensaver_enable_desc">Viso ekrano vizualizacija ramybės būsenoje. Dingsta palietus.</string>
+    <string name="screensaver_delay">Delsa</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Fonas</string>
+    <string name="screensaver_width">Plotis</string>
+    <string name="screensaver_height">Aukštis</string>
+    <string name="screensaver_bright_day">Ryškumas dieną</string>
+    <string name="screensaver_bright_night">Ryškumas naktį</string>
+    <string name="screensaver_apps">Niekada virš</string>
+    <string name="screensaver_apps_none">Nėra</string>
+    <string name="screensaver_apps_pick">Rinktis</string>
+    <string name="screensaver_note">Navigacija niekada neuždengiama.</string>
 </resources>
+

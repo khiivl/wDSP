@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globāli noklusējums: %1$s</string>
     <string name="system_report_failed">Atskaiti nevarēja ierakstīt.</string>
     <string name="mic_denied_title">Nav mikrofona</string>
     <string name="mic_denied">Android vairs neprasa mikrofonu, jo atļauja iepriekš tika atteikta. Bez tā neko nevar izmērīt.\n\nAtveriet Iestatījumi → Lietotnes → wDSP → Atļaujas un atļaujiet mikrofonu, pēc tam mēģiniet vēlreiz.</string>
+    <string name="screensaver_section_title">Ekrānsaudzētājs</string>
+    <string name="screensaver_enable">Ekrānsaudzētājs</string>
+    <string name="screensaver_enable_desc">Pilnekrāna vizualizators dīkstāvē. Pazūd pieskaroties.</string>
+    <string name="screensaver_delay">Aizkave</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Fons</string>
+    <string name="screensaver_width">Platums</string>
+    <string name="screensaver_height">Augstums</string>
+    <string name="screensaver_bright_day">Spilgtums dienā</string>
+    <string name="screensaver_bright_night">Spilgtums naktī</string>
+    <string name="screensaver_apps">Nekad virs</string>
+    <string name="screensaver_apps_none">Nav</string>
+    <string name="screensaver_apps_pick">Izvēlēties</string>
+    <string name="screensaver_note">Navigācija netiek aizsegta.</string>
 </resources>
+

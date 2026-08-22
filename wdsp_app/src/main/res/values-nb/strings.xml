@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Global standard: %1$s</string>
     <string name="system_report_failed">Rapporten kunne ikke skrives.</string>
     <string name="mic_denied_title">Ingen mikrofon</string>
     <string name="mic_denied">Android ber ikke om mikrofonen lenger, fordi tillatelsen ble nektet tidligere. Ingenting kan måles uten den.\n\nÅpne Innstillinger → Apper → wDSP → Tillatelser og tillat mikrofonen, prøv deretter igjen.</string>
+    <string name="screensaver_section_title">Skjermsparer</string>
+    <string name="screensaver_enable">Skjermsparer</string>
+    <string name="screensaver_enable_desc">Fullskjermsvisualisering ved inaktivitet. Skjules ved berøring.</string>
+    <string name="screensaver_delay">Forsinkelse</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Bakgrunn</string>
+    <string name="screensaver_width">Bredde</string>
+    <string name="screensaver_height">Høyde</string>
+    <string name="screensaver_bright_day">Lysstyrke dag</string>
+    <string name="screensaver_bright_night">Lysstyrke natt</string>
+    <string name="screensaver_apps">Aldri over</string>
+    <string name="screensaver_apps_none">Ingen</string>
+    <string name="screensaver_apps_pick">Velg</string>
+    <string name="screensaver_note">Navigasjonen dekkes aldri.</string>
 </resources>
+

@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globalno privzeto: %1$s</string>
     <string name="system_report_failed">Poročila ni bilo mogoče zapisati.</string>
     <string name="mic_denied_title">Ni mikrofona</string>
     <string name="mic_denied">Android ne zahteva več mikrofona, ker je bilo dovoljenje prej zavrnjeno. Brez njega ni mogoče izmeriti ničesar.\n\nOdprite Nastavitve → Aplikacije → wDSP → Dovoljenja in dovolite mikrofon, nato poskusite znova.</string>
+    <string name="screensaver_section_title">Ohranjevalnik</string>
+    <string name="screensaver_enable">Ohranjevalnik</string>
+    <string name="screensaver_enable_desc">Celozaslonski vizualizator po neaktivnosti. Skrije se ob dotiku.</string>
+    <string name="screensaver_delay">Zakasnitev</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Ozadje</string>
+    <string name="screensaver_width">Širina</string>
+    <string name="screensaver_height">Višina</string>
+    <string name="screensaver_bright_day">Svetlost dan</string>
+    <string name="screensaver_bright_night">Svetlost noč</string>
+    <string name="screensaver_apps">Nikoli čez</string>
+    <string name="screensaver_apps_none">Nič</string>
+    <string name="screensaver_apps_pick">Izberi</string>
+    <string name="screensaver_note">Navigacija ni nikoli prekrita.</string>
 </resources>
+

@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -265,4 +265,19 @@
     <string name="system_report_failed">No se pudo escribir el informe.</string>
     <string name="mic_denied_title">Sin micrófono</string>
     <string name="mic_denied">Android ya no pide el micrófono porque el permiso fue denegado anteriormente. No se puede medir nada sin él.\n\nAbrí Configuración → Aplicaciones → wDSP → Permisos y permití el micrófono, luego intentá de nuevo.</string>
+    <string name="screensaver_section_title">Protector de pantalla</string>
+    <string name="screensaver_enable">Protector</string>
+    <string name="screensaver_enable_desc">Visualizador a pantalla completa tras inactividad. Un toque lo oculta.</string>
+    <string name="screensaver_delay">Demora</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Fondo</string>
+    <string name="screensaver_width">Ancho</string>
+    <string name="screensaver_height">Alto</string>
+    <string name="screensaver_bright_day">Brillo día</string>
+    <string name="screensaver_bright_night">Brillo noche</string>
+    <string name="screensaver_apps">Nunca sobre</string>
+    <string name="screensaver_apps_none">Nada</string>
+    <string name="screensaver_apps_pick">Elegir</string>
+    <string name="screensaver_note">La navegación nunca se cubre.</string>
 </resources>
+

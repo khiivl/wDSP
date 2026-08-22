@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globální výchozí: %1$s</string>
     <string name="system_report_failed">Zprávu se nepodařilo zapsat.</string>
     <string name="mic_denied_title">Žádný mikrofon</string>
     <string name="mic_denied">Android již nežádá o mikrofon, protože oprávnění bylo dříve zamítnuto. Bez něj nelze nic měřit.\n\nOtevřete Nastavení → Aplikace → wDSP → Oprávnění a povolte mikrofon, poté to zkuste znovu.</string>
+    <string name="screensaver_section_title">Spořič obrazovky</string>
+    <string name="screensaver_enable">Spořič</string>
+    <string name="screensaver_enable_desc">Celoobrazovkový vizualizér při nečinnosti. Zmizí po dotyku.</string>
+    <string name="screensaver_delay">Zpoždění</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Pozadí</string>
+    <string name="screensaver_width">Šířka</string>
+    <string name="screensaver_height">Výška</string>
+    <string name="screensaver_bright_day">Jas den</string>
+    <string name="screensaver_bright_night">Jas noc</string>
+    <string name="screensaver_apps">Nikdy přes</string>
+    <string name="screensaver_apps_none">Nevybráno</string>
+    <string name="screensaver_apps_pick">Vybrat</string>
+    <string name="screensaver_note">Navigace není nikdy překryta.</string>
 </resources>
+

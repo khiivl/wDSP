@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Implicit global: %1$s</string>
     <string name="system_report_failed">Raportul nu a putut fi scris.</string>
     <string name="mic_denied_title">Fără microfon</string>
     <string name="mic_denied">Android nu mai cere microfonul, deoarece permisiunea a fost refuzată anterior. Nimic nu poate fi măsurat fără el.\n\nDeschideți Setări → Aplicații → wDSP → Permisiuni și permiteți microfonul, apoi încercați din nou.</string>
+    <string name="screensaver_section_title">Economizor ecran</string>
+    <string name="screensaver_enable">Economizor</string>
+    <string name="screensaver_enable_desc">Vizualizator pe tot ecranul după inactivitate. Ascuns la atingere.</string>
+    <string name="screensaver_delay">Întârziere</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Fundal</string>
+    <string name="screensaver_width">Lățime</string>
+    <string name="screensaver_height">Înălțime</string>
+    <string name="screensaver_bright_day">Luminozitate zi</string>
+    <string name="screensaver_bright_night">Luminozitate noapte</string>
+    <string name="screensaver_apps">Niciodată</string>
+    <string name="screensaver_apps_none">Niciuna</string>
+    <string name="screensaver_apps_pick">Alege</string>
+    <string name="screensaver_note">Navigația nu este acoperită.</string>
 </resources>
+

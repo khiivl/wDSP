@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -257,4 +257,19 @@
     <string name="system_report_failed">Не вдалося записати звіт.</string>
     <string name="mic_denied_title">Немає мікрофона</string>
     <string name="mic_denied">Android більше не запитує доступ до мікрофона, оскільки раніше було відмовлено. Без нього нічого виміряти неможливо.\n\nВідкрийте Налаштування → Додатки → wDSP → Дозволи та дозвольте мікрофон, після чого спробуйте знову.</string>
+    <string name="screensaver_section_title">Заставка</string>
+    <string name="screensaver_enable">Заставка</string>
+    <string name="screensaver_enable_desc">Візуалізатор на весь екран при простої. Ховається від дотику.</string>
+    <string name="screensaver_delay">Затримка</string>
+    <string name="screensaver_delay_fmt">%1$d с</string>
+    <string name="screensaver_bg_alpha">Фон</string>
+    <string name="screensaver_width">Ширина</string>
+    <string name="screensaver_height">Висота</string>
+    <string name="screensaver_bright_day">Яскравість день</string>
+    <string name="screensaver_bright_night">Яскравість ніч</string>
+    <string name="screensaver_apps">Ніколи поверх</string>
+    <string name="screensaver_apps_none">Не вибрано</string>
+    <string name="screensaver_apps_pick">Вибрати</string>
+    <string name="screensaver_note">Навігація ніколи не перекривається.</string>
 </resources>
+

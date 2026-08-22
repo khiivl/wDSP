@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@
     <string name="system_report_failed">Aruannet ei õnnestunud kirjutada.</string>
     <string name="mic_denied_title">Mikrofoni pole</string>
     <string name="mic_denied">Android ei küsi enam mikrofoni, sest luba keelduti varem. Ilma selleta ei saa midagi mõõta.\n\nAvage Seaded → Rakendused → wDSP → Load ja lubage mikrofon, seejärel proovige uuesti.</string>
+    <string name="screensaver_section_title">Ekraanisäästja</string>
+    <string name="screensaver_enable">Säästja</string>
+    <string name="screensaver_enable_desc">Täisekraanil visualiseerija tegevusetuse korral. Kaob puudutamisel.</string>
+    <string name="screensaver_delay">Viivitus</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Taust</string>
+    <string name="screensaver_width">Laius</string>
+    <string name="screensaver_height">Kõrgus</string>
+    <string name="screensaver_bright_day">Heledus päeval</string>
+    <string name="screensaver_bright_night">Heledus öösel</string>
+    <string name="screensaver_apps">Mitte kunagi</string>
+    <string name="screensaver_apps_none">Valimata</string>
+    <string name="screensaver_apps_pick">Vali</string>
+    <string name="screensaver_note">Navigatsiooni ei kaeta kunagi.</string>
 </resources>
+

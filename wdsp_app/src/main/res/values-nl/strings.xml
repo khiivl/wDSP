@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globale standaard: %1$s</string>
     <string name="system_report_failed">Het rapport kon niet worden geschreven.</string>
     <string name="mic_denied_title">Geen microfoon</string>
     <string name="mic_denied">Android vraagt niet meer om de microfoon, omdat de toestemming eerder is geweigerd. Zonder dit kan er niets worden gemeten.\n\nOpen Instellingen → Apps → wDSP → Rechten en sta de microfoon toe, probeer het daarna opnieuw.</string>
+    <string name="screensaver_section_title">Screensaver</string>
+    <string name="screensaver_enable">Screensaver</string>
+    <string name="screensaver_enable_desc">Schermvullende visualisatie bij inactiviteit. Verdwijnt bij aanraking.</string>
+    <string name="screensaver_delay">Vertraging</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Achtergrond</string>
+    <string name="screensaver_width">Breedte</string>
+    <string name="screensaver_height">Hoogte</string>
+    <string name="screensaver_bright_day">Helderheid dag</string>
+    <string name="screensaver_bright_night">Helderheid nacht</string>
+    <string name="screensaver_apps">Nooit over</string>
+    <string name="screensaver_apps_none">Geen</string>
+    <string name="screensaver_apps_pick">Kiezen</string>
+    <string name="screensaver_note">Navigatie wordt nooit bedekt.</string>
 </resources>
+

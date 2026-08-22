@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Global standard: %1$s</string>
     <string name="system_report_failed">Rapporten kunne ikke skrives.</string>
     <string name="mic_denied_title">Ingen mikrofon</string>
     <string name="mic_denied">Android beder ikke om mikrofonen længere, fordi tilladelsen blev afvist tidligere. Intet kan måles uden den.\n\nÅpne Indstillinger → Apps → wDSP → Tilladelser og tillad mikrofonen, og prøv derefter igen.</string>
+    <string name="screensaver_section_title">Pauseskærm</string>
+    <string name="screensaver_enable">Pauseskærm</string>
+    <string name="screensaver_enable_desc">Fuldskærms visualiser efter inaktivitet. Skjules ved berøring.</string>
+    <string name="screensaver_delay">Forsinkelse</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Baggrund</string>
+    <string name="screensaver_width">Bredde</string>
+    <string name="screensaver_height">Højde</string>
+    <string name="screensaver_bright_day">Lysstyrke dag</string>
+    <string name="screensaver_bright_night">Lysstyrke nat</string>
+    <string name="screensaver_apps">Aldrig over</string>
+    <string name="screensaver_apps_none">Ingen valgt</string>
+    <string name="screensaver_apps_pick">Vælg</string>
+    <string name="screensaver_note">Navigation dækkes aldrig.</string>
 </resources>
+

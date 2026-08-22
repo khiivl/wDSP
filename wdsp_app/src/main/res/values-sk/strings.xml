@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -269,4 +269,19 @@ Globálne predvolené: %1$s</string>
     <string name="system_report_failed">Správu sa nepodarilo zapísať.</string>
     <string name="mic_denied_title">Žiadny mikrofón</string>
     <string name="mic_denied">Android už nežiada o mikrofón, pretože oprávnenie bolo predtým zamietnuté. Bez neho sa nedá nič merať.\n\nOtvorte Nastavenia → Aplikácie → wDSP → Oprávnenia a povoľte mikrofón, potom to skúste znova.</string>
+    <string name="screensaver_section_title">Šetrič obrazovky</string>
+    <string name="screensaver_enable">Šetrič</string>
+    <string name="screensaver_enable_desc">Celoobrazovkový vizualizér pri nečinnosti. Zmizne po dotyku.</string>
+    <string name="screensaver_delay">Oneskorenie</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Pozadie</string>
+    <string name="screensaver_width">Šírka</string>
+    <string name="screensaver_height">Výška</string>
+    <string name="screensaver_bright_day">Jas deň</string>
+    <string name="screensaver_bright_night">Jas noc</string>
+    <string name="screensaver_apps">Nikdy cez</string>
+    <string name="screensaver_apps_none">Nevybrané</string>
+    <string name="screensaver_apps_pick">Vybrať</string>
+    <string name="screensaver_note">Navigácia nie je nikdy prekrytá.</string>
 </resources>
+
