@@ -422,6 +422,30 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     /** Blank between the end of the line and where it starts again. */
     private static final float MARQUEE_GAP_F = 0.35f;
 
+    public static final int GLYPH_PREVIOUS = 1;
+    public static final int GLYPH_PLAY = 2;
+    public static final int GLYPH_PAUSE = 3;
+    public static final int GLYPH_NEXT = 4;
+
+    private int flashGlyph = 0;
+    private long flashUntil = 0;
+    private final android.graphics.Path glyphPath = new android.graphics.Path();
+
+    /** Fixed length of a fade, in milliseconds - long enough to see, short enough to forget. */
+    private static final long FLASH_MS = 550;
+
+    /**
+     * Confirms which of the three areas was pressed, then gets out of the way.
+     *
+     * <p>The areas are invisible, so without this a tap in the dark is a guess that only the music
+     * can answer - and it answers a second later, by which time the hand has already tapped again.
+     */
+    public void flashTransport(int glyph) {
+        this.flashGlyph = glyph;
+        this.flashUntil = System.currentTimeMillis() + FLASH_MS;
+        invalidate();
+    }
+
     public void setNowPlayingSource(NowPlaying source) {
         this.nowPlaying = source;
         this.marqueeOffset = 0f;
@@ -479,6 +503,13 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                 pauseT = Math.min(target, pauseT + step);
             } else {
                 pauseT = Math.max(target, pauseT - step);
+            }
+            dirty = true;
+        }
+        if (flashUntil > 0) {
+            if (now >= flashUntil) {
+                flashUntil = 0;
+                flashGlyph = 0;
             }
             dirty = true;
         }
@@ -573,6 +604,58 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         }
         if (nowPlaying != null && bottomInset > 8) {
             drawNowPlaying(canvas, viewW, viewH);
+        }
+        if (flashGlyph != 0 && flashUntil > 0) {
+            drawTransportFlash(canvas, viewW, viewH);
+        }
+    }
+
+    /** The pressed symbol, fading, drawn over everything and centred on the screen. */
+    private void drawTransportFlash(Canvas canvas, float viewW, float viewH) {
+        float left = Math.max(0f, (flashUntil - System.currentTimeMillis()) / (float) FLASH_MS);
+        if (left <= 0f) return;
+        float size = Math.min(viewW, viewH) * 0.18f;
+        float cx = viewW / 2f;
+        float cy = viewH / 2f;
+        int alpha = Math.round(210 * left * (alphaPercent / 100f));
+        clockPaint.setTypeface(null);
+        infoPaint.setColor(android.graphics.Color.argb(alpha, 255, 255, 255));
+        infoPaint.setStyle(Paint.Style.FILL);
+
+        float h = size;
+        float w = size * 0.62f;
+        glyphPath.reset();
+        switch (flashGlyph) {
+            case GLYPH_PLAY:
+                glyphPath.moveTo(cx - w / 2f, cy - h / 2f);
+                glyphPath.lineTo(cx + w / 2f, cy);
+                glyphPath.lineTo(cx - w / 2f, cy + h / 2f);
+                glyphPath.close();
+                canvas.drawPath(glyphPath, infoPaint);
+                break;
+            case GLYPH_PAUSE:
+                float bar = w * 0.34f;
+                canvas.drawRect(cx - w / 2f, cy - h / 2f, cx - w / 2f + bar, cy + h / 2f, infoPaint);
+                canvas.drawRect(cx + w / 2f - bar, cy - h / 2f, cx + w / 2f, cy + h / 2f, infoPaint);
+                break;
+            case GLYPH_PREVIOUS:
+            case GLYPH_NEXT:
+                float dir = flashGlyph == GLYPH_NEXT ? 1f : -1f;
+                for (int i = 0; i < 2; i++) {
+                    float ox = cx + dir * (i * w * 0.55f - w * 0.35f);
+                    glyphPath.reset();
+                    glyphPath.moveTo(ox - dir * w * 0.28f, cy - h / 2f);
+                    glyphPath.lineTo(ox + dir * w * 0.28f, cy);
+                    glyphPath.lineTo(ox - dir * w * 0.28f, cy + h / 2f);
+                    glyphPath.close();
+                    canvas.drawPath(glyphPath, infoPaint);
+                }
+                float barX = cx + dir * (w * 0.72f);
+                canvas.drawRect(Math.min(barX, barX + dir * w * 0.14f), cy - h / 2f,
+                        Math.max(barX, barX + dir * w * 0.14f), cy + h / 2f, infoPaint);
+                break;
+            default:
+                break;
         }
     }
 

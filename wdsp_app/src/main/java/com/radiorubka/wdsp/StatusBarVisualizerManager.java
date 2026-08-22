@@ -400,6 +400,7 @@ public class StatusBarVisualizerManager {
 
     /** width, height, x, y while the screensaver has it; null the rest of the time. */
     private int[] screensaverBounds;
+    private Runnable onBack;
 
     public boolean isAttached() {
         return isViewAttached && visualizerView != null;
@@ -414,7 +415,8 @@ public class StatusBarVisualizerManager {
      */
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
                                  int alphaPercent, int bottomInset, boolean screensaverPaused,
-                                 View.OnTouchListener touchHandler) {
+                                 View.OnTouchListener touchHandler, Runnable onBack) {
+        this.onBack = onBack;
         if (!isAttached()) return;
         screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
         visualizerView.setAlphaPercent(alphaPercent);
@@ -431,6 +433,20 @@ public class StatusBarVisualizerManager {
         // drag zones need the whole gesture, not just its first event.
         layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         if (touchHandler != null) visualizerView.setOnTouchListener(touchHandler);
+        // Focusable only while it is the screensaver, and only so that Back reaches us. An
+        // overlay that never takes focus never sees a key. Home cannot be caught this way or any
+        // other - the system claims it before any app, focused or not.
+        layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        visualizerView.setFocusableInTouchMode(true);
+        visualizerView.setOnKeyListener((view, keyCode, event) -> {
+            if (keyCode == android.view.KeyEvent.KEYCODE_BACK
+                    && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                if (onBack != null) onBack.run();
+                return true;
+            }
+            return false;
+        });
+        visualizerView.requestFocus();
         updateWindowGeometry();
     }
 
@@ -438,6 +454,12 @@ public class StatusBarVisualizerManager {
     public void setScreensaverBrightness(int alphaPercent) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setAlphaPercent(alphaPercent);
+    }
+
+    /** Shows which transport area was pressed. */
+    public void flashTransport(int glyph) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.flashTransport(glyph);
     }
 
     /** Hands the view the track information, or null when there is nothing we may show. */
@@ -469,7 +491,11 @@ public class StatusBarVisualizerManager {
         visualizerView.setScreensaverState(false, false);
         visualizerView.setNowPlayingSource(null);
         visualizerView.setOnTouchListener(null);
+        visualizerView.setOnKeyListener(null);
+        visualizerView.setFocusableInTouchMode(false);
+        onBack = null;
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         updateWindowGeometry();
     }
 

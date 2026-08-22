@@ -12,6 +12,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -356,6 +357,20 @@ public final class ScreensaverManager {
      */
     private static final float EDGE_F = 0.18f;
 
+    /**
+     * The bottom third answers taps: previous, play or pause, next.
+     *
+     * <h2>Why this is worth the screen it takes</h2>
+     *
+     * A car with no wheel controls and no buttons on the fascia leaves one way to skip a track at
+     * night on a motorway: dismiss the screensaver, wait for the launcher, and aim at a widget
+     * button the size of a thumbnail. Three areas that cannot be missed replace all of that.
+     *
+     * <p>They cost nothing that was being used. The sliders only ever act on a drag, so a tap in
+     * the same place was doing nothing at all before - it just dismissed the screensaver.
+     */
+    private static final float TRANSPORT_FROM = 0.66f;
+
 
     private static final int GRAB_NONE = 0;
     private static final int GRAB_HEIGHT = 1;
@@ -396,7 +411,7 @@ public final class ScreensaverManager {
 
                 @Override
                 public boolean onSingleTapUp(MotionEvent e) {
-                    hide();
+                    onTap(e.getX(), e.getY());
                     return true;
                 }
 
@@ -420,6 +435,61 @@ public final class ScreensaverManager {
             };
         }
         return touchListener;
+    }
+
+    /**
+     * A tap: transport along the bottom, and anywhere else it puts the screensaver away.
+     */
+    private void onTap(float x, float y) {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        int screenW = strip.screenWidth();
+        int screenH = strip.screenHeight();
+        float top = strip.systemStatusBarHeight();
+        float usableH = Math.max(1f, screenH - top);
+
+        if (y < top + usableH * TRANSPORT_FROM) {
+            hide();
+            return;
+        }
+        int key;
+        int glyph;
+        if (x < screenW / 3f) {
+            key = KeyEvent.KEYCODE_MEDIA_PREVIOUS;
+            glyph = StatusBarVisualizerView.GLYPH_PREVIOUS;
+        } else if (x > screenW * 2f / 3f) {
+            key = KeyEvent.KEYCODE_MEDIA_NEXT;
+            glyph = StatusBarVisualizerView.GLYPH_NEXT;
+        } else {
+            key = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
+            glyph = NowPlaying.getInstance(context).isPlaying()
+                    ? StatusBarVisualizerView.GLYPH_PAUSE : StatusBarVisualizerView.GLYPH_PLAY;
+        }
+        sendMediaKey(key);
+        strip.flashTransport(glyph);
+        if (standIn != null) standIn.flashTransport(glyph);
+        // The screensaver stays. Skipping a track is not a reason to lose the picture, and being
+        // thrown back to the launcher for it is the thing these areas exist to avoid.
+        resetIdleClock();
+    }
+
+    /**
+     * Sends the key to whoever is playing.
+     *
+     * <p>Through AudioManager rather than to a package we picked: the media button routing already
+     * knows which session is active, including a Bluetooth phone acting as the source, and it
+     * keeps working when the owner changes players without us being told.
+     */
+    private void sendMediaKey(int keyCode) {
+        try {
+            android.media.AudioManager am =
+                    (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return;
+            long now = android.os.SystemClock.uptimeMillis();
+            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0));
+            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0));
+        } catch (Throwable t) {
+            Log.w(TAG, "could not send the media key", t);
+        }
     }
 
     /**
@@ -549,7 +619,7 @@ public final class ScreensaverManager {
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
                 strip.lendToScreensaver(widthFraction(), heightFraction(),
-                        backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures());
+                        backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures(), this::hide);
                 return;
             }
             if (standIn == null) return;
@@ -737,7 +807,7 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures());
+                            backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures(), this::hide);
                 } else {
                     buildOverlay();
                     windowManager.addView(overlayRoot, overlayParams());
