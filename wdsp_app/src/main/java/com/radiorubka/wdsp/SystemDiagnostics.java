@@ -508,6 +508,10 @@ public final class SystemDiagnostics {
         // Sent by the MCU service from RPC_SetChannel, so it marks the exact moment the source
         // changed and carries the volume that was pushed to the hardware with it.
         filter.addAction("com.qf.action.VOLUME_CHANGED");
+        // Our own screensaver, so a report shows when it was covering the screen - and so that
+        // the announcement other overlays rely on is demonstrably being sent.
+        filter.addAction(ScreensaverManager.ACTION_SHOWN);
+        filter.addAction(ScreensaverManager.ACTION_HIDDEN);
         filter.addAction("com.qf.action.ACC_ON");
         filter.addAction("com.qf.action.ACC_OFF");
         // Android's, for the units where the platform stays quiet.

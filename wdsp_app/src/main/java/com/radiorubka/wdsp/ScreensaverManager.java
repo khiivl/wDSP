@@ -1,6 +1,7 @@
 package com.radiorubka.wdsp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -108,6 +109,26 @@ public final class ScreensaverManager {
     private static final long PAUSE_HOLD_MS = 8000L;
 
     /** The platform names the foreground activity here, as {@code package/class}. */
+    /**
+     * Said out loud when the screensaver appears and disappears.
+     *
+     * <h2>Why anyone else needs to know</h2>
+     *
+     * Two overlays of the same window type share one layer, and inside a layer the last one added
+     * is the one on top. There is no priority to set and no sub-layer to claim - the types that
+     * sit above this one have been closed to ordinary apps since Oreo. So an overlay that must
+     * stay reachable, like a radio's transport buttons, cannot simply declare itself important:
+     * the only move available is to remove and re-add itself, which puts it back on top.
+     *
+     * <p>It cannot do that at the right moment without being told when the moment is. Hence this.
+     * {@code EXTRA_RADIO} says whether wDSP thinks the sound is coming from a tuner, because that
+     * is the case where the screensaver is deliberately showing nothing but a clock and has least
+     * business being in the way.
+     */
+    public static final String ACTION_SHOWN = "com.radiorubka.wdsp.SCREENSAVER_SHOWN";
+    public static final String ACTION_HIDDEN = "com.radiorubka.wdsp.SCREENSAVER_HIDDEN";
+    public static final String EXTRA_RADIO = "radio";
+
     private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
     private static final String PROP_NAVI_SPEAKING = "sys.qf.navi_state";
     private static final String PROP_FLOAT_NAVI_BAR = "persist.sys.float_navi_bar";
@@ -723,6 +744,7 @@ public final class ScreensaverManager {
                     lendStripOrBuildOwn();
                 }
                 attached = true;
+                announce(ACTION_SHOWN);
                 Log.i(TAG, "screensaver shown over " + lastForeground);
             } catch (Throwable t) {
                 Log.w(TAG, "could not show the screensaver", t);
@@ -764,8 +786,20 @@ public final class ScreensaverManager {
                 overlayRoot = null;
             }
             attached = false;
+            announce(ACTION_HIDDEN);
             resetIdleClock();
         });
+    }
+
+    private void announce(String action) {
+        try {
+            Intent intent = new Intent(action);
+            intent.putExtra(EXTRA_RADIO, NowPlaying.getInstance(context).isRadioSource());
+            intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+            context.sendBroadcast(intent);
+        } catch (Throwable t) {
+            Log.w(TAG, "could not announce the screensaver", t);
+        }
     }
 
     private void buildOverlay() {
