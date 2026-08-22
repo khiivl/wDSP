@@ -401,6 +401,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private static final long FADE_MS = 700;
 
     private final Paint clockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private boolean clockTypefaceTried = false;
 
     /**
      * Turns the clock on and says whether the music is stopped.
@@ -465,6 +466,25 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             }
         }
         return dirty;
+    }
+
+    /**
+     * The seven-segment face, loaded once.
+     *
+     * <p>Falls back to the app's own font rather than failing: a clock in the wrong typeface is a
+     * clock, and one that refuses to draw is a bug. Loaded lazily because this runs on the drawing
+     * thread and the first frame is not the place to touch the resource system if it can be
+     * avoided afterwards.
+     */
+    private void applyClockTypeface() {
+        if (clockTypefaceTried) return;
+        clockTypefaceTried = true;
+        try {
+            android.graphics.Typeface face =
+                    androidx.core.content.res.ResourcesCompat.getFont(getContext(), R.font.digital);
+            if (face != null) clockPaint.setTypeface(face);
+        } catch (Throwable ignored) {
+        }
     }
 
     private String currentClockText() {
@@ -532,11 +552,11 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
      */
     private void drawClock(Canvas canvas, float cx, float cy, float bandHeight) {
         if (clockText.isEmpty()) clockText = currentClockText();
+        applyClockTypeface();
         float scale = 0.94f + 0.06f * pauseT;
         float size = Math.max(24f, bandHeight * 0.62f) * scale;
         clockPaint.setTextSize(size);
         clockPaint.setTextAlign(Paint.Align.CENTER);
-        clockPaint.setFakeBoldText(true);
         int alpha = (int) (255f * (alphaPercent / 100f) * pauseT);
         clockPaint.setColor(android.graphics.Color.argb(Math.max(0, Math.min(255, alpha)),
                 255, 255, 255));
