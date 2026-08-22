@@ -148,6 +148,18 @@ public final class ScreensaverManager {
     private boolean screenOn = true;
     /** When the music was first seen stopped, or 0 while it is playing. */
     private long stoppedSince = 0L;
+
+    /**
+     * Set when the pause was our own doing - the middle area of the screen was pressed while
+     * something was playing.
+     *
+     * <p>The waiting-out above exists because we cannot tell a real pause from a gap between
+     * tracks. When the press came from here there is nothing to tell apart: we know why the music
+     * stopped, so the clock can come straight up. A pause from anywhere else - the wheel, the
+     * player's own screen, a phone over Bluetooth - still gets waited out, because from here it
+     * still looks exactly like buffering.
+     */
+    private boolean ownPause = false;
     private String lastForeground = "";
     private long foregroundSince = 0L;
 
@@ -461,8 +473,9 @@ public final class ScreensaverManager {
             glyph = StatusBarVisualizerView.GLYPH_NEXT;
         } else {
             key = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
-            glyph = NowPlaying.getInstance(context).isPlaying()
-                    ? StatusBarVisualizerView.GLYPH_PAUSE : StatusBarVisualizerView.GLYPH_PLAY;
+            boolean playing = NowPlaying.getInstance(context).isPlaying();
+            glyph = playing ? StatusBarVisualizerView.GLYPH_PAUSE : StatusBarVisualizerView.GLYPH_PLAY;
+            ownPause = playing;
         }
         sendMediaKey(key);
         strip.flashTransport(glyph);
@@ -670,6 +683,10 @@ public final class ScreensaverManager {
             StatusBarVisualizerManager.getInstance(context).setScreensaverNowPlaying(false);
             if (standIn != null) standIn.setScreensaverState(true, false);
         });
+        // A stop we caused ourselves is acted on the moment the player confirms it. Any other one
+        // falls through to the poll, which waits it out - pushPlaybackState asks believedStopped,
+        // and that still says no.
+        NowPlaying.getInstance(context).setOnStopped(this::pushPlaybackState);
         startPolling();
     }
 
@@ -711,16 +728,7 @@ public final class ScreensaverManager {
             return;
         }
         if (attached) {
-            // While it is up, keep it told what the music is doing - the clock fades in when it
-            // has stopped for long enough and the bars come back the moment it starts.
-            boolean paused = believedStopped();
-            StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
-            strip.setScreensaverNowPlaying(paused);
-            strip.setScreensaverInfoSource(infoSource());
-            if (standIn != null) {
-                standIn.setScreensaverState(true, paused);
-                standIn.setNowPlayingSource(infoSource());
-            }
+            pushPlaybackState();
             return;
         }
         if (!mayShowOver(foreground)) {
@@ -729,6 +737,26 @@ public final class ScreensaverManager {
         }
         long idleMs = System.currentTimeMillis() - foregroundSince;
         if (idleMs >= delaySeconds() * 1000L) show();
+    }
+
+    /**
+     * Tells the screensaver what the music is doing: the clock fades in once it has stopped, and
+     * the bars come back the moment it starts.
+     *
+     * <p>Called from the poll, and again straight after a press on the play area - waiting up to a
+     * whole poll to react to something the owner just did would be the slowest part of the button.
+     */
+    private void pushPlaybackState() {
+        if (!attached) return;
+        updatePlaybackBelief();
+        boolean paused = believedStopped();
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        strip.setScreensaverNowPlaying(paused);
+        strip.setScreensaverInfoSource(infoSource());
+        if (standIn != null) {
+            standIn.setScreensaverState(true, paused);
+            standIn.setNowPlayingSource(infoSource());
+        }
     }
 
     /**
@@ -742,6 +770,7 @@ public final class ScreensaverManager {
         boolean playing = NowPlaying.getInstance(context).isPlaying();
         if (playing) {
             stoppedSince = 0L;
+            ownPause = false;
         } else if (stoppedSince == 0L) {
             stoppedSince = System.currentTimeMillis();
         }
@@ -751,6 +780,10 @@ public final class ScreensaverManager {
         // Radio counts as stopped straight away, with no waiting it out: there is no spectrum to
         // lose, so there is nothing for the bars to be doing in the meantime.
         if (NowPlaying.getInstance(context).isRadioSource()) return true;
+        // Our own pause, and the player has confirmed it. Both halves matter: without the second
+        // one a key that reached nobody - no session, or a player that ignores it - would put a
+        // clock over music that never stopped.
+        if (ownPause && !NowPlaying.getInstance(context).isPlaying()) return true;
         return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
     }
 

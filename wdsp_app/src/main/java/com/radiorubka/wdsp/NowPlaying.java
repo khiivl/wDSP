@@ -92,14 +92,25 @@ public final class NowPlaying {
 
     /**
      * Told the moment playback starts, so the bars do not wait for the next poll.
-     *
-     * <p>Only for starting. Stopping is deliberately left to the poll, which sits on it for a few
-     * seconds before believing it - see the screensaver's PAUSE_HOLD_MS.
      */
     private Runnable onStarted;
 
+    /**
+     * Told the moment it stops.
+     *
+     * <p>Whether that is worth acting on is not decided here. Most stops have to be sat on for a
+     * few seconds first, because a gap between tracks looks identical from this side - see the
+     * screensaver's PAUSE_HOLD_MS. But when the caller already knows why the music stopped, it
+     * should not then have to wait for a poll to hear that it did.
+     */
+    private Runnable onStopped;
+
     public void setOnStarted(Runnable listener) {
         this.onStarted = listener;
+    }
+
+    public void setOnStopped(Runnable listener) {
+        this.onStopped = listener;
     }
 
     private static NowPlaying instance;
@@ -406,14 +417,17 @@ public final class NowPlaying {
     private void acceptState(PlaybackState state) {
         if (state == null) return;
         boolean started;
+        boolean stopped;
         synchronized (this) {
             boolean was = playing;
             playing = state.getState() == PlaybackState.STATE_PLAYING;
             positionMs = state.getPosition();
             positionTakenAt = System.currentTimeMillis();
             started = playing && !was;
+            stopped = !playing && was;
         }
         if (started && onStarted != null) main.post(onStarted);
+        if (stopped && onStopped != null) main.post(onStopped);
     }
 
     private static boolean notEmpty(String s) {

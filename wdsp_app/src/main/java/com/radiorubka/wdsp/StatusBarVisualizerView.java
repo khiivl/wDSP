@@ -618,7 +618,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         float cx = viewW / 2f;
         float cy = viewH / 2f;
         int alpha = Math.round(210 * left * (alphaPercent / 100f));
-        clockPaint.setTypeface(null);
         infoPaint.setColor(android.graphics.Color.argb(alpha, 255, 255, 255));
         infoPaint.setStyle(Paint.Style.FILL);
 
