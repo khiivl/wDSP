@@ -150,6 +150,22 @@ public class StatusBarVisualizerManager {
         return Math.min(stored, maxOffsetY());
     }
 
+    /**
+     * What the platform reserves for its own status bar, ignoring any manual strip height.
+     *
+     * <p>{@link #getStatusBarHeight()} answers a different question - how tall the owner wants the
+     * strip - and on a unit where they have set that by hand the two are unrelated. The screensaver
+     * needs the real one, because that is the part of the screen it cannot draw on.
+     */
+    public int systemStatusBarHeight() {
+        int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            int h = context.getResources().getDimensionPixelSize(resId);
+            if (h > 0) return h;
+        }
+        return 0;
+    }
+
     /** The lowest offset that still leaves the whole strip on the screen. */
     public int maxOffsetY() {
         return Math.max(0, screenHeight() - getStatusBarHeight());
@@ -397,23 +413,31 @@ public class StatusBarVisualizerManager {
      * this the strip would be painted underneath it.
      */
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
-                                 int alphaPercent, final Runnable onTouched) {
+                                 int alphaPercent, View.OnTouchListener touchHandler) {
         if (!isAttached()) return;
         screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
         visualizerView.setAlphaPercent(alphaPercent);
         visualizerView.setBackdrop(backdrop);
         visualizerView.setBandFractions(widthFraction, heightFraction);
+        visualizerView.setTopInset(systemStatusBarHeight());
         // The strip normally lets every touch through. For as long as it is the screensaver it has
-        // to catch one, so that the tap which puts it away does not also press whatever is under it.
+        // to catch them: the tap that puts it away must not also press what is underneath, and the
+        // drag zones need the whole gesture, not just its first event.
         layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-        visualizerView.setOnTouchListener((view, event) -> {
-            if (event.getActionMasked() == android.view.MotionEvent.ACTION_DOWN
-                    && onTouched != null) {
-                onTouched.run();
-            }
-            return true;
-        });
+        if (touchHandler != null) visualizerView.setOnTouchListener(touchHandler);
         updateWindowGeometry();
+    }
+
+    /** Brightness only, with no relayout - the screensaver's brightness drag calls this. */
+    public void setScreensaverBrightness(int alphaPercent) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setAlphaPercent(alphaPercent);
+    }
+
+    /** Backdrop only, with no relayout - the screensaver's backdrop drag calls this. */
+    public void setScreensaverBackdrop(int color) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setBackdrop(color);
     }
 
     /** Puts it back exactly as it was. */
@@ -423,6 +447,7 @@ public class StatusBarVisualizerManager {
         visualizerView.setAlphaPercent(alphaPercent);
         visualizerView.setBackdrop(0);
         visualizerView.setBandFractions(1f, 1f);
+        visualizerView.setTopInset(0);
         visualizerView.setOnTouchListener(null);
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         updateWindowGeometry();

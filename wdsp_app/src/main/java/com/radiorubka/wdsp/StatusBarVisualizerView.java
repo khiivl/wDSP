@@ -356,6 +356,20 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private int backdropColor = 0;
     private float bandWidthF = 1f;
     private float bandHeightF = 1f;
+    /**
+     * How much of the top belongs to the system status bar and cannot be drawn on.
+     *
+     * <p>The band is centred in what is left rather than in the whole view. Centring on the whole
+     * view is arithmetically right and looks wrong: the bar is opaque and always there, so the eye
+     * measures the free space, and a band centred on 360 of 720 sits visibly high when the top 72
+     * are covered. It also stopped a tall band from hiding its own top under the bar.
+     */
+    private int topInset = 0;
+
+    public void setTopInset(int px) {
+        this.topInset = Math.max(0, px);
+        invalidate();
+    }
 
     public void setBackdrop(int color) {
         this.backdropColor = color;
@@ -376,10 +390,12 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         if (viewW <= 0 || viewH <= 0) return;
         if (backdropColor != 0) canvas.drawColor(backdropColor);
 
+        float usableTop = Math.min(topInset, viewH);
+        float usableH = viewH - usableTop;
         float w = viewW * bandWidthF;
-        float totalH = viewH * bandHeightF;
+        float totalH = usableH * bandHeightF;
         float offsetX = (viewW - w) / 2f;
-        float offsetY = (viewH - totalH) / 2f;
+        float offsetY = usableTop + (usableH - totalH) / 2f;
         if (w <= 0 || totalH <= 0) return;
 
         int count = this.bandCount;

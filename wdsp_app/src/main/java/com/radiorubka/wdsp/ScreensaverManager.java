@@ -116,8 +116,16 @@ public final class ScreensaverManager {
     // settings
     // -------------------------------------------------------------------------------------------
 
+    /**
+     * On unless it has been switched off.
+     *
+     * <p>A screensaver nobody knows about is a screensaver nobody turns on. It costs one property
+     * read every two seconds, it never covers navigation, and one touch puts it away - so the
+     * failure mode of being wrong about this is a person tapping the screen once and finding the
+     * switch that stops it happening again.
+     */
     public boolean isEnabled() {
-        return prefs.getBoolean(PREF_ENABLED, false);
+        return prefs.getBoolean(PREF_ENABLED, true);
     }
 
     public void setEnabled(boolean enabled) {
@@ -141,6 +149,7 @@ public final class ScreensaverManager {
     }
 
     public int backgroundAlpha() {
+        if (liveBackdrop >= 0) return liveBackdrop;
         return Math.max(0, Math.min(100, prefs.getInt(PREF_BG_ALPHA, DEFAULT_BG_ALPHA)));
     }
 
@@ -152,6 +161,7 @@ public final class ScreensaverManager {
     }
 
     public float widthFraction() {
+        if (liveWidthF > 0f) return liveWidthF;
         return clamp01(prefs.getFloat(PREF_WIDTH_F, DEFAULT_WIDTH_F), 0.10f);
     }
 
@@ -175,6 +185,7 @@ public final class ScreensaverManager {
      * change is worse than one that needs two movements.
      */
     public float heightFraction() {
+        if (liveHeightF > 0f) return liveHeightF;
         float stored = prefs.getFloat(PREF_HEIGHT_F, -1f);
         if (stored > 0f) return clamp01(stored, 0.03f);
         return clamp01(proportionalHeightFraction(), 0.03f);
@@ -197,7 +208,34 @@ public final class ScreensaverManager {
 
     /** Bar brightness for the theme in force, 10..100. */
     public int brightness() {
+        if (liveBrightness > 0) return liveBrightness;
         return brightness(ThemeManager.isNight(context));
+    }
+
+    /** Repaints the backdrop alone, for the fourth drag. */
+    private void applyBackdrop() {
+        handler.post(() -> {
+            if (!attached) return;
+            StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+            if (strip.isLentToScreensaver()) {
+                strip.setScreensaverBackdrop(backdropColor());
+            } else if (overlayRoot != null) {
+                overlayRoot.setBackgroundColor(backdropColor());
+            }
+        });
+    }
+
+    /** Repaints the bars without resizing anything, for the brightness drag. */
+    private void applyBrightness() {
+        handler.post(() -> {
+            if (!attached) return;
+            StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+            if (strip.isLentToScreensaver()) {
+                strip.setScreensaverBrightness(brightness());
+            } else if (standIn != null) {
+                standIn.setAlphaPercent(brightness());
+            }
+        });
     }
 
     public int brightness(boolean night) {
@@ -216,6 +254,163 @@ public final class ScreensaverManager {
         });
     }
 
+    // -------------------------------------------------------------------------------------------
+    // resizing it by hand, with nothing drawn to show for it
+    //
+    // Drag anywhere. Up and down is height, left and right is width, and the direction of the
+    // first few millimetres decides which. There is no track, no thumb and no zone, because there
+    // is nothing drawn on a screensaver to aim at - and an invisible target is one you miss.
+    //
+    // The first attempt did use zones, a strip down the left and one along the bottom, and it was
+    // unusable for two compounding reasons. The strips were sized in dp, and this head unit
+    // reports a density of exactly 1.0, so "72dp, wide enough for a thumb" came out as 72 physical
+    // pixels. And a hand reaching for an edge control rides the edge itself: the touches came in
+    // at eight to twenty-eight pixels from it, under even that.
+    //
+    // Direction has neither problem. It also cannot run out at the edge of the screen, because the
+    // value moves with the distance travelled rather than with where the finger is.
+    // -------------------------------------------------------------------------------------------
+
+    /**
+     * How far a finger has to travel before the drag commits to an axis, as a share of the screen.
+     *
+     * <p>Small enough that the control feels immediate, large enough that a tap meant to dismiss
+     * the screensaver is never mistaken for the beginning of a resize.
+     */
+    private static final float DECIDE_F = 0.03f;
+
+    /**
+     * A vertical drag starting right of this is brightness rather than height.
+     *
+     * <p>A third of the screen, not a strip. The lesson from the first attempt at these gestures
+     * is that an invisible target has to be one you cannot miss - and a hand reaching for an edge
+     * rides the edge, so the zone runs all the way to it with nothing held back.
+     */
+    private static final float BRIGHT_ZONE_FROM = 0.66f;
+
+    /**
+     * A vertical drag that starts in this band, measured down from under the status bar, sets the
+     * backdrop instead of the height.
+     *
+     * <p>Under it, not in it: the system owns the status bar and takes every touch that lands
+     * there, so a gesture anchored to the very top would never reach us at all.
+     */
+    private static final float TOP_ZONE_DEPTH = 0.22f;
+
+    private static final int GRAB_NONE = 0;
+    private static final int GRAB_HEIGHT = 1;
+    private static final int GRAB_WIDTH = 2;
+    private static final int GRAB_UNDECIDED = 3;
+    private static final int GRAB_BRIGHT = 4;
+    private static final int GRAB_BACKDROP = 5;
+
+    private int grabbed = GRAB_NONE;
+    private float grabX, grabY, grabValue;
+    private float liveWidthF = -1f, liveHeightF = -1f;
+    private int liveBrightness = -1;
+    private int liveBackdrop = -1;
+    private View.OnTouchListener touchListener;
+
+    private View.OnTouchListener gestures() {
+        if (touchListener == null) touchListener = this::onScreensaverTouch;
+        return touchListener;
+    }
+
+    private boolean onScreensaverTouch(View view, MotionEvent event) {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        int screenW = strip.screenWidth();
+        int screenH = strip.screenHeight();
+        float x = event.getX();
+        float y = event.getY();
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                grabX = x;
+                grabY = y;
+                grabbed = GRAB_UNDECIDED;
+                return true;
+
+            case MotionEvent.ACTION_MOVE:
+                float dx = x - grabX;
+                float dy = y - grabY;
+                if (grabbed == GRAB_UNDECIDED) {
+                    float decide = Math.min(screenW, screenH) * DECIDE_F;
+                    if (Math.abs(dx) < decide && Math.abs(dy) < decide) return true;
+                    // Whichever way the finger went further is the one it meant. The drag starts
+                    // counting from here rather than from where the finger landed, so committing
+                    // to an axis does not jump the value.
+                    boolean vertical = Math.abs(dy) >= Math.abs(dx);
+                    float topBandEnd = strip.systemStatusBarHeight() + screenH * TOP_ZONE_DEPTH;
+                    if (!vertical) {
+                        grabbed = GRAB_WIDTH;
+                        grabValue = widthFraction();
+                    } else if (grabY < topBandEnd) {
+                        grabbed = GRAB_BACKDROP;
+                        grabValue = backgroundAlpha();
+                    } else if (grabX > screenW * BRIGHT_ZONE_FROM) {
+                        grabbed = GRAB_BRIGHT;
+                        grabValue = brightness();
+                    } else {
+                        grabbed = GRAB_HEIGHT;
+                        grabValue = heightFraction();
+                    }
+                    grabX = x;
+                    grabY = y;
+                    return true;
+                }
+                if (grabbed == GRAB_HEIGHT) {
+                    // Up is more. A full sweep of the screen covers the whole range, so the travel
+                    // feels the same however large the unit's screen happens to be.
+                    liveHeightF = clamp01(grabValue + (grabY - y) / screenH, 0.03f);
+                    applyGeometry();
+                } else if (grabbed == GRAB_WIDTH) {
+                    liveWidthF = clamp01(grabValue + (x - grabX) / screenW, 0.10f);
+                    applyGeometry();
+                } else if (grabbed == GRAB_BRIGHT) {
+                    // Whichever theme is in force. The same number the matching slider in settings
+                    // holds, so the two are one setting seen from two places.
+                    liveBrightness = Math.max(10, Math.min(100,
+                            Math.round(grabValue + (grabY - y) / screenH * 100f)));
+                    applyBrightness();
+                } else if (grabbed == GRAB_BACKDROP) {
+                    liveBackdrop = Math.max(0, Math.min(100,
+                            Math.round(grabValue + (grabY - y) / screenH * 100f)));
+                    applyBackdrop();
+                }
+                return true;
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                if (grabbed == GRAB_UNDECIDED || grabbed == GRAB_NONE) {
+                    // Never travelled far enough to be a drag, so it was a tap, and a tap means
+                    // put the screensaver away. Anything that did become a drag never dismisses,
+                    // however it ends - reaching for an invisible control and losing the picture
+                    // because of it is the worst thing this could do.
+                    hide();
+                    return true;
+                }
+                if (liveWidthF > 0f) prefs.edit().putFloat(PREF_WIDTH_F, liveWidthF).apply();
+                if (liveHeightF > 0f) prefs.edit().putFloat(PREF_HEIGHT_F, liveHeightF).apply();
+                if (liveBrightness > 0) {
+                    prefs.edit().putInt(ThemeManager.isNight(context)
+                            ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY, liveBrightness).apply();
+                }
+                if (liveBackdrop >= 0) {
+                    prefs.edit().putInt(PREF_BG_ALPHA, liveBackdrop).apply();
+                }
+                liveWidthF = -1f;
+                liveHeightF = -1f;
+                liveBrightness = -1;
+                liveBackdrop = -1;
+                grabbed = GRAB_NONE;
+                resetIdleClock();
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
     private static float clamp01(float value, float min) {
         return Math.max(min, Math.min(1.0f, value));
     }
@@ -231,7 +426,7 @@ public final class ScreensaverManager {
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
                 strip.lendToScreensaver(widthFraction(), heightFraction(),
-                        backdropColor(), brightness(), this::hide);
+                        backdropColor(), brightness(), gestures());
                 return;
             }
             if (standIn == null) return;
@@ -371,7 +566,7 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), this::hide);
+                            backdropColor(), brightness(), gestures());
                 } else {
                     buildOverlay();
                     windowManager.addView(overlayRoot, overlayParams());
@@ -425,13 +620,7 @@ public final class ScreensaverManager {
         overlayRoot = new FrameLayout(context);
         overlayRoot.setBackgroundColor(backdropColor());
 
-        // One touch anywhere puts it away. The window is focusable-free but touchable, so this is
-        // the only thing it consumes - and consuming it is right: the tap was meant to wake the
-        // screen up, not to press whatever happens to be underneath.
-        overlayRoot.setOnTouchListener((v, event) -> {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) hide();
-            return true;
-        });
+        overlayRoot.setOnTouchListener(gestures());
     }
 
     private StatusBarVisualizerView buildVisualizer() {
