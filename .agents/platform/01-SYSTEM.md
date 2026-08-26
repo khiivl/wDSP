@@ -50,6 +50,23 @@ then `wm size reset` and `wm density reset` — always both, always after every 
 Confusing the two has cost real bugs — reading `persist.sys.qf.last_audio_src` (which said
 `nothing`) instead of the live `sys.qf.last_audio_src` made a guard fire against nobody.
 
+📻 **A live property says who owns the path, not who is alive.** Measured 26.08.2026 with the radio
+application's process **dead** — no `pidof`, nothing running:
+
+```
+sys.qf.sound.channel = 2      sys.current.vol.type = radio_type      sys.radio.vol = 4
+```
+
+Channel 2 survived the death of the process that took it. So `channel == 2` is evidence that the
+tuner owns the MCU mixer input, and **not** evidence that the radio is playing, or even installed
+and running. Any guard shaped like "channel 2, therefore the radio is active" reads as true from
+the moment a radio crashes until somebody switches source by hand.
+
+The same family as `last_audio_src` above, and the same correction: these properties describe the
+state of the path, not the liveness of an application. Where liveness matters, measure the signal —
+in wDSP that is `AudioSpectrumEngine.hasSignalNow()`, which vetoes the tuner outright when real PCM
+is moving.
+
 | property | meaning |
 |---|---|
 | `sys.qf.last_audio_src` | **the package that owns audio right now** — written by the platform's focus control |
