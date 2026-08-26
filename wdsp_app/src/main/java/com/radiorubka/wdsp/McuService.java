@@ -135,7 +135,22 @@ public class McuService extends Service implements LocationListener {
     private static final String RADIO_PACKAGE = "com.kostyamat.fmradio";
     private static final String ACTION_AUDIO_STATE_QUERY = RADIO_PACKAGE + ".AUDIO_STATE_QUERY";
 
-    /** Last {@code seq} accepted, so a late or repeated signal is dropped rather than acted on. */
+    /**
+     * What was accepted last, so a late or repeated signal is dropped rather than acted on.
+     *
+     * <p>🔴 Ordered by {@code at} rather than by {@code seq}, and the difference matters. The
+     * sequence number is monotonic only within one run of the <b>radio</b>: reinstall it, or let
+     * it be killed and restarted, and it begins again from a low number. Ordering on {@code seq}
+     * alone, this service would then reject every signal the radio ever sent again - permanently,
+     * because nothing here resets until this service itself is recreated. The failure would look
+     * like the contract quietly not existing.
+     *
+     * <p>{@code at} is {@code SystemClock.elapsedRealtime()}, which both applications read from
+     * the same device clock. It only goes backwards when the unit reboots, and then both sides
+     * start from nothing anyway. {@code seq} is kept to separate two signals sharing a
+     * millisecond, and because it reads well in a log.
+     */
+    private long lastAudioStateAt = Long.MIN_VALUE;
     private int lastAudioStateSeq = Integer.MIN_VALUE;
 
     // GALA fade & hold-timer state
@@ -685,11 +700,23 @@ public class McuService extends Service implements LocationListener {
 
         // Late or repeated. The signal is an edge, and acting on a stale one re-bases to a level
         // that has already been superseded.
-        if (lastAudioStateSeq != Integer.MIN_VALUE && seq <= lastAudioStateSeq) {
-            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " ignored, already at " + lastAudioStateSeq);
+        long at = intent.getLongExtra("at", 0L);
+        boolean stale;
+        if (at > 0 && lastAudioStateAt != Long.MIN_VALUE) {
+            stale = at < lastAudioStateAt
+                    || (at == lastAudioStateAt && seq <= lastAudioStateSeq);
+        } else {
+            // No clock in the signal, so fall back to the sequence and accept the risk described
+            // on lastAudioStateAt. A sender that omits `at` is outside the contract anyway.
+            stale = lastAudioStateSeq != Integer.MIN_VALUE && seq <= lastAudioStateSeq;
+        }
+        if (stale) {
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " ignored, already at seq="
+                    + lastAudioStateSeq + " at=" + lastAudioStateAt);
             return;
         }
         lastAudioStateSeq = seq;
+        lastAudioStateAt = at;
 
         int live = VolumeHelper.getVolume();
 
