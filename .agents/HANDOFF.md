@@ -58,9 +58,9 @@ across** — they are kept identical on purpose.
 2. **Confirm the audio-focus fix cures the first-measurement failure on somebody else's car.**
    The request itself is fixed and verified here — `audio focus: granted`, 26.08 — but that it
    cures the old complaint is still a hypothesis, and only a tester's report answers it.
-3. **The Telegram group link is missing from the distribution.** The texts now send people to the
-   group or a forum PM rather than a direct message, by the owner's instruction, but they name it
-   in words because nobody gave us the URL. Drop it in when it is known.
+3. Nothing else outstanding from this cycle. Measurements are now directed to the Telegram group
+   (<https://t.me/wDSPapp>, collection post <https://t.me/wDSPapp/79>) or a forum PM rather than a
+   direct message — by the owner's instruction, because lone testers' files get lost in DMs.
 4. `SessionResolver` could be told which PCM device is open instead of probing session 0 blind.
    🔴 **It is the most delicate code in the app** — do not touch it without measuring first.
 5. New strings exist in **en, uk, ru** only. The project has 28 locales.
