@@ -124,6 +124,12 @@ The radio answers with an ordinary `AUDIO_STATE_STABLE` carrying its current sta
 signal, no second message type. If the radio is not installed, or says nothing, wDSP behaves exactly
 as it does today. **Neither application requires the other.**
 
+📌 **The query does not wake the radio, and must not.** An explicit broadcast does not start a
+stopped application — `FLAG_INCLUDE_STOPPED_PACKAGES` is deliberately not set. If somebody has
+closed the radio, we do not resurrect it to ask it a question. Observed on the unit 26.08.2026: the
+query went out while the radio process was dead, nothing answered, and wDSP carried on without an
+error — which is the whole of the intended behaviour, and is easy to mistake for a fault later.
+
 ---
 
 ## Also agreed, and worth not relearning

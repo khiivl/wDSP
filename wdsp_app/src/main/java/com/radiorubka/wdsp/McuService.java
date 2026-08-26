@@ -731,9 +731,9 @@ public class McuService extends Service implements LocationListener {
         // against. The EQ is still applied, because the curve does not depend on the mute.
         if (VolumeHelper.isHardwareMuted() || live <= 0) {
             applyVolumeDependentSettings(Math.max(0, live));
-            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " source=" + source + " channel=" + channel
-                    + " -> muted (read " + live + "), base left at " + baseStandstillVolume
-                    + ", EQ applied once");
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                    + " channel=" + channel + " -> muted (read " + live + "), base left at "
+                    + baseStandstillVolume + ", EQ applied once");
             return;
         }
 
@@ -747,8 +747,14 @@ public class McuService extends Service implements LocationListener {
 
         applyVolumeDependentSettings(live);
 
-        Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " source=" + source + " channel=" + channel
-                + " -> base=" + live + ", offset reset, EQ applied once");
+        // 🔴 at is printed on every branch, accepted included. It was missing here, and the gap
+        // showed the moment two applications had to agree on what they had sent each other: the
+        // radio said its reply replayed the stored signal unchanged, and nothing in this log could
+        // confirm or contradict it. The log line is the only evidence that survives on this unit -
+        // its logcat buffer rotates in about six minutes - so anything both sides argue about has
+        // to be in it.
+        Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                + " channel=" + channel + " -> base=" + live + ", offset reset, EQ applied once");
     }
 
     // True/false state actually used by GALA processing - the shared global switch when
