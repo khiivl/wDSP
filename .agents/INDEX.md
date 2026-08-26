@@ -23,6 +23,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 | [BUILDING.md](BUILDING.md) | how a fresh clone builds itself, what is committed on purpose, and why R8 must stay off |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | the cabin measurement: sweep, deconvolution, what it can and cannot honestly tell a user, and where it is going |
 | [SCREENSAVER_RADIO_CONTRACT.md](SCREENSAVER_RADIO_CONTRACT.md) | screensaver lifecycle, Radio MCU integration, MediaSession metadata sync, clock 10 FPS breathing, and overlay layering (✍️ Antigravity 25.08.2026) |
+| [AUDIO_OWNERSHIP_CONTRACT.md](AUDIO_OWNERSHIP_CONTRACT.md) | who owns the volume, the channel and the EQ when radio and wDSP share one MCU path — the signal that ends the race, and why `volume` in it is advisory. **Agreed 26.08.2026, not implemented yet** |
 
 Read [../CLAUDE.md](../CLAUDE.md) first for how the app is put together.
 

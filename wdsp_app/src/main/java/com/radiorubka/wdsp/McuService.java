@@ -113,6 +113,31 @@ public class McuService extends Service implements LocationListener {
     private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
 
+    /**
+     * The audio ownership contract with QF Radio - see {@code .agents/AUDIO_OWNERSHIP_CONTRACT.md}.
+     *
+     * <p>Radio and this service are two state machines on one MCU path. On a volume change the
+     * radio synchronises the levels and holds the FM channel; on the same change this service
+     * recomputes the EQ, because the curve depends on volume. Polling at 100 ms, we always arrive
+     * second, chasing intermediate values and landing on top of a state the radio had just
+     * finished arranging.
+     *
+     * <p>So ownership is split rather than shared. The radio owns the <b>base level</b> and the
+     * channel; we own the <b>offset</b> on top of it (GALA), the EQ, the tone and the subwoofer.
+     * The radio sends one signal after its last write, and we act once instead of racing.
+     *
+     * <p>🔑 The {@code volume} extra is <b>advisory and deliberately ignored</b>: the two sides do
+     * not share a scale - we clamp to 32, {@code STREAM_MUSIC} on these units reports a maximum of
+     * 15 - and stitching scales across IPC is its own class of bug. The contract is the edge, not
+     * the number, so the level is always re-read here through {@link VolumeHelper}.
+     */
+    static final String ACTION_AUDIO_STATE_STABLE = "com.radiorubka.wdsp.AUDIO_STATE_STABLE";
+    private static final String RADIO_PACKAGE = "com.kostyamat.fmradio";
+    private static final String ACTION_AUDIO_STATE_QUERY = RADIO_PACKAGE + ".AUDIO_STATE_QUERY";
+
+    /** Last {@code seq} accepted, so a late or repeated signal is dropped rather than acted on. */
+    private int lastAudioStateSeq = Integer.MIN_VALUE;
+
     // GALA fade & hold-timer state
     private int currentAppliedOffset = -1; // the offset currently SET on the hardware
     private int pendingTargetOffset  = -1; // the offset we want to reach (after hold timer)
@@ -283,6 +308,9 @@ public class McuService extends Service implements LocationListener {
                     Log.i(TAG, "SIMULATE_SPEED: " + simulatedSpeedKmh + " km/h"
                             + (simulatedSpeedKmh > 0 ? "" : " (off, back to GPS)"));
                 }
+                else if (ACTION_AUDIO_STATE_STABLE.equals(action)) {
+                    onAudioStateStable(intent);
+                }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
                     adjustSubGain(1);
                 }
@@ -430,6 +458,7 @@ public class McuService extends Service implements LocationListener {
             // one. Announced after now, when the name is true.
             syncPreset(true);
             sendBroadcast(presetChangedIntent);
+            askRadioForItsState();
             isBootStart = false;
         });
 
@@ -470,6 +499,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");
+        controlFilter.addAction(ACTION_AUDIO_STATE_STABLE);
         return controlFilter;
     }
 
@@ -597,6 +627,103 @@ public class McuService extends Service implements LocationListener {
     }
 
 
+    /**
+     * The radio has finished arranging the sound and says so. Re-baseline once, apply once.
+     *
+     * <p>Called from the receiver, which posts everything onto {@code backgroundHandler}, so this
+     * runs on the same thread as the poll and needs no locking.
+     *
+     * <h2>Why the live volume becomes the base outright</h2>
+     *
+     * The radio's synchronisation writes a <b>level</b>. Whatever stood there before - our base
+     * plus whatever offset GALA had applied - has been replaced by the level the radio decided on,
+     * and there is no way afterwards to say how much of the new number was ours. Pretending we can
+     * subtract our old offset from it would carry a stale figure into a level we did not set.
+     *
+     * <p>So the level is the new base, and the offset restarts from zero. GALA recomputes it on
+     * the next poll, 100 ms later, and fades back in from the base the radio chose. The tracking
+     * variables are reset the same way the unmute recovery resets them, and for the same reason:
+     * without it the very next poll sees a volume it did not command, decides a person turned the
+     * knob, and re-bases a second time.
+     *
+     * <p>{@code source="idle"} - the radio giving up the channel - takes this identical path.
+     * 🔴 It means "re-baseline from the live volume", <b>not</b> "stop GALA": the radio going
+     * quiet does not stop the car. Both sides recorded that reading explicitly, because the word
+     * invites the opposite one.
+     */
+    /**
+     * Asks the radio, once at startup, what the audio state is now.
+     *
+     * <p>The other half of the contract, and the half that exists because a signal is an edge:
+     * whoever did not hear it does not know the state. That is not theoretical here. After
+     * {@code adb install -r} this service does not come back on its own - the process shows in
+     * {@code pidof} while the service is dead and broadcasts reach nobody - and it also happens on
+     * a crash restart, or when the unit wakes and the start order falls differently. In each case
+     * the radio has already sent its signal and we would sit on a stale base, which is the exact
+     * race the contract removes.
+     *
+     * <p>The radio answers with an ordinary {@link #ACTION_AUDIO_STATE_STABLE} carrying its
+     * current state - one signal type, not two. If the radio is not installed, or says nothing,
+     * nothing happens and this service behaves exactly as it did before the contract existed.
+     * Neither application requires the other.
+     */
+    private void askRadioForItsState() {
+        try {
+            Intent query = new Intent(ACTION_AUDIO_STATE_QUERY).setPackage(RADIO_PACKAGE);
+            sendBroadcast(query);
+            Log.i(TAG, "asked " + RADIO_PACKAGE + " for the current audio state");
+        } catch (Throwable t) {
+            // A radio that is not installed is the ordinary case, not a fault.
+            Log.i(TAG, "could not ask the radio for its state: " + t);
+        }
+    }
+
+    private void onAudioStateStable(Intent intent) {
+        int seq = intent.getIntExtra("seq", 0);
+        String source = intent.getStringExtra("source");
+        int channel = intent.getIntExtra("channel", -1);
+
+        // Late or repeated. The signal is an edge, and acting on a stale one re-bases to a level
+        // that has already been superseded.
+        if (lastAudioStateSeq != Integer.MIN_VALUE && seq <= lastAudioStateSeq) {
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " ignored, already at " + lastAudioStateSeq);
+            return;
+        }
+        lastAudioStateSeq = seq;
+
+        int live = VolumeHelper.getVolume();
+
+        // 🔴 A muted amplifier reads back as zero, and zero is not a base - it is the absence of
+        // one. Caught on the wire the first time this ran: the unit happened to be muted, the
+        // signal arrived, and the base was set to 0. Nothing looks wrong until the mute comes off,
+        // at which point GALA restores base plus offset and the car goes almost silent.
+        //
+        // The poll's own mute guard returns before any of its base handling for exactly this
+        // reason, but that guard is upstream of here, so this path needs its own. The base is left
+        // untouched and the unmute recovery re-establishes it when there is sound to measure
+        // against. The EQ is still applied, because the curve does not depend on the mute.
+        if (VolumeHelper.isHardwareMuted() || live <= 0) {
+            applyVolumeDependentSettings(Math.max(0, live));
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " source=" + source + " channel=" + channel
+                    + " -> muted (read " + live + "), base left at " + baseStandstillVolume
+                    + ", EQ applied once");
+            return;
+        }
+
+        baseStandstillVolume = live;
+        currentAppliedOffset = 0;
+        pendingTargetOffset  = 0;
+        lastGalaTier         = 0;
+        tierChangeTimestamp  = System.currentTimeMillis();
+        lastReadHardwareVol  = live;
+        lastAppliedVolume    = live;
+
+        applyVolumeDependentSettings(live);
+
+        Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " source=" + source + " channel=" + channel
+                + " -> base=" + live + ", offset reset, EQ applied once");
+    }
+
     // True/false state actually used by GALA processing - the shared global switch when
     // galaGlobalMode is on, otherwise whatever the current preset has stored.
     private boolean isGalaEnabled() {
@@ -647,6 +774,14 @@ public class McuService extends Service implements LocationListener {
                 if (galavoltype.equals("aux_type")) {
                     if (aux_standstill != -1) {
                         baseStandstillVolume = aux_standstill;
+                    }
+                    else {
+                        // The other three sources all fall back to the live volume here, and the
+                        // omission was doing real harm: switching to AUX for the first time in a
+                        // session left the base belonging to whatever played before it. GALA then
+                        // added its offset to somebody else's base - too loud if the previous
+                        // source was louder, silent if it was quieter.
+                        baseStandstillVolume = VolumeHelper.getVolume();
                     }
                 }
                 if (galavoltype.equals("radio_type")) {
