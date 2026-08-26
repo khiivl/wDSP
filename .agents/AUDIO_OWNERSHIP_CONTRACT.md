@@ -84,6 +84,14 @@ separates two signals inside one millisecond, and reads well in a log.
 ⚠️ `at` must be `elapsedRealtime()` and nothing else. `currentTimeMillis()` jumps when the clock is
 synchronised, and the two sides would part company at that moment.
 
+🔴 **`at` is never 0.** When the radio has nothing stored to replay — a fresh process that has not
+announced yet — it must send the current `elapsedRealtime()` rather than a zero. This is
+load-bearing, not tidiness: wDSP orders by the clock only while `at > 0` and otherwise falls back to
+comparing `seq`, and `seq = 0` is the lowest number there is. A reply carrying `at = 0` and
+`seq = 0` would therefore be rejected every time wDSP's service had not just restarted. Measured
+26.08.2026: two consecutive queries into a freshly started radio returned `seq=0` twice with
+`at` 26 seconds apart — the fallback doing exactly its job.
+
 Measured on the unit, 26.08.2026: `seq=40 at=500000` accepted, `seq=41 at=400000` ignored (a higher
 counter on an older clock), `seq=1 at=600000` accepted — the restarted radio that would otherwise
 have been locked out permanently.
@@ -156,7 +164,27 @@ nothing there. `idle` already covers the only moment that matters — the radio 
 
 ## Status
 
-- **wDSP side:** done, measured on the unit, shipped in `0.4.7.3` / `versionCode 10`
-  (`2b7355c`, ordering fix `89286ee`).
-- **Radio side:** done, built (`WdspAudioContract`).
-- **Joint test on the car:** outstanding, at the owner's word.
+Both sides are implemented and on the unit. Joint testing, 26.08.2026:
+
+| behaviour | state |
+|---|---|
+| delivery radio → wDSP | ✅ repeatedly, 25-65 ms |
+| delivery wDSP → radio (`QUERY`) | ✅ answered every time the radio was running |
+| acted on exactly once per signal | ✅ |
+| the base wDSP re-reads equals the platform's own level | ✅ `base=4` against `sys.radio.vol=4`, every time |
+| a stale signal is dropped | ✅ higher `seq` on an older `at` ignored |
+| **recovery after the radio restarts** | ✅ **on a real restart, not a simulation** — `seq` reset to 1 and was accepted on the clock, where `seq` ordering would have locked the contract out for good |
+| `QUERY` reply repeats `seq` | ✅ |
+| `QUERY` reply repeats `at` | ⏳ untested — the radio had never announced, so there was no `at` to repeat |
+| `idle` re-baselines rather than silencing GALA | ✅ on a real `idle` from the radio |
+| a query into a dead radio | ✅ nothing answers, nothing breaks |
+| **a real volume knob** | ❌ **only the owner can produce this** — `keyevent 24/25` does not raise the platform event |
+| the radio's sync switch set to OFF | ❌ untested |
+
+`announceRadio` is proven **on a source transition** — the radio taking the channel as its process
+started. On a **level change from the knob** it is not proven; those are two different entries into
+the same branch, and only the last two rows above can tell them apart.
+
+The witness for that proof is a line that is *absent* from the wDSP log: at 15:44:46 no
+`asked com.kostyamat…` preceded the signal, so it was not a reply to a query, so it came from
+`announceRadio`. Recorded here because the evidence lives on this side, not the radio's.
