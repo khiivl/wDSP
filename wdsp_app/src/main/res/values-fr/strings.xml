@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Par défaut global : %1$s</string>
     <string name="screensaver_apps_none">Aucune</string>
     <string name="screensaver_apps_pick">Choisir</string>
     <string name="screensaver_note">La navigation n\'est jamais recouverte.</string>
+    <string name="room_mic_spot_label">Où se trouve le micro</string>
+    <string name="room_mic_spot_desc">Faites glisser le point là où se trouve réellement le micro. Cela ne change rien à la mesure, cela nous indique comment lire le résultat, et sans cela, un micro posé sur un haut-parleur ressemble exactement à trois haut-parleurs cassés.</string>
+    <string name="room_root_title">Avez-vous autorisé l\'accès root ?</string>
+    <string name="room_root_message">La mesure n\'a pas pu obtenir l\'accès root à l\'instant, nous devons donc poser la question.\n\nIl est nécessaire pour une seule action : arrêter le processus en arrière-plan qui maintient le micro ouvert à 16 kHz. La plate-forme ne conserve qu\'un seul flux d\'entrée, donc sans cela, notre enregistrement y est attaché et la moitié de la mesure est perdue - et rien dans Android ne l\'admet, la fréquence d\'échantillonnage indique toujours 48000.\n\nRien n\'est désactivé ou désinstallé ; l\'assistant se relance tout seul.</string>
+    <string name="room_root_yes">Oui, il est activé</string>
+    <string name="room_root_no">Non</string>
+    <string name="room_root_blocked">Alors activez-le d\'abord : ouvrez Magisk → Superuser, trouvez wDSP, et réglez-le sur Autoriser (ou Demander, et autorisez-le quand il le demande).\n\nLa mesure n\'a pas été lancée. Relancez-la une fois le root autorisé.</string>
+    <string name="screensaver_info_h">Bande de piste</string>
+    <string name="room_mic_place_hint">Sur quoi il est fixé</string>
+    <string name="room_mic_place_windscreen">Pare-brise</string>
+    <string name="room_mic_place_visor">Sous le pare-soleil</string>
+    <string name="room_mic_place_mirror">Rétroviseur</string>
+    <string name="room_mic_place_dome">Plafonnier</string>
+    <string name="room_mic_place_wheel">Volant</string>
+    <string name="room_mic_place_dash">Tableau de bord</string>
+    <string name="room_mic_place_pillar_top">Montant de pare-brise, en haut</string>
+    <string name="room_mic_place_pillar_bottom">Montant de pare-brise, en bas</string>
 </resources>
 

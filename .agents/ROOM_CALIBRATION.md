@@ -215,14 +215,83 @@ terms.
   microphone on the windscreen pillar. Being generous costs nothing — a phantom channel does not
   miss by metres, it misses by hundreds of milliseconds.
 
-- **The delay hardware reaches five milliseconds and no further.** The positional sliders run 0..10
-  at half a millisecond each, which is about a metre and seventy of path difference: enough for a
-  saloon, not enough for a van. A suggestion beyond that cannot be entered, so the measurement caps
-  it and says so plainly rather than clamping in silence and letting the user believe their car is
-  aligned. In a long vehicle, "cannot be corrected" is the honest answer.
-- **Which end of the fader is "front" is assumed, not confirmed.** The arrival times and their
-  differences are right either way; only the labels could be mirrored. One test in a real car
-  settles it.
+- **The delay line reaches about twenty milliseconds.** 🔬 `MAX_DELAY_STEPS` and
+  `HARDWARE_DELAY_STEPS` are both 40, at 0.4990 ms a step - **measured, not assumed** - so roughly
+  seven metres of path difference. The sliders were raised to match, because a suggestion that
+  cannot be typed in is no suggestion at all. Beyond that the line saturates, and the measurement
+  sets `beyondHardware` and says so plainly rather than clamping in silence.
+
+  ⚠️ This paragraph used to say "five milliseconds and no further, sliders 0..10". That was true of
+  an earlier build, and it is why an 18-step suggestion in a tester's report looks alarming and is
+  not.
+- ~~**Which end of the fader is "front" is assumed, not confirmed.**~~ 📻 **Settled 20.08.2026,
+  and the assumption was wrong.** Testers ran the measurement and said which speaker played the
+  first sweep: the **rear left**. So balance 0 is the left side as assumed, but fader 0 is the
+  **rear**, not the front — every result before that was named mirror-image front to back. The
+  arrival times were never affected, only the labels on them. Confirmed again since on every unit
+  that has run it: the first sweep is always the rear left. The corrected table is the `Channel`
+  enum in `RoomMeasurement`.
+
+---
+
+## 5-bis. What four testers' reports changed, 23-26.08.2026
+
+Four measurements came back from strangers' cars. Two failed, and both failures were about the room
+rather than the code.
+
+### The microphone's position is asked for now
+
+📻 Both failures reported "only 1 speaker heard", and in both the microphone was sitting on one
+speaker - from inside the numbers that is indistinguishable from three dead speakers. The two that
+succeeded were the two whose owner had volunteered where it was.
+
+⇒ Diagnostics shows the same car picture the balance uses, with a dot to drag and four arrows
+worth a twelfth of the cabin each, plus **a named place** it is fitted to: windscreen, under the
+sun visor, A-pillar top or bottom, mirror, dome light, steering wheel, dashboard.
+
+🧩 Why both, and not just the dot: the dot gives the spot on the floor plan, which is enough for
+the delays because they are geometry in the horizontal plane. It says nothing about height or about
+what sits two centimetres away - and that is what decides whether the first arrival is the speaker
+or a reflection. A visor and a dome light can be at the same x,y and behave nothing alike. Three of
+the first four reports came back reflection-dominated and the arrival times could not say why.
+
+Report line: `microphone placed: front right (lr +0.72, fr +0.55), on the under the sun visor`.
+Written in English whatever the owner's language, because we are the ones who read it.
+
+### 🔴 Polarity is only trustworthy where the sound arrived directly
+
+Two reports came back with exactly one channel marked `-1`, and in both it was a channel the same
+report had already called "mostly reflections". A reflection off the windscreen arrives inverted.
+
+⚠️ Nearly acted on: an owner was told his front left was wired backwards on a 7.3 dB clarity
+reading. Withdrawn.
+
+⇒ Polarity prints with `?` on any channel not heard directly; `wiringVerdict` compares **only**
+confidently-heard channels, and only when at least two exist to disagree. All four inverted is
+reported as a convention, not a fault.
+
+### 🔴 The sweep never asked for audio focus
+
+📻 The oldest complaint: the first measurement fails, then works after a Bluetooth call or the next
+day - both of which force the platform to re-establish who owns the audio.
+
+🧩 The sweep opened an `AudioTrack` with `USAGE_MEDIA` and never requested focus. Volume only
+reaches the amplifier for the source named in `sys.current.vol.type`, and one failing tester's
+report had that **unset**. A track that never asked to be the player can be written, mixed and
+never amplified - which looks exactly like three disconnected speakers.
+
+⇒ `AUDIOFOCUS_GAIN` held for the whole pass, not per sweep. Printed as `audio focus: granted`.
+❓ Not yet confirmed to be the cure; the report now carries the evidence either way.
+
+### Root is asked for out loud
+
+A `su` call is refused silently where Magisk's policy is "deny". The measurement checks for root
+itself first and only asks if that fails; on "no" it refuses to start and points at
+Magisk → Superuser rather than quietly measuring through a 16 kHz microphone.
+
+🧩 A refusal returning in under half a second was decided by policy, not by a person - nobody reads
+a dialog that fast. That is the only signal that separates "the owner said no" from "Magisk never
+asked".
 
 ---
 

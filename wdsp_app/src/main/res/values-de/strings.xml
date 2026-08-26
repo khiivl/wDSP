@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <!-- Presets -->
@@ -271,5 +271,22 @@
     <string name="screensaver_apps_none">Keine</string>
     <string name="screensaver_apps_pick">Wählen</string>
     <string name="screensaver_note">Navigation wird nie überdeckt.</string>
+    <string name="room_mic_spot_label">Wo sich das Mikrofon befindet</string>
+    <string name="room_mic_spot_desc">Ziehe den Punkt dorthin, wo das Mikrofon tatsächlich sitzt. Es ändert nichts an der Messung - es sagt uns nur, wie das Ergebnis zu lesen ist. Ohne dies sieht ein Mikrofon auf einem Lautsprecher genau wie drei kaputte aus.</string>
+    <string name="room_root_title">Hast du Root-Zugriff gewährt?</string>
+    <string name="room_root_message">Die Messung konnte gerade keinen Root-Zugriff erhalten, deshalb müssen wir fragen.\n\nEr wird für genau eine Aktion benötigt: das Stoppen des Hintergrundprozesses, der das Mikrofon auf 16 kHz offen hält. Die Plattform behält nur einen Eingangsstream, sodass unsere Aufnahme ohne dies daran angehängt und die halbe Messung verworfen wird - und Android gibt es nicht zu, die Abtastrate zeigt immer noch 48000 an.\n\nEs wird nichts deaktiviert oder deinstalliert; der Assistent startet von selbst wieder.</string>
+    <string name="room_root_yes">Ja, ist an</string>
+    <string name="room_root_no">Nein</string>
+    <string name="room_root_blocked">Dann schalte ihn zuerst ein: Öffne Magisk → Superuser, finde wDSP und stelle es auf Zulassen (oder Nachfragen und erlaube es, wenn es fragt).\n\nDie Messung wurde nicht gestartet. Führe sie erneut aus, sobald Root erlaubt ist.</string>
+    <string name="screensaver_info_h">Titel-Streifen</string>
+    <string name="room_mic_place_hint">Woran es befestigt ist</string>
+    <string name="room_mic_place_windscreen">Windschutzscheibe</string>
+    <string name="room_mic_place_visor">Unter der Sonnenblende</string>
+    <string name="room_mic_place_mirror">Rückspiegel</string>
+    <string name="room_mic_place_dome">Deckenleuchte</string>
+    <string name="room_mic_place_wheel">Lenkrad</string>
+    <string name="room_mic_place_dash">Armaturenbrett</string>
+    <string name="room_mic_place_pillar_top">A-Säule, oben</string>
+    <string name="room_mic_place_pillar_bottom">A-Säule, unten</string>
 </resources>
 

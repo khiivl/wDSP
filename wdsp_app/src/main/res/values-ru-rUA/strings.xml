@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -275,5 +275,22 @@
     <string name="screensaver_apps_none">Не выбрано</string>
     <string name="screensaver_apps_pick">Выбрать</string>
     <string name="screensaver_note">Навигация никогда не перекрывается.</string>
+    <string name="room_mic_spot_label">Де стоїть мікрофон</string>
+    <string name="room_mic_spot_desc">Перетягніть крапку туди, де мікрофон насправді. На свіп це не впливає — це підказує, як читати результат: без неї мікрофон, що лежить на одному динаміку, виглядає точно як три несправні.</string>
+    <string name="room_root_title">Ви дозволили рут-доступ?</string>
+    <string name="room_root_message">Зараз отримати рут не вдалося, тому доводиться спитати.\n\nВін потрібен рівно на одну дію: зупинити фоновий процес, що тримає мікрофон відкритим на 16 кГц. Платформа має лише один вхідний потік, тож без цього наш запис чіпляють до нього — і половина свіпу зникає. Android про це не повідомляє: частота дискретизації все одно показує 48000.\n\nНічого не вимикається й не видаляється — асистент піднімається сам.</string>
+    <string name="room_root_yes">Так, дозволено</string>
+    <string name="room_root_no">Ні</string>
+    <string name="room_root_blocked">Тоді спершу дозвольте: Magisk → Суперкористувач, знайдіть wDSP і поставте «Дозволити» (або «Питати» й дозвольте, коли спитає).\n\nВимір не запускався. Запустіть його ще раз, коли рут буде дозволено.</string>
+    <string name="screensaver_info_h">Track strip</string>
+    <string name="room_mic_place_hint">На чому закріплений</string>
+    <string name="room_mic_place_windscreen">Лобове скло</string>
+    <string name="room_mic_place_visor">Під козирком</string>
+    <string name="room_mic_place_mirror">Дзеркало</string>
+    <string name="room_mic_place_dome">Плафон</string>
+    <string name="room_mic_place_wheel">Кермо</string>
+    <string name="room_mic_place_dash">Торпедо</string>
+    <string name="room_mic_place_pillar_top">Стійка лобового, вгорі</string>
+    <string name="room_mic_place_pillar_bottom">Стійка лобового, внизу</string>
 </resources>
 

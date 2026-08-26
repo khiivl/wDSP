@@ -34,4 +34,9 @@
     <dimen name="button_height">55dp</dimen>
 
     <dimen name="thumb_height">20dp</dimen>
+    <!-- The microphone-placement car in Diagnostics. 300dp is half of a 1024x600 fascia and
+         well under half of a 1280x720 one, so the arrows above and below it stay on screen
+         without the page having to be scrolled to find them. Density is 1.0 on these units, so
+         dp and px are the same thing here. -->
+    <dimen name="room_mic_car_height">300dp</dimen>
 </resources>

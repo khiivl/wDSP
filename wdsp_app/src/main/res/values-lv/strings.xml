@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Globāli noklusējums: %1$s</string>
     <string name="screensaver_apps_none">Nav</string>
     <string name="screensaver_apps_pick">Izvēlēties</string>
     <string name="screensaver_note">Navigācija netiek aizsegta.</string>
+    <string name="room_mic_spot_label">Kur atrodas mikrofons</string>
+    <string name="room_mic_spot_desc">Velciet punktu uz to vietu, kur faktiski atrodas mikrofons. Mērījumos tas neko nemaina - tas tikai norāda, kā nolasīt rezultātu, un bez tā mikrofons, kas uzlikts uz viena skaļruņa, izskatās tieši tāpat kā trīs bojāti.</string>
+    <string name="room_root_title">Vai esat atļāvis root piekļuvi?</string>
+    <string name="room_root_message">Mērījumam tikko neizdevās iegūt root tiesības, tāpēc mums ir jājautā.\n\nTas ir nepieciešams tieši vienai darbībai: fona procesa apturēšanai, kas uztur mikrofonu atvērtu 16 kHz frekvencē. Platforma uztur tikai vienu ievades straumi, tāpēc bez tā mūsu ieraksts tiek pievienots tam un puse mērījuma tiek izmesta - un Android to neatzīst, iztveršanas frekvence joprojām rāda 48000.\n\nNekas netiek atspējots vai atinstalēts; asistents pats ieslēdzas atpakaļ.</string>
+    <string name="room_root_yes">Jā, tas ir ieslēgts</string>
+    <string name="room_root_no">Nē</string>
+    <string name="room_root_blocked">Tad vispirms to ieslēdziet: atveriet Magisk → Superuser, atrodiet wDSP un iestatiet to uz Atļaut (vai Jautāt, un atļaujiet, kad tas jautā).\n\nMērījums netika sākts. Palaidiet to vēlreiz, kad root būs atļauts.</string>
+    <string name="screensaver_info_h">Dziesmas josla</string>
+    <string name="room_mic_place_hint">Pie kā tas ir piestiprināts</string>
+    <string name="room_mic_place_windscreen">Vējstikls</string>
+    <string name="room_mic_place_visor">Zem saulessarga</string>
+    <string name="room_mic_place_mirror">Atpakaļskata spogulis</string>
+    <string name="room_mic_place_dome">Salona apgaismojums</string>
+    <string name="room_mic_place_wheel">Stūre</string>
+    <string name="room_mic_place_dash">Mērinstrumentu panelis</string>
+    <string name="room_mic_place_pillar_top">A-statnis, augšpusē</string>
+    <string name="room_mic_place_pillar_bottom">A-statnis, apakšpusē</string>
 </resources>
 

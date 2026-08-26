@@ -105,6 +105,10 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     private long lastDrawTime = 0;
     private final float[] drawnLevels = new float[AudioSpectrumEngine.NUM_BANDS_32];
+    private String lastDrawnTitleLine;
+    private String lastDrawnArtist;
+    private android.graphics.Bitmap lastDrawnArt;
+    private long lastColonStep = 0;
 
     private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
         @Override
@@ -414,6 +418,9 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private final Paint infoPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float marqueeOffset = 0f;
+
+    /** The line the current scroll position belongs to; a different one starts over. */
+    private String marqueeLine = null;
     private long lastMarqueeTick = 0;
     private boolean marqueeRunning = false;
 
@@ -421,6 +428,9 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private static final float MARQUEE_PX_PER_S = 55f;
     /** Blank between the end of the line and where it starts again. */
     private static final float MARQUEE_GAP_F = 0.35f;
+
+    /** Most of the strip the fixed artist may occupy before it is cut short. */
+    private static final float ARTIST_MAX_F = 0.34f;
 
     public static final int GLYPH_PREVIOUS = 1;
     public static final int GLYPH_PLAY = 2;
@@ -446,9 +456,17 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         invalidate();
     }
 
+    /**
+     * Where the strip reads the track from, or null when there is nothing we may show.
+     *
+     * <p>Deliberately does not touch the marquee. The screensaver hands this in on every one of
+     * its two-second ticks, and resetting the scroll here sent a long title back to its start
+     * every two seconds - about a hundred pixels in, so it never reached the end and jerked
+     * instead. The scroll belongs to the line being drawn, and is reset in
+     * {@link #drawNowPlaying} when that line actually changes.
+     */
     public void setNowPlayingSource(NowPlaying source) {
         this.nowPlaying = source;
-        this.marqueeOffset = 0f;
     }
 
     /**
@@ -461,6 +479,8 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         this.pausedTarget = paused;
         if (!showClock) {
             pauseT = 0f;
+        } else if (paused) {
+            pauseT = 1f;
         }
     }
 
@@ -526,6 +546,32 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                 clockText = text;
                 dirty = true;
             }
+            long colonStep = now / 100;
+            if (colonStep != lastColonStep) {
+                lastColonStep = colonStep;
+                dirty = true;
+            }
+        }
+        if (nowPlaying != null) {
+            String curTitleLine = nowPlaying.titleLine();
+            String curArtist = nowPlaying.artist();
+            android.graphics.Bitmap curArt = nowPlaying.art();
+            boolean metaChanged = false;
+            if (curTitleLine == null ? lastDrawnTitleLine != null : !curTitleLine.equals(lastDrawnTitleLine)) {
+                metaChanged = true;
+            }
+            if (curArtist == null ? lastDrawnArtist != null : !curArtist.equals(lastDrawnArtist)) {
+                metaChanged = true;
+            }
+            if (curArt != lastDrawnArt) {
+                metaChanged = true;
+            }
+            if (metaChanged) {
+                lastDrawnTitleLine = curTitleLine;
+                lastDrawnArtist = curArtist;
+                lastDrawnArt = curArt;
+                dirty = true;
+            }
         }
         return dirty;
     }
@@ -549,12 +595,20 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         }
     }
 
-    private String currentClockText() {
+    private String[] currentClockParts() {
         java.util.Calendar c = java.util.Calendar.getInstance();
         boolean h24 = android.text.format.DateFormat.is24HourFormat(getContext());
         int hour = h24 ? c.get(java.util.Calendar.HOUR_OF_DAY) : c.get(java.util.Calendar.HOUR);
         if (!h24 && hour == 0) hour = 12;
-        return String.format(java.util.Locale.US, "%d:%02d", hour, c.get(java.util.Calendar.MINUTE));
+        return new String[]{
+                String.valueOf(hour),
+                String.format(java.util.Locale.US, "%02d", c.get(java.util.Calendar.MINUTE))
+        };
+    }
+
+    private String currentClockText() {
+        String[] parts = currentClockParts();
+        return parts[0] + ":" + parts[1];
     }
 
     @Override
@@ -608,6 +662,36 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         if (flashGlyph != 0 && flashUntil > 0) {
             drawTransportFlash(canvas, viewW, viewH);
         }
+    }
+
+    /**
+     * Writes the artist where it will stay, and answers where the scrolling half may begin.
+     *
+     * <p>Dimmer than the title on purpose: two lines of equal weight side by side read as one
+     * run-on, and the eye needs to see at a glance which half is the name of the track.
+     *
+     * <p>It never takes more than {@link #ARTIST_MAX_F} of the room. A band with a long name
+     * would otherwise leave the title nowhere to scroll, and the title is the part being read.
+     */
+    private float drawArtist(Canvas canvas, String artist, float x, float right, float baseline,
+                             float alpha) {
+        float room = (right - x) * ARTIST_MAX_F;
+        if (room <= 0) return x;
+
+        infoPaint.setColor(android.graphics.Color.argb(
+                Math.round(150 * alpha), 255, 255, 255));
+        float width = infoPaint.measureText(artist);
+        if (width > room) {
+            int fits = infoPaint.breakText(artist, true, room - infoPaint.measureText("…"), null);
+            if (fits <= 0) return x;
+            artist = artist.substring(0, fits).trim() + "…";
+            width = infoPaint.measureText(artist);
+        }
+        canvas.drawText(artist, x, baseline, infoPaint);
+
+        infoPaint.setColor(android.graphics.Color.argb(
+                Math.round(235 * alpha), 255, 255, 255));
+        return x + width + infoPaint.measureText("   ");
     }
 
     /** The pressed symbol, fading, drawn over everything and centred on the screen. */
@@ -665,6 +749,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
      * scales together instead of a fixed icon sitting in a band twice its size.
      */
     private void drawNowPlaying(Canvas canvas, float viewW, float viewH) {
+        if (nowPlaying == null || (!nowPlaying.hasTrack() && !nowPlaying.isPlaying())) return;
         float h = bottomInset;
         float top = viewH - h;
         float pad = h * 0.16f;
@@ -692,8 +777,13 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             x += size + pad;
         }
 
-        String line = nowPlaying.line();
-        if (line == null) line = nowPlaying.playerLabel();
+        String line = nowPlaying.titleLine();
+        String artist = nowPlaying.artist();
+        if (line == null) {
+            line = nowPlaying.line();
+            artist = null;
+        }
+        if (line == null) return;
         float right = viewW - pad;
         if (line != null && right > x) {
             infoPaint.setTextSize(h * 0.38f);
@@ -703,8 +793,19 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             infoPaint.setTextAlign(Paint.Align.LEFT);
             Paint.FontMetrics fm = infoPaint.getFontMetrics();
             float baseline = top + h / 2f - (fm.ascent + fm.descent) / 2f;
+
+            if (artist != null && !artist.trim().isEmpty()) {
+                x = drawArtist(canvas, artist.trim(), x, right, baseline, alpha);
+            }
             float avail = right - x;
             float textW = infoPaint.measureText(line);
+
+            if (!line.equals(marqueeLine)) {
+                // A new track starts from the left. Nothing else does - the same line keeps its
+                // place across every redraw, whatever else asked us to redraw.
+                marqueeLine = line;
+                marqueeOffset = 0f;
+            }
 
             canvas.save();
             canvas.clipRect(x, top, right, viewH);
@@ -748,18 +849,43 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
      * than as being switched on.
      */
     private void drawClock(Canvas canvas, float cx, float cy, float bandHeight) {
-        if (clockText.isEmpty()) clockText = currentClockText();
+        String[] parts = currentClockParts();
+        String hourStr = parts[0];
+        String minStr = parts[1];
         applyClockTypeface();
         float scale = 0.94f + 0.06f * pauseT;
         float size = Math.max(24f, bandHeight * 0.62f) * scale;
         clockPaint.setTextSize(size);
-        clockPaint.setTextAlign(Paint.Align.CENTER);
-        int alpha = (int) (255f * (alphaPercent / 100f) * pauseT);
-        clockPaint.setColor(android.graphics.Color.argb(Math.max(0, Math.min(255, alpha)),
-                255, 255, 255));
+        clockPaint.setTextAlign(Paint.Align.LEFT);
+
+        int baseAlpha = (int) (255f * (alphaPercent / 100f) * pauseT);
+        baseAlpha = Math.max(0, Math.min(255, baseAlpha));
+
+        long now = System.currentTimeMillis();
+        float t = (now % 1000) / 1000f;
+        float colonFade = (float) (0.5f * (1.0 + Math.cos(2.0 * Math.PI * t)));
+        int colonAlpha = Math.round(baseAlpha * (0.15f + 0.85f * colonFade));
+
         Paint.FontMetrics fm = clockPaint.getFontMetrics();
         float baseline = cy - (fm.ascent + fm.descent) / 2f;
-        canvas.drawText(clockText, cx, baseline, clockPaint);
+
+        float hourW = clockPaint.measureText(hourStr);
+        float colonW = clockPaint.measureText(":");
+        float minW = clockPaint.measureText(minStr);
+        float totalW = hourW + colonW + minW;
+        float startX = cx - totalW / 2f;
+
+        // Digits: baseAlpha
+        clockPaint.setColor(android.graphics.Color.argb(baseAlpha, 255, 255, 255));
+        canvas.drawText(hourStr, startX, baseline, clockPaint);
+
+        // Colon: colonAlpha (smooth 10fps sine fade)
+        clockPaint.setColor(android.graphics.Color.argb(colonAlpha, 255, 255, 255));
+        canvas.drawText(":", startX + hourW, baseline, clockPaint);
+
+        // Minutes: baseAlpha
+        clockPaint.setColor(android.graphics.Color.argb(baseAlpha, 255, 255, 255));
+        canvas.drawText(minStr, startX + hourW + colonW, baseline, clockPaint);
     }
 
     @Override

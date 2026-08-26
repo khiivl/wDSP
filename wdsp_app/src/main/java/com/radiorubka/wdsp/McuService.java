@@ -76,6 +76,15 @@ public class McuService extends Service implements LocationListener {
 
     // GALA settings
     private boolean cachedGalaEn;
+    /**
+     * Highest the standstill slider goes, in slider steps of 5 km/h - so 40 means 200 km/h.
+     *
+     * <p>The same number is enforced in {@code MainActivity.loadPreset}. If either moves without
+     * the other, the screen and this service go back to computing GALA from different figures,
+     * which is the failure this constant exists to end.
+     */
+    private static final int GALA_MIN_SPEED_CEILING = 40;
+
     private int cachedGalaInc;
     private int cachedGalaMinV;
     // private int cachedGalaMaxV;
@@ -407,14 +416,20 @@ public class McuService extends Service implements LocationListener {
             VolumeHelper.init(this);
             initReflection();
             prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            currentPresetName = prefs.getString("Preset 1", "Preset 1");
-            sendBroadcast(presetChangedIntent);
-            loadPresetData(currentPresetName);
+            // Both flags before syncPreset, because applying a preset consults isGalaEnabled().
             galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
             galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
             prefs.registerOnSharedPreferenceChangeListener(prefListener);
             loadPlayerMap();
+            // syncPreset reads last_selected_preset, loads it and applies it - all three. What
+            // stood here did the first two by hand and got the first one wrong: it asked for a
+            // preference literally named "Preset 1" rather than the key that stores which preset
+            // is selected, so it loaded Preset 1's settings over whatever the owner had chosen.
+            // syncPreset then corrected it two lines later, which is why nothing was ever visibly
+            // broken - but the PRESET_CHANGED broadcast went out in between, announcing the wrong
+            // one. Announced after now, when the name is true.
             syncPreset(true);
+            sendBroadcast(presetChangedIntent);
             isBootStart = false;
         });
 
@@ -508,7 +523,16 @@ public class McuService extends Service implements LocationListener {
         // GALA
         cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
-        cachedGalaMinV = prefs.getInt(preset + "_gala_min_speed", 0);
+        // Clamped exactly as MainActivity.loadPreset clamps it, and for the same reason: the
+        // standstill slider used to reach 300 km/h and now stops at 200.
+        //
+        // 🔴 It was clamped only there, and that is worse than not clamping at all. A preset saved
+        // under the old range showed 200 on screen while this service went on computing with 300,
+        // so GALA never engaged and nothing said why - not the screen, which looked right, and not
+        // the log, which reported the offset as 0 with settings that appeared to ask for one. The
+        // owner then opened the main screen, touched anything, autosave wrote the clamped value
+        // back, and GALA came alive - which reads as "it only works when I go to the main screen".
+        cachedGalaMinV = Math.min(GALA_MIN_SPEED_CEILING, prefs.getInt(preset + "_gala_min_speed", 0));
 //        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
         cachedGalaFadeDelayMs = prefs.getInt(preset + "_gala_fade_ms", 100);
@@ -752,7 +776,15 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
-        if (cachedGalaEn) {
+        //
+        // 🔴 isGalaEnabled(), not cachedGalaEn. This was the raw per-preset field, and it was the
+        // only place left reading it directly - step 2 above already asks properly. With the
+        // global switch on, the two disagreed: a preset created while global mode was on never has
+        // "_gala_enabled" written at all, so it read false while the global flag read true. Step 2
+        // then computed a correct offset, logged it, and step 6 took the else branch and faded that
+        // offset straight back to zero. GALA looked switched on, the log showed it working, and the
+        // volume never moved.
+        if (isGalaEnabled()) {
             long now = System.currentTimeMillis();
 
             // 6a. HOLD-TIMER: Has the tier changed?
@@ -850,23 +882,28 @@ public class McuService extends Service implements LocationListener {
         String activeType = VolumeHelper.getActivePlayerType();
 
         // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
-        // Our own package is com.radiorubka.wdsp, which contains "radio" - so a plain substring
-        // test decided the tuner was playing the moment our own UI came to the front, hid the
-        // status bar widget and, because the widget unregisters when hidden, left nothing
-        // listening to the analyser at all once the main screen was closed again.
-        boolean isOwnPackage = currentPlayer != null && currentPlayer.startsWith(getPackageName());
-        boolean isRadio = "radio_type".equals(activeType)
-                || (currentPlayer != null && !isOwnPackage
-                    && currentPlayer.toLowerCase().contains("radio"));
+        // The hardware tuner bypasses Android PCM AudioFlinger, so there is nothing to measure.
+        // If the spectrum engine hears real signal, or a software media session is active, it is NOT tuner.
+        boolean hasSignal = AudioSpectrumEngine.getInstance().hasSignalNow();
+        boolean isPlayingMedia = NowPlaying.getInstance(this).isPlaying()
+                && !NowPlaying.getInstance(this).isRadioSource();
+        // The channel counts as evidence FOR the tuner and never against it: it only reads
+        // reliably on a unit carrying the BitPerfect policies, and wanders on a factory one. A
+        // stray 2 while music plays costs nothing, because hasSignal above has already answered.
+        // A stray 4 while the tuner plays used to suppress the radio flag here, and nothing else
+        // would have caught it - so that guard is gone. See NowPlaying.isRadioSource().
+        String soundChannel = HardwareProfile.systemProperty("sys.qf.sound.channel");
+
+        boolean isRadio = !hasSignal && !isPlayingMedia
+                && ("radio_type".equals(activeType) || "2".equals(soundChannel)
+                    || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status")));
+
         // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
         // muted when this was measured. The problem is what hiding costs: the widget unregisters
         // when hidden, and it is the only listener once the main screen is closed, so muting the
         // amplifier tore down the whole measurement chain. Leaving it running instead shows the
         // signal that genuinely exists upstream of the mute, and costs almost nothing now that
         // the widget only redraws when the picture actually changes.
-        //
-        // Radio is still gated, and for a real reason: it bypasses AudioFlinger entirely, so there
-        // is nothing to measure and the bars would be a flat lie rather than a quiet truth.
         boolean isMuted = false;
         int channel = isRadio ? 2 : 0; // 2 = Radio (external DSP, no PCM), 0 = Android master mixer (all media)
         if (statusBarManager != null) {
@@ -874,6 +911,10 @@ public class McuService extends Service implements LocationListener {
         }
 
         // Process the naming convention for the "unknown" preset.
+        if (isPlayingMedia && NowPlaying.getInstance(this).playerPackage() != null
+                && !NowPlaying.getInstance(this).playerPackage().isEmpty()) {
+            currentPlayer = NowPlaying.getInstance(this).playerPackage();
+        }
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }

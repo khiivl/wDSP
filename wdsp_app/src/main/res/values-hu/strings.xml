@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Globális alapértelmezett: %1$s</string>
     <string name="screensaver_apps_none">Nincs</string>
     <string name="screensaver_apps_pick">Válassz</string>
     <string name="screensaver_note">A navigációt sosem takarja el.</string>
+    <string name="room_mic_spot_label">Hol van a mikrofon</string>
+    <string name="room_mic_spot_desc">Húzd a pontot oda, ahol a mikrofon ténylegesen van. Magán a mérésen nem változtat semmit - csak megmondja, hogyan kell olvasni az eredményt, e nélkül egyetlen hangszórón lévő mikrofon pontosan úgy néz ki, mintha három rossz lenne.</string>
+    <string name="room_root_title">Engedélyezted a root hozzáférést?</string>
+    <string name="room_root_message">A mérés most nem kapott root jogot, ezért meg kell kérdeznünk.\n\nPontosan egy művelethez van rá szükség: annak a háttérfolyamatnak a leállításához, amely 16 kHz-en tartja nyitva a mikrofont. A platform csak egyetlen bemeneti streamet tart fenn, így e nélkül a felvételünk ehhez csatlakozik, és a mérés fele elvész - és az Androidban semmi sem ismeri ezt el, a mintavételezési frekvencia továbbra is 48000-et mutat.\n\nSemmi sincs letiltva vagy eltávolítva; az asszisztens magától visszakapcsol.</string>
+    <string name="room_root_yes">Igen, be van kapcsolva</string>
+    <string name="room_root_no">Nem</string>
+    <string name="room_root_blocked">Akkor először kapcsold be: nyisd meg a Magisk → Superuser menüt, keresd meg a wDSP-t, és állítsd Engedélyezésre (vagy Kérdezzen, és engedélyezd, amikor kéri).\n\nA mérés nem indult el. Futtasd újra, amint a root engedélyezve van.</string>
+    <string name="screensaver_info_h">Szám sávja</string>
+    <string name="room_mic_place_hint">Mire van rögzítve</string>
+    <string name="room_mic_place_windscreen">Szélvédő</string>
+    <string name="room_mic_place_visor">A napellenző alatt</string>
+    <string name="room_mic_place_mirror">Visszapillantó tükör</string>
+    <string name="room_mic_place_dome">Utastér világítás</string>
+    <string name="room_mic_place_wheel">Kormánykerék</string>
+    <string name="room_mic_place_dash">Műszerfal</string>
+    <string name="room_mic_place_pillar_top">A-oszlop, fent</string>
+    <string name="room_mic_place_pillar_bottom">A-oszlop, lent</string>
 </resources>
 

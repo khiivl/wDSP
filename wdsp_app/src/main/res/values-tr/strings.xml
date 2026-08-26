@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Genel Varsayılan: %1$s</string>
     <string name="screensaver_apps_none">Hiçbiri</string>
     <string name="screensaver_apps_pick">Seç</string>
     <string name="screensaver_note">Navigasyon asla kapatılmaz.</string>
+    <string name="room_mic_spot_label">Mikrofon nerede</string>
+    <string name="room_mic_spot_desc">Noktayı mikrofonun gerçekte bulunduğu yere sürükleyin. Ölçümle ilgili hiçbir şeyi değiştirmez - bize sonucu nasıl okuyacağımızı söyler ve bu olmadan tek bir hoparlörün üzerinde duran bir mikrofon tamamen üç bozuk hoparlör gibi görünür.</string>
+    <string name="room_root_title">Root erişimine izin verdiniz mi?</string>
+    <string name="room_root_message">Ölçüm şu anda root alamadı, bu yüzden sormamız gerekiyor.\n\nTam olarak tek bir işlem için gereklidir: mikrofonu 16 kHz\'de açık tutan arka plan işlemini durdurmak. Platform yalnızca bir giriş akışı tutar, bu nedenle bu olmadan kaydımız ona eklenir ve ölçümün yarısı atılır - ve Android\'de hiçbir şey bunu kabul etmez, örnekleme hızı hala 48000 olarak görünür.\n\nHiçbir şey devre dışı bırakılmaz veya kaldırılmaz; asistan kendi kendine geri döner.</string>
+    <string name="room_root_yes">Evet, açık</string>
+    <string name="room_root_no">Hayır</string>
+    <string name="room_root_blocked">O zaman önce açın: Magisk → Superuser\'ı açın, wDSP\'yi bulun ve İzin Ver olarak ayarlayın (veya Sor\'a ayarlayın ve sorduğunda izin verin).\n\nÖlçüm başlatılmadı. Root izni verildiğinde tekrar çalıştırın.</string>
+    <string name="screensaver_info_h">Parça şeridi</string>
+    <string name="room_mic_place_hint">Nereye takılı</string>
+    <string name="room_mic_place_windscreen">Ön cam</string>
+    <string name="room_mic_place_visor">Güneşlik altı</string>
+    <string name="room_mic_place_mirror">Dikiz aynası</string>
+    <string name="room_mic_place_dome">Tavan lambası</string>
+    <string name="room_mic_place_wheel">Direksiyon</string>
+    <string name="room_mic_place_dash">Gösterge paneli</string>
+    <string name="room_mic_place_pillar_top">A sütunu, üst</string>
+    <string name="room_mic_place_pillar_bottom">A sütunu, alt</string>
 </resources>
 

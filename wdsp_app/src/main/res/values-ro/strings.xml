@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Implicit global: %1$s</string>
     <string name="screensaver_apps_none">Niciuna</string>
     <string name="screensaver_apps_pick">Alege</string>
     <string name="screensaver_note">Navigația nu este acoperită.</string>
+    <string name="room_mic_spot_label">Unde se află microfonul</string>
+    <string name="room_mic_spot_desc">Trageți punctul acolo unde se află de fapt microfonul. Nu schimbă cu nimic măsurătoarea - ne spune cum să citim rezultatul, iar fără el un microfon așezat pe un difuzor arată exact ca trei defecte.</string>
+    <string name="room_root_title">Ați permis accesul root?</string>
+    <string name="room_root_message">Măsurătoarea nu a putut obține root chiar acum, așa că trebuie să întrebăm.\n\nEste necesar pentru o singură acțiune: oprirea procesului de fundal care ține microfonul deschis la 16 kHz. Platforma menține un singur flux de intrare, așa că fără acesta înregistrarea noastră este atașată la el și jumătate din măsurătoare este aruncată - și nimic din Android nu recunoaște acest lucru, rata de eșantionare arată încă 48000.\n\nNimic nu este dezactivat sau dezinstalat; asistentul repornește singur.</string>
+    <string name="room_root_yes">Da, este pornit</string>
+    <string name="room_root_no">Nu</string>
+    <string name="room_root_blocked">Atunci porniți-l mai întâi: deschideți Magisk → Superuser, găsiți wDSP și setați-l la Permiteți (sau Întrebați și permiteți-l când vă întreabă).\n\nMăsurătoarea nu a fost pornită. Rulați-o din nou odată ce root-ul este permis.</string>
+    <string name="screensaver_info_h">Banda piesei</string>
+    <string name="room_mic_place_hint">De ce este fixat</string>
+    <string name="room_mic_place_windscreen">Parbriz</string>
+    <string name="room_mic_place_visor">Sub parasolar</string>
+    <string name="room_mic_place_mirror">Oglindă retrovizoare</string>
+    <string name="room_mic_place_dome">Plafonieră</string>
+    <string name="room_mic_place_wheel">Volan</string>
+    <string name="room_mic_place_dash">Bord</string>
+    <string name="room_mic_place_pillar_top">Stâlpul A, sus</string>
+    <string name="room_mic_place_pillar_bottom">Stâlpul A, jos</string>
 </resources>
 

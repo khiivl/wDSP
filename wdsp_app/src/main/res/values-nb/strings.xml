@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Global standard: %1$s</string>
     <string name="screensaver_apps_none">Ingen</string>
     <string name="screensaver_apps_pick">Velg</string>
     <string name="screensaver_note">Navigasjonen dekkes aldri.</string>
+    <string name="room_mic_spot_label">Hvor mikrofonen er</string>
+    <string name="room_mic_spot_desc">Dra prikken til der mikrofonen faktisk sitter. Det endrer ingenting ved selve målingen - det forteller oss hvordan vi skal lese resultatet, og uten det ser en mikrofon som ligger på én høyttaler ut nøyaktig som tre ødelagte.</string>
+    <string name="room_root_title">Har du tillatt root-tilgang?</string>
+    <string name="room_root_message">Målingen kunne ikke få root akkurat nå, så vi må spørre.\n\nDet trengs til nøyaktig én handling: å stoppe bakgrunnsprosessen som holder mikrofonen åpen på 16 kHz. Plattformen opprettholder bare én inndatastrøm, så uten dette blir opptaket vårt festet til den og halve målingen går tapt - og ingenting i Android innrømmer det, samplingsfrekvensen viser fortsatt 48000.\n\nIngenting deaktiveres eller avinstalleres; assistenten starter selv igjen.</string>
+    <string name="room_root_yes">Ja, den er på</string>
+    <string name="room_root_no">Nei</string>
+    <string name="room_root_blocked">Da må du slå den på først: åpne Magisk → Superuser, finn wDSP og sett den til Tillat (eller Spør, og tillat når den spør).\n\nMålingen ble ikke startet. Kjør den på nytt når root er tillatt.</string>
+    <string name="screensaver_info_h">Sporstripe</string>
+    <string name="room_mic_place_hint">Hva den er montert på</string>
+    <string name="room_mic_place_windscreen">Frontrute</string>
+    <string name="room_mic_place_visor">Under solskjermen</string>
+    <string name="room_mic_place_mirror">Bakspeil</string>
+    <string name="room_mic_place_dome">Kupélys</string>
+    <string name="room_mic_place_wheel">Ratt</string>
+    <string name="room_mic_place_dash">Dashbord</string>
+    <string name="room_mic_place_pillar_top">A-stolpe, topp</string>
+    <string name="room_mic_place_pillar_bottom">A-stolpe, bunn</string>
 </resources>
 

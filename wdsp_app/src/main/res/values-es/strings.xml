@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -272,5 +272,22 @@
     <string name="screensaver_apps_none">Nada</string>
     <string name="screensaver_apps_pick">Elegir</string>
     <string name="screensaver_note">La navegación nunca se cubre.</string>
+    <string name="room_mic_spot_label">Dónde está el micrófono</string>
+    <string name="room_mic_spot_desc">Arrastra el punto a donde realmente está el micrófono. No cambia nada en la medición: nos dice cómo leer el resultado, y sin ello un micrófono apoyado en un altavoz parece exactamente como tres estropeados.</string>
+    <string name="room_root_title">¿Has permitido el acceso root?</string>
+    <string name="room_root_message">La medición no pudo obtener root en este momento, así que tenemos que preguntar.\n\nSe necesita para exactamente una acción: detener el proceso en segundo plano que mantiene el micrófono abierto a 16 kHz. La plataforma mantiene solo un flujo de entrada, así que sin esto nuestra grabación se adjunta a ese y la mitad de la medición se descarta; y nada en Android lo admite, la frecuencia de muestreo sigue mostrando 48000.\n\nNo se desactiva ni desinstala nada; el asistente vuelve a encenderse por sí solo.</string>
+    <string name="room_root_yes">Sí, está activado</string>
+    <string name="room_root_no">No</string>
+    <string name="room_root_blocked">Entonces actívalo primero: abre Magisk → Superuser, busca wDSP y establécelo en Permitir (o Preguntar, y permítelo cuando pregunte).\n\nLa medición no se inició. Vuelve a ejecutarla una vez que se permita el root.</string>
+    <string name="screensaver_info_h">Banda de pista</string>
+    <string name="room_mic_place_hint">A qué está sujeto</string>
+    <string name="room_mic_place_windscreen">Parabrisas</string>
+    <string name="room_mic_place_visor">Bajo el parasol</string>
+    <string name="room_mic_place_mirror">Espejo retrovisor</string>
+    <string name="room_mic_place_dome">Luz de techo</string>
+    <string name="room_mic_place_wheel">Volante</string>
+    <string name="room_mic_place_dash">Salpicadero</string>
+    <string name="room_mic_place_pillar_top">Pilar A, arriba</string>
+    <string name="room_mic_place_pillar_bottom">Pilar A, abajo</string>
 </resources>
 

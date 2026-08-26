@@ -283,6 +283,10 @@ public class StatusBarVisualizerManager {
 
     public void evaluateVisibility() {
         mainHandler.post(() -> {
+            if (isLentToScreensaver()) {
+                // When lent to screensaver, visibility is controlled exclusively by ScreensaverManager!
+                return;
+            }
             boolean shouldShow = isEnabled
                     && canDrawOverlays()
                     && isScreenOn
@@ -417,6 +421,9 @@ public class StatusBarVisualizerManager {
                                  int alphaPercent, int bottomInset, boolean screensaverPaused,
                                  View.OnTouchListener touchHandler, Runnable onBack) {
         this.onBack = onBack;
+        if (!isAttached()) {
+            ensureViewAttached();
+        }
         if (!isAttached()) return;
         screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
         visualizerView.setAlphaPercent(alphaPercent);
@@ -424,29 +431,48 @@ public class StatusBarVisualizerManager {
         visualizerView.setBandFractions(widthFraction, heightFraction);
         visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
         // The screensaver owns this judgement - it waits out a gap between tracks before it
-        // calls the music stopped, and asking NowPlaying here would skip that wait.
-        visualizerView.setScreensaverState(true, screensaverPaused);
         NowPlaying np = NowPlaying.getInstance(context);
-        visualizerView.setNowPlayingSource(np.isRadioSource() ? null : np);
+        np.refresh();
+        boolean isRadio = np.isRadioSource();
+        visualizerView.setScreensaverState(true, isRadio || screensaverPaused);
+        visualizerView.setNowPlayingSource((np.hasTrack() || np.isPlaying()) ? np : null);
+        np.setMetadataListener(visualizerView::postInvalidate);
         // The strip normally lets every touch through. For as long as it is the screensaver it has
         // to catch them: the tap that puts it away must not also press what is underneath, and the
         // drag zones need the whole gesture, not just its first event.
         layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+
+        // Focus, and therefore the Back key, only when the tuner is not the source.
+        //
+        // An overlay that never takes focus never sees a key, so Back can only be caught by taking
+        // it. But on radio the radio app's own overlay has to sit on top of the screensaver and
+        // keep its station buttons reachable - that is the contract in
+        // .agents/SCREENSAVER_RADIO_CONTRACT.md - and a focused window underneath is a second
+        // claimant on the input. Radio therefore does without Back, by the owner's decision, and
+        // everything else keeps it.
+        //
+        // Home cannot be caught this way or any other; the system claims it before any app.
+        if (isRadio) {
+            layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            visualizerView.setFocusableInTouchMode(false);
+            visualizerView.setOnKeyListener(null);
+        } else {
+            layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            visualizerView.setFocusableInTouchMode(true);
+            visualizerView.setOnKeyListener((view, keyCode, event) -> {
+                if (keyCode == android.view.KeyEvent.KEYCODE_BACK
+                        && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                    Runnable back = onBack;
+                    if (back != null) back.run();
+                    return true;
+                }
+                return false;
+            });
+            visualizerView.requestFocus();
+        }
         if (touchHandler != null) visualizerView.setOnTouchListener(touchHandler);
-        // Focusable only while it is the screensaver, and only so that Back reaches us. An
-        // overlay that never takes focus never sees a key. Home cannot be caught this way or any
-        // other - the system claims it before any app, focused or not.
-        layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        visualizerView.setFocusableInTouchMode(true);
-        visualizerView.setOnKeyListener((view, keyCode, event) -> {
-            if (keyCode == android.view.KeyEvent.KEYCODE_BACK
-                    && event.getAction() == android.view.KeyEvent.ACTION_UP) {
-                if (onBack != null) onBack.run();
-                return true;
-            }
-            return false;
-        });
-        visualizerView.requestFocus();
+        visualizerView.setVisibility(View.VISIBLE);
+        visualizerView.start();
         updateWindowGeometry();
     }
 
@@ -482,6 +508,7 @@ public class StatusBarVisualizerManager {
 
     /** Puts it back exactly as it was. */
     public void takeBackFromScreensaver() {
+        NowPlaying.getInstance(context).setMetadataListener(null);
         screensaverBounds = null;
         if (!isAttached()) return;
         visualizerView.setAlphaPercent(alphaPercent);
@@ -497,6 +524,7 @@ public class StatusBarVisualizerManager {
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         updateWindowGeometry();
+        evaluateVisibility();
     }
 
     public boolean isLentToScreensaver() {

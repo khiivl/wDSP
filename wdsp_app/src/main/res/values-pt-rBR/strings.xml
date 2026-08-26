@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -281,5 +281,22 @@
     <string name="screensaver_apps_none">Nenhum</string>
     <string name="screensaver_apps_pick">Escolher</string>
     <string name="screensaver_note">A navegação nunca é coberta.</string>
+    <string name="room_mic_spot_label">Onde o microfone está</string>
+    <string name="room_mic_spot_desc">Arraste o ponto para onde o microfone realmente está. Isso não muda nada na medição - apenas nos diz como ler o resultado e, sem isso, um microfone apoiado em um alto-falante parece exatamente com três quebrados.</string>
+    <string name="room_root_title">Você permitiu o acesso root?</string>
+    <string name="room_root_message">A medição não conseguiu obter root agora, então temos que perguntar.\n\nÉ necessário para exatamente uma ação: parar o processo em segundo plano que mantém o microfone aberto a 16 kHz. A plataforma mantém apenas um fluxo de entrada, então sem isso nossa gravação é anexada a ele e metade da medição é descartada - e nada no Android admite isso, a taxa de amostragem ainda mostra 48000.\n\nNada é desativado ou desinstalado; o assistente volta a ligar sozinho.</string>
+    <string name="room_root_yes">Sim, está ativado</string>
+    <string name="room_root_no">Não</string>
+    <string name="room_root_blocked">Então ative-o primeiro: abra o Magisk → Superuser, encontre o wDSP e defina-o como Permitir (ou Perguntar, e permita quando ele perguntar).\n\nA medição não foi iniciada. Execute-a novamente assim que o root for permitido.</string>
+    <string name="screensaver_info_h">Faixa da música</string>
+    <string name="room_mic_place_hint">Onde está fixado</string>
+    <string name="room_mic_place_windscreen">Para-brisa</string>
+    <string name="room_mic_place_visor">Sob o quebra-sol</string>
+    <string name="room_mic_place_mirror">Espelho retrovisor</string>
+    <string name="room_mic_place_dome">Luz de teto</string>
+    <string name="room_mic_place_wheel">Volante</string>
+    <string name="room_mic_place_dash">Painel</string>
+    <string name="room_mic_place_pillar_top">Coluna A, em cima</string>
+    <string name="room_mic_place_pillar_bottom">Coluna A, embaixo</string>
 </resources>
 

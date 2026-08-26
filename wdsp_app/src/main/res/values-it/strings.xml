@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Predefinito globale: %1$s</string>
     <string name="screensaver_apps_none">Nessuna</string>
     <string name="screensaver_apps_pick">Scegli</string>
     <string name="screensaver_note">La navigazione non viene mai coperta.</string>
+    <string name="room_mic_spot_label">Dov\'è il microfono</string>
+    <string name="room_mic_spot_desc">Trascina il punto dove si trova effettivamente il microfono. Non cambia nulla nella misurazione: ci dice come leggere il risultato e, senza di esso, un microfono appoggiato su un altoparlante sembra esattamente come tre rotti.</string>
+    <string name="room_root_title">Hai consentito l\'accesso root?</string>
+    <string name="room_root_message">La misurazione non ha potuto ottenere il root in questo momento, quindi dobbiamo chiederlo.\n\nÈ necessario per un\'unica azione: fermare il processo in background che tiene aperto il microfono a 16 kHz. La piattaforma mantiene un solo flusso di ingresso, quindi senza questo la nostra registrazione si attacca a quello e metà della misurazione viene scartata - e nulla in Android lo ammette, la frequenza di campionamento indica ancora 48000.\n\nNessuna funzione viene disabilitata o disinstallata; l\'assistente si riaccende da solo.</string>
+    <string name="room_root_yes">Sì, è attivo</string>
+    <string name="room_root_no">No</string>
+    <string name="room_root_blocked">Allora attivalo prima: apri Magisk → Superuser, trova wDSP e impostalo su Consenti (o Chiedi, e consentilo quando lo chiede).\n\nLa misurazione non è stata avviata. Eseguila di nuovo una volta che il root è consentito.</string>
+    <string name="screensaver_info_h">Striscia traccia</string>
+    <string name="room_mic_place_hint">A cosa è fissato</string>
+    <string name="room_mic_place_windscreen">Parabrezza</string>
+    <string name="room_mic_place_visor">Sotto l\'aletta parasole</string>
+    <string name="room_mic_place_mirror">Specchietto retrovisore</string>
+    <string name="room_mic_place_dome">Plafoniera</string>
+    <string name="room_mic_place_wheel">Volante</string>
+    <string name="room_mic_place_dash">Cruscotto</string>
+    <string name="room_mic_place_pillar_top">Montante A, in alto</string>
+    <string name="room_mic_place_pillar_bottom">Montante A, in basso</string>
 </resources>
 

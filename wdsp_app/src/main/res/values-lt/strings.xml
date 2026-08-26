@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Bendras numatytasis: %1$s</string>
     <string name="screensaver_apps_none">Nėra</string>
     <string name="screensaver_apps_pick">Rinktis</string>
     <string name="screensaver_note">Navigacija niekada neuždengiama.</string>
+    <string name="room_mic_spot_label">Kur yra mikrofonas</string>
+    <string name="room_mic_spot_desc">Vilkite tašką ten, kur iš tikrųjų yra mikrofonas. Tai nieko nekeičia pačiame matavime - tai tik nurodo mums, kaip nuskaityti rezultatą, o be to mikrofonas, padėtas ant vieno garsiakalbio, atrodo lygiai taip pat kaip trys sugedę.</string>
+    <string name="room_root_title">Ar leidote root prieigą?</string>
+    <string name="room_root_message">Matavimui ką tik nepavyko gauti root teisių, todėl turime paklausti.\n\nTai reikalinga tik vienam veiksmui: sustabdyti fone veikiantį procesą, kuris laiko mikrofoną atidarytą 16 kHz dažniu. Platforma palaiko tik vieną įvesties srautą, todėl be šito mūsų įrašas pridedamas prie jo ir pusė matavimo prarandama - ir niekas Android sistemoje to nepripažįsta, diskretizacijos dažnis vis dar rodo 48000.\n\nNiekas neišjungiama ir nepašalinama; asistentas vėl įsijungia pats.</string>
+    <string name="room_root_yes">Taip, įjungta</string>
+    <string name="room_root_no">Ne</string>
+    <string name="room_root_blocked">Tada pirmiausia jį įjunkite: atidarykite Magisk → Superuser, raskite wDSP ir nustatykite Leisti (arba Klausti, ir leiskite, kai paklaus).\n\nMatavimas nebuvo pradėtas. Paleiskite jį dar kartą, kai bus leista root prieiga.</string>
+    <string name="screensaver_info_h">Kūrinio juosta</string>
+    <string name="room_mic_place_hint">Prie ko pritvirtintas</string>
+    <string name="room_mic_place_windscreen">Priekinis stiklas</string>
+    <string name="room_mic_place_visor">Po skydeliu nuo saulės</string>
+    <string name="room_mic_place_mirror">Galinio vaizdo veidrodėlis</string>
+    <string name="room_mic_place_dome">Salono apšvietimas</string>
+    <string name="room_mic_place_wheel">Vairas</string>
+    <string name="room_mic_place_dash">Prietaisų skydelis</string>
+    <string name="room_mic_place_pillar_top">A-statramstis, viršuje</string>
+    <string name="room_mic_place_pillar_bottom">A-statramstis, apačioje</string>
 </resources>
 

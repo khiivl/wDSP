@@ -66,6 +66,25 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
+        <!--
+            Reconnaissance for the recorder, and temporary. Exported so it can be aimed from a
+            terminal at one player at a time while we find out which of them hand their audio
+            over - a question no manifest or package dump answers, because the refusal is made at
+            runtime. See CaptureProbe, whose javadoc carries the command line: it names a package
+            with a string extra and a length with an int extra.
+        -->
+        <activity
+            android:name="com.radiorubka.wdsp.CaptureConsentActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name="com.radiorubka.wdsp.CaptureProbeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
         <receiver
             android:name="com.radiorubka.wdsp.BootReceiver"
             android:enabled="true"

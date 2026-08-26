@@ -1907,6 +1907,172 @@
                     android:text="@string/room_measure_desc"
                     android:textSize="11sp" />
 
+                <!--
+                     Where the microphone is, pointed at rather than described.
+
+                     Four measurements came back before this existed and the two whose owner said
+                     nothing were the two that failed - both with the microphone sitting on one
+                     speaker, which is only visible afterwards by comparing arrival times. The same
+                     car picture the balance uses, so nobody has to learn a second one.
+                -->
+                <TextView
+                    android:id="@+id/label_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/room_mic_spot_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_mic_spot_desc"
+                    android:textSize="11sp" />
+
+                <!-- What the microphone is fitted to, by name.
+                     The dot on the car gives the spot on the floor plan, which is enough for the
+                     delays - they are geometry in the horizontal plane. It says nothing about
+                     height or about what is a couple of centimetres away, and that is what
+                     decides whether the first arrival is the speaker or a reflection off glass.
+                     A visor and a dome light can sit at almost the same x,y and behave nothing
+                     alike. Three of the first four reports came back reflection-dominated, so
+                     this is the half that was missing. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_room_mic_place"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/room_mic_place_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
+                    app:boxBackgroundColor="#20121820"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:boxStrokeWidth="1.2dp"
+                    app:endIconTint="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_room_mic_place"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:paddingVertical="8dp"
+                        android:textColor="@color/cyan_custom" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Built the way the fader is: a container of its own with the car filling it
+                     by ratio and the arrows pinned to the container's edges, the gap between them
+                     coming from the same two dimensions. Sizing the car itself instead - which is
+                     what this did at first - left it about a third of the size, because whatever
+                     height was left over after the arrows drove the width down through the ratio. -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/room_mic_car_height"
+                    android:layout_marginTop="6dp">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/img_room_mic_car"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="@dimen/fader_arrow_gap_h"
+                        android:layout_marginTop="@dimen/fader_arrow_gap_v"
+                        android:layout_marginEnd="@dimen/fader_arrow_gap_h"
+                        android:layout_marginBottom="@dimen/fader_arrow_gap_v"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:layerType="hardware"
+                        android:scaleType="fitCenter"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="W,300:520"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_car_cabriolet" />
+
+                    <com.radiorubka.wdsp.BalancePointerView
+                        android:id="@+id/room_mic_pointer"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_front"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="0"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_rear"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="180"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_left"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="270"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintEnd_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_right"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="90"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintStart_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -105,6 +105,87 @@ but on a smeared one it does: the same bench gave 1.32 ms full-band and 2.0 ms n
 clarity is low, the bandwidth becomes part of the answer - one more reason to treat a low-clarity
 delay as measured rather than known.
 
+### 🔴 AudioPlaybackCapture hands over the microphone, not the stream
+
+`AudioPlaybackCapture` exists here — the platform is API 29, exactly the version that introduced
+it — and it opens, reads happily, and returns audio. That audio is **the built-in microphone**.
+
+📻 Four measurements, any one of them enough:
+
+1. `dumpsys media.audio_flinger` during a capture: our track has `Source 1` (MIC) and sits on
+   `Input device: 0x80000004 (AUDIO_DEVICE_IN_BUILTIN_MIC)`. A `REMOTE_SUBMIX` input thread exists
+   but stays inactive.
+2. The level follows the **speakers**, not the digital side. MCU volume 6 → −13 dB; MCU volume 1 →
+   −31 dB, with Android's `STREAM_MUSIC` pinned at 15/15 both times.
+3. The mixer volume is not adjustable on this platform at all — the MCU and the external DSP do it
+   — so the digital level could not have changed. The capture changed by 18 dB anyway.
+4. With nothing playing it returns −30 dB of broadband noise at 99 % non-zero samples. That is a
+   cabin, not dither.
+
+Consequences:
+
+- `addMatchingUid()` and `addMatchingUsage()` **do nothing**, and cannot: there is no mix to
+  filter, only a microphone. Aiming at a package with no process at all still returns the music.
+- 📻 Same with and without the BitPerfect module (measured with the module disabled and the unit
+  rebooted), so it is not a policy the module replaces.
+- 📻 Freeing the microphone first does not help either. The assistant was stopped with root — the
+  bandwidth went from −64.6 dB to −5.8 dB above 8 kHz, so the microphone genuinely became ours —
+  and the capture still routed to `BUILTIN_MIC`. The "one input stream" rule is not the cause here.
+- 🪤 A tone your own app plays is always capturable by your own app, whatever its usage. Do not use
+  a self-played tone to conclude anything about whether another app's audio would be withheld.
+
+🧩 `r_submix` **is** present in `/vendor/etc/audio_policy_configuration.xml` and in the policy dump,
+so the cause is not a missing module. ❓ Where exactly the request is turned into a microphone open
+was not found.
+
+### What the kernel will tell you for free
+
+📻 `/proc/asound/card0/pcm<N>p/sub0/status` is `-r--r--r--` — **no root needed**, so it works on a
+stranger's unit. A stream that is open reads:
+
+```
+state: RUNNING
+owner_pid   : 9378
+delay       : 1840
+```
+
+🔴 The useful part is **which device**. Media travels on `pcm3p` (`FE_ST_FAST`) with the factory
+policies and on the primary one with the module installed — and that single fact says whether a
+session-0 effect can hear anything, which is otherwise discovered by attaching one and waiting for
+silence.
+
+🪤 Two things it will not tell you, both learned the hard way:
+
+- **Not who is playing.** `owner_pid` is the audio HAL — measured,
+  `/vendor/bin/hw/android.hardware.audio@2.0-service` — never the application. Same pid whoever
+  plays.
+- **Open is not audible.** The radio app writes PCM silence to hold the player role, so a device
+  reads `RUNNING` while what you hear is the analogue tuner. 🧩 Not fatal, because the radio
+  announces itself in its own properties: *open and not radio* is a sound answer to "is anything
+  really playing", and a cheaper one than waiting for an effect.
+
+Read by `PcmStatus`, and printed in wDSP's system report next to the analyser block, so that
+"nothing open", "fast open while the effect sits on session 0" and "open and sounding but silent to
+us" can be told apart from a stranger's file.
+
+### The hardware has its own taps, and they are switched off
+
+🔬 `/proc/asound/pcm` lists `00-16: FE_ST_DUMP` (capture only) and `00-10: FE_ST_LOOP`.
+`tinymix` exposes:
+
+```
+VBC_DUMP_POS        DUMP_POS_DAC0_E | DAC1_E | A1..A4 | V1..V2
+S_VBC_DUMP SWITCH   Off
+VBC_MUX_LOOP_DAC0   DAC0_SMTHDG_OUT | DAC0_MIX1_OUT | DAC0_EQ4_OUT | DAC0_MBDRC_OUT
+```
+
+⚠️ Both taps sit **after** the AudioFlinger mix, so neither can separate media from navigation —
+those share one output thread and one stream type. See
+[09-NAVIGATION-AND-BITPERFECT.md](09-NAVIGATION-AND-BITPERFECT.md).
+
+🪤 `tinymix` is present in `/system/bin`; `tinycap` is **not**. Reading `/dev/snd/pcmC0D16c` needs
+tinyalsa built into the app and either root or a module, because the node is `system:audio`.
+
 ### There is no way past the AGDSP with stock policies
 
 `/vendor/etc/audio_pcm.xml` promises a `recognition` path on PCM `device=0`

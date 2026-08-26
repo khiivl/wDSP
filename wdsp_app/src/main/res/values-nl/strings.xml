@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Globale standaard: %1$s</string>
     <string name="screensaver_apps_none">Geen</string>
     <string name="screensaver_apps_pick">Kiezen</string>
     <string name="screensaver_note">Navigatie wordt nooit bedekt.</string>
+    <string name="room_mic_spot_label">Waar de microfoon is</string>
+    <string name="room_mic_spot_desc">Sleep de stip naar de plek waar de microfoon zich daadwerkelijk bevindt. Het verandert niets aan de meting - het vertelt ons hoe we het resultaat moeten lezen, en zonder dat lijkt een microfoon die op één luidspreker ligt precies op drie kapotte.</string>
+    <string name="room_root_title">Heb je root-toegang toegestaan?</string>
+    <string name="room_root_message">De meting kon zojuist geen root krijgen, dus we moeten het vragen.\n\nHet is nodig voor precies één actie: het stoppen van het achtergrondproces dat de microfoon openhoudt op 16 kHz. Het platform behoudt slechts één invoerstroom, dus zonder dit wordt onze opname daaraan gekoppeld en gaat de helft van de meting verloren - en niets in Android geeft het toe, de samplefrequentie geeft nog steeds 48000 aan.\n\nEr wordt niets uitgeschakeld of verwijderd; de assistent start vanzelf weer op.</string>
+    <string name="room_root_yes">Ja, het staat aan</string>
+    <string name="room_root_no">Nee</string>
+    <string name="room_root_blocked">Zet het dan eerst aan: open Magisk → Superuser, zoek wDSP en zet het op Toestaan (of Vragen, en sta het toe wanneer erom wordt gevraagd).\n\nDe meting is niet gestart. Voer het opnieuw uit zodra root is toegestaan.</string>
+    <string name="screensaver_info_h">Nummerstrook</string>
+    <string name="room_mic_place_hint">Waar het aan bevestigd is</string>
+    <string name="room_mic_place_windscreen">Voorruit</string>
+    <string name="room_mic_place_visor">Onder de zonneklep</string>
+    <string name="room_mic_place_mirror">Achteruitkijkspiegel</string>
+    <string name="room_mic_place_dome">Plafondlamp</string>
+    <string name="room_mic_place_wheel">Stuurwiel</string>
+    <string name="room_mic_place_dash">Dashboard</string>
+    <string name="room_mic_place_pillar_top">A-stijl, boven</string>
+    <string name="room_mic_place_pillar_bottom">A-stijl, onder</string>
 </resources>
 

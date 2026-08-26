@@ -134,12 +134,24 @@ public final class HardwareProfile {
      * UIS7862, UIS7862S and the weaker UIS8581 - and when somebody reports that something is slow
      * or stutters, this is the first thing worth knowing.
      */
+    /**
+     * The board, and the Android version told twice.
+     *
+     * <h2>Why twice</h2>
+     *
+     * These ROMs lie about the release string. One arrived reporting {@code android=14} on hardware
+     * that cannot run it, and a whole diagnosis was built on that number before the owner said it
+     * was faked. {@code SDK_INT} is what the framework actually branches on and what a ROM builder
+     * has far less reason to touch, so printing both makes the lie visible instead of contagious:
+     * {@code android=14 (sdk 29)} says everything at a glance.
+     */
     public static String describeBoard() {
-        return String.format(Locale.US, "board=%s platform=%s model=%s android=%s",
+        return String.format(Locale.US, "board=%s platform=%s model=%s android=%s (sdk %d)",
                 orUnknown(systemProperty("ro.product.board")),
                 orUnknown(systemProperty("ro.board.platform")),
                 orUnknown(systemProperty("ro.product.model")),
-                android.os.Build.VERSION.RELEASE);
+                android.os.Build.VERSION.RELEASE,
+                android.os.Build.VERSION.SDK_INT);
     }
 
     /**

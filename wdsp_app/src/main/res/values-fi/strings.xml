@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Yleinen oletus: %1$s</string>
     <string name="screensaver_apps_none">Ei valittu</string>
     <string name="screensaver_apps_pick">Valitse</string>
     <string name="screensaver_note">Navigointia ei koskaan peitetä.</string>
+    <string name="room_mic_spot_label">Missä mikrofoni on</string>
+    <string name="room_mic_spot_desc">Vedä piste siihen, missä mikrofoni oikeasti on. Se ei muuta mittausta mitenkään – se vain kertoo meille, miten tulos luetaan. Ilman sitä yhden kaiuttimen päällä oleva mikrofoni näyttää täsmälleen kolmelta rikkinäiseltä.</string>
+    <string name="room_root_title">Oletko sallinut root-oikeudet?</string>
+    <string name="room_root_message">Mittaus ei saanut root-oikeuksia juuri nyt, joten meidän on kysyttävä.\n\nSitä tarvitaan tasan yhteen toimintoon: taustaprosessin pysäyttämiseen, joka pitää mikrofonin auki 16 kHz:ssä. Alusta ylläpitää vain yhtä tulovirtaa, joten ilman tätä tallennuksemme liitetään siihen ja puolet mittauksesta menee hukkaan – eikä mikään Androidissa myönnä sitä, näytteenottotaajuus näyttää edelleen 48000.\n\nMitään ei poisteta käytöstä tai asenneta pois; avustaja käynnistyy uudelleen itsekseen.</string>
+    <string name="room_root_yes">Kyllä, se on päällä</string>
+    <string name="room_root_no">Ei</string>
+    <string name="room_root_blocked">Laita se sitten ensin päälle: avaa Magisk → Superuser, etsi wDSP ja aseta se kohtaan Salli (tai Kysy, ja salli se, kun se kysyy).\n\nMittausta ei aloitettu. Suorita se uudelleen, kun root on sallittu.</string>
+    <string name="screensaver_info_h">Kappalenauha</string>
+    <string name="room_mic_place_hint">Mihin se on kiinnitetty</string>
+    <string name="room_mic_place_windscreen">Tuulilasi</string>
+    <string name="room_mic_place_visor">Aurinkosuojan alla</string>
+    <string name="room_mic_place_mirror">Taustapeili</string>
+    <string name="room_mic_place_dome">Kattovalo</string>
+    <string name="room_mic_place_wheel">Ohjauspyörä</string>
+    <string name="room_mic_place_dash">Kojelauta</string>
+    <string name="room_mic_place_pillar_top">A-pilari, ylhäällä</string>
+    <string name="room_mic_place_pillar_bottom">A-pilari, alhaalla</string>
 </resources>
 

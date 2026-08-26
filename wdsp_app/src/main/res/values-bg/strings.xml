@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@
     <string name="screensaver_apps_none">Няма избрани</string>
     <string name="screensaver_apps_pick">Избери</string>
     <string name="screensaver_note">Навигацията никога не се покрива.</string>
+    <string name="room_mic_spot_label">Къде е микрофонът</string>
+    <string name="room_mic_spot_desc">Плъзнете точката там, където всъщност е микрофонът. Това не променя нищо в измерването - просто ни казва как да четем резултата. Без нея микрофон, поставен върху един говорител, изглежда точно като три счупени.</string>
+    <string name="room_root_title">Разрешихте ли root достъп?</string>
+    <string name="room_root_message">Измерването не успя да получи root, затова се налага да попитаме.\n\nТой е необходим точно за едно действие: спиране на фоновия процес, който държи микрофона отворен на 16 kHz. Платформата поддържа само един входен поток, така че без това нашият запис се прикачва към него и половината измерване се губи - и нищо в Android не го съобщава, честотата на дискретизация все още показва 48000.\n\nНищо не се деактивира или деинсталира; асистентът се стартира сам отново.</string>
+    <string name="room_root_yes">Да, включен е</string>
+    <string name="room_root_no">Не</string>
+    <string name="room_root_blocked">Тогава първо го включете: отворете Magisk → Superuser, намерете wDSP и му дайте разрешение (или задайте да пита и разрешете, когато попита).\n\nИзмерването не е стартирано. Стартирайте го отново, след като root бъде разрешен.</string>
+    <string name="screensaver_info_h">Лента на песента</string>
+    <string name="room_mic_place_hint">Към какво е прикрепен</string>
+    <string name="room_mic_place_windscreen">Предно стъкло</string>
+    <string name="room_mic_place_visor">Под сенника</string>
+    <string name="room_mic_place_mirror">Огледало за обратно виждане</string>
+    <string name="room_mic_place_dome">Плафон</string>
+    <string name="room_mic_place_wheel">Волан</string>
+    <string name="room_mic_place_dash">Табло</string>
+    <string name="room_mic_place_pillar_top">А-колона, горе</string>
+    <string name="room_mic_place_pillar_bottom">А-колона, долу</string>
 </resources>
 

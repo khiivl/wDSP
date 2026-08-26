@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -271,5 +271,22 @@
     <string name="screensaver_apps_none">Ingen</string>
     <string name="screensaver_apps_pick">Välj</string>
     <string name="screensaver_note">Navigering täcks aldrig.</string>
+    <string name="room_mic_spot_label">Var mikrofonen är</string>
+    <string name="room_mic_spot_desc">Dra pricken till där mikrofonen faktiskt sitter. Det ändrar ingenting i själva mätningen - det berättar för oss hur vi ska läsa resultatet, och utan det ser en mikrofon som ligger på en högtalare ut precis som tre trasiga.</string>
+    <string name="room_root_title">Har du tillåtit root-åtkomst?</string>
+    <string name="room_root_message">Mätningen kunde inte få root just nu, så vi måste fråga.\n\nDet behövs för exakt en åtgärd: att stoppa bakgrundsprocessen som håller mikrofonen öppen vid 16 kHz. Plattformen upprätthåller bara en inmatningsström, så utan detta fästs vår inspelning vid den och halva mätningen kastas bort - och inget i Android erkänner det, samplingsfrekvensen visar fortfarande 48000.\n\nInget inaktiveras eller avinstalleras; assistenten startar om sig själv.</string>
+    <string name="room_root_yes">Ja, den är på</string>
+    <string name="room_root_no">Nej</string>
+    <string name="room_root_blocked">Slå då på den först: öppna Magisk → Superuser, hitta wDSP och ställ in den på Tillåt (eller Fråga, och tillåt när den frågar).\n\nMätningen startades inte. Kör den igen när root är tillåtet.</string>
+    <string name="screensaver_info_h">Spårremsa</string>
+    <string name="room_mic_place_hint">Vad den är monterad på</string>
+    <string name="room_mic_place_windscreen">Vindruta</string>
+    <string name="room_mic_place_visor">Under solskyddet</string>
+    <string name="room_mic_place_mirror">Backspegel</string>
+    <string name="room_mic_place_dome">Kupébelysning</string>
+    <string name="room_mic_place_wheel">Ratt</string>
+    <string name="room_mic_place_dash">Instrumentbräda</string>
+    <string name="room_mic_place_pillar_top">A-stolpe, uppe</string>
+    <string name="room_mic_place_pillar_bottom">A-stolpe, nere</string>
 </resources>
 

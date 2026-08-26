@@ -4,10 +4,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.File;
@@ -238,6 +241,124 @@ public final class RoomMeasurement {
      private static final String SCRATCH_PRESET = "wDSP Flat";
 
      private static final String PREFS_NAME = "EqPresets";
+
+    /**
+     * Where the owner says the microphone is, on the same −1..1 axes the balance control uses:
+     * left/right and rear/front, 0 being the middle of the car.
+     *
+     * <h2>Why the answer has to be asked for</h2>
+     *
+     * It changes nothing about the sweep. It changes everything about reading the result. Four
+     * measurements came back from testers before this existed; the two that failed were the two
+     * whose owner had said nothing about placement, and both turned out to have the microphone
+     * sitting on one speaker. From inside the numbers that looks exactly like three speakers that
+     * are not working — the only way to tell was to compare arrival times afterwards by hand and
+     * notice they fitted a corner. Asked once, with a finger, it is known.
+     */
+    private static final String PREF_MIC_LR = "room_mic_lr";
+    private static final String PREF_MIC_FR = "room_mic_fr";
+
+    /**
+     * What the microphone is fitted to, chosen from a list rather than described.
+     *
+     * <h2>Why a name and not just the dot</h2>
+     *
+     * The dot gives the spot on the floor plan, and that is enough for the delays - they are
+     * geometry in the horizontal plane. It says nothing about height, or about what sits a couple
+     * of centimetres away, and that is what decides whether the first arrival is the loudspeaker
+     * or a reflection. A sun visor and a dome light can be at almost the same point on the plan
+     * and behave nothing alike: one has a hard flap and the windscreen right beside the capsule,
+     * the other has the roof behind it and little else.
+     *
+     * <p>📻 Three of the first four reports from strangers came back reflection-dominated, and the
+     * arrival times could not say why. A name can: it carries the expected height and the nearest
+     * reflector, which is exactly what reading a clarity figure needs - and what an automatic
+     * version of this will need before it can decide anything on its own.
+     *
+     * <p>Stored as the index into this array, so the report and any later analysis agree on what
+     * the owner meant. Adding to the end is safe; reordering is not.
+     */
+    private static final int[] MIC_PLACES = {
+            R.string.room_mic_place_windscreen,
+            R.string.room_mic_place_visor,
+            R.string.room_mic_place_pillar_top,
+            R.string.room_mic_place_pillar_bottom,
+            R.string.room_mic_place_mirror,
+            R.string.room_mic_place_dome,
+            R.string.room_mic_place_wheel,
+            R.string.room_mic_place_dash,
+    };
+
+    private static final String PREF_MIC_PLACE = "room_mic_place";
+
+    /** The list as the owner sees it, in order. */
+    public static String[] micPlaceNames(Context context) {
+        String[] out = new String[MIC_PLACES.length];
+        for (int i = 0; i < MIC_PLACES.length; i++) out[i] = context.getString(MIC_PLACES[i]);
+        return out;
+    }
+
+    /** {@code -1} when nobody has said yet, which the report prints as "not stated". */
+    public static int micPlace(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(PREF_MIC_PLACE, -1);
+    }
+
+    public static void setMicPlace(Context context, int index) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(PREF_MIC_PLACE, index).apply();
+    }
+
+    private static String micPlaceDescription(Context context) {
+        int i = micPlace(context);
+        if (i < 0 || i >= MIC_PLACES.length) return "not stated";
+        // In English regardless of the owner's language: the report is read by us, and a place
+        // name in a language nobody on this end reads is worse than no name at all.
+        return englishPlace(i);
+    }
+
+    private static String englishPlace(int i) {
+        switch (i) {
+            case 0: return "windscreen";
+            case 1: return "under the sun visor";
+            case 2: return "A-pillar, top";
+            case 3: return "A-pillar, bottom";
+            case 4: return "rear-view mirror";
+            case 5: return "dome light";
+            case 6: return "steering wheel";
+            case 7: return "dashboard";
+            default: return "not stated";
+        }
+    }
+
+    public static float micSpotLeftRight(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getFloat(PREF_MIC_LR, 0f);
+    }
+
+    public static float micSpotFrontRear(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getFloat(PREF_MIC_FR, 0f);
+    }
+
+    public static void setMicSpot(Context context, float leftRight, float frontRear) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putFloat(PREF_MIC_LR, leftRight)
+                .putFloat(PREF_MIC_FR, frontRear)
+                .apply();
+    }
+
+    /** The spot in words, for the report - "front right", "centre", and so on. */
+    private static String micSpotDescription(Context context) {
+        float lr = micSpotLeftRight(context);
+        float fr = micSpotFrontRear(context);
+        // A third of the way out counts as "that side"; nearer the middle than that is the middle,
+        // because nobody places a microphone to the centimetre and pretending otherwise would give
+        // the reader more confidence than the gesture deserves.
+        String frontRear = fr > 0.33f ? "front" : fr < -0.33f ? "rear" : "middle";
+        String leftRight = lr > 0.33f ? "right" : lr < -0.33f ? "left" : "centre";
+        return String.format(Locale.US, "%s %s  (lr %+.2f, fr %+.2f)", frontRear, leftRight, lr, fr);
+    }
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
@@ -406,6 +527,8 @@ public final class RoomMeasurement {
         public String reportPath;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
+        /** What the platform answered when the sweep asked to be the player. */
+        public String focus;
         /** Where the sweep stopped - lower than usual when the microphone could not be freed. */
         public float sweepTopHz = SWEEP_END_HZ;
         /** True when a channel needs more delay than the hardware can apply - a long vehicle. */
@@ -617,6 +740,25 @@ public final class RoomMeasurement {
             applyRouting(prefs, preset, channels[0]);
             sleep(ROUTING_SETTLE_MS);
 
+            // Ask to be the player before making a sound.
+            //
+            // 🔴 This was missing, and it is the best explanation anybody has for the oldest
+            // complaint about this feature: the first measurement on a unit fails, and then it
+            // works after a Bluetooth call, or simply the next day. Both of those force the
+            // platform to re-establish who owns the audio.
+            //
+            // On this platform the volume only reaches the amplifier for the source named in
+            // sys.current.vol.type, and one failing tester's report had that property **unset**.
+            // A track that never asked for focus never makes the platform decide it is the
+            // player, so the sweep can be written, mixed, and never actually amplified - and from
+            // the microphone that looks exactly like three speakers that are not connected.
+            //
+            // Held for the whole pass rather than per sweep: dropping and retaking it four times
+            // would invite the platform to re-route between channels, which is the one thing this
+            // measurement must not have happen in the middle of it.
+            result.focus = requestFocus(context);
+            Log.i(TAG, "audio focus for the sweep: " + result.focus);
+
             record = openMicrophone();
             if (record == null) {
                 result.error = "the microphone could not be opened";
@@ -685,6 +827,7 @@ public final class RoomMeasurement {
             if (effects != null) effects.restore();
             closeQuietly(track);
             closeQuietly(record);
+            abandonFocus(context);
         }
 
         // The whole recording is kept as one file. Four separate ones would have to be lined up
@@ -1045,6 +1188,135 @@ public final class RoomMeasurement {
         return record;
     }
 
+    /**
+     * Held for the whole measurement, so the platform treats us as the player that owns the sound.
+     *
+     * <p>Static because the pass is static, and there is only ever one measurement at a time -
+     * {@link #isRunning()} guarantees it.
+     */
+    private static android.media.AudioFocusRequest focusRequest;
+
+    /**
+     * What happened to the focus while the sweep ran, or null if nothing did.
+     *
+     * <p>Worth a line in the report on its own. A measurement that was interrupted by a navigation
+     * prompt, a Bluetooth call or the vendor's own chime looks exactly like a measurement of a
+     * badly behaved car, and nothing else in the file distinguishes the two.
+     */
+    private static volatile String focusLostDuringPass;
+
+    /** @return what the platform answered, in words, for the report. */
+    private static String requestFocus(Context context) {
+        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return "no AudioManager";
+        focusLostDuringPass = null;
+        try {
+            // 🔴 The listener is not optional decoration. setWillPauseWhenDucked - and
+            // setAcceptsDelayedFocusGain with it - make build() throw IllegalStateException
+            // unless a listener was set, and the throw is what the first version of this did:
+            // every report carried "audio focus: could not ask: java.lang.IllegalStateException:
+            // Can't use delayed focus or pause on duck without a listener", the pass ran with no
+            // focus at all, and the fix for "the first measurement fails" was never once in
+            // effect. Measured on the owner's own unit, 26.08.2026.
+            //
+            // GAIN rather than one of the transient kinds: a transient grant tells everyone else
+            // to duck and come back, and what is wanted here is for this to be the player for the
+            // next half minute. Anything that was playing should stop, not lower itself into the
+            // measurement.
+            AudioManager.OnAudioFocusChangeListener listener = change -> {
+                String what;
+                switch (change) {
+                    case AudioManager.AUDIOFOCUS_LOSS: what = "taken away"; break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: what = "taken briefly"; break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: what = "asked to duck"; break;
+                    case AudioManager.AUDIOFOCUS_GAIN: what = null; break;
+                    default: what = "change " + change; break;
+                }
+                if (what != null && isRunning()) focusLostDuringPass = what;
+                Log.i(TAG, "audio focus changed during the pass: " + change);
+            };
+            focusRequest = new android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setWillPauseWhenDucked(true)
+                    .setOnAudioFocusChangeListener(listener,
+                            new Handler(Looper.getMainLooper()))
+                    .build();
+            int answer = am.requestAudioFocus(focusRequest);
+            switch (answer) {
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED: return "granted";
+                case AudioManager.AUDIOFOCUS_REQUEST_DELAYED: return "delayed";
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED: return "REFUSED";
+                default: return "answer " + answer;
+            }
+        } catch (Throwable t) {
+            focusRequest = null;
+            return "could not ask: " + t;
+        }
+    }
+
+    private static void abandonFocus(Context context) {
+        android.media.AudioFocusRequest request = focusRequest;
+        focusRequest = null;
+        if (request == null) return;
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) am.abandonAudioFocusRequest(request);
+        } catch (Throwable t) {
+            Log.w(TAG, "could not give the focus back", t);
+        }
+    }
+
+    /**
+     * Says out loud when a speaker looks wired backwards - and stays quiet when it cannot tell.
+     *
+     * <h2>Why this is worth printing and why it is fenced</h2>
+     *
+     * Polarity is a sign rather than a level, so no microphone can get it wrong - but only if the
+     * sign it read belongs to the direct sound. On a channel heard mainly through the cabin the
+     * detector locks onto a reflection, and a reflection off glass arrives inverted. Two testers'
+     * reports came back with exactly one channel marked -1, and in both cases it was a channel the
+     * same report had already called "mostly reflections". Told plainly, that sends somebody under
+     * the dashboard looking for wiring nobody crossed.
+     *
+     * <p>So the comparison is made only among channels heard directly, and only when there are at
+     * least two of them to disagree.
+     */
+    private static String wiringVerdict(Result result) {
+        int positive = 0;
+        int negative = 0;
+        StringBuilder inverted = new StringBuilder();
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok || !c.confident) continue;
+            if (c.polarity < 0) {
+                negative++;
+                if (inverted.length() > 0) inverted.append(", ");
+                inverted.append(c.label);
+            } else {
+                positive++;
+            }
+        }
+        if (positive + negative < 2) {
+            return "";
+        }
+        if (negative == 0) {
+            return "WIRING: every speaker heard directly is in phase with the others.\n";
+        }
+        if (positive == 0) {
+            // All of them inverted is not a fault in the car: it is one convention against
+            // another, somewhere between the amplifier and the measurement, and it sounds the
+            // same. Say so rather than send four speakers to be rewired.
+            return "WIRING: every speaker heard directly reads inverted. That is a convention, "
+                    + "not a fault - all four together sound identical to all four the other way "
+                    + "round. Nothing to do.\n";
+        }
+        return "WIRING: " + inverted + " reads inverted while the others do not - that speaker is "
+                + "most likely connected the wrong way round, and it will thin out the bass in "
+                + "the middle of the car. Worth checking the two wires at that speaker.\n";
+    }
+
     private static AudioTrack openTrack(int samples) {
         int minBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT);
@@ -1110,6 +1382,14 @@ public final class RoomMeasurement {
             sb.append(HardwareProfile.describeBoard()).append('\n');
             sb.append(HardwareProfile.screenDescription(context)).append('\n');
             if (result.microphone != null) sb.append(result.microphone).append('\n');
+            sb.append("microphone placed: ").append(micSpotDescription(context))
+                    .append(", on the ").append(micPlaceDescription(context)).append('\n');
+            if (result.focus != null) {
+                sb.append("audio focus: ").append(result.focus);
+                String lost = focusLostDuringPass;
+                if (lost != null) sb.append(" - then ").append(lost).append(" DURING the pass");
+                sb.append('\n');
+            }
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(amplitude)
                     .append(" sweep=").append(seconds).append(" s")
@@ -1126,10 +1406,19 @@ public final class RoomMeasurement {
             for (int i = 0; i < result.channels.length; i++) {
                 ChannelResult c = result.channels[i];
                 if (c == null) continue;
+                // Polarity is a sign rather than a level, so no microphone can get it wrong - but
+                // only if the sign it read belongs to the direct sound. On a channel heard mainly
+                // through the cabin the detector locks onto a reflection, and a reflection off
+                // glass inverts. Two testers' reports came back with exactly one channel marked
+                // -1, both of them channels the same report had already called "mostly
+                // reflections", and printing that as flatly as a 24 dB one sends people looking
+                // for wiring nobody crossed. Say which readings can be trusted.
+                String polarity = String.format(Locale.US, "polarity %+d", c.polarity);
+                if (c.ok && !c.confident) polarity += "?";
                 sb.append(String.format(Locale.US,
                         "%-12s arrival %8.2f ms  clarity %5.1f dB  prominence %8.0f  "
-                                + "polarity %+d  peak %6.1f dBFS%s\n",
-                        c.label, c.arrivalMs, c.clarityDb, c.prominence, c.polarity,
+                                + "%-12s peak %6.1f dBFS%s\n",
+                        c.label, c.arrivalMs, c.clarityDb, c.prominence, polarity,
                         20 * Math.log10(c.recordedPeak + 1e-9f),
                         !c.ok ? "   NOT HEARD"
                               : c.confident ? "   heard directly"
@@ -1144,6 +1433,7 @@ public final class RoomMeasurement {
                 }
                 sb.append("\n\n");
             }
+            sb.append(wiringVerdict(result));
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
             if (result.reflectionDominated) {
@@ -1151,7 +1441,10 @@ public final class RoomMeasurement {
                         + "directly - the clarity figure says which. That is normal with the "
                         + "microphone on the dashboard, where the windscreen sits a hand's width "
                         + "away. Their delays are still much better than none, but they may be "
-                        + "short. Where the microphone is fitted matters here: please say.\n");
+                        + "short, and their polarity is marked with a question mark because a "
+                        + "reflection off glass can arrive inverted - do not go looking for "
+                        + "crossed wiring on the strength of one of those. Where the microphone "
+                        + "is fitted matters here: please say.\n");
             }
             if (result.beyondHardware) {
                 sb.append("NOTE: at least one speaker needs more delay than the hardware can "

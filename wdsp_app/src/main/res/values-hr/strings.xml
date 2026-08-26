@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Globalno zadano: %1$s</string>
     <string name="screensaver_apps_none">Ništa</string>
     <string name="screensaver_apps_pick">Odaberi</string>
     <string name="screensaver_note">Navigacija se nikad ne prekriva.</string>
+    <string name="room_mic_spot_label">Gdje je mikrofon</string>
+    <string name="room_mic_spot_desc">Povucite točku na mjesto gdje se mikrofon zapravo nalazi. To ne mijenja ništa na samom mjerenju - govori nam kako očitati rezultat, a bez toga mikrofon postavljen na jedan zvučnik izgleda točno kao tri pokvarena.</string>
+    <string name="room_root_title">Jeste li omogućili root pristup?</string>
+    <string name="room_root_message">Mjerenje trenutno nije moglo dobiti root, pa moramo pitati.\n\nPotreban je za točno jednu radnju: zaustavljanje pozadinskog procesa koji drži mikrofon otvorenim na 16 kHz. Platforma održava samo jedan ulazni tok, pa se bez toga naš zapis veže za njega i pola mjerenja se baca - a ništa u Androidu to ne priznaje, brzina uzorkovanja i dalje pokazuje 48000.\n\nNišta nije onemogućeno ili deinstalirano; asistent se sam ponovno pokreće.</string>
+    <string name="room_root_yes">Da, uključen je</string>
+    <string name="room_root_no">Ne</string>
+    <string name="room_root_blocked">Onda ga prvo uključite: otvorite Magisk → Superuser, pronađite wDSP i postavite na Dopusti (ili Pitaj, pa dopustite kad pita).\n\nMjerenje nije pokrenuto. Pokrenite ga ponovno kada root bude dopušten.</string>
+    <string name="screensaver_info_h">Traka pjesme</string>
+    <string name="room_mic_place_hint">Na što je pričvršćen</string>
+    <string name="room_mic_place_windscreen">Vjetrobransko staklo</string>
+    <string name="room_mic_place_visor">Ispod štitnika za sunce</string>
+    <string name="room_mic_place_mirror">Retrovizor</string>
+    <string name="room_mic_place_dome">Svjetlo u kabini</string>
+    <string name="room_mic_place_wheel">Volan</string>
+    <string name="room_mic_place_dash">Armaturna ploča</string>
+    <string name="room_mic_place_pillar_top">A-stup, gore</string>
+    <string name="room_mic_place_pillar_bottom">A-stup, dolje</string>
 </resources>
 

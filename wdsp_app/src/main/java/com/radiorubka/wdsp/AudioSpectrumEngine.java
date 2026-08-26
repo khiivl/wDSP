@@ -513,6 +513,63 @@ public class AudioSpectrumEngine {
 
     /** How long the attached session may stay silent while media plays before we re-resolve. */
     private static final long SILENCE_TOLERANCE_MS = 4000;
+
+    /**
+     * What the analyser is doing, in the words a report needs.
+     *
+     * <h2>Why the report has to carry this</h2>
+     *
+     * "The visualiser does not work" arrives from units we cannot borrow, and everything that could
+     * cause it is invisible from the outside: whether an effect could be attached at all, which
+     * session it landed on, and whether that session is carrying anything. Without those three the
+     * only honest answer is a guess, and one such guess has already cost this project a fortnight.
+     *
+     * <p>Kept to facts. A session of 0 with audio playing means the effect went onto the primary
+     * output while the music is elsewhere - the classic dead attach on factory policies. A session
+     * that is not 0 but silent means the sweep picked the wrong one. Nothing attached at all means
+     * the platform refused, which is what newer Android does with another application's session.
+     */
+    public String describeForReport() {
+        StringBuilder sb = new StringBuilder();
+        boolean attached = visualizer != null;
+        sb.append("  effect attached  = ").append(attached).append('\n');
+        sb.append("  session          = ").append(currentSessionId);
+        if (attached && currentSessionId == 0) sb.append("  (session 0 - the output mix)");
+        sb.append('\n');
+        long since = lastSignalTime == 0 ? -1 : System.currentTimeMillis() - lastSignalTime;
+        sb.append("  signal seen      = ")
+                .append(since < 0 ? "never since the effect was created"
+                        : (since < SILENCE_TOLERANCE_MS ? "yes, " + since + " ms ago"
+                        : "not for " + since + " ms"))
+                .append('\n');
+        sb.append("  native analyzer  = ").append(NativeAnalyzer.isAvailable()).append('\n');
+        try {
+            sb.append("  capture size     = ")
+                    .append(Arrays.toString(Visualizer.getCaptureSizeRange()))
+                    .append("  max rate ").append(Visualizer.getMaxCaptureRate()).append(" mHz\n");
+        } catch (Throwable t) {
+            sb.append("  capture limits   = could not be read: ").append(t).append('\n');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Whether the attached session has delivered something other than silence just now.
+     *
+     * <h2>What this is for</h2>
+     *
+     * It settles, with evidence, whether the sound in the cabin is coming from the analogue tuner.
+     * On this platform the tuner never reaches AudioFlinger at all - it is a wire from the tuner to
+     * the amplifier - so anything the spectrum engine can hear is, by definition, not it.
+     *
+     * <p>That matters because the alternative test is a list of package names, and a radio app
+     * playing an internet stream is the same package doing something completely different. Asked
+     * by name it answers "radio"; asked by ear it answers "there is audio here". The ear is right.
+     */
+    public boolean hasSignalNow() {
+        return lastSignalTime != 0
+                && System.currentTimeMillis() - lastSignalTime < SILENCE_TOLERANCE_MS;
+    }
     /** Floor between two resolutions, so a genuinely quiet track cannot start a sweep loop. */
     private static final long RESOLVE_COOLDOWN_MS = 20000;
     /**
@@ -555,7 +612,6 @@ public class AudioSpectrumEngine {
         // So whatever start() could not do without a resolver has to be done here.
         synchronized (this) {
             if (visualizer != null) {
-                lastSignalTime = System.currentTimeMillis();
                 watchdogHandler.removeCallbacks(watchdog);
                 watchdogHandler.postDelayed(watchdog, WATCHDOG_PERIOD_MS);
             }
@@ -620,6 +676,9 @@ public class AudioSpectrumEngine {
      */
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
+        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
+            return;
+        }
         lastResolveTime = System.currentTimeMillis();
         Log.i(TAG, "Resolving audio session: " + reason);
 
@@ -635,10 +694,12 @@ public class AudioSpectrumEngine {
                 lastResolveFoundNothing = sessionId < 0;
                 if (sessionId < 0) {
                     Log.w(TAG, "No session carrying audio found; staying on " + previousSession);
-                } else if (sessionId != previousSession) {
-                    Log.i(TAG, "Switching capture session: " + previousSession + " -> " + sessionId);
+                } else {
+                    if (sessionId != previousSession) {
+                        Log.i(TAG, "Switching capture session: " + previousSession + " -> " + sessionId);
+                    }
+                    lastSignalTime = System.currentTimeMillis();
                 }
-                lastSignalTime = System.currentTimeMillis();
                 currentSessionId = target;
                 if (!listeners.isEmpty() && visualizer == null) {
                     startInternal(target);
@@ -885,9 +946,13 @@ public class AudioSpectrumEngine {
      * zero for the whole of Bluetooth playback.
      */
     private boolean isMediaPlaybackActive() {
+        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
+            return false;
+        }
         String source = getActivePlayerPackage();
         if (source != null && !source.isEmpty()
-                && !"nothing".equalsIgnoreCase(source) && !"Unknown".equalsIgnoreCase(source)) {
+                && !"nothing".equalsIgnoreCase(source) && !"Unknown".equalsIgnoreCase(source)
+                && !NowPlaying.isRadioPackage(source)) {
             return true;
         }
         String type = VolumeHelper.getActivePlayerType();
@@ -963,7 +1028,6 @@ public class AudioSpectrumEngine {
         armWatchdog();
         if (sessionResolver != null && sessionResolver.isResolving()) return;
         startInternal(currentSessionId);
-        lastSignalTime = System.currentTimeMillis();
         requestResolve("capture started");
     }
 
@@ -972,12 +1036,15 @@ public class AudioSpectrumEngine {
         if (watchdogHandler == null) {
             watchdogHandler = new Handler(Looper.getMainLooper());
         }
-        lastSignalTime = System.currentTimeMillis();
         watchdogHandler.removeCallbacks(watchdog);
         watchdogHandler.postDelayed(watchdog, WATCHDOG_PERIOD_MS);
     }
 
     private void startInternal(int sessionId) {
+        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
+            visualizer = null;
+            return;
+        }
         try {
             Visualizer v = new Visualizer(sessionId);
 

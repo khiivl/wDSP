@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@
     <string name="screensaver_apps_none">Valimata</string>
     <string name="screensaver_apps_pick">Vali</string>
     <string name="screensaver_note">Navigatsiooni ei kaeta kunagi.</string>
+    <string name="room_mic_spot_label">Kus mikrofon asub</string>
+    <string name="room_mic_spot_desc">Lohistage punkt sinna, kus mikrofon tegelikult asub. See ei muuda mõõtmise juures midagi – see ütleb meile, kuidas tulemust lugeda, ja ilma selleta näeb ühel kõlaril lebav mikrofon välja täpselt nagu kolm katkist kõlarit.</string>
+    <string name="room_root_title">Kas olete lubanud root-juurdepääsu?</string>
+    <string name="room_root_message">Mõõtmine ei saanud praegu root-õigusi, seega peame küsima.\n\nSeda on vaja täpselt ühe toimingu jaoks: taustaprotsessi peatamiseks, mis hoiab mikrofoni avatuna sagedusel 16 kHz. Platvormil on ainult üks sisendvoog, nii et ilma selleta lisatakse meie salvestus sellele ja pool mõõtmisest läheb kaduma – ja miski Androidis ei tunnista seda, valimisagedus näitab endiselt 48000.\n\nMidagi ei keelata ega desinstallita; assistent käivitub ise uuesti.</string>
+    <string name="room_root_yes">Jah, see on sees</string>
+    <string name="room_root_no">Ei</string>
+    <string name="room_root_blocked">Siis lülitage see kõigepealt sisse: avage Magisk → Superuser, leidke wDSP ja määrake see valikule Luba (või Küsi ja lubage, kui see küsib).\n\nMõõtmist ei käivitatud. Käivitage see uuesti, kui root on lubatud.</string>
+    <string name="screensaver_info_h">Loo riba</string>
+    <string name="room_mic_place_hint">Mille külge see on kinnitatud</string>
+    <string name="room_mic_place_windscreen">Tuuleklaas</string>
+    <string name="room_mic_place_visor">Päikesesirmi all</string>
+    <string name="room_mic_place_mirror">Tahavaatepeegel</string>
+    <string name="room_mic_place_dome">Laevalgusti</string>
+    <string name="room_mic_place_wheel">Rool</string>
+    <string name="room_mic_place_dash">Armatuurlaud</string>
+    <string name="room_mic_place_pillar_top">A-piilar, üleval</string>
+    <string name="room_mic_place_pillar_bottom">A-piilar, all</string>
 </resources>
 

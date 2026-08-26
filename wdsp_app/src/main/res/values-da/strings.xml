@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Global standard: %1$s</string>
     <string name="screensaver_apps_none">Ingen valgt</string>
     <string name="screensaver_apps_pick">Vælg</string>
     <string name="screensaver_note">Navigation dækkes aldrig.</string>
+    <string name="room_mic_spot_label">Hvor mikrofonen er</string>
+    <string name="room_mic_spot_desc">Træk prikken til der, hvor mikrofonen faktisk sidder. Det ændrer intet ved selve målingen - det fortæller os, hvordan vi skal læse resultatet, og uden det ser en mikrofon, der ligger på én højttaler, ud præcis som tre ødelagte.</string>
+    <string name="room_root_title">Har du tilladt root-adgang?</string>
+    <string name="room_root_message">Målingen kunne ikke få root netop nu, så vi er nødt til at spørge.\n\nDet er nødvendigt til præcis én handling: at stoppe baggrundsprocessen, der holder mikrofonen åben ved 16 kHz. Platformen opretholder kun én input-stream, så uden det bliver vores optagelse knyttet til den, og halvdelen af målingen går tabt - og intet i Android indrømmer det, samplefrekvensen viser stadig 48000.\n\nIntet deaktiveres eller afinstalleres; assistenten starter selv igen.</string>
+    <string name="room_root_yes">Ja, den er slået til</string>
+    <string name="room_root_no">Nej</string>
+    <string name="room_root_blocked">Så slå det til først: åbn Magisk → Superuser, find wDSP, og indstil den til Tillad (eller Spørg, og tillad det, når den spørger).\n\nMålingen blev ikke startet. Kør den igen, når root er tilladt.</string>
+    <string name="screensaver_info_h">Nummer-stribe</string>
+    <string name="room_mic_place_hint">Hvad den er monteret på</string>
+    <string name="room_mic_place_windscreen">Forrude</string>
+    <string name="room_mic_place_visor">Under solskærmen</string>
+    <string name="room_mic_place_mirror">Bakspejl</string>
+    <string name="room_mic_place_dome">Loftslys</string>
+    <string name="room_mic_place_wheel">Rat</string>
+    <string name="room_mic_place_dash">Instrumentbræt</string>
+    <string name="room_mic_place_pillar_top">A-stolpe, top</string>
+    <string name="room_mic_place_pillar_bottom">A-stolpe, bund</string>
 </resources>
 

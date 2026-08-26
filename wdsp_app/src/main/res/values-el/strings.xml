@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@
     <string name="screensaver_apps_none">Κανένα</string>
     <string name="screensaver_apps_pick">Επιλογή</string>
     <string name="screensaver_note">Η πλοήγηση δεν καλύπτεται ποτέ.</string>
+    <string name="room_mic_spot_label">Πού βρίσκεται το μικρόφωνο</string>
+    <string name="room_mic_spot_desc">Σύρετε την κουκκίδα εκεί όπου πραγματικά βρίσκεται το μικρόφωνο. Δεν αλλάζει τίποτα στη μέτρηση - μας λέει πώς να διαβάσουμε το αποτέλεσμα, και χωρίς αυτό, ένα μικρόφωνο πάνω σε ένα ηχείο μοιάζει ακριβώς με τρία χαλασμένα.</string>
+    <string name="room_root_title">Έχετε επιτρέψει πρόσβαση root;</string>
+    <string name="room_root_message">Η μέτρηση δεν μπόρεσε να πάρει πρόσβαση root μόλις τώρα, οπότε πρέπει να ρωτήσουμε.\n\nΧρειάζεται ακριβώς για μία ενέργεια: τη διακοπή της διεργασίας στο παρασκήνιο που κρατά το μικρόφωνο ανοιχτό στα 16 kHz. Η πλατφόρμα διατηρεί μόνο μία ροή εισόδου, οπότε χωρίς αυτό η εγγραφή μας συνδέεται σε αυτήν και η μισή μέτρηση χάνεται - και τίποτα στο Android δεν το παραδέχεται, ο ρυθμός δειγματοληψίας δείχνει ακόμα 48000.\n\nΤίποτα δεν απενεργοποιείται ή απεγκαθίσταται. Ο βοηθός επανέρχεται από μόνος του.</string>
+    <string name="room_root_yes">Ναι, είναι ενεργοποιημένο</string>
+    <string name="room_root_no">Όχι</string>
+    <string name="room_root_blocked">Τότε ενεργοποιήστε το πρώτα: ανοίξτε το Magisk → Superuser, βρείτε το wDSP και ορίστε το σε Να επιτρέπεται (ή Ερώτηση, και επιτρέψτε το όταν ρωτήσει).\n\nΗ μέτρηση δεν ξεκίνησε. Εκτελέστε την ξανά μόλις επιτραπεί το root.</string>
+    <string name="screensaver_info_h">Λωρίδα κομματιού</string>
+    <string name="room_mic_place_hint">Πού είναι τοποθετημένο</string>
+    <string name="room_mic_place_windscreen">Παρμπρίζ</string>
+    <string name="room_mic_place_visor">Κάτω από το σκίαστρο</string>
+    <string name="room_mic_place_mirror">Καθρέπτης</string>
+    <string name="room_mic_place_dome">Πλαφονιέρα</string>
+    <string name="room_mic_place_wheel">Τιμόνι</string>
+    <string name="room_mic_place_dash">Ταμπλό</string>
+    <string name="room_mic_place_pillar_top">Κολόνα Α, πάνω</string>
+    <string name="room_mic_place_pillar_bottom">Κολόνα Α, κάτω</string>
 </resources>
 

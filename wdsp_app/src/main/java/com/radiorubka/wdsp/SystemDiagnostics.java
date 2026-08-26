@@ -114,15 +114,47 @@ public final class SystemDiagnostics {
             {"persist.sys.radio_volume", "fallback when sys.radio.vol is unset (framework default 12)"},
             {"persist.sys.phone_volume", "fallback when sys.call.vol is unset (framework default 12)"},
             {"persist.sys.aux_volume", "fallback when sys.aux.vol is unset (framework default 12)"},
-            {"persist.sys.navi_volume", "volume restored to after a wake-up"},
     };
 
     private static final String[][] NAVIGATION = {
+            // The whole of a spoken prompt's level, measured while driving on 22.08.2026 and
+            // then confirmed by a report from a running unit: this and the STREAM_SYSTEM index
+            // are the same number, and SYSTEM is the only stream on the speaker not sitting at
+            // full scale. Setting the Android stream by hand looks like it does nothing, because
+            // the platform re-applies this one when navigation starts.
+            {"persist.sys.navi_volume", "the prompt volume - it IS the STREAM_SYSTEM index, mirrored here"},
             {"persist.sys.navi_remix", "mix navigation over music instead of pausing it (default true)"},
             {"persist.sys.navi_remix_ratio", "0..100, sent to the MCU as ratio*32/100 (default 60)"},
             {"sys.qf.lower.volume.by.navi", "where the ducked music volume is parked for restoring"},
             {"sys.qf.navi_state", "navigation is speaking"},
             {"persist.sys.navi_boot", "navigation starts with the unit"},
+    };
+
+    /**
+     * Whether a policy-replacing module is installed, and roughly which.
+     *
+     * <h2>Why by property and not by looking</h2>
+     *
+     * The module itself lives under {@code /data/adb}, which is 0700 root - unreadable to us on
+     * the units that matter, which are the ones whose owner never granted root. But it announces
+     * itself: everything below is set from its own {@code system.prop} and from nowhere else on a
+     * factory unit. Read together they say the module is there, and the audio-path block says what
+     * it did.
+     *
+     * 🔴 The one that matters most is the pinned volume. The platform ducks the music for a
+     * navigation prompt by stepping the Android volume index down, and the module both pins that
+     * index to the top and flattens the curve underneath it - so the stepping moves nothing.
+     * Measured on two units, 24-25.08.2026.
+     */
+    private static final String[][] AUDIO_MODULE = {
+            {"persist.audio.hifi.enable", "set by the BitPerfect module; absent on a factory unit"},
+            {"persist.vendor.audio.hifi", "the same, vendor side"},
+            {"aaudio.mmap_policy", "2 means the module opened the low-latency path"},
+            {"aaudio.mmap_exclusive_policy", "the same, exclusive mode"},
+            {"audio.offload.disable", "the module turns compressed offload off"},
+            {"persist.qf.arm.default.volume", "the module pins this, which is why the index sits at the ceiling"},
+            {"persist.vendor.audio_hal.period_size", "HAL period the module asks for"},
+            {"ro.vendor.audio.sdk.fluencetype", "vendor voice processing; the module sets none"},
     };
 
     private static final String[][] AUDIO_PATH = {
@@ -202,13 +234,21 @@ public final class SystemDiagnostics {
         appendProps(sb, "PLATFORM VOLUME - defaults it falls back to", VOLUME_DEFAULTS);
         appendProps(sb, "NAVIGATION MIXING", NAVIGATION);
         appendProps(sb, "AUDIO PATH", AUDIO_PATH);
+        appendProps(sb, "AUDIO POLICY MODULE - is one installed, and what it asked for",
+                AUDIO_MODULE);
         appendProps(sb, "BLUETOOTH AND CALLS", BLUETOOTH_AND_CALL);
 
         appendVendorVolume(sb);
         appendAndroidVolume(sb, context);
+        // Where the policy actually puts things, and what it charges them in dB. This is the part
+        // that differs across the fleet while everything above it looks the same, so it is the
+        // part worth having from a stranger's unit. See AudioPolicySnapshot.
+        AudioPolicySnapshot.append(sb, context);
         appendDevices(sb, context);
         appendActiveAudio(sb, context);
 
+        appendPcm(sb);
+        appendSpectrum(sb);
         appendNowPlaying(sb, context);
 
         if (withMicrophoneProbe) {
@@ -218,6 +258,10 @@ public final class SystemDiagnostics {
         }
 
         sb.append(timeline());
+
+        // Last, because nobody reads it and everybody needs it: the policy files themselves, so a
+        // unit that behaves unlike any other can be diffed against one that behaves.
+        AudioPolicySnapshot.appendRawPolicies(sb);
         return sb.toString();
     }
 
@@ -267,6 +311,41 @@ public final class SystemDiagnostics {
      * only the package name. When somebody reports that the screensaver shows no track, this says
      * which of those is the case without a single question being asked.
      */
+    /**
+     * What the spectrum analyser managed to attach to, and whether it is hearing anything.
+     *
+     * <p>This is the whole of "the visualiser does not work", written down. Read it together with
+     * NOW PLAYING below: audio playing with nothing attached, or attached to session 0, or attached
+     * and silent, are three different faults with three different causes.
+     */
+    /**
+     * Which sound-card stream the kernel has open, and on which device.
+     *
+     * <p>Sits next to the analyser block on purpose: read together they separate the three ways
+     * the visualiser can look dead. Nothing open at all is one fault; the fast device open while
+     * the effect sits on session 0 is another, and the commonest; open and sounding while the
+     * effect hears silence is a third. See PcmStatus for what this cannot tell you.
+     */
+    private static void appendPcm(StringBuilder sb) {
+        sb.append("SOUND CARD - what is open right now\n");
+        try {
+            sb.append(PcmStatus.describeForReport());
+        } catch (Throwable t) {
+            sb.append("  could not be read: ").append(t).append('\n');
+        }
+        sb.append('\n');
+    }
+
+    private static void appendSpectrum(StringBuilder sb) {
+        sb.append("SPECTRUM ANALYSER\n");
+        try {
+            sb.append(AudioSpectrumEngine.getInstance().describeForReport());
+        } catch (Throwable t) {
+            sb.append("  could not be asked: ").append(t).append('\n');
+        }
+        sb.append('\n');
+    }
+
     private static void appendNowPlaying(StringBuilder sb, Context context) {
         NowPlaying np = NowPlaying.getInstance(context);
         sb.append("NOW PLAYING\n");

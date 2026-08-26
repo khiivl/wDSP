@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@ Globální výchozí: %1$s</string>
     <string name="screensaver_apps_none">Nevybráno</string>
     <string name="screensaver_apps_pick">Vybrat</string>
     <string name="screensaver_note">Navigace není nikdy překryta.</string>
+    <string name="room_mic_spot_label">Kde je mikrofon</string>
+    <string name="room_mic_spot_desc">Přetáhněte bod tam, kde se mikrofon skutečně nachází. Měření to nijak nezmění - jen nám to řekne, jak číst výsledek, bez toho mikrofon ležící na jednom reproduktoru vypadá přesně jako tři rozbité.</string>
+    <string name="room_root_title">Povolili jste root přístup?</string>
+    <string name="room_root_message">Měření se nyní nepodařilo získat root, takže se musíme zeptat.\n\nJe to potřeba přesně k jedné věci: zastavení procesu na pozadí, který udržuje mikrofon otevřený na 16 kHz. Platforma udržuje pouze jeden vstupní proud, takže bez toho se náš záznam připojí k němu a polovina měření se ztratí - a Android to nijak nedá najevo, vzorkovací frekvence stále ukazuje 48000.\n\nNic se nedeaktivuje ani neodinstalovává; asistent se sám znovu spustí.</string>
+    <string name="room_root_yes">Ano, je zapnutý</string>
+    <string name="room_root_no">Ne</string>
+    <string name="room_root_blocked">Pak ho nejprve zapněte: otevřete Magisk → Superuser, najděte wDSP a nastavte na Povolit (nebo Dotázat se a povolte, až se zeptá).\n\nMěření nebylo spuštěno. Spusťte jej znovu, jakmile bude root povolen.</string>
+    <string name="screensaver_info_h">Pruh skladby</string>
+    <string name="room_mic_place_hint">K čemu je připevněn</string>
+    <string name="room_mic_place_windscreen">Čelní sklo</string>
+    <string name="room_mic_place_visor">Pod sluneční clonou</string>
+    <string name="room_mic_place_mirror">Zpětné zrcátko</string>
+    <string name="room_mic_place_dome">Stropní světlo</string>
+    <string name="room_mic_place_wheel">Volant</string>
+    <string name="room_mic_place_dash">Palubní deska</string>
+    <string name="room_mic_place_pillar_top">A-sloupek, nahoře</string>
+    <string name="room_mic_place_pillar_bottom">A-sloupek, dole</string>
 </resources>
 

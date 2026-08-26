@@ -247,6 +247,13 @@
     <string name="debug_section_title">Diagnostics</string>
     <string name="room_measure_label">Cabin measurement</string>
     <string name="room_measure_desc">Plays a sweep through each speaker in turn and measures when the sound arrives and whether it is in phase. Takes about half a minute. Engine off, doors shut, normal listening volume.</string>
+    <string name="room_mic_spot_label">Where the microphone is</string>
+    <string name="room_mic_spot_desc">Drag the dot to where the microphone actually sits. It changes nothing about the sweep - it tells us how to read the result, and without it a microphone lying on one speaker looks exactly like three broken ones.</string>
+    <string name="room_root_title">Have you allowed root access?</string>
+    <string name="room_root_message">The measurement could not get root just now, so this has to be asked.\n\nIt is needed for exactly one action: stopping the background process that holds the microphone open at 16 kHz. The platform keeps only one input stream, so without it our recording is attached to that one and half the sweep is thrown away - and nothing in Android admits it, the sample rate still reads 48000.\n\nNothing is disabled or uninstalled; the assistant comes back on its own.</string>
+    <string name="room_root_yes">Yes, it is on</string>
+    <string name="room_root_no">No</string>
+    <string name="room_root_blocked">Then turn it on first: open Magisk → Superuser, find wDSP, and set it to Grant (or Prompt, and allow it when it asks).\n\nThe measurement was not started. Run it again once root is allowed.</string>
     <string name="room_measure_button">Measure</string>
     <string name="room_measure_running">Measuring: %1$s</string>
     <string name="room_measure_done">Done — send the result?</string>
@@ -284,4 +291,13 @@
     <string name="screensaver_note">Navigation is never covered, whatever is chosen here.</string>
     <string name="mic_denied_title">No microphone</string>
     <string name="mic_denied">Android is not asking for the microphone any more, because the permission was refused earlier. Nothing can be measured without it.\n\nOpen Settings → Apps → wDSP → Permissions and allow the microphone, then try again.</string>
+    <string name="room_mic_place_hint">What it is fitted to</string>
+    <string name="room_mic_place_windscreen">Windscreen</string>
+    <string name="room_mic_place_visor">Under the sun visor</string>
+    <string name="room_mic_place_mirror">Rear-view mirror</string>
+    <string name="room_mic_place_dome">Dome light</string>
+    <string name="room_mic_place_wheel">Steering wheel</string>
+    <string name="room_mic_place_dash">Dashboard</string>
+    <string name="room_mic_place_pillar_top">A-pillar, top</string>
+    <string name="room_mic_place_pillar_bottom">A-pillar, bottom</string>
 </resources>

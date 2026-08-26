@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">wDSP</string>
 
     <!-- Presets -->
@@ -283,5 +283,22 @@
     <string name="screensaver_apps_none">Ništa</string>
     <string name="screensaver_apps_pick">Izaberi</string>
     <string name="screensaver_note">Navigacija se nikad ne prekriva.</string>
+    <string name="room_mic_spot_label">Gde se nalazi mikrofon</string>
+    <string name="room_mic_spot_desc">Prevucite tačku na mesto gde se mikrofon zapravo nalazi. To ne menja ništa u merenju - samo nam govori kako da pročitamo rezultat, a bez toga mikrofon postavljen na jedan zvučnik izgleda tačno kao tri pokvarena.</string>
+    <string name="room_root_title">Da li ste dozvolili root pristup?</string>
+    <string name="room_root_message">Merenje trenutno nije moglo da dobije root, pa moramo da pitamo.\n\nPotreban je za tačno jednu radnju: zaustavljanje pozadinskog procesa koji drži mikrofon otvorenim na 16 kHz. Platforma održava samo jedan ulazni tok, pa se bez toga naš zapis vezuje za njega i polovina merenja se baca - a ništa u Androidu to ne priznaje, brzina uzorkovanja i dalje pokazuje 48000.\n\nNišta nije onemogućeno ili deinstalirano; asistent se sam ponovo uključuje.</string>
+    <string name="room_root_yes">Da, uključen je</string>
+    <string name="room_root_no">Ne</string>
+    <string name="room_root_blocked">Onda ga prvo uključite: otvorite Magisk → Superuser, pronađite wDSP i podesite na Dozvoli (ili Pitaj, pa dozvolite kad pita).\n\nMerenje nije pokrenuto. Pokrenite ga ponovo kada root bude dozvoljen.</string>
+    <string name="screensaver_info_h">Трака песме</string>
+    <string name="room_mic_place_hint">Na šta je pričvršćen</string>
+    <string name="room_mic_place_windscreen">Vetrobransko staklo</string>
+    <string name="room_mic_place_visor">Ispod štitnika za sunce</string>
+    <string name="room_mic_place_mirror">Retrovizor</string>
+    <string name="room_mic_place_dome">Svetlo u kabini</string>
+    <string name="room_mic_place_wheel">Volan</string>
+    <string name="room_mic_place_dash">Kontrolna tabla</string>
+    <string name="room_mic_place_pillar_top">A-stub, gore</string>
+    <string name="room_mic_place_pillar_bottom">A-stub, dole</string>
 </resources>
 

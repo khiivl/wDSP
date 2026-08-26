@@ -105,6 +105,22 @@ public final class NowPlaying {
      */
     private Runnable onStopped;
 
+    public interface MetadataListener {
+        void onMetadataChanged();
+    }
+    private MetadataListener metadataListener;
+
+    public void setMetadataListener(MetadataListener listener) {
+        this.metadataListener = listener;
+    }
+
+    public void notifyMetadataChanged() {
+        MetadataListener l = this.metadataListener;
+        if (l != null) {
+            main.post(l::onMetadataChanged);
+        }
+    }
+
     public void setOnStarted(Runnable listener) {
         this.onStarted = listener;
     }
@@ -146,6 +162,23 @@ public final class NowPlaying {
 
     public synchronized Bitmap art() {
         return art;
+    }
+
+    /**
+     * The part of {@link #line()} without the artist: album and title, in reading order.
+     *
+     * <p>Split out because only this half is worth scrolling. The artist changes rarely, is short,
+     * and reads as a label on the strip rather than as part of the sentence - sliding it past
+     * makes the eye chase the one word it already knew. Null when there is nothing but an artist.
+     */
+    public synchronized String titleLine() {
+        StringBuilder sb = new StringBuilder();
+        if (notEmpty(album) && !album.equalsIgnoreCase(title)) sb.append(album);
+        if (notEmpty(title)) {
+            if (sb.length() > 0) sb.append(" — ");
+            sb.append(title);
+        }
+        return sb.length() == 0 ? null : sb.toString();
     }
 
     /** One line for the marquee, in the order a person reads it. Null when there is nothing. */
@@ -205,39 +238,82 @@ public final class NowPlaying {
         }
     }
 
+    /**
+     * Whether there is anything worth putting on the strip at all.
+     *
+     * <p>Separate from {@link #isPlaying()} on purpose: a paused player still has a track, and the
+     * screensaver wants to keep showing it under the clock rather than blanking the line the
+     * moment the music stops.
+     */
+    public synchronized boolean hasTrack() {
+        return notEmpty(title) || notEmpty(artist) || notEmpty(album) || art != null;
+    }
+
+    /**
+     * The application the sound belongs to, for anyone who has to name it to the platform.
+     *
+     * <p>The MCU service needs it to label the preset, and playback capture is filtered by uid, so
+     * recording one player and nothing else starts with knowing which package that is.
+     */
+    public synchronized String playerPackage() {
+        return currentPackage();
+    }
+
     private synchronized String currentPackage() {
-        if (notEmpty(playerPackage)) return playerPackage;
+        if (notEmpty(playerPackage)) {
+            return playerPackage;
+        }
         String prop = HardwareProfile.systemProperty(PROP_AUDIO_SRC);
         return prop == null ? "" : prop;
     }
 
-    /**
-     * Whether the sound is coming from a tuner rather than from a file or a stream.
-     *
-     * <h2>Why the screensaver has to know</h2>
-     *
-     * Because there is nothing to draw. Radio does not pass through AudioFlinger on this platform
-     * - it is an analogue path from the tuner to the amplifier - so the spectrum engine is
-     * measuring silence and the bars would be an honest-looking lie.
-     *
-     * <p>And because the track line is not ours to show. The radio app has its own overlay with
-     * the station logo and the RDS line, and that is something its author sells; wDSP repeating it
-     * underneath, from the metadata that same app publishes by the standard, would be taking it.
-     * On radio the screensaver shows the clock and stops there.
-     *
-     * <p>Three signals, any one of which is enough: the app's own radio flag, the MCU's channel,
-     * and the package that owns the sound. They do not all work on every unit - the channel never
-     * changes on some, and a third-party tuner app is not in the list - so the test is generous
-     * rather than clever.
-     */
-    public boolean isRadioSource() {
-        if (isTrue(HardwareProfile.systemProperty(PROP_RADIO_STATUS))) return true;
-        if (CHANNEL_RADIO.equals(HardwareProfile.systemProperty(PROP_SOUND_CHANNEL))) return true;
-        String pkg = currentPackage();
-        for (String radio : RADIO_PACKAGES) {
-            if (pkg.startsWith(radio)) return true;
+    public static boolean isRadioPackage(String pkg) {
+        if (pkg == null || pkg.isEmpty()) return false;
+        for (String r : RADIO_PACKAGES) {
+            if (pkg.startsWith(r)) return true;
         }
         return false;
+    }
+
+    /**
+     * Whether the sound is coming from the analogue tuner rather than from a file or a stream.
+     *
+     * <h2>What turns on it</h2>
+     *
+     * The bars. Radio does not pass through AudioFlinger on this platform - it is a wire from the
+     * tuner to the amplifier - so the spectrum engine is measuring silence, and bars drawn from
+     * that would be a convincing lie. On radio the screensaver shows the clock and whatever the
+     * radio app publishes about the station instead.
+     *
+     * <h2>Three lines, and why it used to be twenty</h2>
+     *
+     * <ol>
+     *   <li><b>Heard before asked.</b> If the spectrum engine is hearing anything, whatever is
+     *       playing cannot be the tuner - radio never reaches the mixer. This has to come first
+     *       and cannot be dropped: the radio app raises its radio flag for an internet stream too,
+     *       and a stream does go through the mixer. Reported from a car: the strip showed a full
+     *       spectrum while the screensaver put up a clock.</li>
+     *   <li><b>The MCU channel.</b> Evidence <em>for</em> the tuner and never against it - 2
+     *       decides, anything else says nothing. It reads reliably only where the BitPerfect
+     *       policies are installed and wanders on a factory unit, but the asymmetry costs nothing:
+     *       a stray 2 while music plays never gets here, because there is signal.</li>
+     *   <li><b>The radio flag</b>, which the radio app now sets properly.</li>
+     * </ol>
+     *
+     * <p>📻 Verified on the wire 25.08.2026 with the tuner playing: {@code sys.qf.radio.status} was
+     * true, {@code sys.qf.sound.channel} was 2, and the volume type and owning package agreed.
+     *
+     * <p>What used to follow - the volume type, the media session's package, and two flavours of
+     * {@code last_audio_src} matched against a list of radio package names - is gone. The list was
+     * the rung that lied: a radio app playing a stream is the same package doing something else
+     * entirely, and it is what put a clock over a working spectrum. With the properties honest,
+     * naming the app adds nothing except a way to be wrong.
+     */
+    public boolean isRadioSource() {
+        if (AudioSpectrumEngine.getInstance().hasSignalNow()) return false;
+
+        if (CHANNEL_RADIO.equals(HardwareProfile.systemProperty(PROP_SOUND_CHANNEL))) return true;
+        return isTrue(HardwareProfile.systemProperty(PROP_RADIO_STATUS));
     }
 
     private static boolean isTrue(String s) {
@@ -330,7 +406,45 @@ public final class NowPlaying {
             synchronized (NowPlaying.this) {
                 if (path.equals(artKey)) art = bitmap;
             }
+            notifyMetadataChanged();
         }, "wDSP_AlbumArt").start();
+    }
+
+    /**
+     * Loads cover art from a content://, file://, or http(s):// URI asynchronously.
+     */
+    private void loadArtFromUri(String uriStr) {
+        if (uriStr == null || uriStr.isEmpty()) return;
+        if (uriStr.equals(artKey)) return;
+        artKey = uriStr;
+        art = null;
+        new Thread(() -> {
+            Bitmap bitmap = null;
+            try {
+                if (uriStr.startsWith("content://") || uriStr.startsWith("android.resource://")) {
+                    android.net.Uri uri = android.net.Uri.parse(uriStr);
+                    try (java.io.InputStream is = context.getContentResolver().openInputStream(uri)) {
+                        if (is != null) bitmap = android.graphics.BitmapFactory.decodeStream(is);
+                    }
+                } else if (uriStr.startsWith("file://") || uriStr.startsWith("/")) {
+                    String path = uriStr.startsWith("file://") ? uriStr.substring(7) : uriStr;
+                    bitmap = android.graphics.BitmapFactory.decodeFile(path);
+                } else if (uriStr.startsWith("http://") || uriStr.startsWith("https://")) {
+                    java.net.URL url = new java.net.URL(uriStr);
+                    java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setConnectTimeout(3000);
+                    conn.setReadTimeout(3000);
+                    try (java.io.InputStream is = conn.getInputStream()) {
+                        if (is != null) bitmap = android.graphics.BitmapFactory.decodeStream(is);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+            synchronized (NowPlaying.this) {
+                if (uriStr.equals(artKey)) art = bitmap;
+            }
+            notifyMetadataChanged();
+        }, "wDSP_UriArt").start();
     }
 
     // -------------------------------------------------------------------------------------------
@@ -342,6 +456,21 @@ public final class NowPlaying {
         String enabled = Settings.Secure.getString(context.getContentResolver(),
                 "enabled_notification_listeners");
         return enabled != null && enabled.contains(context.getPackageName());
+    }
+
+    public void refresh() {
+        main.post(() -> {
+            if (sessions == null) {
+                listenToSessions();
+            } else if (canReadSessions()) {
+                try {
+                    ComponentName listener = new ComponentName(context, NotificationAccess.class);
+                    adoptSession(sessions.getActiveSessions(listener));
+                } catch (Throwable t) {
+                    Log.w(TAG, "could not refresh active sessions", t);
+                }
+            }
+        });
     }
 
     private void listenToSessions() {
@@ -371,7 +500,13 @@ public final class NowPlaying {
                     best = c;
                     break;
                 }
-                if (best == null) best = c;
+                if (best == null) {
+                    String pkg = c.getPackageName();
+                    boolean isRadio = isRadioPackage(pkg);
+                    if (!isRadio || isPlaying) {
+                        best = c;
+                    }
+                }
             }
         }
         if (controller != null && controllerCallback != null) {
@@ -381,7 +516,18 @@ public final class NowPlaying {
             }
         }
         controller = best;
-        if (controller == null) return;
+        if (controller == null) {
+            synchronized (this) {
+                playerPackage = "";
+                title = null;
+                artist = null;
+                album = null;
+                durationMs = 0;
+                art = null;
+                artKey = null;
+            }
+            return;
+        }
         controllerCallback = new MediaController.Callback() {
             @Override
             public void onMetadataChanged(MediaMetadata metadata) {
@@ -397,21 +543,62 @@ public final class NowPlaying {
         synchronized (this) {
             playerPackage = controller.getPackageName() == null ? "" : controller.getPackageName();
         }
+        Log.i(TAG, "adoptSession adopted: " + playerPackage);
         acceptMetadata(controller.getMetadata());
         acceptState(controller.getPlaybackState());
     }
 
     private synchronized void acceptMetadata(MediaMetadata metadata) {
-        if (metadata == null) return;
+        if (metadata == null) {
+            title = null;
+            artist = null;
+            album = null;
+            durationMs = 0;
+            art = null;
+            artKey = null;
+            return;
+        }
         title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
+        if (!notEmpty(title)) title = metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE);
+        if (!notEmpty(title) && metadata.getDescription() != null && metadata.getDescription().getTitle() != null) {
+            title = metadata.getDescription().getTitle().toString();
+        }
         artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
         if (!notEmpty(artist)) artist = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST);
+        if (!notEmpty(artist)) artist = metadata.getString(MediaMetadata.METADATA_KEY_AUTHOR);
+        if (!notEmpty(artist)) artist = metadata.getString(MediaMetadata.METADATA_KEY_COMPOSER);
+        if (!notEmpty(artist)) artist = metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE);
+        if (!notEmpty(artist) && metadata.getDescription() != null && metadata.getDescription().getSubtitle() != null) {
+            artist = metadata.getDescription().getSubtitle().toString();
+        }
         album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM);
+        if (!notEmpty(album)) album = metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION);
+        if (!notEmpty(album) && metadata.getDescription() != null && metadata.getDescription().getDescription() != null) {
+            album = metadata.getDescription().getDescription().toString();
+        }
         durationMs = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION);
         Bitmap bitmap = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
         if (bitmap == null) bitmap = metadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
+        if (bitmap == null && metadata.getDescription() != null) {
+            bitmap = metadata.getDescription().getIconBitmap();
+        }
         art = bitmap;
-        artKey = null;
+        if (art == null) {
+            String uriStr = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI);
+            if (uriStr == null) uriStr = metadata.getString(MediaMetadata.METADATA_KEY_ART_URI);
+            if (uriStr == null && metadata.getDescription() != null && metadata.getDescription().getIconUri() != null) {
+                uriStr = metadata.getDescription().getIconUri().toString();
+            }
+            if (uriStr != null && !uriStr.isEmpty()) {
+                loadArtFromUri(uriStr);
+            } else {
+                artKey = null;
+            }
+        } else {
+            artKey = null;
+        }
+        Log.i(TAG, "acceptMetadata title=" + title + ", artist=" + artist + ", album=" + album);
+        notifyMetadataChanged();
     }
 
     private void acceptState(PlaybackState state) {
@@ -423,9 +610,18 @@ public final class NowPlaying {
             playing = state.getState() == PlaybackState.STATE_PLAYING;
             positionMs = state.getPosition();
             positionTakenAt = System.currentTimeMillis();
+            if (isRadioPackage(playerPackage) && !playing) {
+                title = null;
+                artist = null;
+                album = null;
+                art = null;
+                artKey = null;
+                playerPackage = "";
+            }
             started = playing && !was;
             stopped = !playing && was;
         }
+        notifyMetadataChanged();
         if (started && onStarted != null) main.post(onStarted);
         if (stopped && onStopped != null) main.post(onStopped);
     }

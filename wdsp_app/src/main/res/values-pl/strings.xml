@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">wDSP</string>
 
@@ -271,5 +271,22 @@
     <string name="screensaver_apps_none">Brak</string>
     <string name="screensaver_apps_pick">Wybierz</string>
     <string name="screensaver_note">Nawigacja nigdy nie jest zasłaniana.</string>
+    <string name="room_mic_spot_label">Gdzie znajduje się mikrofon</string>
+    <string name="room_mic_spot_desc">Przeciągnij kropkę w miejsce, gdzie faktycznie znajduje się mikrofon. To niczego nie zmienia w samym pomiarze - po prostu mówi nam, jak odczytać wynik, a bez tego mikrofon leżący na jednym głośniku wygląda dokładnie jak trzy zepsute.</string>
+    <string name="room_root_title">Czy zezwoliłeś na dostęp root?</string>
+    <string name="room_root_message">Pomiar nie mógł w tej chwili uzyskać dostępu root, więc musimy zapytać.\n\nJest to potrzebne dokładnie do jednej czynności: zatrzymania procesu w tle, który utrzymuje mikrofon otwarty przy 16 kHz. Platforma utrzymuje tylko jeden strumień wejściowy, więc bez tego nasze nagranie jest do niego dołączane i połowa pomiaru jest odrzucana - i nic w Androidzie się do tego nie przyznaje, częstotliwość próbkowania nadal wskazuje 48000.\n\nNic nie jest wyłączane ani odinstalowywane; asystent włącza się z powrotem sam.</string>
+    <string name="room_root_yes">Tak, jest włączony</string>
+    <string name="room_root_no">Nie</string>
+    <string name="room_root_blocked">Więc najpierw go włącz: otwórz Magisk → Superuser, znajdź wDSP i ustaw na Zezwól (lub Zapytaj i zezwól, gdy zapyta).\n\nPomiar nie został uruchomiony. Uruchom go ponownie, gdy root będzie dozwolony.</string>
+    <string name="screensaver_info_h">Pasek utworu</string>
+    <string name="room_mic_place_hint">Do czego jest przymocowany</string>
+    <string name="room_mic_place_windscreen">Przednia szyba</string>
+    <string name="room_mic_place_visor">Pod osłoną przeciwsłoneczną</string>
+    <string name="room_mic_place_mirror">Lusterko wsteczne</string>
+    <string name="room_mic_place_dome">Lampka sufitowa</string>
+    <string name="room_mic_place_wheel">Kierownica</string>
+    <string name="room_mic_place_dash">Deska rozdzielcza</string>
+    <string name="room_mic_place_pillar_top">Słupek A, góra</string>
+    <string name="room_mic_place_pillar_bottom">Słupek A, dół</string>
 </resources>
 

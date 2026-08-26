@@ -1199,6 +1199,28 @@ public class SettingsActivity extends AppCompatActivity {
         measureButton.setOnClickListener(v -> startRoomMeasurement());
         sendButton.setOnClickListener(v -> saveRoomMeasurement());
 
+        // Where the microphone is, pointed at rather than typed.
+        //
+        // Four measurements arrived before this existed. The two whose owner said nothing were the
+        // two that failed, both with the microphone sitting on top of one speaker - which from
+        // here is indistinguishable from three dead speakers until the arrival times are compared
+        // by hand. The same car picture the balance control uses, so there is nothing new to learn.
+        BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
+        if (micSpot != null) {
+            micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
+                    RoomMeasurement.micSpotFrontRear(this));
+            micSpot.setOnBalanceChangeListener((lr, fr) -> RoomMeasurement.setMicSpot(this, lr, fr));
+
+            // Arrows as well as the drag, the way the balance control has them. A finger on a
+            // 190dp car is worth about a tenth of the cabin; somebody who knows the microphone is
+            // just left of centre cannot say that by dragging, and should not have to.
+            wireMicPlace();
+            wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
+            wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
+            wireMicNudge(micSpot, R.id.btn_room_mic_left, -MIC_NUDGE, 0f);
+            wireMicNudge(micSpot, R.id.btn_room_mic_right, +MIC_NUDGE, 0f);
+        }
+
         tvSystemReportStatus = findViewById(R.id.tv_system_report_status);
         TextView reportButton = findViewById(R.id.btn_system_report);
         TouchGlow.attach(reportButton);
@@ -1221,6 +1243,104 @@ public class SettingsActivity extends AppCompatActivity {
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
+        askForRootThenMeasure();
+    }
+
+    /**
+     * Asks for root before the sweep, in words, and only ever once per launch.
+     *
+     * <h2>Why it is asked for out loud</h2>
+     *
+     * The measurement needs root for one thing: stopping the background process that holds the
+     * microphone open at 16 kHz. Without it half the sweep is never recorded, and nothing says so
+     * - the audio API reports 48000 either way, so the result simply comes back poorer with no
+     * explanation anybody could act on.
+     *
+     * <p>Until now the request was made silently from inside the measurement, and a refusal is
+     * silent too: where Magisk's policy for this app is already "deny", {@code su} returns in
+     * milliseconds with nothing on screen. Owners were left with a measurement that quietly
+     * underperformed and no idea that a switch existed. So: say what it is for, then ask, then say
+     * what happened - including the case where Magisk answered without asking anybody, which the
+     * owner can only fix in Magisk.
+     */
+    private void askForRootThenMeasure() {
+        new Thread(() -> {
+            if (RootAccess.alreadyGranted()) {
+                runOnUiThread(this::beginRoomMeasurement);
+                return;
+            }
+            // Only asked when we could not get it ourselves. Somebody who granted root long ago
+            // should never see this dialog at all - being asked about something already done is
+            // how a person learns to dismiss dialogs without reading them.
+            runOnUiThread(() -> ThemedDialog.builder(this)
+                    .setTitle(R.string.room_root_title)
+                    .setMessage(R.string.room_root_message)
+                    .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
+                        RootAccess.Outcome outcome = RootAccess.request();
+                        runOnUiThread(() -> {
+                            if (outcome == RootAccess.Outcome.GRANTED) {
+                                beginRoomMeasurement();
+                            } else {
+                                // They said it was on and it is not. Say where the switch is
+                                // rather than measure through a 16 kHz microphone and hand back a
+                                // poor result with no explanation.
+                                ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                        getString(R.string.room_root_blocked));
+                            }
+                        });
+                    }, "root-request").start())
+                    .setNegativeButton(R.string.room_root_no, (d, w) ->
+                            ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                    getString(R.string.room_root_blocked)))
+                    .setCancelable(false)
+                    .show());
+        }, "root-check").start();
+    }
+
+    /**
+     * One press of an arrow, as a fraction of half the cabin.
+     *
+     * <p>A twenty-fourth, which is what the balance control moves per press across its 0..24 range.
+     * Matching it means the two controls that share a picture also share a feel.
+     */
+    private static final float MIC_NUDGE = 1f / 12f;
+
+    /**
+     * The list of places the microphone can be fitted to.
+     *
+     * <p>Left empty until somebody chooses, rather than defaulting to one: a default here would be
+     * a guess wearing the owner's clothes, and every report would carry it as if it had been said.
+     * "not stated" in a report is honest and tells us to ask.
+     */
+    private void wireMicPlace() {
+        android.widget.AutoCompleteTextView spinner = findViewById(R.id.spinner_room_mic_place);
+        if (spinner == null) return;
+        String[] names = RoomMeasurement.micPlaceNames(this);
+        spinner.setAdapter(new ThemeManager.ThemedDropdownAdapter<>(this, names));
+        int chosen = RoomMeasurement.micPlace(this);
+        if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
+        spinner.setOnItemClickListener((parent, view, position, id) ->
+                RoomMeasurement.setMicPlace(this, position));
+    }
+
+    private void wireMicNudge(BalancePointerView pointer, int buttonId, float dLr, float dFr) {
+        View button = findViewById(buttonId);
+        if (button == null) return;
+        TouchGlow.attach(button);
+        button.setOnClickListener(v -> {
+            float lr = clampSpot(RoomMeasurement.micSpotLeftRight(this) + dLr);
+            float fr = clampSpot(RoomMeasurement.micSpotFrontRear(this) + dFr);
+            RoomMeasurement.setMicSpot(this, lr, fr);
+            pointer.setBalance(lr, fr);
+        });
+    }
+
+    private static float clampSpot(float v) {
+        return v < -1f ? -1f : v > 1f ? 1f : v;
+    }
+
+    private void beginRoomMeasurement() {
+        if (RoomMeasurement.isRunning()) return;
         // Taken here rather than in the measurement, because the system-bar insets can only be
         // read from a window that exists - and the report is written from a background thread.
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
@@ -1356,40 +1476,71 @@ public class SettingsActivity extends AppCompatActivity {
                     getString(R.string.room_measure_save_failed));
             return;
         }
-        int packed = 0;
-        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(pending.stream)) {
-            byte[] buffer = new byte[8192];
-            java.io.File[] files = dir.listFiles();
-            if (files != null) {
-                for (java.io.File f : files) {
-                    if (!f.isFile() || f.getName().endsWith(".zip")) continue;
-                    zos.putNextEntry(new java.util.zip.ZipEntry(f.getName()));
-                    try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
-                        int n;
-                        while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
-                    }
-                    zos.closeEntry();
-                    packed++;
+        // 🔴 Collected here rather than taken from disk, because taking it from disk is what the
+        // first version did and the owner's own archive proved it wrong: it carried a system
+        // report from five days earlier, written by a build that had none of the policy dump in
+        // it. An archive is read by somebody who was never in that car, so every file in it has
+        // to describe the same moment - otherwise the diagnosis is made against a machine that no
+        // longer exists. Any older copy lying in the folder is left out for the same reason.
+        //
+        // SystemDiagnostics.report opens six audio sources when it has the microphone, so this
+        // whole thing is off the UI thread now. It used to zip on the main thread and got away
+        // with it only because the files were small.
+        final boolean withMicrophone = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        Toaster.show(this, getString(R.string.system_report_working));
+        new Thread(() -> {
+            int packed = 0;
+            try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(pending.stream)) {
+                String report;
+                try {
+                    report = SystemDiagnostics.report(this, withMicrophone);
+                } catch (Throwable t) {
+                    Log.e("wDSP_Settings", "could not build the system report for the archive", t);
+                    report = "the report failed while being collected: " + t;
                 }
+                zos.putNextEntry(new java.util.zip.ZipEntry("wdsp_system_report.txt"));
+                zos.write(report.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                zos.closeEntry();
+                packed++;
+
+                byte[] buffer = new byte[8192];
+                java.io.File[] files = dir.listFiles();
+                if (files != null) {
+                    for (java.io.File f : files) {
+                        if (!f.isFile() || f.getName().endsWith(".zip")) continue;
+                        if (f.getName().startsWith("wdsp_system_report")) continue;
+                        zos.putNextEntry(new java.util.zip.ZipEntry(f.getName()));
+                        try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
+                            int n;
+                            while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
+                        }
+                        zos.closeEntry();
+                        packed++;
+                    }
+                }
+            } catch (java.io.IOException e) {
+                android.util.Log.e("wDSP_Settings", "could not build the measurement archive", e);
+                Downloads.discard(this, pending);
+                runOnUiThread(() -> ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                        getString(R.string.room_measure_save_failed)));
+                return;
             }
-        } catch (java.io.IOException e) {
-            android.util.Log.e("wDSP_Settings", "could not build the measurement archive", e);
-            Downloads.discard(this, pending);
-            ThemedDialog.notice(this, getString(R.string.room_measure_send),
-                    getString(R.string.room_measure_save_failed));
-            return;
-        }
-        if (packed == 0) {
-            Downloads.discard(this, pending);
-            ThemedDialog.notice(this, getString(R.string.room_measure_send),
-                    getString(R.string.room_measure_nothing));
-            return;
-        }
-        Downloads.finish(this, pending);
-        ThemedDialog.notice(this, getString(R.string.room_measure_saved_title),
-                getString(R.string.room_measure_saved, pending.displayPath, packed)
-                        + System.lineSeparator() + System.lineSeparator()
-                        + getString(R.string.room_measure_telegram));
+            // One file is the report we just wrote, so a lone entry means the recordings are gone.
+            if (packed <= 1) {
+                Downloads.discard(this, pending);
+                runOnUiThread(() -> ThemedDialog.notice(this, getString(R.string.room_measure_send),
+                        getString(R.string.room_measure_nothing)));
+                return;
+            }
+            final int count = packed;
+            Downloads.finish(this, pending);
+            runOnUiThread(() -> ThemedDialog.notice(this,
+                    getString(R.string.room_measure_saved_title),
+                    getString(R.string.room_measure_saved, pending.displayPath, count)
+                            + System.lineSeparator() + System.lineSeparator()
+                            + getString(R.string.room_measure_telegram)));
+        }, "wDSP_MeasurementZip").start();
     }
 
     private void openTelegram() {

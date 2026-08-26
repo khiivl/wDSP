@@ -34,6 +34,7 @@ files, mark what you add.
 | [04-FIRMWARE-PATCHING.md](04-FIRMWARE-PATCHING.md) | inside the MCU image: memory map, the dispatcher, the settings structure, and what changing it would take |
 | [05-AUDIO-PATH.md](05-AUDIO-PATH.md) | recording, playback, latency, the microphone, audio policies, the player role |
 | [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) | anything that changes how loud something is: the per-source volume model, source switching, the optional second DSP, and the vendor Bluetooth app breaking the radio |
+| [09-NAVIGATION-AND-BITPERFECT.md](09-NAVIGATION-AND-BITPERFECT.md) | why a navigator is inaudible: the firmware's whitelist, how each navigator actually travels, and the one thing BitPerfect changes that causes it |
 | [06-TUNER.md](06-TUNER.md) | the radio side — mostly relevant to other projects, but several MCU facts live here |
 | [07-PRACTICE.md](07-PRACTICE.md) | how to work here without wasting runs: adb traps, testing discipline, what a reboot really resets |
 

@@ -163,6 +163,15 @@ public final class ScreensaverManager {
     private String lastForeground = "";
     private long foregroundSince = 0L;
 
+    /**
+     * Hears every touch on the unit, so that idle means idle.
+     *
+     * <p>The foreground activity is the only thing the platform publishes, and it does not change
+     * while somebody scrolls a list or works through a settings page - so counting from it put the
+     * screensaver on top of people who were plainly using the thing. See {@link TouchWatcher}.
+     */
+    private TouchWatcher touchWatcher;
+
     private static ScreensaverManager instance;
 
     public static synchronized ScreensaverManager getInstance(Context context) {
@@ -679,6 +688,12 @@ public final class ScreensaverManager {
         resetIdleClock();
         NowPlaying.getInstance(context).setOnStarted(() -> {
             stoppedSince = 0L;
+            // Cleared here and nowhere else. "Playing again" is a transition the player reports;
+            // "playing right now" is a reading, and between our key and the player obeying it
+            // that reading still says yes. Clearing on the reading threw the flag away inside
+            // that gap whenever a poll happened to fall in it, which is why the clock came up
+            // for some presses and not others.
+            ownPause = false;
             if (!attached) return;
             StatusBarVisualizerManager.getInstance(context).setScreensaverNowPlaying(false);
             if (standIn != null) standIn.setScreensaverState(true, false);
@@ -694,14 +709,31 @@ public final class ScreensaverManager {
         foregroundSince = System.currentTimeMillis();
     }
 
+    /**
+     * Somebody touched the screen, so the delay starts again from here.
+     *
+     * <p>Cheap on purpose - one field, no work, no waking anything. It is called once per gesture
+     * and must stay that way, because it sits directly in the path of every touch on the unit.
+     *
+     * <p>While the screensaver is up this does nothing: the screensaver's own window is in front
+     * and its taps are what decide whether it stays or goes.
+     */
+    private void onTouchedSomewhere() {
+        if (attached) return;
+        resetIdleClock();
+    }
+
     private void startPolling() {
         stopPolling();
         if (!isEnabled() || !screenOn) return;
+        if (touchWatcher == null) touchWatcher = new TouchWatcher(context, this::onTouchedSomewhere);
+        touchWatcher.start();
         handler.postDelayed(poll, POLL_MS);
     }
 
     private void stopPolling() {
         handler.removeCallbacks(poll);
+        if (touchWatcher != null) touchWatcher.stop();
     }
 
     private final Runnable poll = new Runnable() {
@@ -719,23 +751,31 @@ public final class ScreensaverManager {
     private void tick() {
         updatePlaybackBelief();
         String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
-        if (!foreground.equals(lastForeground)) {
-            lastForeground = foreground;
-            resetIdleClock();
-            // Something moved. If the screensaver was up it is no longer wanted - whatever put a
-            // new activity in front did so for a reason.
-            if (attached) hide();
-            return;
-        }
+        long idleMs = System.currentTimeMillis() - foregroundSince;
+        Log.d(TAG, "TICK attached=" + attached + ", fg=" + foreground + ", lastFg=" + lastForeground
+                + ", idleMs=" + idleMs + ", delayMs=" + (delaySeconds() * 1000L)
+                + ", mayShow=" + mayShowOver(foreground));
         if (attached) {
+            if (!foreground.isEmpty() && !mayShowOver(foreground)) {
+                Log.i(TAG, "Screensaver dismissed because foreground changed to blocked: " + foreground);
+                hide();
+                return;
+            }
             pushPlaybackState();
             return;
         }
+
+        if (!foreground.equals(lastForeground)) {
+            lastForeground = foreground;
+            resetIdleClock();
+            return;
+        }
+
         if (!mayShowOver(foreground)) {
             resetIdleClock();
             return;
         }
-        long idleMs = System.currentTimeMillis() - foregroundSince;
+
         if (idleMs >= delaySeconds() * 1000L) show();
     }
 
@@ -768,9 +808,9 @@ public final class ScreensaverManager {
      */
     private void updatePlaybackBelief() {
         boolean playing = NowPlaying.getInstance(context).isPlaying();
-        if (playing) {
+        boolean hasSignal = AudioSpectrumEngine.getInstance().hasSignalNow();
+        if (playing || hasSignal) {
             stoppedSince = 0L;
-            ownPause = false;
         } else if (stoppedSince == 0L) {
             stoppedSince = System.currentTimeMillis();
         }
@@ -787,10 +827,11 @@ public final class ScreensaverManager {
         return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
     }
 
-    /** The strip is for what we can honestly show, and on radio that is nothing. */
+    /** The strip is for what we can honestly show: tracks/RDS when playing or with active metadata, nothing when idle. */
     private NowPlaying infoSource() {
         NowPlaying np = NowPlaying.getInstance(context);
-        return np.isRadioSource() ? null : np;
+        if (!np.isPlaying() && !np.hasTrack()) return null;
+        return np;
     }
 
     /**
@@ -875,6 +916,7 @@ public final class ScreensaverManager {
     }
 
     public void hide() {
+        Log.i(TAG, "screensaver hide() called! attached=" + attached, new Throwable("hide-caller"));
         handler.post(() -> {
             if (!attached) return;
             // The strip goes back first: if removing the backdrop threw, the thing the owner
