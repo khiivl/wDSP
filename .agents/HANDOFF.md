@@ -18,12 +18,13 @@ somewhere else in full; this is the map, not the territory.
 
 ## The state of the tree
 
-Version **0.4.7.1**, `versionCode 8`, branch `kostyfmat_mod`. Builds clean.
+Version **0.4.7.2**, `versionCode 9`, branch `kostyfmat_mod`. Builds clean, signed release
+installed and measured on the owner's unit, **committed and pushed** (`91a5ff5`, `569ca75`).
+The distribution is packed at `~/Downloads/wDSP-kostyamat-mod-0.4.7.2/` with texts in English and
+Russian.
 
-🔴 **A large amount is uncommitted.** Check `git status` before anything else and do not assume
-this file is current about it. As of writing, uncommitted work covers: the diagnostics rework
-(`AudioPolicySnapshot`, `PcmStatus`, `RootAccess`, the capture probe), the screensaver fixes, the
-GALA fixes, and the measurement changes below.
+⚠️ Check `git status` before anything else anyway, and do not assume this file is current about
+it — it describes the tree at the moment it was written, and nothing keeps it honest.
 
 ⚠️ **Commits are the owner's decision.** Never commit or push unasked. Pushing is **only** through
 WSL — the keys are there, and a Windows-side push fails silently.
@@ -52,13 +53,14 @@ across** — they are kept identical on purpose.
 
 ## Open, in rough order of value
 
-1. **Repack the distribution.** `~/Downloads/wDSP-kostyamat-mod-0.4.7.1/` was packed before the
-   25.08 contract changed the radio behaviour and before Back was restored, so **two of its texts
-   are now untrue**: "on radio, the clock only" and the unqualified promise about the Back key.
-2. **Test the curve fix** from §4-ter on a car with no hub. It is arithmetic, not an ear, and it
+1. **Test the curve fix** from §4-ter on a car with no hub. It is arithmetic, not an ear, and it
    would close the oldest complaint on this platform.
-3. **Confirm the audio-focus fix** actually cures the first-measurement failure. The report now
-   carries `audio focus:` either way, so the next tester's file answers it.
+2. **Confirm the audio-focus fix cures the first-measurement failure on somebody else's car.**
+   The request itself is fixed and verified here — `audio focus: granted`, 26.08 — but that it
+   cures the old complaint is still a hypothesis, and only a tester's report answers it.
+3. **The Telegram group link is missing from the distribution.** The texts now send people to the
+   group or a forum PM rather than a direct message, by the owner's instruction, but they name it
+   in words because nobody gave us the URL. Drop it in when it is known.
 4. `SessionResolver` could be told which PCM device is open instead of probing session 0 blind.
    🔴 **It is the most delicate code in the app** — do not touch it without measuring first.
 5. New strings exist in **en, uk, ru** only. The project has 28 locales.

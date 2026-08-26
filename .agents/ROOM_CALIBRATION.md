@@ -319,3 +319,45 @@ settled first. Everything below that line waits on the microphone being known.
 3. **Subwoofer level, then the full target curve.** These are levels, and they need the microphone
    itself to be known — by a stored profile for the built-in one, or by a phone for an external
    one. This is the part §2 and §3 are about.
+
+---
+
+## 5-ter. What the owner's own sweep found, 26.08.2026
+
+Two faults, both in code written the day before, and both found by **reading a real report**
+rather than by reading the code. Worth keeping because neither would ever have failed a build.
+
+### The focus request threw, every single time
+
+`AudioFocusRequest.Builder.setWillPauseWhenDucked(true)` — and `setAcceptsDelayedFocusGain(true)`
+with it — make `build()` throw `IllegalStateException: Can't use delayed focus or pause on duck
+without a listener` **unless a listener is set**. The whole request was inside a `try`, so the
+failure printed itself politely into the report as `audio focus: could not ask: …` and the pass
+ran with no focus at all.
+
+So the cure for the oldest complaint on this platform — *the first measurement fails, then it
+works the next day* — sat in the tree for a day **doing nothing**, and looked implemented.
+
+🔑 The listener is not a formality: it is now the only thing that can tell us the focus was taken
+away **during** a pass. A measurement interrupted by a navigation prompt is indistinguishable, in
+the numbers, from a car that answers badly.
+
+### An archive is only as honest as its oldest file
+
+`ZipEntry` without `setTime()` is stamped with **the moment of packing**. The measurement folder
+still held per-speaker WAVs from 20.08, written by a version that produced them and never cleaned
+up, and the system report was picked up off the disk — the owner's copy was from the 21st and
+predated the policy dump entirely.
+
+The result: an archive in which a fresh report sat beside six-day-old recordings, all stamped
+identically, describing two different sessions. Nothing in it said so.
+
+Three locks now, and all three are needed:
+
+1. `clearPreviousRun()` empties the folder before the pass — deliberately not selective about
+   names, because a name list goes stale exactly the way the files did;
+2. `entry.setTime(f.lastModified())` so the archive carries real times;
+3. the system report is **collected at pack time**, never read from disk.
+
+🔴 **The rule behind all three:** every file in an archive must describe the same machine at the
+same minute, because it is read by somebody who was never in that car and cannot ask.
