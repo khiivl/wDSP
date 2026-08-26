@@ -735,6 +735,15 @@ public final class RoomMeasurement {
                         .apply();
                 sleep(ROUTING_SETTLE_MS);
             }
+            // 🔴 Everything from the previous measurement goes first, because the archive is
+            // built by sweeping this folder and it cannot tell an old file from a new one. The
+            // owner's archive of 26.08 proved the cost: it carried per-speaker recordings from
+            // the 20th, written by a version that still produced them, and a zip stamps every
+            // entry with the moment it was packed - so six-day-old recordings of a different
+            // measurement arrived looking exactly as fresh as the report beside them. Whoever
+            // reads that archive is diagnosing two cars at once without being told.
+            clearPreviousRun(context);
+
             // The first speaker is selected before anything starts, so its sweep is not the one
             // that has to wait for the routing to take effect.
             applyRouting(prefs, preset, channels[0]);
@@ -1355,6 +1364,24 @@ public final class RoomMeasurement {
     // ---------------------------------------------------------------------------------------
 
     /** The folder holding the last measurement, created if it is not there yet. */
+    /**
+     * Empties the output folder so an archive can only ever describe one measurement.
+     *
+     * <p>Deliberately not selective about which names it knows: the folder has already collected
+     * files written by versions that no longer exist, and a list of names to delete would go stale
+     * the same way. Anything here belongs to a measurement that is being replaced.
+     */
+    private static void clearPreviousRun(Context context) {
+        File[] files = outputDir(context).listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (!f.isFile()) continue;
+            //noinspection ResultOfMethodCallIgnored
+            boolean gone = f.delete();
+            if (!gone) Log.w(TAG, "could not remove the previous " + f.getName());
+        }
+    }
+
     public static File outputDir(Context context) {
         File dir = new File(context.getExternalCacheDir(), OUTPUT_DIR);
         //noinspection ResultOfMethodCallIgnored

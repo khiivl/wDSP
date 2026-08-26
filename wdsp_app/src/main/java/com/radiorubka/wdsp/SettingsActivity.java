@@ -1510,7 +1510,13 @@ public class SettingsActivity extends AppCompatActivity {
                     for (java.io.File f : files) {
                         if (!f.isFile() || f.getName().endsWith(".zip")) continue;
                         if (f.getName().startsWith("wdsp_system_report")) continue;
-                        zos.putNextEntry(new java.util.zip.ZipEntry(f.getName()));
+                        java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(f.getName());
+                        // Without this a zip stamps every entry with the moment it was packed, so
+                        // a file left over from an older measurement arrives looking as fresh as
+                        // the report beside it. The measurement clears its folder before it runs
+                        // now, and this is the second lock on the same door.
+                        entry.setTime(f.lastModified());
+                        zos.putNextEntry(entry);
                         try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
                             int n;
                             while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
