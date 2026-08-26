@@ -69,6 +69,25 @@ The two sides do not share a scale — wDSP clamps to `Math.min(32, base + offse
 
 🔑 **The contract is the edge — "the state is stable now" — not the number.**
 
+### 🔴 Ordering is by `at`, never by `seq`
+
+`seq` is monotonic only **within one run of the radio**. Reinstall it, or let the system kill and
+restart it, and it begins again from a low number — at which point a receiver ordering on `seq`
+alone rejects every signal the radio ever sends again, and goes on rejecting them, because nothing
+on the wDSP side resets until `McuService` itself is recreated. From outside that does not look
+like a fault; it looks like the contract quietly not existing.
+
+So `at` — `SystemClock.elapsedRealtime()`, one clock both applications read — is the ordering key.
+It only goes backwards when the unit reboots, and then both sides start from nothing anyway. `seq`
+separates two signals inside one millisecond, and reads well in a log.
+
+⚠️ `at` must be `elapsedRealtime()` and nothing else. `currentTimeMillis()` jumps when the clock is
+synchronised, and the two sides would part company at that moment.
+
+Measured on the unit, 26.08.2026: `seq=40 at=500000` accepted, `seq=41 at=400000` ignored (a higher
+counter on an older clock), `seq=1 at=600000` accepted — the restarted radio that would otherwise
+have been locked out permanently.
+
 ### One event stream, not two
 
 `source="idle"` (the radio has given up the channel or the focus) travels on the **same action**.
@@ -113,5 +132,25 @@ as it does today. **Neither application requires the other.**
 on a unit carrying the BitPerfect policies and wanders on a factory one. The radio writes `4` (MPU)
 only deliberately, when it is itself giving the channel away, and it keys its own logic on `== 2`.
 
-The radio side will live in a helper (`WdspAudioContract`) rather than as strings scattered through
+The radio side lives in a helper (`WdspAudioContract`) rather than as strings scattered through
 `RadioService`.
+
+**A muted amplifier is a legal input.** `VolumeHelper.getVolume()` reads back 0 under mute, and 0 is
+not a base — it is the absence of one. Taking it looks harmless until the mute comes off, when GALA
+restores base plus offset into near silence. The radio gates its own send on `v > 0`, but wDSP does
+not rely on that: under mute, or a level of 0, it leaves the base alone, applies the EQ, and lets
+the ordinary unmute recovery re-establish the base when there is sound to measure against.
+
+**`source="media"` was considered and rejected.** The radio would be announcing a state it neither
+owns nor controls; wDSP keeps its own per-source bases (`media_standstill`, `aux_standstill`,
+`btcall_standstill`, `radio_standstill`) and there is no race in media mode because the radio writes
+nothing there. `idle` already covers the only moment that matters — the radio giving up the path.
+
+---
+
+## Status
+
+- **wDSP side:** done, measured on the unit, shipped in `0.4.7.3` / `versionCode 10`
+  (`2b7355c`, ordering fix `89286ee`).
+- **Radio side:** done, built (`WdspAudioContract`).
+- **Joint test on the car:** outstanding, at the owner's word.
