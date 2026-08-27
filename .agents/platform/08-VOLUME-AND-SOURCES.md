@@ -50,6 +50,32 @@ untouched, which sets up the previous paragraph.
 whose value equals `i` to `persist.sys.main_volume`. Not "the one you asked for" — every one that
 happens to be at that number.
 
+📻 **Measured firing on a source switch, 27.08.2026** — both properties sampled every 400 ms:
+
+```
+01:27:18   media=1  radio=4  radio_type
+01:28:47   media=4  radio=4  radio_type    ← made equal on purpose
+01:29:21   media=1  radio=1  media_type    ← a source switch: BOTH wiped
+```
+
+`persist.sys.main_volume` is `1` on this unit, and both landed exactly there.
+
+🔴 **The trap this sets for anyone synchronising volume between sources.** Two sources holding the
+same number is the condition this routine keys on. Before anything synchronises them the sources
+rarely match, so at most one is ever wiped and nobody notices. Carry a level from one source to
+another — which is the whole point of synchronising — and you have **manufactured the condition
+yourself**: the next source switch throws away the level the owner chose, on both.
+
+It also fires from paths that look unrelated: a radio taking the audio path may write
+`radio.vol = media.vol` as part of acquiring it, which equalises them without anybody asking for
+synchronisation at all.
+
+🔑 **The way out is not to fight it.** The platform writes last and will win. Keep the per-source
+levels in your own process, where no property reset can reach them, and write the level back after
+a source change — wDSP restores it on the next 100 ms poll (`McuService`, the source-change block).
+The owner hears one step at the moment of switching, where the sound is changing anyway, instead
+of silently losing the level they set.
+
 ### The 0..32 to 0..15 rescale
 
 🔬 `changeVolForBtA2dpVol` only runs when `persist.sys.double_bt` is true. It then mirrors the

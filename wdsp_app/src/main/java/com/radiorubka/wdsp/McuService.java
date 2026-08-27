@@ -153,6 +153,18 @@ public class McuService extends Service implements LocationListener {
     private long lastAudioStateAt = Long.MIN_VALUE;
     private int lastAudioStateSeq = Integer.MIN_VALUE;
 
+    /**
+     * When the audio source last changed, so the announce handler can tell whether GALA's applied
+     * offset still belongs to the source being announced.
+     *
+     * <p>{@code currentAppliedOffset} is not cleared when sources switch, so for a short while
+     * after one it holds a figure earned on the source we just left.
+     */
+    private long lastSourceChangeMs = 0;
+
+    /** How long after a source change GALA's applied offset is not to be trusted. */
+    private static final long OFFSET_TRUST_DELAY_MS = 1500;
+
     // GALA fade & hold-timer state
     private int currentAppliedOffset = -1; // the offset currently SET on the hardware
     private int pendingTargetOffset  = -1; // the offset we want to reach (after hold timer)
@@ -685,12 +697,80 @@ public class McuService extends Service implements LocationListener {
     private void askRadioForItsState() {
         try {
             Intent query = new Intent(ACTION_AUDIO_STATE_QUERY).setPackage(RADIO_PACKAGE);
+            // Who owns the volume synchronisation, and whether this build can do it at all.
+            //
+            // 🔴 syncOwner is not "this version supports it" - it is "this unit can actually do
+            // it". A framework without findVolumeStateByType cannot store a level for a source
+            // that is not live, and a build that claimed ownership there would have the radio
+            // politely stand aside for somebody unable to act. Nothing would synchronise and
+            // nothing would say why.
+            int versionCode = ownVersionCode();
+            boolean canSync = VolumeHelper.canReachOtherSources();
+            query.putExtra("versionCode", versionCode);
+            query.putExtra("syncOwner", canSync);
             sendBroadcast(query);
-            Log.i(TAG, "asked " + RADIO_PACKAGE + " for the current audio state");
+            Log.i(TAG, "asked " + RADIO_PACKAGE + " for the current audio state (vCode "
+                    + versionCode + ", syncOwner " + canSync + ")");
         } catch (Throwable t) {
             // A radio that is not installed is the ordinary case, not a fault.
             Log.i(TAG, "could not ask the radio for its state: " + t);
         }
+    }
+
+    /**
+     * Our own versionCode, read from the package rather than from BuildConfig.
+     *
+     * <p>BuildConfig generation is not switched on for this module, and turning it on to learn a
+     * number the package manager already knows would be a build change in service of a log line.
+     */
+    private int ownVersionCode() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (Exception e) {
+            return 0;   // reads as "older than any contract", which is the safe direction
+        }
+    }
+
+    /** media and radio carry each other's level; a phone call and AUX keep their own. */
+    private static final String VOL_TYPE_MEDIA = "media_type";
+    private static final String VOL_TYPE_RADIO = "radio_type";
+
+    /**
+     * Carries the level the owner chose from one of media/radio onto the other.
+     *
+     * <h2>Why this lives here rather than in the radio</h2>
+     *
+     * The platform only broadcasts {@code VOLUME_CHANGED} when the <b>channel</b> changes, not when
+     * a level does, and the radio's receiver is not even alive while a player is in front. So the
+     * radio can never see the volume being turned while music plays - which is the entire "media to
+     * radio does not follow" complaint. This service polls, so it sees every change on any source.
+     * That, and not being long-lived, is the real reason the job belongs here.
+     *
+     * <h2>🔴 The base, never the live level</h2>
+     *
+     * GALA's offset must not travel. At 120 km/h the live level is base plus six; writing that onto
+     * the other source would start it six louder, GALA would add its own on top, and the next switch
+     * would carry that too. The boost would compound with every source change until the owner
+     * reported that the radio turns itself up. So what crosses is the base - the level a person
+     * actually chose - and the number stored for the other source will legitimately differ from
+     * what is audible right now.
+     */
+    private void carryBaseToOtherSource(String currentType, int base) {
+        if (base < 0 || !VolumeHelper.canReachOtherSources()) return;
+        final String other;
+        if (VOL_TYPE_MEDIA.equals(currentType)) other = VOL_TYPE_RADIO;
+        else if (VOL_TYPE_RADIO.equals(currentType)) other = VOL_TYPE_MEDIA;
+        else return;   // a call or AUX keeps its own level, deliberately
+
+        if (VolumeHelper.getVolumeForType(other) == base) return;   // already agrees
+        if (!VolumeHelper.setVolumeForType(other, base)) return;
+
+        // Keep our own remembered base for that source in step, or the next switch would restore
+        // the figure we have just superseded.
+        if (VOL_TYPE_MEDIA.equals(other)) media_standstill = base;
+        else radio_standstill = base;
+
+        Log.i(TAG, "volume sync: " + currentType + " base " + base + " carried to " + other);
     }
 
     private void onAudioStateStable(Intent intent) {
@@ -737,15 +817,89 @@ public class McuService extends Service implements LocationListener {
             return;
         }
 
-        baseStandstillVolume = live;
-        currentAppliedOffset = 0;
-        pendingTargetOffset  = 0;
-        lastGalaTier         = 0;
+        // 🔴🔴 An announce that merely repeats the number we ourselves last commanded is our own
+        // echo, and acting on it is a runaway. Measured on the unit, 27.08.2026, with the speed
+        // simulator at 90 km/h - the only way to see it without a motorway:
+        //
+        //   GALA at 90 km/h ... -> offset 2
+        //   seq=5 -> base=6      GALA raised 5 to 6, the radio announced it
+        //   seq=6 -> base=7      GALA raised 6 to 7, the radio announced it
+        //   [simulator off, the boost fades away]
+        //   seq=7..11 -> base 6, 5, 4, 3, 2
+        //
+        // It started at 5 and ended at 2. Three steps of the owner's chosen level, gone.
+        //
+        // The platform raises VOLUME_CHANGED for *every* change of volume, including the ones this
+        // service makes itself. The radio dutifully announces each, and cannot know who caused it -
+        // nothing tells it. So the loop closes here: GALA raises the volume, the rise comes back as
+        // an announce, the boost is absorbed into the base, GALA computes a fresh boost on top of
+        // the inflated base, and the volume climbs. Braking runs it in reverse and eats the level.
+        //
+        // Only this side can break it, and it costs one comparison: we remember what we commanded.
+        // If the announced level is exactly that, nobody moved anything and there is nothing to
+        // learn from it. A person who happens to dial in the very number we last set changes
+        // nothing either, because the base already holds it.
+        if (live == lastAppliedVolume) {
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                    + " -> our own echo (" + live + "), base kept at " + baseStandstillVolume);
+            return;
+        }
+
+        // 🔴 Subtract GALA's own boost, because the premise this used to rest on stopped being
+        // true the day the contract activated.
+        //
+        // It used to set the base to the live level and reset the offset, reasoning that the radio
+        // had *written* that level and there was no telling how much of it was ours. That held
+        // while the radio owned volume writing. It does not hold now: with wdspSyncOwner the radio
+        // writes nothing and only reports that a person moved the volume - so the level still has
+        // our offset inside it.
+        //
+        // Left as it was, the failure is loud and only happens while driving. At 90 km/h with a
+        // boost of 4 the owner turns the volume DOWN one step; the handler takes the whole level
+        // as the base and zeroes the offset; the next poll recomputes the same boost from the same
+        // speed and adds it again. The volume jumps up four steps in answer to a request to make
+        // it quieter, and it compounds on every touch of the knob.
+        //
+        // The offset is not trusted straight after a source change: it is not cleared when sources
+        // switch, so for a moment it belongs to the source we just left, and subtracting it would
+        // put the base below where it belongs. There the old behaviour is right, and is kept.
+        boolean offsetIsOurs = currentAppliedOffset > 0
+                && System.currentTimeMillis() - lastSourceChangeMs > OFFSET_TRUST_DELAY_MS;
+        int applied = offsetIsOurs ? currentAppliedOffset : 0;
+
+        baseStandstillVolume = Math.max(0, live - applied);
+        currentAppliedOffset = applied;   // the hardware still carries it; base + offset = live
+        pendingTargetOffset  = applied;   // no fade is owed, GALA recomputes on the next poll
+        lastGalaTier         = applied;
         tierChangeTimestamp  = System.currentTimeMillis();
         lastReadHardwareVol  = live;
         lastAppliedVolume    = live;
 
         applyVolumeDependentSettings(live);
+
+        // 🔴 Carry it here too, and not only from the poll's manual-adjustment branch.
+        //
+        // Measured on the unit the first minute this ran: the level was wound 6 -> 1 on the radio,
+        // five announces arrived, and only ONE of them reached media. It ended at media 2 against
+        // radio 1 - a quiet one-step disagreement that nobody would trace back to this.
+        //
+        // The cause is this method: re-baselining sets lastReadHardwareVol and lastAppliedVolume,
+        // which is exactly what the poll's detector compares against to decide that a person moved
+        // the volume. So the handler silences the detector, and a carry only happens on a poll
+        // whose timing slips between two announces.
+        //
+        // The right reading is simpler anyway: an announce from the radio *means* the level was
+        // just set deliberately. wDSP owns propagation now, so this is precisely where it belongs -
+        // the poll's branch stays for levels changed on a source the radio never announces.
+        //
+        // 🔴 baseStandstillVolume, not live. They are the same number only while GALA has no boost
+        // applied, which is every test done at a standstill - and different by exactly the boost
+        // as soon as the car moves. Carrying the live level would send the boost into the source
+        // that is not playing, where nothing recomputes it and nothing corrects it: it would sit
+        // there until somebody switched over and found it loud. The whole point of the fix above
+        // is that the boost does not travel, and passing live here would have undone it one line
+        // later.
+        carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
 
         // 🔴 at is printed on every branch, accepted included. It was missing here, and the gap
         // showed the moment two applications had to agree on what they had sent each other: the
@@ -770,7 +924,25 @@ public class McuService extends Service implements LocationListener {
         String galavoltype = VolumeHelper.getActivePlayerType();
 
         // if the player has changed since the last run
-        if (!galavoltype.equals(galavoltype_last)) {
+        // Whether the source changed on this very poll. Nothing may be carried to another source
+        // in that cycle - see the guard on the manual-adjustment branch below.
+        boolean sourceChangedThisPoll = !galavoltype.equals(galavoltype_last);
+        if (sourceChangedThisPoll) lastSourceChangeMs = System.currentTimeMillis();
+
+        if (sourceChangedThisPoll) {
+            // 🔴 Greet the radio again whenever it takes the path, not only when this service
+            // starts. The query is sent once at startup, and a radio that started *after* this
+            // service never heard it: its "wDSP owns the synchronisation" flag would stay false,
+            // it would fall back to writing the levels itself, and this service would be writing
+            // them too. Two writers with different numbers - the radio copies the live level, this
+            // side carries the base without GALA's offset - so they part company by exactly the
+            // offset and the owner sees the volume jump when switching source.
+            //
+            // The transition is already detected here, so this costs nothing new. And it happens
+            // exactly when it matters: the moment the radio's own fallback would otherwise act.
+            if (VOL_TYPE_RADIO.equals(galavoltype)) {
+                askRadioForItsState();
+            }
             // and the base volume is already established
             if (baseStandstillVolume != -1) {
                 // save the last standstill volume recorded by the algorithm
@@ -824,6 +996,40 @@ public class McuService extends Service implements LocationListener {
                     else {
                         baseStandstillVolume = VolumeHelper.getVolume();
                     }
+                }
+            }
+
+            // 🔴 Put the level back, because the platform has just thrown it away.
+            //
+            // Measured on the unit, 27.08.2026, sampling both properties every 400 ms:
+            //
+            //   01:27:18  media=1  radio=4  radio_type
+            //   01:28:47  media=4  radio=4  radio_type   (set by hand, to make them agree)
+            //   01:29:21  media=1  radio=1  media_type   (a source switch - BOTH wiped)
+            //
+            // persist.sys.main_volume is 1 on this unit, and both landed exactly there. That is
+            // VolumeManager.resetDefValIfNeed(i): it walks all four states and sets every one
+            // whose value equals i to persist.sys.main_volume. Not the one asked for - every one
+            // standing on that number.
+            //
+            // 🔑 And the sting: carrying a level between sources makes them equal by definition,
+            // so the synchronisation itself manufactures the condition this blunt routine keys on.
+            // Before it existed the two sources rarely matched and at most one was ever wiped.
+            //
+            // Fighting the platform is pointless - it writes last. But the truth lives here: the
+            // per-source figures above are held in this process and no property reset can touch
+            // them. So the level is simply written back. The owner hears a step at the moment of
+            // switching, where the sound is changing anyway, instead of losing the level they set.
+            if (baseStandstillVolume >= 0 && !VolumeHelper.isHardwareMuted()) {
+                int live = VolumeHelper.getVolume();
+                if (live != baseStandstillVolume) {
+                    VolumeHelper.setVolume(baseStandstillVolume);
+                    lastAppliedVolume = baseStandstillVolume;
+                    lastReadHardwareVol = baseStandstillVolume;
+                    currentAppliedOffset = 0;
+                    pendingTargetOffset = 0;
+                    Log.i(TAG, "source now " + galavoltype + ": platform left " + live
+                            + ", restored our base " + baseStandstillVolume);
                 }
             }
         }
@@ -941,6 +1147,21 @@ public class McuService extends Service implements LocationListener {
                 baseStandstillVolume = 0;
             }
             Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
+            // Only here, and deliberately: this is the one branch that means a person moved the
+            // volume. GALA's own steps must never travel to the other source - see the note on
+            // carryBaseToOtherSource about the boost compounding.
+            //
+            // 🔴 And never on the poll where the source itself changed. currentAppliedOffset is not
+            // cleared when sources switch, so on that one cycle the branch above subtracts an
+            // offset belonging to the source we just left from a volume the platform has just
+            // loaded for the source we arrived at - and the base comes out low by exactly that
+            // offset. GALA corrects itself over the next polls, so it was harmless while the
+            // number stayed here. It stops being harmless the moment it is written into another
+            // source: that one is not playing, nothing corrects it, and the error waits there
+            // until somebody switches to it.
+            if (!sourceChangedThisPoll) {
+                carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+            }
         }
 
         // 6. GALA APPLICATION with Hold-Timer and Fade

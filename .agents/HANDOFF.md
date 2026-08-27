@@ -51,6 +51,48 @@ across** — they are kept identical on purpose.
 
 ---
 
+## 🔴 Uncommitted right now — the night of 26-27.08
+
+`McuService.java`, `VolumeHelper.java`, `build.gradle`, and three `.agents/` files carry
+**`0.4.7.4` / `versionCode 11`**, installed on the unit and proven on the wire, **not committed**.
+
+Beyond the volume-sync architecture described below, tonight added four fixes, and two of them are
+faults that would have reached people and shown up **only while driving**:
+
+| | |
+|---|---|
+| carry from the announce handler too | it silenced its own detector; 1 of 5 steps carried |
+| subtract GALA's boost from the base | the level still contains it now that the radio no longer writes levels |
+| **suppress our own echo** | GALA's own writes came back as announces and were eaten into the base — the volume climbed at speed and sank under braking; 5/5 became 2/2 |
+| **restore the level after a source switch** | the platform wipes every source standing on the same number to `persist.sys.main_volume`, and synchronising *creates* that condition |
+
+Both of the last two were found with `SIMULATE_SPEED`, not by testing at a standstill, where they
+are invisible. See `platform/08-VOLUME-AND-SOURCES.md` and the shared memory
+`wdsp-audio-contract-proven.md`.
+
+⚠️ The synchronisation is proven **on the properties**, not by ear — the media path was silent that
+night for an unrelated reason (a stuck HAL fd, see the radio session's notes). "The level is
+carried" is proven; "it sounds the same" is not.
+
+## 🔴 Uncommitted right now, on purpose
+
+`McuService.java`, `VolumeHelper.java`, `build.gradle` carry **`0.4.7.4` / `versionCode 11`**: the
+volume-sync architecture the owner asked for on 26.08 — wDSP carries the base level between
+`media_type` and `radio_type` through `VolumeManager.findVolumeStateByType`, and the radio falls
+back only when wDSP is absent or older. It builds clean and is **deliberately not committed, not
+pushed and not installed**.
+
+Not because it is unfinished. `versionCode 11` together with the radio's gate switches the whole
+volume architecture **live**, and the owner was driving when it was written — nobody could hear the
+result. Both sides are held ready and activate together, in front of him. Commits are his decision;
+this note exists so the work is not mistaken for a stray edit.
+
+The design and its laws are written up in the shared memory under
+`wdsp-audio-contract-proven.md` → "Синк-архітектура vCode 11", and the protocol itself in
+[AUDIO_OWNERSHIP_CONTRACT.md](AUDIO_OWNERSHIP_CONTRACT.md).
+
+---
+
 ## Open, in rough order of value
 
 1. **Test the curve fix** from §4-ter on a car with no hub. It is arithmetic, not an ear, and it
