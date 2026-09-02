@@ -1183,18 +1183,74 @@ public final class RoomMeasurement {
     // audio plumbing
     // ---------------------------------------------------------------------------------------
 
+    /**
+     * Opens the microphone for a measurement, choosing the source that the platform leaves alone.
+     *
+     * 🔴 The source is not a detail here. {@code /vendor/etc/audio_effects.xml} binds echo
+     * cancellation and noise suppression to capture sources by name:
+     *
+     * <pre>
+     *   &lt;preprocess&gt;
+     *     &lt;stream type="mic"&gt;                 &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *     &lt;stream type="voice_communication"&gt; &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *     &lt;stream type="voice_recognition"&gt;   &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *   &lt;/preprocess&gt;
+     * </pre>
+     *
+     * {@code unprocessed} is absent from that list, and that is the whole reason to use it.
+     * Measured on the wire, {@code dumpsys media.audio_flinger} during a capture:
+     *
+     * <pre>
+     *   VOICE_RECOGNITION   Noise Suppression   State 003 (ACTIVE)   Enabled=y
+     *   UNPROCESSED         AEC + NS            State 000 (INIT)     Enabled=n
+     * </pre>
+     *
+     * 🪤 Suspending the effects from here does not help, and it is worth knowing why: our
+     * {@code NoiseSuppressor.create(session)} hands back our own handle, and disabling it leaves
+     * the one the policy attached still running. The app logged "NS was off, now off" while
+     * AudioFlinger reported the chain ACTIVE — both true, about different objects.
+     *
+     * A suppressor adapts to steady content and does so unevenly across the spectrum; a swept
+     * sine is steady content by construction. So it removes signal, mostly where the signal is
+     * already weak. {@code suspendCapturePreprocessing} is still called by the caller, because on
+     * a unit whose policy differs it may be the thing that works.
+     *
+     * ⚠️ The source changes nothing else: 📻 the capture gain stays at the same {@code
+     * VBC ADC0 DG Set} either way — the {@code UnprocessRecord} block in {@code audio_pga.xml},
+     * with its {@code 0x18}, is dead and the HAL never applies it. Levels measured 0.2 dB apart.
+     */
     private static AudioRecord openMicrophone() {
         int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
         if (minBytes <= 0) return null;
-        AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                minBytes * 8);
-        if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-            record.release();
-            return null;
+
+        AudioRecord record = tryOpen(MediaRecorder.AudioSource.UNPROCESSED, minBytes);
+        if (record == null) {
+            // Not every unit offers it. Falling back is better than refusing to measure, and the
+            // report says which source was used so a result can be read in that light.
+            Log.w(TAG, "UNPROCESSED unavailable, falling back to VOICE_RECOGNITION - "
+                    + "the platform will attach AEC/NS to this capture");
+            record = tryOpen(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBytes);
         }
         return record;
+    }
+
+    private static AudioRecord tryOpen(int source, int minBytes) {
+        try {
+            AudioRecord record = new AudioRecord(source, SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 8);
+            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
+                record.release();
+                return null;
+            }
+            Log.i(TAG, "microphone opened with source " + source
+                    + (source == MediaRecorder.AudioSource.UNPROCESSED
+                       ? " (UNPROCESSED - no policy preprocessing)" : ""));
+            return record;
+        } catch (Throwable t) {
+            Log.w(TAG, "could not open capture source " + source + ": " + t);
+            return null;
+        }
     }
 
     /**

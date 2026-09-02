@@ -134,6 +134,12 @@ public class McuService extends Service implements LocationListener {
     static final String ACTION_AUDIO_STATE_STABLE = "com.radiorubka.wdsp.AUDIO_STATE_STABLE";
     private static final String RADIO_PACKAGE = "com.kostyamat.fmradio";
     private static final String ACTION_AUDIO_STATE_QUERY = RADIO_PACKAGE + ".AUDIO_STATE_QUERY";
+    private static final String PROP_VOLUME_SYNC = "persist.sys.qf.radio.sync_vol";
+
+    private boolean isVolumeSyncEnabled() {
+        String prop = HardwareProfile.systemProperty(PROP_VOLUME_SYNC);
+        return prop == null || "true".equalsIgnoreCase(prop) || "1".equals(prop);
+    }
 
     /**
      * What was accepted last, so a late or repeated signal is dropped rather than acted on.
@@ -757,6 +763,7 @@ public class McuService extends Service implements LocationListener {
      */
     private void carryBaseToOtherSource(String currentType, int base) {
         if (base < 0 || !VolumeHelper.canReachOtherSources()) return;
+        if (!isVolumeSyncEnabled()) return;
         final String other;
         if (VOL_TYPE_MEDIA.equals(currentType)) other = VOL_TYPE_RADIO;
         else if (VOL_TYPE_RADIO.equals(currentType)) other = VOL_TYPE_MEDIA;
