@@ -50,6 +50,23 @@ then `wm size reset` and `wm density reset` — always both, always after every 
 Confusing the two has cost real bugs — reading `persist.sys.qf.last_audio_src` (which said
 `nothing`) instead of the live `sys.qf.last_audio_src` made a guard fire against nobody.
 
+📻 **A `persist.` property set by `resetprop` is not persistent.** Magisk's `resetprop` writes the
+property in memory only; without `-p` it never reaches `/data/property/`, so the value is gone at
+the next boot. Measured 27.08.2026 on a unit where a module sets two of them at every boot:
+
+```
+persist.qf.arm.default.volume   live = 15   /data/property/… = no such file
+persist.sys.main_volume         live = 1    /data/property/… = no such file
+```
+
+That is why the BitPerfect module re-sets its properties in a loop on every boot rather than once —
+and why a "persistent" value written by a module quietly disappears after a reboot while a value
+written by `setprop` from a system context stays. Two consequences worth holding on to:
+
+- a module's damage to a `persist.` property **heals itself at the next boot**, which is good;
+- and a module's *fix* to one does too, which is not. Anything a module needs to survive a reboot
+  has to be re-applied at every boot, or written with `-p`.
+
 📻 **A live property says who owns the path, not who is alive.** Measured 26.08.2026 with the radio
 application's process **dead** — no `pidof`, nothing running:
 

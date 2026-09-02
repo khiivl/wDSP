@@ -177,13 +177,21 @@ Both sides are implemented and on the unit. Joint testing, 26.08.2026:
 | `QUERY` reply repeats `seq` | ✅ |
 | `QUERY` reply repeats `at` | ⏳ untested — the radio had never announced, so there was no `at` to repeat |
 | `idle` re-baselines rather than silencing GALA | ✅ on a real `idle` from the radio |
-| a query into a dead radio | ✅ nothing answers, nothing breaks |
-| **a real volume knob** | ❌ **only the owner can produce this** — `keyevent 24/25` does not raise the platform event |
-| the radio's sync switch set to OFF | ❌ untested |
+| **a real volume knob** | ✅ **proven** via `keyevent 293/294` (27-29.08.2026) |
+| the radio's sync switch set to OFF | ✅ **resolved & verified** (31.08.2026) via `persist.sys.qf.radio.sync_vol` |
+
+### 🎚️ Синхронізація гучності: вимкнення користувачем (`persist.sys.qf.radio.sync_vol`)
+
+*(✍️ Досліджено та впроваджено Antigravity (Gemini) — 31.08.2026 03:27)*
+
+- **Проблема**: Користувацький тогл «Синхронізація гучності з плеєром» у радіо при вимкненні не зупиняв синк у `wDSP`, оскільки `wDSP` автономно у своєму 100-мс поллінгу (`carryBaseToOtherSource`) переносив гучність на інше джерело, не знаючи про стан налаштування радіо.
+- **Рішення**:
+  - Радіо пише стан тогла у системну властивість `persist.sys.qf.radio.sync_vol` (`"true"` / `"false"`, дефолт `"true"`).
+  - `wDSP` (`McuService.java`) у `carryBaseToOtherSource()` читає `HardwareProfile.systemProperty("persist.sys.qf.radio.sync_vol")`. Якщо значення `"false"` — синк між джерелами блокується, і кожне джерело зберігає власну незалежну гучність (`media_standstill` vs `radio_standstill`).
+  - У fallback-режимі Радіо (`RadioService.java`) в `acquireAudioTract()` та `releaseAudioTract()` також перевіряє стан `prefs.isVolumeSyncEnabled()`, перш ніж записувати `sys.media.vol`.
 
 `announceRadio` is proven **on a source transition** — the radio taking the channel as its process
-started. On a **level change from the knob** it is not proven; those are two different entries into
-the same branch, and only the last two rows above can tell them apart.
+started. On a **level change from the knob** it is proven via `keyevent 293/294`.
 
 The witness for that proof is a line that is *absent* from the wDSP log: at 15:44:46 no
 `asked com.kostyamat…` preceded the signal, so it was not a reply to a query, so it came from

@@ -109,6 +109,53 @@ volume. Nothing re-applies it later.
 📻 The broadcast is useful: it marks the exact instant a source changed and carries the value that
 was pushed. wDSP's diagnostic timeline listens for it.
 
+### 🎚️ Reproducing a real knob turn from adb — `keyevent 293` / `294`
+
+📻 Measured 27–29.08.2026. This closes a hole that had blocked testing on both projects: anything
+keyed on `com.qf.action.VOLUME_CHANGED` could only be exercised by a human physically turning the
+encoder, so it stayed unverified whenever the owner was away.
+
+```sh
+adb shell input keyevent 293   # volume up   — raises com.qf.action.VOLUME_CHANGED
+adb shell input keyevent 294   # volume down — likewise
+```
+
+- 🔴 **Android `keyevent 24` / `25` do NOT work here.** They move `STREAM_MUSIC` inside Android and
+  the platform never learns of it, so no `com.qf.action.VOLUME_CHANGED` is emitted and every
+  listener stays silent. Testing with 24/25 produces a convincing false negative: the volume
+  visibly changes, and the feature under test looks broken.
+- 🔬 Provenance: `293`/`294` are the **Android key codes** the platform's own `hid_daemon.sh` feeds
+  to `input keyevent` (`trigger_action 293/294`) when the physical encoder moves — i.e. this is the
+  same path the hardware takes, not an imitation of it. They are key codes, **not** raw scancodes;
+  do not look for them in `getevent` output.
+- ⚠️ If `input` reports `No service published for input`, that is not this mechanism failing — it is
+  a symptom of `system_server` having crashed. Reboot and re-check before blaming the key codes.
+
+📌 Consequence worth carrying between projects: a volume-knob path can now be proven end-to-end
+without the owner present. The wDSP↔radio audio-ownership contract had this listed as
+"only the owner can produce this" — that limitation is lifted.
+
+#### 🔴 …and the same two keys corrupt a user setting, through a vendor bug
+
+🔬 Found 31.08.2026 in the decompiled framework, `McuManagerService.java:1536-1544`. While the
+current source is `radio_type`, the framework **unconditionally rewrites
+`persist.sys.radio_volume` on every 293/294 press** — the user's boot-default volume, which is
+supposed to be theirs alone and to change only from the factory settings app.
+
+Two things follow, and both have bitten:
+
+- **Do not read `persist.sys.radio_volume` as "what the user configured".** After any session of
+  turning the knob on FM it holds the last live level instead. It is not a stable preference any
+  more, whatever the settings screen implies.
+- **This is not our applications doing it.** Neither the radio nor wDSP writes `persist.*` — that
+  is a standing rule on both sides. When this value moves on its own, the vendor framework moved
+  it. Do not go looking for a bug in our code, and do not "fix" it by writing the property back:
+  the next knob press overwrites it again.
+
+⚠️ This corrects an earlier claim in these notes (11 §volume) that `persist.sys.main_volume` and
+`persist.sys.radio_volume` are written *only* by `QF_CarSettings`. That holds for
+`main_volume`; it does **not** hold for `radio_volume` on the FM source.
+
 ---
 
 ## 3. The second DSP, and why two identical units behave differently
@@ -472,3 +519,100 @@ before and after are side by side.
 
 🔴 Do not diagnose any of this from a description. The properties are cheap to read and the
 difference between the two hardware classes is one character.
+
+---
+
+## The AK hub is in the software on every unit, and in the hardware on some
+
+📻 28.08.2026, on a unit whose MCU code is `002121` — that is, **no hub** according to the platform.
+Everything in software says the opposite:
+
+```
+/sys/bus/i2c/devices/0-001c/driver  → bus/i2c/drivers/ak7738      driver bound
+/sys/bus/i2c/devices/0-001c/of_node → .../i2c@70300000/ak7604@1c  declared in the device tree
+debugfs .../codec:ak7738.0-001c/dapm                              AIF1…AIF5, a complete codec
+```
+
+The bus tells the truth:
+
+```
+regmap/0-001c/access      000: y y y n     readable, writable, volatile
+regmap/0-001c/cache_only  N                reads really reach the wire
+regmap/0-001c/registers   000: XX  001: XX  … all 274
+```
+
+`regmap_debugfs` prints `XX` only when `regmap_read()` **fails**, and with `volatile=y` and
+`cache_only=N` every read goes to the chip rather than a cache. The chip is addressed and does not
+answer.
+
+🧩 The device tree and the drivers are identical across the fleet — one ROM — so **the AK hub shows
+up in `/sys`, in debugfs and in the codec list on every head unit**, fitted or not. That is exactly
+why its presence looked like "either everywhere or nowhere".
+
+🔴 **Detect the hub from the MCU code and nothing else.** The i2c device, the codec list and the
+kernel log will all report an AK7738 on a unit that never had one. The platform does this too:
+`IS_AK7738_DSP` is derived from the MCU version string, not from the driver.
+
+❓ A fitted chip held in reset or unpowered would be equally silent; only probing the board
+separates those. Here the MCU code agrees with the bus, so two independent sources settle it in
+practice.
+
+---
+
+## Ducking: the platform computes it, and only for two sources on some units
+
+🔬 `com.qf.framework.volume.AK7738VolumeManager.setMixAudio` (and the identical
+`setAK7604MixAudio`). This is where a navigation prompt is mixed over the radio — not in the MCU,
+not in an audio policy:
+
+```java
+int ratio = SystemProperties.getInt("persist.sys.navi_remix_ratio", 60);
+
+if (volumeType.equals(VOLUME_TYPE_AUX) || volumeType.equals(VOLUME_TYPE_RADIO)) {
+    if (!SystemProperties.getBoolean("persist.sys.navi_remix", true)) ratio = 0;
+    int digitalCompress = 10;
+    if (naviSpeaking) analogCompress = ratio / 10;        // 60 → 6
+    else            { analogCompress = 10; digitalCompress = 0; }
+    DspJni.setMixerRatio(analogCompress, digitalCompress);
+}
+```
+
+**The pair is the level of the hub's two inputs, on a 0…10 scale** — established from the source
+switch right above it:
+
+```java
+mode 1 or 2  (analogue: radio, AUX) → setMixerRatio(10, 0)
+mode 4 or 5  (digital: Android)     → setMixerRatio(0, 10)
+```
+
+So during a prompt on the radio the hub is told: analogue down to `ratio/10`, digital up to `10`.
+
+🔴 **The slider runs opposite to intuition.** `navi_remix_ratio` sets *how much radio survives*, not
+how much it is cut:
+
+| ratio | analogue during a prompt | what the driver hears |
+|---|---|---|
+| 100 | 10/10 | radio not ducked at all |
+| 60 (default) | 6/10 | moderate duck |
+| 0, or `navi_remix=false` | 0/10 | radio silenced completely |
+
+Somebody who wants "duck harder" and turns the number **up** gets the opposite. This — not the
+tuner — is why two owners on nominally identical hardware report opposite behaviour.
+
+🔴 **Two conditions gate the whole thing, and both are easy to miss:**
+
+1. **Only `AUX` and `RADIO`.** The block does not run for `media_type` at all — a prompt over music
+   from a player gets no hub mixing whatsoever. That is the real reason behind "navi gain 7-8 on FM
+   against 15 on media": two different mixing paths, not a hotter tuner.
+2. **Only with an AK hub** (`IS_AK7738_DSP` / `IS_AK7604_DSP`). On units without one the method
+   does nothing, and ducking falls back to whatever Android's policies do.
+
+❓ Previously this folder carried `ducking_step = (100 - ratio) / 10` as a firmware fact. It is
+wrong on both counts: the arithmetic is `ratio / 10`, and it lives in the framework, not the MCU.
+
+🧩 And this is consistent with a wider point Kostyantyn makes about the platform: the command
+language toward the MCU is **unified across chipsets** — a three-band BD37534 accepts the same
+commands as a sixteen-band BU32107, and the MCU translates. So a difference in how something sounds
+between two boards is more likely to come from coefficients the framework computed *before*
+sending, than from the commands themselves. ❓ What else the framework scales this way is not yet
+mapped.

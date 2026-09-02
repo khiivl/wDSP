@@ -435,4 +435,162 @@ requested by the application.
 
 ⚠️ And on units fitted with the lesser sound processor, BitPerfect is essentially never installed —
 it produces digital noise instead of sound there. So a BD37544 unit is almost certainly on factory
-policies.
+policies. 🧩 The likely mechanism is now known — see
+[10-BITPERFECT-MODULE.md](10-BITPERFECT-MODULE.md) §7.
+
+---
+
+## The audio path can be dead while everything reports healthy
+
+📻 Measured 28.08.2026, after a normal reboot: players silent, radio fine, `audioserver` alive and
+`dumpsys media.audio_policy` showing the expected policies. Nothing looked wrong. The stream itself
+told the truth:
+
+```
+$ cat /proc/asound/card0/pcm3p/sub0/status
+state: SETUP
+owner_pid   : 24823        ← this process no longer exists
+trigger_time: 0.000000000  ← never started
+hw_ptr      : 0
+```
+
+`SETUP` with a zero trigger time means the stream was opened, configured, and abandoned. A dead
+owner keeps the substream, and every later playback lands in a device that will never run. The cure
+is one line, and it is instant:
+
+```bash
+setprop ctl.restart audioserver     # then state: RUNNING, trigger_time non-zero
+```
+
+🔬 **And the restart that strands it comes from the platform itself**, not from any module —
+`McuManagerService.onVersionInfoChanged`, three lines above the hardware decode:
+
+```java
+if (TextUtils.isEmpty(oldMcuVersion) || !TextUtils.equals(str, oldMcuVersion)) {
+    SystemProperties.set("ctl.restart", "audioserver");
+}
+```
+
+On a cold boot the old version is empty, so this fires **every time**, at whatever moment the MCU
+gets round to reporting. If the HAL has a stream open by then, that stream is what gets stranded.
+
+⚠️ **A watchdog that checks policies cannot see this.** BitPerfect's does exactly that, prints
+`SUCCESS: audioserver is running with BitPerfect policies!` and goes to sleep — the policies really
+are loaded; it is the path underneath them that is dead. Check `state:` in
+`/proc/asound/card0/pcm3p/sub0/status`, not `dumpsys`.
+
+## The capture source is ignored; the effect on the session is not
+
+📻 28.08.2026, two probes back to back on the same unit, watching the mixer *during* the capture:
+
+| source | `VBC ADC0 DG Set` while recording | rms | peak |
+|---|---|---|---|
+| `VOICE_RECOGNITION` (6) | `4 4` | −31.2 dBFS | −20.2 |
+| `UNPROCESSED` (9) | `4 4` | −31.0 dBFS | −19.4 |
+
+Identical. 🔬 `audio_pga.xml` promises `UnprocessRecord/VBC_ADC0_DG = 0x18` (24) against `Record`'s
+`0x04`, but the control never moves — **the HAL does not honour the source**, and that XML block is
+dead. Choosing `UNPROCESSED` to get a raw microphone achieves nothing here.
+
+What *does* sit on the path is a **pre-processing effect**, and it is visible in
+`dumpsys media.audio_flinger` while recording:
+
+```
+session 4657   48 kHz   client = com.radiorubka.wdsp        ← ours
+    Noise Suppression        Enabled=y   Suspended=n         ← running
+
+session 4649   16 kHz   client = the assistant
+    Acoustic Echo Canceler (sprd cvs) + Noise Suppression
+                             Enabled=y   Suspended=y         ← not ours, parked
+```
+
+🔑 **Read the sample rate to tell whose session is whose.** A 16 kHz input session belongs to the
+assistant or telephony; ours is 48 kHz. The hardware AEC ("sprd cvs") attaches only to the 16 kHz
+side and never to a 48 kHz capture — so on this platform the effect worth removing before a
+measurement is **NS**, not AEC.
+
+### Suspending it from the app does not work, and measuring proves it does not matter
+
+🔬 `/vendor/etc/audio_effects.xml` binds the preprocessing **by source name**:
+
+```xml
+<preprocess>
+  <stream type="mic">                 <apply effect="aec"/> <apply effect="ns"/>
+  <stream type="voice_communication"> <apply effect="aec"/> <apply effect="ns"/>
+  <stream type="voice_recognition">   <apply effect="aec"/> <apply effect="ns"/>
+</preprocess>
+```
+
+`unprocessed` is absent — so `UNPROCESSED` should escape it, and in a bare capture it does:
+📻 `State 000` (INIT), `Enabled=n`. **But not while something is playing.** During a sweep the same
+source gives `State 003` (ACTIVE) on our own session, exactly as `VOICE_RECOGNITION` does. The
+policy attaches the chain when an input and an output are live together, and the source does not
+override that.
+
+🪤 And suspending from the app is an illusion: `NoiseSuppressor.create(session)` returns *our*
+handle. Disabling it leaves the one the policy attached running — the app logs "NS was off, now
+off" while AudioFlinger reports the chain ACTIVE. Both statements are true, about different
+objects. `MicProbe` and `RoomMeasurement` both call `suspendCapturePreprocessing`; neither can
+switch off what the policy owns.
+
+📻 **So does it spoil a measurement? No — measured, not assumed.** Two cabin sweeps, same car, same
+volume, minutes apart:
+
+```
+                20    31    50    80   125   200   315   500   800  1.25k   2k  3.15k   5k    8k  12.5k  20k
+VOICE_RECOG.  −30.0 −29.6 −28.4 −28.4 −30.6 −14.4 −8.0  −8.9  −7.9  −8.2  −8.2  −8.3  −8.6 −14.2 −54.2 −57.3
+UNPROCESSED   −30.6 −30.2 −29.1 −29.2 −31.1 −14.6 −7.9  −8.9  −8.0  −8.1  −8.2  −8.2  −8.5 −14.2 −55.5 −58.8
+```
+
+0.0–0.2 dB across the working band, and the low end moved the *wrong way* for the "NS eats the
+bass" theory — without it the bass reads slightly **lower**. Arrival 1.6 vs 1.7 ms, clarity 26.6 vs
+27.5 dB, peak −6.8 vs −6.7. All within what two consecutive sweeps of the same cabin differ by
+anyway.
+
+🧩 The low-end roll-off is the microphone on the dashboard and the absent subwoofer, not the
+suppressor. `UNPROCESSED` is kept in `RoomMeasurement` because it costs nothing, falls back
+cleanly, and may matter on a unit with a different policy — **not** because it was shown to improve
+anything here.
+
+## A volume written while no source is current never reaches the hardware
+
+📻 Same session. `sys.media.vol` was set to 5, read back as 5, and the cabin stayed silent — because
+`sys.current.vol.type` was **empty**: after a reboot the platform publishes no current source until
+something has actually behaved like a player. `VolumeState.setVolumeVal` only calls the MCU when
+`volType.equals(sys.current.vol.type)`, so the write went into a property and stopped there.
+
+Starting and stopping a player once fixes it for good:
+
+```
+before:  sys.current.vol.type = []            → writes are inert
+after:   sys.current.vol.type = media_type    → writes reach the MCU
+```
+
+and only then does the wire show what it should:
+
+```
+mcu_services: audio channel change to MPU, current_audio_source=com.radiorubka.wdsp
+APP2MCU - writeToUart: [ff fd fe 1a 01 40 5a a5 13 e4 …]
+VolumeState: getVolumeVal - volume:6 - propSave: sys.media.vol - defVol: 1
+```
+
+🔴 **Corrected 28.08 — it is not the media session.** 📻 `dumpsys media_session` during a sweep
+shows wDSP with **no session of its own**; it appears only under *"Audio playback (lastly played
+comes first)"*, which is where the launcher's media widget takes its icon from. So playing audio is
+already enough to become the current source, and adding a `MediaSession` would fix nothing.
+
+What actually publishes `sys.current.vol.type` is a **source switch on the MCU** — starting the
+radio does it, playing Android audio does not. 📻 Verified twice: with music playing and the PCM
+running at `S24_LE`, `sys.current.vol.type` stayed empty; starting and pausing the radio filled it
+with `media_type`, and only then did a written volume reach the wire.
+
+🧩 So the four independent parts of "being a player" hold, but the missing one here was the **MCU
+channel/source state**, not a session object.
+
+Note `defVol: 1` in that log line. 🔬 `persist.sys.main_volume` is **the start-up volume slider in
+CarSettings** — a normal user-facing setting, not a stray value. On this unit it is deliberately set
+to 1 so that an autonomous session cannot startle the household with a loud reboot.
+
+🔴 Which makes BitPerfect's heal block a defect: it rewrites `15` to `12`, and on a 0…32 scale `15`
+is well inside what a person can pick. Not to be confused with `persist.qf.arm.default.volume`
+(0…15, the Android mixer at unity) — that one is deliberate, dates from 4.18, and stays. See [10-BITPERFECT-MODULE.md](10-BITPERFECT-MODULE.md) §4.

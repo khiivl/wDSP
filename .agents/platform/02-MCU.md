@@ -22,13 +22,35 @@ persist.sys.qf.mcu.version = QF05.V02.13.20251124.002121
                                                   └────┘
 ```
 
-The last segment is a hardware code. Read it, do not guess:
+The last segment is a hardware code. 🔬 Decoded from the platform's own source, 27.08.2026 — every
+row below is a line of framework code, not an inference:
 
-- **third character from the end** is the external radio chip type — the platform itself does this
-  in `McuManagerService.initRadioExtChip` and publishes `persist.sys.qf.radio.ext`. `002121` → `2`
-  → TDA7708. `004121` → `4` → NXP6686;
-- **`00xx21` means the sound processor is a ROHM BU32107.** The alternative is a BD37544, which is
-  analogue and does roughly half as much.
+| position | meaning | who reads it |
+|---|---|---|
+| **1** (second character) | **AK hub**: `2` → AK7738, `3` → AK7604, anything else → none | `AK7738VolumeManager.getDspType()` |
+| **2** (third character) | **external tuner**: `!= 0` → present. `2` = TDA7708, `4` = NXP6686 | `McuManagerService.initRadioExtChip()` |
+| **4** (fifth character) | **I2S**: `"0"` → no, anything else → yes; this is what separates a BU32107 from a BD37544 | `McuManagerService.onVersionInfoChanged()` |
+
+`002121` → hub **none**, tuner **TDA7708 present**, I2S **yes**.
+
+⚠️ Positions are **0-based from the start** of the last segment. An earlier version of this file
+said "third character from the end", which is wrong and does not fit either worked example.
+
+🔑 **Three things follow, and each of them saves work:**
+
+- `getDspType()` accepts **hex**: a non-digit is decoded as `c + 10 - 97`, so `a` → 10. Parsing only
+  digits will misread a future code.
+- The platform **publishes the I2S answer itself** as `persist.sys.qf.arm.use.i2s`. Read that rather
+  than re-deriving it — a module that tested `last two characters == "21"` disagreed with the
+  platform on any code shaped `00xx31`, and would have applied the wrong audio profile.
+- 🔬 **The platform restarts audioserver by itself** — `SystemProperties.set("ctl.restart",
+  "audioserver")` in `onVersionInfoChanged`, but **only when the version string differs from the
+  stored one**. So it happens after a firmware change and never again, which is why "no sound after
+  a reboot" comes and goes.
+
+⚠️ The tuner **type** is decoded but not used: `initRadioExtChip` only sets `radio.ext` to `true`
+for any non-zero digit. Nothing in the framework treats an NXP differently from a TDA, so any
+difference in their output level has to be handled outside it.
 
 ⚠️ The MCU **speaks one command set to both sound processors** and makes the lesser one look
 complete: the BD37544 accepts commands it cannot honour, and the BU32107's abilities are trimmed in

@@ -59,6 +59,30 @@ policy sets, alongside the media track. **Navigation and media share one output 
 nothing below AudioFlinger can separate them — no VBC tap, no submix. See
 [05-AUDIO-PATH.md](05-AUDIO-PATH.md).
 
+🔴 **Provenance, checked on the wire 27.08.2026 — that measurement is stale, but not for the reason
+first proposed.** It was suggested that `audio_policy_engine_product_strategies.xml` did not exist
+before BitPerfect v5.0, so "both policy sets" could not have carried the mapping. **The file is
+factory and has always been there:**
+
+- 🔬 `/vendor/etc/audio_policy_engine_configuration.xml` carries the stock AOSP 2018 header, is
+  shipped by **no** module (`ls /data/adb/modules/BitPerfect.module/system/vendor/etc/` does not
+  list it), and it `xi:include`s `audio_policy_engine_product_strategies.xml`. Without that file
+  the policy engine would not parse at all.
+- 🔬 What v5.0 introduced is the module **overriding** it: `QF_BitPerfect.module.v4.18.zip` carries
+  no `audio_policy_engine_*` file whatsoever; v5.0 carries three.
+
+❓ **Unread, and it is the part that matters:** whether the *factory* copy already mapped
+`NAVIGATION_GUIDANCE` to `SYSTEM`. The overlay masks the original and this Magisk build keeps no
+mirror (`/sbin/.magisk/mirror`, `/debug_ramdisk/.magisk/mirror` — both absent), so it cannot be read
+from a running unit. It needs a stock firmware dump.
+
+🧩 One hint only: in the v5.0 file that one line sits at a different indentation from every other
+`<Attributes>` around it, which reads like a hand insertion rather than something the vendor wrote.
+
+⇒ **Do not cite the measurement above as describing the current system, and do not cite the file as
+describing behaviour either** — here the wire and the file have already disagreed once. Where a
+`NAVIGATION_GUIDANCE` tone lands today is ❓, and costs one tone to find out.
+
 ---
 
 ## 3. The prompt's level is one number: `navi_volume`
@@ -253,3 +277,62 @@ asking), the installed navigators checked against `NaviApp.ini`, and the audio h
 
 Related: [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) · [05-AUDIO-PATH.md](05-AUDIO-PATH.md)
 · [02-MCU.md](02-MCU.md)
+
+---
+
+## §12. The navigator whitelist is cached once per process (27.08.2026)
+
+🔬 From `android/qf/os/QFAudioUtils.java` in `framework_jar/qfaudio`:
+
+```java
+public static final String NAVI_CONFIG = "/system/config/NaviApp.ini";
+public static boolean is_audio_initiated = false;
+public static List<AudioConfig> naviconfigs = new ArrayList();
+
+// every lookup:
+if (!is_audio_initiated) audio_init();      // reads the file
+// ...at the end of audio_init():
+is_audio_initiated = true;
+```
+
+🔴 **The file is read once and the result is kept for the life of the process.** Editing
+`/system/config/NaviApp.ini` at runtime — even with root, even through the Magisk overlay — changes
+**nothing** until whatever cached it is restarted. In practice that means a reboot.
+
+Consequence for anything that wants to "learn" a new navigator while the car is running: the
+whitelist is **not** the lever. It is a boot-time fallback. Live behaviour has to be implemented by
+whoever is running — with root, the same levers are available directly
+(`VolumeManager.findVolumeStateByType` + `setVolumeVal`, `AK7738VolumeManager.setMixAudio`).
+
+### What else that file's owner exposes
+
+| name | value | what it is |
+|---|---|---|
+| `VOLUME_MIX_APPSET` | `-1` | the "appset" in column 3 of the ini — leave the mix to the app |
+| `PROPERTY_ORI_MUSIC_VOLUME` | `persist.sys.ori_music_volume` | 🔑 where the platform stores the music level **before** ducking, so it can restore it afterwards |
+| `FLAG_NAVI` | `7419` | a marker the audio path tags navigation with |
+| `VOICE_CONFIG` | `/system/config/VoiceApp.ini` | the same mechanism for voice apps |
+
+`persist.sys.ori_music_volume` is worth knowing about before writing any ducking of your own: if two
+things duck at once, this is the single slot both will try to restore from, and the second one to
+save wins the memory of what "before" was.
+
+### Which usages actually reach which group
+
+🔬 Read out of the shipped `audio_policy_engine_product_strategies.xml`:
+
+| usage | stream | volume group |
+|---|---|---|
+| `ASSISTANCE_NAVIGATION_GUIDANCE` | SYSTEM | system |
+| `ASSISTANCE_SONIFICATION` | SYSTEM | system |
+| `ASSISTANT` | MUSIC | music *(moved to system in BitPerfect v5.1)* |
+| `MEDIA`, `GAME` | MUSIC | music |
+
+🔴 A navigator that announces plain `MEDIA` is, to the policy engine, **the same thing as a music
+player**. No curve and no volume group can separate them, because they arrive identical. Only a
+per-package list can — which is what `NaviApp.ini` is for, and why it exists at all.
+
+⚠️ `AUDIO_STREAM_TTS` is **not** the navigator channel here: it belongs to
+`STRATEGY_TRANSMITTED_THROUGH_SPEAKER`, reached only by `AUDIO_FLAG_BEACON`. Its `FULL_SCALE` curve
+on the speaker is the AOSP default for that strategy, not somebody's edit. Aiming navigation fixes
+at it does nothing.
