@@ -11,33 +11,32 @@
     <!-- Paddings and Margins -->
     <dimen name="padding_standard">16dp</dimen>
     <dimen name="padding_small">8dp</dimen>
-    <dimen name="margin_large">32dp</dimen>
     <dimen name="margin_standard">16dp</dimen>
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_tiny">4dp</dimen>
 
     <!-- Component Sizes -->
-    <dimen name="slider_max_width">300dp</dimen>
-    <dimen name="slider_max_width_big">600dp</dimen>
     <dimen name="slider_track_height">5dp</dimen>
     <dimen name="control_block_max_width">340dp</dimen>
     <dimen name="fader_length">300dp</dimen>
-    <dimen name="fader_textlength">100dp</dimen>
-    <dimen name="seekbar_padding_horizontal">12dp</dimen>
     <!-- Gap left/right and top/bottom of the car image so a borderless arrow
          icon plus its step-count label fit stacked/side-by-side in the
          margin, centered around the car. -->
-    <dimen name="fader_arrow_gap_h">84dp</dimen>
-    <dimen name="fader_arrow_gap_v">88dp</dimen>
-    <dimen name="fader_arrow_icon_size">40dp</dimen>
+    <dimen name="fader_arrow_gap_h">28dp</dimen>
+    <dimen name="fader_arrow_gap_v">24dp</dimen>
+    <dimen name="fader_arrow_icon_size">36dp</dimen>
     <dimen name="fader_arrow_label_size">28dp</dimen>
 
     <!-- Button Sizes -->
-    <dimen name="button_radius">5dp</dimen>
-    <dimen name="stroke_width">1.3dp</dimen>
+    <dimen name="button_radius">10dp</dimen>
+    <dimen name="stroke_width">1.5dp</dimen>
     <dimen name="button_width">45dp</dimen>
     <dimen name="button_height">55dp</dimen>
-    <dimen name="button_top_height">43dp</dimen>
 
     <dimen name="thumb_height">20dp</dimen>
+    <!-- The microphone-placement car in Diagnostics. 300dp is half of a 1024x600 fascia and
+         well under half of a 1280x720 one, so the arrows above and below it stay on screen
+         without the page having to be scrolled to find them. Density is 1.0 on these units, so
+         dp and px are the same thing here. -->
+    <dimen name="room_mic_car_height">300dp</dimen>
 </resources>

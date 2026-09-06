@@ -1,0 +1,304 @@
+<resources>
+    <string name="app_name">wDSP</string>
+
+    <!-- Presets -->
+    <string name="btn_auto">Auto-Előbeállítás</string>
+    <string name="btn_add">Másolás</string>
+    <string name="btn_rename">Átnevezés</string>
+    <string name="btn_delete">Törlés</string>
+    <string name="btn_export">Exportálás</string>
+    <string name="btn_import">Importálás</string>
+
+    <!-- EQ Tab -->
+    <string name="lbl_sub">Mélynyomó:</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="q_high">4.7</string>
+    <string name="q_low">2.2</string>
+
+    <!-- F-M Curve Tab -->
+    <string name="fm_title">Fiziológiai hangerő kompenzációs görbe (Loudness)</string>
+    <string name="enable_loudness">Loudness bekapcsolása</string>
+    <string name="trim_highs">Magashang vágás</string>
+    <string name="sub_tweaking">Mélynyomó finomhangolás</string>
+    <string name="fm_visualizer_label">Valós idejű kompenzációs előnézet</string>
+    <string name="lbl_volume">Hangerő:</string>
+    <string name="lbl_sub_offset">Mélynyomó eltolás:</string>
+    <string name="lbl_lower_sub_by">Mélynyomó csökkentése:</string>
+    <string name="lbl_calibration_point">Kalibrációs pont (~80 dB):</string>
+    <string name="lbl_correction_strength">Korrekció erőssége:</string>
+
+    <!-- Delays Tab -->
+    <string name="delays_title">Hangszóró időkésleltetés (Delays)</string>
+    <string name="spatial_correction">Térbeli korrekció</string>
+    <string name="surround_mode">Térhangzás mód</string>
+    <string name="front_left">Bal első</string>
+    <string name="front_right">Jobb első</string>
+    <string name="rear_left">Bal hátsó</string>
+    <string name="rear_right">Jobb hátsó</string>
+    <string name="subwoofer">Mélynyomó</string>
+    <string name="rear_fill_enhancement">Hátsó térkitöltés (Rear Fill)</string>
+    <string name="delay_value_format">%1$.1f ms (%2$d cm)</string>
+
+    <!-- Filters Tab -->
+    <string name="built_in_loudness_legacy">Beépített Loudness (LEGACY)</string>
+    <string name="speaker_bass_controls">Hangszóró mélyhang vezérlés</string>
+    <string name="front_speaker_bass">Első mélyhang</string>
+    <string name="rear_speaker_bass">Hátsó mélyhang</string>
+    <string name="lbl_filter">Szűrő</string>
+    <string name="lbl_boost">Kiemelés</string>
+    <string name="lbl_freq">Frekvencia</string>
+    <string name="lbl_freq_boost">Kiemelési frekv</string>
+    <string name="lbl_center">Közép</string>
+    <string name="fader_balance">Fader &amp; Balansz</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+
+    <!-- GALA Tab -->
+    <string name="gala_title">GALA (Sebességfüggő hangerő)</string>
+    <string name="enable_gala">GALA bekapcsolása</string>
+    <string name="enable_gala_feature">GALA funkció engedélyezése</string>
+    <string name="gala_global">Globális</string>
+    <string name="vol_step_every">Hangerőlépcső minden:</string>
+    <string name="gps_speed_label">GPS SEBESSÉG</string>
+    <string name="current_gps_speed">Jelenlegi GPS sebesség:</string>
+    <string name="vol_offset_label">HANGERŐ ELTOLÁS</string>
+    <string name="applied_vol_offset">Alkalmazott eltolás:</string>
+    <string name="standstill_threshold">Álló helyzeti küszöb</string>
+    <string name="standstill_speed">Álló helyzeti sebesség:</string>
+    <string name="max_speed_limit">Maximális sebességkorlát</string>
+    <string name="max_speed_label">Maximális sebesség:</string>
+    <string name="max_vol_adj">Max. hangerőbeállítás</string>
+    <string name="max_adjustment">Maximális korrekció:</string>
+    <string name="sensitivity_settings">Érzékenységi beállítások</string>
+    <string name="simulation_debug">Szimuláció &amp; Hibakeresés</string>
+    <string name="simulate_vehicle_speed">Sebesség szimulálása</string>
+    <string name="simulate_speed">Szimulált sebesség:</string>
+    <string name="gala_fade_delay">Átmeneti sebesség (késleltetés/lépés):</string>
+    <string name="gala_hold_timer">Küszöb megtartási időzítő:</string>
+    <string name="gala_ms_fmt">%d ms</string>
+    <string name="gala_s_fmt">%.1f s</string>
+
+    <!-- General -->
+    <string name="btn_apply">Alkalmaz</string>
+    <string name="btn_reapply">Újraalkalmazás visszaállításkor</string>
+    <string name="value_default">Semmi</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Mégse</string>
+    <string name="none">Nincs</string>
+
+    <!-- Toasts -->
+    <string name="toast_settings_applied">Beállítások alkalmazva</string>
+    <string name="toast_exists">Már létezik</string>
+    <string name="toast_cannot_delete_last">Az utolsó előbeállítás nem törölhető</string>
+    <string name="toast_exported">Exportálva</string>
+    <string name="toast_imported">Importálva</string>
+    <string name="toast_sub_comp_limit">Mélynyomó komp. 80 Hz-re korlátozva</string>
+
+    <!-- Battery Optimization Dialog -->
+    <string name="battery_dialog_title">wDSP futtatása a háttérben</string>
+    <string name="battery_dialog_message">A dinamikus hangszínszabályzó megbízható működéséhez fel kell menteni a wDSP-t az akkumulátor-optimalizálás alól.</string>
+    <string name="btn_allow">Engedélyezés</string>
+    <string name="btn_later">Később</string>
+
+    <!-- Hardware Status -->
+    <string name="hw_detecting">Hardver: Észlelés…</string>
+    <string name="hw_demo_mode">Nem lehet kapcsolódni a MCU_SERVICE-hez</string>
+
+    <!-- Preset Dialogs -->
+    <string name="dialog_rename_title">Átnevezés</string>
+
+    <!-- Automation Dialog -->
+    <string name="automation_title_fmt">Automatizáció: %1$s</string>
+    <string name="active_player_fmt">Aktív lejátszó: %1$s</string>
+    <string name="current_associations">Jelenlegi hozzárendelések:
+</string>
+    <string name="global_default_fmt">
+Globális alapértelmezett: %1$s</string>
+    <string name="btn_assign">Hozzárendelés</string>
+    <string name="btn_set_default">Alapértelmezett</string>
+    <string name="btn_unassign">Hozzárendelés törlése</string>
+
+    <!-- Default Names -->
+    <string name="default_preset_name">Előbeállítás 1</string>
+    <string name="default_preset_name_hint">Előbeállítás</string>
+
+    <!-- Labels -->
+    <string name="lbl_hz_fmt">%1$s Hz</string>
+    <string name="lbl_db_fmt2">%.1f dB</string>
+    <string name="lbl_db_fmt">+ %1$d dB</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+
+    <!-- Formats -->
+    <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Helymeghatározási engedély szükséges a GALA-hoz.</string>
+    <string name="toast_import_failed">Sikertelen importálás: %1$s</string>
+    <string name="error">Hiba</string>
+
+    <!-- Menu -->
+    <string name="EQtab">EQ</string>
+    <string name="FMtab">Loudness</string>
+    <string name="DLtab">Késleltetés</string>
+    <string name="OTtab">Egyéb</string>
+    <string name="GLtab">Sebesség</string>
+
+    <!-- PowerVolume -->
+    <string name="lbl_pwr">Erősítő teljesítmény:</string>
+    <string name="hint_sub_freq">Frekv</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Állapotsor vizualizáció</string>
+    <string name="status_bar_visualizer_enable">Állapotsor vizualizáció</string>
+    <string name="status_bar_visualizer_width">Szélesség</string>
+    <string name="status_bar_visualizer_offset_x">Pozíció</string>
+    <string name="status_bar_visualizer_theme">Téma</string>
+    <string name="status_bar_visualizer_hue">HUE eltolás / Szín</string>
+    <string name="status_bar_visualizer_permission_needed">Átfedési engedély szükséges</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE forgatás)</string>
+    <string name="status_bar_theme_solid_hue">Egyszínű HUE-ból</string>
+    <string name="status_bar_theme_auto_day_night">Auto Nappal/Éjjel (Fehér/Fekete)</string>
+    <string name="status_bar_theme_eq_groups">EQ csoportok (HUE forgatás)</string>
+    <string name="status_bar_theme_monochrome_white">Mindig fehér</string>
+    <string name="status_bar_theme_monochrome_black">Mindig fekete</string>
+    <string name="status_bar_theme_fire">Tűz</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+
+    <string name="settings_title">wDSP Settings</string>
+    <string name="settings_appearance">Appearance &amp; Themes</string>
+    <string name="settings_theme_day">Day</string>
+    <string name="settings_theme_night">Night</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Accent</string>
+    <string name="settings_primary_text_title">Main Text</string>
+    <string name="settings_label_color_title">Labels</string>
+    <string name="settings_on_accent_title">On Accent</string>
+    <string name="settings_wallpaper_title">Wallpaper</string>
+    <string name="settings_wallpaper_none">Built-in / Default</string>
+    <string name="settings_wallpaper_load">Pick Photo</string>
+    <string name="settings_wallpaper_default">Reset</string>
+    <string name="settings_wallpaper_solid_switch">Solid Color</string>
+    <string name="settings_wallpaper_status_solid">Solid Color Active</string>
+    <string name="settings_solid_hue">Solid Color HUE</string>
+    <string name="settings_solid_val">Solid Brightness</string>
+    <string name="settings_permissions">Permissions &amp; System</string>
+    <string name="settings_app_details">App Details</string>
+    <string name="eq_visualizer_title">Hangszínszabályzó vizualizáló</string>
+    <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
+    <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_mode_spectrum">Frequency - Color</string>
+    <string name="eq_vis_enable_label">Display spectrum bars</string>
+
+    <string name="settings_backup_btn">Backup All Settings</string>
+    <string name="settings_restore_btn">Restore Settings</string>
+    <string name="toast_backup_success">Settings backed up successfully</string>
+    <string name="toast_backup_failed">Backup failed: %s</string>
+    <string name="toast_restore_success">Settings restored successfully</string>
+    <string name="toast_restore_failed">Restore failed: %s</string>
+    <string name="gala_section_speed_gain">Sebesség és kompenzáció</string>
+    <string name="gala_section_smoothing_sim">Simítás és szimuláció</string>
+    <string name="settings_perm_overlay">Átfedési engedély (Megjelenítés más alkalmazások felett)</string>
+    <string name="fm_controls_title">Kalibrálás és korrekciós erősség</string>
+    <string name="perm_battery_opt">Akkumulátoroptimalizálás</string>
+    <string name="perm_audio_record">Hangfelvétel (EQ)</string>
+    <string name="perm_gps_location">GPS-helymeghatározás (GALA)</string>
+    <string name="vis_normalization_label">Dinamikus normalizálás (AGC)</string>
+    <string name="vis_normalization_desc">A dinamikatartomány finom kiegyenlítése halk felvételekhez</string>
+    <string name="status_bar_bands_count">Sávok száma:</string>
+    <string name="analyzer_section_title">Az analizátor pontossága és szinkronja</string>
+    <string name="agc_main_label">Automatikus szint: fő analizátor</string>
+    <string name="agc_main_desc">A kikapcsolt állapot abszolút szinteket jelent. Az a műszer, amely magát skálázza át, olvashatatlan</string>
+    <string name="agc_bar_label">Automatikus szint: állapotsáv modul</string>
+    <string name="agc_bar_desc">Itt dísz és nem mérés, ezért a kiegyenlítés általában jól jön</string>
+    <string name="agc_strength_label">Erősség</string>
+    <string name="latency_trim_label">Kép és hang szinkronja</string>
+    <string name="latency_trim_desc">Az alapkésleltetést magunk mérjük; minden lejátszó másképp pufferel, ezért fülre igazítsa</string>
+    <string name="range_db_label">Megjelenítési tartomány</string>
+    <string name="unit_hz">%1$s Hz</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_latency_ms">%1$+d ms</string>
+    <string name="format_range_db">%1$d dB</string>
+    <string name="placeholder_db">0.0 dB</string>
+    <string name="toast_saf_error">Hiba a fájl kiválasztásakor: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Szinkronizálás a hanggal</string>
+    <string name="sync_measure_desc">Lejátszik néhány rövid hangjelzést, és megméri, mennyivel siet a sávok kijelzése a hanghoz képest. Körülbelül 15 másodpercig tart.</string>
+    <string name="sync_measure_button">Szinkronizálás</string>
+    <string name="sync_measure_running">Mérés…</string>
+    <string name="sync_measure_result">Mért érték: %1$d ms</string>
+    <string name="sync_measure_failed">A mérés nem sikerült</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnosztika</string>
+    <string name="room_measure_label">Utastér mérése</string>
+    <string name="room_measure_desc">Sorra megszólaltat egy sweepet minden hangszórón, és megméri, mikor érkezett meg a hang, és fázisban van-e. Körülbelül fél percig tart. Motor leállítva, ajtók becsukva, szokásos hangerő.</string>
+    <string name="room_measure_button">Mérés</string>
+    <string name="room_measure_running">Mérés: %1$s</string>
+    <string name="room_measure_done">Kész — elküldjük az eredményt?</string>
+    <string name="room_measure_failed">A mérés nem sikerült</string>
+    <string name="room_measure_send">Archívum mentése</string>
+    <string name="room_measure_saved_title">Mérés mentve</string>
+    <string name="room_measure_saved">A(z) %2$d fájlt tartalmazó archívum ide lett írva:\n\n%1$s\n\nNyissa meg egy fájlkezelővel, vagy másolja le USB-kábellel vagy memóriakártyával.</string>
+    <string name="room_measure_save_failed">Az archívumot nem sikerült kiírni.</string>
+    <string name="room_measure_share_text">wDSP utastér-mérés, verzió %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Még nincs mérés</string>
+    <string name="toast_saved_to">Mentve ide: %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Átlátszatlanság</string>
+    <string name="status_bar_height_manual">Sáv magassága</string>
+    <string name="status_bar_offset_y">Távolság a tetejétől</string>
+    <string name="status_bar_placement_hint">Hagyja a magasságot 0-n, és az alkalmazás maga méri meg a sávot. Csak akkor állítsa be kézzel, ha a sáv rossz helyre kerül — egyes fejegységeken a felső sávot az indító (launcher) rajzolja, és az Android nem tud a létezéséről.</string>
+    <string name="freq_off">Ki</string>
+    <string name="system_report_label">Rendszerjelentés</string>
+    <string name="system_report_desc">Feljegyzi, hogy az egység hogyan kezeli a hangerőt, az útválasztást és a mikrofont. Szükséges a Bluetooth-hívás utáni hangerő-visszaállítás, a halk navigációs utasítások és az el nem induló mérés javításához.</string>
+    <string name="system_report_button">Gyűjtés</string>
+    <string name="system_report_working">Gyűjtés…</string>
+    <string name="system_report_title">Rendszerjelentés</string>
+    <string name="system_report_saved">Mentve ide:\n\n%1$s\n\nA hangerőhibák elkapásához: indítson egy rövid telefonhívást Bluetooth-on, tegye le, majd gyűjtse be másodszor is a jelentést. A második fájl tartalmazza, mi változott a hívás során.</string>
+    <string name="system_report_failed">A jelentést nem sikerült kiírni.</string>
+    <string name="mic_denied_title">Nincs mikrofon</string>
+    <string name="mic_denied">Az Android már nem kéri a mikrofont, mert az engedélyt korábban megtagadták. Enélkül semmit sem lehet mérni.\n\nNyissa meg a Beállítások → Alkalmazások → wDSP → Engedélyek menüt, engedélyezze a mikrofont, majd próbálja újra.</string>
+    <string name="screensaver_section_title">Képernyővédő</string>
+    <string name="screensaver_enable">Képernyővédő</string>
+    <string name="screensaver_enable_desc">Teljes képernyős vizualizáció inaktivitáskor. Érintésre eltűnik.</string>
+    <string name="screensaver_delay">Késleltetés</string>
+    <string name="screensaver_delay_fmt">%1$d mp</string>
+    <string name="screensaver_bg_alpha">Háttér</string>
+    <string name="screensaver_width">Szélesség</string>
+    <string name="screensaver_height">Magasság</string>
+    <string name="screensaver_bright_day">Fényerő nappal</string>
+    <string name="screensaver_bright_night">Fényerő éjjel</string>
+    <string name="screensaver_apps">Soha felette</string>
+    <string name="screensaver_apps_none">Nincs</string>
+    <string name="screensaver_apps_pick">Válassz</string>
+    <string name="screensaver_note">A navigációt sosem takarja el.</string>
+    <string name="room_mic_spot_label">Hol van a mikrofon</string>
+    <string name="room_mic_spot_desc">Húzd a pontot oda, ahol a mikrofon ténylegesen van. Magán a mérésen nem változtat semmit - csak megmondja, hogyan kell olvasni az eredményt, e nélkül egyetlen hangszórón lévő mikrofon pontosan úgy néz ki, mintha három rossz lenne.</string>
+    <string name="room_root_title">Engedélyezted a root hozzáférést?</string>
+    <string name="room_root_message">A mérés most nem kapott root jogot, ezért meg kell kérdeznünk.\n\nPontosan egy művelethez van rá szükség: annak a háttérfolyamatnak a leállításához, amely 16 kHz-en tartja nyitva a mikrofont. A platform csak egyetlen bemeneti streamet tart fenn, így e nélkül a felvételünk ehhez csatlakozik, és a mérés fele elvész - és az Androidban semmi sem ismeri ezt el, a mintavételezési frekvencia továbbra is 48000-et mutat.\n\nSemmi sincs letiltva vagy eltávolítva; az asszisztens magától visszakapcsol.</string>
+    <string name="room_root_yes">Igen, be van kapcsolva</string>
+    <string name="room_root_no">Nem</string>
+    <string name="room_root_blocked">Akkor először kapcsold be: nyisd meg a Magisk → Superuser menüt, keresd meg a wDSP-t, és állítsd Engedélyezésre (vagy Kérdezzen, és engedélyezd, amikor kéri).\n\nA mérés nem indult el. Futtasd újra, amint a root engedélyezve van.</string>
+    <string name="screensaver_info_h">Szám sávja</string>
+    <string name="room_mic_place_hint">Mire van rögzítve</string>
+    <string name="room_mic_place_windscreen">Szélvédő</string>
+    <string name="room_mic_place_visor">A napellenző alatt</string>
+    <string name="room_mic_place_mirror">Visszapillantó tükör</string>
+    <string name="room_mic_place_dome">Utastér világítás</string>
+    <string name="room_mic_place_wheel">Kormánykerék</string>
+    <string name="room_mic_place_dash">Műszerfal</string>
+    <string name="room_mic_place_pillar_top">A-oszlop, fent</string>
+    <string name="room_mic_place_pillar_bottom">A-oszlop, lent</string>
+</resources>
+

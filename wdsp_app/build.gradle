@@ -5,25 +5,67 @@ plugins {
 android {
     namespace 'com.radiorubka.wdsp'
     compileSdk 36
+    // Pinned so Android Studio builds the native module with the same toolchain as the command
+    // line instead of picking whatever it finds or offering to download another one.
+    ndkVersion '28.2.13676358'
 
     defaultConfig {
         applicationId "com.radiorubka.wdsp"
         minSdk 29
         //noinspection ExpiredTargetSdkVersion
         targetSdk 29
-        versionCode 1
-        versionName "0.4.2"
+        versionCode 11
+        versionName "0.4.7.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17'
+            }
+        }
+        ndk {
+            // The head units this targets are UIS7862/ums512, all 64-bit; the 32-bit slice is
+            // there only so an older board does not end up without a library at all.
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
+    }
+
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader ->
+            localProperties.load(reader)
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(localProperties.getProperty('keystore.file', ''))
+            storePassword localProperties.getProperty('keystore.password', '')
+            keyAlias localProperties.getProperty('key.alias', '')
+            keyPassword localProperties.getProperty('key.password', '')
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

@@ -1,0 +1,619 @@
+package com.radiorubka.wdsp;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.PixelFormat;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
+
+/**
+ * Manages the Status Bar Visualizer overlay lifecycle, positioning, and audio gating.
+ * Follows the non-intrusive status bar overlay design from TopBarWidget.
+ */
+public class StatusBarVisualizerManager {
+    private static final String TAG = "wDSP_StatusBarVisMgr";
+
+    public static final String PREF_STATUS_BAR_ENABLED = "sb_vis_enabled";
+    public static final String PREF_STATUS_BAR_WIDTH_F = "sb_vis_width_f";
+    public static final String PREF_STATUS_BAR_POS_F   = "sb_vis_pos_f";
+    public static final String PREF_STATUS_BAR_THEME   = "sb_vis_theme";
+    public static final String PREF_STATUS_BAR_HUE     = "sb_vis_hue";
+    public static final String PREF_STATUS_BAR_ALPHA   = "sb_vis_alpha";
+    public static final String PREF_STATUS_BAR_HEIGHT_PX = "sb_vis_height_px";
+    /**
+     * How far below the top edge the strip is drawn, in pixels.
+     *
+     * Zero everywhere the bar starts at the very top, which is nearly everywhere. It exists for
+     * the units where the strip on screen belongs to the launcher and does not begin at the edge.
+     */
+    public static final String PREF_STATUS_BAR_OFFSET_Y = "sb_vis_offset_y";
+    public static final String PREF_STATUS_BAR_NORMALIZATION = "sb_vis_normalization";
+    public static final String PREF_STATUS_BAR_BANDS   = "sb_vis_bands";
+
+    public static final float DEFAULT_WIDTH_F = 0.40f;
+    public static final float DEFAULT_POS_F   = 0.50f;
+    public static final int DEFAULT_THEME     = StatusBarVisualizerView.THEME_SPECTRUM;
+    public static final int DEFAULT_HUE       = 0;
+    public static final int DEFAULT_ALPHA     = 100;
+    public static final int DEFAULT_BANDS     = 32;
+
+    private final Context context;
+    private final WindowManager windowManager;
+    private final SharedPreferences prefs;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private StatusBarVisualizerView visualizerView;
+    private WindowManager.LayoutParams layoutParams;
+    private boolean isViewAttached = false;
+
+    private boolean isEnabled = false;
+    private float widthFraction = DEFAULT_WIDTH_F;
+    private float posFraction = DEFAULT_POS_F;
+    private int theme = DEFAULT_THEME;
+    private int hueShift = DEFAULT_HUE;
+    private int alphaPercent = DEFAULT_ALPHA;
+    private int bandCount = DEFAULT_BANDS;
+
+    // Audio gating: Channel 4 (Media) = Active, Channel 2 (Radio) = Inactive
+    private int currentChannel = 4; // Default to Media
+    private boolean isMuted = false;
+    private boolean isScreenOn = true;
+
+    private static StatusBarVisualizerManager instance;
+
+    public static synchronized StatusBarVisualizerManager getInstance(Context context) {
+        if (instance == null) {
+            instance = new StatusBarVisualizerManager(context.getApplicationContext());
+        }
+        return instance;
+    }
+
+    public StatusBarVisualizerManager(Context context) {
+        this.context = context.getApplicationContext();
+        this.windowManager = (WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE);
+        this.prefs = ThemeManager.prefs(this.context);
+
+        // Migrate from old EqPresets if present
+        SharedPreferences oldPrefs = this.context.getSharedPreferences("EqPresets", Context.MODE_PRIVATE);
+        if (oldPrefs.contains(PREF_STATUS_BAR_ENABLED) && !prefs.contains(PREF_STATUS_BAR_ENABLED)) {
+            prefs.edit()
+                    .putBoolean(PREF_STATUS_BAR_ENABLED, oldPrefs.getBoolean(PREF_STATUS_BAR_ENABLED, false))
+                    .putFloat(PREF_STATUS_BAR_WIDTH_F, oldPrefs.getFloat(PREF_STATUS_BAR_WIDTH_F, DEFAULT_WIDTH_F))
+                    .putFloat(PREF_STATUS_BAR_POS_F, oldPrefs.getFloat(PREF_STATUS_BAR_POS_F, DEFAULT_POS_F))
+                    .putInt(PREF_STATUS_BAR_THEME, oldPrefs.getInt(PREF_STATUS_BAR_THEME, DEFAULT_THEME))
+                    .putInt(PREF_STATUS_BAR_HUE, oldPrefs.getInt(PREF_STATUS_BAR_HUE, DEFAULT_HUE))
+                    .apply();
+        }
+
+        loadPreferences();
+    }
+
+    public void loadPreferences() {
+        isEnabled = prefs.getBoolean(PREF_STATUS_BAR_ENABLED, true);
+        widthFraction = prefs.getFloat(PREF_STATUS_BAR_WIDTH_F, DEFAULT_WIDTH_F);
+        posFraction = prefs.getFloat(PREF_STATUS_BAR_POS_F, DEFAULT_POS_F);
+        theme = prefs.getInt(PREF_STATUS_BAR_THEME, DEFAULT_THEME);
+        hueShift = prefs.getInt(PREF_STATUS_BAR_HUE, DEFAULT_HUE);
+        alphaPercent = prefs.getInt(PREF_STATUS_BAR_ALPHA, DEFAULT_ALPHA);
+        bandCount = prefs.getInt(PREF_STATUS_BAR_BANDS, DEFAULT_BANDS);
+    }
+
+    public boolean canDrawOverlays() {
+        return Settings.canDrawOverlays(context);
+    }
+
+    public int getStatusBarHeight() {
+        // 1. Check if already measured and saved
+        int customHeight = prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
+        if (customHeight > 0) {
+            return customHeight;
+        }
+
+        // 2. Read directly from system resources dimen and cache permanently
+        int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            int h = context.getResources().getDimensionPixelSize(resId);
+            if (h > 0) {
+                prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, h).apply();
+                return h;
+            }
+        }
+
+        // 3. Fallback based on density and save
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        int fallback = (int) (28 * dm.density);
+        prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, fallback).apply();
+        return fallback;
+    }
+
+    /**
+     * How far down the strip is drawn, never far enough to lose it.
+     *
+     * <p>The stored number used to be taken as given, and the slider's travel was the whole screen
+     * height - so the last few pixels of travel pushed the strip entirely below the bottom edge,
+     * where it cannot be seen and cannot be grabbed back. The clamp lives here rather than only in
+     * the slider because the height can change afterwards: a strip parked at the bottom and then
+     * made taller would walk off the screen on its own.
+     */
+    public int offsetY() {
+        int stored = Math.max(0, prefs.getInt(PREF_STATUS_BAR_OFFSET_Y, 0));
+        return Math.min(stored, maxOffsetY());
+    }
+
+    /**
+     * What the platform reserves for its own status bar, ignoring any manual strip height.
+     *
+     * <p>{@link #getStatusBarHeight()} answers a different question - how tall the owner wants the
+     * strip - and on a unit where they have set that by hand the two are unrelated. The screensaver
+     * needs the real one, because that is the part of the screen it cannot draw on.
+     */
+    public int systemStatusBarHeight() {
+        int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            int h = context.getResources().getDimensionPixelSize(resId);
+            if (h > 0) return h;
+        }
+        return 0;
+    }
+
+    /** The lowest offset that still leaves the whole strip on the screen. */
+    public int maxOffsetY() {
+        return Math.max(0, screenHeight() - getStatusBarHeight());
+    }
+
+    public void setOffsetY(int px) {
+        prefs.edit().putInt(PREF_STATUS_BAR_OFFSET_Y, Math.max(0, px)).apply();
+        updateWindowGeometry();
+    }
+
+    /**
+     * Sets the height by hand, or returns to measuring it.
+     *
+     * <p>Zero means automatic: the stored value is cleared and {@link #getStatusBarHeight()} goes
+     * back to asking the platform. That matters because a person experimenting needs a way back -
+     * and because on most units the automatic answer is the right one.
+     */
+    public void setManualHeight(int px) {
+        if (px <= 0) {
+            prefs.edit().remove(PREF_STATUS_BAR_HEIGHT_PX).apply();
+        } else {
+            prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, px).apply();
+        }
+        updateWindowGeometry();
+    }
+
+    /** The height set by hand, or 0 when it is being measured automatically. */
+    public int manualHeight() {
+        return prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
+    }
+
+    public void updateStatusBarHeight(int heightPx) {
+        if (heightPx <= 0) return;
+        int current = prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
+        if (current != heightPx) {
+            Log.i(TAG, "Calibrating status bar height: " + heightPx + "px (was " + current + "px)");
+            prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, heightPx).apply();
+            mainHandler.post(this::updateWindowGeometry);
+        }
+    }
+
+    /**
+     * The display the overlay actually lives on, not the one the app was configured for.
+     *
+     * <h2>Why not getResources().getDisplayMetrics()</h2>
+     *
+     * Because there is more than one answer to "how big is the screen" and they disagree. Resource
+     * metrics describe the window a context was configured for, and an activity that draws behind
+     * the system bars gets a different number from a service that does not - so the slider's travel
+     * was computed against one screen and the overlay placed on another. After a few moves of the
+     * height slider the two drifted far enough apart to put the bottom of the strip below the
+     * edge, which is exactly the fault this was supposed to prevent.
+     *
+     * <p>An overlay window is positioned in display coordinates, so the display is the only
+     * measurement that can be right. Everything that places the strip - here and in the settings
+     * sliders - now asks this.
+     */
+    public int screenWidth() {
+        return realDisplaySize()[0];
+    }
+
+    public int screenHeight() {
+        return realDisplaySize()[1];
+    }
+
+    private int[] realDisplaySize() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Rect bounds =
+                        windowManager.getCurrentWindowMetrics().getBounds();
+                if (bounds.width() > 0 && bounds.height() > 0) {
+                    return new int[]{bounds.width(), bounds.height()};
+                }
+            } else {
+                android.graphics.Point point = new android.graphics.Point();
+                windowManager.getDefaultDisplay().getRealSize(point);
+                if (point.x > 0 && point.y > 0) return new int[]{point.x, point.y};
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not read the display size, falling back to resources", t);
+        }
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return new int[]{dm.widthPixels, dm.heightPixels};
+    }
+
+    private int getScreenWidth() {
+        return screenWidth();
+    }
+
+    public void setAudioGating(int channel, boolean muted) {
+        this.currentChannel = channel;
+        this.isMuted = muted;
+        mainHandler.post(this::evaluateVisibility);
+    }
+
+    public void setScreenState(boolean screenOn) {
+        this.isScreenOn = screenOn;
+        mainHandler.post(this::evaluateVisibility);
+    }
+
+    public void onPreferenceChanged(String key) {
+        mainHandler.post(() -> {
+            loadPreferences();
+            if (visualizerView != null) {
+                visualizerView.setTheme(theme);
+                visualizerView.setHueShift(hueShift);
+                visualizerView.setAlphaPercent(alphaPercent);
+                visualizerView.setBandCount(bandCount);
+                visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
+            }
+            updateWindowGeometry();
+            evaluateVisibility();
+        });
+    }
+
+    public void evaluateVisibility() {
+        mainHandler.post(() -> {
+            if (isLentToScreensaver()) {
+                // When lent to screensaver, visibility is controlled exclusively by ScreensaverManager!
+                return;
+            }
+            boolean shouldShow = isEnabled
+                    && canDrawOverlays()
+                    && isScreenOn
+                    && !isMuted
+                    && (currentChannel != 2); // Explicitly hide when Channel 2 (Radio) is active
+
+            if (shouldShow) {
+                ensureViewAttached();
+                if (visualizerView != null) {
+                    visualizerView.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (visualizerView != null) {
+                    visualizerView.setVisibility(View.GONE);
+                }
+            }
+        });
+    }
+
+    private void ensureViewAttached() {
+        if (!canDrawOverlays()) return;
+
+        if (visualizerView == null) {
+            visualizerView = new StatusBarVisualizerView(context);
+            visualizerView.setTheme(theme);
+            visualizerView.setHueShift(hueShift);
+            visualizerView.setAlphaPercent(alphaPercent);
+            visualizerView.setBandCount(bandCount);
+            visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
+        }
+
+        if (layoutParams == null) {
+            int windowType;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                windowType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            } else {
+                //noinspection deprecation
+                windowType = WindowManager.LayoutParams.TYPE_PHONE;
+            }
+
+            int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+
+            layoutParams = new WindowManager.LayoutParams(
+                    calculateWidthPx(),
+                    getStatusBarHeight(),
+                    windowType,
+                    flags,
+                    PixelFormat.TRANSLUCENT
+            );
+            layoutParams.gravity = Gravity.TOP | Gravity.START;
+        }
+        fillGeometry();
+
+        if (!isViewAttached) {
+            try {
+                windowManager.addView(visualizerView, layoutParams);
+                isViewAttached = true;
+                Log.i(TAG, "StatusBarVisualizer attached to WindowManager.");
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to add StatusBarVisualizer view", t);
+                isViewAttached = false;
+            }
+        } else {
+            try {
+                windowManager.updateViewLayout(visualizerView, layoutParams);
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    private void updateWindowGeometry() {
+        if (isViewAttached && visualizerView != null && layoutParams != null) {
+            fillGeometry();
+            try {
+                windowManager.updateViewLayout(visualizerView, layoutParams);
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    /**
+     * Writes the strip's size and position into {@code layoutParams} - the only place that does.
+     *
+     * <p>There used to be two, one on the attach path and one on the update path, and they had to
+     * agree. They stopped agreeing the moment the screensaver could borrow the window: the update
+     * path learned about it and the attach path did not, so the next time anything re-evaluated
+     * visibility - and the audio gating does that constantly - the strip snapped back to its own
+     * size underneath the backdrop.
+     */
+    private void fillGeometry() {
+        if (layoutParams == null) return;
+        if (screensaverBounds != null) {
+            layoutParams.width = screensaverBounds[0];
+            layoutParams.height = screensaverBounds[1];
+            layoutParams.x = screensaverBounds[2];
+            layoutParams.y = screensaverBounds[3];
+            return;
+        }
+        layoutParams.height = getStatusBarHeight();
+        layoutParams.width = calculateWidthPx();
+        layoutParams.x = calculateLeftPx();
+        layoutParams.y = offsetY();
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // lending the strip to the screensaver
+    //
+    // The screensaver shows the same widget, larger. Not a copy of it - the same one. Two
+    // visualiser views would both be listening to the spectrum engine and both drawing, for one
+    // picture; and a copy would drift from the original the first time a theme or a band count
+    // changed in one place and not the other.
+    // -------------------------------------------------------------------------------------------
+
+    /** width, height, x, y while the screensaver has it; null the rest of the time. */
+    private int[] screensaverBounds;
+    private Runnable onBack;
+
+    public boolean isAttached() {
+        return isViewAttached && visualizerView != null;
+    }
+
+    /**
+     * Hands the strip to the screensaver: new size, new brightness, and lifted above the backdrop.
+     *
+     * <p>Removing and re-adding the view is not laziness - {@code updateViewLayout} keeps a window
+     * where it is in the stacking order, and the backdrop was added after the strip, so without
+     * this the strip would be painted underneath it.
+     */
+    public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
+                                 int alphaPercent, int bottomInset, boolean screensaverPaused,
+                                 View.OnTouchListener touchHandler, Runnable onBack) {
+        this.onBack = onBack;
+        if (!isAttached()) {
+            ensureViewAttached();
+        }
+        if (!isAttached()) return;
+        screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
+        visualizerView.setAlphaPercent(alphaPercent);
+        visualizerView.setBackdrop(backdrop);
+        visualizerView.setBandFractions(widthFraction, heightFraction);
+        visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
+        // The screensaver owns this judgement - it waits out a gap between tracks before it
+        NowPlaying np = NowPlaying.getInstance(context);
+        np.refresh();
+        boolean isRadio = np.isRadioSource();
+        visualizerView.setScreensaverState(true, isRadio || screensaverPaused);
+        visualizerView.setNowPlayingSource((np.hasTrack() || np.isPlaying()) ? np : null);
+        np.setMetadataListener(visualizerView::postInvalidate);
+        // The strip normally lets every touch through. For as long as it is the screensaver it has
+        // to catch them: the tap that puts it away must not also press what is underneath, and the
+        // drag zones need the whole gesture, not just its first event.
+        layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+
+        // Focus, and therefore the Back key, only when the tuner is not the source.
+        //
+        // An overlay that never takes focus never sees a key, so Back can only be caught by taking
+        // it. But on radio the radio app's own overlay has to sit on top of the screensaver and
+        // keep its station buttons reachable - that is the contract in
+        // .agents/SCREENSAVER_RADIO_CONTRACT.md - and a focused window underneath is a second
+        // claimant on the input. Radio therefore does without Back, by the owner's decision, and
+        // everything else keeps it.
+        //
+        // Home cannot be caught this way or any other; the system claims it before any app.
+        if (isRadio) {
+            layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            visualizerView.setFocusableInTouchMode(false);
+            visualizerView.setOnKeyListener(null);
+        } else {
+            layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            visualizerView.setFocusableInTouchMode(true);
+            visualizerView.setOnKeyListener((view, keyCode, event) -> {
+                if (keyCode == android.view.KeyEvent.KEYCODE_BACK
+                        && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                    Runnable back = onBack;
+                    if (back != null) back.run();
+                    return true;
+                }
+                return false;
+            });
+            visualizerView.requestFocus();
+        }
+        if (touchHandler != null) visualizerView.setOnTouchListener(touchHandler);
+        visualizerView.setVisibility(View.VISIBLE);
+        visualizerView.start();
+        updateWindowGeometry();
+    }
+
+    /** Brightness only, with no relayout - the screensaver's brightness drag calls this. */
+    public void setScreensaverBrightness(int alphaPercent) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setAlphaPercent(alphaPercent);
+    }
+
+    /** Shows which transport area was pressed. */
+    public void flashTransport(int glyph) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.flashTransport(glyph);
+    }
+
+    /** Hands the view the track information, or null when there is nothing we may show. */
+    public void setScreensaverInfoSource(NowPlaying source) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setNowPlayingSource(source);
+    }
+
+    /** Tells the view whether the music is stopped, which is what drives the clock crossfade. */
+    public void setScreensaverNowPlaying(boolean paused) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setScreensaverState(true, paused);
+    }
+
+    /** Backdrop only, with no relayout - the screensaver's backdrop drag calls this. */
+    public void setScreensaverBackdrop(int color) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setBackdrop(color);
+    }
+
+    /** Puts it back exactly as it was. */
+    public void takeBackFromScreensaver() {
+        NowPlaying.getInstance(context).setMetadataListener(null);
+        screensaverBounds = null;
+        if (!isAttached()) return;
+        visualizerView.setAlphaPercent(alphaPercent);
+        visualizerView.setBackdrop(0);
+        visualizerView.setBandFractions(1f, 1f);
+        visualizerView.setInsets(0, 0);
+        visualizerView.setScreensaverState(false, false);
+        visualizerView.setNowPlayingSource(null);
+        visualizerView.setOnTouchListener(null);
+        visualizerView.setOnKeyListener(null);
+        visualizerView.setFocusableInTouchMode(false);
+        onBack = null;
+        layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        updateWindowGeometry();
+        evaluateVisibility();
+    }
+
+    public boolean isLentToScreensaver() {
+        return screensaverBounds != null;
+    }
+
+    private int calculateWidthPx() {
+        int screenW = getScreenWidth();
+        float clamped = Math.max(0.10f, Math.min(1.0f, widthFraction));
+        return Math.max(1, (int) (screenW * clamped));
+    }
+
+    private int calculateLeftPx() {
+        int screenW = getScreenWidth();
+        int width = calculateWidthPx();
+        int freeSpace = Math.max(0, screenW - width);
+        float clamped = Math.max(0.0f, Math.min(1.0f, posFraction));
+        // Clamped again on the way out. The arithmetic above already keeps the strip on screen,
+        // but it only does so while the width used here and the width the window actually gets
+        // are the same number - and this is the one place where both are known, so it is the
+        // cheapest place to guarantee it rather than assume it.
+        return Math.max(0, Math.min(freeSpace, (int) (freeSpace * clamped)));
+    }
+
+
+    public void removeOverlay() {
+        mainHandler.post(() -> {
+            if (isViewAttached && visualizerView != null) {
+                try {
+                    visualizerView.stop();
+                    windowManager.removeView(visualizerView);
+                } catch (Throwable ignored) {}
+                isViewAttached = false;
+            }
+        });
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.isEnabled = enabled;
+        prefs.edit().putBoolean(PREF_STATUS_BAR_ENABLED, enabled).apply();
+        evaluateVisibility();
+    }
+
+    public void setWidthFraction(float fraction) {
+        this.widthFraction = Math.max(0.10f, Math.min(1.0f, fraction));
+        prefs.edit().putFloat(PREF_STATUS_BAR_WIDTH_F, this.widthFraction).apply();
+        mainHandler.post(this::updateWindowGeometry);
+    }
+
+    public void setPosFraction(float fraction) {
+        this.posFraction = Math.max(0.0f, Math.min(1.0f, fraction));
+        prefs.edit().putFloat(PREF_STATUS_BAR_POS_F, this.posFraction).apply();
+        mainHandler.post(this::updateWindowGeometry);
+    }
+
+    public void setTheme(int theme) {
+        this.theme = theme;
+        prefs.edit().putInt(PREF_STATUS_BAR_THEME, theme).apply();
+        mainHandler.post(() -> {
+            if (visualizerView != null) {
+                visualizerView.setTheme(theme);
+            }
+        });
+    }
+
+    public void setHueShift(int hue) {
+        this.hueShift = hue;
+        prefs.edit().putInt(PREF_STATUS_BAR_HUE, hue).apply();
+        mainHandler.post(() -> {
+            if (visualizerView != null) {
+                visualizerView.setHueShift(hue);
+            }
+        });
+    }
+
+    public void setBandCount(int bands) {
+        this.bandCount = (bands == 16) ? 16 : 32;
+        prefs.edit().putInt(PREF_STATUS_BAR_BANDS, this.bandCount).apply();
+        mainHandler.post(() -> {
+            if (visualizerView != null) {
+                visualizerView.setBandCount(this.bandCount);
+            }
+        });
+    }
+
+    public boolean isEnabled() { return isEnabled; }
+    public float getWidthFraction() { return widthFraction; }
+    public float getPosFraction() { return posFraction; }
+    public int getTheme() { return theme; }
+    public int getHueShift() { return hueShift; }
+    public int getBandCount() { return bandCount; }
+}

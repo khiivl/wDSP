@@ -10,7 +10,7 @@
     <string name="btn_import">Imp.</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -45,7 +45,7 @@
     <string name="rear_speaker_bass">Rear-Lautsprecher Bass</string>
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
-    <string name="lbl_freq">Freq</string>
+    <string name="lbl_freq">Frequenz</string>
     <string name="lbl_freq_boost">Boost Freq</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balance</string>
@@ -78,7 +78,7 @@
     <!-- General -->
     <string name="btn_apply">Anwenden</string>
     <string name="btn_reapply">Erneut anwenden bei Reset</string>
-    <string name="value_default">Nicht gesetzt</string>
+    <string name="value_default">Nichts</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Abbrechen</string>
     <string name="none">Keine</string>
@@ -124,6 +124,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Standortberechtigung ist für GALA erforderlich.</string>
+    <string name="toast_import_failed">Import fehlgeschlagen: %1$s</string>
+    <string name="error">Fehler</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -134,4 +143,150 @@
     <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
     <string name="hint_sub_freq">Freq</string>
+
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statusleisten-Visualisierer</string>
+    <string name="status_bar_visualizer_enable">Statusleisten-Visualisierer</string>
+    <string name="status_bar_visualizer_width">Breite</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Design</string>
+    <string name="status_bar_visualizer_hue">HUE-Verschiebung / Farbe</string>
+    <string name="status_bar_visualizer_permission_needed">Überlagerungsberechtigung erforderlich</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE-Drehung)</string>
+    <string name="status_bar_theme_solid_hue">Feste Farbe aus HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Tag/Nacht (Weiß/Schwarz)</string>
+    <string name="status_bar_theme_eq_groups">EQ-Gruppen (HUE-Drehung)</string>
+    <string name="status_bar_theme_monochrome_white">Immer Weiß</string>
+    <string name="status_bar_theme_monochrome_black">Immer Schwarz</string>
+    <string name="status_bar_theme_fire">Feuer</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+    <string name="settings_title">wDSP Einstellungen</string>
+    <string name="settings_appearance">Design &amp; Themen</string>
+    <string name="settings_theme_day">Tag</string>
+    <string name="settings_theme_night">Nacht</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Akzent</string>
+    <string name="settings_primary_text_title">Haupttext</string>
+    <string name="settings_label_color_title">Beschriftung</string>
+    <string name="settings_on_accent_title">Auf Akzent</string>
+    <string name="settings_wallpaper_title">Hintergrundbild</string>
+    <string name="settings_wallpaper_none">Standard</string>
+    <string name="settings_wallpaper_load">Foto wählen</string>
+    <string name="settings_wallpaper_default">Zurücksetzen</string>
+    <string name="settings_wallpaper_solid_switch">Einfarbig</string>
+    <string name="settings_wallpaper_status_solid">Einfarbig aktiv</string>
+    <string name="settings_solid_hue">Farbton HUE</string>
+    <string name="settings_solid_val">Hintergrund-Helligkeit</string>
+    <string name="settings_permissions">Berechtigungen &amp; System</string>
+    <string name="settings_app_details">App-Info</string>
+    <string name="eq_visualizer_title">Equalizer-Visualizer</string>
+    <string name="eq_vis_color_mode_label">Farbmodus des Visualizers:</string>
+    <string name="eq_vis_mode_monochrome">Einfarbiger Akzent</string>
+    <string name="eq_vis_mode_spectrum">Frequenz - Farbe</string>
+    <string name="eq_vis_enable_label">Spektrumbalken anzeigen</string>
+
+    <string name="settings_backup_btn">Einstellungen sichern</string>
+    <string name="settings_restore_btn">Einstellungen wiederherstellen</string>
+    <string name="toast_backup_success">Einstellungen erfolgreich gesichert</string>
+    <string name="toast_backup_failed">Sicherung fehlgeschlagen: %s</string>
+    <string name="toast_restore_success">Einstellungen erfolgreich wiederhergestellt</string>
+    <string name="toast_restore_failed">Wiederherstellung fehlgeschlagen: %s</string>
+    <string name="gala_section_speed_gain">Geschwindigkeit und Kompensation</string>
+    <string name="gala_section_smoothing_sim">Glättung und Simulation</string>
+    <string name="settings_perm_overlay">Overlay-Berechtigung (Über anderen Apps anzeigen)</string>
+    <string name="fm_controls_title">Kalibrierung und Korrekturstärke</string>
+    <string name="perm_battery_opt">Akkuoptimierung</string>
+    <string name="perm_audio_record">Audioaufnahme (EQ)</string>
+    <string name="perm_gps_location">GPS-Standort (GALA)</string>
+    <string name="vis_normalization_label">Dynamische Normalisierung (AGC)</string>
+    <string name="vis_normalization_desc">Sanfter Dynamikausgleich für leise Titel</string>
+    <string name="status_bar_bands_count">Anzahl der Bänder:</string>
+    <string name="analyzer_section_title">Genauigkeit des Analysators und Synchronisation</string>
+    <string name="agc_main_label">Automatikpegel: Hauptanalysator</string>
+    <string name="agc_main_desc">Aus bedeutet absolute Pegel. Ein Messgerät, das sich selbst umskaliert, ist nicht ablesbar</string>
+    <string name="agc_bar_label">Automatikpegel: Widget in der Statusleiste</string>
+    <string name="agc_bar_desc">Hier ist es Zierde und keine Messung, deshalb ist ein Ausgleich meist erwünscht</string>
+    <string name="agc_strength_label">Stärke</string>
+    <string name="latency_trim_label">Synchronisation von Bild und Ton</string>
+    <string name="latency_trim_desc">Die Grundverzögerung wird selbst gemessen; jeder Player puffert anders, also nach Gehör nachjustieren</string>
+    <string name="range_db_label">Anzeigebereich</string>
+    <string name="unit_hz">%1$s Hz</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_latency_ms">%1$+d ms</string>
+    <string name="format_range_db">%1$d dB</string>
+    <string name="placeholder_db">0.0 dB</string>
+    <string name="toast_saf_error">Fehler bei der Dateiauswahl: %1$s</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synchronisierung mit dem Ton</string>
+    <string name="sync_measure_desc">Spielt einige kurze Töne ab und misst, wie weit die Balken dem Ton vorauslaufen. Dauert etwa 15 Sekunden.</string>
+    <string name="sync_measure_button">Synchronisieren</string>
+    <string name="sync_measure_running">Messung läuft…</string>
+    <string name="sync_measure_result">Gemessen: %1$d ms</string>
+    <string name="sync_measure_failed">Messung fehlgeschlagen</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnose</string>
+    <string name="room_measure_label">Messung des Innenraums</string>
+    <string name="room_measure_desc">Spielt nacheinander einen Sweep über jeden Lautsprecher und misst, wann der Ton ankam und ob er phasenrichtig ist. Dauert etwa eine halbe Minute. Motor aus, Türen zu, normale Lautstärke.</string>
+    <string name="room_measure_button">Messen</string>
+    <string name="room_measure_running">Messung: %1$s</string>
+    <string name="room_measure_done">Fertig — Ergebnis senden?</string>
+    <string name="room_measure_failed">Messung fehlgeschlagen</string>
+    <string name="room_measure_send">Archiv speichern</string>
+    <string name="room_measure_saved_title">Messung gespeichert</string>
+    <string name="room_measure_saved">Das Archiv mit %2$d Dateien wurde geschrieben nach:\n\n%1$s\n\nÖffnen Sie es mit einem Dateimanager oder kopieren Sie es über ein USB-Kabel oder eine Speicherkarte.</string>
+    <string name="room_measure_save_failed">Das Archiv konnte nicht geschrieben werden.</string>
+    <string name="room_measure_share_text">wDSP-Innenraummessung, Version %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Noch nichts gemessen</string>
+    <string name="toast_saved_to">Gespeichert in %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Deckkraft</string>
+    <string name="status_bar_height_manual">Streifenhöhe</string>
+    <string name="status_bar_offset_y">Abstand von oben</string>
+    <string name="status_bar_placement_hint">Lassen Sie die Höhe auf 0 und die App misst die Leiste selbst. Stellen Sie sie nur manuell ein, wenn der Streifen am falschen Ort landet — bei einigen Autoradios wird die obere Leiste vom Launcher gezeichnet, und Android weiß nichts davon.</string>
+    <string name="freq_off">Aus</string>
+    <string name="system_report_label">Systembericht</string>
+    <string name="system_report_desc">Schreibt auf, wie dieses Gerät Lautstärke, Routing und das Mikrofon handhabt. Erforderlich, um das Zurücksetzen der Lautstärke nach einem Bluetooth-Anruf, leise Navigationsansagen und eine nicht startende Messung zu beheben.</string>
+    <string name="system_report_button">Sammeln</string>
+    <string name="system_report_working">Sammeln…</string>
+    <string name="system_report_title">Systembericht</string>
+    <string name="system_report_saved">Gespeichert in:\n\n%1$s\n\nUm auch den Lautstärkefehler zu erfassen: Machen Sie einen kurzen Anruf über Bluetooth, legen Sie auf und sammeln Sie den Bericht ein zweites Mal. Die zweite Datei enthält, was sich während des Anrufs geändert hat.</string>
+    <string name="system_report_failed">Der Bericht konnte nicht geschrieben werden.</string>
+    <string name="mic_denied_title">Kein Mikrofon</string>
+    <string name="mic_denied">Android fragt nicht mehr nach dem Mikrofon, da die Berechtigung zuvor verweigert wurde. Ohne dies kann nichts gemessen werden.\n\nÖffnen Sie Einstellungen → Apps → wDSP → Berechtigungen und erlauben Sie das Mikrofon, versuchen Sie es dann erneut.</string>
+    <string name="screensaver_section_title">Bildschirmschoner</string>
+    <string name="screensaver_enable">Schoner</string>
+    <string name="screensaver_enable_desc">Vollbild-Visualisierer bei Inaktivität. Verschwindet bei Berührung.</string>
+    <string name="screensaver_delay">Verzögerung</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Hintergrund</string>
+    <string name="screensaver_width">Breite</string>
+    <string name="screensaver_height">Höhe</string>
+    <string name="screensaver_bright_day">Helligkeit Tag</string>
+    <string name="screensaver_bright_night">Helligkeit Nacht</string>
+    <string name="screensaver_apps">Nie über</string>
+    <string name="screensaver_apps_none">Keine</string>
+    <string name="screensaver_apps_pick">Wählen</string>
+    <string name="screensaver_note">Navigation wird nie überdeckt.</string>
+    <string name="room_mic_spot_label">Wo sich das Mikrofon befindet</string>
+    <string name="room_mic_spot_desc">Ziehe den Punkt dorthin, wo das Mikrofon tatsächlich sitzt. Es ändert nichts an der Messung - es sagt uns nur, wie das Ergebnis zu lesen ist. Ohne dies sieht ein Mikrofon auf einem Lautsprecher genau wie drei kaputte aus.</string>
+    <string name="room_root_title">Hast du Root-Zugriff gewährt?</string>
+    <string name="room_root_message">Die Messung konnte gerade keinen Root-Zugriff erhalten, deshalb müssen wir fragen.\n\nEr wird für genau eine Aktion benötigt: das Stoppen des Hintergrundprozesses, der das Mikrofon auf 16 kHz offen hält. Die Plattform behält nur einen Eingangsstream, sodass unsere Aufnahme ohne dies daran angehängt und die halbe Messung verworfen wird - und Android gibt es nicht zu, die Abtastrate zeigt immer noch 48000 an.\n\nEs wird nichts deaktiviert oder deinstalliert; der Assistent startet von selbst wieder.</string>
+    <string name="room_root_yes">Ja, ist an</string>
+    <string name="room_root_no">Nein</string>
+    <string name="room_root_blocked">Dann schalte ihn zuerst ein: Öffne Magisk → Superuser, finde wDSP und stelle es auf Zulassen (oder Nachfragen und erlaube es, wenn es fragt).\n\nDie Messung wurde nicht gestartet. Führe sie erneut aus, sobald Root erlaubt ist.</string>
+    <string name="screensaver_info_h">Titel-Streifen</string>
+    <string name="room_mic_place_hint">Woran es befestigt ist</string>
+    <string name="room_mic_place_windscreen">Windschutzscheibe</string>
+    <string name="room_mic_place_visor">Unter der Sonnenblende</string>
+    <string name="room_mic_place_mirror">Rückspiegel</string>
+    <string name="room_mic_place_dome">Deckenleuchte</string>
+    <string name="room_mic_place_wheel">Lenkrad</string>
+    <string name="room_mic_place_dash">Armaturenbrett</string>
+    <string name="room_mic_place_pillar_top">A-Säule, oben</string>
+    <string name="room_mic_place_pillar_bottom">A-Säule, unten</string>
 </resources>
+

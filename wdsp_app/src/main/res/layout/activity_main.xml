@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/app_background"
+    android:background="@android:color/transparent"
     tools:context=".MainActivity"
     android:fitsSystemWindows="true">
 
@@ -26,29 +27,53 @@
             android:clipChildren="false"
             android:clipToPadding="false">
 
+            <!-- Top Preset Row matching exact mockup -->
             <LinearLayout
                 android:id="@+id/layout_presets"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/padding_standard"
-                android:paddingVertical="@dimen/padding_small"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="4dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
+                <!-- Logo with neon wave -->
+                <ImageView
+                    android:id="@+id/img_app_logo_wave"
+                    android:layout_width="32dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_logo_wave" />
+
+                <TextView
+                    android:id="@+id/tv_app_logo_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="wDSP"
+                    android:textColor="#FFFFFF"
+                    android:textSize="@dimen/card_title_text"
+                    android:textStyle="bold" />
+
+                <!-- Preset dropdown capsule (Hint = Preset) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_presets"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="300dp"
+                    android:layout_width="230dp"
                     android:layout_height="wrap_content"
-                    android:hint="@string/default_preset_name_hint"
-                    android:textColorHint="@color/text_theme_aware_2"
-                    android:translationY="-2dp"
+                    android:layout_marginStart="16dp"
+                    app:boxCornerRadiusBottomEnd="14dp"
+                    app:boxCornerRadiusBottomStart="14dp"
+                    app:boxCornerRadiusTopEnd="14dp"
+                    app:boxCornerRadiusTopStart="14dp"
+                    app:boxBackgroundColor="#20121820"
+                    app:boxStrokeWidth="1.2dp"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
+                    android:hint="@string/default_preset_name_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
                     app:endIconTint="@color/cyan_custom">
 
                     <AutoCompleteTextView
@@ -56,386 +81,415 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
-                        android:paddingVertical="12dp"
+                        android:paddingVertical="7dp"
+                        android:paddingHorizontal="12dp"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:textColor="@color/cyan_custom"
-                        tools:ignore="LabelFor" />
+                        android:textStyle="bold"
+                        android:textSize="@dimen/eq_value_text" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                    <LinearLayout
-                        style="?android:attr/buttonBarStyle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="horizontal">
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_auto_preset"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:backgroundTint="@color/btn_auto_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_auto"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small"
-                            tools:ignore="NestedWeights" />
+                <!-- 6 Action Icon Buttons -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_add_preset"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_add_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_add"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                    <!-- 1. Auto Preset -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_auto_preset"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_auto"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_rename_preset"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_rename_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_rename"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                    <!-- 2. Duplicate / Add -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_add_preset"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_marginStart="10dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_add"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_export_presets"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_export_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_export"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                    <!-- 3. Rename -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_rename_preset"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_marginStart="10dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_rename"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_import_presets"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_import_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_import"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                    <!-- 4. Delete -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_delete_preset"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_marginStart="10dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_delete"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_delete_preset"
-                            style="?android:attr/buttonBarButtonStyle"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="@dimen/button_top_height"
-                            android:layout_marginStart="@dimen/margin_tiny"
-                            android:backgroundTint="@color/btn_delete_bg"
-                            android:paddingHorizontal="@dimen/padding_small"
-                            android:text="@string/btn_delete"
-                            app:cornerRadius="@dimen/button_radius"
-                            app:strokeWidth="@dimen/stroke_width"
-                            app:strokeColor="@color/stroke_color_top"
-                            android:textColor="@color/colored_button_text"
-                            android:textSize="@dimen/text_size_small" />
+                    <!-- 5. Import -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_import_presets"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_marginStart="10dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_import"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                    </LinearLayout>
+                    <!-- 6. Export -->
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_export_presets"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_marginStart="10dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_export"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
+
+                </LinearLayout>
             </LinearLayout>
 
-            <FrameLayout
+            <!-- Main EQ Card with rounded corners and neon stroke -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/card_main_eq"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_marginHorizontal="0dp"
-                android:layout_marginVertical="0dp"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
+                android:background="@drawable/bg_main_eq_card"
+                android:padding="6dp"
                 app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/layout_presets"
-                android:paddingTop="6dp"
-                android:clipChildren="false"
-                android:clipToPadding="false">
+                app:layout_constraintTop_toBottomOf="@+id/layout_presets">
 
-                <com.radiorubka.wdsp.SpectrumAnalyzerView
-                    android:id="@+id/spectrum_analyzer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="false"
-                    android:focusable="false" />
+                <!-- Center 16 EQ bands with Visualizer, Analyzer and left dB scale -->
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
 
-                <com.radiorubka.wdsp.EqVisualizerView
-                    android:id="@+id/eq_visualizer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="false"
-                    android:focusable="false" />
+                    <com.radiorubka.wdsp.SpectrumAnalyzerView
+                        android:id="@+id/spectrum_analyzer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clickable="false"
+                        android:focusable="false" />
 
-                <LinearLayout
-                    android:id="@+id/eq_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
+                    <com.radiorubka.wdsp.EqVisualizerView
+                        android:id="@+id/eq_visualizer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clickable="false"
+                        android:focusable="false" />
+
+                    <LinearLayout
+                        android:id="@+id/eq_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="32dp"
+                        android:orientation="horizontal"
                     android:weightSum="16" />
-            </FrameLayout>
+                </FrameLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <LinearLayout
                 android:id="@+id/layout_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="0dp"
-                android:paddingBottom="13dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="12dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
 
-                <!-- POWER VOLUME SELECTOR (NEW) -->
-
-                <TextView
-                    android:id="@+id/lbl_pwr"
-                    style="@style/TextLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:layout_marginEnd="@dimen/margin_tiny"
-                    android:text="@string/lbl_pwr"
-                    android:textColor="@color/text_theme_aware_2"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_pwr_db"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_pwr_db"
-                    style="@style/TextValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:layout_marginEnd="@dimen/margin_small"
-                    android:minWidth="28dp"
-                    android:gravity="center"
-                    android:text="@string/value_default"
-                    android:textColor="@color/text_theme_aware_2"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_minus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/lbl_pwr"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_pwr_vol_minus"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="@dimen/button_width"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:textColor="@color/cyan_custom"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:textSize="@dimen/text_size_button"
-                    android:text="@string/btn_minus"
-                    app:cornerRadius="@dimen/button_radius"
-                    app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_pwr_vol_plus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/tv_pwr_db"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_pwr_vol_plus"
-                    android:layout_width="@dimen/button_width"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginHorizontal="@dimen/margin_tiny"
-                    android:layout_marginEnd="@dimen/margin_large"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="@color/cyan_custom"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:textSize="@dimen/text_size_button"
-                    android:text="@string/btn_plus"
-                    app:cornerRadius="@dimen/button_radius"
-                    app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/lbl_sub"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_minus"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <!-- SUB LABEL (Updated to start after Power Vol Plus) -->
-                <TextView
-                    android:id="@+id/lbl_sub"
-                    style="@style/TextLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lbl_sub"
-                    android:textColor="@color/text_theme_aware_2"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/seek_sub_gain"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_pwr_vol_plus"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_sub_gain"
+                <!-- 1. POWER VOLUME BLOCK -->
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:valueFrom="0"
-                    android:valueTo="12"
-                    android:stepSize="1"
-                    android:value="0"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="24dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    android:theme="@style/Widget.Material3.Slider"
-                    app:trackHeight="@dimen/slider_track_height"
-                    app:labelBehavior="gone"
-                    app:layout_constraintStart_toEndOf="@id/lbl_sub"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_sub_db"
-                    app:tickColorActive="@color/tick_color_active"
-                    app:tickColorInactive="@color/tick_color_inactive"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintWidth_max="@dimen/slider_max_width"
-                    app:thumbHeight="@dimen/thumb_height"/>
+                    android:layout_weight="2.2"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/tv_sub_db"
-                    style="@style/TextValue"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/lbl_pwr"
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lbl_pwr"
+                        android:textSize="@dimen/eq_value_text"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_theme_aware" />
+
+                    <TextView
+                        android:id="@+id/tv_pwr_db"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minWidth="24dp"
+                        android:gravity="center"
+                        android:text="@string/value_default"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/cyan_custom" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_pwr_vol_minus"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:textColor="@color/cyan_custom"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:textSize="@dimen/card_title_text"
+                        android:textStyle="bold"
+                        android:text="@string/btn_minus" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_pwr_vol_plus"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:textColor="@color/cyan_custom"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:textSize="@dimen/card_title_text"
+                        android:textStyle="bold"
+                        android:text="@string/btn_plus" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="1dp" />
+
+                <!-- 2. SUBWOOFER GAIN BLOCK -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:minWidth="32dp"
-                    android:text="@string/value_default"
-                    android:textColor="@color/text_theme_aware_2"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/layout_spinner_sub_freq"
-                    app:layout_constraintStart_toEndOf="@id/seek_sub_gain"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_weight="3.6"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
+                    <TextView
+                        android:id="@+id/lbl_sub"
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lbl_sub"
+                        android:textSize="@dimen/eq_value_text"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_theme_aware" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_sub_gain"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginHorizontal="6dp"
+                        android:valueFrom="0"
+                        android:valueTo="12"
+                        android:stepSize="1"
+                        android:value="0"
+                        app:thumbRadius="7dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        android:theme="@style/Widget.Material3.Slider"
+                        app:trackHeight="4dp"
+                        app:labelBehavior="gone"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent" />
+
+                    <TextView
+                        android:id="@+id/tv_sub_db"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:minWidth="28dp"
+                        android:text="@string/value_default"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/cyan_custom" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="1dp" />
+
+                <!-- 3. SUBWOOFER FREQUENCY DROPDOWN -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_sub_freq"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="100dp"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_small"
-                    android:layout_marginEnd="@dimen/margin_large"
+                    android:layout_weight="1.6"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#20121820"
+                    app:boxStrokeWidth="1.2dp"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
                     app:endIconTint="@color/cyan_custom"
-                    android:translationY="-2dp"
                     android:hint="@string/lbl_freq"
-                    android:textColorHint="@color/text_theme_aware_2"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_minus"
-                    app:layout_constraintStart_toEndOf="@id/tv_sub_db"
-                    app:layout_constraintTop_toTopOf="parent">
+                    android:textColorHint="@color/text_theme_aware_2">
 
                     <AutoCompleteTextView
                         android:id="@+id/spinner_sub_freq"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
-                        android:paddingVertical="10dp"
+                        android:paddingVertical="8dp"
                         android:textColor="@color/cyan_custom"
                         android:focusable="false"
                         tools:ignore="LabelFor" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_minus"
-                    android:layout_width="@dimen/button_width"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginEnd="@dimen/margin_tiny"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="@color/cyan_custom"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:textSize="@dimen/text_size_button"
-                    android:text="@string/btn_minus"
-                    app:cornerRadius="@dimen/button_radius"
-                    app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_plus"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/layout_spinner_sub_freq"
-                    app:layout_constraintTop_toTopOf="parent" />
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="1dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_plus"
-                    android:layout_width="@dimen/button_width"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginEnd="@dimen/margin_tiny"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="@color/cyan_custom"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:textSize="@dimen/text_size_button"
-                    android:text="@string/btn_plus"
-                    app:cornerRadius="@dimen/button_radius"
-                    app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_center"
-                    app:layout_constraintStart_toEndOf="@id/btn_minus"
-                    app:layout_constraintTop_toTopOf="parent" />
+                <!-- 4. EQ QUICK ACTIONS (-, +, 0) -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2.6"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_center"
-                    android:layout_width="@dimen/button_width"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginEnd="@dimen/margin_tiny"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="@color/btn_delete_bg"
-                    android:minWidth="0dp"
-                    android:padding="0dp"
-                    android:textSize="@dimen/text_size_button"
-                    android:text="@string/btn_center"
-                    app:cornerRadius="@dimen/button_radius"
-                    app:strokeWidth="@dimen/stroke_width"
-                    app:strokeColor="@color/stroke_color"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_plus"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_minus"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
+                        android:textColor="@color/cyan_custom"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:textSize="@dimen/card_title_text"
+                        android:textStyle="bold"
+                        android:text="@string/btn_minus" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_plus"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:textColor="@color/cyan_custom"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:textSize="@dimen/card_title_text"
+                        android:textStyle="bold"
+                        android:text="@string/btn_plus" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_center"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:textColor="@color/cyan_custom"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:textSize="@dimen/card_title_text"
+                        android:textStyle="bold"
+                        android:text="@string/btn_center" />
+                </LinearLayout>
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- F-M Curve Tab Content -->
@@ -456,70 +510,195 @@
                     android:layout_height="wrap_content"
                     android:padding="@dimen/padding_standard">
 
-                    <TextView
-                        android:id="@+id/tv_fm_title"
-                        style="@style/TextTitle"
-                        android:layout_width="wrap_content"
+                    <!-- Header Row: Title + Status Pill Badge -->
+                    <LinearLayout
+                        android:id="@+id/layout_fm_header"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/fm_title"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        app:layout_constraintTop_toTopOf="parent">
 
+                        <TextView
+                            android:id="@+id/tv_fm_title"
+                            style="@style/TextTitle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/fm_title" />
+
+                        <!-- Status Pill Badge -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:background="@drawable/bg_licence_card"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lbl_volume"
+                                android:textSize="@dimen/eq_small_text" />
+
+                            <TextView
+                                android:id="@+id/tv_sys_volume_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="3dp"
+                                android:text="1"
+                                android:textSize="@dimen/eq_small_text"
+                                android:textColor="@color/cyan_custom" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="|"
+                                android:textColor="@color/panel_border_theme_aware"
+                                android:textSize="@dimen/eq_small_text" />
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lbl_sub_offset"
+                                android:textSize="@dimen/eq_small_text" />
+
+                            <TextView
+                                android:id="@+id/tv_sub_offset_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="3dp"
+                                android:text="@string/placeholder_db"
+                                android:textSize="@dimen/eq_small_text"
+                                android:textColor="@color/cyan_custom" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="|"
+                                android:textColor="@color/panel_border_theme_aware"
+                                android:textSize="@dimen/eq_small_text" />
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lbl_lower_sub_by"
+                                android:textSize="@dimen/eq_small_text" />
+
+                            <TextView
+                                android:id="@+id/tv_sub_offset_warn"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="3dp"
+                                android:text="OK"
+                                android:textSize="@dimen/eq_small_text"
+                                android:textColor="@color/cyan_custom" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Top Action Buttons Row -->
                     <LinearLayout
                         android:id="@+id/layout_fm_toggles"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_standard"
+                        android:layout_marginTop="10dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        app:layout_constraintTop_toBottomOf="@id/tv_fm_title">
+                        app:layout_constraintTop_toBottomOf="@id/layout_fm_header">
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/enable_loudness" />
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fm_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/enable_loudness"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/trim_highs" />
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fatigue_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/trim_highs"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/sub_tweaking" />
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fm_sub_comp"
-                            android:layout_width="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/sub_tweaking"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
-                    <!-- FR Graph for FM Curve -->
+                    <!-- FR Graph for FM Curve (Visualizer Card) -->
                     <FrameLayout
                         android:id="@+id/fm_visualizer_container"
                         android:layout_width="match_parent"
-                        android:layout_height="180dp"
-                        android:layout_marginTop="@dimen/margin_standard"
+                        android:layout_height="@dimen/visualizer_height"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_licence_card"
+                        android:padding="8dp"
                         app:layout_constraintTop_toBottomOf="@id/layout_fm_toggles">
 
                         <com.radiorubka.wdsp.FmVisualizerView
@@ -532,175 +711,145 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="top|center"
-                            android:layout_marginTop="@dimen/margin_standard"
+                            android:layout_marginTop="6dp"
                             android:alpha="0.7"
                             android:text="@string/fm_visualizer_label" />
                     </FrameLayout>
 
-                    <!-- System Volume Monitor -->
-                    <LinearLayout
-                        android:id="@+id/layout_vol_monitor"
+                    <!-- Calibration & Correction Intensity Card -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/card_fm_controls"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_standard"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
+                        android:background="@drawable/bg_licence_card"
+                        android:padding="14dp"
+                        android:layout_marginTop="10dp"
                         app:layout_constraintTop_toBottomOf="@id/fm_visualizer_container">
 
                         <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
+                            android:id="@+id/fm_controls_title"
+                            style="@style/TextHeader"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/lbl_volume" />
+                            android:text="@string/fm_controls_title"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_theme_aware"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent" />
 
-                        <TextView
-                            android:id="@+id/tv_sys_volume_val"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
-
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:text="@string/lbl_sub_offset" />
-
-                        <TextView
-                            android:id="@+id/tv_sub_offset_val"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
-
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:text="@string/lbl_lower_sub_by" />
-
-                        <TextView
-                            android:id="@+id/tv_sub_offset_warn"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
-                    </LinearLayout>
-
-                    <!-- Calibration Volume -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_cal_vol"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_vol_monitor">
-
+                        <!-- Row 1: Точка калібрування -->
                         <TextView
                             android:id="@+id/lbl_cal_vol"
                             style="@style/TextLabel"
-                            android:layout_width="140dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
                             android:text="@string/lbl_calibration_point"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toBottomOf="@id/fm_controls_title"
+                            app:layout_constraintStart_toStartOf="parent" />
 
+                        <!-- Row 2: Інтенсивність корекції -->
+                        <TextView
+                            android:id="@+id/lbl_strength"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="@string/lbl_correction_strength"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fm_cal_vol"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <!-- Dynamic Barrier for FM Labels -->
+                        <androidx.constraintlayout.widget.Barrier
+                            android:id="@+id/barrier_fm_labels"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:barrierDirection="end"
+                            app:constraint_referenced_ids="lbl_cal_vol,lbl_strength" />
+
+                        <!-- Slider 1: Calibration Volume -->
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_fm_cal_vol"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
                             android:valueFrom="0"
                             android:valueTo="32"
                             android:stepSize="1"
                             android:value="25"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
                             app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
+                            app:haloRadius="0dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
                             app:trackColorActive="@color/track_color_active"
                             app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
                             app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_fm_cal_vol_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_cal_vol"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big"
-                            app:thumbHeight="@dimen/thumb_height"/>
+                            app:layout_constraintStart_toEndOf="@id/barrier_fm_labels"
+                            app:layout_constraintEnd_toStartOf="@id/tv_fm_cal_vol_val"
+                            app:layout_constraintTop_toTopOf="@id/lbl_cal_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_cal_vol" />
 
                         <TextView
                             android:id="@+id/tv_fm_cal_vol_val"
                             style="@style/TextValue"
-                            android:layout_width="40dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:minWidth="40dp"
                             android:gravity="end"
                             android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_fm_cal_vol"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/lbl_cal_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_cal_vol" />
 
-                    <!-- Strength Slider -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_cal_vol">
-
-                        <TextView
-                            android:id="@+id/lbl_strength"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_correction_strength"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
+                        <!-- Slider 2: Correction Strength -->
                         <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
                             android:id="@+id/seek_fm_strength"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
                             android:valueFrom="0"
                             android:valueTo="100"
                             android:stepSize="1"
                             android:value="100"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
                             app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
+                            app:haloRadius="0dp"
                             app:haloColor="@color/transparent"
                             app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
                             app:trackColorActive="@color/track_color_active"
                             app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="5dp"
                             app:trackStopIndicatorSize="0dp"
                             app:tickVisibilityMode="hidden"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_fm_strength_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_strength"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
+                            app:labelBehavior="gone"
+                            app:layout_constraintStart_toEndOf="@id/barrier_fm_labels"
+                            app:layout_constraintEnd_toStartOf="@id/tv_fm_strength_val"
+                            app:layout_constraintTop_toTopOf="@id/lbl_strength"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_strength" />
 
                         <TextView
                             android:id="@+id/tv_fm_strength_val"
                             style="@style/TextValue"
-                            android:layout_width="40dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:minWidth="40dp"
                             android:gravity="end"
                             android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_fm_strength"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/lbl_strength"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_strength" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -756,25 +905,29 @@
                         android:padding="16dp"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
-                        <LinearLayout
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_precise_enable"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/toggle_height"
                             android:layout_marginBottom="@dimen/margin_standard"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/spatial_correction" />
-
-                            <com.google.android.material.materialswitch.MaterialSwitch
-                                android:id="@+id/switch_precise_enable"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" />
-                        </LinearLayout>
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/spatial_correction"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
 
                         <!-- FL Row -->
                         <androidx.constraintlayout.widget.ConstraintLayout
@@ -806,7 +959,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
-                                android:valueTo="10"
+                                android:valueTo="40"
                                 android:stepSize="1"
                                 android:value="0"
                                 app:thumbRadius="10dp"
@@ -852,7 +1005,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
-                                android:valueTo="10"
+                                android:valueTo="40"
                                 android:stepSize="1"
                                 android:value="0"
                                 app:thumbRadius="10dp"
@@ -898,7 +1051,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
-                                android:valueTo="10"
+                                android:valueTo="40"
                                 android:stepSize="1"
                                 android:value="0"
                                 app:thumbRadius="10dp"
@@ -946,7 +1099,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
-                                android:valueTo="10"
+                                android:valueTo="40"
                                 android:stepSize="1"
                                 android:value="0"
                                 app:thumbRadius="10dp"
@@ -993,7 +1146,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
-                                android:valueTo="10"
+                                android:valueTo="40"
                                 android:stepSize="1"
                                 android:value="0"
                                 app:thumbRadius="10dp"
@@ -1022,25 +1175,29 @@
                         android:padding="16dp"
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
-                        <LinearLayout
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_legacy_enable"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/toggle_height"
                             android:layout_marginBottom="@dimen/margin_standard"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/surround_mode" />
-
-                            <com.google.android.material.materialswitch.MaterialSwitch
-                                android:id="@+id/switch_legacy_enable"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" />
-                        </LinearLayout>
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/surround_mode"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
 
                         <!-- L-FL Row -->
                         <androidx.constraintlayout.widget.ConstraintLayout
@@ -1234,10 +1391,15 @@
 
                             <TextView
                                 style="@style/TextLabel"
-                                android:layout_width="wrap_content"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/rear_fill_enhancement"
                                 app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/tv_delay1_rsse_val"
+                                app:layout_constraintHorizontal_bias="0"
                                 app:layout_constraintTop_toTopOf="parent" />
 
                             <TextView
@@ -1362,7 +1524,7 @@
                                 app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_filter_front"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="@dimen/ctl_button_height"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
                                 android:valueTo="11"
@@ -1408,7 +1570,7 @@
                                 app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_boost_front"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="@dimen/ctl_button_height"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
                                 android:valueTo="12"
@@ -1443,6 +1605,12 @@
                                 android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
+                                app:boxCornerRadiusTopStart="10dp"
+                                app:boxCornerRadiusTopEnd="10dp"
+                                app:boxCornerRadiusBottomStart="10dp"
+                                app:boxCornerRadiusBottomEnd="10dp"
+                                app:boxBackgroundColor="#33000000"
+                                app:boxStrokeWidth="1.5dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
                                 app:endIconTint="@color/cyan_custom">
@@ -1496,7 +1664,7 @@
                                 app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_filter_rear"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="@dimen/ctl_button_height"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
                                 android:valueTo="11"
@@ -1542,7 +1710,7 @@
                                 app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_bass_boost_rear"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="@dimen/ctl_button_height"
                                 android:layout_marginTop="@dimen/margin_tiny"
                                 android:valueFrom="0"
                                 android:valueTo="12"
@@ -1577,6 +1745,12 @@
                                 android:hint="@string/lbl_freq_boost"
                                 android:textColorHint="@color/text_theme_aware_2"
                                 android:translationY="-2dp"
+                                app:boxCornerRadiusTopStart="10dp"
+                                app:boxCornerRadiusTopEnd="10dp"
+                                app:boxCornerRadiusBottomStart="10dp"
+                                app:boxCornerRadiusBottomEnd="10dp"
+                                app:boxBackgroundColor="#33000000"
+                                app:boxStrokeWidth="1.5dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
                                 app:endIconTint="@color/cyan_custom">
@@ -1595,14 +1769,30 @@
 
                         </LinearLayout>
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_loud"
-                            style="@style/TextLabel"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/built_in_loudness_legacy"
+                            android:layout_height="@dimen/toggle_height"
                             android:layout_marginTop="16dp"
-                            android:layout_gravity="center_horizontal" />
+                            android:layout_gravity="center_horizontal"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/built_in_loudness_legacy"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
 
                     </LinearLayout>
 
@@ -1629,7 +1819,7 @@
                     android:id="@+id/seek_fader_lr"
                     android:visibility="gone"
                     android:layout_width="@dimen/fader_length"
-                    android:layout_height="48dp"
+                    android:layout_height="@dimen/ctl_button_height"
                     android:valueFrom="0"
                     android:valueTo="24"
                     android:stepSize="1"
@@ -1662,9 +1852,9 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintDimensionRatio="W,945:1781"
+                    app:layout_constraintDimensionRatio="W,300:520"
                     android:layerType="hardware"
-                    app:srcCompat="@drawable/fabka_smooth" />
+                    app:srcCompat="@drawable/ic_car_cabriolet" />
 
                 <com.radiorubka.wdsp.BalancePointerView
                     android:id="@+id/balance_pointer"
@@ -1731,12 +1921,13 @@
 
                 <ImageView
                     android:id="@+id/btn_fader_fr_plus"
-                    android:layout_width="@dimen/fader_arrow_icon_size"
-                    android:layout_height="@dimen/fader_arrow_icon_size"
-                    android:background="@drawable/ripple_arrow"
+                    android:layout_width="@dimen/toggle_height"
+                    android:layout_height="@dimen/toggle_height"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_icon_button"
                     android:clickable="true"
                     android:focusable="true"
-                    android:scaleType="fitCenter"
+                    android:scaleType="centerInside"
                     android:rotation="0"
                     android:contentDescription="@string/btn_front"
                     android:src="@drawable/ic_arrow"
@@ -1748,12 +1939,13 @@
                 <!-- BOTTOM: arrow below the car (rear), number below the arrow. -->
                 <ImageView
                     android:id="@+id/btn_fader_fr_minus"
-                    android:layout_width="@dimen/fader_arrow_icon_size"
-                    android:layout_height="@dimen/fader_arrow_icon_size"
-                    android:background="@drawable/ripple_arrow"
+                    android:layout_width="@dimen/toggle_height"
+                    android:layout_height="@dimen/toggle_height"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_icon_button"
                     android:clickable="true"
                     android:focusable="true"
-                    android:scaleType="fitCenter"
+                    android:scaleType="centerInside"
                     android:rotation="180"
                     android:contentDescription="@string/btn_rear"
                     android:src="@drawable/ic_arrow"
@@ -1796,12 +1988,13 @@
 
                 <ImageView
                     android:id="@+id/btn_fader_lr_minus"
-                    android:layout_width="@dimen/fader_arrow_icon_size"
-                    android:layout_height="@dimen/fader_arrow_icon_size"
-                    android:background="@drawable/ripple_arrow"
+                    android:layout_width="@dimen/toggle_height"
+                    android:layout_height="@dimen/toggle_height"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_icon_button"
                     android:clickable="true"
                     android:focusable="true"
-                    android:scaleType="fitCenter"
+                    android:scaleType="centerInside"
                     android:rotation="270"
                     android:contentDescription="@string/btn_left"
                     android:src="@drawable/ic_arrow"
@@ -1814,12 +2007,13 @@
                 <!-- RIGHT: the car, then arrow, then number. -->
                 <ImageView
                     android:id="@+id/btn_fader_lr_plus"
-                    android:layout_width="@dimen/fader_arrow_icon_size"
-                    android:layout_height="@dimen/fader_arrow_icon_size"
-                    android:background="@drawable/ripple_arrow"
+                    android:layout_width="@dimen/toggle_height"
+                    android:layout_height="@dimen/toggle_height"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_icon_button"
                     android:clickable="true"
                     android:focusable="true"
-                    android:scaleType="fitCenter"
+                    android:scaleType="centerInside"
                     android:rotation="90"
                     android:contentDescription="@string/btn_right"
                     android:src="@drawable/ic_arrow"
@@ -1862,111 +2056,44 @@
                 android:fillViewport="true"
                 android:overScrollMode="never">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:padding="16dp"
                     android:background="@drawable/ui_bg_layer"
-                    android:layout_height="wrap_content">
+                    android:orientation="vertical">
 
-                    <TextView
-                        style="@style/TextTitle"
-                        android:id="@+id/tv_gala_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/gala_title"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"/>
-
+                    <!-- Title & Header Bar -->
                     <LinearLayout
-                        android:gravity="center_vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:id="@+id/layout_gala_controls"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        app:layout_constraintTop_toBottomOf="@+id/tv_gala_title">
+                        android:gravity="center_vertical">
 
                         <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
+                            style="@style/TextTitle"
+                            android:id="@+id/tv_gala_title"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/enable_gala"/>
+                            android:layout_weight="1"
+                            android:text="@string/gala_title" />
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switch_gala_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"/>
-
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/gala_global"
-                            android:layout_marginStart="16dp"/>
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switch_gala_global"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"/>
-
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/vol_step_every"
-                            android:layout_marginStart="16dp"/>
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_gala_increment"
-                            android:layout_width="200dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="45"
-                            android:stepSize="1"
-                            android:value="15"
-                            android:layout_marginStart="8dp"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-
-                        <TextView
-                            style="@style/TextValue"
-                            android:id="@+id/tv_gala_increment_val"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/value_default"
-                            android:layout_marginStart="8dp"/>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:orientation="vertical"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        app:layout_constraintTop_toBottomOf="@+id/layout_gala_controls">
-
+                        <!-- Live Metrics Badges -->
                         <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:layout_width="match_parent"
                             android:gravity="center_vertical"
-                            android:layout_height="wrap_content">
+                            android:background="@drawable/bg_icon_button"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp">
 
                             <TextView
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/current_gps_speed"/>
+                                android:text="@string/current_gps_speed"
+                                android:textSize="12.5sp" />
 
                             <TextView
                                 style="@style/TextValue"
@@ -1974,58 +2101,21 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
-                                android:layout_marginStart="16dp"/>
+                                android:layout_marginStart="6dp"
+                                android:textSize="12.5sp" />
+
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="14dp"
+                                android:background="@color/panel_border_theme_aware"
+                                android:layout_marginHorizontal="10dp" />
 
                             <TextView
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/standstill_speed"
-                                android:layout_marginStart="16dp"/>
-
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_minspeed"
-                                android:layout_width="350dp"
-                                android:layout_height="wrap_content"
-                                android:valueFrom="0"
-                                android:valueTo="60"
-                                android:stepSize="1"
-                                android:value="0"
-                                android:layout_marginStart="8dp"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/transparent"
-                                app:thumbColor="@color/cyan_custom"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/track_color_active"
-                                app:trackColorInactive="@color/track_color_inactive"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:id="@+id/tv_gala_minspeed_val"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="16dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/applied_vol_offset"/>
+                                android:text="@string/applied_vol_offset"
+                                android:textSize="12.5sp" />
 
                             <TextView
                                 style="@style/TextValue"
@@ -2033,67 +2123,227 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
-                                android:layout_marginStart="16dp"/>
-
-        <!--                    <TextView-->
-        <!--                        android:textSize="18sp"-->
-        <!--                        android:textColor="@color/text_theme_aware"-->
-        <!--                        android:layout_width="wrap_content"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:text="@string/max_speed_label"-->
-        <!--                        android:layout_marginStart="32dp"/>-->
-
-        <!--                    <com.google.android.material.slider.Slider-->
-        <!--                        android:id="@+id/seek_gala_maxspeed"-->
-        <!--                        android:layout_width="350dp"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:valueFrom="0"-->
-        <!--                        android:valueTo="60"-->
-        <!--                        android:stepSize="1"-->
-        <!--                        android:value="30"-->
-        <!--                        android:layout_marginStart="8dp"-->
-        <!--                        app:thumbRadius="10dp"-->
-        <!--                        app:haloRadius="24dp"-->
-        <!--                        app:haloColor="@color/transparent"-->
-        <!--                        app:thumbColor="@color/cyan_custom"-->
-        <!--                        app:trackColorActive="@color/cyan_custom"-->
-        <!--                        app:trackHeight="4dp" />-->
-
-        <!--                    <TextView-->
-        <!--                        android:textSize="18sp"-->
-        <!--                        android:textStyle="bold"-->
-        <!--                        android:textColor="@color/text_theme_aware_2"-->
-        <!--                        android:id="@+id/tv_gala_maxspeed_val"-->
-        <!--                        android:layout_width="wrap_content"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:text="@string/value_default"-->
-        <!--                        android:layout_marginStart="8dp"/>-->
-
+                                android:layout_marginStart="6dp"
+                                android:textSize="12.5sp" />
                         </LinearLayout>
+                    </LinearLayout>
 
-                        <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
+                    <!-- Toggles Bar -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_gala_enable"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/enable_gala"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_gala_global"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text="@string/gala_global"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
+                    </LinearLayout>
+
+                    <!-- Symmetrical 2-Column Cards Grid -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <!-- Card 1: Швидкість та Компенсація -->
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="32dp">
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_licence_card"
+                            android:padding="14dp"
+                            android:layout_marginEnd="6dp">
 
                             <TextView
+                                android:id="@+id/gala_c1_title"
+                                style="@style/TextHeader"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/gala_section_speed_gain"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_theme_aware"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent" />
+
+                            <!-- Row 1: Крок швидкості -->
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_inc"
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/max_adjustment"/>
+                                android:layout_marginTop="12dp"
+                                android:text="@string/vol_step_every"
+                                app:layout_constraintTop_toBottomOf="@id/gala_c1_title"
+                                app:layout_constraintStart_toStartOf="parent" />
 
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_max_adj"
-                                android:layout_width="350dp"
+                            <!-- Row 2: Поріг активації -->
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_minspeed"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:text="@string/standstill_speed"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_increment"
+                                app:layout_constraintStart_toStartOf="parent" />
+
+                            <!-- Row 3: Макс. підсилення -->
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_max_adj"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:text="@string/max_adjustment"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_minspeed"
+                                app:layout_constraintStart_toStartOf="parent" />
+
+                            <!-- Dynamic Barrier for Card 1 Labels -->
+                            <androidx.constraintlayout.widget.Barrier
+                                android:id="@+id/barrier_gala_c1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:barrierDirection="end"
+                                app:constraint_referenced_ids="tv_lbl_gala_inc,tv_lbl_gala_minspeed,tv_lbl_gala_max_adj" />
+
+                            <!-- Slider 1 -->
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_gala_increment"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:valueFrom="0"
+                                android:valueTo="45"
+                                android:stepSize="1"
+                                android:value="15"
+                                app:thumbHeight="@dimen/thumb_height"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c1"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_increment_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_inc"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_inc" />
+
+                            <!-- Value 1 -->
+                            <TextView
+                                android:id="@+id/tv_gala_increment_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/value_default"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_inc"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_inc" />
+
+                            <!-- Slider 2 -->
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_gala_minspeed"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:valueFrom="0"
+                                android:valueTo="40"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbHeight="@dimen/thumb_height"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c1"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_minspeed_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
+
+                            <!-- Value 2 -->
+                            <TextView
+                                android:id="@+id/tv_gala_minspeed_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/value_default"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
+
+                            <!-- Slider 3 -->
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_gala_max_adj"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
                                 android:valueFrom="0"
                                 android:valueTo="32"
                                 android:stepSize="1"
                                 android:value="12"
-                                android:layout_marginStart="8dp"
+                                app:thumbHeight="@dimen/thumb_height"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
@@ -2103,40 +2353,101 @@
                                 app:trackColorActive="@color/track_color_active"
                                 app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c1"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_max_adj_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_max_adj"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_max_adj" />
 
+                            <!-- Value 3 -->
                             <TextView
-                                style="@style/TextValue"
                                 android:id="@+id/tv_gala_max_adj_val"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
                                 android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_max_adj"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_max_adj" />
 
-                        </LinearLayout>
+                        </androidx.constraintlayout.widget.ConstraintLayout>
 
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
+                        <!-- Card 2: Плавність та Симуляція -->
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="32dp">
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_licence_card"
+                            android:padding="14dp"
+                            android:layout_marginStart="6dp">
 
                             <TextView
+                                android:id="@+id/gala_c2_title"
+                                style="@style/TextHeader"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/gala_section_smoothing_sim"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_theme_aware"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent" />
+
+                            <!-- Row 1: Плавність переходу -->
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_fade"
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/gala_fade_delay"/>
+                                android:layout_marginTop="12dp"
+                                android:text="@string/gala_fade_delay"
+                                app:layout_constraintTop_toBottomOf="@id/gala_c2_title"
+                                app:layout_constraintStart_toStartOf="parent" />
 
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_fade_ms"
-                                android:layout_width="@dimen/slider_max_width_big"
+                            <!-- Row 2: Час утримання -->
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_hold"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:text="@string/gala_hold_timer"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_fade_ms"
+                                app:layout_constraintStart_toStartOf="parent" />
+
+                            <!-- Row 3: Симуляція швидкості -->
+                            <TextView
+                                android:id="@+id/tv_lbl_simulate_speed"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:text="@string/simulate_speed"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_hold_ms"
+                                app:layout_constraintStart_toStartOf="parent" />
+
+                            <!-- Dynamic Barrier for Card 2 Labels -->
+                            <androidx.constraintlayout.widget.Barrier
+                                android:id="@+id/barrier_gala_c2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:barrierDirection="end"
+                                app:constraint_referenced_ids="tv_lbl_gala_fade,tv_lbl_gala_hold,tv_lbl_simulate_speed" />
+
+                            <!-- Slider 1 -->
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_gala_fade_ms"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
                                 android:valueFrom="0"
                                 android:valueTo="2000"
                                 android:stepSize="100"
                                 android:value="300"
+                                app:thumbHeight="@dimen/thumb_height"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
@@ -2146,40 +2457,36 @@
                                 app:trackColorActive="@color/track_color_active"
                                 app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c2"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_fade_ms_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_fade"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_fade" />
 
+                            <!-- Value 1 -->
                             <TextView
-                                style="@style/TextValue"
                                 android:id="@+id/tv_gala_fade_ms_val"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
                                 android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_fade"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_fade" />
 
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="160dp"
-                                android:layout_height="wrap_content"
-                                android:text="@string/gala_hold_timer"/>
-
+                            <!-- Slider 2 -->
                             <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_gala_hold_ms"
-                                android:layout_width="@dimen/slider_max_width_big"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
                                 android:valueFrom="0"
                                 android:valueTo="10000"
                                 android:stepSize="500"
                                 android:value="3000"
+                                app:thumbHeight="@dimen/thumb_height"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
@@ -2189,69 +2496,68 @@
                                 app:trackColorActive="@color/track_color_active"
                                 app:trackColorInactive="@color/track_color_inactive"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c2"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_hold_ms_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_hold"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_hold" />
 
+                            <!-- Value 2 -->
                             <TextView
-                                style="@style/TextValue"
                                 android:id="@+id/tv_gala_hold_ms_val"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
                                 android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_hold"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_hold" />
 
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="32dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="160dp"
-                                android:layout_height="wrap_content"
-                                android:text="@string/simulate_speed"/>
-
+                            <!-- Slider 3 -->
                             <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_simulate_speed"
-                                android:layout_width="@dimen/slider_max_width_big"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:valueFrom="0"
                                 android:valueTo="200"
                                 android:stepSize="1"
                                 android:value="0"
+                                app:thumbHeight="@dimen/thumb_height"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
-                                app:thumbColor="#ff5722"
+                                app:thumbColor="@color/cyan_custom"
                                 app:tickColorActive="@color/tick_color_active"
                                 app:tickColorInactive="@color/tick_color_inactive"
                                 app:tickVisibilityMode="hidden"
-                                app:trackColorActive="#ff5722"
+                                app:trackColorActive="@color/track_color_active"
                                 app:trackColorInactive="@color/track_color_inactive"
-                                app:trackStopIndicatorSize="0dp"
                                 app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/tv_lbl_simulate_speed" />
 
+                            <!-- Value 3 -->
                             <TextView
-                                style="@style/TextValue"
-                                android:gravity="end"
                                 android:id="@+id/tv_simulate_speed_val"
+                                style="@style/TextValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/value_default"/>
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/value_default"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_simulate_speed"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_simulate_speed" />
 
-                        </LinearLayout>
-
+                        </androidx.constraintlayout.widget.ConstraintLayout>
                     </LinearLayout>
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
+                </LinearLayout>
             </ScrollView>
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>

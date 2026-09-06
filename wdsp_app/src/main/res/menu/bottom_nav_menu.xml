@@ -3,26 +3,25 @@
     <item
         android:id="@+id/nav_eq"
         android:icon="@drawable/eq_icon"
-        android:iconTint="@color/btn_auto_bg"
         android:title="@string/EQtab" />
     <item
         android:id="@+id/nav_fm_curve"
         android:icon="@drawable/fm_icon"
-        android:iconTint="@color/btn_add_bg"
         android:title="@string/FMtab" />
     <item
         android:id="@+id/nav_delays"
         android:icon="@drawable/del_icon"
-        android:iconTint="@color/btn_rename_bg"
         android:title="@string/DLtab" />
     <item
         android:id="@+id/nav_other"
         android:icon="@drawable/oth_icon"
-        android:iconTint="@color/btn_export_bg"
         android:title="@string/OTtab" />
     <item
-        android:icon="@drawable/gala_icon"
-        android:iconTint="@color/btn_import_bg"
         android:id="@+id/nav_gala"
-        android:title="@string/GLtab"/>
+        android:icon="@drawable/gala_icon"
+        android:title="@string/GLtab" />
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_tune_settings"
+        android:title="@string/settings_title" />
 </menu>

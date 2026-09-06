@@ -1,29 +1,94 @@
 <resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
         <item name="colorPrimary">@color/cyan_custom</item>
         <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:fontFamily">@font/main_font</item>
         <item name="fontFamily">@font/main_font</item>
-
-        <!-- Disables the default click "boop" sound effect for every View
-             in the app in one place, instead of calling
-             setSoundEffectsEnabled(false) on each button individually. This
-             works because View's constructor resolves any attribute it
-             doesn't get explicitly (from XML or code) through the current
-             theme - including for widgets created programmatically with
-             `new Foo(context)`, like the per-band EQ sliders/toggles built
-             at runtime in MainActivity.setupEqBands(). Matters here because
-             those UI click sounds were getting captured by the spectrum
-             analyzer's Visualizer (session 0 sees the whole output mix,
-             including UI sound effects, not just music). -->
         <item name="android:soundEffectsEnabled">false</item>
 
+        <!-- Global UI Widgets Styling matching QFRadio -->
+        <item name="seekBarStyle">@style/CustomSeekBarStyle</item>
+        <item name="android:seekBarStyle">@style/CustomSeekBarStyle</item>
+        <item name="sliderStyle">@style/CustomSliderStyle</item>
+        <item name="bottomNavigationStyle">@style/CustomBottomNavStyle</item>
+        <item name="materialAlertDialogTheme">@style/CustomDialogTheme</item>
+        <item name="alertDialogTheme">@style/CustomDialogTheme</item>
+        <item name="materialButtonStyle">@style/CustomMaterialButtonStyle</item>
     </style>
 
     <style name="Theme.WDSP" parent="Base.Theme.WDSP" />
+
+    <!-- Material Dialog Theme -->
+    <style name="CustomDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:background">@drawable/bg_dialog</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="colorSurface">#12161b</item>
+        <item name="colorPrimary">@color/cyan_custom</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
+    </style>
+
+    <style name="DialogButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/cyan_custom</item>
+        <item name="android:textStyle">bold</item>
+        <item name="rippleColor">#331FE7C4</item>
+    </style>
+
+    <style name="CustomMaterialButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="strokeWidth">1.2dp</item>
+        <item name="strokeColor">#33FFFFFF</item>
+        <item name="backgroundTint">#20121820</item>
+        <item name="rippleColor">#331FE7C4</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+
+    <!-- SeekBar Styling -->
+    <style name="CustomSeekBarStyle" parent="@android:style/Widget.SeekBar">
+        <item name="android:progressDrawable">@drawable/seekbar_progress</item>
+        <item name="android:thumb">@drawable/seekbar_thumb</item>
+        <item name="android:splitTrack">false</item>
+        <item name="android:minHeight">24dp</item>
+        <item name="android:maxHeight">24dp</item>
+    </style>
+
+    <!-- Material Slider Styling -->
+    <style name="CustomSliderStyle" parent="Widget.Material3.Slider">
+        <item name="trackColorActive">@color/cyan_custom</item>
+        <item name="trackColorInactive">#26FFFFFF</item>
+        <item name="thumbColor">@color/cyan_custom</item>
+        <item name="haloColor">@color/transparent</item>
+        <item name="thumbRadius">10dp</item>
+        <item name="thumbWidth">20dp</item>
+        <item name="thumbHeight">20dp</item>
+        <item name="trackHeight">5dp</item>
+        <item name="trackStopIndicatorSize">0dp</item>
+        <item name="tickVisibilityMode">hidden</item>
+        <item name="labelBehavior">gone</item>
+    </style>
+
+    <!-- Bottom Navigation Bar Styling -->
+    <style name="CustomBottomNavStyle" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemIconSize">24dp</item>
+        <item name="itemIconTint">@color/nav_item_color_selector</item>
+        <item name="itemTextColor">@color/nav_item_color_selector</item>
+        <item name="itemRippleColor">@color/transparent</item>
+        <item name="itemActiveIndicatorStyle">@style/CustomNavIndicator</item>
+    </style>
+
+    <style name="CustomNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">#261FE7C4</item>
+        <item name="android:width">48dp</item>
+        <item name="android:height">32dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Square</item>
+    </style>
 
     <!-- Standard Text Styles -->
     <style name="TextTitle">
@@ -49,17 +114,15 @@
         <item name="android:textColor">@color/text_theme_aware_2</item>
     </style>
 
-    <!-- 1. The Square Shape -->
+    <!-- The Square Shape -->
     <style name="ShapeAppearance.Square" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerSize">@dimen/button_radius</item>
     </style>
 
-    <!-- 2. The Indicator Style (Explicitly setting parent to empty to avoid lookup) -->
+    <!-- The Indicator Style -->
     <style name="IndicatorSquare" parent="">
-        <!-- This is the internal property for the indicator's shape -->
         <item name="shapeAppearance">@style/ShapeAppearance.Square</item>
         <item name="android:color">@color/custom_square</item>
-        <!-- Optional: Set height and width here if you want it to be a perfect square -->
         <item name="android:width">33dp</item>
         <item name="android:height">33dp</item>
     </style>

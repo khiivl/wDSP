@@ -10,6 +10,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.Rect;
 //import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,14 +30,18 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import androidx.appcompat.widget.SwitchCompat;
 
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import androidx.annotation.NonNull;
@@ -44,11 +51,15 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.android.material.slider.Slider;
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import org.json.JSONObject;
 
@@ -88,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<Slider> gainSliders = new ArrayList<>();
     private final List<ToggleButton> qSwitches = new ArrayList<>();
     private final List<TextView> dbLabels = new ArrayList<>();
+    private final List<TextView> freqLabels = new ArrayList<>();
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
@@ -97,7 +109,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvSubDb;
 
     private TextView tvPowerDb;
-    private final String[] SUB_FREQS = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
+    private final String[] SUB_FREQS_RAW = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
+    /**
+     * Built at runtime from SUB_FREQS_RAW and the localised hertz unit. It used to be a literal
+     * array of Ukrainian strings, which meant the subwoofer dropdown stayed Ukrainian in all
+     * thirty locales - and worse, the parsing code compares the spinner's text against these
+     * entries, so a translated build would have failed to match at all.
+     */
+    private final String[] SUB_FREQS = new String[SUB_FREQS_RAW.length];
 
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
@@ -105,32 +124,42 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerBassFreqFront, spinnerBassFreqRear;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
+    /**
+     * What the bass-boost dropdowns actually show: the same frequencies with the hertz unit on
+     * them, built at runtime like {@link #SUB_FREQS}.
+     *
+     * <p>The raw array stays exactly as it was, because the parsing compares the dropdown's text
+     * against it - and because the preference stores an index into it. A number on its own in a
+     * list of frequencies is guessable but not readable; every other frequency control in the app
+     * carries its unit, and this one was the exception.
+     */
+    private final String[] BASS_BOOST_FREQS_SHOWN = new String[BASS_BOOST_FREQS.length];
 
     // Fader & Delays
     private Slider seekFaderLr;
     private Slider seekFaderFr;
     private BalancePointerView balancePointer;
     private TextView tvFaderLrLeftVal, tvFaderLrRightVal, tvFaderFrFrontVal, tvFaderFrRearVal;
-    private SwitchCompat switchLoud;
+    private MaterialButton switchLoud;
     private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
     private Slider seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE;
-    private SwitchCompat switchPreciseEnable, switchLegacyEnable;
+    private MaterialButton switchPreciseEnable, switchLegacyEnable;
     private TextView tvDelayFlVal, tvDelayFrVal, tvDelayRlVal, tvDelayRrVal, tvDelaySubVal;
     private TextView tvDelay1FlVal, tvDelay1FrVal, tvDelay1RlVal, tvDelay1RrVal, tvDelay1RSSEVal;
 
     // F-M Curve
-    private SwitchCompat switchFmEnable, switchFatigueEnable, switchFmSubComp;
+    private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp;
     private Slider seekFmCalVol, seekFmStrength;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private SwitchCompat switchGalaEnable, switchGalaGlobal;
+    private MaterialButton switchGalaEnable, switchGalaGlobal;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal, tvGalaFadeMsVal, tvGalaHoldMsVal;
-    
+
     // Whether GALA's on/off state is shared across all presets instead of per-preset.
     // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
     private boolean galaGlobalMode = false;
@@ -166,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
             if ("com.radiorubka.wdsp.PRESET_CHANGED".equals(action)) {
                 String name = intent.getStringExtra("preset");
                 if (name != null && presetNames != null && presetNames.contains(name)) {
-                    Toaster.show(MainActivity.this, "Auto: " + name);
+                    Toaster.show(MainActivity.this, getString(R.string.toast_auto_preset, name));
                     spinnerPresets.setText(name, false);
                     loadPreset(name);
                 }
@@ -195,6 +224,16 @@ public class MainActivity extends AppCompatActivity {
                     isUpdatingUi = false;
                 }
             }
+            else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
+                Log.i("MainActivity", "SETTINGS_RESTORED received, reloading all UI components");
+                applyAppTheme();
+                setupPresets();
+                refreshAllUiValues();
+                SelectTab();
+                if (spectrumAnalyzer != null) {
+                    spectrumAnalyzer.invalidate();
+                }
+            }
         }
     };
 
@@ -214,6 +253,21 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // The service arms this too, and normally gets there first. This is the second anchor:
+        // after an update the service is not running again until the unit is restarted, and a
+        // tester who opens the app and makes a call in that window would otherwise record nothing.
+        // Arming twice is a no-op.
+        SystemDiagnostics.arm(this);
+
+        for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
+            SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
+        }
+        // Index 0 is the "no boost" entry rather than a frequency, so it is a word, translated.
+        BASS_BOOST_FREQS_SHOWN[0] = getString(R.string.freq_off);
+        for (int i = 1; i < BASS_BOOST_FREQS.length; i++) {
+            BASS_BOOST_FREQS_SHOWN[i] = getString(R.string.unit_hz, BASS_BOOST_FREQS[i]);
+        }
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
 
@@ -352,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
                 //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             } else {
-                Toaster.show(this, "Location permission is required for GALA features.");
+                Toaster.show(this, getString(R.string.toast_location_permission_needed));
                 //Intent intent = new Intent(this, McuService.class);
                 startMcuActualService();
             }
@@ -367,8 +421,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleTargetTab(intent);
+    }
+
+    private void handleTargetTab(Intent intent) {
+        if (intent == null) return;
+        int targetTabId = intent.getIntExtra("target_tab_id", -1);
+        if (targetTabId != -1) {
+            BottomNavigationView bn = findViewById(R.id.bottom_navigation);
+            if (bn != null) {
+                bn.setSelectedItemId(targetTabId);
+            }
+            intent.removeExtra("target_tab_id");
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        applyAppTheme();
+        handleTargetTab(getIntent());
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
         if (isFullyInitialized) {
             refreshAllUiValues();
@@ -389,6 +464,8 @@ public class MainActivity extends AppCompatActivity {
                 loadPreset(newName);
             }
         }
+        updateVisualizer();
+        applyAppTheme();
         checkAndStartSpectrumAnalyzer();
     }
 
@@ -397,6 +474,254 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_INACTIVE").setPackage(getPackageName()));
         if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+    }
+
+    private void tintSlider(Slider s, ColorStateList csl, ColorStateList cslTrack) {
+        if (s == null) return;
+        float density = getResources().getDisplayMetrics().density;
+        s.setThumbTintList(csl);
+        s.setTrackActiveTintList(csl);
+        s.setTrackInactiveTintList(ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
+        s.setHaloRadius(0);
+        s.setTrackHeight((int) (5 * density));
+        s.setThumbRadius((int) (10 * density));
+        s.setThumbWidth((int) (20 * density));
+        s.setThumbHeight((int) (20 * density));
+        s.setTrackStopIndicatorSize(0);
+        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
+    }
+
+    private void updateToggleStyle(View v) {
+        if (v == null) return;
+        int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
+        int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
+        int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
+        int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
+
+        boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
+        int unselectedBg = isNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        int unselectedBorder = isNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
+        int onAccentColor = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
+
+        if (v instanceof MaterialButton) {
+            MaterialButton mb = (MaterialButton) v;
+            boolean checked = mb.isChecked();
+            if (checked) {
+                mb.setBackgroundTintList(ColorStateList.valueOf(accent));
+                mb.setTextColor(onAccentColor);
+                mb.setStrokeColor(ColorStateList.valueOf(accent));
+            } else {
+                mb.setBackgroundTintList(ColorStateList.valueOf(unselectedBg));
+                mb.setTextColor(textPrimary);
+                mb.setStrokeColor(ColorStateList.valueOf(unselectedBorder));
+            }
+            return;
+        }
+
+        if (v instanceof ToggleButton) {
+            ToggleButton tb = (ToggleButton) v;
+            boolean checked = tb.isChecked();
+            float density = getResources().getDisplayMetrics().density;
+            int radius = (int) (6 * density);
+            if (checked) {
+                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
+                tb.setTextColor(onAccentColor);
+            } else {
+                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
+                tb.setTextColor(textPrimary);
+            }
+            return;
+        }
+
+        if (v instanceof CompoundButton) {
+            CompoundButton toggle = (CompoundButton) v;
+            boolean checked = toggle.isChecked();
+            float density = getResources().getDisplayMetrics().density;
+            int radius = (int) (10 * density);
+            toggle.setPadding((int) (14 * density), (int) (6 * density), (int) (14 * density), (int) (6 * density));
+            toggle.setGravity(Gravity.CENTER);
+            if (checked) {
+                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
+                toggle.setTextColor(onAccentColor);
+            } else {
+                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
+                toggle.setTextColor(textPrimary);
+            }
+        }
+    }
+
+    private void applyAppTheme() {
+        try {
+            Drawable wallpaper = com.radiorubka.wdsp.ui.theme.ThemeManager.wallpaperBackground(this);
+            View mainView = findViewById(R.id.main);
+            if (mainView != null) {
+                mainView.setBackground(wallpaper);
+            }
+            View root = getWindow().getDecorView();
+            if (root != null) {
+                root.setBackground(wallpaper);
+            }
+
+            int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
+            int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this);
+            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
+            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this);
+            int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
+            float density = getResources().getDisplayMetrics().density;
+
+            ColorStateList csl = ColorStateList.valueOf(accent);
+            ColorStateList cslTrack = ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 70));
+
+            // Dynamically tint all 16 EQ sliders and labels
+            for (Slider s : gainSliders) {
+                tintSlider(s, csl, cslTrack);
+            }
+            for (TextView db : dbLabels) {
+                if (db != null) {
+                    db.setTextColor(accent);
+                }
+            }
+            for (TextView l : freqLabels) {
+                if (l != null) {
+                    l.setTextColor(secondaryText);
+                }
+            }
+
+            // Q factor toggles
+            for (ToggleButton q : qSwitches) {
+                if (q != null) {
+                    updateToggleStyle(q);
+                }
+            }
+
+            // Sub gain
+            tintSlider(seekSubGain, csl, cslTrack);
+
+            // Filters & Fader
+            tintSlider(seekBassFilterFront, csl, cslTrack);
+            tintSlider(seekBassBoostFront, csl, cslTrack);
+            tintSlider(seekBassFilterRear, csl, cslTrack);
+            tintSlider(seekBassBoostRear, csl, cslTrack);
+            tintSlider(seekFaderLr, csl, cslTrack);
+            tintSlider(seekFaderFr, csl, cslTrack);
+
+            // Delays
+            tintSlider(seekDelayFl, csl, cslTrack);
+            tintSlider(seekDelayFr, csl, cslTrack);
+            tintSlider(seekDelayRl, csl, cslTrack);
+            tintSlider(seekDelayRr, csl, cslTrack);
+            tintSlider(seekDelaySub, csl, cslTrack);
+            tintSlider(seekDelay1Fl, csl, cslTrack);
+            tintSlider(seekDelay1Fr, csl, cslTrack);
+            tintSlider(seekDelay1Rl, csl, cslTrack);
+            tintSlider(seekDelay1Rr, csl, cslTrack);
+            tintSlider(seekDelay1RSSE, csl, cslTrack);
+
+            // F-M Curve
+            tintSlider(seekFmCalVol, csl, cslTrack);
+            tintSlider(seekFmStrength, csl, cslTrack);
+
+            // GALA
+            tintSlider(seekGalaInc, csl, cslTrack);
+            tintSlider(seekGalaMinSpeed, csl, cslTrack);
+            tintSlider(seekSimulateSpeed, csl, cslTrack);
+            tintSlider(seekGalaMaxAdj, csl, cslTrack);
+            tintSlider(seekGalaFadeMs, csl, cslTrack);
+            tintSlider(seekGalaHoldMs, csl, cslTrack);
+
+            // Style all toggle buttons
+            updateToggleStyle(switchLoud);
+            updateToggleStyle(switchPreciseEnable);
+            updateToggleStyle(switchLegacyEnable);
+            updateToggleStyle(switchFmEnable);
+            updateToggleStyle(switchFatigueEnable);
+            updateToggleStyle(switchFmSubComp);
+            updateToggleStyle(switchGalaEnable);
+            updateToggleStyle(switchGalaGlobal);
+
+            // Spinners
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText);
+
+            // Primary Section Titles & Headers
+            int[] primaryTitles = {
+                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title
+            };
+            for (int id : primaryTitles) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(primaryText);
+            }
+
+            // Accent Values
+            boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
+            int valueColor = isNight ? accent : primaryText;
+            int faderIconTint = isNight ? accent : primaryText;
+            int[] accentValues = {
+                R.id.tv_pwr_db, R.id.tv_sub_db,
+                R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
+                R.id.tv_delay_fl_val, R.id.tv_delay_fr_val, R.id.tv_delay_rl_val, R.id.tv_delay_rr_val, R.id.tv_delay_sub_val,
+                R.id.tv_delay1_fl_val, R.id.tv_delay1_fr_val, R.id.tv_delay1_rl_val, R.id.tv_delay1_rr_val, R.id.tv_delay1_rsse_val,
+                R.id.tv_bass_filter_front_db, R.id.tv_bass_boost_front_db, R.id.tv_bass_filter_rear_db, R.id.tv_bass_boost_rear_db,
+                R.id.tv_fader_fr_front_val, R.id.tv_fader_fr_rear_val, R.id.tv_fader_lr_left_val, R.id.tv_fader_lr_right_val,
+                R.id.tv_gala_increment_val, R.id.tv_gala_speed, R.id.tv_gala_minspeed_val, R.id.tv_gala_offset,
+                R.id.tv_gala_max_adj_val, R.id.tv_gala_fade_ms_val, R.id.tv_gala_hold_ms_val, R.id.tv_simulate_speed_val
+            };
+            for (int id : accentValues) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(valueColor);
+            }
+
+            // Secondary Labels
+            int[] secondaryLabels = {
+                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength
+            };
+            for (int id : secondaryLabels) {
+                TextView tv = findViewById(id);
+                if (tv != null) tv.setTextColor(secondaryText);
+            }
+
+            // Fader Buttons
+            int[] faderArrows = {
+                R.id.btn_fader_fr_plus, R.id.btn_fader_fr_minus,
+                R.id.btn_fader_lr_plus, R.id.btn_fader_lr_minus
+            };
+            for (int id : faderArrows) {
+                ImageView iv = findViewById(id);
+                if (iv != null) iv.setImageTintList(ColorStateList.valueOf(faderIconTint));
+            }
+
+            // Power / Sub Buttons
+            int[] subButtons = {
+                R.id.btn_pwr_vol_plus, R.id.btn_pwr_vol_minus,
+                R.id.btn_plus, R.id.btn_minus
+            };
+            for (int id : subButtons) {
+                View btn = findViewById(id);
+                if (btn instanceof TextView) {
+                    ((TextView) btn).setTextColor(valueColor);
+                }
+            }
+
+            // Bottom Navigation Bar
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            if (bottomNav != null) {
+                ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this);
+                bottomNav.setItemIconTintList(navCsl);
+                bottomNav.setItemTextColor(navCsl);
+                bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+            }
+
+            ImageView carView = findViewById(R.id.imageView);
+            if (carView != null) {
+                carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+            }
+
+            if (eqVisualizer != null) eqVisualizer.invalidate();
+            if (spectrumAnalyzer != null) spectrumAnalyzer.invalidate();
+        } catch (Exception ignored) {
+        }
     }
 
     // --- Spectrum analyzer (pre-EQ, visual-only; see SpectrumAnalyzerView javadoc) ---
@@ -419,7 +744,8 @@ public class MainActivity extends AppCompatActivity {
         if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
 
             // Show a quick explanation so the user isn't confused
-            new AlertDialog.Builder(this)
+            com.radiorubka.wdsp.ui.ThemedDialog.show(
+                    com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                     .setTitle(R.string.battery_dialog_title)
                     .setMessage(R.string.battery_dialog_message)
                     .setPositiveButton(R.string.btn_allow, (dialog, which) -> {
@@ -433,8 +759,7 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(intent);
                         }
                     })
-                    .setNegativeButton(R.string.btn_later, null)
-                    .show();
+                    .setNegativeButton(R.string.btn_later, null));
         }
     }
 
@@ -468,6 +793,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction("com.radiorubka.wdsp.VOLUME_CHANGED");
         filter.addAction("com.radiorubka.wdsp.GALA_UPDATE");
         filter.addAction("com.radiorubka.wdsp.SUB_GAIN_CHANGED");
+        filter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
 
         registerReceiver(serviceReceiver, filter);
     }
@@ -480,6 +806,7 @@ public class MainActivity extends AppCompatActivity {
         setupDelayControls();
         setupDelay1Controls();
         setupGalaControls();
+        checkStatusBarHeightCalibration();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
@@ -501,6 +828,22 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_delete_preset).setOnClickListener(v -> deleteCurrentPreset());
         findViewById(R.id.btn_export_presets).setOnClickListener(v -> exportPresets());
         findViewById(R.id.btn_import_presets).setOnClickListener(v -> importPresets());
+
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_minus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_plus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_center));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_pwr_vol_minus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_pwr_vol_plus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_lr_minus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_lr_plus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_fr_minus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_fr_plus));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_apply));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_add_preset));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_rename_preset));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_delete_preset));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_export_presets));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_import_presets));
     }
 
     private void initSecondaryViews() {
@@ -614,6 +957,7 @@ public class MainActivity extends AppCompatActivity {
         gainSliders.clear();
         qSwitches.clear();
         dbLabels.clear();
+        freqLabels.clear();
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
         //int cL = ContextCompat.getColor(this, R.color.band_label);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
@@ -635,65 +979,54 @@ public class MainActivity extends AppCompatActivity {
             q.setTextOn(getString(R.string.q_high));
             q.setTextOff(getString(R.string.q_low));
             q.setChecked(false);
-            q.setTextColor(cQ); q.setBackgroundColor(Color.TRANSPARENT);
-            q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
+            q.setTextColor(ContextCompat.getColor(this, R.color.text_theme_aware_2));
+            q.setBackgroundColor(Color.TRANSPARENT);
+            q.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
-            q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.07f));
+            updateToggleStyle(q);
             q.setOnCheckedChangeListener((bv, checked) -> {
+                updateToggleStyle(bv);
                 if (!isUpdatingUi) {
                     updateVisualizer();
-//                    updateEqMcu();
                     autoSaveCurrent();
                 }
             });
 
-            db.setText("0"); db.setTextColor(accentColor);
-            db.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
-            db.setGravity(Gravity.CENTER); db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            db.setText("0");
+            db.setTextColor(accentColor);
+            db.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+            db.setTypeface(null, Typeface.BOLD);
+            db.setGravity(Gravity.CENTER);
+            db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.07f));
 
             TextView label = new TextView(this);
-            label.setText(AudioConfig.BAND_LABELS[i]); label.setTextColor(getColor(R.color.transparent));
-            label.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
-            label.setGravity(Gravity.CENTER); label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            label.setText(AudioConfig.BAND_LABELS[i]);
+            label.setTextColor(com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this));
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
+            label.setGravity(Gravity.CENTER);
+            label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            freqLabels.add(label);
 
             s.setValueFrom(0f);
             s.setValueTo(12f);
             s.setStepSize(1f);
-            s.setValue(6f);
-            s.setThumbHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
-//            s.setThumbRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics()));
-            s.setHaloRadius((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+            float density = getResources().getDisplayMetrics().density;
+            s.setThumbHeight((int) (20 * density));
+            s.setThumbWidth((int) (20 * density));
+            s.setThumbRadius((int) (10 * density));
+            s.setHaloRadius(0);
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
-
-            // Color-code the track per band group (same palette as the EQ visualizer curve)
-            int groupIdx = 0;
-            for (int g = 0; g < GROUP_STARTS.length; g++) {
-                if (idx >= GROUP_STARTS[g]) groupIdx = g;
-            }
-            int bandColor = GROUP_COLORS[groupIdx];
-            s.setTrackActiveTintList(ColorStateList.valueOf(bandColor));
-            s.setThumbTintList(ColorStateList.valueOf(bandColor));
-            s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(bandColor, 70)));
-            s.setTrackHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+            s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
+            s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accentColor, 70)));
+            s.setTrackHeight((int) (5 * density));
             s.setRotation(270f);
-
-            // 1. Set the Stop Indicator size to 0 (This is the "first tick" you're seeing)
             s.setTrackStopIndicatorSize(0);
-
-            // 3. Make the track itself invisible
-//            ColorStateList transparent = ColorStateList.valueOf(Color.TRANSPARENT);
-//            s.setTrackActiveTintList(transparent);
-//            s.setTrackInactiveTintList(transparent);
-
-            // 4. Ensure Ticks are off and invisible just in case, also hide label
-//            s.setTickVisibilityMode(TickVisibilityMode.TICK_VISIBILITY_HIDDEN);
             s.setLabelBehavior(LabelFormatter.LABEL_GONE);
-            s.setTickActiveTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.tick_color_active)));
-            s.setTickInactiveTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.tick_color_inactive)));
 
             FrameLayout seekBox = new FrameLayout(this);
-            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.76f));
+            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.78f));
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(1000, -2);
             lp.gravity = Gravity.CENTER; s.setLayoutParams(lp);
 
@@ -713,20 +1046,30 @@ public class MainActivity extends AppCompatActivity {
 
             layout.addView(q);
             layout.addView(db);
-            layout.addView(label);
             seekBox.addView(s);
             layout.addView(seekBox);
+            layout.addView(label);
             container.addView(layout);
             updateDbLabel(i, 6);
         }
     }
 
     private void updateVisualizer() {
-        if (eqVisualizer == null) return;
+        if (eqVisualizer == null || gainSliders.size() < AudioConfig.NUM_BANDS) return;
         int[] gs = new int[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = getIntSlider(gainSliders.get(i));
+        boolean[] qn = new boolean[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            gs[i] = getIntSlider(gainSliders.get(i));
+            if (i < qSwitches.size()) {
+                qn[i] = qSwitches.get(i).isChecked();
+            }
+        }
         eqVisualizer.setGains(gs);
-        if (spectrumAnalyzer != null) spectrumAnalyzer.setGains(gs);
+        float[] offs = calculateFmOffsets();
+        AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
+        engine.setGains(gs);
+        engine.setQFactors(qn);
+        engine.setFmOffsets(offs);
     }
 
     private void updateDbLabel(int i, int p) {
@@ -803,10 +1146,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSubControls() {
-        // 1. Create the adapter (using a standard material-friendly layout)
-        ArrayAdapter<String> subAdapter = new ArrayAdapter<>(
+        // 1. Create the adapter (using themed QFRadio-styled dropdown layout)
+        ArrayAdapter<String> subAdapter = new ThemeManager.ThemedDropdownAdapter<>(
                 this,
-                android.R.layout.simple_list_item_1,
                 SUB_FREQS
         );
         spinnerSubFreq.setAdapter(subAdapter);
@@ -814,7 +1156,7 @@ public class MainActivity extends AppCompatActivity {
         // 2. Set the initial text (replaces setSelection)
         // 'false' is critical here to prevent the dropdown from opening or filtering
         spinnerSubFreq.setText(SUB_FREQS[5], false);
-        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[5]);
 
         // 3. Change OnItemSelectedListener to OnItemClickListener
         spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
@@ -825,7 +1167,7 @@ public class MainActivity extends AppCompatActivity {
                 Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
 
                 // Re-sync Global just in case
-                Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[5]);
                 return;
             }
 
@@ -834,8 +1176,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Update the global value for other calculations
-            String freqString = SUB_FREQS[pos];
-            Globals.currentSubFreqHz = Integer.parseInt(freqString);
+            Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[pos]);
         });
 
         // 4. Seek Gain logic remains largely the same
@@ -850,8 +1191,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFilterControls() {
-        ArrayAdapter<String> bbAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1, BASS_BOOST_FREQS);
+        ArrayAdapter<String> bbAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, BASS_BOOST_FREQS_SHOWN);
 
         spinnerBassFreqFront.setAdapter(bbAdapter);
         spinnerBassFreqRear.setAdapter(bbAdapter);
@@ -906,11 +1246,11 @@ public class MainActivity extends AppCompatActivity {
                 if (!isUpdatingUi) autoSaveCurrent();
             });
         }
-        switchLoud.jumpDrawablesToCurrentState();
-        switchLoud.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchLoud);
+        switchLoud.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 autoSaveCurrent();
-//                updateFaderMcu();
             } });
     }
 
@@ -925,15 +1265,37 @@ public class MainActivity extends AppCompatActivity {
         };
         seekDelayFl.addOnChangeListener(dl); seekDelayFr.addOnChangeListener(dl);
         seekDelayRl.addOnChangeListener(dl); seekDelayRr.addOnChangeListener(dl); seekDelaySub.addOnChangeListener(dl);
-        switchPreciseEnable.jumpDrawablesToCurrentState();
-        switchPreciseEnable.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchPreciseEnable);
+        switchPreciseEnable.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 if (checked) switchLegacyEnable.setChecked(false);
-//                updateDelayMcu();
                 autoSaveCurrent();
             }
         });
     }
+
+    /**
+     * What one step of a Surround delay slider is really worth, in milliseconds.
+     *
+     * <p>Not one millisecond, which is what these sliders said for as long as the app has existed.
+     * The MCU takes the slider value from the {@code 0x89} frame and multiplies it by 102 before it
+     * reaches the sound processor, and the processor counts delay in samples at 48 kHz - the ROHM
+     * datasheet gives the rule outright, "send data = time in ms x 48". So a step is 102/48 =
+     * 2.125 ms, and the ten steps the slider offers cover the 21.3 ms the chip can do, not 10 ms.
+     *
+     * <p>Measured on a head unit to be sure, by holding the routing still and moving this delay
+     * line between sweeps: 3 steps shifted the arrival by 6.354 ms, 6 steps by 12.688 ms, 10 steps
+     * by 21.167 ms. That is 2.117 ms per step, four parts in a thousand from the arithmetic, and
+     * nowhere near the 1.0 that was printed.
+     *
+     * <p>Only the label was wrong; the sliders always did this. So nothing about a saved preset
+     * changes - the same setting produces the same sound as before, and now says so honestly.
+     *
+     * <p>The positional delays ({@code _d_*}, command {@code 0x8C}) are a different line with a
+     * different scale, half a millisecond per step, and that one was measured to be correct.
+     */
+    private static final float SURROUND_DELAY_STEP_MS = 102f / 48f;
 
     private void setupDelay1Controls() {
         Slider.OnChangeListener dl = (slider, value, fromUser) -> {
@@ -943,7 +1305,7 @@ public class MainActivity extends AppCompatActivity {
                 String text = (v > 0 ? "+" : "") + v;
                 tvDelay1RSSEVal.setText(text); 
             }
-            else { float ms = p * 1.0f; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
+            else { float ms = p * SURROUND_DELAY_STEP_MS; String val = String.format(Locale.getDefault(), getString(R.string.delay_value_format), ms, Math.round(ms * 34.3f));
                 if (slider == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (slider == seekDelay1Fr) tvDelay1FrVal.setText(val);
                 else if (slider == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (slider == seekDelay1Rr) tvDelay1RrVal.setText(val);
             }
@@ -951,36 +1313,43 @@ public class MainActivity extends AppCompatActivity {
         };
         seekDelay1Fl.addOnChangeListener(dl); seekDelay1Fr.addOnChangeListener(dl);
         seekDelay1Rl.addOnChangeListener(dl); seekDelay1Rr.addOnChangeListener(dl); seekDelay1RSSE.addOnChangeListener(dl);
-        switchLegacyEnable.jumpDrawablesToCurrentState();
-        switchLegacyEnable.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchLegacyEnable);
+        switchLegacyEnable.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 if (checked) switchPreciseEnable.setChecked(false);
-//                updateDelay1Mcu();
                 autoSaveCurrent();
             }
         });
     }
 
     private void setupFmControls() {
-        switchFmEnable.jumpDrawablesToCurrentState();
-        switchFmEnable.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchFmEnable);
+        switchFmEnable.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
         });
-        switchFatigueEnable.jumpDrawablesToCurrentState();
-        switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchFatigueEnable);
+        switchFatigueEnable.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
-//                updateEqMcu();
             }
         });
-        switchFmSubComp.jumpDrawablesToCurrentState();
-        switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchFmSubComp);
+        switchFmSubComp.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (!isUpdatingUi) {
-                if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);
+                int idx = java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString());
+                if (idx < 0) idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(spinnerSubFreq.getText().toString());
+                if (checked && idx > 5) {
+                    spinnerSubFreq.setText(SUB_FREQS[5], false);
+                    Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[5]);
+                }
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -999,6 +1368,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateFmVisualizer() {
         if (fmVisualizer == null) return;
         float[] offs = calculateFmOffsets();
+        AudioSpectrumEngine.getInstance().setFmOffsets(offs);
         int[] gs = new int[AudioConfig.NUM_BANDS]; float[] actual = new float[AudioConfig.NUM_BANDS]; float[] warns = new float[AudioConfig.NUM_BANDS];
         int vol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume(); 
         tvSysVolumeVal.setText(String.valueOf(vol));
@@ -1020,12 +1390,15 @@ public class MainActivity extends AppCompatActivity {
 
     private float[] calculateFmOffsets() {
         float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
+        if (seekFmCalVol == null || seekFmStrength == null || switchFmEnable == null || switchFatigueEnable == null) {
+            return offs;
+        }
         int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
         int cal = getIntSlider(seekFmCalVol); float str = getIntSlider(seekFmStrength) / 100f;
         if (vol < cal && switchFmEnable.isChecked()) {
             float ratio = (float)(cal - vol) / (float)(cal - 1);
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
-            if (switchFmSubComp.isChecked()) {
+            if (switchFmSubComp != null && switchFmSubComp.isChecked()) {
                 int currentSubFreq = Globals.currentSubFreqHz;
                 if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[3] * ratio * str;
                 else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[2] * ratio * str;
@@ -1037,6 +1410,20 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * ratio * str;
         }
         return offs;
+    }
+
+    private void checkStatusBarHeightCalibration() {
+        SharedPreferences p = ThemeManager.prefs(this);
+        if (p.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HEIGHT_PX, 0) == 0) {
+            View decorView = getWindow().getDecorView();
+            decorView.post(() -> {
+                Rect rect = new Rect();
+                decorView.getWindowVisibleDisplayFrame(rect);
+                if (rect.top > 0) {
+                    StatusBarVisualizerManager.getInstance(this).updateStatusBarHeight(rect.top);
+                }
+            });
+        }
     }
 
     private void setupPresets() {
@@ -1057,8 +1444,8 @@ public class MainActivity extends AppCompatActivity {
             savePreset(defaultPreset);
         }
 
-        // Use a simpler layout for the list items (standard Android or a custom one)
-        presetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, presetNames);
+        // Use themed QFRadio-styled layout for preset items
+        presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
         spinnerPresets.setAdapter(presetAdapter);
 
         // Initial load
@@ -1108,7 +1495,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Prevent renaming the protected "Call" preset immediately
         if ("Call".equals(oldName)) {
-            Toaster.show(this, "ERROR"); // Ensure this string exists or use a literal
+            Toaster.show(this, getString(R.string.error));
             return;
         }
 
@@ -1140,7 +1527,8 @@ public class MainActivity extends AppCompatActivity {
         container.addView(inputLayout);
 
         // 4. Build using MaterialAlertDialogBuilder
-        new MaterialAlertDialogBuilder(this)
+        com.radiorubka.wdsp.ui.ThemedDialog.show(
+                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                 .setTitle(R.string.dialog_rename_title)
                 .setView(container)
                 .setPositiveButton(R.string.btn_ok, (d, w) -> {
@@ -1153,8 +1541,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 })
-                .setNegativeButton(R.string.btn_cancel, null)
-                .show();
+                .setNegativeButton(R.string.btn_cancel, null));
     }
 
     private void performRename(String o, String n) {
@@ -1266,20 +1653,74 @@ public class MainActivity extends AppCompatActivity {
         return Math.round(s.getValue());
     }
 
+    private int resolveSubFreqIndex(String text) {
+        if (text == null || text.trim().isEmpty()) return 5;
+        String trimmed = text.trim();
+        int idx = java.util.Arrays.asList(SUB_FREQS).indexOf(trimmed);
+        if (idx >= 0) return idx;
+        idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(trimmed);
+        if (idx >= 0) return idx;
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (!digits.isEmpty()) {
+            idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(digits);
+            if (idx >= 0) return idx;
+        }
+        return 5;
+    }
+
+    private int resolveBassBoostFreqIndex(String text) {
+        if (text == null || text.trim().isEmpty()) return 0;
+        String trimmed = text.trim();
+        // Both forms are accepted: what is on screen now, and the bare number a preset saved
+        // before the unit was added.
+        int idx = java.util.Arrays.asList(BASS_BOOST_FREQS_SHOWN).indexOf(trimmed);
+        if (idx >= 0) return idx;
+        idx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(trimmed);
+        if (idx >= 0) return idx;
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (!digits.isEmpty()) {
+            idx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(digits);
+            if (idx >= 0) return idx;
+        }
+        return 0;
+    }
+
+    private int parsePowerDb() {
+        if (tvPowerDb == null) return 0;
+        String text = tvPowerDb.getText().toString().replace("+", "").trim();
+        try {
+            return -Integer.parseInt(text);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     private void savePreset(String name) {
+        if (name == null || name.trim().isEmpty()) return;
         SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) { e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i))); e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked()); }
-        e.putInt(name + "_sub_g", getIntSlider(seekSubGain)); e.putInt(name + "_sub_f", java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()));
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i)));
+            e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked());
+        }
+        
+        int subFreqIdx = resolveSubFreqIndex(spinnerSubFreq != null ? spinnerSubFreq.getText().toString() : "");
+        int subGain = seekSubGain != null ? getIntSlider(seekSubGain) : 0;
+        e.putInt(name + "_sub_g", subGain);
+        e.putInt(name + "_sub_f", subFreqIdx);
+
+        int powerVal = parsePowerDb();
+        e.putInt(name + "_power_vol", powerVal);
+
         if (isFullyInitialized) {
             e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront));
             e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
             e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear));
             e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
 
-            int frontFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqFront.getText().toString());
-            int rearFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqRear.getText().toString());
-            e.putInt(name + "_bb_frq_f", Math.max(0, frontFreqIdx));
-            e.putInt(name + "_bb_frq_r", Math.max(0, rearFreqIdx));
+            int frontFreqIdx = resolveBassBoostFreqIndex(spinnerBassFreqFront.getText().toString());
+            int rearFreqIdx = resolveBassBoostFreqIndex(spinnerBassFreqRear.getText().toString());
+            e.putInt(name + "_bb_frq_f", frontFreqIdx);
+            e.putInt(name + "_bb_frq_r", rearFreqIdx);
 
             e.putInt(name + "_f_lr", getIntSlider(seekFaderLr));
             e.putInt(name + "_f_fr", getIntSlider(seekFaderFr));
@@ -1311,13 +1752,9 @@ public class MainActivity extends AppCompatActivity {
             }
             e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
             e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
-//            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
             e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
             e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
             e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
-
-            e.putInt(name + "_power_vol", -Integer.parseInt(tvPowerDb.getText().toString()));
-
         }
         e.apply();
     }
@@ -1326,34 +1763,47 @@ public class MainActivity extends AppCompatActivity {
         isUpdatingUi = true;
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            int g = p.getInt(name + "_g" + i, 6); gainSliders.get(i).setValue((float) g); updateDbLabel(i, g);
+            int g = p.getInt(name + "_g" + i, 6);
+            gainSliders.get(i).setValue((float) g);
+            updateDbLabel(i, g);
             qSwitches.get(i).setChecked(p.getBoolean(name + "_q" + i, false));
         }
-        int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setValue((float) sg);
+
+        // Subwoofer Gain & Frequency
+        int sg = p.getInt(name + "_sub_g", 0);
+        seekSubGain.setValue((float) Math.max(0, Math.min(12, sg)));
         String subText = "+" + sg;
         tvSubDb.setText(subText);
-        int subFreqIdx = p.getInt(name + "_sub_f", 5); // 5 is the default (80Hz)
+
+        int subFreqIdx = p.getInt(name + "_sub_f", 5);
         if (subFreqIdx < 0 || subFreqIdx >= SUB_FREQS.length) {
-            subFreqIdx = 5; // Safety fallback
+            subFreqIdx = 5;
         }
         spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
+        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[subFreqIdx]);
+
+        // Power Volume
+        int powerVal = p.getInt(name + "_power_vol", 0);
+        tvPowerDb.setText(String.valueOf(-powerVal));
+
         if (isFullyInitialized) {
             seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
             seekBassBoostFront.setValue((float) p.getInt(name + "_bb_f", 0));
             seekBassFilterRear.setValue((float) p.getInt(name + "_bf_r", 0));
             seekBassBoostRear.setValue((float) p.getInt(name + "_bb_r", 0));
 
-            // Replace .setSelection(int) with .setText(String, false)
             int frontIdx = p.getInt(name + "_bb_frq_f", 0);
             int rearIdx = p.getInt(name + "_bb_frq_r", 0);
+            if (frontIdx < 0 || frontIdx >= BASS_BOOST_FREQS.length) frontIdx = 0;
+            if (rearIdx < 0 || rearIdx >= BASS_BOOST_FREQS.length) rearIdx = 0;
 
-            // Use false to prevent the dropdown from popping up while loading
-            spinnerBassFreqFront.setText(BASS_BOOST_FREQS[frontIdx], false);
-            spinnerBassFreqRear.setText(BASS_BOOST_FREQS[rearIdx], false);
+            spinnerBassFreqFront.setText(BASS_BOOST_FREQS_SHOWN[frontIdx], false);
+            spinnerBassFreqRear.setText(BASS_BOOST_FREQS_SHOWN[rearIdx], false);
 
             seekFaderLr.setValue((float) p.getInt(name + "_f_lr", 12));
             seekFaderFr.setValue((float) p.getInt(name + "_f_fr", 12));
-            updateFaderLabels(); switchLoud.setChecked(p.getBoolean(name + "_loud", false));
+            updateFaderLabels();
+            switchLoud.setChecked(p.getBoolean(name + "_loud", false));
             switchFmEnable.setChecked(p.getBoolean(name + "_fm_en", false));
             switchFatigueEnable.setChecked(p.getBoolean(name + "_fat_en", false));
             switchFmSubComp.setChecked(p.getBoolean(name + "_sub_comp", false));
@@ -1382,21 +1832,23 @@ public class MainActivity extends AppCompatActivity {
                     : p.getBoolean(name + "_gala_enabled", false));
             seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
-            seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
+            // Clamped, because the range used to reach 300 km/h and now stops at 200. A
+            // preset saved under the old range would otherwise throw out of setValue and
+            // take the screen down with it. Nothing audible is lost: a car that reaches
+            // 200 downhill still never crosses a threshold set above it.
+            seekGalaMinSpeed.setValue(Math.min(40f,
+                    p.getInt(name + "_gala_min_speed", 0)));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
             seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
-            seekGalaFadeMs.setValue((float) p.getInt(name + "_gala_fade_ms", 100));    // Changed from 300ms
+            seekGalaFadeMs.setValue((float) p.getInt(name + "_gala_fade_ms", 100));
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
-            seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));   // Changed from 3000ms
+            seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
-
-            // Power
-            tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
         }
-        isUpdatingUi = false; updateVisualizer();
+        isUpdatingUi = false;
+        updateVisualizer();
         updateFmVisualizer();
-
     }
 
     private void setupNavigation() {
@@ -1423,6 +1875,10 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.nav_delays) target = dly;
             else if (id == R.id.nav_other) target = ftr;
             else if (id == R.id.nav_gala) target = gl;
+            else if (id == R.id.nav_settings) {
+                startActivity(new Intent(this, SettingsActivity.class));
+                return false;
+            }
 
             if (target != null) {
                 // Only animate an actual tab change. Without this guard, SelectTab()
@@ -1497,7 +1953,8 @@ public class MainActivity extends AppCompatActivity {
         for (Map.Entry<String, String> entry : map.entrySet()) sb.append("- ").append(entry.getKey()).append(" -> ").append(entry.getValue()).append("\n");
 //        sb.append(getString(R.string.global_default_fmt, def));
 
-        new MaterialAlertDialogBuilder(this)
+        com.radiorubka.wdsp.ui.ThemedDialog.show(
+                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
                 .setTitle(getString(R.string.automation_title_fmt, cur))
                 .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb)
                 .setPositiveButton(R.string.btn_assign, (d, w) -> {
@@ -1513,23 +1970,27 @@ public class MainActivity extends AppCompatActivity {
                         map.remove(p);
                         prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
                     }
-                })
-                .show();
+                }));
     }
 
     private void setupGalaControls() {
-        switchGalaEnable.jumpDrawablesToCurrentState();
-        switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
+        updateToggleStyle(switchGalaEnable);
+        switchGalaEnable.addOnCheckedChangeListener((bv, checked) -> { 
+            updateToggleStyle(bv);
+            if (!isUpdatingUi) { autoSaveCurrent(); } 
+        });
 
         // Global GALA: not tied to any preset, so it's loaded/wired once here rather than
         // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
         // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
         // see the GALA sections of savePreset()/loadPreset().
-        switchGalaGlobal.jumpDrawablesToCurrentState();
+        updateToggleStyle(switchGalaGlobal);
         SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
         switchGalaGlobal.setChecked(galaGlobalMode);
-        switchGalaGlobal.setOnCheckedChangeListener((bv, checked) -> {
+        updateToggleStyle(switchGalaGlobal);
+        switchGalaGlobal.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
             if (isUpdatingUi) return;
             galaGlobalMode = checked;
             SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -1591,110 +2052,161 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Failed to unregister receiver. It may have already been unregistered.", e);
         }
     }
-    private void exportPresets() { String s = spinnerPresets.getText().toString();
-        exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, (s) + ".json")); }
+    private void exportPresets() {
+        autoSaveCurrent();
+        String s = spinnerPresets.getText().toString();
+        // Saved straight to Download/wDSP so that the same file manager handles both saving and
+        // loading. Only the document picker offers a save dialog on these head units, and only a
+        // file manager offers a load one, which is why the two used to look different.
+        if (exportPresetToDownloads(s)) return;
+        exportLauncher.launch(new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("application/json")
+                .putExtra(Intent.EXTRA_TITLE, s + ".json"));
+    }
+
+    /** @return false when the media store refused, so the caller can fall back to the picker */
+    private boolean exportPresetToDownloads(String presetName) {
+        Downloads.Pending pending =
+                Downloads.create(this, presetName + ".json", "application/json");
+        if (pending == null) return false;
+        try {
+            writeCurrentPresetTo(pending.stream);
+            Downloads.finish(this, pending);
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_export),
+                    getString(R.string.toast_saved_to, pending.displayPath));
+            return true;
+        } catch (Exception e) {
+            Downloads.discard(this, pending);
+            Log.e(TAG, "Preset export to Downloads failed", e);
+            return false;
+        }
+    }
+
     private void importPresets() {
-        importLauncher.launch(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json")); }
+        Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("application/json");
+        // Opens straight at Download/wDSP, where exporting puts things - see OpenInDownloads for
+        // why that needs the system picker and not just a hint.
+        importLauncher.launch(com.radiorubka.wdsp.ui.OpenInDownloads.aim(this, pick));
+    }
+
+    /**
+     * Writes the selected preset as JSON.
+     *
+     * Shared by both ways of exporting - straight to the Downloads folder, and through the
+     * document picker when a ROM will not have the media store - so that the two can never drift
+     * apart and produce files that restore differently.
+     */
+    private void writeCurrentPresetTo(OutputStream os) throws java.io.IOException {
+        String currentPreset = spinnerPresets.getText().toString();
+        savePreset(currentPreset);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Map<String, ?> allEntries = prefs.getAll();
+
+        Map<String, Object> filteredData = new HashMap<>();
+        filteredData.put("is_single_preset", true);
+        filteredData.put("preset_name_label", currentPreset);
+
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(currentPreset + "_")) {
+                String suffix = key.substring(currentPreset.length());
+                filteredData.put(suffix, entry.getValue());
+                filteredData.put(key, entry.getValue());
+            }
+        }
+
+        os.write(new Gson().toJson(filteredData)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     private void saveCurrentPresetToFile(Uri u) {
         try (OutputStream os = getContentResolver().openOutputStream(u)) {
             if (os == null) return;
-
-            // 1. Get the name of the currently selected preset
-            String currentPreset = spinnerPresets.getText().toString();
-
-            // Get the preferences into prefs
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-            // Save all the prefs entries to a map where string is the name of the pref and ? is a wildcard for all data types.
-            Map<String, ?> allEntries = prefs.getAll();
-
-            // Creating a placeholder map for filtered data
-            Map<String, Object> filteredData = new HashMap<>();
-
-            // 2. Add metadata so the importer knows this is a single preset
-            filteredData.put("is_single_preset", true);
-            filteredData.put("preset_name_label", currentPreset);
-
-            // 3. Only grab keys that start with the current preset's name
-            // (e.g., "Music_g0", "Music_sub_g", etc.)
-            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                if (entry.getKey().startsWith(currentPreset + "_")) {
-                    filteredData.put(entry.getKey(), entry.getValue());
-                }
-            }
-
-            // 4. Save only this filtered map to the file
-            os.write(new Gson().toJson(filteredData).getBytes());
-            Toaster.show(this, getString(R.string.toast_exported));
-        }
-        catch (IOException e) {
+            writeCurrentPresetTo(os);
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_export),
+                    getString(R.string.toast_exported));
+        } catch (IOException e) {
             Log.e(TAG, "Export error", e);
-            Toaster.show(this, "ERROR");
+            Toaster.show(this, getString(R.string.error));
         }
     }
+
     private void loadPresetFromFile(Uri u) {
         try (InputStream is = getContentResolver().openInputStream(u);
-             BufferedReader r = new BufferedReader(new InputStreamReader(is))) {
+             BufferedReader r = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
 
-            // 1. Read the file into a String
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = r.readLine()) != null) sb.append(line);
 
-            // 2. Parse JSON into a Map
             Map<String, Object> importedMap = new Gson().fromJson(sb.toString(), new TypeToken<Map<String, Object>>() {}.getType());
+            if (importedMap == null) return;
 
-            // 3. Get the Preset Name from metadata
-            String newPresetName = (String) importedMap.get("preset_name_label");
-            if (newPresetName == null) newPresetName = "Imported_" + System.currentTimeMillis() / 1000;
+            String sourcePresetName = (String) importedMap.get("preset_name_label");
+            String newPresetName = sourcePresetName;
+            if (newPresetName == null || newPresetName.trim().isEmpty()) {
+                newPresetName = "Imported_" + (System.currentTimeMillis() / 1000);
+            }
 
-            // 4. Prepare to save (NOTICE: No .clear() here!)
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
 
-            // 5. Import the settings keys
             for (Map.Entry<String, Object> entry : importedMap.entrySet()) {
-                String key = entry.getKey();
+                String rawKey = entry.getKey();
                 Object value = entry.getValue();
 
-                // Skip metadata keys
-                if (key.equals("is_single_preset") || key.equals("preset_name_label")) continue;
+                if ("is_single_preset".equals(rawKey) || "preset_name_label".equals(rawKey)) continue;
 
-                // Save the value based on its type
+                String suffix;
+                if (rawKey.startsWith("_")) {
+                    suffix = rawKey;
+                } else if (sourcePresetName != null && rawKey.startsWith(sourcePresetName + "_")) {
+                    suffix = rawKey.substring(sourcePresetName.length());
+                } else if (rawKey.contains("_")) {
+                    suffix = rawKey.substring(rawKey.indexOf('_'));
+                } else {
+                    suffix = "_" + rawKey;
+                }
+
+                String targetKey = newPresetName + suffix;
+
                 if (value instanceof Boolean) {
-                    editor.putBoolean(key, (Boolean) value);
+                    editor.putBoolean(targetKey, (Boolean) value);
                 } else if (value instanceof Double) {
-                    // JSON numbers are Doubles; convert to Int or Float
                     double d = (Double) value;
-                    if (d == Math.rint(d)) editor.putInt(key, (int) d);
-                    else editor.putFloat(key, (float) d);
+                    if (d == Math.rint(d)) editor.putInt(targetKey, (int) d);
+                    else editor.putFloat(targetKey, (float) d);
                 } else if (value instanceof String) {
-                    editor.putString(key, (String) value);
+                    editor.putString(targetKey, (String) value);
                 }
             }
 
-            // 6. Update the "preset_names" list so the UI shows the new preset
             if (!presetNames.contains(newPresetName)) {
                 presetNames.add(newPresetName);
                 Collections.sort(presetNames);
                 editor.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
             }
 
-            // 7. Save and Refresh
+            editor.putString(PREF_LAST_SELECTED, newPresetName);
             editor.apply();
-            setupPresets();           // Reloads the spinner list
-            ensureCallPresetExists(); // Safety check
 
-            // 8. Auto-select the newly imported preset
-            //int newIndex = presetNames.indexOf(newPresetName);
+            setupPresets();
+            ensureCallPresetExists();
+
             spinnerPresets.setText(newPresetName, false);
             loadPreset(newPresetName);
 
-            Toaster.show(this, getString(R.string.toast_imported) + ": " + newPresetName);
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_import),
+                    getString(R.string.toast_imported) + ": " + newPresetName);
 
         } catch (Exception e) {
             Log.e(TAG, "Import error", e);
-            Toaster.show(this, "Import failed: " + e.getMessage());
+            com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_import),
+                    getString(R.string.toast_import_failed, e.getMessage()));
         }
     }
 

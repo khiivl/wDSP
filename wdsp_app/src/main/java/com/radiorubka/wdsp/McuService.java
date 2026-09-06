@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.media.AudioManager;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -25,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,6 +76,15 @@ public class McuService extends Service implements LocationListener {
 
     // GALA settings
     private boolean cachedGalaEn;
+    /**
+     * Highest the standstill slider goes, in slider steps of 5 km/h - so 40 means 200 km/h.
+     *
+     * <p>The same number is enforced in {@code MainActivity.loadPreset}. If either moves without
+     * the other, the screen and this service go back to computing GALA from different figures,
+     * which is the failure this constant exists to end.
+     */
+    private static final int GALA_MIN_SPEED_CEILING = 40;
+
     private int cachedGalaInc;
     private int cachedGalaMinV;
     // private int cachedGalaMaxV;
@@ -87,9 +98,78 @@ public class McuService extends Service implements LocationListener {
     private boolean galaGlobalMode;
     private boolean galaGlobalEnabled;
     
+    /**
+     * Speed in km/h - the real one from GPS, and the simulated one from the slider in Settings.
+     *
+     * <p>Both are read and written only on the worker thread, which is worth knowing before
+     * anyone reaches for {@code volatile} here: {@code controlReceiver} looks like it runs on the
+     * main thread, and its body does not - the whole of {@code onReceive} is posted to
+     * {@code backgroundHandler}. {@code onLocationChanged} posts as well. So there is one thread
+     * involved and no visibility problem to solve.
+     */
     private float currentSpeedKmh = 0.0f;
+    /** Last offset the simulator diagnostic reported, so it logs on change only. */
+    private int lastLoggedSimOffset = Integer.MIN_VALUE;
     private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
+
+    /**
+     * The audio ownership contract with QF Radio - see {@code .agents/AUDIO_OWNERSHIP_CONTRACT.md}.
+     *
+     * <p>Radio and this service are two state machines on one MCU path. On a volume change the
+     * radio synchronises the levels and holds the FM channel; on the same change this service
+     * recomputes the EQ, because the curve depends on volume. Polling at 100 ms, we always arrive
+     * second, chasing intermediate values and landing on top of a state the radio had just
+     * finished arranging.
+     *
+     * <p>So ownership is split rather than shared. The radio owns the <b>base level</b> and the
+     * channel; we own the <b>offset</b> on top of it (GALA), the EQ, the tone and the subwoofer.
+     * The radio sends one signal after its last write, and we act once instead of racing.
+     *
+     * <p>🔑 The {@code volume} extra is <b>advisory and deliberately ignored</b>: the two sides do
+     * not share a scale - we clamp to 32, {@code STREAM_MUSIC} on these units reports a maximum of
+     * 15 - and stitching scales across IPC is its own class of bug. The contract is the edge, not
+     * the number, so the level is always re-read here through {@link VolumeHelper}.
+     */
+    static final String ACTION_AUDIO_STATE_STABLE = "com.radiorubka.wdsp.AUDIO_STATE_STABLE";
+    private static final String RADIO_PACKAGE = "com.kostyamat.fmradio";
+    private static final String ACTION_AUDIO_STATE_QUERY = RADIO_PACKAGE + ".AUDIO_STATE_QUERY";
+    private static final String PROP_VOLUME_SYNC = "persist.sys.qf.radio.sync_vol";
+
+    private boolean isVolumeSyncEnabled() {
+        String prop = HardwareProfile.systemProperty(PROP_VOLUME_SYNC);
+        return prop == null || "true".equalsIgnoreCase(prop) || "1".equals(prop);
+    }
+
+    /**
+     * What was accepted last, so a late or repeated signal is dropped rather than acted on.
+     *
+     * <p>🔴 Ordered by {@code at} rather than by {@code seq}, and the difference matters. The
+     * sequence number is monotonic only within one run of the <b>radio</b>: reinstall it, or let
+     * it be killed and restarted, and it begins again from a low number. Ordering on {@code seq}
+     * alone, this service would then reject every signal the radio ever sent again - permanently,
+     * because nothing here resets until this service itself is recreated. The failure would look
+     * like the contract quietly not existing.
+     *
+     * <p>{@code at} is {@code SystemClock.elapsedRealtime()}, which both applications read from
+     * the same device clock. It only goes backwards when the unit reboots, and then both sides
+     * start from nothing anyway. {@code seq} is kept to separate two signals sharing a
+     * millisecond, and because it reads well in a log.
+     */
+    private long lastAudioStateAt = Long.MIN_VALUE;
+    private int lastAudioStateSeq = Integer.MIN_VALUE;
+
+    /**
+     * When the audio source last changed, so the announce handler can tell whether GALA's applied
+     * offset still belongs to the source being announced.
+     *
+     * <p>{@code currentAppliedOffset} is not cleared when sources switch, so for a short while
+     * after one it holds a figure earned on the source we just left.
+     */
+    private long lastSourceChangeMs = 0;
+
+    /** How long after a source change GALA's applied offset is not to be trusted. */
+    private static final long OFFSET_TRUST_DELAY_MS = 1500;
 
     // GALA fade & hold-timer state
     private int currentAppliedOffset = -1; // the offset currently SET on the hardware
@@ -101,6 +181,8 @@ public class McuService extends Service implements LocationListener {
     private boolean wasMuted = false;
 
     private int lastReadHardwareVol = -1;
+
+    // What the hardware last REPORTED, which is not the same thing as what we last sent it.
 
     private long lastEqWriteTime = 0;
     private byte[] pendingEqData = null;
@@ -119,6 +201,12 @@ public class McuService extends Service implements LocationListener {
     private final byte[] eqData = new byte[12];
     private final byte[] subData = new byte[2];
 
+    // Exactly what the DSP was last told - Fletcher-Munson already folded in, quantised and
+    // clamped the same way the hardware sees it. Handed to the spectrum analyser so it can show
+    // the processed sound instead of the slider positions.
+    private final int[] effectiveGainIdx = new int[16];
+    private int effectiveSubGainIdx = 0;
+
     private final Intent volumeChangedIntent = new Intent("com.radiorubka.wdsp.VOLUME_CHANGED");
     private final Intent presetChangedIntent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
     private final Intent galaUpdateIntent = new Intent("com.radiorubka.wdsp.GALA_UPDATE");
@@ -129,6 +217,8 @@ public class McuService extends Service implements LocationListener {
     private String presetBeforeCall;
 
     private String galavoltype_last = VolumeHelper.getActivePlayerType();
+
+    private StatusBarVisualizerManager statusBarManager;
 
     private int media_standstill = -1;
     private int btcall_standstill = -1;
@@ -141,6 +231,13 @@ public class McuService extends Service implements LocationListener {
             Class<?> sp = Class.forName("android.os.SystemProperties");
             getPropMethod = sp.getMethod("get", String.class, String.class);
             Log.i(TAG, "Reflection initialized successfully.");
+            // One line that says which sound processor is fitted and whether the capture
+            // path carries voice processing - both change what this app may promise.
+            Log.i(TAG, HardwareProfile.describe());
+            // A room measurement borrows the equaliser, the fader and the delay
+            // lines. If the app died while it held them, give them back now rather
+            // than leaving somebody driving with the sound in one door.
+            RoomMeasurement.restoreIfInterrupted(getApplicationContext());
         } catch (Exception e) {
             Log.e(TAG, "Critical Reflection Failure", e);
         }
@@ -149,7 +246,10 @@ public class McuService extends Service implements LocationListener {
     private final SharedPreferences.OnSharedPreferenceChangeListener prefListener = (p, key) -> {
         if (key == null) return;
         backgroundHandler.post(() -> {
-            if (key.equals(PREF_PLAYER_MAP)) {
+            if (key.startsWith("sb_vis_")) {
+                if (statusBarManager != null) statusBarManager.onPreferenceChanged(key);
+            }
+            else if (key.equals(PREF_PLAYER_MAP)) {
                 loadPlayerMap();
             }
             else if (key.equals(PREF_LAST_SELECTED)) {
@@ -208,6 +308,11 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                    ScreensaverManager.getInstance(McuService.this).setScreenState(true);
+                    if (statusBarManager != null) {
+                        statusBarManager.setScreenState(true);
+                        statusBarManager.evaluateVisibility();
+                    }
                     applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
@@ -215,6 +320,10 @@ public class McuService extends Service implements LocationListener {
                     }, 3000);
                 }
                 else if ("com.qf.action.ACC_OFF".equals(action)) {
+                    ScreensaverManager.getInstance(McuService.this).setScreenState(false);
+                    if (statusBarManager != null) {
+                        statusBarManager.setScreenState(false);
+                    }
                     stopPolling();
                     stopGps();
                 }
@@ -227,12 +336,84 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
+                    // Logged because when somebody says the simulator does nothing, the first
+                    // thing worth knowing is whether the value ever arrived at the service at all.
+                    Log.i(TAG, "SIMULATE_SPEED: " + simulatedSpeedKmh + " km/h"
+                            + (simulatedSpeedKmh > 0 ? "" : " (off, back to GPS)"));
+                }
+                else if (ACTION_AUDIO_STATE_STABLE.equals(action)) {
+                    onAudioStateStable(intent);
                 }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
                     adjustSubGain(1);
                 }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
                     adjustSubGain(-1);
+                }
+                else if ("com.radiorubka.wdsp.PROBE_SESSION".equals(action)) {
+                    // Diagnostic only - see SessionProbe. sid >= 0 probes one session,
+                    // sid < 0 scans downwards from the platform's session counter.
+                    int sid = intent.getIntExtra("sid", -1);
+                    int ms = intent.getIntExtra("ms", sid >= 0 ? 1000 : 120);
+                    if (intent.hasExtra("dump")) {
+                        AudioSpectrumEngine.getInstance()
+                                .setDebugDump(intent.getIntExtra("dump", 0) != 0);
+                    }
+                    else if (sid >= 0) {
+                        SessionProbe.probeAsync(sid, ms);
+                    } else {
+                        SessionProbe.scanAsync(getApplicationContext(),
+                                intent.getIntExtra("max", 64), ms);
+                    }
+                }
+                else if ("com.radiorubka.wdsp.MEASURE_ROOM".equals(action)) {
+                    // Plays a sweep through each speaker in turn and reports what came
+                    // back - see RoomMeasurement. Everything it changes is restored, and
+                    // the recordings are kept so a tester can send them back.
+                    RoomMeasurement.setSameRouting(intent.getIntExtra("same", 0) != 0);
+                    RoomMeasurement.setDelayTest(intent.getIntExtra("delaytest", 0));
+                    RoomMeasurement.measureAsync(getApplicationContext(),
+                            intent.getFloatExtra("amp", 0.25f),
+                            intent.getFloatExtra("sec", 3f), null);
+                }
+                else if ("com.radiorubka.wdsp.SET_VOLUME".equals(action)) {
+                    // Diagnostic only: moves the volume the way a person does, without
+                    // telling GALA, so its manual-adjustment detector can be tested.
+                    int vol = intent.getIntExtra("vol", -1);
+                    if (vol >= 0) {
+                        Log.i(TAG, "SET_VOLUME debug: " + VolumeHelper.getVolume()
+                                + " -> " + vol);
+                        VolumeHelper.setVolume(vol);
+                    }
+                }
+                else if ("com.radiorubka.wdsp.MEASURE_LATENCY".equals(action)) {
+                    // Diagnostic only - see LatencyProbe. Plays eight quiet bursts on its own
+                    // session and reports how far ahead of the speakers the analyser runs.
+                    LatencyProbe.measureAsync(
+                            (AudioManager) getSystemService(Context.AUDIO_SERVICE),
+                            intent.getIntExtra("fast", 0) != 0,
+                            intent.getIntExtra("mic", 0) != 0,
+                            McuService.this::storeMeasuredLatency);
+                }
+                else if ("com.radiorubka.wdsp.PROBE_MIC".equals(action)) {
+                    // Diagnostic only - see MicProbe. Records to a WAV so the capture path can
+                    // be inspected; src picks the audio source, 6 is VOICE_RECOGNITION.
+                    MicProbe.probeAsync(getApplicationContext(),
+                            intent.getIntExtra("src",
+                                    android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION),
+                            intent.getIntExtra("ms", 4000));
+                }
+                else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
+                    Log.i(TAG, "SETTINGS_RESTORED received, reloading all prefs and syncing DSP");
+                    prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    loadPlayerMap();
+                    galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+                    galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+                    syncPreset(false);
+                    if (statusBarManager != null) {
+                        statusBarManager.loadPreferences();
+                        statusBarManager.evaluateVisibility();
+                    }
                 }
             });
         }
@@ -277,6 +458,10 @@ public class McuService extends Service implements LocationListener {
         super.onCreate();
         createNotificationChannel();
 
+        AudioSpectrumEngine.getInstance().initContext(this);
+        statusBarManager = StatusBarVisualizerManager.getInstance(this);
+        statusBarManager.evaluateVisibility();
+
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
         galaUpdateIntent.setPackage(getPackageName());
@@ -292,20 +477,38 @@ public class McuService extends Service implements LocationListener {
             VolumeHelper.init(this);
             initReflection();
             prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            currentPresetName = prefs.getString("Preset 1", "Preset 1");
-            sendBroadcast(presetChangedIntent);
-            loadPresetData(currentPresetName);
+            // Both flags before syncPreset, because applying a preset consults isGalaEnabled().
             galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
             galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
             prefs.registerOnSharedPreferenceChangeListener(prefListener);
             loadPlayerMap();
+            // syncPreset reads last_selected_preset, loads it and applies it - all three. What
+            // stood here did the first two by hand and got the first one wrong: it asked for a
+            // preference literally named "Preset 1" rather than the key that stores which preset
+            // is selected, so it loaded Preset 1's settings over whatever the owner had chosen.
+            // syncPreset then corrected it two lines later, which is why nothing was ever visibly
+            // broken - but the PRESET_CHANGED broadcast went out in between, announcing the wrong
+            // one. Announced after now, when the name is true.
             syncPreset(true);
+            sendBroadcast(presetChangedIntent);
+            askRadioForItsState();
             isBootStart = false;
         });
 
         IntentFilter controlFilter = getIntentFilter();
 
         registerReceiver(controlReceiver, controlFilter);
+
+        // The screensaver watches which activity is in front and needs to be running whether or
+        // not anybody has the app open - that is the whole point of it.
+        ScreensaverManager.getInstance(this).start();
+        // Cheap: one broadcast filter, and media sessions only if the owner has allowed them.
+        NowPlaying.getInstance(this).start();
+
+        // Armed here rather than when the diagnostic screen is opened, because the events worth
+        // recording - a Bluetooth call taking the audio path and giving it back - happen while
+        // nobody is looking at the app. It only listens; there is no polling behind this.
+        SystemDiagnostics.arm(this);
 
         applyCurrentSettings();
     }
@@ -323,7 +526,28 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
+        controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
+        controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
+        controlFilter.addAction("com.radiorubka.wdsp.MEASURE_ROOM");
+        controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
+        controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
+        controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");
+        controlFilter.addAction(ACTION_AUDIO_STATE_STABLE);
         return controlFilter;
+    }
+
+    /**
+     * Keeps what a latency measurement found, so the analyser stops guessing.
+     *
+     * The acoustic figure is preferred when there is one: it is the distance from the moment we
+     * see a sample to the moment it reaches the cabin, which is exactly what the bars have to
+     * wait for. Without a microphone we only know how far the samples got inside Android, and the
+     * stretch below the DAC has to be allowed for instead of measured.
+     */
+    private void storeMeasuredLatency(LatencyProbe.Result result) {
+        if (AudioSpectrumEngine.storeMeasuredLatency(getApplicationContext(), result) < 0) {
+            Log.w(TAG, "latency measurement did not produce a usable figure, keeping the old one");
+        }
     }
 
     private void loadPlayerMap() {
@@ -362,7 +586,16 @@ public class McuService extends Service implements LocationListener {
         // GALA
         cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
-        cachedGalaMinV = prefs.getInt(preset + "_gala_min_speed", 0);
+        // Clamped exactly as MainActivity.loadPreset clamps it, and for the same reason: the
+        // standstill slider used to reach 300 km/h and now stops at 200.
+        //
+        // 🔴 It was clamped only there, and that is worse than not clamping at all. A preset saved
+        // under the old range showed 200 on screen while this service went on computing with 300,
+        // so GALA never engaged and nothing said why - not the screen, which looked right, and not
+        // the log, which reported the offset as 0 with settings that appeared to ask for one. The
+        // owner then opened the main screen, touched anything, autosave wrote the clamped value
+        // back, and GALA came alive - which reads as "it only works when I go to the main screen".
+        cachedGalaMinV = Math.min(GALA_MIN_SPEED_CEILING, prefs.getInt(preset + "_gala_min_speed", 0));
 //        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
         cachedGalaFadeDelayMs = prefs.getInt(preset + "_gala_fade_ms", 100);
@@ -427,6 +660,264 @@ public class McuService extends Service implements LocationListener {
     }
 
 
+    /**
+     * The radio has finished arranging the sound and says so. Re-baseline once, apply once.
+     *
+     * <p>Called from the receiver, which posts everything onto {@code backgroundHandler}, so this
+     * runs on the same thread as the poll and needs no locking.
+     *
+     * <h2>Why the live volume becomes the base outright</h2>
+     *
+     * The radio's synchronisation writes a <b>level</b>. Whatever stood there before - our base
+     * plus whatever offset GALA had applied - has been replaced by the level the radio decided on,
+     * and there is no way afterwards to say how much of the new number was ours. Pretending we can
+     * subtract our old offset from it would carry a stale figure into a level we did not set.
+     *
+     * <p>So the level is the new base, and the offset restarts from zero. GALA recomputes it on
+     * the next poll, 100 ms later, and fades back in from the base the radio chose. The tracking
+     * variables are reset the same way the unmute recovery resets them, and for the same reason:
+     * without it the very next poll sees a volume it did not command, decides a person turned the
+     * knob, and re-bases a second time.
+     *
+     * <p>{@code source="idle"} - the radio giving up the channel - takes this identical path.
+     * 🔴 It means "re-baseline from the live volume", <b>not</b> "stop GALA": the radio going
+     * quiet does not stop the car. Both sides recorded that reading explicitly, because the word
+     * invites the opposite one.
+     */
+    /**
+     * Asks the radio, once at startup, what the audio state is now.
+     *
+     * <p>The other half of the contract, and the half that exists because a signal is an edge:
+     * whoever did not hear it does not know the state. That is not theoretical here. After
+     * {@code adb install -r} this service does not come back on its own - the process shows in
+     * {@code pidof} while the service is dead and broadcasts reach nobody - and it also happens on
+     * a crash restart, or when the unit wakes and the start order falls differently. In each case
+     * the radio has already sent its signal and we would sit on a stale base, which is the exact
+     * race the contract removes.
+     *
+     * <p>The radio answers with an ordinary {@link #ACTION_AUDIO_STATE_STABLE} carrying its
+     * current state - one signal type, not two. If the radio is not installed, or says nothing,
+     * nothing happens and this service behaves exactly as it did before the contract existed.
+     * Neither application requires the other.
+     */
+    private void askRadioForItsState() {
+        try {
+            Intent query = new Intent(ACTION_AUDIO_STATE_QUERY).setPackage(RADIO_PACKAGE);
+            // Who owns the volume synchronisation, and whether this build can do it at all.
+            //
+            // 🔴 syncOwner is not "this version supports it" - it is "this unit can actually do
+            // it". A framework without findVolumeStateByType cannot store a level for a source
+            // that is not live, and a build that claimed ownership there would have the radio
+            // politely stand aside for somebody unable to act. Nothing would synchronise and
+            // nothing would say why.
+            int versionCode = ownVersionCode();
+            boolean canSync = VolumeHelper.canReachOtherSources();
+            query.putExtra("versionCode", versionCode);
+            query.putExtra("syncOwner", canSync);
+            sendBroadcast(query);
+            Log.i(TAG, "asked " + RADIO_PACKAGE + " for the current audio state (vCode "
+                    + versionCode + ", syncOwner " + canSync + ")");
+        } catch (Throwable t) {
+            // A radio that is not installed is the ordinary case, not a fault.
+            Log.i(TAG, "could not ask the radio for its state: " + t);
+        }
+    }
+
+    /**
+     * Our own versionCode, read from the package rather than from BuildConfig.
+     *
+     * <p>BuildConfig generation is not switched on for this module, and turning it on to learn a
+     * number the package manager already knows would be a build change in service of a log line.
+     */
+    private int ownVersionCode() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (Exception e) {
+            return 0;   // reads as "older than any contract", which is the safe direction
+        }
+    }
+
+    /** media and radio carry each other's level; a phone call and AUX keep their own. */
+    private static final String VOL_TYPE_MEDIA = "media_type";
+    private static final String VOL_TYPE_RADIO = "radio_type";
+
+    /**
+     * Carries the level the owner chose from one of media/radio onto the other.
+     *
+     * <h2>Why this lives here rather than in the radio</h2>
+     *
+     * The platform only broadcasts {@code VOLUME_CHANGED} when the <b>channel</b> changes, not when
+     * a level does, and the radio's receiver is not even alive while a player is in front. So the
+     * radio can never see the volume being turned while music plays - which is the entire "media to
+     * radio does not follow" complaint. This service polls, so it sees every change on any source.
+     * That, and not being long-lived, is the real reason the job belongs here.
+     *
+     * <h2>🔴 The base, never the live level</h2>
+     *
+     * GALA's offset must not travel. At 120 km/h the live level is base plus six; writing that onto
+     * the other source would start it six louder, GALA would add its own on top, and the next switch
+     * would carry that too. The boost would compound with every source change until the owner
+     * reported that the radio turns itself up. So what crosses is the base - the level a person
+     * actually chose - and the number stored for the other source will legitimately differ from
+     * what is audible right now.
+     */
+    private void carryBaseToOtherSource(String currentType, int base) {
+        if (base < 0 || !VolumeHelper.canReachOtherSources()) return;
+        if (!isVolumeSyncEnabled()) return;
+        final String other;
+        if (VOL_TYPE_MEDIA.equals(currentType)) other = VOL_TYPE_RADIO;
+        else if (VOL_TYPE_RADIO.equals(currentType)) other = VOL_TYPE_MEDIA;
+        else return;   // a call or AUX keeps its own level, deliberately
+
+        if (VolumeHelper.getVolumeForType(other) == base) return;   // already agrees
+        if (!VolumeHelper.setVolumeForType(other, base)) return;
+
+        // Keep our own remembered base for that source in step, or the next switch would restore
+        // the figure we have just superseded.
+        if (VOL_TYPE_MEDIA.equals(other)) media_standstill = base;
+        else radio_standstill = base;
+
+        Log.i(TAG, "volume sync: " + currentType + " base " + base + " carried to " + other);
+    }
+
+    private void onAudioStateStable(Intent intent) {
+        int seq = intent.getIntExtra("seq", 0);
+        String source = intent.getStringExtra("source");
+        int channel = intent.getIntExtra("channel", -1);
+
+        // Late or repeated. The signal is an edge, and acting on a stale one re-bases to a level
+        // that has already been superseded.
+        long at = intent.getLongExtra("at", 0L);
+        boolean stale;
+        if (at > 0 && lastAudioStateAt != Long.MIN_VALUE) {
+            stale = at < lastAudioStateAt
+                    || (at == lastAudioStateAt && seq <= lastAudioStateSeq);
+        } else {
+            // No clock in the signal, so fall back to the sequence and accept the risk described
+            // on lastAudioStateAt. A sender that omits `at` is outside the contract anyway.
+            stale = lastAudioStateSeq != Integer.MIN_VALUE && seq <= lastAudioStateSeq;
+        }
+        if (stale) {
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " ignored, already at seq="
+                    + lastAudioStateSeq + " at=" + lastAudioStateAt);
+            return;
+        }
+        lastAudioStateSeq = seq;
+        lastAudioStateAt = at;
+
+        int live = VolumeHelper.getVolume();
+
+        // 🔴 A muted amplifier reads back as zero, and zero is not a base - it is the absence of
+        // one. Caught on the wire the first time this ran: the unit happened to be muted, the
+        // signal arrived, and the base was set to 0. Nothing looks wrong until the mute comes off,
+        // at which point GALA restores base plus offset and the car goes almost silent.
+        //
+        // The poll's own mute guard returns before any of its base handling for exactly this
+        // reason, but that guard is upstream of here, so this path needs its own. The base is left
+        // untouched and the unmute recovery re-establishes it when there is sound to measure
+        // against. The EQ is still applied, because the curve does not depend on the mute.
+        if (VolumeHelper.isHardwareMuted() || live <= 0) {
+            applyVolumeDependentSettings(Math.max(0, live));
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                    + " channel=" + channel + " -> muted (read " + live + "), base left at "
+                    + baseStandstillVolume + ", EQ applied once");
+            return;
+        }
+
+        // 🔴🔴 An announce that merely repeats the number we ourselves last commanded is our own
+        // echo, and acting on it is a runaway. Measured on the unit, 27.08.2026, with the speed
+        // simulator at 90 km/h - the only way to see it without a motorway:
+        //
+        //   GALA at 90 km/h ... -> offset 2
+        //   seq=5 -> base=6      GALA raised 5 to 6, the radio announced it
+        //   seq=6 -> base=7      GALA raised 6 to 7, the radio announced it
+        //   [simulator off, the boost fades away]
+        //   seq=7..11 -> base 6, 5, 4, 3, 2
+        //
+        // It started at 5 and ended at 2. Three steps of the owner's chosen level, gone.
+        //
+        // The platform raises VOLUME_CHANGED for *every* change of volume, including the ones this
+        // service makes itself. The radio dutifully announces each, and cannot know who caused it -
+        // nothing tells it. So the loop closes here: GALA raises the volume, the rise comes back as
+        // an announce, the boost is absorbed into the base, GALA computes a fresh boost on top of
+        // the inflated base, and the volume climbs. Braking runs it in reverse and eats the level.
+        //
+        // Only this side can break it, and it costs one comparison: we remember what we commanded.
+        // If the announced level is exactly that, nobody moved anything and there is nothing to
+        // learn from it. A person who happens to dial in the very number we last set changes
+        // nothing either, because the base already holds it.
+        if (live == lastAppliedVolume) {
+            Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                    + " -> our own echo (" + live + "), base kept at " + baseStandstillVolume);
+            return;
+        }
+
+        // 🔴 Subtract GALA's own boost, because the premise this used to rest on stopped being
+        // true the day the contract activated.
+        //
+        // It used to set the base to the live level and reset the offset, reasoning that the radio
+        // had *written* that level and there was no telling how much of it was ours. That held
+        // while the radio owned volume writing. It does not hold now: with wdspSyncOwner the radio
+        // writes nothing and only reports that a person moved the volume - so the level still has
+        // our offset inside it.
+        //
+        // Left as it was, the failure is loud and only happens while driving. At 90 km/h with a
+        // boost of 4 the owner turns the volume DOWN one step; the handler takes the whole level
+        // as the base and zeroes the offset; the next poll recomputes the same boost from the same
+        // speed and adds it again. The volume jumps up four steps in answer to a request to make
+        // it quieter, and it compounds on every touch of the knob.
+        //
+        // The offset is not trusted straight after a source change: it is not cleared when sources
+        // switch, so for a moment it belongs to the source we just left, and subtracting it would
+        // put the base below where it belongs. There the old behaviour is right, and is kept.
+        boolean offsetIsOurs = currentAppliedOffset > 0
+                && System.currentTimeMillis() - lastSourceChangeMs > OFFSET_TRUST_DELAY_MS;
+        int applied = offsetIsOurs ? currentAppliedOffset : 0;
+
+        baseStandstillVolume = Math.max(0, live - applied);
+        currentAppliedOffset = applied;   // the hardware still carries it; base + offset = live
+        pendingTargetOffset  = applied;   // no fade is owed, GALA recomputes on the next poll
+        lastGalaTier         = applied;
+        tierChangeTimestamp  = System.currentTimeMillis();
+        lastReadHardwareVol  = live;
+        lastAppliedVolume    = live;
+
+        applyVolumeDependentSettings(live);
+
+        // 🔴 Carry it here too, and not only from the poll's manual-adjustment branch.
+        //
+        // Measured on the unit the first minute this ran: the level was wound 6 -> 1 on the radio,
+        // five announces arrived, and only ONE of them reached media. It ended at media 2 against
+        // radio 1 - a quiet one-step disagreement that nobody would trace back to this.
+        //
+        // The cause is this method: re-baselining sets lastReadHardwareVol and lastAppliedVolume,
+        // which is exactly what the poll's detector compares against to decide that a person moved
+        // the volume. So the handler silences the detector, and a carry only happens on a poll
+        // whose timing slips between two announces.
+        //
+        // The right reading is simpler anyway: an announce from the radio *means* the level was
+        // just set deliberately. wDSP owns propagation now, so this is precisely where it belongs -
+        // the poll's branch stays for levels changed on a source the radio never announces.
+        //
+        // 🔴 baseStandstillVolume, not live. They are the same number only while GALA has no boost
+        // applied, which is every test done at a standstill - and different by exactly the boost
+        // as soon as the car moves. Carrying the live level would send the boost into the source
+        // that is not playing, where nothing recomputes it and nothing corrects it: it would sit
+        // there until somebody switched over and found it loud. The whole point of the fix above
+        // is that the boost does not travel, and passing live here would have undone it one line
+        // later.
+        carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
+
+        // 🔴 at is printed on every branch, accepted included. It was missing here, and the gap
+        // showed the moment two applications had to agree on what they had sent each other: the
+        // radio said its reply replayed the stored signal unchanged, and nothing in this log could
+        // confirm or contradict it. The log line is the only evidence that survives on this unit -
+        // its logcat buffer rotates in about six minutes - so anything both sides argue about has
+        // to be in it.
+        Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
+                + " channel=" + channel + " -> base=" + live + ", offset reset, EQ applied once");
+    }
+
     // True/false state actually used by GALA processing - the shared global switch when
     // galaGlobalMode is on, otherwise whatever the current preset has stored.
     private boolean isGalaEnabled() {
@@ -440,7 +931,25 @@ public class McuService extends Service implements LocationListener {
         String galavoltype = VolumeHelper.getActivePlayerType();
 
         // if the player has changed since the last run
-        if (!galavoltype.equals(galavoltype_last)) {
+        // Whether the source changed on this very poll. Nothing may be carried to another source
+        // in that cycle - see the guard on the manual-adjustment branch below.
+        boolean sourceChangedThisPoll = !galavoltype.equals(galavoltype_last);
+        if (sourceChangedThisPoll) lastSourceChangeMs = System.currentTimeMillis();
+
+        if (sourceChangedThisPoll) {
+            // 🔴 Greet the radio again whenever it takes the path, not only when this service
+            // starts. The query is sent once at startup, and a radio that started *after* this
+            // service never heard it: its "wDSP owns the synchronisation" flag would stay false,
+            // it would fall back to writing the levels itself, and this service would be writing
+            // them too. Two writers with different numbers - the radio copies the live level, this
+            // side carries the base without GALA's offset - so they part company by exactly the
+            // offset and the owner sees the volume jump when switching source.
+            //
+            // The transition is already detected here, so this costs nothing new. And it happens
+            // exactly when it matters: the moment the radio's own fallback would otherwise act.
+            if (VOL_TYPE_RADIO.equals(galavoltype)) {
+                askRadioForItsState();
+            }
             // and the base volume is already established
             if (baseStandstillVolume != -1) {
                 // save the last standstill volume recorded by the algorithm
@@ -478,6 +987,14 @@ public class McuService extends Service implements LocationListener {
                     if (aux_standstill != -1) {
                         baseStandstillVolume = aux_standstill;
                     }
+                    else {
+                        // The other three sources all fall back to the live volume here, and the
+                        // omission was doing real harm: switching to AUX for the first time in a
+                        // session left the base belonging to whatever played before it. GALA then
+                        // added its offset to somebody else's base - too loud if the previous
+                        // source was louder, silent if it was quieter.
+                        baseStandstillVolume = VolumeHelper.getVolume();
+                    }
                 }
                 if (galavoltype.equals("radio_type")) {
                     if (radio_standstill != -1) {
@@ -486,6 +1003,40 @@ public class McuService extends Service implements LocationListener {
                     else {
                         baseStandstillVolume = VolumeHelper.getVolume();
                     }
+                }
+            }
+
+            // 🔴 Put the level back, because the platform has just thrown it away.
+            //
+            // Measured on the unit, 27.08.2026, sampling both properties every 400 ms:
+            //
+            //   01:27:18  media=1  radio=4  radio_type
+            //   01:28:47  media=4  radio=4  radio_type   (set by hand, to make them agree)
+            //   01:29:21  media=1  radio=1  media_type   (a source switch - BOTH wiped)
+            //
+            // persist.sys.main_volume is 1 on this unit, and both landed exactly there. That is
+            // VolumeManager.resetDefValIfNeed(i): it walks all four states and sets every one
+            // whose value equals i to persist.sys.main_volume. Not the one asked for - every one
+            // standing on that number.
+            //
+            // 🔑 And the sting: carrying a level between sources makes them equal by definition,
+            // so the synchronisation itself manufactures the condition this blunt routine keys on.
+            // Before it existed the two sources rarely matched and at most one was ever wiped.
+            //
+            // Fighting the platform is pointless - it writes last. But the truth lives here: the
+            // per-source figures above are held in this process and no property reset can touch
+            // them. So the level is simply written back. The owner hears a step at the moment of
+            // switching, where the sound is changing anyway, instead of losing the level they set.
+            if (baseStandstillVolume >= 0 && !VolumeHelper.isHardwareMuted()) {
+                int live = VolumeHelper.getVolume();
+                if (live != baseStandstillVolume) {
+                    VolumeHelper.setVolume(baseStandstillVolume);
+                    lastAppliedVolume = baseStandstillVolume;
+                    lastReadHardwareVol = baseStandstillVolume;
+                    currentAppliedOffset = 0;
+                    pendingTargetOffset = 0;
+                    Log.i(TAG, "source now " + galavoltype + ": platform left " + live
+                            + ", restored our base " + baseStandstillVolume);
                 }
             }
         }
@@ -525,6 +1076,30 @@ public class McuService extends Service implements LocationListener {
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
             }
+            // Logged because this is where "the speed simulator does nothing" comes from, every
+            // time it has been looked into. The division is integer: with the standstill speed at
+            // 65 and the increment at 45, simulating 90 gives (90-65)/45 = 0 and the volume
+            // correctly does not move. Nothing is broken, the settings simply ask for no change -
+            // and from the outside that is indistinguishable from a dead control.
+            //
+            // The standstill slider used to reach 300 km/h - a threshold nothing carrying one of
+            // these head units ever crosses, so it was possible to set GALA to never engage and
+            // have nothing say so. It stops at 200 now, which an ordinary car can still reach
+            // downhill, and presets saved under the old range are clamped when they load.
+            //
+            // Once per change, not ten times a second: the log on these units is flooded by the
+            // serial layer and scrolls away in minutes, and a diagnostic that buries itself is
+            // worse than none.
+            if (simulatedSpeedKmh > 0f && rawOffset != lastLoggedSimOffset) {
+                lastLoggedSimOffset = rawOffset;
+                Log.i(TAG, String.format(Locale.US,
+                        "GALA at %.0f km/h: standstill %d, increment %d, ceiling %d -> offset %d%s",
+                        speed, minSpeed, speedIncrement, cachedGalaMaxAdj, rawOffset,
+                        rawOffset == 0 ? "  (no change asked for - check these three numbers)" : ""));
+            }
+        } else if (simulatedSpeedKmh > 0f && lastLoggedSimOffset != Integer.MIN_VALUE) {
+            lastLoggedSimOffset = Integer.MIN_VALUE;
+            Log.i(TAG, "GALA is switched off, so the simulated speed changes nothing");
         }
 
         // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
@@ -563,17 +1138,49 @@ public class McuService extends Service implements LocationListener {
         }
 
         // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
-        // We detect this because the hardware volume changed, but NOT by our script.
+        // We detect this because the hardware volume changed since the last poll, and not by us.
+        //
+        // Both halves matter. lastReadHardwareVol must hold what the hardware REPORTED last time,
+        // never what we told it to be: the platform keeps its own volume curve per source and
+        // does not always hand back the number it was given. Storing our own command there made
+        // the first test true for ever, so every poll counted as a person turning the knob, and
+        // re-based GALA to whatever was already playing. Base plus offset then equals the current
+        // volume by construction - a fixed point - and the volume never moves again. That is the
+        // reported failure: GALA dies after one press of volume-down while music plays, and only
+        // then, because only then is anything writing volumes that read back differently.
         if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
             baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
             if (hardwareVol < currentAppliedOffset) {
                 baseStandstillVolume = 0;
             }
             Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
+            // Only here, and deliberately: this is the one branch that means a person moved the
+            // volume. GALA's own steps must never travel to the other source - see the note on
+            // carryBaseToOtherSource about the boost compounding.
+            //
+            // 🔴 And never on the poll where the source itself changed. currentAppliedOffset is not
+            // cleared when sources switch, so on that one cycle the branch above subtracts an
+            // offset belonging to the source we just left from a volume the platform has just
+            // loaded for the source we arrived at - and the base comes out low by exactly that
+            // offset. GALA corrects itself over the next polls, so it was harmless while the
+            // number stayed here. It stops being harmless the moment it is written into another
+            // source: that one is not playing, nothing corrects it, and the error waits there
+            // until somebody switches to it.
+            if (!sourceChangedThisPoll) {
+                carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+            }
         }
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
-        if (cachedGalaEn) {
+        //
+        // 🔴 isGalaEnabled(), not cachedGalaEn. This was the raw per-preset field, and it was the
+        // only place left reading it directly - step 2 above already asks properly. With the
+        // global switch on, the two disagreed: a preset created while global mode was on never has
+        // "_gala_enabled" written at all, so it read false while the global flag read true. Step 2
+        // then computed a correct offset, logged it, and step 6 took the else branch and faded that
+        // offset straight back to zero. GALA looked switched on, the log showed it working, and the
+        // volume never moved.
+        if (isGalaEnabled()) {
             long now = System.currentTimeMillis();
 
             // 6a. HOLD-TIMER: Has the tier changed?
@@ -668,15 +1275,55 @@ public class McuService extends Service implements LocationListener {
 
     private void checkPlayer() {
         String currentPlayer = getSystemProperty();
+        String activeType = VolumeHelper.getActivePlayerType();
+
+        // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
+        // The hardware tuner bypasses Android PCM AudioFlinger, so there is nothing to measure.
+        // If the spectrum engine hears real signal, or a software media session is active, it is NOT tuner.
+        boolean hasSignal = AudioSpectrumEngine.getInstance().hasSignalNow();
+        boolean isPlayingMedia = NowPlaying.getInstance(this).isPlaying()
+                && !NowPlaying.getInstance(this).isRadioSource();
+        // The channel counts as evidence FOR the tuner and never against it: it only reads
+        // reliably on a unit carrying the BitPerfect policies, and wanders on a factory one. A
+        // stray 2 while music plays costs nothing, because hasSignal above has already answered.
+        // A stray 4 while the tuner plays used to suppress the radio flag here, and nothing else
+        // would have caught it - so that guard is gone. See NowPlaying.isRadioSource().
+        String soundChannel = HardwareProfile.systemProperty("sys.qf.sound.channel");
+
+        boolean isRadio = !hasSignal && !isPlayingMedia
+                && ("radio_type".equals(activeType) || "2".equals(soundChannel)
+                    || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status")));
+
+        // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
+        // muted when this was measured. The problem is what hiding costs: the widget unregisters
+        // when hidden, and it is the only listener once the main screen is closed, so muting the
+        // amplifier tore down the whole measurement chain. Leaving it running instead shows the
+        // signal that genuinely exists upstream of the mute, and costs almost nothing now that
+        // the widget only redraws when the picture actually changes.
+        boolean isMuted = false;
+        int channel = isRadio ? 2 : 0; // 2 = Radio (external DSP, no PCM), 0 = Android master mixer (all media)
+        if (statusBarManager != null) {
+            statusBarManager.setAudioGating(channel, isMuted);
+        }
 
         // Process the naming convention for the "unknown" preset.
+        if (isPlayingMedia && NowPlaying.getInstance(this).playerPackage() != null
+                && !NowPlaying.getInstance(this).playerPackage().isEmpty()) {
+            currentPlayer = NowPlaying.getInstance(this).playerPackage();
+        }
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }
         // If btcall_type, set the Player to be "Call".
-        if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
+        if (activeType.equals("btcall_type")) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
+        }
+        // A measurement selects its own preset and must keep it: our own sweeps make this app
+        // the active player, and a player-based switch would drop the flat preset half way
+        // through and measure the user's equaliser instead.
+        else if (RoomMeasurement.isRunning()) {
+            // deliberately nothing
         }
         // If the last Player doesn't match the new Player, process the switch.
         else if (!Objects.equals(currentPlayer, lastPlayerSource)) {
@@ -752,12 +1399,32 @@ public class McuService extends Service implements LocationListener {
             float db2 = (cachedGains[b2] - 6) * 2 + fmOffsets[b2];
             int idx2 = Math.max(0, Math.min(12, Math.round((db2 / 2.0f) + 6)));
 
+            effectiveGainIdx[b1] = idx1;
+            effectiveGainIdx[b2] = idx2;
+
             eqData[i + 1] = (byte) ((idx2 << 4) | (idx1 & 0x0F));
         }
         eqData[9] = cachedQByte1;
         eqData[10] = cachedQByte2;
         eqData[11] = 0x00;
         sendEqThrottled(eqData);
+        publishDspStateToSpectrum();
+    }
+
+    /**
+     * Hands the spectrum analyser the state that was actually sent to the DSP, not the raw slider
+     * positions: the Fletcher-Munson curve is already baked into these indices, and so is the
+     * hardware's own quantisation to 2 dB steps and its clamp at +/-12 dB. Feeding the sliders and
+     * the curve separately would count the curve twice and hide the clamping.
+     */
+    private void publishDspStateToSpectrum() {
+        boolean[] q = new boolean[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < 8; i++) {
+            q[i] = (cachedQByte1 & (1 << i)) != 0;
+            q[i + 8] = (cachedQByte2 & (1 << i)) != 0;
+        }
+        AudioSpectrumEngine.getInstance().setDspState(
+                effectiveGainIdx, q, cachedSubFreq, effectiveSubGainIdx);
     }
 
     private void updateFmOffsets(int vol) {
@@ -796,8 +1463,10 @@ public class McuService extends Service implements LocationListener {
         }
 
         int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset)));
+        effectiveSubGainIdx = finalGainIdx;
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
         sendSubThrottled(subData);
+        publishDspStateToSpectrum();
     }
 
     private float getMaxBassBoost() {
@@ -946,11 +1615,15 @@ public class McuService extends Service implements LocationListener {
         if (cmd == (byte) 0x81) {
             turboSenderType = "[FADER_LOUD_LEGACY]: ";
         }
+        // These two were the wrong way round: 0x89 carries the surround/RSSE frame and 0x8C
+        // the positional delays. Harmless to the hardware, but it sends anyone reading the log
+        // looking at the wrong command - which is exactly what happened while measuring what the
+        // delay sliders really do.
         if (cmd == (byte) 0x89) {
-            turboSenderType = "[SPATIAL_DELAYS]: ";
+            turboSenderType = "[SURROUND_RSSE]: ";
         }
         if (cmd == (byte) 0x8c) {
-            turboSenderType = "[SURROUND_DELAYS]: ";
+            turboSenderType = "[SPATIAL_DELAYS]: ";
         }
         if (cmd == (byte) 0x80) {
             turboSenderType = "[EQ]: ";
@@ -1060,6 +1733,9 @@ public class McuService extends Service implements LocationListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (statusBarManager != null) {
+            statusBarManager.removeOverlay();
+        }
         backgroundHandler.post(() -> {
             if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(prefListener);
             stopPolling();

@@ -11,7 +11,7 @@
     <string name="btn_import">Imp</string>
 
     <!-- EQ Tab -->
-    <string name="lbl_sub">Sub:</string>
+    <string name="lbl_sub">Subwoofer:</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -46,7 +46,7 @@
     <string name="rear_speaker_bass">Bakbas</string>
     <string name="lbl_filter">Filter</string>
     <string name="lbl_boost">Boost</string>
-    <string name="lbl_freq">Frekv</string>
+    <string name="lbl_freq">Frekvens</string>
     <string name="lbl_freq_boost">Boost Frekv</string>
     <string name="lbl_center">Center</string>
     <string name="fader_balance">Fader &amp; Balans</string>
@@ -125,6 +125,15 @@
 
     <!-- Formats -->
     <string name="speed_kmh_format">%d km/h</string>
+    <string name="lbl_percent_fmt">%1$d%%</string>
+    <string name="lbl_degrees_fmt">%1$d°</string>
+    <string name="val_percent_default">40%</string>
+    <string name="val_pos_default">50%</string>
+    <string name="val_degrees_default">0°</string>
+    <string name="toast_auto_preset">Auto: %1$s</string>
+    <string name="toast_location_permission_needed">Platsbehörighet krävs för GALA.</string>
+    <string name="toast_import_failed">Import misslyckades: %1$s</string>
+    <string name="error">Fel</string>
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
@@ -134,4 +143,150 @@
     <string name="GLtab">Fart</string>
     <string name="lbl_pwr">" Förstärkar:"</string>
 
+    <!-- Status Bar Visualizer -->
+    <string name="status_bar_visualizer_title">Statusfältsvisualiserare</string>
+    <string name="status_bar_visualizer_enable">Statusfältsvisualiserare</string>
+    <string name="status_bar_visualizer_width">Bredd</string>
+    <string name="status_bar_visualizer_offset_x">Position</string>
+    <string name="status_bar_visualizer_theme">Tema</string>
+    <string name="status_bar_visualizer_hue">HUE-förskjutning / Färg</string>
+    <string name="status_bar_visualizer_permission_needed">Överlagringsbehörighet krävs</string>
+    <string name="status_bar_theme_spectrum">Spektrum (HUE-rotation)</string>
+    <string name="status_bar_theme_solid_hue">Enfärgad från HUE</string>
+    <string name="status_bar_theme_auto_day_night">Auto Dag/Natt (Vit/Svart)</string>
+    <string name="status_bar_theme_eq_groups">EQ-grupper (HUE-rotation)</string>
+    <string name="status_bar_theme_monochrome_white">Alltid vit</string>
+    <string name="status_bar_theme_monochrome_black">Alltid svart</string>
+    <string name="status_bar_theme_fire">Eld</string>
+    <string name="status_bar_theme_neon">Neon</string>
+
+    <string name="settings_title">wDSP Settings</string>
+    <string name="settings_appearance">Appearance &amp; Themes</string>
+    <string name="settings_theme_day">Day</string>
+    <string name="settings_theme_night">Night</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_accent_title">Accent</string>
+    <string name="settings_primary_text_title">Main Text</string>
+    <string name="settings_label_color_title">Labels</string>
+    <string name="settings_on_accent_title">On Accent</string>
+    <string name="settings_wallpaper_title">Wallpaper</string>
+    <string name="settings_wallpaper_none">Built-in / Default</string>
+    <string name="settings_wallpaper_load">Pick Photo</string>
+    <string name="settings_wallpaper_default">Reset</string>
+    <string name="settings_wallpaper_solid_switch">Solid Color</string>
+    <string name="settings_wallpaper_status_solid">Solid Color Active</string>
+    <string name="settings_solid_hue">Solid Color HUE</string>
+    <string name="settings_solid_val">Solid Brightness</string>
+    <string name="settings_permissions">Permissions &amp; System</string>
+    <string name="settings_app_details">App Details</string>
+    <string name="eq_visualizer_title">Equalizer-visualiserare</string>
+    <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
+    <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_mode_spectrum">Frequency - Color</string>
+    <string name="eq_vis_enable_label">Display spectrum bars</string>
+
+    <string name="settings_backup_btn">Backup All Settings</string>
+    <string name="settings_restore_btn">Restore Settings</string>
+    <string name="toast_backup_success">Settings backed up successfully</string>
+    <string name="toast_backup_failed">Backup failed: %s</string>
+    <string name="toast_restore_success">Settings restored successfully</string>
+    <string name="toast_restore_failed">Restore failed: %s</string>
+    <string name="gala_section_speed_gain">Hastighet och kompensation</string>
+    <string name="gala_section_smoothing_sim">Utjämning och simulering</string>
+    <string name="settings_perm_overlay">Överläggsbehörighet (Visa över appar)</string>
+    <string name="fm_controls_title">Kalibrering och korrigeringsstyrka</string>
+    <string name="perm_battery_opt">Batterioptimering</string>
+    <string name="perm_audio_record">Ljudinspelning (EQ)</string>
+    <string name="perm_gps_location">GPS-position (GALA)</string>
+    <string name="vis_normalization_label">Dynamisk normalisering (AGC)</string>
+    <string name="vis_normalization_desc">Mjuk utjämning av dynamikomfånget för tysta spår</string>
+    <string name="status_bar_bands_count">Antal band:</string>
+    <string name="analyzer_section_title">Analysatorns noggrannhet och synkronisering</string>
+    <string name="agc_main_label">Automatisk nivå: huvudanalysator</string>
+    <string name="agc_main_desc">Av betyder absoluta nivåer. Ett instrument som skalar om sig självt går inte att läsa</string>
+    <string name="agc_bar_label">Automatisk nivå: widget i statusfältet</string>
+    <string name="agc_bar_desc">Här handlar det om dekoration och inte om mätning, så utjämning är oftast välkommen</string>
+    <string name="agc_strength_label">Styrka</string>
+    <string name="latency_trim_label">Synkronisering av bild och ljud</string>
+    <string name="latency_trim_desc">Grundfördröjningen mäts automatiskt; varje spelare buffrar olika, så finjustera på gehör</string>
+    <string name="range_db_label">Visningsområde</string>
+    <string name="unit_hz">%1$s Hz</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_latency_ms">%1$+d ms</string>
+    <string name="format_range_db">%1$d dB</string>
+    <string name="placeholder_db">0.0 dB</string>
+    <string name="toast_saf_error">Fel vid filval: %1$s</string>
+    <string name="hint_sub_freq">Frekvens</string>
+
+    <!-- Analyser sound sync -->
+    <string name="sync_measure_label">Synkronisering med ljudet</string>
+    <string name="sync_measure_desc">Spelar upp några korta pip och mäter hur mycket staplarna ligger före ljudet. Tar ungefär 15 sekunder.</string>
+    <string name="sync_measure_button">Synkronisera</string>
+    <string name="sync_measure_running">Mäter…</string>
+    <string name="sync_measure_result">Uppmätt: %1$d ms</string>
+    <string name="sync_measure_failed">Mätningen misslyckades</string>
+
+    <!-- Diagnostics: cabin measurement -->
+    <string name="debug_section_title">Diagnostik</string>
+    <string name="room_measure_label">Mätning av kupén</string>
+    <string name="room_measure_desc">Spelar upp ett svep genom varje högtalare i tur och ordning och mäter när ljudet kom fram och om det är i fas. Tar ungefär en halv minut. Motorn av, dörrarna stängda, vanlig volym.</string>
+    <string name="room_measure_button">Mät</string>
+    <string name="room_measure_running">Mäter: %1$s</string>
+    <string name="room_measure_done">Klart — skicka resultatet?</string>
+    <string name="room_measure_failed">Mätningen misslyckades</string>
+    <string name="room_measure_send">Spara arkiv</string>
+    <string name="room_measure_saved_title">Mätning sparad</string>
+    <string name="room_measure_saved">Arkivet med %2$d filer skrevs till:\n\n%1$s\n\nÖppna det med en filhanterare eller kopiera det med en USB-kabel eller ett minneskort.</string>
+    <string name="room_measure_save_failed">Det gick inte att skriva arkivet.</string>
+    <string name="room_measure_share_text">wDSP kupémätning, version %1$s</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_nothing">Inget mätt ännu</string>
+    <string name="toast_saved_to">Sparat i %1$s</string>
+    <string name="lbl_px_fmt">%1$d px</string>
+    <string name="status_bar_alpha">Opacitet</string>
+    <string name="status_bar_height_manual">Remsans höjd</string>
+    <string name="status_bar_offset_y">Avstånd från toppen</string>
+    <string name="status_bar_placement_hint">Låt höjden vara 0 så mäter appen fältet själv. Ställ in det manuellt bara om remsan hamnar på fel ställe — på vissa bilradioapparater ritas det översta fältet av launchern och Android vet inte att det finns där.</string>
+    <string name="freq_off">Av</string>
+    <string name="system_report_label">Systemrapport</string>
+    <string name="system_report_desc">Antecknar hur denna enhet hanterar volym, dirigering och mikrofonen. Behövs för att fixa volymåterställning efter ett Bluetooth-samtal, tysta navigeringsmeddelanden och en mätning som inte startar.</string>
+    <string name="system_report_button">Samla</string>
+    <string name="system_report_working">Samlar…</string>
+    <string name="system_report_title">Systemrapport</string>
+    <string name="system_report_saved">Sparad i:\n\n%1$s\n\nFör att även fånga volymfelet: ring ett kort telefonsamtal över Bluetooth, lägg på och samla rapporten en andra gång. Den andra filen kommer att innehålla vad som ändrades under samtalet.</string>
+    <string name="system_report_failed">Rapporten kunde inte skrivas.</string>
+    <string name="mic_denied_title">Ingen mikrofon</string>
+    <string name="mic_denied">Android ber inte om mikrofonen längre, eftersom behörigheten nekades tidigare. Ingenting kan mätas utan den.\n\nÖppna Inställningar → Appar → wDSP → Behörigheter och tillåt mikrofonen, försök sedan igen.</string>
+    <string name="screensaver_section_title">Skärmsläckare</string>
+    <string name="screensaver_enable">Skärmsläckare</string>
+    <string name="screensaver_enable_desc">Helskärmsvisualisering vid inaktivitet. Döljs vid beröring.</string>
+    <string name="screensaver_delay">Fördröjning</string>
+    <string name="screensaver_delay_fmt">%1$d s</string>
+    <string name="screensaver_bg_alpha">Bakgrund</string>
+    <string name="screensaver_width">Bredd</string>
+    <string name="screensaver_height">Höjd</string>
+    <string name="screensaver_bright_day">Ljusstyrka dag</string>
+    <string name="screensaver_bright_night">Ljusstyrka natt</string>
+    <string name="screensaver_apps">Aldrig över</string>
+    <string name="screensaver_apps_none">Ingen</string>
+    <string name="screensaver_apps_pick">Välj</string>
+    <string name="screensaver_note">Navigering täcks aldrig.</string>
+    <string name="room_mic_spot_label">Var mikrofonen är</string>
+    <string name="room_mic_spot_desc">Dra pricken till där mikrofonen faktiskt sitter. Det ändrar ingenting i själva mätningen - det berättar för oss hur vi ska läsa resultatet, och utan det ser en mikrofon som ligger på en högtalare ut precis som tre trasiga.</string>
+    <string name="room_root_title">Har du tillåtit root-åtkomst?</string>
+    <string name="room_root_message">Mätningen kunde inte få root just nu, så vi måste fråga.\n\nDet behövs för exakt en åtgärd: att stoppa bakgrundsprocessen som håller mikrofonen öppen vid 16 kHz. Plattformen upprätthåller bara en inmatningsström, så utan detta fästs vår inspelning vid den och halva mätningen kastas bort - och inget i Android erkänner det, samplingsfrekvensen visar fortfarande 48000.\n\nInget inaktiveras eller avinstalleras; assistenten startar om sig själv.</string>
+    <string name="room_root_yes">Ja, den är på</string>
+    <string name="room_root_no">Nej</string>
+    <string name="room_root_blocked">Slå då på den först: öppna Magisk → Superuser, hitta wDSP och ställ in den på Tillåt (eller Fråga, och tillåt när den frågar).\n\nMätningen startades inte. Kör den igen när root är tillåtet.</string>
+    <string name="screensaver_info_h">Spårremsa</string>
+    <string name="room_mic_place_hint">Vad den är monterad på</string>
+    <string name="room_mic_place_windscreen">Vindruta</string>
+    <string name="room_mic_place_visor">Under solskyddet</string>
+    <string name="room_mic_place_mirror">Backspegel</string>
+    <string name="room_mic_place_dome">Kupébelysning</string>
+    <string name="room_mic_place_wheel">Ratt</string>
+    <string name="room_mic_place_dash">Instrumentbräda</string>
+    <string name="room_mic_place_pillar_top">A-stolpe, uppe</string>
+    <string name="room_mic_place_pillar_bottom">A-stolpe, nere</string>
 </resources>
+

@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/app_background"
+    android:background="@android:color/transparent"
     tools:context=".MainActivity"
     android:fitsSystemWindows="true">
 
@@ -41,6 +42,12 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_presets"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -80,53 +87,41 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_auto_preset"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
-                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:layout_height="@dimen/toggle_height"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/btn_auto_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_auto"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_auto"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_add_preset"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
                         android:layout_marginEnd="@dimen/margin_tiny"
-                        android:layout_weight="1"
-                        android:backgroundTint="@color/btn_add_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_add"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_add"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_rename_preset"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
-                        android:layout_marginEnd="0dp"
+                        android:layout_height="@dimen/toggle_height"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/btn_rename_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_rename"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_rename"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -136,53 +131,41 @@
                     android:layout_marginTop="@dimen/margin_tiny"
                     android:orientation="horizontal">
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_export_presets"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
-                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:layout_height="@dimen/toggle_height"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/btn_export_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_export"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_export"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_import_presets"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:layout_weight="1"
                         android:layout_marginEnd="@dimen/margin_tiny"
-                        android:layout_weight="1"
-                        android:backgroundTint="@color/btn_import_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_import"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_import"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btn_delete_preset"
-                        style="?android:attr/buttonBarButtonStyle"
                         android:layout_width="0dp"
-                        android:layout_height="@dimen/button_top_height"
-                        android:layout_marginEnd="0dp"
+                        android:layout_height="@dimen/toggle_height"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/btn_delete_bg"
-                        android:paddingHorizontal="@dimen/padding_small"
-                        android:text="@string/btn_delete"
-                        app:cornerRadius="@dimen/button_radius"
-                        app:strokeWidth="@dimen/stroke_width"
-                        app:strokeColor="@color/stroke_color"
-                        android:textColor="@color/colored_button_text"
-                        android:textSize="12sp" />
+                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_preset_delete"
+                        android:scaleType="centerInside"
+                        android:tint="#FFFFFF"
+                        android:background="@drawable/bg_icon_button" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -350,7 +333,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/lbl_sub"
                     android:textColor="@color/cyan_custom"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/card_title_text"
                     android:textStyle="bold" />
 
                 <com.google.android.material.slider.Slider
@@ -382,12 +365,18 @@
                     android:gravity="center"
                     android:text="@string/value_default"
                     android:textColor="@color/cyan_custom"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/card_title_text"
                     android:textStyle="bold" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_sub_freq"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_small"
@@ -455,10 +444,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/enable_loudness" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fm_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -473,10 +481,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/trim_highs" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fatigue_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -491,10 +518,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/sub_tweaking" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fm_sub_comp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <FrameLayout
@@ -680,10 +726,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/spatial_correction" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_precise_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- FL -->
@@ -853,10 +918,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/surround_mode" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_legacy_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- Legacy FL -->
@@ -1135,6 +1219,12 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_front"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1242,6 +1332,12 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_rear"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxBackgroundColor="#33000000"
+                    app:boxStrokeWidth="1.5dp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
@@ -1282,7 +1378,7 @@
                             android:id="@+id/seek_fader_lr"
                             android:visibility="gone"
                             android:layout_width="@dimen/fader_length"
-                            android:layout_height="48dp"
+                            android:layout_height="@dimen/ctl_button_height"
                             android:valueFrom="0"
                             android:valueTo="24"
                             android:stepSize="1"
@@ -1315,9 +1411,9 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintDimensionRatio="W,945:1781"
+                            app:layout_constraintDimensionRatio="W,300:520"
                             android:layerType="hardware"
-                            app:srcCompat="@drawable/fabka_smooth" />
+                            app:srcCompat="@drawable/ic_car_cabriolet" />
 
                         <com.radiorubka.wdsp.BalancePointerView
                             android:id="@+id/balance_pointer"
@@ -1504,13 +1600,29 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/switch_loud"
-                        style="@style/TextLabel"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="@dimen/toggle_height"
                         android:layout_marginBottom="@dimen/margin_standard"
-                        android:text="@string/built_in_loudness_legacy" />
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="#20121820"
+                        android:text="@string/built_in_loudness_legacy"
+                        android:textAllCaps="false"
+                        android:textSize="@dimen/eq_value_text"
+                        android:textStyle="bold"
+                        android:checkable="true" />
 
                 </LinearLayout>
             </ScrollView>
@@ -1561,10 +1673,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/enable_gala" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_gala_enable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- Global GALA -->
@@ -1582,10 +1713,29 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/gala_global" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_gala_global"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- Status Display -->

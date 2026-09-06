@@ -1,0 +1,1664 @@
+package com.radiorubka.wdsp;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTimestamp;
+import android.media.AudioTrack;
+import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Locale;
+
+/**
+ * Measures the car, one loudspeaker at a time.
+ *
+ * <h2>What it does</h2>
+ *
+ * For each of the four speakers in turn it steers the sound to that speaker alone, plays a sweep,
+ * listens with the microphone, and turns the recording back into an impulse response. From that
+ * impulse response three things fall out:
+ *
+ * <ol>
+ *   <li><b>when the sound arrived</b> - the difference between speakers is the time alignment the
+ *       delay sliders exist to correct;</li>
+ *   <li><b>whether it arrived the right way up</b> - a negative first peak means that speaker is
+ *       wired with its terminals swapped, which is the usual reason a subwoofer sounds thin;</li>
+ *   <li><b>how loud each band was</b> - the frequency response of speaker plus cabin plus
+ *       microphone.</li>
+ * </ol>
+ *
+ * <h2>Why the first two are trustworthy and the third is not</h2>
+ *
+ * The head unit's microphone is not a measurement microphone and nobody knows its response. That
+ * does not matter for timing: an arrival is found by <i>when</i> energy appeared, and a microphone
+ * that is six decibels down at 4 kHz still hears the arrival at the same instant. The same goes
+ * for polarity, which is a sign, not a level.
+ *
+ * The frequency response is a different matter. Whatever error the microphone has is added to the
+ * measurement in decibels, and if the equaliser were set to flatten what the microphone reports,
+ * that error would be inverted straight into the sound. So this class <b>measures</b> the response
+ * and writes it to the log, and deliberately stops there. Turning it into equaliser settings needs
+ * a way to separate the microphone from the room, which is a separate problem with its own answer
+ * (see {@code .agents/ROOM_CALIBRATION.md}).
+ *
+ * <h2>Why an exponential sweep rather than pink noise</h2>
+ *
+ * A sweep that rises exponentially spends the same amount of time in every octave, so the bottom
+ * of the range - where a single cycle lasts fifty milliseconds - gets as much signal as the top.
+ * Deconvolving the recording against the sweep's inverse filter collapses it back to an impulse,
+ * and the loudspeaker's harmonic distortion lands at negative times, ahead of the impulse, where
+ * it is simply discarded. Noise gives none of that: no impulse response, no arrival time, and
+ * distortion mixed into the answer.
+ *
+ * <h2>What it borrows and gives back</h2>
+ *
+ * Measuring requires changing the head unit: the sound has to be steered to one speaker, the delay
+ * lines have to be off (they would be measured as part of the room), and the equaliser has to be
+ * flat (or it would be measured as part of the speaker). All of that belongs to the user, so every
+ * value is written to a recovery preference before it is touched and restored afterwards. If the
+ * app dies half way through, {@link #restoreIfInterrupted(Context)} puts it back at next start -
+ * a measurement must never be able to leave somebody's car sounding wrong.
+ *
+ * The microphone is borrowed the same way: echo cancellation and noise suppression have to be off
+ * while measuring - one exists to remove exactly the sound we are playing - but on head units with
+ * custom audio policies they are switched on deliberately, so they go back on afterwards.
+ *
+ * <h2>How to run it</h2>
+ *
+ * <pre>
+ *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM
+ *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ef amp 0.35 --ef sec 3
+ * </pre>
+ *
+ * Everything is logged under the tag {@code wDSP_RoomMeasure}, and the report and recordings are
+ * written to {@link #outputDir(Context)} so that a measurement made in somebody else's car can be
+ * sent back and examined properly rather than described over chat. Settings has a button that zips
+ * the lot and hands it to the system share sheet.
+ */
+public final class RoomMeasurement {
+    private static final String TAG = "wDSP_RoomMeasure";
+
+    private static final int SAMPLE_RATE = 48000;
+    /** 20 Hz is below anything a car door can reproduce, but the sweep costs nothing down there. */
+    private static final float SWEEP_START_HZ = 20f;
+    private static final float SWEEP_END_HZ = 20000f;
+    /**
+     * Where the sweep stops when the microphone is stuck at 16 kHz.
+     *
+     * An assistant hotword listener holds the microphone open on many head units and cannot always
+     * be stopped - on the one this was written for it is a system app, and
+     * {@code killBackgroundProcesses} does not touch it. Every other recording is then served from
+     * its 16 kHz stream, resampled, and nothing above 8 kHz survives.
+     *
+     * Sweeping to 20 kHz in that state wastes more than half the signal: the energy is emitted,
+     * never recorded, and the deconvolution has nothing to match it against. Sweeping to 7 kHz
+     * instead puts all of it where the microphone can hear it.
+     *
+     * The cost is only sharpness, and not much of it: a 7 kHz band gives an impulse whose main
+     * lobe is about 0.14 ms wide, while the delay sliders move in steps of 0.5 ms. What is lost is
+     * the top of the frequency response, which this measurement does not act on anyway.
+     */
+    private static final float SWEEP_END_NARROW_HZ = 7000f;
+    private static final float DEFAULT_SECONDS = 3f;
+    /**
+     * Amplitude of the sweep, not of the head unit.
+     *
+     * This class never touches the volume control: how loud the car plays is the user's decision
+     * and their neighbours' business. A quarter of full scale is loud enough to measure at a
+     * normal listening volume and quiet enough not to frighten anybody.
+     */
+    private static final float DEFAULT_AMPLITUDE = 0.25f;
+    /** Recording continues past the last sweep so that the room's decay is captured too. */
+    private static final float TAIL_SECONDS = 1.0f;
+    /** Silence before the first sweep, and inside every window, so nothing starts abruptly. */
+    private static final float LEAD_SECONDS = 0.5f;
+    /**
+     * Silence between sweeps.
+     *
+     * Long enough for two things at once: the cabin to stop ringing, and the MCU to act on the
+     * routing change that is sent half way through it.
+     */
+    private static final float GAP_SECONDS = 1.5f;
+    /**
+     * Below this, the recording has no top end and the sweep is being measured through half a
+     * microphone. Normal is around -15 dB; a stream that is really 16 kHz gives -70 or worse.
+     */
+    private static final float BANDWIDTH_WARN_DB = -30f;
+    /** The fader and balance sliders run 0..24 with 12 in the middle. */
+    private static final int FADER_MIN = 0;
+    private static final int FADER_CENTRE = 12;
+    private static final int FADER_MAX = 24;
+    /** Equaliser gain indices run 0..12, and 6 is flat - see McuService.applyEqualizer(). */
+    private static final int EQ_FLAT_INDEX = 6;
+    /** Time for the MCU to act on a routing change before the sweep starts. */
+    private static final long ROUTING_SETTLE_MS = 800;
+
+    /**
+     * Reported, no longer used to decide anything.
+     *
+     * It looked like a good test on a bench - silent channels gave 19 and 24, driven ones gave
+     * thousands - and then the same driven speaker came back with 65 on one run and 2889 on the
+     * next, with its arrival time unchanged to the sample. The average it divides by depends on
+     * what else fell inside the window, which has nothing to do with whether a speaker was heard.
+     * Kept in the report as a second opinion; see MIN_CLARITY_DB for what actually decides.
+     */
+    private static final float MIN_PROMINENCE = 200f;
+    /**
+     * The recording also has to contain something. A channel that was never driven still produces
+     * an impulse response - of the room noise - and it can look convincing on its own.
+     */
+    private static final float MIN_PEAK = 0.01f;      // -40 dBFS
+    /**
+     * How far the direct sound has to stand above the room before its arrival time is believed.
+     *
+     * A speaker the microphone cannot see still produces an impulse response, and its peak is
+     * still repeatable to the sample - it is simply the loudest moment of a diffuse smear rather
+     * than the instant the sound arrived. Measured on a bench: the speaker facing the microphone
+     * gave +14 dB, the one behind it +1 dB, and only the first of the two described a distance.
+     */
+    private static final float MIN_CLARITY_DB = 9f;
+    /**
+     * The largest difference in arrival times a vehicle can physically produce.
+     *
+     * Sound covers about thirty-four centimetres in a millisecond, so sixty milliseconds is twenty
+     * metres - absurd for anything, which is exactly what makes it a safe limit. It is set that
+     * high on purpose: **this app runs in vans and minibuses as well as cars**, where a rear
+     * speaker really can be five or six metres from a microphone on the windscreen pillar, and a
+     * limit tuned to a saloon would throw away their most interesting measurement.
+     *
+     * Nothing is lost by being generous. A channel that was not heard at all does not miss by
+     * metres, it misses by hundreds of milliseconds: measured on a bench with the rear pair
+     * disconnected, the phantoms landed 700 ms from the reference.
+     */
+    private static final float MAX_PLAUSIBLE_SPREAD_MS = 60f;
+
+    /**
+     * The largest delay that can be entered, in slider steps.
+     *
+     * <p>Forty, and that figure is the hardware's rather than the interface's. It was measured
+     * with {@code --ei delaytest 1}, which holds the routing still and moves the delay line
+     * between sweeps instead, so the shift it produces is read off directly:
+     *
+     * <pre>
+     *   10 steps (register 50)  -> +4.979 ms    0.4990 ms per step
+     *   25 steps (register 125) -> +12.458 ms   0.4983 ms per step
+     *   30 steps (register 150) -> +14.979 ms   0.4993 ms per step
+     *   40 steps (register 200) -> +19.958 ms   0.4990 ms per step
+     *   45 steps (register 225) -> +21.271 ms   saturated
+     * </pre>
+     *
+     * So the register really is a tenth of a millisecond per unit and the slider really is half a
+     * millisecond per step — the labels inherited from the original firmware are right, to within
+     * two parts in a thousand. And the delay line runs linearly to <b>20 ms, about 6.9 metres</b>,
+     * saturating just above 21.
+     *
+     * <p>Until this was measured the sliders stopped at ten, five milliseconds, a metre and
+     * seventy. Nobody chose that: it came down from the factory app and it is still what the
+     * upstream branch has. It is fine for a saloon and useless for a van, where a rear speaker
+     * really can be five metres away, so the sliders now go to forty as well — the two limits are
+     * raised together, because a suggestion that cannot be typed in is no suggestion at all.
+     * Presets written under the old range stay valid; nothing about the labelling changes.
+     */
+    private static final int MAX_DELAY_STEPS = 40;
+    /** Measured, not assumed: 0.4990 ms per step across the linear range. */
+    private static final float DELAY_STEP_MS = 0.5f;
+    /** Where the delay line itself stops. Beyond this it saturates; the slider now matches it. */
+    private static final int HARDWARE_DELAY_STEPS = 40;
+
+    /**
+     * Where a measurement leaves its report and recordings.
+     *
+     * External cache rather than files, for two reasons: the system may reclaim it when space runs
+     * short, which is right for something a tester sends once and forgets, and it is the path
+     * declared in {@code res/xml/file_paths.xml} so that FileProvider is allowed to hand it to
+     * Telegram.
+     */
+    private static final String OUTPUT_DIR = "measurements";
+
+    /**
+      * The preset a measurement runs through.
+      *
+      * Nothing is measured through the user's own preset any more. Their preset has an equaliser
+      * curve, and very likely delay lines, loudness, bass boost and a high-pass - and a high-pass
+      * is a real group delay at the bottom, which would be measured as if the loudspeaker were
+      * further away than it is. Every user would then get a different and slightly wrong answer,
+      * for reasons invisible in the result.
+      *
+      * So the measurement copies their preset, neutralises everything that colours or delays the
+      * sound, switches to the copy, and switches back afterwards. Their own settings are never
+      * written to at all, which also means a crash half way through cannot damage them.
+      */
+     private static final String SCRATCH_PRESET = "wDSP Flat";
+
+     private static final String PREFS_NAME = "EqPresets";
+
+    /**
+     * Where the owner says the microphone is, on the same −1..1 axes the balance control uses:
+     * left/right and rear/front, 0 being the middle of the car.
+     *
+     * <h2>Why the answer has to be asked for</h2>
+     *
+     * It changes nothing about the sweep. It changes everything about reading the result. Four
+     * measurements came back from testers before this existed; the two that failed were the two
+     * whose owner had said nothing about placement, and both turned out to have the microphone
+     * sitting on one speaker. From inside the numbers that looks exactly like three speakers that
+     * are not working — the only way to tell was to compare arrival times afterwards by hand and
+     * notice they fitted a corner. Asked once, with a finger, it is known.
+     */
+    private static final String PREF_MIC_LR = "room_mic_lr";
+    private static final String PREF_MIC_FR = "room_mic_fr";
+
+    /**
+     * What the microphone is fitted to, chosen from a list rather than described.
+     *
+     * <h2>Why a name and not just the dot</h2>
+     *
+     * The dot gives the spot on the floor plan, and that is enough for the delays - they are
+     * geometry in the horizontal plane. It says nothing about height, or about what sits a couple
+     * of centimetres away, and that is what decides whether the first arrival is the loudspeaker
+     * or a reflection. A sun visor and a dome light can be at almost the same point on the plan
+     * and behave nothing alike: one has a hard flap and the windscreen right beside the capsule,
+     * the other has the roof behind it and little else.
+     *
+     * <p>📻 Three of the first four reports from strangers came back reflection-dominated, and the
+     * arrival times could not say why. A name can: it carries the expected height and the nearest
+     * reflector, which is exactly what reading a clarity figure needs - and what an automatic
+     * version of this will need before it can decide anything on its own.
+     *
+     * <p>Stored as the index into this array, so the report and any later analysis agree on what
+     * the owner meant. Adding to the end is safe; reordering is not.
+     */
+    private static final int[] MIC_PLACES = {
+            R.string.room_mic_place_windscreen,
+            R.string.room_mic_place_visor,
+            R.string.room_mic_place_pillar_top,
+            R.string.room_mic_place_pillar_bottom,
+            R.string.room_mic_place_mirror,
+            R.string.room_mic_place_dome,
+            R.string.room_mic_place_wheel,
+            R.string.room_mic_place_dash,
+    };
+
+    private static final String PREF_MIC_PLACE = "room_mic_place";
+
+    /** The list as the owner sees it, in order. */
+    public static String[] micPlaceNames(Context context) {
+        String[] out = new String[MIC_PLACES.length];
+        for (int i = 0; i < MIC_PLACES.length; i++) out[i] = context.getString(MIC_PLACES[i]);
+        return out;
+    }
+
+    /** {@code -1} when nobody has said yet, which the report prints as "not stated". */
+    public static int micPlace(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(PREF_MIC_PLACE, -1);
+    }
+
+    public static void setMicPlace(Context context, int index) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(PREF_MIC_PLACE, index).apply();
+    }
+
+    private static String micPlaceDescription(Context context) {
+        int i = micPlace(context);
+        if (i < 0 || i >= MIC_PLACES.length) return "not stated";
+        // In English regardless of the owner's language: the report is read by us, and a place
+        // name in a language nobody on this end reads is worse than no name at all.
+        return englishPlace(i);
+    }
+
+    private static String englishPlace(int i) {
+        switch (i) {
+            case 0: return "windscreen";
+            case 1: return "under the sun visor";
+            case 2: return "A-pillar, top";
+            case 3: return "A-pillar, bottom";
+            case 4: return "rear-view mirror";
+            case 5: return "dome light";
+            case 6: return "steering wheel";
+            case 7: return "dashboard";
+            default: return "not stated";
+        }
+    }
+
+    public static float micSpotLeftRight(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getFloat(PREF_MIC_LR, 0f);
+    }
+
+    public static float micSpotFrontRear(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getFloat(PREF_MIC_FR, 0f);
+    }
+
+    public static void setMicSpot(Context context, float leftRight, float frontRear) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putFloat(PREF_MIC_LR, leftRight)
+                .putFloat(PREF_MIC_FR, frontRear)
+                .apply();
+    }
+
+    /** The spot in words, for the report - "front right", "centre", and so on. */
+    private static String micSpotDescription(Context context) {
+        float lr = micSpotLeftRight(context);
+        float fr = micSpotFrontRear(context);
+        // A third of the way out counts as "that side"; nearer the middle than that is the middle,
+        // because nobody places a microphone to the centimetre and pretending otherwise would give
+        // the reader more confidence than the gesture deserves.
+        String frontRear = fr > 0.33f ? "front" : fr < -0.33f ? "rear" : "middle";
+        String leftRight = lr > 0.33f ? "right" : lr < -0.33f ? "left" : "centre";
+        return String.format(Locale.US, "%s %s  (lr %+.2f, fr %+.2f)", frontRear, leftRight, lr, fr);
+    }
+    /** Holds everything a running measurement has changed, so it can be undone after a crash. */
+    private static final String PREF_RECOVERY = "room_measure_recovery";
+
+    private static volatile boolean running;
+    /**
+     * Diagnostic: play every sweep through the same routing.
+     *
+     * With the acoustics held identical, anything that still differs between the four windows
+     * belongs to the measurement rather than to the car - which is the only way to tell a real
+     * arrival difference from a drift between the recording clock and the playback clock.
+     */
+    private static volatile boolean sameRouting;
+
+    public static void setSameRouting(boolean same) {
+        sameRouting = same;
+    }
+
+    /**
+     * Diagnostic: hold the routing still and change the delay line between sweeps instead.
+     *
+     * The sliders are labelled in milliseconds, and those labels came from reading somebody else's
+     * code rather than from measuring anything. Here the label is not needed: the four sweeps go to
+     * the same loudspeaker with the delay set to a known series of slider values, and because they
+     * share one recording the constant cancels, so the differences between their arrivals are
+     * exactly what the hardware added.
+     *
+     * <pre>
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 1  # positional
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei delaytest 2  # surround
+     * </pre>
+     *
+     * Mode 1 tests the positional line, {@code _d_fr}, against its half-millisecond step; it has
+     * been run, and the label was right. Mode 2 tests the surround line, {@code _d1_fr}, against
+     * its one-millisecond step, which the firmware suggests is wrong by a factor of 2.125.
+     */
+    private static volatile int delayTest;
+    /** Slider values used by the positional delay test ({@code delaytest 1}), one per sweep. */
+    private static final int[] DELAY_TEST_STEPS = {0, 10, 25, 40};
+    /**
+     * Slider values used by the surround delay test ({@code delaytest 2}), one per sweep.
+     *
+     * <p>Smaller numbers, because the question is different. The positional test asked how big the
+     * step is; this one asks whether the step is what the label says at all. The MCU firmware
+     * multiplies these slider values by 102 before they reach the chip, and the chip counts delay
+     * in samples at 48 kHz, which would make one step 2.125 ms rather than the 1.0 ms printed
+     * beside the slider. Ten steps therefore lands either at 10 ms or at 21.25 ms, and no
+     * measurement error confuses those two.
+     */
+    private static final int[] SURROUND_TEST_STEPS = {0, 3, 6, 10};
+
+    public static void setDelayTest(int mode) {
+        delayTest = mode;
+    }
+
+    /** The slider values this run is stepping through, whichever delay line is being tested. */
+    private static int[] delayTestSteps() {
+        return delayTest == 2 ? SURROUND_TEST_STEPS : DELAY_TEST_STEPS;
+    }
+
+    /** What the interface claims a step is worth, for the line under test. */
+    private static float delayTestLabelMs() {
+        return delayTest == 2 ? 1.0f : DELAY_STEP_MS;
+    }
+
+    private RoomMeasurement() {
+    }
+
+    /**
+     * The four speakers, and how to steer the sound to each one on its own.
+     *
+     * <p>Confirmed on real cars, 20.08.2026: testers ran the measurement and reported which
+     * speaker played the first sweep. It was the <b>rear left</b>, from balance 0 and fader 0 - so
+     * balance 0 is the left side as assumed, but fader 0 is the <b>rear</b>, not the front. The
+     * table below is the corrected one; before this it named every result mirror-image front to
+     * back. The arrival times themselves were never affected, only the labels on them.
+     */
+    private enum Channel {
+        REAR_LEFT("rear left", FADER_MIN, FADER_MIN),
+        REAR_RIGHT("rear right", FADER_MAX, FADER_MIN),
+        FRONT_LEFT("front left", FADER_MIN, FADER_MAX),
+        FRONT_RIGHT("front right", FADER_MAX, FADER_MAX);
+
+        final String label;
+        /** Balance: the value written to {@code <preset>_f_lr}. */
+        final int leftRight;
+        /** Fader: the value written to {@code <preset>_f_fr}. */
+        final int frontRear;
+
+        Channel(String label, int leftRight, int frontRear) {
+            this.label = label;
+            this.leftRight = leftRight;
+            this.frontRear = frontRear;
+        }
+    }
+
+    /** What one speaker's measurement found. */
+    public static final class ChannelResult {
+        public String label;
+        /** Sample at which the sound arrived, counted from the start of the recording. */
+        public int arrivalSamples;
+        /**
+         * Time of flight in milliseconds, measured on the monotonic clock.
+         *
+         * Not simply the arrival sample divided by the sample rate. Each channel gets its own
+         * recording and its own playback, and the gap between "recording started" and "the first
+         * sample of the sweep actually left" is different every time - measured at up to seven
+         * milliseconds of variation between runs on a bench where nothing moved. A car is only
+         * nine milliseconds wide, so that jitter would have swamped the answer.
+         *
+         * Both ends therefore report through the platform's own timestamps, which were shown to be
+         * honest on this hardware while the picture-to-sound delay was being measured. What
+         * remains is the sound's own journey plus a constant that every channel shares, and the
+         * delays are differences, so the constant falls out.
+         */
+        public float arrivalMs;
+        /** True when the timestamps were available; without them the delays are not trustworthy. */
+        public boolean clockLocked;
+        /** How far the arrival stood above everything else. Under ten means nothing was heard. */
+        public float prominence;
+        /** +1 normal, -1 wired backwards, 0 not determined. */
+        public int polarity;
+        /** Sixteen band levels in dB, on the hardware equaliser's grid. */
+        public final float[] bandsDb = new float[NativeSweep.BAND_COUNT];
+        /** Loudest sample in the recording, so a tester can see at once if it was too quiet. */
+        public float recordedPeak;
+        /** Level of the whole recording, which separates "quiet" from "one loud click". */
+        public float recordedRms;
+        /** Energy above 8 kHz against the band below it; far below -25 dB means a 16 kHz stream. */
+        public float bandwidthDb;
+        /**
+         * How far the direct sound stood above the room, in decibels.
+         *
+         * This is what separates a speaker the microphone can see from one it cannot. Measured on
+         * a bench: the speaker facing the microphone gave a sharp impulse and near silence after
+         * it; the one sitting behind it gave a smear eleven times weaker whose level was still
+         * within seven decibels of the peak a millisecond later. Both arrival times were
+         * repeatable to the sample; only one of them meant a distance.
+         */
+        public float clarityDb;
+        /**
+         * The speaker was heard and its arrival is physically possible, so it takes part in the
+         * alignment. This is deliberately a low bar - see {@link #confident}.
+         */
+        public boolean ok;
+        /**
+         * The direct sound stood clearly above what followed it, so this arrival is the speaker's
+         * own and not the cabin repeating it.
+         *
+         * <p>When this is false the channel is still used, because a delay computed from a
+         * reflection is far closer to the truth than no delay at all - but it may be optimistic,
+         * and the report says so rather than quietly presenting it as fact.
+         */
+        public boolean confident;
+        /** There was signal at all. Below this nothing can be said about the channel. */
+        public boolean heardAtAll;
+    }
+
+    /** Everything a full measurement produced, ready to be logged or shown. */
+    public static final class Result {
+        public final ChannelResult[] channels = new ChannelResult[4];
+        /** Delay in milliseconds to add to each channel so that all four arrive together. */
+        public final float[] suggestedDelayMs = new float[4];
+        /** The same delays in slider steps; the hardware moves in half-millisecond increments. */
+        public final int[] suggestedDelaySteps = new int[4];
+        public String error;
+        public String reportPath;
+        /** What the microphone guard found and did, in one line for the report. */
+        public String microphone;
+        /** What the platform answered when the sweep asked to be the player. */
+        public String focus;
+        /** Where the sweep stopped - lower than usual when the microphone could not be freed. */
+        public float sweepTopHz = SWEEP_END_HZ;
+        /** True when a channel needs more delay than the hardware can apply - a long vehicle. */
+        public boolean beyondHardware;
+        /**
+         * At least one speaker was heard mainly through the cabin rather than directly, so its
+         * delay may be optimistic. Normal with the microphone on the dashboard; the report says
+         * so instead of presenting the number as if it were exact.
+         */
+        public boolean reflectionDominated;
+
+        public boolean isUsable() {
+            for (ChannelResult c : channels) {
+                if (c == null || !c.ok) return false;
+            }
+            return true;
+        }
+    }
+
+    public interface Listener {
+        void onProgress(String stage);
+
+        void onFinished(Result result);
+    }
+
+    public static boolean isRunning() {
+        return running;
+    }
+
+    /** Runs a full measurement on its own thread. Takes roughly half a minute. */
+    public static void measureAsync(final Context context, final float amplitude,
+                                    final float seconds, final Listener listener) {
+        if (running) {
+            Log.w(TAG, "a measurement is already running, ignoring this request");
+            return;
+        }
+        new Thread(() -> {
+            running = true;
+            Result result;
+            try {
+                result = measure(context, amplitude, seconds, listener);
+            } catch (Throwable t) {
+                result = new Result();
+                result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+                Log.e(TAG, "measurement failed", t);
+            } finally {
+                running = false;
+            }
+            if (listener != null) listener.onFinished(result);
+        }, "wDSP_RoomMeasure").start();
+    }
+
+    /**
+     * Puts back anything a measurement changed but did not manage to restore.
+     *
+     * Called from the service at start-up. A measurement writes what it is about to change into a
+     * single preference and clears it when it has finished; anything left there means the app died
+     * with somebody's equaliser flattened and their sound coming out of one door.
+     */
+    public static void restoreIfInterrupted(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String saved = prefs.getString(PREF_RECOVERY, null);
+        if (saved == null || saved.isEmpty()) return;
+
+        Log.w(TAG, "a previous measurement did not finish; restoring what it changed: " + saved);
+        SharedPreferences.Editor editor = prefs.edit();
+        applySaved(editor, saved);
+        editor.remove(PREF_RECOVERY);
+        editor.apply();
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // the measurement itself
+    // ---------------------------------------------------------------------------------------
+
+    private static Result measure(Context context, float amplitude, float seconds,
+                                  Listener listener) {
+        Result result = new Result();
+        Context app = context.getApplicationContext();
+        SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String preset = prefs.getString("last_selected_preset", null);
+        if (preset == null) {
+            result.error = "no preset is selected, so there is nothing to measure through";
+            Log.e(TAG, result.error);
+            return result;
+        }
+        if (!NativeSweep.isAvailable()) {
+            result.error = "the native library is not loaded";
+            Log.e(TAG, result.error);
+            return result;
+        }
+
+        Log.i(TAG, "=== room measurement starting ===");
+        Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s");
+        Log.i(TAG, HardwareProfile.describe());
+
+        // Take the microphone back if something else has it, then sweep only as high as whatever
+        // we ended up with can actually hear.
+        MicrophoneGuard.Outcome mic = MicrophoneGuard.ensureOurs(app);
+        result.microphone = mic.toString();
+        final float topHz = (mic.wasHeld && !mic.freed) ? SWEEP_END_NARROW_HZ : SWEEP_END_HZ;
+        if (topHz < SWEEP_END_HZ) {
+            Log.w(TAG, "the microphone is limited to 16 kHz and could not be freed, so the sweep "
+                    + "stops at " + (int) topHz + " Hz instead of " + (int) SWEEP_END_HZ
+                    + " - delays are unaffected, the top of the response is not measured");
+        }
+
+        // Only one thing of the user's is touched: which preset is selected. Everything else
+        // happens inside a copy.
+        String saved = "last_selected_preset=" + preset;
+        prefs.edit().putString(PREF_RECOVERY, saved).apply();
+        buildScratchPreset(prefs, preset);
+        Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
+
+        try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds)) {
+            if (!sweep.isValid()) {
+                result.error = "the sweep could not be built";
+                return result;
+            }
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
+            computeDelays(result);
+            result.sweepTopHz = topHz;
+            result.reportPath = writeReport(app, result, preset, amplitude, seconds);
+        } finally {
+            SharedPreferences.Editor editor = prefs.edit();
+            applySaved(editor, saved);
+            editor.remove(PREF_RECOVERY);
+            editor.apply();
+            Log.i(TAG, "switched back to " + preset);
+        }
+
+        logResult(result);
+        return result;
+    }
+
+    /**
+     * Plays all four sweeps in one go and records them in one go.
+     *
+     * <h3>Why it has to be one pass</h3>
+     *
+     * The first version opened a fresh recording and a fresh playback for every speaker. That
+     * looks tidier and it is wrong: the gap between "recording started" and "the first sample of
+     * the sweep actually left the hardware" is different every time a stream is opened. Measured
+     * on a bench where nothing moved, the same pair of speakers came out 6.4 ms apart, then
+     * 2.7 ms, then 4.5 ms <i>the other way round</i>. A whole car is only nine milliseconds wide,
+     * so that jitter was larger than the thing being measured.
+     *
+     * Platform timestamps did not rescue it either - a single reading taken early in playback is
+     * not accurate enough to extrapolate back to the first frame.
+     *
+     * With one stream in each direction the skew between them is a single unknown constant for
+     * the whole measurement. It appears identically in all four arrivals, and the delays are
+     * differences, so it cancels exactly. Nothing has to be known about it at all.
+     *
+     * The routing is switched during the silence between sweeps, which is also where the cabin is
+     * given time to stop ringing.
+     */
+    private static void runOnePass(Context context, SharedPreferences prefs, String preset,
+                                   NativeSweep sweep, float amplitude, Result result,
+                                   Listener listener) {
+        final Channel[] channels = Channel.values();
+        final int sweepLen = sweep.length();
+        final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
+        final int lead = (int) (LEAD_SECONDS * SAMPLE_RATE);
+        final int period = sweepLen + gap;
+        final int totalFrames = lead + channels.length * period;
+        final int recordLen = totalFrames + (int) (TAIL_SECONDS * SAMPLE_RATE);
+
+        float[] mono = new float[sweepLen];
+        sweep.generate(mono, amplitude);
+
+        // One long track: quiet, sweep, quiet, sweep, and so on.
+        short[] stereo = new short[totalFrames * 2];
+        for (int k = 0; k < channels.length; k++) {
+            final int at = lead + k * period;
+            for (int i = 0; i < sweepLen; i++) {
+                short v = (short) Math.max(Short.MIN_VALUE,
+                        Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+                stereo[(at + i) * 2] = v;
+                stereo[(at + i) * 2 + 1] = v;
+            }
+        }
+        Log.i(TAG, "one pass: sweep " + sweepLen + " samples, gap " + gap + ", period " + period
+                + ", total " + totalFrames + " frames (" + (totalFrames / (float) SAMPLE_RATE)
+                + " s)");
+
+        AudioTrack track = null;
+        AudioRecord record = null;
+        MicProbe.Suspension effects = null;
+        short[] captured = new short[recordLen];
+        int got = 0;
+
+        try {
+            if (delayTest != 0) {
+                // One loudspeaker, chosen once, and the delay line is what changes. The front
+                // right is used because on the bench this was written against it is the one the
+                // microphone hears directly - a smeared arrival would blur the very shift being
+                // measured.
+                Log.i(TAG, "delay test: routing fixed to the front right, delay steps "
+                        + java.util.Arrays.toString(delayTestSteps()));
+                prefs.edit()
+                        .putInt(preset + "_f_lr", FADER_MAX)
+                        .putInt(preset + "_f_fr", FADER_MAX)
+                        .apply();
+                sleep(ROUTING_SETTLE_MS);
+            }
+            // 🔴 Everything from the previous measurement goes first, because the archive is
+            // built by sweeping this folder and it cannot tell an old file from a new one. The
+            // owner's archive of 26.08 proved the cost: it carried per-speaker recordings from
+            // the 20th, written by a version that still produced them, and a zip stamps every
+            // entry with the moment it was packed - so six-day-old recordings of a different
+            // measurement arrived looking exactly as fresh as the report beside them. Whoever
+            // reads that archive is diagnosing two cars at once without being told.
+            clearPreviousRun(context);
+
+            // The first speaker is selected before anything starts, so its sweep is not the one
+            // that has to wait for the routing to take effect.
+            applyRouting(prefs, preset, channels[0]);
+            sleep(ROUTING_SETTLE_MS);
+
+            // Ask to be the player before making a sound.
+            //
+            // 🔴 This was missing, and it is the best explanation anybody has for the oldest
+            // complaint about this feature: the first measurement on a unit fails, and then it
+            // works after a Bluetooth call, or simply the next day. Both of those force the
+            // platform to re-establish who owns the audio.
+            //
+            // On this platform the volume only reaches the amplifier for the source named in
+            // sys.current.vol.type, and one failing tester's report had that property **unset**.
+            // A track that never asked for focus never makes the platform decide it is the
+            // player, so the sweep can be written, mixed, and never actually amplified - and from
+            // the microphone that looks exactly like three speakers that are not connected.
+            //
+            // Held for the whole pass rather than per sweep: dropping and retaking it four times
+            // would invite the platform to re-route between channels, which is the one thing this
+            // measurement must not have happen in the middle of it.
+            result.focus = requestFocus(context);
+            Log.i(TAG, "audio focus for the sweep: " + result.focus);
+
+            record = openMicrophone();
+            if (record == null) {
+                result.error = "the microphone could not be opened";
+                Log.e(TAG, result.error);
+                return;
+            }
+            effects = MicProbe.suspendCapturePreprocessing(record.getAudioSessionId(), TAG);
+
+            track = openTrack(stereo.length);
+            if (track == null) {
+                result.error = "the output could not be opened";
+                Log.e(TAG, result.error);
+                return;
+            }
+
+            record.startRecording();
+            track.play();
+            final long playStartedMs = System.currentTimeMillis();
+
+            final AudioTrack playing = track;
+            Thread writer = new Thread(() -> {
+                int offset = 0;
+                while (offset < stereo.length) {
+                    int written = playing.write(stereo, offset, stereo.length - offset);
+                    if (written <= 0) break;
+                    offset += written;
+                }
+            }, "wDSP_RoomSweepOut");
+            writer.start();
+
+            // Routing is switched in the silence before each sweep. The timing comes from the
+            // wall clock rather than from frames written, because what matters is when the MCU
+            // acts, and it acts on its own schedule - the gap is long enough to absorb both.
+            Thread router = new Thread(() -> {
+                for (int k = 1; k < channels.length; k++) {
+                    final long switchAtMs = (long) ((lead + k * period - gap / 2)
+                            * 1000L / SAMPLE_RATE);
+                    long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
+                    if (waitMs > 0) sleep(waitMs);
+                    if (listener != null) listener.onProgress(channels[k].label);
+                    applyRouting(prefs, preset, channels[k]);
+                }
+            }, "wDSP_RoomRouting");
+            if (listener != null) listener.onProgress(channels[0].label);
+            router.start();
+
+            while (got < recordLen) {
+                int read = record.read(captured, got, recordLen - got);
+                if (read <= 0) {
+                    Log.w(TAG, "read returned " + read);
+                    break;
+                }
+                got += read;
+            }
+            try {
+                writer.join(2000);
+                router.join(2000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (Throwable t) {
+            result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            Log.e(TAG, "the pass failed", t);
+            return;
+        } finally {
+            if (effects != null) effects.restore();
+            closeQuietly(track);
+            closeQuietly(record);
+            abandonFocus(context);
+        }
+
+        // The whole recording is kept as one file. Four separate ones would have to be lined up
+        // again by whoever looks at them, and lining them up is the entire difficulty.
+        writeWav(context, "room_measurement.wav", captured, got);
+
+        float[] asFloat = new float[got];
+        int peak = 0;
+        double sumSquares = 0;
+        for (int i = 0; i < got; i++) {
+            asFloat[i] = captured[i] / 32768f;
+            if (Math.abs(captured[i]) > peak) peak = Math.abs(captured[i]);
+            sumSquares += (double) asFloat[i] * asFloat[i];
+        }
+        final float passPeak = peak / 32768f;
+        final float passRms = got > 0 ? (float) Math.sqrt(sumSquares / got) : 0f;
+        final float passBandwidth = NativeSweep.bandwidthRatioDb(asFloat, got, SAMPLE_RATE);
+        Log.i(TAG, String.format(Locale.US,
+                "pass: %d frames, peak %.1f dBFS, rms %.1f dBFS, above 8 kHz %.1f dB",
+                got, 20 * Math.log10(passPeak + 1e-9f), 20 * Math.log10(passRms + 1e-9f),
+                passBandwidth));
+        if (passBandwidth < BANDWIDTH_WARN_DB) {
+            Log.w(TAG, "the recording has nothing above 8 kHz. The microphone is running at "
+                    + "16 kHz because something else has it open - an assistant hotword is the "
+                    + "usual cause, and the platform will not admit it.");
+        }
+
+        // Each sweep is cut out with a generous margin. The window is short enough that the next
+        // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
+        // that window was cut for.
+        final int windowLen = lead + sweepLen + (int) (1.0f * SAMPLE_RATE);
+        float[] analysis = new float[NativeSweep.RESULT_SIZE];
+
+        for (int k = 0; k < channels.length; k++) {
+            ChannelResult cr = new ChannelResult();
+            cr.label = channels[k].label;
+            cr.recordedPeak = passPeak;
+            cr.recordedRms = passRms;
+            cr.bandwidthDb = passBandwidth;
+            result.channels[k] = cr;
+
+            final int from = k * period;
+            final int len = Math.min(windowLen, got - from);
+            if (len < sweepLen) {
+                Log.w(TAG, cr.label + ": the recording ended before this sweep");
+                continue;
+            }
+            float[] window = new float[len];
+            System.arraycopy(asFloat, from, window, 0, len);
+
+            int windowPeak = 0;
+            double windowSum = 0;
+            for (float v : window) {
+                windowSum += (double) v * v;
+                if (Math.abs(v) > windowPeak / 32768f) windowPeak = Math.round(Math.abs(v) * 32768f);
+            }
+            cr.recordedPeak = windowPeak / 32768f;
+            cr.recordedRms = (float) Math.sqrt(windowSum / len);
+
+            if (!sweep.analyse(window, len, analysis)) {
+                Log.w(TAG, cr.label + ": nothing in this part of the recording looked like the "
+                        + "sweep");
+                continue;
+            }
+            cr.arrivalSamples = (int) analysis[NativeSweep.ARRIVAL];
+            // Every window starts an exact number of periods into the same recording, so the
+            // arrival inside it is directly comparable with the others. The unknown skew between
+            // the recording and the playback is the same for all four and drops out of the
+            // differences.
+            cr.arrivalMs = cr.arrivalSamples * 1000f / SAMPLE_RATE;
+            cr.clockLocked = true;
+            cr.prominence = analysis[NativeSweep.PROMINENCE];
+            cr.polarity = (int) analysis[NativeSweep.POLARITY];
+            cr.clarityDb = analysis[NativeSweep.CLARITY];
+            System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
+            // Clarity decides, not prominence. Prominence compares the loudest instant of the
+            // impulse response with its average, and the average moves with whatever else landed
+            // in the window - measured on a bench, the same speaker gave 2889 on one run and 65
+            // on the next while its arrival time stayed put to the sample. Clarity asks a
+            // physical question instead: did the microphone hear this speaker directly, or only
+            // the room repeating it. Prominence is still reported, because it costs nothing and a
+            // second opinion is useful when a measurement looks odd.
+            // Two different questions, and conflating them threw away good measurements.
+            //
+            // "Was this speaker heard at all" is answered by the level: below MIN_PEAK there is
+            // nothing to work with. That is the bar for taking part in the alignment.
+            //
+            // "Is this arrival the speaker's own, or the cabin repeating it" is answered by
+            // clarity, and in a real car the answer is often no - which does not make the
+            // measurement useless. A microphone standing on the instrument binnacle sits a
+            // hand's width from the windscreen and from the top of the binnacle itself, so
+            // every speaker arrives with two strong reflections a fraction of a millisecond
+            // behind it. Measured in one: 15.7 dB for the nearest speaker and 3.9 to 4.7 dB for
+            // the other three. On a bench in the open air the same code gave 23 to 33 dB, and
+            // that is where the nine-decibel threshold came from - the least representative
+            // place it could have been calibrated.
+            cr.heardAtAll = cr.recordedPeak >= MIN_PEAK;
+            cr.confident = cr.clarityDb >= MIN_CLARITY_DB;
+            cr.ok = cr.heardAtAll;
+            if (delayTest != 0 && k > 0 && result.channels[0] != null) {
+                // What the hardware actually did, against what the slider claims it would do.
+                final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
+                final int steps = delayTestSteps()[k];
+                Log.i(TAG, String.format(Locale.US,
+                        "delay test: %2d steps moved the arrival by %+.3f ms  (%.4f ms per step; "
+                                + "the slider is labelled %.1f)",
+                        steps, moved, moved / steps, delayTestLabelMs()));
+            }
+
+            Log.i(TAG, String.format(Locale.US,
+                    "%s: arrival %.2f ms in its window (sample %d), clarity %.1f dB, "
+                            + "prominence %.0f, polarity %+d, peak %.1f dBFS, rms %.1f dBFS%s",
+                    cr.label, cr.arrivalMs, cr.arrivalSamples, cr.clarityDb, cr.prominence,
+                    cr.polarity,
+                    20 * Math.log10(cr.recordedPeak + 1e-9f),
+                    20 * Math.log10(cr.recordedRms + 1e-9f),
+                    cr.ok ? "" : "  <-- TOO WEAK TO TRUST"));
+        }
+    }
+
+    /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
+    private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
+        if (delayTest != 0) {
+            // The routing was set once before the pass and stays put; what moves is the delay.
+            final int steps = delayTestSteps()[channel.ordinal()];
+            Log.i(TAG, "--- delay test: " + steps + " steps on the front right ("
+                    + (delayTest == 2 ? "surround line, _d1_fr" : "positional line, _d_fr") + ") ---");
+            SharedPreferences.Editor e = prefs.edit();
+            if (delayTest == 2) {
+                // Surround mode is not a second set of sliders on top of the first: the firmware
+                // picks one source or the other for the same seven delay registers, on a flag that
+                // this frame carries. So the positional line has to be off, or the frame that
+                // arrives last decides which numbers the chip sees.
+                e.putBoolean(preset + "_d_en", false)
+                 .putBoolean(preset + "_d1_en", true)
+                 .putInt(preset + "_d1_fr", steps);
+            } else {
+                e.putBoolean(preset + "_d1_en", false)
+                 .putBoolean(preset + "_d_en", true)
+                 .putInt(preset + "_d_fr", steps);
+            }
+            e.apply();
+            return;
+        }
+        if (sameRouting) {
+            Log.i(TAG, "--- " + channel.label + ": routing held for the drift test ---");
+            return;
+        }
+        Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
+                + " fader=" + channel.frontRear + " ---");
+        prefs.edit()
+                .putInt(preset + "_f_lr", channel.leftRight)
+                .putInt(preset + "_f_fr", channel.frontRear)
+                .apply();
+    }
+
+    /**
+     * Turns arrival times into delay settings.
+     *
+     * The speaker that is furthest away is heard last, so it needs no delay at all; every other
+     * speaker is held back until it arrives at the same moment. This is the one result that is
+     * exact no matter what the microphone's response is, because it comes entirely from timing.
+     */
+    private static void computeDelays(Result result) {
+        // The clearest channel is the reference. Every sweep is played at the same offset inside
+        // its own window, so a channel that was genuinely heard must arrive within a few
+        // milliseconds of it - the width of a car. A channel that was not driven at all still
+        // produces an impulse response, of room noise, and its loudest moment lands wherever it
+        // pleases: measured on a bench with the rear pair disconnected, the reference sat at
+        // 590 ms and the two phantoms at 1267 and 1309.
+        //
+        // This catches them whatever their clarity happens to be, which matters because clarity
+        // alone does not separate the two cleanly enough - the noisiest phantom measured 7.7 dB
+        // against 10.5 dB for the quietest real speaker.
+        ChannelResult anchor = null;
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok) continue;
+            if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
+        }
+        if (anchor == null) {
+            result.error = "no speaker was heard at all - check the volume and that the "
+                    + "microphone is not covered";
+            Log.w(TAG, result.error);
+            return;
+        }
+
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok || c == anchor) continue;
+            final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
+            if (apart > MAX_PLAUSIBLE_SPREAD_MS) {
+                c.ok = false;
+                Log.w(TAG, String.format(Locale.US,
+                        "%s: arrived %.0f ms from the clearest channel, which no car can do "
+                                + "(%.0f ms is already ten metres) - not a real arrival",
+                        c.label, apart, apart));
+            }
+        }
+
+        float latest = Float.NEGATIVE_INFINITY;
+        float earliest = Float.POSITIVE_INFINITY;
+        int heard = 0;
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok) continue;
+            latest = Math.max(latest, c.arrivalMs);
+            earliest = Math.min(earliest, c.arrivalMs);
+            heard++;
+        }
+        if (heard < 2) {
+            result.error = "only " + heard + " speaker(s) were heard - nothing to align against";
+            Log.w(TAG, result.error);
+            return;
+        }
+        int confident = 0;
+        for (ChannelResult c : result.channels) {
+            if (c != null && c.ok && c.confident) confident++;
+        }
+        result.reflectionDominated = confident < heard;
+        Log.i(TAG, String.format(Locale.US,
+                "%d speakers agree, spread %.2f ms, reference is the %s at %.1f dB clarity; "
+                        + "%d of them heard directly",
+                heard, latest - earliest, anchor.label, anchor.clarityDb, confident));
+
+        for (int i = 0; i < result.channels.length; i++) {
+            ChannelResult c = result.channels[i];
+            if (c == null || !c.ok) continue;
+            // The speaker heard last needs no delay; every other one waits for it.
+            result.suggestedDelayMs[i] = latest - c.arrivalMs;
+            // The hardware moves in half-millisecond steps, which is about seventeen centimetres
+            // of air - finer than that would be pretending.
+            final int wanted = Math.round(result.suggestedDelayMs[i] / DELAY_STEP_MS);
+            result.suggestedDelaySteps[i] = Math.min(wanted, MAX_DELAY_STEPS);
+            if (wanted > MAX_DELAY_STEPS) {
+                // Say it rather than clamp it silently. In a long vehicle this is the normal
+                // answer, and a user who is told will move the microphone or accept it; a user who
+                // is not told will believe their car is aligned when it is not.
+                result.beyondHardware = true;
+                Log.w(TAG, String.format(Locale.US,
+                        "%s needs %.1f ms (%d steps) but the delay line stops at %d steps "
+                                + "(%.1f ms, about %.1f m) - this vehicle is longer than the "
+                                + "hardware can correct, and the suggestion below is capped",
+                        c.label, result.suggestedDelayMs[i], wanted, MAX_DELAY_STEPS,
+                        MAX_DELAY_STEPS * DELAY_STEP_MS,
+                        MAX_DELAY_STEPS * DELAY_STEP_MS * 0.343f));
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // borrowing and returning the head unit's settings
+    // ---------------------------------------------------------------------------------------
+
+    private static void applySaved(SharedPreferences.Editor editor, String saved) {
+        for (String pair : saved.split(";")) {
+            int eq = pair.indexOf('=');
+            if (eq <= 0) continue;
+            String key = pair.substring(0, eq);
+            String value = pair.substring(eq + 1);
+            // Only one key is ever recorded now - which preset was selected - and putting it back
+            // makes the service reload everything that belongs to it.
+            editor.putString(key, value);
+        }
+    }
+
+    /**
+     * Puts the sound processor into a state where what is measured is the car, not the settings.
+     *
+     * The delay lines have to go: they are there to compensate for the very distances being
+     * measured, so leaving them on would measure the correction rather than the problem. The
+     * equaliser goes flat for the same reason - its curve would otherwise be indistinguishable
+     * from the loudspeaker's own response.
+     */
+    /**
+      * Copies the user's preset and neutralises everything that would be measured by mistake.
+      *
+      * What is switched off, and why each one matters:
+      *
+      * <ul>
+      *   <li><b>delay lines and surround</b> - they exist to compensate for the very distances
+      *       being measured, so leaving them on measures the correction instead of the problem;
+      *   <li><b>high-pass and bass boost</b> - a high-pass is a real group delay at the bottom of
+      *       the range, and it would look exactly like a loudspeaker standing further away;
+      *   <li><b>equaliser and loudness</b> - otherwise the preset's curve is measured as though it
+      *       were the loudspeaker's own;
+      *   <li><b>subwoofer</b> - it plays the same low frequencies as the speaker being measured,
+      *       from somewhere else in the car, and smears the arrival;
+      *   <li><b>GALA</b> - it changes the volume according to speed, and a volume change during a
+      *       sweep would be measured as part of the room.
+      * </ul>
+      *
+      * The power amplifier setting is copied rather than reset: it decides how loud the car is
+      * capable of being, and a measurement has no business changing that.
+      */
+     private static void buildScratchPreset(SharedPreferences prefs, String from) {
+         SharedPreferences.Editor e = prefs.edit();
+
+         // The type of every key matters and nothing enforces it: these preferences have no
+         // schema, and a value written as the wrong type crashes the service the moment it reads
+         // the preset. The gains are numbers; the Q flags are booleans, one bit per band, because
+         // the hardware only offers a wide setting and a narrow one.
+         for (int b = 0; b < 16; b++) {
+             e.putInt(SCRATCH_PRESET + "_g" + b, EQ_FLAT_INDEX);
+             e.putBoolean(SCRATCH_PRESET + "_q" + b, false);
+         }
+         e.putInt(SCRATCH_PRESET + "_f_lr", FADER_CENTRE);
+         e.putInt(SCRATCH_PRESET + "_f_fr", FADER_CENTRE);
+         e.putBoolean(SCRATCH_PRESET + "_loud", false);
+
+         e.putBoolean(SCRATCH_PRESET + "_d_en", false);
+         e.putBoolean(SCRATCH_PRESET + "_d1_en", false);
+         for (String ch : new String[]{"fl", "fr", "rl", "rr", "sub"}) {
+             e.putInt(SCRATCH_PRESET + "_d_" + ch, 0);
+         }
+         for (String ch : new String[]{"fl", "fr", "rl", "rr"}) {
+             e.putInt(SCRATCH_PRESET + "_d1_" + ch, 0);
+         }
+         e.putInt(SCRATCH_PRESET + "_rsse_val", 10);
+
+         e.putInt(SCRATCH_PRESET + "_sub_g", 0);
+         e.putInt(SCRATCH_PRESET + "_sub_f", 0);
+         e.putBoolean(SCRATCH_PRESET + "_sub_comp", false);
+
+         for (String k : new String[]{"_bb_f", "_bb_r", "_bf_f", "_bf_r",
+                                      "_bb_frq_f", "_bb_frq_r"}) {
+             e.putInt(SCRATCH_PRESET + k, 0);
+         }
+
+         e.putBoolean(SCRATCH_PRESET + "_fm_en", false);
+         e.putBoolean(SCRATCH_PRESET + "_fat_en", false);
+         e.putInt(SCRATCH_PRESET + "_fm_cal", 0);
+         e.putInt(SCRATCH_PRESET + "_fm_str", 0);
+         e.putBoolean(SCRATCH_PRESET + "_gala_enabled", false);
+
+         // Carried over rather than reset - see the note above.
+         e.putInt(SCRATCH_PRESET + "_power_vol", prefs.getInt(from + "_power_vol", 0));
+
+         e.putString("last_selected_preset", SCRATCH_PRESET);
+         e.apply();
+
+         // The service reloads on the preset change and then sends every frame; give it room.
+         sleep(ROUTING_SETTLE_MS * 2);
+     }
+
+    // ---------------------------------------------------------------------------------------
+    // audio plumbing
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Opens the microphone for a measurement, choosing the source that the platform leaves alone.
+     *
+     * 🔴 The source is not a detail here. {@code /vendor/etc/audio_effects.xml} binds echo
+     * cancellation and noise suppression to capture sources by name:
+     *
+     * <pre>
+     *   &lt;preprocess&gt;
+     *     &lt;stream type="mic"&gt;                 &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *     &lt;stream type="voice_communication"&gt; &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *     &lt;stream type="voice_recognition"&gt;   &lt;apply effect="aec"/&gt; &lt;apply effect="ns"/&gt;
+     *   &lt;/preprocess&gt;
+     * </pre>
+     *
+     * {@code unprocessed} is absent from that list, and that is the whole reason to use it.
+     * Measured on the wire, {@code dumpsys media.audio_flinger} during a capture:
+     *
+     * <pre>
+     *   VOICE_RECOGNITION   Noise Suppression   State 003 (ACTIVE)   Enabled=y
+     *   UNPROCESSED         AEC + NS            State 000 (INIT)     Enabled=n
+     * </pre>
+     *
+     * 🪤 Suspending the effects from here does not help, and it is worth knowing why: our
+     * {@code NoiseSuppressor.create(session)} hands back our own handle, and disabling it leaves
+     * the one the policy attached still running. The app logged "NS was off, now off" while
+     * AudioFlinger reported the chain ACTIVE — both true, about different objects.
+     *
+     * A suppressor adapts to steady content and does so unevenly across the spectrum; a swept
+     * sine is steady content by construction. So it removes signal, mostly where the signal is
+     * already weak. {@code suspendCapturePreprocessing} is still called by the caller, because on
+     * a unit whose policy differs it may be the thing that works.
+     *
+     * ⚠️ The source changes nothing else: 📻 the capture gain stays at the same {@code
+     * VBC ADC0 DG Set} either way — the {@code UnprocessRecord} block in {@code audio_pga.xml},
+     * with its {@code 0x18}, is dead and the HAL never applies it. Levels measured 0.2 dB apart.
+     */
+    private static AudioRecord openMicrophone() {
+        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        if (minBytes <= 0) return null;
+
+        AudioRecord record = tryOpen(MediaRecorder.AudioSource.UNPROCESSED, minBytes);
+        if (record == null) {
+            // Not every unit offers it. Falling back is better than refusing to measure, and the
+            // report says which source was used so a result can be read in that light.
+            Log.w(TAG, "UNPROCESSED unavailable, falling back to VOICE_RECOGNITION - "
+                    + "the platform will attach AEC/NS to this capture");
+            record = tryOpen(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBytes);
+        }
+        return record;
+    }
+
+    private static AudioRecord tryOpen(int source, int minBytes) {
+        try {
+            AudioRecord record = new AudioRecord(source, SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 8);
+            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
+                record.release();
+                return null;
+            }
+            Log.i(TAG, "microphone opened with source " + source
+                    + (source == MediaRecorder.AudioSource.UNPROCESSED
+                       ? " (UNPROCESSED - no policy preprocessing)" : ""));
+            return record;
+        } catch (Throwable t) {
+            Log.w(TAG, "could not open capture source " + source + ": " + t);
+            return null;
+        }
+    }
+
+    /**
+     * Held for the whole measurement, so the platform treats us as the player that owns the sound.
+     *
+     * <p>Static because the pass is static, and there is only ever one measurement at a time -
+     * {@link #isRunning()} guarantees it.
+     */
+    private static android.media.AudioFocusRequest focusRequest;
+
+    /**
+     * What happened to the focus while the sweep ran, or null if nothing did.
+     *
+     * <p>Worth a line in the report on its own. A measurement that was interrupted by a navigation
+     * prompt, a Bluetooth call or the vendor's own chime looks exactly like a measurement of a
+     * badly behaved car, and nothing else in the file distinguishes the two.
+     */
+    private static volatile String focusLostDuringPass;
+
+    /** @return what the platform answered, in words, for the report. */
+    private static String requestFocus(Context context) {
+        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return "no AudioManager";
+        focusLostDuringPass = null;
+        try {
+            // 🔴 The listener is not optional decoration. setWillPauseWhenDucked - and
+            // setAcceptsDelayedFocusGain with it - make build() throw IllegalStateException
+            // unless a listener was set, and the throw is what the first version of this did:
+            // every report carried "audio focus: could not ask: java.lang.IllegalStateException:
+            // Can't use delayed focus or pause on duck without a listener", the pass ran with no
+            // focus at all, and the fix for "the first measurement fails" was never once in
+            // effect. Measured on the owner's own unit, 26.08.2026.
+            //
+            // GAIN rather than one of the transient kinds: a transient grant tells everyone else
+            // to duck and come back, and what is wanted here is for this to be the player for the
+            // next half minute. Anything that was playing should stop, not lower itself into the
+            // measurement.
+            AudioManager.OnAudioFocusChangeListener listener = change -> {
+                String what;
+                switch (change) {
+                    case AudioManager.AUDIOFOCUS_LOSS: what = "taken away"; break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: what = "taken briefly"; break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: what = "asked to duck"; break;
+                    case AudioManager.AUDIOFOCUS_GAIN: what = null; break;
+                    default: what = "change " + change; break;
+                }
+                if (what != null && isRunning()) focusLostDuringPass = what;
+                Log.i(TAG, "audio focus changed during the pass: " + change);
+            };
+            focusRequest = new android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setWillPauseWhenDucked(true)
+                    .setOnAudioFocusChangeListener(listener,
+                            new Handler(Looper.getMainLooper()))
+                    .build();
+            int answer = am.requestAudioFocus(focusRequest);
+            switch (answer) {
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED: return "granted";
+                case AudioManager.AUDIOFOCUS_REQUEST_DELAYED: return "delayed";
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED: return "REFUSED";
+                default: return "answer " + answer;
+            }
+        } catch (Throwable t) {
+            focusRequest = null;
+            return "could not ask: " + t;
+        }
+    }
+
+    private static void abandonFocus(Context context) {
+        android.media.AudioFocusRequest request = focusRequest;
+        focusRequest = null;
+        if (request == null) return;
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) am.abandonAudioFocusRequest(request);
+        } catch (Throwable t) {
+            Log.w(TAG, "could not give the focus back", t);
+        }
+    }
+
+    /**
+     * Says out loud when a speaker looks wired backwards - and stays quiet when it cannot tell.
+     *
+     * <h2>Why this is worth printing and why it is fenced</h2>
+     *
+     * Polarity is a sign rather than a level, so no microphone can get it wrong - but only if the
+     * sign it read belongs to the direct sound. On a channel heard mainly through the cabin the
+     * detector locks onto a reflection, and a reflection off glass arrives inverted. Two testers'
+     * reports came back with exactly one channel marked -1, and in both cases it was a channel the
+     * same report had already called "mostly reflections". Told plainly, that sends somebody under
+     * the dashboard looking for wiring nobody crossed.
+     *
+     * <p>So the comparison is made only among channels heard directly, and only when there are at
+     * least two of them to disagree.
+     */
+    private static String wiringVerdict(Result result) {
+        int positive = 0;
+        int negative = 0;
+        StringBuilder inverted = new StringBuilder();
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok || !c.confident) continue;
+            if (c.polarity < 0) {
+                negative++;
+                if (inverted.length() > 0) inverted.append(", ");
+                inverted.append(c.label);
+            } else {
+                positive++;
+            }
+        }
+        if (positive + negative < 2) {
+            return "";
+        }
+        if (negative == 0) {
+            return "WIRING: every speaker heard directly is in phase with the others.\n";
+        }
+        if (positive == 0) {
+            // All of them inverted is not a fault in the car: it is one convention against
+            // another, somewhere between the amplifier and the measurement, and it sounds the
+            // same. Say so rather than send four speakers to be rewired.
+            return "WIRING: every speaker heard directly reads inverted. That is a convention, "
+                    + "not a fault - all four together sound identical to all four the other way "
+                    + "round. Nothing to do.\n";
+        }
+        return "WIRING: " + inverted + " reads inverted while the others do not - that speaker is "
+                + "most likely connected the wrong way round, and it will thin out the bass in "
+                + "the middle of the car. Worth checking the two wires at that speaker.\n";
+    }
+
+    private static AudioTrack openTrack(int samples) {
+        int minBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        if (minBytes <= 0) return null;
+        // Deliberately the media path: the measurement has to travel the same route the music
+        // does, through the same mixer and the same outboard processor.
+        return new AudioTrack.Builder()
+                .setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build())
+                .setAudioFormat(new AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(SAMPLE_RATE)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                        .build())
+                .setBufferSizeInBytes(Math.max(minBytes * 2, samples))
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .build();
+    }
+
+    /** The same signal in both channels; which speaker actually sounds is the DSP's decision. */
+    private static short[] toStereoPcm16(float[] mono) {
+        short[] out = new short[mono.length * 2];
+        for (int i = 0; i < mono.length; i++) {
+            short v = (short) Math.max(Short.MIN_VALUE,
+                    Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+            out[i * 2] = v;
+            out[i * 2 + 1] = v;
+        }
+        return out;
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // what the tester sends back
+    // ---------------------------------------------------------------------------------------
+
+    /** The folder holding the last measurement, created if it is not there yet. */
+    /**
+     * Empties the output folder so an archive can only ever describe one measurement.
+     *
+     * <p>Deliberately not selective about which names it knows: the folder has already collected
+     * files written by versions that no longer exist, and a list of names to delete would go stale
+     * the same way. Anything here belongs to a measurement that is being replaced.
+     */
+    private static void clearPreviousRun(Context context) {
+        File[] files = outputDir(context).listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (!f.isFile()) continue;
+            //noinspection ResultOfMethodCallIgnored
+            boolean gone = f.delete();
+            if (!gone) Log.w(TAG, "could not remove the previous " + f.getName());
+        }
+    }
+
+    public static File outputDir(Context context) {
+        File dir = new File(context.getExternalCacheDir(), OUTPUT_DIR);
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    /** True when there is a measurement on disk worth sending. */
+    public static boolean hasResult(Context context) {
+        File report = new File(outputDir(context), "room_measurement.txt");
+        return report.isFile() && report.length() > 0;
+    }
+
+    private static String writeReport(Context context, Result result, String preset,
+                                      float amplitude, float seconds) {
+        File file = new File(outputDir(context), "room_measurement.txt");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("wDSP room measurement\n");
+            sb.append(HardwareProfile.describe()).append('\n');
+            // The machine and the screen. A report is evidence about one particular head unit, and
+            // two units with the same MCU code can still be different computers. The screen line
+            // carries the system-bar insets as well - the only way to work out where the bar really
+            // is on the Tesla-style units, where the overlay currently lands in the wrong place.
+            sb.append(HardwareProfile.describeBoard()).append('\n');
+            sb.append(HardwareProfile.screenDescription(context)).append('\n');
+            if (result.microphone != null) sb.append(result.microphone).append('\n');
+            sb.append("microphone placed: ").append(micSpotDescription(context))
+                    .append(", on the ").append(micPlaceDescription(context)).append('\n');
+            if (result.focus != null) {
+                sb.append("audio focus: ").append(result.focus);
+                String lost = focusLostDuringPass;
+                if (lost != null) sb.append(" - then ").append(lost).append(" DURING the pass");
+                sb.append('\n');
+            }
+            sb.append("preset=").append(preset)
+                    .append(" amplitude=").append(amplitude)
+                    .append(" sweep=").append(seconds).append(" s")
+                    .append(" up to ").append((int) result.sweepTopHz).append(" Hz\n");
+            // The screen shows the user "measurement failed" and nothing else. If they send the
+            // archive anyway - and they do - the report has to say what went wrong, or the
+            // failure has to be diagnosed by reading the recordings, which is what happened the
+            // first time somebody sent one.
+            if (result.error != null) {
+                sb.append("THE APP REPORTED A FAILURE: ").append(result.error).append('\n');
+            }
+            sb.append('\n');
+
+            for (int i = 0; i < result.channels.length; i++) {
+                ChannelResult c = result.channels[i];
+                if (c == null) continue;
+                // Polarity is a sign rather than a level, so no microphone can get it wrong - but
+                // only if the sign it read belongs to the direct sound. On a channel heard mainly
+                // through the cabin the detector locks onto a reflection, and a reflection off
+                // glass inverts. Two testers' reports came back with exactly one channel marked
+                // -1, both of them channels the same report had already called "mostly
+                // reflections", and printing that as flatly as a 24 dB one sends people looking
+                // for wiring nobody crossed. Say which readings can be trusted.
+                String polarity = String.format(Locale.US, "polarity %+d", c.polarity);
+                if (c.ok && !c.confident) polarity += "?";
+                sb.append(String.format(Locale.US,
+                        "%-12s arrival %8.2f ms  clarity %5.1f dB  prominence %8.0f  "
+                                + "%-12s peak %6.1f dBFS%s\n",
+                        c.label, c.arrivalMs, c.clarityDb, c.prominence, polarity,
+                        20 * Math.log10(c.recordedPeak + 1e-9f),
+                        !c.ok ? "   NOT HEARD"
+                              : c.confident ? "   heard directly"
+                                            : "   mostly reflections"));
+                sb.append("             suggested delay ")
+                        .append(String.format(Locale.US, "%.1f ms (%d steps)",
+                                result.suggestedDelayMs[i], result.suggestedDelaySteps[i]))
+                        .append('\n');
+                sb.append("             response dB:");
+                for (float band : c.bandsDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n\n");
+            }
+            sb.append(wiringVerdict(result));
+            sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
+                    + "8000 12500 20000 Hz\n");
+            if (result.reflectionDominated) {
+                sb.append("NOTE: some speakers were heard mainly through the cabin rather than "
+                        + "directly - the clarity figure says which. That is normal with the "
+                        + "microphone on the dashboard, where the windscreen sits a hand's width "
+                        + "away. Their delays are still much better than none, but they may be "
+                        + "short, and their polarity is marked with a question mark because a "
+                        + "reflection off glass can arrive inverted - do not go looking for "
+                        + "crossed wiring on the strength of one of those. Where the microphone "
+                        + "is fitted matters here: please say.\n");
+            }
+            if (result.beyondHardware) {
+                sb.append("NOTE: at least one speaker needs more delay than the hardware can "
+                        + "apply. The delay line was measured to run linearly to 40 steps (20 ms, "
+                        + "about 6.9 m) and to saturate just above that, so the suggestion is "
+                        + "capped there. Please say what vehicle this is.\n");
+            }
+            sb.append("The response includes the microphone's own curve and is NOT a calibration.\n");
+            out.write(sb.toString().getBytes("UTF-8"));
+            Log.i(TAG, "report written to " + file.getAbsolutePath());
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            Log.w(TAG, "the report could not be written", e);
+            return null;
+        }
+    }
+
+    private static void writeWav(Context context, String name, short[] samples, int count) {
+        File file = new File(outputDir(context), name);
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            out.write(new byte[44]);
+            byte[] bytes = new byte[count * 2];
+            for (int i = 0; i < count; i++) {
+                bytes[i * 2] = (byte) (samples[i] & 0xFF);
+                bytes[i * 2 + 1] = (byte) ((samples[i] >> 8) & 0xFF);
+            }
+            out.write(bytes);
+        } catch (IOException e) {
+            Log.w(TAG, "could not write " + name, e);
+            return;
+        }
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            long dataBytes = (long) count * 2;
+            byte[] header = new byte[44];
+            ascii(header, 0, "RIFF");
+            le32(header, 4, (int) (36 + dataBytes));
+            ascii(header, 8, "WAVE");
+            ascii(header, 12, "fmt ");
+            le32(header, 16, 16);
+            le16(header, 20, 1);
+            le16(header, 22, 1);
+            le32(header, 24, SAMPLE_RATE);
+            le32(header, 28, SAMPLE_RATE * 2);
+            le16(header, 32, 2);
+            le16(header, 34, 16);
+            ascii(header, 36, "data");
+            le32(header, 40, (int) dataBytes);
+            raf.seek(0);
+            raf.write(header);
+        } catch (IOException e) {
+            Log.w(TAG, "could not finish the header of " + name, e);
+        }
+    }
+
+    private static void logResult(Result result) {
+        Log.i(TAG, "=== room measurement finished ===");
+        if (result.error != null) {
+            Log.e(TAG, "error: " + result.error);
+            return;
+        }
+        for (int i = 0; i < result.channels.length; i++) {
+            ChannelResult c = result.channels[i];
+            if (c == null) continue;
+            if (!c.ok) {
+                // Never print a delay for a channel that was not heard: a zero here reads as
+                // "nothing to correct", which is the opposite of "we do not know".
+                Log.i(TAG, String.format(Locale.US,
+                        "%-12s NOT MEASURED (prominence %.0f, peak %.1f dBFS)",
+                        c.label, c.prominence, 20 * Math.log10(c.recordedPeak + 1e-9f)));
+                continue;
+            }
+            Log.i(TAG, String.format(Locale.US,
+                    "%-12s arrival %7.2f ms -> delay %4.1f ms (%d steps)  polarity %+d",
+                    c.label, c.arrivalMs, result.suggestedDelayMs[i],
+                    result.suggestedDelaySteps[i], c.polarity));
+        }
+        if (!result.isUsable()) {
+            Log.w(TAG, "at least one channel was not heard clearly. Turn the volume up a little, "
+                    + "make sure the engine is off and the doors are shut, and check that nothing "
+                    + "else is holding the microphone - an assistant hotword will take it and cap "
+                    + "it at 16 kHz without saying so.");
+        }
+        if (result.reportPath != null) Log.i(TAG, "report: " + result.reportPath);
+    }
+
+    private static void ascii(byte[] target, int at, String text) {
+        for (int i = 0; i < text.length(); i++) target[at + i] = (byte) text.charAt(i);
+    }
+
+    private static void le32(byte[] target, int at, int value) {
+        for (int i = 0; i < 4; i++) target[at + i] = (byte) ((value >> (8 * i)) & 0xFF);
+    }
+
+    private static void le16(byte[] target, int at, int value) {
+        for (int i = 0; i < 2; i++) target[at + i] = (byte) ((value >> (8 * i)) & 0xFF);
+    }
+
+    private static void closeQuietly(AudioTrack track) {
+        if (track == null) return;
+        try {
+            track.stop();
+        } catch (Throwable ignored) {
+        }
+        try {
+            track.release();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void closeQuietly(AudioRecord record) {
+        if (record == null) return;
+        try {
+            record.stop();
+        } catch (Throwable ignored) {
+        }
+        try {
+            record.release();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Convenience for the defaults, used by the debug broadcast. */
+    public static void measureAsync(Context context, Listener listener) {
+        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, listener);
+    }
+}

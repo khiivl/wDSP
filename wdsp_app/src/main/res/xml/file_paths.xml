@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Paths FileProvider is allowed to hand to other apps.
+
+    Needed for the cabin measurement: a tester presses "send" and the archive goes to Telegram or
+    anything else that accepts a file, without file managers or memory sticks.
+
+    It lives in external-cache so the system can reclaim it when space runs short, and so it does
+    not litter a folder the user can see.
+-->
+<paths>
+    <external-cache-path name="shared_measurements" path="measurements/" />
+</paths>

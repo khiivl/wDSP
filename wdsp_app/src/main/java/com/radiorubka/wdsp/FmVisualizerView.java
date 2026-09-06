@@ -33,16 +33,30 @@ public class FmVisualizerView extends View {
     private float[] xCoords;
     private float[] yCoords;
 
-    // Same band grouping as EqVisualizerView, since this view plots the same 16 bands
-    private final int[][] GROUP_RANGES = {{0,2}, {3,4}, {5,6}, {7,9}, {10,12}, {13,15}};
-    private int[] GROUP_COLORS;
+    // 16-band base colors following the physical optical spectrum (700 nm Red -> 390 nm Violet)
+    private static final int[] SPECTRUM_BASE_COLORS = {
+            0xFFD50000, // 20 Hz   (700 nm - Deep Red)
+            0xFFFF1744, // 31.5 Hz (680 nm - Bright Red)
+            0xFFFF3D00, // 50 Hz   (650 nm - Red-Orange)
+            0xFFFF6D00, // 80 Hz   (620 nm - Orange)
+            0xFFFF9100, // 125 Hz  (600 nm - Amber-Orange)
+            0xFFFFC400, // 200 Hz  (585 nm - Amber-Yellow)
+            0xFFFFEA00, // 315 Hz  (570 nm - Yellow)
+            0xFFAEEA00, // 500 Hz  (550 nm - Lime)
+            0xFF00E676, // 800 Hz  (530 nm - Pure Green)
+            0xFF00BFA5, // 1.25 kHz (510 nm - Teal / Spring Green)
+            0xFF00E5FF, // 2 kHz   (490 nm - Cyan)
+            0xFF00B0FF, // 3.15 kHz (475 nm - Sky Blue)
+            0xFF2979FF, // 5 kHz   (460 nm - Pure Blue)
+            0xFF3D5AFE, // 8 kHz   (440 nm - Deep Blue/Indigo)
+            0xFF651FFF, // 12.5 kHz (420 nm - Violet)
+            0xFF6200EA  // 20 kHz  (390 nm - Pure Deep Violet)
+    };
 
     // Pre-allocated Path objects
     private final Path fullPath = new Path();
     private final Path fillPath = new Path();
-
     private final Path bgPath = new Path();
-
 
     @SuppressWarnings("FieldCanBeLocal")
     private final float TOP_OFFSET_RATIO = 0.23f;
@@ -74,17 +88,6 @@ public class FmVisualizerView extends View {
         colorFill = ContextCompat.getColor(getContext(), R.color.visualizer_fill);
         int colorGrid = ContextCompat.getColor(getContext(), R.color.visualizer_grid);
 
-        // Same reversed order as EqVisualizerView's GROUP_COLORS: low bass -> upper treble
-        // goes warm (red) to cool (blue/teal).
-        GROUP_COLORS = new int[]{
-                ContextCompat.getColor(getContext(), R.color.btn_delete_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_import_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_export_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_add_bg),
-                ContextCompat.getColor(getContext(), R.color.btn_auto_bg)
-        };
-
         thumbRadiusOffset = 10 * density;
         pointRadius = 6 * density;
 
@@ -94,7 +97,7 @@ public class FmVisualizerView extends View {
 
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         linePaint.setColor(colorLine);
-        linePaint.setStrokeWidth(2.5f * density);
+        linePaint.setStrokeWidth(2.8f * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
         linePaint.setStrokeJoin(Paint.Join.ROUND);
@@ -229,28 +232,25 @@ public class FmVisualizerView extends View {
             canvas.drawLine(xCoords[i], drawStartY, xCoords[i], gridBottom, gridPaint);
         }
 
-        // 7. Update gradients (horizontal band-color for line & fill, vertical fade for fill) & Draw
+        // 7. Update gradients (horizontal optical spectrum for line & fill, vertical fade for fill) & Draw
         if (bgLeft != lastLineGradLeft || bgRight != lastLineGradRight
                 || drawStartY != lastDrawStartY || gridBottom != lastGridBottom) {
             float totalW = bgRight - bgLeft;
-            float[] positions = new float[GROUP_COLORS.length];
-            int[] fillColors = new int[GROUP_COLORS.length];
-            int fillAlpha = Color.alpha(colorFill);
-            for (int g = 0; g < GROUP_RANGES.length; g++) {
-                int startIdx = GROUP_RANGES[g][0];
-                int endIdx = GROUP_RANGES[g][1];
-                float midX = (xCoords[startIdx] + xCoords[endIdx]) / 2f;
-                positions[g] = (midX - bgLeft) / totalW;
+            float[] positions = new float[AudioConfig.NUM_BANDS];
+            int[] fillColors = new int[AudioConfig.NUM_BANDS];
+            int fillAlpha = 70; // Soft translucent glow fill
 
-                int c = GROUP_COLORS[g];
-                fillColors[g] = Color.argb(fillAlpha, Color.red(c), Color.green(c), Color.blue(c));
+            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+                positions[i] = Math.max(0f, Math.min(1f, (xCoords[i] - bgLeft) / totalW));
+                int c = SPECTRUM_BASE_COLORS[i];
+                fillColors[i] = Color.argb(fillAlpha, Color.red(c), Color.green(c), Color.blue(c));
             }
 
-            // Horizontal gradient for the curve line, following band group colors
+            // Horizontal gradient for the curve line, following physical optical frequency spectrum
             linePaint.setShader(new LinearGradient(bgLeft, 0, bgRight, 0,
-                    GROUP_COLORS, positions, Shader.TileMode.CLAMP));
+                    SPECTRUM_BASE_COLORS, positions, Shader.TileMode.CLAMP));
 
-            // Horizontal gradient for the fill, same band group colors at the fill's own alpha,
+            // Horizontal gradient for the fill, same band colors at the fill's own alpha,
             // composited with a vertical opaque->transparent mask so it still fades out downward.
             Shader fillColorShader = new LinearGradient(bgLeft, 0, bgRight, 0,
                     fillColors, positions, Shader.TileMode.CLAMP);

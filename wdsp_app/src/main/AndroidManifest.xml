@@ -5,6 +5,14 @@
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!--
+        Lets the app stop a background hotword listener that is holding the microphone.
+        A normal permission, granted at install. Nothing is uninstalled or disabled: the
+        assistant restarts on its own the moment the system wants it again. Without this a
+        cabin measurement is made through a 16 kHz stream and half the sweep is missing,
+        with nothing in the API admitting it - see MicrophoneGuard.
+    -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -15,6 +23,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:allowBackup="true"
@@ -35,11 +44,46 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.radiorubka.wdsp.SettingsActivity"
+            android:exported="false" />
+
+        <!-- Listed so that MediaSessionManager will answer "what is playing"; it overrides
+             nothing and reads no notifications. See NotificationAccess. -->
+        <service
+            android:name="com.radiorubka.wdsp.NotificationAccess"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <service
             android:name="com.radiorubka.wdsp.McuService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <!--
+            Reconnaissance for the recorder, and temporary. Exported so it can be aimed from a
+            terminal at one player at a time while we find out which of them hand their audio
+            over - a question no manifest or package dump answers, because the refusal is made at
+            runtime. See CaptureProbe, whose javadoc carries the command line: it names a package
+            with a string extra and a length with an int extra.
+        -->
+        <activity
+            android:name="com.radiorubka.wdsp.CaptureConsentActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name="com.radiorubka.wdsp.CaptureProbeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <receiver
             android:name="com.radiorubka.wdsp.BootReceiver"
@@ -64,6 +108,22 @@
                am broadcast -a com.radiorubka.wdsp.SUB_GAIN_DOWN
              Explicit-component targeting (-n .../.SubGainUpReceiver) no longer works;
              there's no manifest-declared receiver class for this anymore. -->
+
+        <!--
+            Hands the cabin measurement to whatever the tester wants to send it with. The archive
+            is written to external-cache/measurements, which is the only path declared in
+            file_paths.xml - an undeclared path makes getUriForFile throw, which is a configuration
+            mistake and not something to hide from the log.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.radiorubka.wdsp.logs"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

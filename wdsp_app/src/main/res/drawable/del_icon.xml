@@ -1,5 +1,40 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
-      
-    <path android:fillColor="@android:color/white" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM15.29,16.71L11,12.41V7h2v4.59l3.71,3.71L15.29,16.71z"/>
-    
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Center listener / sweet spot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,12m-2.2,0a2.2,2.2 0,1 1,4.4 0a2.2,2.2 0,1 1,-4.4 0" />
+
+    <!-- Time alignment concentric acoustic wave rings -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M7,12 A5,5 0 0,1 17,12" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#80FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M4,12 A8,8 0 0,1 20,12" />
+
+    <!-- Left & Right Speakers -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,8 L6,10 L6,14 L3,16 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M21,8 L18,10 L18,14 L21,16 Z" />
+
+    <!-- Subwoofer bottom pulse -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M8,18 A4,4 0 0,0 16,18" />
 </vector>

@@ -1,0 +1,2200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_settings"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_night"
+    android:fitsSystemWindows="true">
+
+    <ScrollView
+        android:id="@+id/scroll_settings"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_bar">
+
+        <LinearLayout
+            android:id="@+id/settings_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/settings_pad">
+
+            <!-- Головний заголовок -->
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_title"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/settings_section_text"
+                android:textStyle="bold" />
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 1: 🎨 Оформлення та Теми
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_theme_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/settings_appearance"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <!-- Перемикач День / Ніч / Авто -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btn_theme_day"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/rds_btn_bg"
+                    android:text="@string/settings_theme_day"
+                    android:textSize="@dimen/settings_btn_text" />
+
+                <TextView
+                    android:id="@+id/btn_theme_night"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/rds_btn_bg"
+                    android:text="@string/settings_theme_night"
+                    android:textSize="@dimen/settings_btn_text" />
+
+                <TextView
+                    android:id="@+id/btn_theme_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/rds_btn_bg"
+                    android:text="@string/settings_theme_auto"
+                    android:textSize="@dimen/settings_btn_text" />
+            </LinearLayout>
+
+            <!-- 4 HSV-диски палітри -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:weightSum="4">
+
+                <!-- 1. Акцентний колір -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_accent_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="90" />
+                </LinearLayout>
+
+                <!-- 2. Основний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_primary_text_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_primary_text_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_primary_text_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_primary_text_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="100" />
+                </LinearLayout>
+
+                <!-- 3. Другорядний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_label_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_label_color_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_label_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_label_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="60" />
+                </LinearLayout>
+
+                <!-- 4. Текст на акценті -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_on_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_on_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_on_accent_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_on_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="10" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Блок Шпалер -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_wallpaper_title"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/wallpaper_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_wallpaper_none"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_pick"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_load"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_reset"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_default"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_solid_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_wallpaper_solid_switch"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Повзунки солід-кольору (динамічні через ConstraintLayout + Barrier) -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_solid_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/label_solid_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_solid_hue"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <TextView
+                        android:id="@+id/label_solid_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/settings_solid_val"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toBottomOf="@id/frame_solid_hue"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier_solid_labels"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="end"
+                        app:constraint_referenced_ids="label_solid_hue,label_solid_val" />
+
+                    <!-- HUE Slider Frame -->
+                    <FrameLayout
+                        android:id="@+id/frame_solid_hue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        app:layout_constraintStart_toEndOf="@id/barrier_solid_labels"
+                        app:layout_constraintEnd_toStartOf="@id/tv_solid_hue_val"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_hue"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_hue">
+
+                        <View
+                            android:id="@+id/bg_solid_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_solid_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="360"
+                            android:progress="200" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_solid_hue_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="200°"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_hue"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_hue" />
+
+                    <!-- Brightness Slider Frame -->
+                    <FrameLayout
+                        android:id="@+id/frame_solid_val"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        app:layout_constraintStart_toEndOf="@id/barrier_solid_labels"
+                        app:layout_constraintEnd_toStartOf="@id/tv_solid_val_val"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_val"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_val">
+
+                        <View
+                            android:id="@+id/bg_solid_val"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_solid_val"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="100"
+                            android:progress="20" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_solid_val_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="20%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_solid_val"
+                        app:layout_constraintBottom_toBottomOf="@id/label_solid_val" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 2: 🪟 Візуалізатор у статус-барі
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_statusbar_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/status_bar_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_visualizer_enable"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_status_bar_vis"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Параметри розміру та положення (динамічно через ConstraintLayout + Barrier) -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_width"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_bar_visualizer_width"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <TextView
+                        android:id="@+id/label_status_bar_pos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/status_bar_visualizer_offset_x"
+                        android:textSize="13sp"
+                        app:layout_constraintTop_toBottomOf="@id/seek_status_bar_width"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier_sb_params"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="end"
+                        app:constraint_referenced_ids="label_status_bar_width,label_status_bar_pos" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_status_bar_width"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:valueFrom="10"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="40"
+                        app:thumbHeight="20dp"
+                        app:thumbWidth="20dp"
+                        app:thumbRadius="10dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        app:trackHeight="5dp"
+                        app:trackStopIndicatorSize="0dp"
+                        app:tickVisibilityMode="hidden"
+                        app:labelBehavior="gone"
+                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
+                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_width"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_width"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="40%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_status_bar_pos"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:valueFrom="0"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="50"
+                        app:thumbHeight="20dp"
+                        app:thumbWidth="20dp"
+                        app:thumbRadius="10dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        app:trackHeight="5dp"
+                        app:trackStopIndicatorSize="0dp"
+                        app:tickVisibilityMode="hidden"
+                        app:labelBehavior="gone"
+                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
+                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_pos"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_pos"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="50%"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
+                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- Кількість смуг візуалізатора (16 / 32) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_bands"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_bands_count"
+                        android:textColor="@color/text_theme_aware"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_16"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="16"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_32"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="32"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Ручне розміщення смуги: потрібне там, де бар малює лаунчер -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_height"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_height_manual"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_height"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:text="auto"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_status_bar_height"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0"
+                    android:valueTo="200"
+                    android:stepSize="1"
+                    android:value="0"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
+                    app:trackHeight="5dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:tickVisibilityMode="hidden"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_offset_y"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_offset_y"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_offset_y"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:text="0 px"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_status_bar_offset_y"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0"
+                    android:valueTo="200"
+                    android:stepSize="1"
+                    android:value="0"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
+                    app:trackHeight="5dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:tickVisibilityMode="hidden"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_alpha"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_alpha"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_alpha"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:text="100%"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_status_bar_alpha"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="10"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="100"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
+                    app:trackHeight="5dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:tickVisibilityMode="hidden"
+                    app:labelBehavior="gone" />
+
+                <TextView
+                    android:id="@+id/tv_status_bar_placement_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:alpha="0.7"
+                    android:text="@string/status_bar_placement_hint"
+                    android:textSize="11sp" />
+
+                <!-- Тема візуалізатора (Сітка кнопок 4х2) -->
+                <TextView
+                    android:id="@+id/label_status_bar_theme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/status_bar_visualizer_theme"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_theme_spectrum"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_spectrum"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_solid_hue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_solid_hue"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_auto_day_night"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_auto_day_night"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_eq_groups"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_eq_groups"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_theme_white"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_monochrome_white"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_black"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_monochrome_black"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_fire"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_fire"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_theme_neon"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/status_bar_theme_neon"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Зсув HUE для візуалізатора (динамічно) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_bar_visualizer_hue"
+                        android:textSize="13sp" />
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp">
+
+                        <View
+                            android:id="@+id/bg_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center_vertical" />
+
+                        <SeekBar
+                            android:id="@+id/seek_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="360"
+                            android:progress="0"
+                            android:splitTrack="false" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_status_bar_hue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="44dp"
+                        android:gravity="end"
+                        android:text="0°"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Динамічна нормалізація для статус-бара -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_normalization"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vis_normalization_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_sb_vis_normalization"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vis_normalization_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_status_bar_normalization"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 3: 🎛️ Візуалізатор еквалайзера
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_eq_vis_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/eq_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_eq_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/eq_vis_enable_label"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_eq_visualizer_enable"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_eq_vis_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/eq_vis_color_mode_label"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_spectrum"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/eq_vis_mode_spectrum"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_monochrome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/eq_vis_mode_monochrome"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Динамічна нормалізація для еквалайзера -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_vis_normalization"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vis_normalization_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_vis_normalization"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vis_normalization_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_vis_normalization"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- СЕКЦІЯ 3.5: точність аналізатора та синхронізація -->
+            <TextView
+                android:id="@+id/label_analyzer_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/analyzer_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_agc_main"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/agc_main_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_agc_main"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/agc_main_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_agc_main"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_agc_main_strength"
+                        android:layout_width="140dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/agc_strength_label"
+                        android:textSize="12sp" />
+
+                    <SeekBar
+                        android:id="@+id/seek_agc_main_strength"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100" />
+
+                    <TextView
+                        android:id="@+id/tv_agc_main_strength"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_agc_bar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/agc_bar_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_agc_bar"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/agc_bar_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_agc_bar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_agc_bar_strength"
+                        android:layout_width="140dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/agc_strength_label"
+                        android:textSize="12sp" />
+
+                    <SeekBar
+                        android:id="@+id/seek_agc_bar_strength"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100" />
+
+                    <TextView
+                        android:id="@+id/tv_agc_bar_strength"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_latency_trim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/latency_trim_label"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_latency_trim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/latency_trim_desc"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/seek_latency_trim"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="500" />
+
+                    <TextView
+                        android:id="@+id/tv_latency_trim"
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_sync_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/sync_measure_label"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_sync_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_measure_desc"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_sync_measure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/sync_measure_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_sync_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_range_db"
+                        android:layout_width="140dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/range_db_label"
+                        android:textSize="12sp" />
+
+                    <SeekBar
+                        android:id="@+id/seek_range_db"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="80" />
+
+                    <TextView
+                        android:id="@+id/tv_range_db"
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 4: 🔐 Дозволи та Система
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_permissions_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/settings_permissions"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_battery_opt"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/battery_dialog_title"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_overlay_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_perm_overlay"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_audio_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="Audio Record"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_location_perm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="GPS Location"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_app_details"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_app_details"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_backup_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_backup_btn"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_restore_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/settings_restore_btn"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 5: 🌙 Заставка
+                 Повноекранний візуалізатор, коли магнітолу лишили саму.
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_screensaver_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/screensaver_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_enable"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_screensaver"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_screensaver_enable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/screensaver_enable_desc"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_delay"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_delay"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_delay"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_delay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="5"
+                    android:valueTo="600"
+                    android:stepSize="5"
+                    android:value="60"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_bg"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_bg_alpha"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_bg"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="85"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_width"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_width"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_width"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_width"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="10"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="100"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_height"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_height"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_height"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_height"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="3"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="25"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_bright_day"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_bright_day"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_bright_day"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_bright_day"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="10"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="100"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_bright_night"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_bright_night"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_bright_night"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_bright_night"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="10"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="70"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_info_h"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_info_h"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_info_h"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_info_h"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="8"
+                    android:valueTo="25"
+                    android:stepSize="1"
+                    android:value="14"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <TextView
+                    android:id="@+id/label_screensaver_apps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/screensaver_apps"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_screensaver_apps"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/screensaver_apps_pick"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_apps"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_screensaver_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/screensaver_note"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 5: 🔬 Діагностика
+                 Вимір акустики салону і надсилання результату розробнику.
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_debug_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/debug_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/label_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_measure_label"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_measure_desc"
+                    android:textSize="11sp" />
+
+                <!--
+                     Where the microphone is, pointed at rather than described.
+
+                     Four measurements came back before this existed and the two whose owner said
+                     nothing were the two that failed - both with the microphone sitting on one
+                     speaker, which is only visible afterwards by comparing arrival times. The same
+                     car picture the balance uses, so nobody has to learn a second one.
+                -->
+                <TextView
+                    android:id="@+id/label_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/room_mic_spot_label"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_mic_spot_desc"
+                    android:textSize="11sp" />
+
+                <!-- What the microphone is fitted to, by name.
+                     The dot on the car gives the spot on the floor plan, which is enough for the
+                     delays - they are geometry in the horizontal plane. It says nothing about
+                     height or about what is a couple of centimetres away, and that is what
+                     decides whether the first arrival is the speaker or a reflection off glass.
+                     A visor and a dome light can sit at almost the same x,y and behave nothing
+                     alike. Three of the first four reports came back reflection-dominated, so
+                     this is the half that was missing. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_room_mic_place"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/room_mic_place_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
+                    app:boxBackgroundColor="#20121820"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:boxStrokeWidth="1.2dp"
+                    app:endIconTint="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_room_mic_place"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:paddingVertical="8dp"
+                        android:textColor="@color/cyan_custom" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Built the way the fader is: a container of its own with the car filling it
+                     by ratio and the arrows pinned to the container's edges, the gap between them
+                     coming from the same two dimensions. Sizing the car itself instead - which is
+                     what this did at first - left it about a third of the size, because whatever
+                     height was left over after the arrows drove the width down through the ratio. -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/room_mic_car_height"
+                    android:layout_marginTop="6dp">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/img_room_mic_car"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="@dimen/fader_arrow_gap_h"
+                        android:layout_marginTop="@dimen/fader_arrow_gap_v"
+                        android:layout_marginEnd="@dimen/fader_arrow_gap_h"
+                        android:layout_marginBottom="@dimen/fader_arrow_gap_v"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:layerType="hardware"
+                        android:scaleType="fitCenter"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="W,300:520"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_car_cabriolet" />
+
+                    <com.radiorubka.wdsp.BalancePointerView
+                        android:id="@+id/room_mic_pointer"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_front"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="0"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_rear"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="180"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_left"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="270"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintEnd_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_right"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="90"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintStart_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_measure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_measure_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_send"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_measure_send"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_telegram"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/room_measure_telegram"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_system_report"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/system_report_label"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_system_report"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/system_report_desc"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_system_report"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rds_btn_bg"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/system_report_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_system_report_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottom_navigation_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:backgroundTint="@android:color/transparent"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemActiveIndicatorStyle="@style/IndicatorSquare"
+            app:labelVisibilityMode="labeled"
+            app:itemTextAppearanceActiveBoldEnabled="false" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
