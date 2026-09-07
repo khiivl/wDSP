@@ -4,20 +4,33 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.Choreographer;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
+
 import java.lang.reflect.Method;
 
 /**
  * Transparent status bar overlay visualizer view.
- * Renders 16 solid frequency bars seamlessly fitting the vehicle's top status bar.
- * Supports HUE spectrum rotation, custom uniform HUE color, and Auto Day/Night (white on dark / black on white).
+ * Renders frequency bars seamlessly fitting the vehicle's top status bar and full-screen screensaver.
+ *
+ * <p>Supports:
+ * <ul>
+ *   <li>5 distinct visualizer styles adapted from FireLamp EffectVU (Classic, Outrun Peaks, Dynamic Palette, Symmetrical Center, VU-Meter)</li>
+ *   <li>13 rich color themes and FastLED gradient palettes (Spectrum, Fire, Neon, Purple Synthwave, Rainbow Sherbet, Ocean Breeze, Real Sunset, Warm VU, etc.)</li>
+ *   <li>Floating peak caps with realistic peak-hold and gravity decay physics</li>
+ *   <li>Symmetrical frequency layout (center bass shimmers to treble at edges)</li>
+ *   <li>Dynamic palette sampling: bars and peaks dynamically traverse palettes based on height or position</li>
+ *   <li>Seamless crossfade with 7-segment digital clock and now-playing metadata on screensaver</li>
+ * </ul>
  */
 public class StatusBarVisualizerView extends View implements AudioSpectrumEngine.OnSpectrumDataListener {
 
@@ -30,24 +43,28 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     public static final int THEME_FIRE = 6;
     public static final int THEME_NEON = 7;
 
+    // Ported FastLED palettes from FireLamp (color_palette.cpp / effects.h)
+    public static final int THEME_PURPLE_SYNTHWAVE = 8;  // purple_gp / outrun_gp (Electric Cyan -> Violet -> Deep Purple)
+    public static final int THEME_RAINBOW_SHERBET = 9;   // rainbowsherbet_gp (Lime -> Red/Orange -> Pink -> Cyan)
+    public static final int THEME_OCEAN_BREEZE = 10;     // es_ocean_breeze_068_gp (Deep Navy -> Aqua -> Seafoam)
+    public static final int THEME_SUNSET_REAL = 11;      // Sunset_Real_gp (Indigo -> Crimson -> Sunset Orange -> Golden Amber)
+    public static final int THEME_WARM_VU = 12;          // redyellow_gp (Soft White -> Golden Yellow -> Intense Red)
+    public static final int THEME_COLORFULL = 13;        // Colorfull_gp (Teal -> Green -> Lime -> Orange -> Yellow -> Teal)
+
+    // Visualizer rendering styles adapted from FireLamp EffectVU
+    public static final int STYLE_CLASSIC_BARS = 0;
+    public static final int STYLE_OUTRUN_PEAKS = 1;
+    public static final int STYLE_PALETTE_GRADIENT = 2;
+    public static final int STYLE_CENTER_BARS = 3;
+    public static final int STYLE_VU_GRADIENT = 4;
+    public static final int STYLE_OSCILLOSCOPE = 5;
+
     // 16-band base colors following the physical optical spectrum (700 nm Red -> 390 nm Violet)
     private static final int[] SPECTRUM_BASE_COLORS = {
-            0xFFD50000, // 20 Hz   (700 nm - Deep Red)
-            0xFFFF1744, // 31.5 Hz (680 nm - Bright Red)
-            0xFFFF3D00, // 50 Hz   (650 nm - Red-Orange)
-            0xFFFF6D00, // 80 Hz   (620 nm - Orange)
-            0xFFFF9100, // 125 Hz  (600 nm - Amber-Orange)
-            0xFFFFC400, // 200 Hz  (585 nm - Amber-Yellow)
-            0xFFFFEA00, // 315 Hz  (570 nm - Yellow)
-            0xFFAEEA00, // 500 Hz  (550 nm - Lime)
-            0xFF00E676, // 800 Hz  (530 nm - Pure Green)
-            0xFF00BFA5, // 1.25 kHz (510 nm - Teal / Spring Green)
-            0xFF00E5FF, // 2 kHz   (490 nm - Cyan)
-            0xFF00B0FF, // 3.15 kHz (475 nm - Sky Blue)
-            0xFF2979FF, // 5 kHz   (460 nm - Pure Blue)
-            0xFF3D5AFE, // 8 kHz   (440 nm - Deep Blue/Indigo)
-            0xFF651FFF, // 12.5 kHz (420 nm - Violet)
-            0xFF6200EA  // 20 kHz  (390 nm - Pure Deep Violet)
+            0xFFD50000, 0xFFFF1744, 0xFFFF3D00, 0xFFFF6D00,
+            0xFFFF9100, 0xFFFFC400, 0xFFFFEA00, 0xFFAEEA00,
+            0xFF00E676, 0xFF00BFA5, 0xFF00E5FF, 0xFF00B0FF,
+            0xFF2979FF, 0xFF3D5AFE, 0xFF651FFF, 0xFF6200EA
     };
 
     // 6-group color ranges matching wDSP EQ styling
@@ -61,27 +78,65 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             0xFF3949AB  // Treble (Royal Blue)
     };
 
-    // Fire gradient (Red -> Orange -> Yellow)
-    private static final int[] FIRE_COLORS = {
-            0xFFD50000, 0xFFE53935, 0xFFFF1744, 0xFFFF3D00,
-            0xFFFF5722, 0xFFFF6E40, 0xFFFF9100, 0xFFFF9800,
-            0xFFFFA726, 0xFFFFB74D, 0xFFFFC107, 0xFFFFCA28,
-            0xFFFFD54F, 0xFFFFE082, 0xFFFFFF00, 0xFFFFFF8D
+    // Palette definition structures: array of [pos (0..255), R, G, B]
+    private static final int[][] PALETTE_PURPLE_SYNTHWAVE = {
+            {0, 0, 212, 255}, {128, 141, 0, 200}, {255, 179, 0, 255}
     };
-
-    // Neon gradient (Neon Cyan -> Electric Violet -> Magenta)
-    private static final int[] NEON_COLORS = {
-            0xFF00E5FF, 0xFF00E5FF, 0xFF00B0FF, 0xFF0091EA,
-            0xFF2979FF, 0xFF3D5AFE, 0xFF651FFF, 0xFF7C4DFF,
-            0xFFB388FF, 0xFFE040FB, 0xFFD500F9, 0xFFAA00FF,
-            0xFFFF007F, 0xFFFF1744, 0xFFF50057, 0xFFFF4081
+    private static final int[][] PALETTE_RAINBOW_SHERBET = {
+            {0, 87, 255, 65}, {43, 255, 68, 25}, {86, 255, 7, 25},
+            {127, 255, 82, 103}, {170, 255, 255, 242}, {209, 42, 255, 22}, {255, 87, 255, 65}
+    };
+    private static final int[][] PALETTE_OCEAN_BREEZE = {
+            {0, 1, 10, 10}, {51, 1, 99, 137}, {104, 35, 142, 168},
+            {178, 0, 180, 217}, {255, 200, 245, 255}
+    };
+    private static final int[][] PALETTE_SUNSET_REAL = {
+            {0, 0, 0, 160}, {51, 179, 22, 0}, {100, 255, 90, 0},
+            {160, 255, 190, 20}, {210, 100, 0, 103}, {255, 16, 0, 130}
+    };
+    private static final int[][] PALETTE_WARM_VU = {
+            {0, 200, 200, 200}, {64, 255, 218, 0}, {128, 231, 0, 0},
+            {192, 255, 218, 0}, {255, 200, 200, 200}
+    };
+    private static final int[][] PALETTE_COLORFULL = {
+            {0, 22, 121, 174}, {1, 10, 85, 5}, {25, 29, 109, 18},
+            {60, 59, 138, 42}, {93, 83, 99, 52}, {106, 110, 66, 64},
+            {109, 123, 49, 65}, {113, 139, 35, 66}, {116, 192, 117, 98},
+            {124, 255, 255, 137}, {168, 100, 180, 155}, {255, 22, 121, 174}
     };
 
     public static final int MAX_BANDS = 32;
 
     private final Paint barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint peakPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF barRect = new RectF();
+    private final RectF peakRect = new RectF();
     private final float[] hsvBuffer = new float[3];
+
+    // Style & peak configurations
+    private int style = STYLE_CLASSIC_BARS;
+    private boolean peakCapsEnabled = true;
+    private boolean mirrorFrequencies = false;
+
+    // Oscilloscope rendering structures (Real Time-Domain Analog Trace)
+    private static final int OSC_POINTS = 128;
+    private static final int MAX_OSC_TRAILS = 5;
+    private final float[] oscYPoints = new float[OSC_POINTS + 1];
+    private final float[][] oscHistory = new float[MAX_OSC_TRAILS][OSC_POINTS + 1];
+    private final boolean[] oscHistoryValid = new boolean[MAX_OSC_TRAILS];
+    private int oscHistoryHead = 0;
+    private final byte[] rawWaveform = new byte[1024];
+    private final android.graphics.Path oscPath = new android.graphics.Path();
+    private final android.graphics.Path oscHistoryPath = new android.graphics.Path();
+    private final Paint oscPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint oscGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private int oscPersistence = 60; // 0..100% CRT phosphor afterglow persistence
+
+    // Peak tracking arrays
+    private final float[] peakLevels = new float[MAX_BANDS];
+    private final int[] peakHoldFrames = new int[MAX_BANDS];
+    private static final int PEAK_HOLD_COUNT = 9; // ~360 ms hold at 40ms frame interval
+    private static final float PEAK_DECAY_STEP = 0.025f; // Gravity fall-off speed
 
     private int theme = THEME_SPECTRUM;
     private int hueShift = 0; // 0..360
@@ -98,7 +153,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private boolean frameCallbackActive = false;
     private boolean isRunning = false;
 
-    /** Redraw interval for the widget. It is decoration in a strip a few pixels tall; 30 is plenty. */
+    /** Redraw interval for the widget. It is decoration in a strip a few pixels tall; 40 ms is plenty. */
     private static final long WIDGET_FRAME_MS = 40;
     /** Level change, in units of the 0..1 scale, below which a redraw would not be visible. */
     private static final float VISIBLE_CHANGE = 0.004f;
@@ -110,28 +165,66 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private android.graphics.Bitmap lastDrawnArt;
     private long lastColonStep = 0;
 
+    // Dynamic signal energy tracking (FireLamp peak breathing)
+    private float dynamicEnergy = 0f;
+    private float lastDrawnEnergy = 0f;
+
     private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
             if (!frameCallbackActive) return;
             long now = System.currentTimeMillis();
 
-            // Two brakes, both measured on the K706: this callback used to invalidate on every
-            // single display frame whether or not anything had changed, and redrawing the overlay
-            // that often cost nearly three times as much processor as the entire measurement
-            // chain behind it. The main analyser still runs at full rate; this is the status bar.
             if (now - lastDrawTime >= WIDGET_FRAME_MS) {
                 long elapsed = now - lastCaptureTime;
                 float t = captureIntervalMs > 0
                         ? Math.min(1f, elapsed / (float) captureIntervalMs) : 1f;
                 boolean changed = false;
+                float framePeak = 0f;
                 for (int i = 0; i < bandCount; i++) {
                     renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
                     if (Math.abs(renderLevels[i] - drawnLevels[i]) > VISIBLE_CHANGE) changed = true;
+
+                    if (renderLevels[i] > framePeak) framePeak = renderLevels[i];
+
+                    // Update peak hold and gravity decay
+                    float lvl = renderLevels[i];
+                    if (lvl >= peakLevels[i]) {
+                        peakLevels[i] = lvl;
+                        peakHoldFrames[i] = PEAK_HOLD_COUNT;
+                    } else {
+                        if (peakHoldFrames[i] > 0) {
+                            peakHoldFrames[i]--;
+                        } else {
+                            peakLevels[i] -= PEAK_DECAY_STEP;
+                            if (peakLevels[i] < lvl) peakLevels[i] = lvl;
+                            if (peakLevels[i] > 0.001f) changed = true;
+                        }
+                    }
                 }
+
+                // If in oscilloscope mode and spectrum hasn't registered level, inspect raw PCM
+                if (style == STYLE_OSCILLOSCOPE && framePeak < 0.04f) {
+                    int wLen = rawWaveform.length;
+                    for (int k = 0; k < Math.min(wLen, 256); k++) {
+                        float dev = Math.abs((rawWaveform[k] & 0xFF) - 128) / 128.0f;
+                        if (dev > framePeak) framePeak = dev;
+                    }
+                }
+
+                // Smooth dynamic energy with fast punchy attack and analog decay
+                if (framePeak > dynamicEnergy) {
+                    dynamicEnergy = dynamicEnergy * 0.35f + framePeak * 0.65f;
+                } else {
+                    dynamicEnergy = dynamicEnergy * 0.91f + framePeak * 0.09f;
+                }
+
+                if (Math.abs(dynamicEnergy - lastDrawnEnergy) > 0.005f) changed = true;
+
                 if (advanceFade(now)) changed = true;
                 if (changed) {
                     System.arraycopy(renderLevels, 0, drawnLevels, 0, bandCount);
+                    lastDrawnEnergy = dynamicEnergy;
                     lastDrawTime = now;
                     invalidate();
                 }
@@ -152,8 +245,60 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     private void init() {
         barPaint.setStyle(Paint.Style.FILL);
+        peakPaint.setStyle(Paint.Style.FILL);
+        oscPaint.setStyle(Paint.Style.STROKE);
+        oscPaint.setStrokeCap(Paint.Cap.ROUND);
+        oscPaint.setStrokeJoin(Paint.Join.ROUND);
+        oscGlowPaint.setStyle(Paint.Style.STROKE);
+        oscGlowPaint.setStrokeCap(Paint.Cap.ROUND);
+        oscGlowPaint.setStrokeJoin(Paint.Join.ROUND);
         setBackgroundColor(Color.TRANSPARENT);
         recalculateColors();
+    }
+
+    public void setStyle(int style) {
+        if (this.style != style) {
+            this.style = style;
+            invalidate();
+        }
+    }
+
+    public int getStyle() {
+        return this.style;
+    }
+
+    public void setPeakCapsEnabled(boolean enabled) {
+        if (this.peakCapsEnabled != enabled) {
+            this.peakCapsEnabled = enabled;
+            invalidate();
+        }
+    }
+
+    public boolean isPeakCapsEnabled() {
+        return this.peakCapsEnabled;
+    }
+
+    public void setMirrorFrequencies(boolean mirror) {
+        if (this.mirrorFrequencies != mirror) {
+            this.mirrorFrequencies = mirror;
+            invalidate();
+        }
+    }
+
+    public boolean isMirrorFrequencies() {
+        return this.mirrorFrequencies;
+    }
+
+    public void setOscPersistence(int persistence) {
+        int clamped = Math.max(0, Math.min(100, persistence));
+        if (this.oscPersistence != clamped) {
+            this.oscPersistence = clamped;
+            invalidate();
+        }
+    }
+
+    public int getOscPersistence() {
+        return this.oscPersistence;
     }
 
     public void setTheme(int theme) {
@@ -170,10 +315,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     public void setAlphaPercent(int alphaPercent) {
         this.alphaPercent = Math.max(0, Math.min(100, alphaPercent));
-        // The alpha is baked into the colour table, so redrawing with the old table changes
-        // nothing. This asked for a repaint and not a recalculation, which is why brightness has
-        // never done anything - not from the screensaver, and not from its slider in settings
-        // either. It only ever appeared to work when something else happened to rebuild the table.
         recalculateColors();
         invalidate();
     }
@@ -185,11 +326,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         invalidate();
     }
 
-    /**
-     * Determines whether the status bar background is currently light (Day) or dark (Night).
-     */
     public boolean isStatusBarLight() {
-        // 1. Check system night mode configuration
         int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         if (nightMode == Configuration.UI_MODE_NIGHT_YES) {
             return false; // Dark background
@@ -197,7 +334,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             return true;  // Light background
         }
 
-        // 2. Check QF head unit system property persist.sys.day_night (0 = Day, 1 = Night)
         try {
             // noinspection PrivateApi
             Class<?> sp = Class.forName("android.os.SystemProperties");
@@ -210,6 +346,13 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return false; // Default to dark background
     }
 
+    public boolean isNightMode() {
+        try {
+            if (ThemeManager.isNight(getContext())) return true;
+        } catch (Throwable ignored) {}
+        return !isStatusBarLight();
+    }
+
     public void setBandCount(int count) {
         this.bandCount = (count == 16) ? 16 : 32;
         recalculateColors();
@@ -220,87 +363,145 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return this.bandCount;
     }
 
-    public void recalculateColors() {
-        int baseAlpha = (int) ((alphaPercent / 100f) * 255);
+    /**
+     * Interpolates color within a multi-stop FastLED palette.
+     */
+    private static int samplePalette(int[][] stops, float fraction, int baseAlpha, int hueShift) {
+        float frac = Math.max(0f, Math.min(1f, fraction));
+        float targetPos = frac * 255f;
+        int r = stops[stops.length - 1][1];
+        int g = stops[stops.length - 1][2];
+        int b = stops[stops.length - 1][3];
+
+        for (int i = 0; i < stops.length - 1; i++) {
+            int p1 = stops[i][0];
+            int p2 = stops[i + 1][0];
+            if (p1 <= targetPos && targetPos <= p2) {
+                float span = p2 - p1;
+                float t = span > 0 ? (targetPos - p1) / span : 0f;
+                r = Math.round(stops[i][1] + (stops[i + 1][1] - stops[i][1]) * t);
+                g = Math.round(stops[i][2] + (stops[i + 1][2] - stops[i][2]) * t);
+                b = Math.round(stops[i][3] + (stops[i + 1][3] - stops[i][3]) * t);
+                break;
+            }
+        }
+
+        if (hueShift != 0) {
+            float[] hsv = new float[3];
+            Color.RGBToHSV(r, g, b, hsv);
+            hsv[0] = (hsv[0] + hueShift) % 360f;
+            int c = Color.HSVToColor(hsv);
+            return Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
+        }
+        return Color.argb(baseAlpha, r, g, b);
+    }
+
+    /**
+     * Samples the active theme or palette at a given normalized fraction (0.0 to 1.0)
+     * using current default alpha.
+     */
+    public int sampleCurrentTheme(float fraction) {
+        return sampleCurrentTheme(fraction, (int) ((alphaPercent / 100f) * 255));
+    }
+
+    /**
+     * Samples the active theme or palette at a given normalized fraction (0.0 to 1.0)
+     * with an explicit alpha channel value (0..255).
+     */
+    public int sampleCurrentTheme(float fraction, int baseAlpha) {
+        baseAlpha = Math.max(0, Math.min(255, baseAlpha));
         boolean isLightBar = isStatusBarLight();
-        int bands = this.bandCount;
 
-        for (int i = 0; i < bands; i++) {
-            float frac = i / (float) Math.max(1, bands - 1);
-            switch (theme) {
-                case THEME_AUTO_DAY_NIGHT:
-                    int autoColor = isLightBar ? 0xFF1A1A1A : 0xFFFFFFFF;
-                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(autoColor), Color.green(autoColor), Color.blue(autoColor));
-                    break;
+        switch (theme) {
+            case THEME_PURPLE_SYNTHWAVE:
+                return samplePalette(PALETTE_PURPLE_SYNTHWAVE, fraction, baseAlpha, hueShift);
 
-                case THEME_MONOCHROME_WHITE:
-                    resolvedColors[i] = Color.argb(baseAlpha, 255, 255, 255);
-                    break;
+            case THEME_RAINBOW_SHERBET:
+                return samplePalette(PALETTE_RAINBOW_SHERBET, fraction, baseAlpha, hueShift);
 
-                case THEME_MONOCHROME_BLACK:
-                    resolvedColors[i] = Color.argb(baseAlpha, 26, 26, 26);
-                    break;
+            case THEME_OCEAN_BREEZE:
+                return samplePalette(PALETTE_OCEAN_BREEZE, fraction, baseAlpha, hueShift);
 
-                case THEME_SOLID_HUE:
-                    hsvBuffer[0] = (float) hueShift;
-                    hsvBuffer[1] = 1.0f;
-                    hsvBuffer[2] = 1.0f;
-                    int solidColor = Color.HSVToColor(hsvBuffer);
-                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(solidColor), Color.green(solidColor), Color.blue(solidColor));
-                    break;
+            case THEME_SUNSET_REAL:
+                return samplePalette(PALETTE_SUNSET_REAL, fraction, baseAlpha, hueShift);
 
-                case THEME_EQ_GROUPS:
-                    int group = (int) (i * 6f / bands);
-                    int groupBase = GROUP_BASE_COLORS[Math.min(5, group)];
-                    if (hueShift != 0) {
-                        Color.colorToHSV(groupBase, hsvBuffer);
-                        hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
-                        int c = Color.HSVToColor(hsvBuffer);
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
-                    } else {
-                        resolvedColors[i] = Color.argb(baseAlpha, Color.red(groupBase), Color.green(groupBase), Color.blue(groupBase));
-                    }
-                    break;
+            case THEME_WARM_VU:
+                return samplePalette(PALETTE_WARM_VU, fraction, baseAlpha, hueShift);
 
-                case THEME_FIRE:
-                    float fireHue = frac * 55f; // 0 (Red) -> 55 (Yellow)
-                    if (hueShift != 0) fireHue = (fireHue + hueShift) % 360f;
-                    hsvBuffer[0] = fireHue;
-                    hsvBuffer[1] = 1.0f;
-                    hsvBuffer[2] = 1.0f;
-                    int fc = Color.HSVToColor(hsvBuffer);
-                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(fc), Color.green(fc), Color.blue(fc));
-                    break;
+            case THEME_COLORFULL:
+                return samplePalette(PALETTE_COLORFULL, fraction, baseAlpha, hueShift);
 
-                case THEME_NEON:
-                    float neonHue = 180f + frac * 140f; // 180 (Cyan) -> 320 (Magenta/Pink)
-                    if (hueShift != 0) neonHue = (neonHue + hueShift) % 360f;
-                    hsvBuffer[0] = neonHue;
-                    hsvBuffer[1] = 1.0f;
-                    hsvBuffer[2] = 1.0f;
-                    int nc = Color.HSVToColor(hsvBuffer);
-                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(nc), Color.green(nc), Color.blue(nc));
-                    break;
+            case THEME_AUTO_DAY_NIGHT: {
+                int autoColor = isLightBar ? 0xFF1A1A1A : 0xFFFFFFFF;
+                return Color.argb(baseAlpha, Color.red(autoColor), Color.green(autoColor), Color.blue(autoColor));
+            }
 
-                case THEME_SPECTRUM:
-                default:
-                    float specHue = frac * 295f; // 0 (Red) -> 295 (Deep Violet)
-                    if (hueShift != 0) specHue = (specHue + hueShift) % 360f;
-                    hsvBuffer[0] = specHue;
-                    hsvBuffer[1] = 1.0f;
-                    hsvBuffer[2] = 1.0f;
-                    int sc = Color.HSVToColor(hsvBuffer);
-                    resolvedColors[i] = Color.argb(baseAlpha, Color.red(sc), Color.green(sc), Color.blue(sc));
-                    break;
+            case THEME_MONOCHROME_WHITE:
+                return Color.argb(baseAlpha, 255, 255, 255);
+
+            case THEME_MONOCHROME_BLACK:
+                return Color.argb(baseAlpha, 26, 26, 26);
+
+            case THEME_SOLID_HUE: {
+                hsvBuffer[0] = (float) hueShift;
+                hsvBuffer[1] = 1.0f;
+                hsvBuffer[2] = 1.0f;
+                int solidColor = Color.HSVToColor(hsvBuffer);
+                return Color.argb(baseAlpha, Color.red(solidColor), Color.green(solidColor), Color.blue(solidColor));
+            }
+
+            case THEME_EQ_GROUPS: {
+                int group = Math.min(5, (int) (fraction * 6f));
+                int groupBase = GROUP_BASE_COLORS[group];
+                if (hueShift != 0) {
+                    Color.colorToHSV(groupBase, hsvBuffer);
+                    hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
+                    int c = Color.HSVToColor(hsvBuffer);
+                    return Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
+                } else {
+                    return Color.argb(baseAlpha, Color.red(groupBase), Color.green(groupBase), Color.blue(groupBase));
+                }
+            }
+
+            case THEME_FIRE: {
+                float fireHue = fraction * 55f; // 0 (Red) -> 55 (Yellow)
+                if (hueShift != 0) fireHue = (fireHue + hueShift) % 360f;
+                hsvBuffer[0] = fireHue;
+                hsvBuffer[1] = 1.0f;
+                hsvBuffer[2] = 1.0f;
+                int fc = Color.HSVToColor(hsvBuffer);
+                return Color.argb(baseAlpha, Color.red(fc), Color.green(fc), Color.blue(fc));
+            }
+
+            case THEME_NEON: {
+                float neonHue = 180f + fraction * 140f; // 180 (Cyan) -> 320 (Magenta/Pink)
+                if (hueShift != 0) neonHue = (neonHue + hueShift) % 360f;
+                hsvBuffer[0] = neonHue;
+                hsvBuffer[1] = 1.0f;
+                hsvBuffer[2] = 1.0f;
+                int nc = Color.HSVToColor(hsvBuffer);
+                return Color.argb(baseAlpha, Color.red(nc), Color.green(nc), Color.blue(nc));
+            }
+
+            case THEME_SPECTRUM:
+            default: {
+                float specHue = fraction * 295f; // 0 (Red) -> 295 (Deep Violet)
+                if (hueShift != 0) specHue = (specHue + hueShift) % 360f;
+                hsvBuffer[0] = specHue;
+                hsvBuffer[1] = 1.0f;
+                hsvBuffer[2] = 1.0f;
+                int sc = Color.HSVToColor(hsvBuffer);
+                return Color.argb(baseAlpha, Color.red(sc), Color.green(sc), Color.blue(sc));
             }
         }
     }
 
-    private int groupForBand(int band) {
-        for (int g = 0; g < GROUP_RANGES.length; g++) {
-            if (band >= GROUP_RANGES[g][0] && band <= GROUP_RANGES[g][1]) return g;
+    public void recalculateColors() {
+        int bands = this.bandCount;
+        for (int i = 0; i < bands; i++) {
+            float frac = i / (float) Math.max(1, bands - 1);
+            resolvedColors[i] = sampleCurrentTheme(frac, 255);
         }
-        return 0;
     }
 
     private boolean normalizationEnabled = false;
@@ -329,7 +530,11 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             renderLevels[i] = 0f;
             displayLevels[i] = 0f;
             prevLevels[i] = 0f;
+            peakLevels[i] = 0f;
+            peakHoldFrames[i] = 0;
         }
+        dynamicEnergy = 0f;
+        lastDrawnEnergy = 0f;
         invalidate();
     }
 
@@ -355,133 +560,96 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         this.captureIntervalMs = captureIntervalMs;
     }
 
-    /**
-     * A colour painted behind the bars, and how much of the view they occupy.
-     *
-     * <p>Both exist for the screensaver, which is this same strip stretched over the screen with
-     * everything else dimmed behind it. Drawing that here rather than in a second window is what
-     * lets the strip grow without being detached - and a detached visualiser has to find the audio
-     * session again, which takes long enough to see.
-     */
     private int backdropColor = 0;
     private float bandWidthF = 1f;
     private float bandHeightF = 1f;
-    /**
-     * How much of the top belongs to the system status bar and cannot be drawn on.
-     *
-     * <p>The band is centred in what is left rather than in the whole view. Centring on the whole
-     * view is arithmetically right and looks wrong: the bar is opaque and always there, so the eye
-     * measures the free space, and a band centred on 360 of 720 sits visibly high when the top 72
-     * are covered. It also stopped a tall band from hiding its own top under the bar.
-     */
     private int topInset = 0;
-    /**
-     * The strip at the bottom the now-playing bar owns.
-     *
-     * <p>Reserved whether or not there is a track to show, so the spectrum does not resize itself
-     * every time the music pauses. A band that jumps when a song ends looks broken even though
-     * nothing is wrong.
-     */
     private int bottomInset = 0;
 
-    /**
-     * Where the picture is between the bars and the clock: 0 is playing, 1 is paused.
-     *
-     * <h2>Why a crossfade and not a swap</h2>
-     *
-     * Because the two are the same object as far as a person is concerned - the thing in the
-     * middle of the screen - and things that are one thing do not blink out and reappear as
-     * another. The bars sink into their own baseline as they go, which is what they do anyway when
-     * the sound stops; all the animation adds is that they keep doing it smoothly instead of
-     * freezing wherever the last frame of audio left them.
-     */
     private float pauseT = 0f;
     private boolean pausedTarget = false;
     private boolean clockEnabled = false;
     private long lastFadeTick = 0;
     private String clockText = "";
 
-    /** Long enough to read as a movement, short enough not to feel like waiting. */
     private static final long FADE_MS = 700;
 
     private final Paint clockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean clockTypefaceTried = false;
 
-    /**
-     * The now-playing strip along the bottom, and how far its text has scrolled.
-     *
-     * <p>Read straight from {@link NowPlaying} rather than pushed in: the marquee needs a fresh
-     * position on every frame anyway, and copying five fields across on a timer would only add a
-     * way for the two to disagree.
-     */
     private NowPlaying nowPlaying;
     private final Paint infoPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float marqueeOffset = 0f;
 
-    /** The line the current scroll position belongs to; a different one starts over. */
     private String marqueeLine = null;
-    private long lastMarqueeTick = 0;
     private boolean marqueeRunning = false;
 
-    /** Slow enough to read at a glance across a car, fast enough not to feel stuck. */
     private static final float MARQUEE_PX_PER_S = 55f;
-    /** Blank between the end of the line and where it starts again. */
     private static final float MARQUEE_GAP_F = 0.35f;
-
-    /** Most of the strip the fixed artist may occupy before it is cut short. */
     private static final float ARTIST_MAX_F = 0.34f;
 
     public static final int GLYPH_PREVIOUS = 1;
     public static final int GLYPH_PLAY = 2;
     public static final int GLYPH_PAUSE = 3;
     public static final int GLYPH_NEXT = 4;
+    public static final int GLYPH_STYLE_CYCLE = 5;
 
     private int flashGlyph = 0;
     private long flashUntil = 0;
     private final android.graphics.Path glyphPath = new android.graphics.Path();
-
-    /** Fixed length of a fade, in milliseconds - long enough to see, short enough to forget. */
     private static final long FLASH_MS = 550;
 
-    /**
-     * Confirms which of the three areas was pressed, then gets out of the way.
-     *
-     * <p>The areas are invisible, so without this a tap in the dark is a guess that only the music
-     * can answer - and it answers a second later, by which time the hand has already tapped again.
-     */
+    private boolean screensaverMode = false;
+    private final Paint btnBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint btnBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint btnIconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.Path sineIconPath = new android.graphics.Path();
+
     public void flashTransport(int glyph) {
         this.flashGlyph = glyph;
         this.flashUntil = System.currentTimeMillis() + FLASH_MS;
         invalidate();
     }
 
-    /**
-     * Where the strip reads the track from, or null when there is nothing we may show.
-     *
-     * <p>Deliberately does not touch the marquee. The screensaver hands this in on every one of
-     * its two-second ticks, and resetting the scroll here sent a long title back to its start
-     * every two seconds - about a hundred pixels in, so it never reached the end and jerked
-     * instead. The scroll belongs to the line being drawn, and is reset in
-     * {@link #drawNowPlaying} when that line actually changes.
-     */
     public void setNowPlayingSource(NowPlaying source) {
         this.nowPlaying = source;
     }
 
-    /**
-     * Turns the clock on and says whether the music is stopped.
-     *
-     * <p>Called from the screensaver's own two-second tick, so it costs nothing of its own.
-     */
     public void setScreensaverState(boolean showClock, boolean paused) {
         this.clockEnabled = showClock;
+        this.screensaverMode = showClock;
         this.pausedTarget = paused;
         if (!showClock) {
             pauseT = 0f;
         } else if (paused) {
             pauseT = 1f;
         }
+    }
+
+    public boolean isScreensaverMode() {
+        return screensaverMode;
+    }
+
+    public boolean isPointInStyleCycleButton(float x, float y) {
+        if (!screensaverMode) return false;
+        float density = getResources().getDisplayMetrics().density;
+        float cx = getWidth() - 32f * density;
+        float cy = getHeight() - 32f * density;
+        float hitRadius = 38f * density;
+        float dx = x - cx;
+        float dy = y - cy;
+        return (dx * dx + dy * dy) <= (hitRadius * hitRadius);
+    }
+
+    public boolean isPointInNowPlayingArt(float x, float y) {
+        if (nowPlaying == null || (!nowPlaying.hasTrack() && !nowPlaying.isPlaying())) return false;
+        float h = bottomInset;
+        if (h <= 8) return false;
+        float top = getHeight() - h;
+        if (y < top || y > getHeight()) return false;
+        float artRightBound = h * 2.2f;
+        return x >= 0 && x <= artRightBound;
     }
 
     public void setInsets(int top, int bottom) {
@@ -505,12 +673,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         invalidate();
     }
 
-    /**
-     * Moves the crossfade along, and keeps the clock's own minute ticking.
-     *
-     * @return whether anything needs redrawing - the frame loop only invalidates when the bars
-     *         have moved, and a paused screen has no bars moving at all
-     */
     private boolean advanceFade(long now) {
         if (!clockEnabled) return false;
         boolean dirty = false;
@@ -576,14 +738,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return dirty;
     }
 
-    /**
-     * The seven-segment face, loaded once.
-     *
-     * <p>Falls back to the app's own font rather than failing: a clock in the wrong typeface is a
-     * clock, and one that refuses to draw is a bug. Loaded lazily because this runs on the drawing
-     * thread and the first frame is not the place to touch the resource system if it can be
-     * avoided afterwards.
-     */
     private void applyClockTypeface() {
         if (clockTypefaceTried) return;
         clockTypefaceTried = true;
@@ -611,6 +765,23 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return parts[0] + ":" + parts[1];
     }
 
+    /**
+     * Maps physical column index {@code i} to frequency band index.
+     * When {@code mirrorFrequencies} is active, bass (20 Hz) is placed in the center,
+     * while treble (20 kHz) shimmers toward both outer edges.
+     */
+    private int getBandIndex(int i, int count) {
+        if (!mirrorFrequencies) return i;
+        int half = count / 2;
+        if (i < half) {
+            float frac = (half - 1 - i) / (float) Math.max(1, half - 1);
+            return Math.min(count - 1, Math.max(0, Math.round(frac * (count - 1))));
+        } else {
+            float frac = (i - half) / (float) Math.max(1, half - 1);
+            return Math.min(count - 1, Math.max(0, Math.round(frac * (count - 1))));
+        }
+    }
+
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
@@ -630,27 +801,173 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         // The bars sink as the clock arrives, and stop being drawn once they have nothing left.
         float barScale = 1f - pauseT;
         if (barScale > 0.01f) {
-        int count = this.bandCount;
-        float stepX = w / (float) count;
-        float barGap = stepX * (count == 32 ? 0.20f : 0.22f);
-        float barWidth = stepX - barGap;
-        float cornerRadius = barWidth * 0.35f;
+            float bottom = offsetY + totalH;
+            float centerY = offsetY + totalH / 2f;
 
-        float bottom = offsetY + totalH;
+            // Dynamic Peak Breathing (FireLamp peak breathing)
+            // Scales dynamically from resting baseline (20%) up to 100% of user ceiling (alphaPercent)
+            float masterCeiling = (alphaPercent / 100f) * barScale;
+            float minFloor = 0.20f;
+            float dynamicFactor = minFloor + (1.0f - minFloor) * Math.min(1.0f, dynamicEnergy);
+            int currentAlpha = Math.max(0, Math.min(255, Math.round(masterCeiling * dynamicFactor * 255f)));
 
-        for (int i = 0; i < count; i++) {
-            float level = renderLevels[i];
-            if (level < 0.02f) level = 0.02f; // Keep a small visible baseline bar
+            if (style == STYLE_OSCILLOSCOPE) {
+                drawOscilloscope(canvas, offsetX, w, centerY, totalH, barScale, currentAlpha);
+            } else {
+                int count = this.bandCount;
+                float stepX = w / (float) count;
+                float barGap = stepX * (count == 32 ? 0.20f : 0.22f);
+                float barWidth = stepX - barGap;
+                float cornerRadius = barWidth * 0.35f;
 
-            float barHeight = level * totalH * 0.88f * barScale;
-            float left = offsetX + i * stepX + barGap / 2f;
-            float right = left + barWidth;
-            float top = bottom - barHeight;
+                float peakCapHeight = Math.max(2.5f, barWidth * 0.32f);
+                float peakCapRadius = cornerRadius * 0.5f;
 
-            barPaint.setColor(resolvedColors[i]);
-            barRect.set(left, top, right, bottom);
-            canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
-        }
+                for (int i = 0; i < count; i++) {
+                    int srcIdx = getBandIndex(i, count);
+                    float level = renderLevels[srcIdx];
+                    if (level < 0.02f) level = 0.02f; // Keep a small visible baseline bar
+
+                    float peakLevel = peakLevels[srcIdx];
+                    if (peakLevel < level) peakLevel = level;
+
+                    float left = offsetX + i * stepX + barGap / 2f;
+                    float right = left + barWidth;
+
+                    switch (style) {
+                        case STYLE_OUTRUN_PEAKS: {
+                            // Outrun mode (FireLamp outrunPeak): Only floating peak caps bounce!
+                            // Color is dynamically sampled from the active theme/palette by peak height
+                            int outrunColor = sampleCurrentTheme(peakLevel, currentAlpha);
+                            float peakY = bottom - peakLevel * totalH * 0.88f * barScale;
+                            float capTop = peakY - peakCapHeight * 1.5f;
+                            float capBtm = peakY;
+                            peakPaint.setColor(outrunColor);
+                            peakRect.set(left, capTop, right, capBtm);
+                            canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+                            break;
+                        }
+
+                        case STYLE_CENTER_BARS: {
+                            // Center-out symmetrical bars (FireLamp centerBars): expand up and down from centerY
+                            float barHeight = level * totalH * 0.88f * barScale;
+                            float halfH = barHeight / 2f;
+                            float top = centerY - halfH;
+                            float btm = centerY + halfH;
+
+                            // Symmetrical dynamic gradient from center line outward
+                            int centerCol = sampleCurrentTheme(0.05f, currentAlpha);
+                            int edgeCol = sampleCurrentTheme(Math.max(0.12f, level), currentAlpha);
+                            Shader centerShader = new LinearGradient(
+                                    left, top, left, btm,
+                                    new int[]{edgeCol, centerCol, edgeCol},
+                                    new float[]{0.0f, 0.5f, 1.0f},
+                                    Shader.TileMode.CLAMP
+                            );
+                            barPaint.setShader(centerShader);
+                            barRect.set(left, top, right, btm);
+                            canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
+                            barPaint.setShader(null);
+
+                            if (peakCapsEnabled) {
+                                float peakHalfH = (peakLevel * totalH * 0.88f * barScale) / 2f;
+                                int capAlpha = Math.max(10, Math.min(255, Math.round(currentAlpha * 0.95f)));
+                                peakPaint.setColor(0x00FFFFFF | (capAlpha << 24));
+
+                                // Top peak cap
+                                float topPeakY = centerY - peakHalfH;
+                                peakRect.set(left, topPeakY - peakCapHeight, right, topPeakY);
+                                canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+
+                                // Bottom peak cap
+                                float btmPeakY = centerY + peakHalfH;
+                                peakRect.set(left, btmPeakY, right, btmPeakY + peakCapHeight);
+                                canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+                            }
+                            break;
+                        }
+
+                        case STYLE_PALETTE_GRADIENT: {
+                            // Dynamic vertical gradient per bar from baseline to peak (FireLamp paletteBars)
+                            float barHeight = level * totalH * 0.88f * barScale;
+                            float top = bottom - barHeight;
+
+                            int btmColor = sampleCurrentTheme(0.02f, currentAlpha);
+                            int topColor = sampleCurrentTheme(Math.max(0.15f, level), currentAlpha);
+                            Shader gradient = new LinearGradient(
+                                    left, bottom, left, top,
+                                    btmColor, topColor,
+                                    Shader.TileMode.CLAMP
+                            );
+                            barPaint.setShader(gradient);
+                            barRect.set(left, top, right, bottom);
+                            canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
+                            barPaint.setShader(null);
+
+                            if (peakCapsEnabled) {
+                                float peakY = bottom - peakLevel * totalH * 0.88f * barScale;
+                                int capAlpha = Math.max(10, Math.min(255, Math.round(currentAlpha * 0.95f)));
+                                peakPaint.setColor(0x00FFFFFF | (capAlpha << 24));
+                                peakRect.set(left, peakY - peakCapHeight, right, peakY);
+                                canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+                            }
+                            break;
+                        }
+
+                        case STYLE_VU_GRADIENT: {
+                            // Studio VU meter: vertical gradient across full height scale (FireLamp verticalColoredBars)
+                            float barHeight = level * totalH * 0.88f * barScale;
+                            float top = bottom - barHeight;
+
+                            int c0 = sampleCurrentTheme(0.0f, currentAlpha);
+                            int c1 = sampleCurrentTheme(0.65f, currentAlpha);
+                            int c2 = sampleCurrentTheme(1.0f, currentAlpha);
+                            Shader vuShader = new LinearGradient(
+                                    0, bottom, 0, offsetY,
+                                    new int[]{c0, c1, c2},
+                                    new float[]{0.0f, 0.65f, 1.0f},
+                                    Shader.TileMode.CLAMP
+                            );
+                            barPaint.setShader(vuShader);
+                            barPaint.setAlpha(currentAlpha);
+                            barRect.set(left, top, right, bottom);
+                            canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
+                            barPaint.setShader(null);
+
+                            if (peakCapsEnabled) {
+                                float peakY = bottom - peakLevel * totalH * 0.88f * barScale;
+                                int capAlpha = Math.max(10, Math.min(255, Math.round(currentAlpha * 0.95f)));
+                                peakPaint.setColor(0x00FFFFFF | (capAlpha << 24));
+                                peakRect.set(left, peakY - peakCapHeight, right, peakY);
+                                canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+                            }
+                            break;
+                        }
+
+                        case STYLE_CLASSIC_BARS:
+                        default: {
+                            // Classic solid bars (FireLamp horizontalColoredBars)
+                            float barHeight = level * totalH * 0.88f * barScale;
+                            float top = bottom - barHeight;
+
+                            barPaint.setShader(null);
+                            int barColor = (resolvedColors[srcIdx] & 0x00FFFFFF) | (currentAlpha << 24);
+                            barPaint.setColor(barColor);
+                            barRect.set(left, top, right, bottom);
+                            canvas.drawRoundRect(barRect, cornerRadius, cornerRadius, barPaint);
+
+                            if (peakCapsEnabled) {
+                                float peakY = bottom - peakLevel * totalH * 0.88f * barScale;
+                                int capAlpha = Math.max(10, Math.min(255, Math.round(currentAlpha * 0.95f)));
+                                peakPaint.setColor(0x00FFFFFF | (capAlpha << 24));
+                                peakRect.set(left, peakY - peakCapHeight, right, peakY);
+                                canvas.drawRoundRect(peakRect, peakCapRadius, peakCapRadius, peakPaint);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (clockEnabled && pauseT > 0.01f) {
@@ -659,20 +976,191 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         if (nowPlaying != null && bottomInset > 8) {
             drawNowPlaying(canvas, viewW, viewH);
         }
+        if (screensaverMode) {
+            drawStyleCycleButton(canvas, viewW, viewH);
+        }
         if (flashGlyph != 0 && flashUntil > 0) {
             drawTransportFlash(canvas, viewW, viewH);
         }
     }
 
-    /**
-     * Writes the artist where it will stay, and answers where the scrolling half may begin.
-     *
-     * <p>Dimmer than the title on purpose: two lines of equal weight side by side read as one
-     * run-on, and the eye needs to see at a glance which half is the name of the track.
-     *
-     * <p>It never takes more than {@link #ARTIST_MAX_F} of the room. A band with a long name
-     * would otherwise leave the title nowhere to scroll, and the title is the part being read.
-     */
+    private void drawOscilloscope(Canvas canvas, float left, float width, float centerY, float totalH, float barScale, int currentAlpha) {
+        if (width <= 0 || totalH <= 0) return;
+        float maxAmp = (totalH / 2f) * 0.92f * barScale;
+
+        // 1. Fetch genuine live PCM audio waveform from AudioSpectrumEngine
+        int waveLen = AudioSpectrumEngine.getInstance().getLatestWaveform(rawWaveform);
+
+        // 2. Hardware-like Zero-Crossing Trigger
+        // Finds positive slope zero-crossing (<= 128 to > 130) to freeze periodic musical waves in phase
+        int triggerOffset = 0;
+        if (waveLen > 32) {
+            int searchLimit = Math.min(waveLen / 2, 256);
+            for (int i = 1; i < searchLimit; i++) {
+                int prev = (rawWaveform[i - 1] & 0xFF);
+                int curr = (rawWaveform[i] & 0xFF);
+                if (prev <= 128 && curr > 130) {
+                    triggerOffset = i;
+                    break;
+                }
+            }
+        }
+
+        // 3. Timebase: sweep across ~512 samples (~10.7 ms at 48kHz, optimal scope division)
+        int sweepSamples = Math.min(waveLen - triggerOffset, 512);
+        if (sweepSamples < OSC_POINTS) sweepSamples = Math.max(1, waveLen - triggerOffset);
+
+        float stepX = width / (float) OSC_POINTS;
+        oscPath.reset();
+
+        float strokeW = Math.max(2.2f, totalH * 0.055f);
+        float glowW = strokeW * 2.5f;
+
+        // Build horizontal linear gradient shader matching the active theme/palette
+        int startColor = sampleCurrentTheme(0.0f, currentAlpha);
+        int midColor = sampleCurrentTheme(0.5f, currentAlpha);
+        int endColor = sampleCurrentTheme(1.0f, currentAlpha);
+        Shader oscShader = new LinearGradient(
+                left, centerY, left + width, centerY,
+                new int[]{startColor, midColor, endColor},
+                new float[]{0.0f, 0.5f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+
+        float maxPeakY = centerY;
+        float minPeakY = centerY;
+        float maxPeakX = left;
+        float minPeakX = left;
+
+        float gain = normalizationEnabled ? 1.4f : 1.1f;
+
+        // Smooth CRT phosphor persistence decay & dynamic beam deflection inertia
+        // 0% persistence = 0.05 inertia (ultra fast, crisp digital trace)
+        // 100% persistence = 0.35 inertia (viscous analog CRT deflection with physical inertia)
+        float inertia = 0.05f + (oscPersistence / 100f) * 0.30f;
+        float currentWeight = 1.0f - inertia;
+
+        for (int i = 0; i <= OSC_POINTS; i++) {
+            float u = i / (float) OSC_POINTS;
+            float px = left + i * stepX;
+
+            float sampleAmp = 0f;
+            if (waveLen > 0 && sweepSamples > 0) {
+                int sampleIdx = triggerOffset + (int) (u * (sweepSamples - 1));
+                sampleIdx = Math.max(0, Math.min(sampleIdx, waveLen - 1));
+                int raw = (rawWaveform[sampleIdx] & 0xFF) - 128; // -128..+127
+                sampleAmp = (raw / 128.0f) * gain;
+            }
+
+            // Gentle cosine edge taper on the outer 3% to anchor cleanly at centerY margins
+            float edgeTaper = 1.0f;
+            if (u < 0.03f) {
+                edgeTaper = (float) (0.5 * (1.0 - Math.cos(Math.PI * (u / 0.03f))));
+            } else if (u > 0.97f) {
+                edgeTaper = (float) (0.5 * (1.0 - Math.cos(Math.PI * ((1.0 - u) / 0.03f))));
+            }
+
+            float targetY = centerY - sampleAmp * maxAmp * edgeTaper;
+            oscYPoints[i] = oscYPoints[i] * inertia + targetY * currentWeight;
+            float py = oscYPoints[i];
+
+            if (py < minPeakY) {
+                minPeakY = py;
+                minPeakX = px;
+            }
+            if (py > maxPeakY) {
+                maxPeakY = py;
+                maxPeakX = px;
+            }
+        }
+
+        float persistenceFrac = oscPersistence / 100.0f;
+        int activeTrails = persistenceFrac > 0.05f
+                ? Math.min(MAX_OSC_TRAILS, Math.max(1, Math.round(persistenceFrac * MAX_OSC_TRAILS)))
+                : 0;
+
+        oscGlowPaint.setShader(oscShader);
+        oscPaint.setShader(oscShader);
+
+        // Render previous CRT sweep passes fading into the phosphor background
+        if (activeTrails > 0) {
+            for (int t = activeTrails; t >= 1; t--) {
+                int histIdx = (oscHistoryHead - t + MAX_OSC_TRAILS) % MAX_OSC_TRAILS;
+                if (!oscHistoryValid[histIdx]) continue;
+
+                // Exponential phosphor decay curve
+                float decay = (float) Math.pow(0.55f + 0.35f * persistenceFrac, t);
+                int trailAlpha = Math.max(0, Math.min(255, (int) (currentAlpha * 0.70f * decay)));
+                if (trailAlpha <= 4) continue;
+
+                oscHistoryPath.reset();
+                oscHistoryPath.moveTo(left, oscHistory[histIdx][0]);
+                for (int i = 0; i < OSC_POINTS; i++) {
+                    float x1 = left + i * stepX;
+                    float y1 = oscHistory[histIdx][i];
+                    float x2 = left + (i + 1) * stepX;
+                    float y2 = oscHistory[histIdx][i + 1];
+                    float midX = (x1 + x2) / 2f;
+                    oscHistoryPath.cubicTo(midX, y1, midX, y2, x2, y2);
+                }
+
+                // Phosphor bloom spreads slightly wider on lingering trails
+                float trailGlowW = glowW * (1.0f + 0.12f * t);
+                float trailStrokeW = strokeW * (1.0f + 0.06f * t);
+
+                oscGlowPaint.setStrokeWidth(trailGlowW);
+                oscGlowPaint.setAlpha(Math.max(4, (int) (trailAlpha * 0.32f)));
+                canvas.drawPath(oscHistoryPath, oscGlowPaint);
+
+                oscPaint.setStrokeWidth(trailStrokeW);
+                oscPaint.setAlpha(trailAlpha);
+                canvas.drawPath(oscHistoryPath, oscPaint);
+            }
+        }
+
+        // Connect points for the active sweep using smooth cubic Bezier spline
+        oscPath.moveTo(left, oscYPoints[0]);
+        for (int i = 0; i < OSC_POINTS; i++) {
+            float x1 = left + i * stepX;
+            float y1 = oscYPoints[i];
+            float x2 = left + (i + 1) * stepX;
+            float y2 = oscYPoints[i + 1];
+            float midX = (x1 + x2) / 2f;
+            oscPath.cubicTo(midX, y1, midX, y2, x2, y2);
+        }
+
+        // Draw outer CRT phosphor glow for current beam
+        oscGlowPaint.setStrokeWidth(glowW);
+        oscGlowPaint.setAlpha(Math.max(10, (int) (currentAlpha * 0.38f)));
+        canvas.drawPath(oscPath, oscGlowPaint);
+
+        // Draw crisp central beam
+        oscPaint.setStrokeWidth(strokeW);
+        oscPaint.setAlpha(currentAlpha);
+        canvas.drawPath(oscPath, oscPaint);
+
+        oscPaint.setShader(null);
+        oscGlowPaint.setShader(null);
+
+        // Record current sweep to historical ring buffer
+        System.arraycopy(oscYPoints, 0, oscHistory[oscHistoryHead], 0, OSC_POINTS + 1);
+        oscHistoryValid[oscHistoryHead] = true;
+        oscHistoryHead = (oscHistoryHead + 1) % MAX_OSC_TRAILS;
+
+        // Optional: draw floating phosphor peak beads at wave extrema
+        if (peakCapsEnabled && (Math.abs(minPeakY - centerY) > 3f || Math.abs(maxPeakY - centerY) > 3f)) {
+            int beadAlpha = Math.max(10, Math.min(255, (int) (currentAlpha * 0.85f)));
+            peakPaint.setColor(0x00FFFFFF | (beadAlpha << 24));
+            float beadRadius = strokeW * 0.9f;
+            if (Math.abs(minPeakY - centerY) > 3f) {
+                canvas.drawCircle(minPeakX, minPeakY, beadRadius, peakPaint);
+            }
+            if (Math.abs(maxPeakY - centerY) > 3f) {
+                canvas.drawCircle(maxPeakX, maxPeakY, beadRadius, peakPaint);
+            }
+        }
+    }
+
     private float drawArtist(Canvas canvas, String artist, float x, float right, float baseline,
                              float alpha) {
         float room = (right - x) * ARTIST_MAX_F;
@@ -694,7 +1182,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return x + width + infoPaint.measureText("   ");
     }
 
-    /** The pressed symbol, fading, drawn over everything and centred on the screen. */
     private void drawTransportFlash(Canvas canvas, float viewW, float viewH) {
         float left = Math.max(0f, (flashUntil - System.currentTimeMillis()) / (float) FLASH_MS);
         if (left <= 0f) return;
@@ -737,17 +1224,74 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                 canvas.drawRect(Math.min(barX, barX + dir * w * 0.14f), cy - h / 2f,
                         Math.max(barX, barX + dir * w * 0.14f), cy + h / 2f, infoPaint);
                 break;
+            case GLYPH_STYLE_CYCLE:
+                float sineW = size * 1.1f;
+                float sineH = size * 0.42f;
+                glyphPath.reset();
+                glyphPath.moveTo(cx - sineW / 2f, cy);
+                glyphPath.cubicTo(
+                        cx - sineW * 0.25f, cy - sineH,
+                        cx - sineW * 0.25f, cy - sineH,
+                        cx, cy
+                );
+                glyphPath.cubicTo(
+                        cx + sineW * 0.25f, cy + sineH,
+                        cx + sineW * 0.25f, cy + sineH,
+                        cx + sineW / 2f, cy
+                );
+                infoPaint.setStyle(Paint.Style.STROKE);
+                infoPaint.setStrokeWidth(Math.max(3f, size * 0.08f));
+                infoPaint.setStrokeCap(Paint.Cap.ROUND);
+                canvas.drawPath(glyphPath, infoPaint);
+                infoPaint.setStyle(Paint.Style.FILL);
+                break;
             default:
                 break;
         }
     }
 
-    /**
-     * The strip: who is playing it, its cover, the line, and how far through.
-     *
-     * <p>Everything is sized from the strip's own height, which the owner sets, so the whole row
-     * scales together instead of a fixed icon sitting in a band twice its size.
-     */
+    private void drawStyleCycleButton(Canvas canvas, float viewW, float viewH) {
+        float density = getResources().getDisplayMetrics().density;
+        float radius = 22f * density;
+        float cx = viewW - 32f * density;
+        float cy = viewH - 32f * density;
+
+        // Background disc
+        btnBgPaint.setColor(0x44000000);
+        btnBgPaint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(cx, cy, radius, btnBgPaint);
+
+        // Subtle border
+        btnBorderPaint.setColor(0x66FFFFFF);
+        btnBorderPaint.setStyle(Paint.Style.STROKE);
+        btnBorderPaint.setStrokeWidth(1.2f * density);
+        canvas.drawCircle(cx, cy, radius, btnBorderPaint);
+
+        // Oscilloscope sine wave icon
+        btnIconPaint.setColor(0xEEFFFFFF);
+        btnIconPaint.setStyle(Paint.Style.STROKE);
+        btnIconPaint.setStrokeCap(Paint.Cap.ROUND);
+        btnIconPaint.setStrokeJoin(Paint.Join.ROUND);
+        btnIconPaint.setStrokeWidth(2.2f * density);
+
+        sineIconPath.reset();
+        float w = 24f * density;
+        float amp = 7f * density;
+        float startX = cx - w / 2f;
+        sineIconPath.moveTo(startX, cy);
+        sineIconPath.cubicTo(
+                startX + w * 0.25f, cy - amp * 1.3f,
+                startX + w * 0.25f, cy - amp * 1.3f,
+                startX + w * 0.5f, cy
+        );
+        sineIconPath.cubicTo(
+                startX + w * 0.75f, cy + amp * 1.3f,
+                startX + w * 0.75f, cy + amp * 1.3f,
+                startX + w, cy
+        );
+        canvas.drawPath(sineIconPath, btnIconPaint);
+    }
+
     private void drawNowPlaying(Canvas canvas, float viewW, float viewH) {
         if (nowPlaying == null || (!nowPlaying.hasTrack() && !nowPlaying.isPlaying())) return;
         float h = bottomInset;
@@ -801,8 +1345,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             float textW = infoPaint.measureText(line);
 
             if (!line.equals(marqueeLine)) {
-                // A new track starts from the left. Nothing else does - the same line keeps its
-                // place across every redraw, whatever else asked us to redraw.
                 marqueeLine = line;
                 marqueeOffset = 0f;
             }
@@ -810,8 +1352,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             canvas.save();
             canvas.clipRect(x, top, right, viewH);
             if (textW <= avail) {
-                // It fits, so it stays still. A line that scrolls when it does not need to is
-                // movement for its own sake, and this thing is meant to be glanced at.
                 marqueeRunning = false;
                 marqueeOffset = 0f;
                 canvas.drawText(line, x, baseline, infoPaint);
@@ -840,14 +1380,6 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         }
     }
 
-    /**
-     * The clock, rising into the space the bars are leaving.
-     *
-     * <p>Sized from the band rather than from a fixed number, so it is the same shape whatever the
-     * owner has done with the sliders, and on a tall screen it does not turn into a postage stamp.
-     * It grows the last few per cent as it appears, which is what makes it read as arriving rather
-     * than as being switched on.
-     */
     private void drawClock(Canvas canvas, float cx, float cy, float bandHeight) {
         String[] parts = currentClockParts();
         String hourStr = parts[0];

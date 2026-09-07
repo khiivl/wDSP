@@ -141,6 +141,26 @@ public class AudioSpectrumEngine {
     private final java.util.concurrent.ConcurrentHashMap<OnSpectrumDataListener, Integer> consumerOf
             = new java.util.concurrent.ConcurrentHashMap<>();
 
+    // Live raw PCM waveform snapshot for real-time oscilloscope visualization
+    private final byte[] latestWaveform = new byte[1024];
+    private volatile int latestWaveformLen = 0;
+    private final Object waveformLock = new Object();
+
+    /**
+     * Copies the latest raw PCM waveform snapshot (unsigned 8-bit, 128 = zero baseline).
+     *
+     * @param outBuffer Destination array to copy into
+     * @return Number of samples copied, or 0 if no waveform available
+     */
+    public int getLatestWaveform(byte[] outBuffer) {
+        if (outBuffer == null || latestWaveformLen <= 0) return 0;
+        synchronized (waveformLock) {
+            int len = Math.min(outBuffer.length, latestWaveformLen);
+            System.arraycopy(latestWaveform, 0, outBuffer, 0, len);
+            return len;
+        }
+    }
+
     // --- Native path ---------------------------------------------------------------------------
     //
     // When the shared library is present the whole measurement chain runs in C++ and the platform
@@ -754,6 +774,10 @@ public class AudioSpectrumEngine {
                     if (v.getWaveForm(buffer) == Visualizer.SUCCESS) {
                         noteSignal(buffer);
                         nativeAnalyzer.push(buffer, size);
+                        synchronized (waveformLock) {
+                            System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(size, latestWaveform.length));
+                            latestWaveformLen = Math.min(size, latestWaveform.length);
+                        }
                     }
                 } catch (Throwable t) {
                     break;
@@ -1073,6 +1097,13 @@ public class AudioSpectrumEngine {
                     public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
                         noteSignal(waveform);
                         processWaveform(waveform, samplingRate);
+                        if (waveform != null) {
+                            synchronized (waveformLock) {
+                                int len = Math.min(waveform.length, latestWaveform.length);
+                                System.arraycopy(waveform, 0, latestWaveform, 0, len);
+                                latestWaveformLen = len;
+                            }
+                        }
                     }
 
                     @Override

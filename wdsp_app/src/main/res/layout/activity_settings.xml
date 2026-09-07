@@ -569,53 +569,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- Кількість смуг візуалізатора (16 / 32) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/label_status_bar_bands"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/status_bar_bands_count"
-                        android:textColor="@color/text_theme_aware"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/btn_status_bar_bands_16"
-                            android:layout_width="56dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
-                            android:text="16"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/btn_status_bar_bands_32"
-                            android:layout_width="56dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
-                            android:text="32"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
 
                 <!-- Ручне розміщення смуги: потрібне там, де бар малює лаунчер -->
                 <LinearLayout
@@ -777,16 +730,60 @@
                     android:text="@string/status_bar_placement_hint"
                     android:textSize="11sp" />
 
-                <!-- Тема візуалізатора (Сітка кнопок 4х2) -->
-                <TextView
-                    android:id="@+id/label_status_bar_theme"
-                    android:layout_width="wrap_content"
+                <!-- Вибір активного ефекту для статус-бара -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/status_bar_visualizer_theme"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_style_select"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_style_label"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/spinner_status_bar_style"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="140dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 3: 🎨 Ефекти візуалізації
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_vis_effects_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/vis_effects_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_licence_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/label_vis_effects_select_style"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vis_effects_select_style"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
+                <!-- Рядок 1: Класика, Outrun Піки, Градієнт -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -794,18 +791,18 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_theme_spectrum"
+                        android:id="@+id/btn_style_classic"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_spectrum"
+                        android:text="@string/status_bar_style_classic"
                         android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/btn_theme_solid_hue"
+                        android:id="@+id/btn_style_outrun"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -813,11 +810,11 @@
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_solid_hue"
+                        android:text="@string/status_bar_style_outrun"
                         android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/btn_theme_auto_day_night"
+                        android:id="@+id/btn_style_gradient"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -825,22 +822,11 @@
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_auto_day_night"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/btn_theme_eq_groups"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        android:gravity="center"
-                        android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_eq_groups"
+                        android:text="@string/status_bar_style_gradient"
                         android:textSize="11sp" />
                 </LinearLayout>
 
+                <!-- Рядок 2: Центрований, VU-метр, Осцилограф -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -848,18 +834,18 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_theme_white"
+                        android:id="@+id/btn_style_center"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_monochrome_white"
+                        android:text="@string/status_bar_style_center"
                         android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/btn_theme_black"
+                        android:id="@+id/btn_style_vu"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -867,11 +853,11 @@
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_monochrome_black"
+                        android:text="@string/status_bar_style_vu"
                         android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/btn_theme_fire"
+                        android:id="@+id/btn_style_oscillo"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -879,24 +865,427 @@
                         android:gravity="center"
                         android:padding="8dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_fire"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/btn_theme_neon"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        android:gravity="center"
-                        android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
-                        android:text="@string/status_bar_theme_neon"
+                        android:text="@string/status_bar_style_oscillo"
                         android:textSize="11sp" />
                 </LinearLayout>
 
-                <!-- Зсув HUE для візуалізатора (динамічно) -->
+                <!-- 1. Динамічний контейнер: Плаваючі пікові мітки (Floating Peak Caps) -->
                 <LinearLayout
+                    android:id="@+id/container_vis_peaks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_peaks"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/status_bar_peaks_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_sb_vis_peaks"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/status_bar_peaks_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_status_bar_peaks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- 2. Динамічний контейнер: Симетричний спектр (Mirror / Center Bass) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_mirror"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_mirror"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/status_bar_mirror_label"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_sb_vis_mirror"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/status_bar_mirror_desc"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switch_status_bar_mirror"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- 3. Динамічний контейнер: Кількість смуг візуалізатора (16 / 32) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_bands"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_bands"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_bands_count"
+                        android:textColor="@color/text_theme_aware"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_16"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="16"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_32"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="32"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 3a. Динамічний контейнер: Післясвітіння люмінофору (Phosphor Afterglow / Persistence) для осцилографа -->
+                <LinearLayout
+                    android:id="@+id/container_vis_oscillo_persistence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/label_vis_oscillo_persistence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/vis_oscillo_persistence_label"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/desc_vis_oscillo_persistence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/vis_oscillo_persistence_desc"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_vis_oscillo_persistence"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="56dp"
+                            android:gravity="end"
+                            android:text="60%"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_vis_oscillo_persistence"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:valueFrom="0"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="60"
+                        app:thumbHeight="20dp"
+                        app:thumbWidth="20dp"
+                        app:thumbRadius="10dp"
+                        app:haloRadius="0dp"
+                        app:haloColor="@color/transparent"
+                        app:thumbColor="@color/cyan_custom"
+                        app:tickColorActive="@color/transparent"
+                        app:tickColorInactive="@color/transparent"
+                        app:trackColorActive="@color/track_color_active"
+                        app:trackColorInactive="@color/track_color_inactive"
+                        app:trackHeight="5dp"
+                        app:trackStopIndicatorSize="0dp"
+                        app:tickVisibilityMode="hidden"
+                        app:labelBehavior="gone" />
+                </LinearLayout>
+
+                <!-- 4. Динамічний контейнер: Теми та FastLED палітри -->
+                <LinearLayout
+                    android:id="@+id/container_vis_palettes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_theme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/status_bar_visualizer_theme"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_spectrum"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_spectrum"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_solid_hue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_solid_hue"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_auto_day_night"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_auto_day_night"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_eq_groups"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_eq_groups"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_white"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_monochrome_white"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_black"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_monochrome_black"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_fire"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_fire"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_neon"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_neon"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/label_status_bar_palettes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/status_bar_palettes_fastled"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <!-- Рядок 1: Synthwave (purple_gp), Sherbet (rainbowsherbet_gp), Warm VU (redyellow_gp) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_purple"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_purple"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_rainbow_sherbet"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_rainbow_sherbet"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_warm_vu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_warm_vu"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Рядок 2: Colorfull (Colorfull_gp), Ocean Breeze (es_ocean_breeze), Sunset Real (Sunset_Real_gp) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_colorfull"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_colorfull"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_ocean_breeze"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_ocean_breeze"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_sunset_real"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@drawable/rds_btn_bg"
+                            android:text="@string/status_bar_theme_sunset_real"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 5. Динамічний контейнер: Зсув HUE для візуалізатора -->
+                <LinearLayout
+                    android:id="@+id/container_vis_hue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -941,8 +1330,9 @@
                         android:textSize="13sp" />
                 </LinearLayout>
 
-                <!-- Динамічна нормалізація для статус-бара -->
+                <!-- 6. Динамічний контейнер: Динамічна нормалізація (AGC) -->
                 <LinearLayout
+                    android:id="@+id/container_vis_normalization"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -976,7 +1366,21 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
+
+                <!-- Кнопка "Показати на скрінсейвері" -->
+                <TextView
+                    android:id="@+id/btn_vis_preview_screensaver"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:background="@drawable/rds_btn_bg"
+                    android:text="@string/btn_vis_preview_screensaver"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
             </LinearLayout>
+
 
             <!-- ════════════════════════════════════════════════════════════
                  СЕКЦІЯ 3: 🎛️ Візуалізатор еквалайзера
@@ -1577,16 +1981,16 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/label_screensaver_bg"
+                        android:id="@+id/label_screensaver_bg_day"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_bg_alpha"
+                        android:text="@string/screensaver_bg_alpha_day"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tv_screensaver_bg"
+                        android:id="@+id/tv_screensaver_bg_day"
                         style="@style/TextValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -1596,7 +2000,7 @@
                 </LinearLayout>
 
                 <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_bg"
+                    android:id="@+id/seek_screensaver_bg_day"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:valueFrom="0"
@@ -1611,6 +2015,73 @@
                     app:tickColorActive="@color/transparent"
                     app:tickColorInactive="@color/transparent"
                     app:labelBehavior="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_bg_night"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_bg_alpha_night"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_bg_night"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_bg_night"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0"
+                    android:valueTo="100"
+                    android:stepSize="1"
+                    android:value="95"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:labelBehavior="gone" />
+
+                <!-- Вибір активного ефекту для скрінсейвера -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_style"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_style_label"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/spinner_screensaver_style"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="140dp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

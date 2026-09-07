@@ -17,7 +17,7 @@ import android.view.WindowManager;
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 /**
- * Manages the Status Bar Visualizer overlay lifecycle, positioning, and audio gating.
+ * Manages the Status Bar Visualizer overlay lifecycle, positioning, styling, and audio gating.
  * Follows the non-intrusive status bar overlay design from TopBarWidget.
  */
 public class StatusBarVisualizerManager {
@@ -29,23 +29,45 @@ public class StatusBarVisualizerManager {
     public static final String PREF_STATUS_BAR_THEME   = "sb_vis_theme";
     public static final String PREF_STATUS_BAR_HUE     = "sb_vis_hue";
     public static final String PREF_STATUS_BAR_ALPHA   = "sb_vis_alpha";
+    public static final String PREF_STATUS_BAR_ALPHA_DAY   = "sb_vis_alpha_day";
+    public static final String PREF_STATUS_BAR_ALPHA_NIGHT = "sb_vis_alpha_night";
     public static final String PREF_STATUS_BAR_HEIGHT_PX = "sb_vis_height_px";
     /**
      * How far below the top edge the strip is drawn, in pixels.
-     *
-     * Zero everywhere the bar starts at the very top, which is nearly everywhere. It exists for
-     * the units where the strip on screen belongs to the launcher and does not begin at the edge.
+     * Zero everywhere the bar starts at the very top.
      */
     public static final String PREF_STATUS_BAR_OFFSET_Y = "sb_vis_offset_y";
     public static final String PREF_STATUS_BAR_NORMALIZATION = "sb_vis_normalization";
     public static final String PREF_STATUS_BAR_BANDS   = "sb_vis_bands";
+
+    // New preferences adapted from FireLamp EffectVU
+    public static final String PREF_STATUS_BAR_STYLE   = "sb_vis_style";
+    public static final String PREF_STATUS_BAR_STYLE_DAY = "sb_vis_style_day";
+    public static final String PREF_STATUS_BAR_STYLE_NIGHT = "sb_vis_style_night";
+    public static final String PREF_STATUS_BAR_PEAKS   = "sb_vis_peaks";
+    public static final String PREF_STATUS_BAR_MIRROR  = "sb_vis_mirror";
+    public static final String PREF_STATUS_BAR_OSC_PERSISTENCE = "sb_vis_osc_persistence";
 
     public static final float DEFAULT_WIDTH_F = 0.40f;
     public static final float DEFAULT_POS_F   = 0.50f;
     public static final int DEFAULT_THEME     = StatusBarVisualizerView.THEME_SPECTRUM;
     public static final int DEFAULT_HUE       = 0;
     public static final int DEFAULT_ALPHA     = 100;
+    public static final int DEFAULT_ALPHA_DAY   = 100;
+    public static final int DEFAULT_ALPHA_NIGHT = 70;
     public static final int DEFAULT_BANDS     = 32;
+
+    public static final int STYLE_CLASSIC_BARS     = StatusBarVisualizerView.STYLE_CLASSIC_BARS;
+    public static final int STYLE_OUTRUN_PEAKS     = StatusBarVisualizerView.STYLE_OUTRUN_PEAKS;
+    public static final int STYLE_PALETTE_GRADIENT = StatusBarVisualizerView.STYLE_PALETTE_GRADIENT;
+    public static final int STYLE_CENTER_BARS      = StatusBarVisualizerView.STYLE_CENTER_BARS;
+    public static final int STYLE_VU_GRADIENT      = StatusBarVisualizerView.STYLE_VU_GRADIENT;
+    public static final int STYLE_OSCILLOSCOPE     = StatusBarVisualizerView.STYLE_OSCILLOSCOPE;
+
+    public static final int DEFAULT_STYLE      = STYLE_CLASSIC_BARS;
+    public static final boolean DEFAULT_PEAKS  = true;
+    public static final boolean DEFAULT_MIRROR = false;
+    public static final int DEFAULT_OSC_PERSISTENCE = 60;
 
     private final Context context;
     private final WindowManager windowManager;
@@ -63,6 +85,87 @@ public class StatusBarVisualizerManager {
     private int hueShift = DEFAULT_HUE;
     private int alphaPercent = DEFAULT_ALPHA;
     private int bandCount = DEFAULT_BANDS;
+
+    // Visualizer style options
+    private int style = DEFAULT_STYLE;
+    private boolean peaksEnabled = DEFAULT_PEAKS;
+    private boolean mirrorFrequencies = DEFAULT_MIRROR;
+    private int oscPersistence = DEFAULT_OSC_PERSISTENCE;
+    private boolean normalizationEnabled = false;
+
+    public static int defaultThemeForStyle(int s) {
+        switch (s) {
+            case STYLE_OUTRUN_PEAKS:
+                return StatusBarVisualizerView.THEME_NEON;
+            case STYLE_PALETTE_GRADIENT:
+                return StatusBarVisualizerView.THEME_RAINBOW_SHERBET;
+            case STYLE_CENTER_BARS:
+                return StatusBarVisualizerView.THEME_PURPLE_SYNTHWAVE;
+            case STYLE_VU_GRADIENT:
+                return StatusBarVisualizerView.THEME_WARM_VU;
+            case STYLE_OSCILLOSCOPE:
+                return StatusBarVisualizerView.THEME_NEON;
+            case STYLE_CLASSIC_BARS:
+            default:
+                return StatusBarVisualizerView.THEME_SPECTRUM;
+        }
+    }
+
+    public static boolean defaultPeaksForStyle(int s) {
+        switch (s) {
+            case STYLE_PALETTE_GRADIENT:
+            case STYLE_OSCILLOSCOPE:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static boolean defaultMirrorForStyle(int s) {
+        return s == STYLE_CENTER_BARS;
+    }
+
+    public static int defaultBandsForStyle(int s) {
+        return 32;
+    }
+
+    public static int defaultHueForStyle(int s) {
+        return 0;
+    }
+
+    public static int defaultPersistenceForStyle(int s) {
+        return 60;
+    }
+
+    public static boolean defaultNormalizationForStyle(int s) {
+        return s == STYLE_OSCILLOSCOPE;
+    }
+
+    public void loadStyleParameters(int s, boolean night) {
+        this.theme = getThemeForStyle(s, night);
+        this.hueShift = getHueForStyle(s, night);
+        this.bandCount = getBandsForStyle(s);
+        this.peaksEnabled = getPeaksForStyle(s);
+        this.mirrorFrequencies = getMirrorForStyle(s);
+        this.oscPersistence = getPersistenceForStyle(s);
+        this.normalizationEnabled = getNormalizationForStyle(s);
+    }
+
+    public void loadStyleParameters(int s) {
+        loadStyleParameters(s, ThemeManager.isNight(context));
+    }
+
+    public void applyCurrentStyleToView(StatusBarVisualizerView v) {
+        if (v == null) return;
+        v.setStyle(this.style);
+        v.setTheme(this.theme);
+        v.setHueShift(this.hueShift);
+        v.setBandCount(this.bandCount);
+        v.setPeakCapsEnabled(this.peaksEnabled);
+        v.setMirrorFrequencies(this.mirrorFrequencies);
+        v.setOscPersistence(this.oscPersistence);
+        v.setNormalizationEnabled(this.normalizationEnabled);
+    }
 
     // Audio gating: Channel 4 (Media) = Active, Channel 2 (Radio) = Inactive
     private int currentChannel = 4; // Default to Media
@@ -102,10 +205,10 @@ public class StatusBarVisualizerManager {
         isEnabled = prefs.getBoolean(PREF_STATUS_BAR_ENABLED, true);
         widthFraction = prefs.getFloat(PREF_STATUS_BAR_WIDTH_F, DEFAULT_WIDTH_F);
         posFraction = prefs.getFloat(PREF_STATUS_BAR_POS_F, DEFAULT_POS_F);
-        theme = prefs.getInt(PREF_STATUS_BAR_THEME, DEFAULT_THEME);
-        hueShift = prefs.getInt(PREF_STATUS_BAR_HUE, DEFAULT_HUE);
-        alphaPercent = prefs.getInt(PREF_STATUS_BAR_ALPHA, DEFAULT_ALPHA);
-        bandCount = prefs.getInt(PREF_STATUS_BAR_BANDS, DEFAULT_BANDS);
+        boolean night = ThemeManager.isNight(context);
+        alphaPercent = getAlphaPercent(night);
+        style = getStyle(night);
+        loadStyleParameters(style, night);
     }
 
     public boolean canDrawOverlays() {
@@ -113,13 +216,11 @@ public class StatusBarVisualizerManager {
     }
 
     public int getStatusBarHeight() {
-        // 1. Check if already measured and saved
         int customHeight = prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
         if (customHeight > 0) {
             return customHeight;
         }
 
-        // 2. Read directly from system resources dimen and cache permanently
         int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resId > 0) {
             int h = context.getResources().getDimensionPixelSize(resId);
@@ -129,34 +230,17 @@ public class StatusBarVisualizerManager {
             }
         }
 
-        // 3. Fallback based on density and save
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         int fallback = (int) (28 * dm.density);
         prefs.edit().putInt(PREF_STATUS_BAR_HEIGHT_PX, fallback).apply();
         return fallback;
     }
 
-    /**
-     * How far down the strip is drawn, never far enough to lose it.
-     *
-     * <p>The stored number used to be taken as given, and the slider's travel was the whole screen
-     * height - so the last few pixels of travel pushed the strip entirely below the bottom edge,
-     * where it cannot be seen and cannot be grabbed back. The clamp lives here rather than only in
-     * the slider because the height can change afterwards: a strip parked at the bottom and then
-     * made taller would walk off the screen on its own.
-     */
     public int offsetY() {
         int stored = Math.max(0, prefs.getInt(PREF_STATUS_BAR_OFFSET_Y, 0));
         return Math.min(stored, maxOffsetY());
     }
 
-    /**
-     * What the platform reserves for its own status bar, ignoring any manual strip height.
-     *
-     * <p>{@link #getStatusBarHeight()} answers a different question - how tall the owner wants the
-     * strip - and on a unit where they have set that by hand the two are unrelated. The screensaver
-     * needs the real one, because that is the part of the screen it cannot draw on.
-     */
     public int systemStatusBarHeight() {
         int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resId > 0) {
@@ -166,7 +250,6 @@ public class StatusBarVisualizerManager {
         return 0;
     }
 
-    /** The lowest offset that still leaves the whole strip on the screen. */
     public int maxOffsetY() {
         return Math.max(0, screenHeight() - getStatusBarHeight());
     }
@@ -176,13 +259,6 @@ public class StatusBarVisualizerManager {
         updateWindowGeometry();
     }
 
-    /**
-     * Sets the height by hand, or returns to measuring it.
-     *
-     * <p>Zero means automatic: the stored value is cleared and {@link #getStatusBarHeight()} goes
-     * back to asking the platform. That matters because a person experimenting needs a way back -
-     * and because on most units the automatic answer is the right one.
-     */
     public void setManualHeight(int px) {
         if (px <= 0) {
             prefs.edit().remove(PREF_STATUS_BAR_HEIGHT_PX).apply();
@@ -192,7 +268,6 @@ public class StatusBarVisualizerManager {
         updateWindowGeometry();
     }
 
-    /** The height set by hand, or 0 when it is being measured automatically. */
     public int manualHeight() {
         return prefs.getInt(PREF_STATUS_BAR_HEIGHT_PX, 0);
     }
@@ -207,22 +282,6 @@ public class StatusBarVisualizerManager {
         }
     }
 
-    /**
-     * The display the overlay actually lives on, not the one the app was configured for.
-     *
-     * <h2>Why not getResources().getDisplayMetrics()</h2>
-     *
-     * Because there is more than one answer to "how big is the screen" and they disagree. Resource
-     * metrics describe the window a context was configured for, and an activity that draws behind
-     * the system bars gets a different number from a service that does not - so the slider's travel
-     * was computed against one screen and the overlay placed on another. After a few moves of the
-     * height slider the two drifted far enough apart to put the bottom of the strip below the
-     * edge, which is exactly the fault this was supposed to prevent.
-     *
-     * <p>An overlay window is positioned in display coordinates, so the display is the only
-     * measurement that can be right. Everything that places the strip - here and in the settings
-     * sliders - now asks this.
-     */
     public int screenWidth() {
         return realDisplaySize()[0];
     }
@@ -269,12 +328,9 @@ public class StatusBarVisualizerManager {
     public void onPreferenceChanged(String key) {
         mainHandler.post(() -> {
             loadPreferences();
-            if (visualizerView != null) {
-                visualizerView.setTheme(theme);
-                visualizerView.setHueShift(hueShift);
+            if (visualizerView != null && !isLentToScreensaver()) {
                 visualizerView.setAlphaPercent(alphaPercent);
-                visualizerView.setBandCount(bandCount);
-                visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
+                applyCurrentStyleToView(visualizerView);
             }
             updateWindowGeometry();
             evaluateVisibility();
@@ -311,11 +367,8 @@ public class StatusBarVisualizerManager {
 
         if (visualizerView == null) {
             visualizerView = new StatusBarVisualizerView(context);
-            visualizerView.setTheme(theme);
-            visualizerView.setHueShift(hueShift);
             visualizerView.setAlphaPercent(alphaPercent);
-            visualizerView.setBandCount(bandCount);
-            visualizerView.setNormalizationEnabled(prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, false));
+            applyCurrentStyleToView(visualizerView);
         }
 
         if (layoutParams == null) {
@@ -369,15 +422,6 @@ public class StatusBarVisualizerManager {
         }
     }
 
-    /**
-     * Writes the strip's size and position into {@code layoutParams} - the only place that does.
-     *
-     * <p>There used to be two, one on the attach path and one on the update path, and they had to
-     * agree. They stopped agreeing the moment the screensaver could borrow the window: the update
-     * path learned about it and the attach path did not, so the next time anything re-evaluated
-     * visibility - and the audio gating does that constantly - the strip snapped back to its own
-     * size underneath the backdrop.
-     */
     private void fillGeometry() {
         if (layoutParams == null) return;
         if (screensaverBounds != null) {
@@ -395,14 +439,8 @@ public class StatusBarVisualizerManager {
 
     // -------------------------------------------------------------------------------------------
     // lending the strip to the screensaver
-    //
-    // The screensaver shows the same widget, larger. Not a copy of it - the same one. Two
-    // visualiser views would both be listening to the spectrum engine and both drawing, for one
-    // picture; and a copy would drift from the original the first time a theme or a band count
-    // changed in one place and not the other.
     // -------------------------------------------------------------------------------------------
 
-    /** width, height, x, y while the screensaver has it; null the rest of the time. */
     private int[] screensaverBounds;
     private Runnable onBack;
 
@@ -410,13 +448,6 @@ public class StatusBarVisualizerManager {
         return isViewAttached && visualizerView != null;
     }
 
-    /**
-     * Hands the strip to the screensaver: new size, new brightness, and lifted above the backdrop.
-     *
-     * <p>Removing and re-adding the view is not laziness - {@code updateViewLayout} keeps a window
-     * where it is in the stacking order, and the backdrop was added after the strip, so without
-     * this the strip would be painted underneath it.
-     */
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
                                  int alphaPercent, int bottomInset, boolean screensaverPaused,
                                  View.OnTouchListener touchHandler, Runnable onBack) {
@@ -430,28 +461,26 @@ public class StatusBarVisualizerManager {
         visualizerView.setBackdrop(backdrop);
         visualizerView.setBandFractions(widthFraction, heightFraction);
         visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
-        // The screensaver owns this judgement - it waits out a gap between tracks before it
+        ScreensaverManager ssMgr = ScreensaverManager.getInstance(context);
+        int ssStyle = ssMgr.style();
+        visualizerView.setStyle(ssStyle);
+        visualizerView.setTheme(ssMgr.theme(ssStyle));
+        visualizerView.setHueShift(ssMgr.hueShift(ssStyle));
+        visualizerView.setBandCount(ssMgr.bandCount(ssStyle));
+        visualizerView.setPeakCapsEnabled(ssMgr.peaksEnabled(ssStyle));
+        visualizerView.setMirrorFrequencies(ssMgr.mirrorFrequencies(ssStyle));
+        visualizerView.setOscPersistence(ssMgr.oscPersistence(ssStyle));
+        visualizerView.setNormalizationEnabled(ssMgr.normalizationEnabled(ssStyle));
+
         NowPlaying np = NowPlaying.getInstance(context);
         np.refresh();
         boolean isRadio = np.isRadioSource();
         visualizerView.setScreensaverState(true, isRadio || screensaverPaused);
         visualizerView.setNowPlayingSource((np.hasTrack() || np.isPlaying()) ? np : null);
         np.setMetadataListener(visualizerView::postInvalidate);
-        // The strip normally lets every touch through. For as long as it is the screensaver it has
-        // to catch them: the tap that puts it away must not also press what is underneath, and the
-        // drag zones need the whole gesture, not just its first event.
+
         layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
 
-        // Focus, and therefore the Back key, only when the tuner is not the source.
-        //
-        // An overlay that never takes focus never sees a key, so Back can only be caught by taking
-        // it. But on radio the radio app's own overlay has to sit on top of the screensaver and
-        // keep its station buttons reachable - that is the contract in
-        // .agents/SCREENSAVER_RADIO_CONTRACT.md - and a focused window underneath is a second
-        // claimant on the input. Radio therefore does without Back, by the owner's decision, and
-        // everything else keeps it.
-        //
-        // Home cannot be caught this way or any other; the system claims it before any app.
         if (isRadio) {
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
             visualizerView.setFocusableInTouchMode(false);
@@ -476,37 +505,71 @@ public class StatusBarVisualizerManager {
         updateWindowGeometry();
     }
 
-    /** Brightness only, with no relayout - the screensaver's brightness drag calls this. */
+    public void setScreensaverStyle(int style) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setStyle(style);
+    }
+
+    public void setScreensaverTheme(int theme) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setTheme(theme);
+    }
+
+    public void setScreensaverPeaks(boolean enabled) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setPeakCapsEnabled(enabled);
+    }
+
+    public void setScreensaverMirror(boolean mirror) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setMirrorFrequencies(mirror);
+    }
+
+    public void setScreensaverOscPersistence(int persistence) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setOscPersistence(persistence);
+    }
+
+    public void setScreensaverNormalization(boolean norm) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setNormalizationEnabled(norm);
+    }
+
+    public void setScreensaverBands(int bands) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setBandCount(bands);
+    }
+
+    public void setScreensaverHue(int hue) {
+        if (!isAttached() || screensaverBounds == null) return;
+        visualizerView.setHueShift(hue);
+    }
+
     public void setScreensaverBrightness(int alphaPercent) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setAlphaPercent(alphaPercent);
     }
 
-    /** Shows which transport area was pressed. */
     public void flashTransport(int glyph) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.flashTransport(glyph);
     }
 
-    /** Hands the view the track information, or null when there is nothing we may show. */
     public void setScreensaverInfoSource(NowPlaying source) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setNowPlayingSource(source);
     }
 
-    /** Tells the view whether the music is stopped, which is what drives the clock crossfade. */
     public void setScreensaverNowPlaying(boolean paused) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setScreensaverState(true, paused);
     }
 
-    /** Backdrop only, with no relayout - the screensaver's backdrop drag calls this. */
     public void setScreensaverBackdrop(int color) {
         if (!isAttached() || screensaverBounds == null) return;
         visualizerView.setBackdrop(color);
     }
 
-    /** Puts it back exactly as it was. */
     public void takeBackFromScreensaver() {
         NowPlaying.getInstance(context).setMetadataListener(null);
         screensaverBounds = null;
@@ -515,6 +578,8 @@ public class StatusBarVisualizerManager {
         visualizerView.setBackdrop(0);
         visualizerView.setBandFractions(1f, 1f);
         visualizerView.setInsets(0, 0);
+        loadStyleParameters(style, ThemeManager.isNight(context));
+        applyCurrentStyleToView(visualizerView);
         visualizerView.setScreensaverState(false, false);
         visualizerView.setNowPlayingSource(null);
         visualizerView.setOnTouchListener(null);
@@ -542,24 +607,7 @@ public class StatusBarVisualizerManager {
         int width = calculateWidthPx();
         int freeSpace = Math.max(0, screenW - width);
         float clamped = Math.max(0.0f, Math.min(1.0f, posFraction));
-        // Clamped again on the way out. The arithmetic above already keeps the strip on screen,
-        // but it only does so while the width used here and the width the window actually gets
-        // are the same number - and this is the one place where both are known, so it is the
-        // cheapest place to guarantee it rather than assume it.
         return Math.max(0, Math.min(freeSpace, (int) (freeSpace * clamped)));
-    }
-
-
-    public void removeOverlay() {
-        mainHandler.post(() -> {
-            if (isViewAttached && visualizerView != null) {
-                try {
-                    visualizerView.stop();
-                    windowManager.removeView(visualizerView);
-                } catch (Throwable ignored) {}
-                isViewAttached = false;
-            }
-        });
     }
 
     public void setEnabled(boolean enabled) {
@@ -580,34 +628,294 @@ public class StatusBarVisualizerManager {
         mainHandler.post(this::updateWindowGeometry);
     }
 
+    // --- Per-Style Preferences (EffectVU / FireLamp Architecture) ------------------------------
+
+    public int getThemeForStyle(int s, boolean night) {
+        String key = (PREF_STATUS_BAR_THEME + "_" + s) + (night ? "_night" : "_day");
+        if (prefs.contains(key)) return prefs.getInt(key, defaultThemeForStyle(s));
+        String baseKey = PREF_STATUS_BAR_THEME + "_" + s;
+        if (prefs.contains(baseKey)) return prefs.getInt(baseKey, defaultThemeForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_THEME)) {
+            return prefs.getInt(PREF_STATUS_BAR_THEME, defaultThemeForStyle(s));
+        }
+        return defaultThemeForStyle(s);
+    }
+
+    public int getThemeForStyle(int s) {
+        return getThemeForStyle(s, ThemeManager.isNight(context));
+    }
+
+    public void setThemeForStyle(int s, boolean night, int theme) {
+        String key = (PREF_STATUS_BAR_THEME + "_" + s) + (night ? "_night" : "_day");
+        prefs.edit().putInt(key, theme).apply();
+        prefs.edit().putInt(PREF_STATUS_BAR_THEME + "_" + s, theme).apply();
+        if (s == DEFAULT_STYLE && !night) {
+            prefs.edit().putInt(PREF_STATUS_BAR_THEME, theme).apply();
+        }
+        if (this.style == s && ThemeManager.isNight(context) == night) {
+            this.theme = theme;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setTheme(theme);
+                }
+            });
+        }
+    }
+
+    public void setThemeForStyle(int s, int theme) {
+        setThemeForStyle(s, ThemeManager.isNight(context), theme);
+    }
+
+    public int getHueForStyle(int s, boolean night) {
+        String key = (PREF_STATUS_BAR_HUE + "_" + s) + (night ? "_night" : "_day");
+        if (prefs.contains(key)) return prefs.getInt(key, defaultHueForStyle(s));
+        String baseKey = PREF_STATUS_BAR_HUE + "_" + s;
+        if (prefs.contains(baseKey)) return prefs.getInt(baseKey, defaultHueForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_HUE)) {
+            return prefs.getInt(PREF_STATUS_BAR_HUE, defaultHueForStyle(s));
+        }
+        return defaultHueForStyle(s);
+    }
+
+    public int getHueForStyle(int s) {
+        return getHueForStyle(s, ThemeManager.isNight(context));
+    }
+
+    public void setHueForStyle(int s, boolean night, int hue) {
+        int clamped = Math.max(0, Math.min(360, hue));
+        String key = (PREF_STATUS_BAR_HUE + "_" + s) + (night ? "_night" : "_day");
+        prefs.edit().putInt(key, clamped).apply();
+        prefs.edit().putInt(PREF_STATUS_BAR_HUE + "_" + s, clamped).apply();
+        if (s == DEFAULT_STYLE && !night) {
+            prefs.edit().putInt(PREF_STATUS_BAR_HUE, clamped).apply();
+        }
+        if (this.style == s && ThemeManager.isNight(context) == night) {
+            this.hueShift = clamped;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setHueShift(clamped);
+                }
+            });
+        }
+    }
+
+    public void setHueForStyle(int s, int hue) {
+        setHueForStyle(s, ThemeManager.isNight(context), hue);
+    }
+
+    public int getBandsForStyle(int s) {
+        String key = PREF_STATUS_BAR_BANDS + "_" + s;
+        if (prefs.contains(key)) return prefs.getInt(key, defaultBandsForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_BANDS)) {
+            return prefs.getInt(PREF_STATUS_BAR_BANDS, defaultBandsForStyle(s));
+        }
+        return defaultBandsForStyle(s);
+    }
+
+    public void setBandsForStyle(int s, int bands) {
+        int count = (bands == 16) ? 16 : 32;
+        prefs.edit().putInt(PREF_STATUS_BAR_BANDS + "_" + s, count).apply();
+        if (this.style == s) {
+            this.bandCount = count;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setBandCount(count);
+                }
+            });
+        }
+    }
+
+    public boolean getPeaksForStyle(int s) {
+        String key = PREF_STATUS_BAR_PEAKS + "_" + s;
+        if (prefs.contains(key)) return prefs.getBoolean(key, defaultPeaksForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_PEAKS)) {
+            return prefs.getBoolean(PREF_STATUS_BAR_PEAKS, defaultPeaksForStyle(s));
+        }
+        return defaultPeaksForStyle(s);
+    }
+
+    public void setPeaksForStyle(int s, boolean enabled) {
+        prefs.edit().putBoolean(PREF_STATUS_BAR_PEAKS + "_" + s, enabled).apply();
+        if (this.style == s) {
+            this.peaksEnabled = enabled;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setPeakCapsEnabled(enabled);
+                }
+            });
+        }
+    }
+
+    public boolean getMirrorForStyle(int s) {
+        String key = PREF_STATUS_BAR_MIRROR + "_" + s;
+        if (prefs.contains(key)) return prefs.getBoolean(key, defaultMirrorForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_MIRROR)) {
+            return prefs.getBoolean(PREF_STATUS_BAR_MIRROR, defaultMirrorForStyle(s));
+        }
+        return defaultMirrorForStyle(s);
+    }
+
+    public void setMirrorForStyle(int s, boolean mirror) {
+        prefs.edit().putBoolean(PREF_STATUS_BAR_MIRROR + "_" + s, mirror).apply();
+        if (this.style == s) {
+            this.mirrorFrequencies = mirror;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setMirrorFrequencies(mirror);
+                }
+            });
+        }
+    }
+
+    public int getPersistenceForStyle(int s) {
+        String key = PREF_STATUS_BAR_OSC_PERSISTENCE + "_" + s;
+        if (prefs.contains(key)) return prefs.getInt(key, defaultPersistenceForStyle(s));
+        if (s == STYLE_OSCILLOSCOPE && prefs.contains(PREF_STATUS_BAR_OSC_PERSISTENCE)) {
+            return prefs.getInt(PREF_STATUS_BAR_OSC_PERSISTENCE, defaultPersistenceForStyle(s));
+        }
+        return defaultPersistenceForStyle(s);
+    }
+
+    public void setPersistenceForStyle(int s, int persistence) {
+        int clamped = Math.max(0, Math.min(100, persistence));
+        prefs.edit().putInt(PREF_STATUS_BAR_OSC_PERSISTENCE + "_" + s, clamped).apply();
+        if (this.style == s) {
+            this.oscPersistence = clamped;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setOscPersistence(clamped);
+                }
+            });
+        }
+    }
+
+    public boolean getNormalizationForStyle(int s) {
+        String key = PREF_STATUS_BAR_NORMALIZATION + "_" + s;
+        if (prefs.contains(key)) return prefs.getBoolean(key, defaultNormalizationForStyle(s));
+        if (s == DEFAULT_STYLE && prefs.contains(PREF_STATUS_BAR_NORMALIZATION)) {
+            return prefs.getBoolean(PREF_STATUS_BAR_NORMALIZATION, defaultNormalizationForStyle(s));
+        }
+        return defaultNormalizationForStyle(s);
+    }
+
+    public void setNormalizationForStyle(int s, boolean enabled) {
+        prefs.edit().putBoolean(PREF_STATUS_BAR_NORMALIZATION + "_" + s, enabled).apply();
+        if (this.style == s) {
+            this.normalizationEnabled = enabled;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setNormalizationEnabled(enabled);
+                }
+            });
+        }
+    }
+
+    // --- Active Style Delegation ---------------------------------------------------------------
+
     public void setTheme(int theme) {
-        this.theme = theme;
-        prefs.edit().putInt(PREF_STATUS_BAR_THEME, theme).apply();
-        mainHandler.post(() -> {
-            if (visualizerView != null) {
-                visualizerView.setTheme(theme);
-            }
-        });
+        setThemeForStyle(this.style, theme);
     }
 
     public void setHueShift(int hue) {
-        this.hueShift = hue;
-        prefs.edit().putInt(PREF_STATUS_BAR_HUE, hue).apply();
+        setHueForStyle(this.style, hue);
+    }
+
+    public void setBandCount(int bands) {
+        setBandsForStyle(this.style, bands);
+    }
+
+    public void setPeaksEnabled(boolean enabled) {
+        setPeaksForStyle(this.style, enabled);
+    }
+
+    public void setMirrorFrequencies(boolean mirror) {
+        setMirrorForStyle(this.style, mirror);
+    }
+
+    public void setOscPersistence(int persistence) {
+        setPersistenceForStyle(this.style, persistence);
+    }
+
+    public void setNormalizationEnabled(boolean enabled) {
+        setNormalizationForStyle(this.style, enabled);
+    }
+
+    public int getStyle(boolean night) {
+        String key = night ? PREF_STATUS_BAR_STYLE_NIGHT : PREF_STATUS_BAR_STYLE_DAY;
+        if (prefs.contains(key)) return prefs.getInt(key, DEFAULT_STYLE);
+        return prefs.getInt(PREF_STATUS_BAR_STYLE, DEFAULT_STYLE);
+    }
+
+    public void setStyle(boolean night, int style) {
+        String key = night ? PREF_STATUS_BAR_STYLE_NIGHT : PREF_STATUS_BAR_STYLE_DAY;
+        prefs.edit().putInt(key, style).apply();
+        if (!night) {
+            prefs.edit().putInt(PREF_STATUS_BAR_STYLE, style).apply();
+        }
+        if (ThemeManager.isNight(context) == night) {
+            this.style = style;
+            loadStyleParameters(style, night);
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    applyCurrentStyleToView(visualizerView);
+                }
+            });
+        }
+    }
+
+    public void setStyle(int style) {
+        setStyle(ThemeManager.isNight(context), style);
+    }
+
+    public void removeOverlay() {
         mainHandler.post(() -> {
-            if (visualizerView != null) {
-                visualizerView.setHueShift(hue);
+            if (isViewAttached && visualizerView != null) {
+                try {
+                    visualizerView.stop();
+                    windowManager.removeView(visualizerView);
+                } catch (Throwable ignored) {}
+                isViewAttached = false;
             }
         });
     }
 
-    public void setBandCount(int bands) {
-        this.bandCount = (bands == 16) ? 16 : 32;
-        prefs.edit().putInt(PREF_STATUS_BAR_BANDS, this.bandCount).apply();
-        mainHandler.post(() -> {
-            if (visualizerView != null) {
-                visualizerView.setBandCount(this.bandCount);
-            }
-        });
+    public int getAlphaPercent() {
+        return getAlphaPercent(ThemeManager.isNight(context));
+    }
+
+    public int getAlphaPercent(boolean night) {
+        String key = night ? PREF_STATUS_BAR_ALPHA_NIGHT : PREF_STATUS_BAR_ALPHA_DAY;
+        int def = night ? DEFAULT_ALPHA_NIGHT : DEFAULT_ALPHA_DAY;
+        if (prefs.contains(key)) {
+            return prefs.getInt(key, def);
+        }
+        if (prefs.contains(PREF_STATUS_BAR_ALPHA)) {
+            int legacy = prefs.getInt(PREF_STATUS_BAR_ALPHA, DEFAULT_ALPHA);
+            return night ? Math.min(legacy, DEFAULT_ALPHA_NIGHT) : legacy;
+        }
+        return def;
+    }
+
+    public void setAlphaPercent(boolean night, int percent) {
+        int clamped = Math.max(10, Math.min(100, percent));
+        String key = night ? PREF_STATUS_BAR_ALPHA_NIGHT : PREF_STATUS_BAR_ALPHA_DAY;
+        SharedPreferences.Editor editor = prefs.edit().putInt(key, clamped);
+        if (!night) {
+            editor.putInt(PREF_STATUS_BAR_ALPHA, clamped);
+        }
+        editor.apply();
+        if (ThemeManager.isNight(context) == night) {
+            this.alphaPercent = clamped;
+            mainHandler.post(() -> {
+                if (visualizerView != null && !isLentToScreensaver()) {
+                    visualizerView.setAlphaPercent(clamped);
+                }
+            });
+        }
+    }
+
+    public void setAlphaPercent(int percent) {
+        setAlphaPercent(ThemeManager.isNight(context), percent);
     }
 
     public boolean isEnabled() { return isEnabled; }
@@ -616,4 +924,10 @@ public class StatusBarVisualizerManager {
     public int getTheme() { return theme; }
     public int getHueShift() { return hueShift; }
     public int getBandCount() { return bandCount; }
+    public int getStyle() { return getStyle(ThemeManager.isNight(context)); }
+    public boolean isPeaksEnabled() { return peaksEnabled; }
+    public boolean isMirrorFrequencies() { return mirrorFrequencies; }
+    public int getOscPersistence() { return oscPersistence; }
+    public int oscPersistence() { return oscPersistence; }
+    public boolean isNormalizationEnabled() { return normalizationEnabled; }
 }

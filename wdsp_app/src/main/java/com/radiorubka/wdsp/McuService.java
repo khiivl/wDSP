@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -282,7 +283,7 @@ public class McuService extends Service implements LocationListener {
     private final SharedPreferences.OnSharedPreferenceChangeListener prefListener = (p, key) -> {
         if (key == null) return;
         backgroundHandler.post(() -> {
-            if (key.startsWith("sb_vis_")) {
+            if (key.startsWith("sb_vis_") || key.equals(com.radiorubka.wdsp.ui.theme.ThemeManager.PREF_THEME_MODE)) {
                 if (statusBarManager != null) statusBarManager.onPreferenceChanged(key);
             }
             else if (key.equals(PREF_PLAYER_MAP)) {
@@ -1873,6 +1874,20 @@ public class McuService extends Service implements LocationListener {
         channel.setShowBadge(false);
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm != null) nm.createNotificationChannel(channel);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        backgroundHandler.post(() -> {
+            if (statusBarManager != null) {
+                statusBarManager.onPreferenceChanged(com.radiorubka.wdsp.ui.theme.ThemeManager.PREF_THEME_MODE);
+            }
+            ScreensaverManager ss = ScreensaverManager.getInstance(getApplicationContext());
+            if (ss != null) {
+                ss.onConfigurationChanged();
+            }
+        });
     }
 
     @Override

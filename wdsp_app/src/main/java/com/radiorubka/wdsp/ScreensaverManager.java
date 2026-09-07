@@ -65,6 +65,8 @@ public final class ScreensaverManager {
     public static final String PREF_DELAY_S = "ss_delay_s";
     /** How black the backdrop is, 0..100. The visualiser is drawn on top of it. */
     public static final String PREF_BG_ALPHA = "ss_bg_alpha";
+    public static final String PREF_BG_ALPHA_DAY = "ss_bg_alpha_day";
+    public static final String PREF_BG_ALPHA_NIGHT = "ss_bg_alpha_night";
     /** Packages that are never covered, stored as a string set. */
     public static final String PREF_BLOCKED = "ss_blocked_pkgs";
     /** Width of the band, as a fraction of the screen. Edge to edge by default. */
@@ -77,8 +79,21 @@ public final class ScreensaverManager {
     /** Height of the now-playing strip along the bottom, as a fraction of the screen. */
     public static final String PREF_INFO_H = "ss_info_h";
 
+    /** Independent visualizer styling preferences for screensaver */
+    public static final String PREF_STYLE  = "ss_style";
+    public static final String PREF_STYLE_DAY = "ss_style_day";
+    public static final String PREF_STYLE_NIGHT = "ss_style_night";
+    public static final String PREF_THEME  = "ss_theme";
+    public static final String PREF_PEAKS  = "ss_peaks";
+    public static final String PREF_MIRROR = "ss_mirror";
+    public static final String PREF_BANDS  = "ss_bands";
+    public static final String PREF_HUE    = "ss_hue";
+    public static final String PREF_OSC_PERSISTENCE = "ss_osc_persistence";
+
     public static final int DEFAULT_DELAY_S = 60;
     public static final int DEFAULT_BG_ALPHA = 85;
+    public static final int DEFAULT_BG_ALPHA_DAY = 85;
+    public static final int DEFAULT_BG_ALPHA_NIGHT = 85;
     public static final float DEFAULT_WIDTH_F = 1.0f;
     public static final int DEFAULT_BRIGHT_DAY = 100;
     public static final int DEFAULT_BRIGHT_NIGHT = 70;
@@ -174,6 +189,9 @@ public final class ScreensaverManager {
     private boolean ownPause = false;
     private String lastForeground = "";
     private long foregroundSince = 0L;
+    private boolean previewMode = false;
+    private Boolean previewNight = null;
+    private Integer previewStyle = null;
 
     /**
      * Hears every touch on the unit, so that idle means idle.
@@ -189,6 +207,37 @@ public final class ScreensaverManager {
     public static synchronized ScreensaverManager getInstance(Context context) {
         if (instance == null) instance = new ScreensaverManager(context.getApplicationContext());
         return instance;
+    }
+
+    public boolean isAttached() {
+        return attached;
+    }
+
+    public boolean isPreviewMode() {
+        return previewMode;
+    }
+
+    private boolean isNight() {
+        return previewNight != null ? previewNight : ThemeManager.isNight(context);
+    }
+
+    public void forceShow(int s, boolean night) {
+        handler.post(() -> {
+            previewMode = true;
+            previewNight = night;
+            previewStyle = s;
+            applyBackdrop();
+            applyStyleToScreensaver(s);
+            show();
+        });
+    }
+
+    public void forceShow(int s) {
+        forceShow(s, ThemeManager.isNight(context));
+    }
+
+    public void forceShow() {
+        forceShow(style());
     }
 
     private ScreensaverManager(Context context) {
@@ -235,14 +284,310 @@ public final class ScreensaverManager {
 
     public int backgroundAlpha() {
         if (liveBackdrop >= 0) return liveBackdrop;
-        return Math.max(0, Math.min(100, prefs.getInt(PREF_BG_ALPHA, DEFAULT_BG_ALPHA)));
+        return backgroundAlpha(isNight());
+    }
+
+    public int backgroundAlpha(boolean night) {
+        String key = night ? PREF_BG_ALPHA_NIGHT : PREF_BG_ALPHA_DAY;
+        if (prefs.contains(key)) {
+            return Math.max(0, Math.min(100, prefs.getInt(key, night ? DEFAULT_BG_ALPHA_NIGHT : DEFAULT_BG_ALPHA_DAY)));
+        }
+        if (prefs.contains(PREF_BG_ALPHA)) {
+            return Math.max(0, Math.min(100, prefs.getInt(PREF_BG_ALPHA, DEFAULT_BG_ALPHA)));
+        }
+        return night ? DEFAULT_BG_ALPHA_NIGHT : DEFAULT_BG_ALPHA_DAY;
+    }
+
+    public void setBackgroundAlpha(boolean night, int percent) {
+        int clamped = Math.max(0, Math.min(100, percent));
+        String key = night ? PREF_BG_ALPHA_NIGHT : PREF_BG_ALPHA_DAY;
+        SharedPreferences.Editor ed = prefs.edit().putInt(key, clamped);
+        if (!night) {
+            ed.putInt(PREF_BG_ALPHA, clamped);
+        }
+        ed.apply();
+        applyBackdrop();
     }
 
     public void setBackgroundAlpha(int percent) {
-        prefs.edit().putInt(PREF_BG_ALPHA, Math.max(0, Math.min(100, percent))).apply();
+        setBackgroundAlpha(ThemeManager.isNight(context), percent);
+    }
+
+    public int style(boolean night) {
+        if (previewStyle != null) return previewStyle;
+        String key = night ? PREF_STYLE_NIGHT : PREF_STYLE_DAY;
+        if (prefs.contains(key)) return prefs.getInt(key, StatusBarVisualizerManager.DEFAULT_STYLE);
+        if (prefs.contains(PREF_STYLE)) return prefs.getInt(PREF_STYLE, StatusBarVisualizerManager.DEFAULT_STYLE);
+        return StatusBarVisualizerManager.getInstance(context).getStyle(night);
+    }
+
+    public int style() {
+        return style(isNight());
+    }
+
+    public void setStyle(boolean night, int style) {
+        String key = night ? PREF_STYLE_NIGHT : PREF_STYLE_DAY;
+        prefs.edit().putInt(key, style).apply();
+        if (!night) prefs.edit().putInt(PREF_STYLE, style).apply();
+        if (ThemeManager.isNight(context) == night) {
+            handler.post(() -> {
+                applyStyleToScreensaver(style);
+            });
+        }
+    }
+
+    public void setStyle(int style) {
+        setStyle(ThemeManager.isNight(context), style);
+    }
+
+    public int visualizerStyle() {
+        return style();
+    }
+
+    public void setVisualizerStyle(int style) {
+        setStyle(style);
+    }
+
+    public int theme(int s, boolean night) {
+        String key = (PREF_THEME + "_" + s) + (night ? "_night" : "_day");
+        if (prefs.contains(key)) return prefs.getInt(key, StatusBarVisualizerManager.defaultThemeForStyle(s));
+        String baseKey = PREF_THEME + "_" + s;
+        if (prefs.contains(baseKey)) return prefs.getInt(baseKey, StatusBarVisualizerManager.defaultThemeForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getThemeForStyle(s, night);
+    }
+
+    public int theme(int s) {
+        return theme(s, isNight());
+    }
+
+    public void setTheme(int s, boolean night, int theme) {
+        String key = (PREF_THEME + "_" + s) + (night ? "_night" : "_day");
+        prefs.edit().putInt(key, theme).apply();
+        prefs.edit().putInt(PREF_THEME + "_" + s, theme).apply();
+        if (style() == s && ThemeManager.isNight(context) == night) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverTheme(theme);
+                } else if (standIn != null) {
+                    standIn.setTheme(theme);
+                }
+            });
+        }
+    }
+
+    public void setTheme(int s, int theme) {
+        setTheme(s, ThemeManager.isNight(context), theme);
+    }
+
+    public int theme() {
+        return theme(style());
+    }
+
+    public void setTheme(int theme) {
+        setTheme(style(), theme);
+    }
+
+    public boolean peaksEnabled(int s) {
+        String key = PREF_PEAKS + "_" + s;
+        if (prefs.contains(key)) return prefs.getBoolean(key, StatusBarVisualizerManager.defaultPeaksForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getPeaksForStyle(s);
+    }
+
+    public void setPeaksEnabled(int s, boolean enabled) {
+        prefs.edit().putBoolean(PREF_PEAKS + "_" + s, enabled).apply();
+        if (style() == s) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverPeaks(enabled);
+                } else if (standIn != null) {
+                    standIn.setPeakCapsEnabled(enabled);
+                }
+            });
+        }
+    }
+
+    public boolean peaksEnabled() {
+        return peaksEnabled(style());
+    }
+
+    public void setPeaksEnabled(boolean enabled) {
+        setPeaksEnabled(style(), enabled);
+    }
+
+    public boolean mirrorFrequencies(int s) {
+        String key = PREF_MIRROR + "_" + s;
+        if (prefs.contains(key)) return prefs.getBoolean(key, StatusBarVisualizerManager.defaultMirrorForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getMirrorForStyle(s);
+    }
+
+    public void setMirrorFrequencies(int s, boolean mirror) {
+        prefs.edit().putBoolean(PREF_MIRROR + "_" + s, mirror).apply();
+        if (style() == s) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverMirror(mirror);
+                } else if (standIn != null) {
+                    standIn.setMirrorFrequencies(mirror);
+                }
+            });
+        }
+    }
+
+    public boolean mirrorFrequencies() {
+        return mirrorFrequencies(style());
+    }
+
+    public void setMirrorFrequencies(boolean mirror) {
+        setMirrorFrequencies(style(), mirror);
+    }
+
+    public int bandCount(int s) {
+        String key = PREF_BANDS + "_" + s;
+        if (prefs.contains(key)) return prefs.getInt(key, StatusBarVisualizerManager.defaultBandsForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getBandsForStyle(s);
+    }
+
+    public void setBandCount(int s, int bands) {
+        prefs.edit().putInt(PREF_BANDS + "_" + s, bands).apply();
+        if (style() == s) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverBands(bands);
+                } else if (standIn != null) {
+                    standIn.setBandCount(bands);
+                }
+            });
+        }
+    }
+
+    public int bandCount() {
+        return bandCount(style());
+    }
+
+    public void setBandCount(int bands) {
+        setBandCount(style(), bands);
+    }
+
+    public int hueShift(int s, boolean night) {
+        String key = (PREF_HUE + "_" + s) + (night ? "_night" : "_day");
+        if (prefs.contains(key)) return prefs.getInt(key, StatusBarVisualizerManager.defaultHueForStyle(s));
+        String baseKey = PREF_HUE + "_" + s;
+        if (prefs.contains(baseKey)) return prefs.getInt(baseKey, StatusBarVisualizerManager.defaultHueForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getHueForStyle(s, night);
+    }
+
+    public int hueShift(int s) {
+        return hueShift(s, isNight());
+    }
+
+    public void setHueShift(int s, boolean night, int hue) {
+        String key = (PREF_HUE + "_" + s) + (night ? "_night" : "_day");
+        prefs.edit().putInt(key, hue).apply();
+        prefs.edit().putInt(PREF_HUE + "_" + s, hue).apply();
+        if (style() == s && ThemeManager.isNight(context) == night) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverHue(hue);
+                } else if (standIn != null) {
+                    standIn.setHueShift(hue);
+                }
+            });
+        }
+    }
+
+    public void setHueShift(int s, int hue) {
+        setHueShift(s, ThemeManager.isNight(context), hue);
+    }
+
+    public int hueShift() {
+        return hueShift(style());
+    }
+
+    public void setHueShift(int hue) {
+        setHueShift(style(), hue);
+    }
+
+    public int oscPersistence(int s) {
+        String key = PREF_OSC_PERSISTENCE + "_" + s;
+        if (prefs.contains(key)) return prefs.getInt(key, StatusBarVisualizerManager.defaultPersistenceForStyle(s));
+        return StatusBarVisualizerManager.getInstance(context).getPersistenceForStyle(s);
+    }
+
+    public void setOscPersistence(int s, int persistence) {
+        int clamped = Math.max(0, Math.min(100, persistence));
+        prefs.edit().putInt(PREF_OSC_PERSISTENCE + "_" + s, clamped).apply();
+        if (style() == s) {
+            handler.post(() -> {
+                StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+                if (strip.isLentToScreensaver()) {
+                    strip.setScreensaverOscPersistence(clamped);
+                } else if (standIn != null) {
+                    standIn.setOscPersistence(clamped);
+                }
+            });
+        }
+    }
+
+    public int oscPersistence() {
+        return oscPersistence(style());
+    }
+
+    public void setOscPersistence(int persistence) {
+        setOscPersistence(style(), persistence);
+    }
+
+    public boolean normalizationEnabled(int s) {
+        return StatusBarVisualizerManager.getInstance(context).getNormalizationForStyle(s);
+    }
+
+    public boolean normalizationEnabled() {
+        return normalizationEnabled(style());
+    }
+
+    public void applyStyleToScreensaver(int s) {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        if (strip.isLentToScreensaver()) {
+            strip.setScreensaverStyle(s);
+            strip.setScreensaverTheme(theme(s));
+            strip.setScreensaverHue(hueShift(s));
+            strip.setScreensaverBands(bandCount(s));
+            strip.setScreensaverPeaks(peaksEnabled(s));
+            strip.setScreensaverMirror(mirrorFrequencies(s));
+            strip.setScreensaverOscPersistence(oscPersistence(s));
+            strip.setScreensaverNormalization(normalizationEnabled(s));
+        } else if (standIn != null) {
+            standIn.setStyle(s);
+            standIn.setTheme(theme(s));
+            standIn.setHueShift(hueShift(s));
+            standIn.setBandCount(bandCount(s));
+            standIn.setPeakCapsEnabled(peaksEnabled(s));
+            standIn.setMirrorFrequencies(mirrorFrequencies(s));
+            standIn.setOscPersistence(oscPersistence(s));
+            standIn.setNormalizationEnabled(normalizationEnabled(s));
+        }
+    }
+
+    public void onConfigurationChanged() {
         handler.post(() -> {
-            if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
+            boolean night = ThemeManager.isNight(context);
+            applyBackdrop();
+            applyStyleToScreensaver(style(night));
         });
+    }
+
+    public void cycleVisualizerStyle() {
+        int cur = style();
+        int next = (cur + 1) % 6;
+        setStyle(next);
+        applyStyleToScreensaver(next);
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        strip.flashTransport(StatusBarVisualizerView.GLYPH_STYLE_CYCLE);
+        if (standIn != null) standIn.flashTransport(StatusBarVisualizerView.GLYPH_STYLE_CYCLE);
     }
 
     /** How much of the screen the now-playing strip takes, within its limits. */
@@ -342,8 +687,13 @@ public final class ScreensaverManager {
     }
 
     public int brightness(boolean night) {
-        int stored = prefs.getInt(night ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
-                night ? DEFAULT_BRIGHT_NIGHT : DEFAULT_BRIGHT_DAY);
+        String key = night ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY;
+        if (!prefs.contains(key)) {
+            // Inherits from status bar visualizer (widget) brightness if not explicitly overridden
+            StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(context);
+            return sbm.getAlphaPercent(night);
+        }
+        int stored = prefs.getInt(key, night ? DEFAULT_BRIGHT_NIGHT : DEFAULT_BRIGHT_DAY);
         return Math.max(10, Math.min(100, stored));
     }
 
@@ -351,10 +701,7 @@ public final class ScreensaverManager {
         prefs.edit().putInt(night ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
                 Math.max(10, Math.min(100, percent))).apply();
         applyGeometry();
-        handler.post(() -> {
-            if (standIn != null) standIn.setAlphaPercent(brightness());
-            if (overlayRoot != null) overlayRoot.setBackgroundColor(backdropColor());
-        });
+        applyBrightness();
     }
 
     // -------------------------------------------------------------------------------------------
@@ -474,13 +821,53 @@ public final class ScreensaverManager {
      * A tap: transport along the bottom, and anywhere else it puts the screensaver away.
      */
     private void onTap(float x, float y) {
+        if (previewMode) {
+            hide();
+            return;
+        }
         StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
         int screenW = strip.screenWidth();
         int screenH = strip.screenHeight();
         float top = strip.systemStatusBarHeight();
         float usableH = Math.max(1f, screenH - top);
 
-        if (y < top + usableH * TRANSPORT_FROM) {
+        // 1. Hit-test bottom-right style cycle button (visible sine wave icon)
+        float density = context.getResources().getDisplayMetrics().density;
+        float btnHitRadius = 38f * density;
+        float btnCx = screenW - 32f * density;
+        float btnCy = screenH - 32f * density;
+        float dx = x - btnCx;
+        float dy = y - btnCy;
+        if ((dx * dx + dy * dy) <= (btnHitRadius * btnHitRadius)) {
+            cycleVisualizerStyle();
+            resetIdleClock();
+            return;
+        }
+
+        // 2. Hit-test Now Playing album art / player icon (bottom-left)
+        float transportFromY = top + usableH * TRANSPORT_FROM;
+        if (y >= transportFromY) {
+            float artRightBound = infoBarPx() * 2.2f;
+            NowPlaying np = NowPlaying.getInstance(context);
+            if (x <= artRightBound && (np.hasTrack() || np.isPlaying())) {
+                String pkg = np.playerPackage();
+                if (pkg != null && !pkg.isEmpty()) {
+                    try {
+                        Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
+                        if (launch != null) {
+                            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(launch);
+                            hide();
+                            return;
+                        }
+                    } catch (Throwable t) {
+                        Log.w(TAG, "could not launch player: " + pkg, t);
+                    }
+                }
+            }
+        }
+
+        if (y < transportFromY) {
             hide();
             return;
         }
@@ -624,7 +1011,13 @@ public final class ScreensaverManager {
             editor.putInt(ThemeManager.isNight(context) ? PREF_BRIGHT_NIGHT : PREF_BRIGHT_DAY,
                     liveBrightness);
         }
-        if (liveBackdrop >= 0) editor.putInt(PREF_BG_ALPHA, liveBackdrop);
+        if (liveBackdrop >= 0) {
+            boolean night = ThemeManager.isNight(context);
+            editor.putInt(night ? PREF_BG_ALPHA_NIGHT : PREF_BG_ALPHA_DAY, liveBackdrop);
+            if (!night) {
+                editor.putInt(PREF_BG_ALPHA, liveBackdrop);
+            }
+        }
         editor.apply();
         liveWidthF = -1f;
         liveHeightF = -1f;
@@ -768,7 +1161,7 @@ public final class ScreensaverManager {
                 + ", idleMs=" + idleMs + ", delayMs=" + (delaySeconds() * 1000L)
                 + ", mayShow=" + mayShowOver(foreground));
         if (attached) {
-            if (!foreground.isEmpty() && !mayShowOver(foreground)) {
+            if (!previewMode && !foreground.isEmpty() && !mayShowOver(foreground)) {
                 Log.i(TAG, "Screensaver dismissed because foreground changed to blocked: " + foreground);
                 hide();
                 return;
@@ -801,7 +1194,7 @@ public final class ScreensaverManager {
     private void pushPlaybackState() {
         if (!attached) return;
         updatePlaybackBelief();
-        boolean paused = believedStopped();
+        boolean paused = !previewMode && believedStopped();
         StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
         strip.setScreensaverNowPlaying(paused);
         strip.setScreensaverInfoSource(infoSource());
@@ -893,7 +1286,7 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures(), this::hide);
+                            backdropColor(), brightness(), infoBarPx(), !previewMode && believedStopped(), gestures(), this::hide);
                 } else {
                     buildOverlay();
                     windowManager.addView(overlayRoot, overlayParams());
@@ -920,7 +1313,7 @@ public final class ScreensaverManager {
         int w = Math.max(1, Math.round(strip.screenWidth() * widthFraction()));
         int h = Math.max(1, Math.round(strip.screenHeight() * heightFraction()));
         standIn = buildVisualizer();
-        standIn.setScreensaverState(true, believedStopped());
+        standIn.setScreensaverState(true, !previewMode && believedStopped());
         standIn.setNowPlayingSource(infoSource());
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
         lp.gravity = Gravity.CENTER;
@@ -930,6 +1323,9 @@ public final class ScreensaverManager {
     public void hide() {
         Log.i(TAG, "screensaver hide() called! attached=" + attached, new Throwable("hide-caller"));
         handler.post(() -> {
+            previewMode = false;
+            previewNight = null;
+            previewStyle = null;
             if (!attached) return;
             // The strip goes back first: if removing the backdrop threw, the thing the owner
             // actually looks at every day is still the one that gets restored.
@@ -968,13 +1364,14 @@ public final class ScreensaverManager {
 
     private StatusBarVisualizerView buildVisualizer() {
         StatusBarVisualizerView view = new StatusBarVisualizerView(context);
-        view.setTheme(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_THEME,
-                StatusBarVisualizerManager.DEFAULT_THEME));
-        view.setHueShift(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HUE,
-                StatusBarVisualizerManager.DEFAULT_HUE));
+        view.setTheme(theme());
+        view.setHueShift(hueShift());
         view.setAlphaPercent(brightness());
-        view.setBandCount(prefs.getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_BANDS,
-                StatusBarVisualizerManager.DEFAULT_BANDS));
+        view.setBandCount(bandCount());
+        view.setStyle(style());
+        view.setPeakCapsEnabled(peaksEnabled());
+        view.setMirrorFrequencies(mirrorFrequencies());
+        view.setOscPersistence(oscPersistence());
         view.setNormalizationEnabled(true);
         return view;
     }

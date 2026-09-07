@@ -300,4 +300,33 @@
     <string name="room_mic_place_dash">Dashboard</string>
     <string name="room_mic_place_pillar_top">A-pillar, top</string>
     <string name="room_mic_place_pillar_bottom">A-pillar, bottom</string>
+    <!-- Status Bar Visualizer Styles & FireLamp EffectVU Additions -->
+    <string name="status_bar_visualizer_style">Visualizer Style</string>
+    <string name="status_bar_style_classic">Classic</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradient</string>
+    <string name="status_bar_style_center">Center</string>
+    <string name="status_bar_style_vu">VU-Meter</string>
+    <string name="status_bar_style_oscillo">Oscilloscope</string>
+    <string name="status_bar_peaks_label">Floating Peak Caps</string>
+    <string name="status_bar_peaks_desc">Peak hold markers with smooth gravity decay</string>
+    <string name="status_bar_mirror_label">Symmetrical Spectrum</string>
+    <string name="status_bar_mirror_desc">Center bass with treble on sides (stereo symmetry)</string>
+    <string name="status_bar_palettes_fastled">FastLED Palettes (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sherbet</string>
+    <string name="status_bar_theme_warm_vu">Warm VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Ocean Breeze</string>
+    <string name="status_bar_theme_sunset_real">Sunset Real</string>
+    <!-- Visualizer Effects Section -->
+    <string name="vis_effects_title">Visualizer Effects</string>
+    <string name="vis_effects_select_style">Configure Effect:</string>
+    <string name="status_bar_style_label">Widget Visualizer Effect</string>
+    <string name="screensaver_style_label">Screensaver Default Effect</string>
+    <string name="screensaver_bg_alpha_day">Backdrop (Day)</string>
+    <string name="screensaver_bg_alpha_night">Backdrop (Night)</string>
+    <string name="vis_oscillo_persistence_label">Phosphor Afterglow</string>
+    <string name="vis_oscillo_persistence_desc">Analog CRT persistence: decay duration and glow trails of the oscilloscope beam</string>
+    <string name="btn_vis_preview_screensaver">Show on screensaver</string>
 </resources>

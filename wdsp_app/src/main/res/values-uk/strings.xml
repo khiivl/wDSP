@@ -288,5 +288,34 @@
     <string name="room_mic_place_dash">Торпедо</string>
     <string name="room_mic_place_pillar_top">Стійка лобового, вгорі</string>
     <string name="room_mic_place_pillar_bottom">Стійка лобового, внизу</string>
+    <!-- Стилі візуалізатора статусного рядка та палітри FireLamp EffectVU -->
+    <string name="status_bar_visualizer_style">Стиль візуалізації</string>
+    <string name="status_bar_style_classic">Класика</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Градієнт</string>
+    <string name="status_bar_style_center">Центрований</string>
+    <string name="status_bar_style_vu">VU-метр</string>
+    <string name="status_bar_style_oscillo">Осцилограф</string>
+    <string name="status_bar_peaks_label">Плаваючі пікові мітки</string>
+    <string name="status_bar_peaks_desc">Фіксація та плавний гравітаційний спад піків сигналу</string>
+    <string name="status_bar_mirror_label">Симетричний спектр</string>
+    <string name="status_bar_mirror_desc">Баси в центрі, високі частоти по краях (стерео-симетрія)</string>
+    <string name="status_bar_palettes_fastled">Палітри FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Шербет</string>
+    <string name="status_bar_theme_warm_vu">Теплий VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Морський бриз</string>
+    <string name="status_bar_theme_sunset_real">Захід сонця</string>
+    <!-- Visualizer Effects Section -->
+    <string name="vis_effects_title">Ефекти візуалізації</string>
+    <string name="vis_effects_select_style">Ефект для налаштування:</string>
+    <string name="status_bar_style_label">Ефект віджета:</string>
+    <string name="screensaver_style_label">Ефект скрінсейвера:</string>
+    <string name="screensaver_bg_alpha_day">Підкладка (День)</string>
+    <string name="screensaver_bg_alpha_night">Підкладка (Ніч)</string>
+    <string name="vis_oscillo_persistence_label">Післясвітіння люмінофору</string>
+    <string name="vis_oscillo_persistence_desc">Ефект аналогової ЕОП: тривалість та яскравість згасання променя осцилографа</string>
+    <string name="btn_vis_preview_screensaver">Показати на скрінсейвері</string>
 </resources>
 
