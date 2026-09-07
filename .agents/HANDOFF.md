@@ -105,7 +105,17 @@ it were, and both had been broken for a while:
   a preference `MainActivity` had gone on writing into a key nothing read.
 
 Both were found by measuring the unit, not by reading the code, and both were verified there
-afterwards. ⚠️ The lesson worth keeping: **when something the original did stops happening, look for
+afterwards — **standing and moving**. The moving half is the one that matters to a driver and it
+was checked separately, with the speed simulator rather than a road: at a simulated 110 km/h GALA
+raised base 1 by an offset of 4 one step at a time, a knob step down was accepted (`New Vol=4 ->
+New Base=0`) and the level *held* at 4 instead of springing back, and on stopping the offset faded
+out and the new idle branch followed the live volume to 1 rather than writing the bare base of 0.
+
+⚠️ One consequence of GALA's model, named here so it is not discovered as a complaint: lowering the
+volume **at speed** lowers the standstill base by the same amount, so the level at the next stop is
+lower by that much (4 at 110 km/h became 1 when stopped). That is the design — base is the
+standstill level and the offset sits on top — not a fault, but it is the owner's call whether a
+driver should experience it. ⚠️ The lesson worth keeping: **when something the original did stops happening, look for
 what we added on top of it, not for what we removed.** Neither of these was a deletion; each was a
 new write or a new condition placed over working logic.
 
