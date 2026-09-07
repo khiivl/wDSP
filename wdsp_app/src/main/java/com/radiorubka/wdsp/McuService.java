@@ -47,7 +47,12 @@ public class McuService extends Service implements LocationListener {
     private static final String PREFS_NAME = "EqPresets";
     private static final String PREF_LAST_SELECTED = "last_selected_preset";
     private static final String PREF_PLAYER_MAP = "player_preset_map";
-//    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
+    /**
+     * The preset the main screen marks as the default one - written by {@code MainActivity} and,
+     * until 08.09.2026, read by nobody. It is the last link of the fallback chain in
+     * {@link #processPlayerSwitch(String)}: a player with no preset of its own gets this.
+     */
+    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
 
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
     private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
@@ -1304,8 +1309,39 @@ public class McuService extends Service implements LocationListener {
             }
 
             // 6d. Apply the faded offset to the hardware
+            //
+            // 🔴 WITH NOTHING TO ADD, WRITE NOTHING. This block used to write `base + offset`
+            // whenever it differed from the live volume, offset zero included - and an offset of
+            // zero means GALA is asking for no change at all, so the only thing such a write can
+            // ever do is overrule the person.
+            //
+            // 📻 Measured on the unit 08.09.2026, standing still, GALA on, offset 0, base 4:
+            //
+            //   00:56:37.228  VOLUME_CHANGED pushed=5   (the knob, moved by a person)
+            //   00:56:37.307  GALA Update: vol=4 -> 4 (offset=0)
+            //   00:56:37.319  VOLUME_CHANGED pushed=4   (their 5 gone, 80 ms later)
+            //
+            // From the driver's seat that is "the encoder does not work": the level springs back
+            // before the hand leaves it. Whether step 5 catches the turn first is a race - the
+            // announce handler can mark the value as our own echo, step 5 then skips, and this
+            // wrote the stale base over the new one. Sometimes the knob took, sometimes it did
+            // not, which is worse than never working.
+            //
+            // 🔑 The original wDSP never wrote the volume at all - it read the hardware and
+            // followed it. GALA is the one deliberate exception, and it is an exception only
+            // WHILE IT IS BOOSTING. At zero it must behave like the original: the live volume is
+            // the base, by definition, because there is no boost to subtract.
             int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
-            if (hardwareVol != targetVol) {
+            if (currentAppliedOffset == 0) {
+                // Follow, do not drive. This also makes a knob turn authoritative without
+                // depending on step 5 winning its race.
+                if (hardwareVol != baseStandstillVolume) {
+                    Log.v(TAG, "GALA idle: following the volume to " + hardwareVol
+                            + " (base was " + baseStandstillVolume + ")");
+                }
+                baseStandstillVolume = hardwareVol;
+                lastAppliedVolume    = hardwareVol;
+            } else if (hardwareVol != targetVol) {
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
                 hardwareVol = targetVol;
@@ -1430,14 +1466,6 @@ public class McuService extends Service implements LocationListener {
         String presetToLoad = playerMap.get(currentPlayer);
         String defaultPreset = playerMap.get("Default");
 
-        // Redundant logic for the Default preset in old versions.
-        //if (presetToLoad == null && (currentPlayer.isEmpty() || currentPlayer.equals("Unknown"))) {
-        //    presetToLoad = playerMap.get("Unknown");
-        //}
-        //if (presetToLoad == null) {
-        //    presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
-        //}
-
         // Process Call switch; If Call is the Player and the current Preset is not Call, queue to Call preset,
         // save last applied preset
         if (currentPlayer.equals("Call") && !currentPresetName.equals("Call")) {
@@ -1453,6 +1481,29 @@ public class McuService extends Service implements LocationListener {
             else {
                 presetToLoad = defaultPreset;
             }
+        }
+
+        // 🔴 A PLAYER WITH NO PRESET OF ITS OWN GETS THE DEFAULT ONE. This is the original's
+        // behaviour and it was lost: the fallback chain below stood here, commented out as
+        // "redundant logic for the Default preset in old versions", and nothing replaced it.
+        // `defaultPreset` was still computed, but only the Call branch above ever used it.
+        //
+        // The consequence is exactly what an owner reports as "presets stopped switching":
+        // a player that has never been assigned a preset by hand looks up null, `presetToLoad`
+        // stays null, and the whole switch is skipped - so whatever preset happened to be loaded
+        // stays on, whichever player starts. Only the handful of players named in the map ever
+        // moved anything, and that is not what the original did.
+        //
+        // The chain, in the original's order: the player's own preset, then the one mapped to
+        // "Default" on the player screen, then the preference the main screen writes when a
+        // preset is marked as the default one. The last of the three is why PREF_DEFAULT_PRESET
+        // exists at all - MainActivity has kept writing it the whole time, into a preference
+        // nothing read any more.
+        if (presetToLoad == null) {
+            presetToLoad = defaultPreset;
+        }
+        if (presetToLoad == null) {
+            presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
         }
 
         // Process the switch if the current preset doesn't already match the Player.
