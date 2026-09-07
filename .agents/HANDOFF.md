@@ -18,10 +18,10 @@ somewhere else in full; this is the map, not the territory.
 
 ## The state of the tree
 
-Version **0.4.7.4**, `versionCode 11`, branch `kostyfmat_mod`, HEAD **`b7ae94d`** (03.09.2026).
-**Committed and pushed** — `origin/kostyfmat_mod` stands on the same commit, nothing ahead and
-nothing behind. Nothing is being held back any more: the whole volume-sync cycle that this file
-used to describe as "uncommitted on purpose" went in with `4eea344` on 27.08.
+Version **0.4.7.4**, `versionCode 11`, branch `kostyfmat_mod`. The newest commit that changes code
+is **`b7ae94d`** (03.09.2026) and it is pushed; whatever stands after it in the log is this folder.
+Nothing is being held back any more: the whole volume-sync cycle that this file used to describe as
+"uncommitted on purpose" went in with `4eea344` on 27.08.
 
 The working tree carries two `.idea/` files and three untracked helpers from the localisation pass
 — `translations.json`, `translate_instructions.txt`, `apply_and_sync.ps1`. They are the source data
