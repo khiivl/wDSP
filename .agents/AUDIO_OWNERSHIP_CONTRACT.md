@@ -1,8 +1,9 @@
 # The audio ownership contract between wDSP and QF Radio
 
-Agreed 26.08.2026 between the two applications. **Nothing here is implemented yet** — it was
-settled before either side wrote a line, deliberately, and the owner opens the cycle that builds
-it. This file is the specification; if the code and this file ever disagree, one of them is a bug.
+Agreed 26.08.2026 between the two applications, and settled in full before either side wrote a
+line — deliberately. **Both sides have been implemented since, and are on the unit**; what was
+proven jointly and what is still untested is in [Status](#status) at the foot of this file. This
+file remains the specification; if the code and this file ever disagree, one of them is a bug.
 
 ---
 
@@ -164,7 +165,10 @@ nothing there. `idle` already covers the only moment that matters — the radio 
 
 ## Status
 
-Both sides are implemented and on the unit. Joint testing, 26.08.2026:
+Both sides are implemented and on the unit. The wDSP half is committed: `2b7355c`…`634f527`
+(the protocol, 26.08), `4eea344` (the two faults found only while driving, 27.08, and the commit
+that carries `0.4.7.4` / `versionCode 11`), `f2a5d3a` (the `sync_vol` gate, 03.09). Joint testing,
+26.08.2026:
 
 | behaviour | state |
 |---|---|
@@ -189,6 +193,9 @@ Both sides are implemented and on the unit. Joint testing, 26.08.2026:
   - Радіо пише стан тогла у системну властивість `persist.sys.qf.radio.sync_vol` (`"true"` / `"false"`, дефолт `"true"`).
   - `wDSP` (`McuService.java`) у `carryBaseToOtherSource()` читає `HardwareProfile.systemProperty("persist.sys.qf.radio.sync_vol")`. Якщо значення `"false"` — синк між джерелами блокується, і кожне джерело зберігає власну незалежну гучність (`media_standstill` vs `radio_standstill`).
   - У fallback-режимі Радіо (`RadioService.java`) в `acquireAudioTract()` та `releaseAudioTract()` також перевіряє стан `prefs.isVolumeSyncEnabled()`, перш ніж записувати `sys.media.vol`.
+- 📌 **Бік wDSP закомічено** `f2a5d3a` (03.09.2026): `McuService.PROP_VOLUME_SYNC` і ранній вихід
+  на початку `carryBaseToOtherSource()`. Синк увімкнено, коли властивість `null`, `"true"` або
+  `"1"` — тобто **відсутність властивості означає «синхронізувати»**, а не навпаки.
 
 `announceRadio` is proven **on a source transition** — the radio taking the channel as its process
 started. On a **level change from the knob** it is proven via `keyevent 293/294`.
