@@ -20,23 +20,26 @@ somewhere else in full; this is the map, not the territory.
 
 ## The state of the tree
 
-Version **0.4.7.4**, `versionCode 11`, branch `kostyfmat_mod`. The newest **pushed** commit is
-**`b7ae94d`** (03.09.2026); anything after it in the log exists only on this machine, so run
-`git log origin/kostyfmat_mod..HEAD` before assuming the remote has what you are reading about.
-Nothing is being held back any more: the whole volume-sync cycle that this file used to describe as
-"uncommitted on purpose" went in with `4eea344` on 27.08.
+Version **0.4.7.5**, `versionCode 12`, branch `kostyfmat_mod`, **everything committed and pushed**
+as of the night of 07-08.09.2026. Run `git log origin/kostyfmat_mod..HEAD` anyway before assuming
+the remote has what you are reading about — that is the only honest way to know, and this sentence
+goes stale the moment somebody commits.
 
 The working tree carries two `.idea/` files and three untracked helpers from the localisation pass
 — `translations.json`, `translate_instructions.txt`, `apply_and_sync.ps1`. They are the source data
 for that pass — 27 locales × 16 keys, the 26 translated ones plus the hand-written `ru-rUA` — and
 they are kept deliberately. They are not stray edits.
 
-⚠️ **What is built is older than what is committed.** The release APK under
-`wdsp_app/build/outputs/apk/release/` was produced on 28.08 and predates both 03.09 commits; the
-newest packed distribution is still `~/Downloads/wDSP-kostyamat-mod-0.4.7.2/`. **Nothing after
-0.4.7.2 has been handed to testers**, so a report arriving from the field describes 0.4.7.2 unless
-its author says otherwise — and in particular it does *not* contain the audio-focus fix or the
-`UNPROCESSED` capture.
+✅ **What is built now matches what is committed**, which was not true for the whole of the previous
+cycle. The signed release of 0.4.7.5 is packed at `~/Downloads/wDSP-kostyamat-mod-0.4.7.5/` (APK,
+README in English and Russian, the cabin-measurement documents unchanged) and the same build was
+**cold-installed** on the test unit 192.168.1.146 — the package removed rather than replaced, the
+owner's presets saved beforehand and restored afterwards with root.
+
+⚠️ Testers still have **0.4.7.2**; the 0.4.7.5 pack has not been handed out yet. And the README's
+first block matters more than the rest: volume synchronisation with QF Radio is **off** until the
+switch in the radio is turned on, so a tester who never touched it loses a behaviour that used to
+work.
 
 ⚠️ Check `git status` before anything else anyway, and do not assume this file is current about
 it — it describes the tree at the moment it was written, and nothing keeps it honest.
@@ -82,6 +85,29 @@ differing only by the skill's own `from-gemini/` section. **Edit the copy in `.a
 and copy it across** — they are kept identical on purpose.
 
 ---
+
+## The night of 07-08.09: two regressions against the original, and why they matter most
+
+🔴 **Read this before adding anything clever.** The owner's words: our contracts with the radio are
+worth nothing if the business logic of the application this is forked from is broken. Two pieces of
+it were, and both had been broken for a while:
+
+- **The encoder and the volume keys.** The original never wrote the volume at all — it read the
+  hardware and followed. GALA is this fork's one deliberate exception, and it had stopped being an
+  exception: it wrote `base + offset` even when the offset was **zero**, which can only overrule the
+  person turning the knob. Measured: the knob moved 4→5 and the level was back at 4 eighty
+  milliseconds later. Fixed in `85cc392`; at a zero offset wDSP now follows the volume instead of
+  driving it.
+- **The default preset.** A player with no preset of its own used to get the default one. That
+  fallback chain sat commented out as "redundant logic in old versions" and nothing replaced it, so
+  only the handful of players named in the map ever changed anything. Restored in the original's
+  order: the player's own preset, then the one mapped to `Default`, then `PREF_DEFAULT_PRESET` —
+  a preference `MainActivity` had gone on writing into a key nothing read.
+
+Both were found by measuring the unit, not by reading the code, and both were verified there
+afterwards. ⚠️ The lesson worth keeping: **when something the original did stops happening, look for
+what we added on top of it, not for what we removed.** Neither of these was a deletion; each was a
+new write or a new condition placed over working logic.
 
 ## Open, in rough order of value
 
