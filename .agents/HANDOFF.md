@@ -141,6 +141,14 @@ direct message — by the owner's instruction, because lone testers' files get l
 
 ## Working rules that cost something when forgotten
 
+- **Name the state by reading it, never by remembering what you did.** The action may not have
+  landed, may have been overwritten, or may have touched a different source of truth from the one
+  the reader consults. ✍️ Formulated with the QF Radio session on 08.09.2026, after both sides
+  broke it twice in one night: one read the word `muted` in the other's log as an action rather
+  than as a state and built a causal model on it; the other wrote "the property is still true"
+  from the memory of its own `setprop`, half an hour after the radio's service had rewritten it.
+  🪤 Both mistakes look like confidence. A claim narrowed to what was actually read seems weaker
+  than a confident one and is stronger by exactly the amount it never has to be withdrawn.
 - **Argue before obeying** when there is evidence against a request, and say so first.
 - **Verify on the wire yourself** when the owner is away. When the owner is *at* the unit, install
   and be quiet — no `input tap`, no screenshots, no scripted runs. They will look.
