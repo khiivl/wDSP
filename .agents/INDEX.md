@@ -27,6 +27,23 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 
 Read [../CLAUDE.md](../CLAUDE.md) first for how the app is put together.
 
+## Agreements with other applications → `C:\APPS_Contacts\`
+
+📌 **Anything agreed with another application lives there, not here.** The folder was created by
+the owner on 07.09.2026 to end a choice that had gone wrong both ways: a contract kept by one side
+only is read by the other from memory, and a contract kept by both drifts within a day.
+
+- canonical text: `C:\APPS_Contacts\<pair>\` — for this pair, `wDSP--QFRadio\`;
+- **a ledger with a mark from each side**: an item counts as closed only when wDSP and the other
+  application have both marked it, and a mark names its evidence — a commit, a measurement, a line
+  in a log — rather than an intention;
+- each side edits **its own column** and nobody else's;
+- the two contract files in this folder are **mirrors**. Edit the canonical copy, then copy across;
+  never the other way round.
+
+Rules of the folder: `C:\APPS_Contacts\README.md`. It also carries how the two sessions reach each
+other directly, because the shared board delivers Claude→Claude unreliably.
+
 ## Host tests
 
 ```bash

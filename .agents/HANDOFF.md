@@ -13,13 +13,16 @@ somewhere else in full; this is the map, not the territory.
    📻 measured on the wire, 🧩 inferred, ❓ unverified). **If you add to it, mark what you add.**
 2. **[INDEX.md](INDEX.md)** — this application's own design.
 3. `../CLAUDE.md` — how the app is put together.
+4. `C:\APPS_Contacts\wDSP--QFRadio\` — **anything agreed with QF Radio**, and the ledger where each
+   side marks what it has actually done. The copies in this folder are mirrors of it.
 
 ---
 
 ## The state of the tree
 
-Version **0.4.7.4**, `versionCode 11`, branch `kostyfmat_mod`. The newest commit that changes code
-is **`b7ae94d`** (03.09.2026) and it is pushed; whatever stands after it in the log is this folder.
+Version **0.4.7.4**, `versionCode 11`, branch `kostyfmat_mod`. The newest **pushed** commit is
+**`b7ae94d`** (03.09.2026); anything after it in the log exists only on this machine, so run
+`git log origin/kostyfmat_mod..HEAD` before assuming the remote has what you are reading about.
 Nothing is being held back any more: the whole volume-sync cycle that this file used to describe as
 "uncommitted on purpose" went in with `4eea344` on 27.08.
 

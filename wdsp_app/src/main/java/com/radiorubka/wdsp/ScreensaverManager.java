@@ -125,6 +125,18 @@ public final class ScreensaverManager {
      * {@code EXTRA_RADIO} says whether wDSP thinks the sound is coming from a tuner, because that
      * is the case where the screensaver is deliberately showing nothing but a clock and has least
      * business being in the way.
+     *
+     * <h2>🔴 Sent without a package on purpose - do not "fix" it</h2>
+     *
+     * Every other broadcast this application sends names its recipient. These two do not, and that
+     * is the owner's decision (07.09.2026): the radio is not the only application that may want to
+     * know the screen has been taken over, and others are planned. Narrowing the action to
+     * {@code com.kostyamat.fmradio} would be tidier and would quietly break every one of them.
+     *
+     * <p>⚠️ What it costs, so nobody expects more of it than it gives: an implicit broadcast does
+     * not reach a receiver declared in another application's manifest - that has been true since
+     * Oreo - and it does not start an application that is not running. A listener has to be alive
+     * and registered at runtime, which an overlay that draws on screen already is.
      */
     public static final String ACTION_SHOWN = "com.radiorubka.wdsp.SCREENSAVER_SHOWN";
     public static final String ACTION_HIDDEN = "com.radiorubka.wdsp.SCREENSAVER_HIDDEN";

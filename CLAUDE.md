@@ -14,6 +14,17 @@ radio — [.agents/platform/08-VOLUME-AND-SOURCES.md](.agents/platform/08-VOLUME
 first: two units on the same firmware genuinely behave differently there, and the file says how to
 tell which one you have.
 
+## Agreements with other applications live outside this repository
+
+`C:\APPS_Contacts\` is the owner's shared folder for contracts **between applications** (created
+07.09.2026). For this project that is `C:\APPS_Contacts\wDSP--QFRadio\`: the audio-ownership
+contract with QF Radio and the screensaver/overlay one. The copies under `.agents/` are **mirrors**
+— edit the canonical copy there, then copy across, never the reverse.
+
+Each contract carries a ledger with **one column per application**: an item is closed only when
+both sides have marked it, and a mark names its evidence (a commit, a measurement, a log line)
+rather than an intention. Each side edits only its own column. Rules: `C:\APPS_Contacts\README.md`.
+
 ## Repository location
 
 The repo lives at `C:\Users\kosty\AndroidStudioProjects\wDSP` (an *additional* working directory in
@@ -188,9 +199,13 @@ off while measuring — one exists to remove the sound we are playing, the other
 signals, which is what a test tone is — but on a unit with the BitPerfect module they are on
 deliberately, so that phone calls are intelligible.
 
-`HardwareProfile` reads `persist.sys.qf.mcu.version` and tells the BU32107 from the BD37544 by the
-hardware code in its last group (`00xx21` is the BU32107). The MCU speaks one command set to both
-chips and makes the lesser one look complete, so nothing else can tell them apart. It also reports
+`HardwareProfile` reads `persist.sys.qf.mcu.version` and decodes the six-character hardware code in
+its last group **by position**: `[1]` is the sound processor (`0` BU32107, `1` BD37534, `2` AK7738,
+`3` AK7604), `[2]` the tuner, `[3]` analogue or I2S. The MCU speaks one command set to both ROHM
+chips and makes the lesser one look complete, so nothing else can tell them apart. ⚠️ The trailing
+pair — `21` on every firmware seen — is the control panel and the power flags and distinguishes
+nothing; this class tested it until 07.09.2026, and the same test in BitPerfect is why BD units got
+the I2S profile. The table is in `.agents/platform/13-MCU-FIRMWARE-VARIANTS.md` §1. It also reports
 whether the capture path carries voice processing, which is what separates a unit with custom
 audio policies from a factory one.
 
