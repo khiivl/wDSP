@@ -278,6 +278,8 @@ public final class SystemDiagnostics {
         String hub = HardwareProfile.audioHub();
         sb.append("SECOND DSP (audio hub)\n");
         sb.append(String.format(Locale.US, "  MCU code       = %s%n", HardwareProfile.mcuCode()));
+        sb.append(String.format(Locale.US, "  processor      = %s  (character [1] of the code)%n",
+                HardwareProfile.soundProcessor()));
         sb.append(String.format(Locale.US, "  hub            = %s  (from the MCU code, the way the platform decides)%n", hub));
         sb.append(String.format(Locale.US, "  /sys/ak7738    = %s%n", sysfsState("/sys/ak7738/pm_suspend")));
         sb.append(String.format(Locale.US, "  /sys/ak7604    = %s%n", sysfsState("/sys/ak7604/pm_suspend")));

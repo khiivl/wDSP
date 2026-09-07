@@ -21,8 +21,8 @@ public final class HardwareProfile {
      * The MCU firmware version carries the hardware code in its last group.
      *
      * Example from a unit with the BU32107: {@code QF05.V02.13.20251124.002121}. The trailing
-     * {@code 002121} is the code, and the pair at its end names the sound processor - {@code 21}
-     * for the BU32107. The two digits in the middle vary between builds and mean nothing here.
+     * {@code 002121} is the code, and every character of it names one thing - the table, and the
+     * belief it replaces, are in {@link #codeDigit(int)}.
      */
     private static final String PROP_MCU_VERSION = "persist.sys.qf.mcu.version";
 
@@ -45,6 +45,122 @@ public final class HardwareProfile {
     }
 
     /**
+     * One character of the hardware code, as a number, or -1 when there is nothing to read.
+     *
+     * <h2>The table</h2>
+     *
+     * Read out of the factory code rather than inferred: {@code McuVersionUtils.parseMcuVersion}
+     * in {@code QF_CarSettings} splits the last dot-separated field character by character, and
+     * {@code ProductInfoConstants} holds the names each value maps to.
+     *
+     * <pre>
+     *   [0] MCU type          0 ST · 1 MM (MindMotion) · 2 BYD
+     *   [1] sound processor   0 BU32107 · 1 BD37534 · 2 AK7738 · 3 AK7604
+     *   [2] tuner             0 built-in · 1 TSC4745 · 2 TDA7708 · 3 QN8035 · 4 TEF6686
+     *                         5 TDA7708L · 6 TDA7708LX · 7 LXH4745 · 8 TDA7786 · 9 SI4755
+     *   [3] output path       0 analogue · 1 I2S
+     *   [4] control panel     encoders, remote, backlight - nothing to do with audio
+     *   [5] power flags       bit 0 force-power-off, bit 1 operational amplifier
+     * </pre>
+     *
+     * Only [1], [2] and [4] count on past 9 with letters; [0], [3] and [5] are parsed as plain
+     * decimal by the factory code. This reproduces that, because a letter appearing where the
+     * platform would not accept one is a code we do not understand, and "unknown" is the honest
+     * answer to that.
+     *
+     * <h2>What this replaces, and why it is worth a paragraph</h2>
+     *
+     * 🔴 This class used to name the sound processor from the <b>trailing pair</b> of the code -
+     * {@code 21} - and that pair is [4] and [5]: the control panel and the power flags. It reads
+     * {@code 21} on every firmware examined, BU and BD alike, so it never distinguished anything;
+     * the right answer came out of the {@code startsWith("00")} half of the same test, by accident.
+     * The identical mistake in BitPerfect's {@code customize.sh} is why units with the lesser chip
+     * were handed the 24-bit I2S profile for a processor that has only analogue inputs.
+     *
+     * <p>Verified against four firmware images with the archive filenames as an independent
+     * witness. Full write-up in {@code .agents/platform/13-MCU-FIRMWARE-VARIANTS.md} §1.
+     */
+    private static int codeDigit(int index) {
+        String code = mcuCode();
+        if (code == null || code.length() < 6 || index < 0 || index >= code.length()) return -1;
+        char c = code.charAt(index);
+        if (c >= '0' && c <= '9') return c - '0';
+        if (index != 1 && index != 2 && index != 4) return -1;
+        if (c >= 'a' && c <= 'z') return c + 10 - 'a';
+        if (c >= 'A' && c <= 'Z') return c + 10 - 'A';
+        return -1;
+    }
+
+    /** MCU families, indexed by {@code [0]} of the hardware code. */
+    private static final String[] MCU_TYPES = {"ST", "MM", "BYD"};
+
+    /**
+     * Which microcontroller family the board carries, or {@code "unknown"}.
+     *
+     * Nothing in this application depends on it, and it is here for one reason: the test this
+     * class used to run required the code to begin with {@code 0}, and the platform's own list has
+     * three entries. A board built on the MindMotion or BYD part would have been called "not a
+     * BU32107" on that ground alone.
+     */
+    public static String mcuType() {
+        int type = codeDigit(0);
+        return type >= 0 && type < MCU_TYPES.length ? MCU_TYPES[type] : "unknown";
+    }
+
+    /** Sound processors, indexed by {@code [1]} of the hardware code. */
+    private static final String[] SOUND_PROCESSORS = {"BU32107", "BD37534", "AK7738", "AK7604"};
+
+    /** Tuners, indexed by {@code [2]} of the hardware code. */
+    private static final String[] TUNERS = {"built-in", "TSC4745", "TDA7708", "QN8035", "TEF6686",
+            "TDA7708L", "TDA7708LX", "LXH4745", "TDA7786", "SI4755"};
+
+    /**
+     * Which sound processor is fitted, by its factory name, or {@code "unknown"}.
+     *
+     * The two ROHM parts and the two AKM ones are values of one list, not two separate questions -
+     * a unit with an AK hub reports the hub here and nothing about what sits behind it.
+     */
+    public static String soundProcessor() {
+        int type = codeDigit(1);
+        return type >= 0 && type < SOUND_PROCESSORS.length ? SOUND_PROCESSORS[type] : "unknown";
+    }
+
+    /**
+     * Which tuner is fitted, by its factory name, or {@code "unknown"}.
+     *
+     * Nothing in this application talks to it. It is here because a measurement report is read by
+     * somebody who was never in that car, and the tuner decides how the radio behaves against the
+     * rest of the audio path.
+     */
+    public static String tuner() {
+        int type = codeDigit(2);
+        return type >= 0 && type < TUNERS.length ? TUNERS[type] : "unknown";
+    }
+
+    /**
+     * Analogue or I2S between the MCU and the processor - and what the platform published from the
+     * same character.
+     *
+     * The platform reads [3] at start-up and publishes {@code persist.sys.qf.arm.use.i2s} from it,
+     * and the Unisoc audio HAL then picks its route file from that <b>property</b>, not from the
+     * code: {@code qf_double_bt_audio_route_i2s.xml} when true, {@code …_noi2s.xml} when false.
+     *
+     * <p>So the two can disagree — an overlay or a Magisk module can overwrite the property, and
+     * the HAL will follow the property. That is worth seeing in a report rather than resolving
+     * silently, which is why both are printed. (✍️ Gemini, 07.09.2026, from the framework code.)
+     */
+    public static String outputPath() {
+        int path = codeDigit(3);
+        String decoded = path == 0 ? "analogue" : path == 1 ? "I2S" : "unknown";
+        String published = systemProperty("persist.sys.qf.arm.use.i2s");
+        if (published == null || published.isEmpty()) return decoded;
+        String fromProperty = "true".equalsIgnoreCase(published) ? "I2S" : "analogue";
+        return decoded.equals(fromProperty)
+                ? decoded
+                : decoded + " (code) but use.i2s=" + published;
+    }
+
+    /**
      * Which AKM audio hub sits between the MCU and the amplifier, if any.
      *
      * <h2>Why this matters more than it looks</h2>
@@ -59,24 +175,21 @@ public final class HardwareProfile {
      * <h2>How the platform decides, and why this copies it exactly</h2>
      *
      * Not by probing. The framework reads the MCU version string, takes the part after the last
-     * dot, and looks at its <b>second character</b>: 2 means AK7738, 3 means AK7604, anything else
-     * means no hub at all. A letter counts on from 9. That is the whole test, and it is reproduced
-     * here character for character - a report that disagrees with the platform about which DSP is
-     * fitted is worse than no report.
+     * dot, and looks at its <b>second character</b> - {@code [1]}, the sound processor. {@code 2}
+     * means AK7738 and {@code 3} means AK7604; {@code 0} and {@code 1} are the two ROHM parts, so
+     * "no hub" and "BU32107" are the same value and this question cannot be asked as a flag. See
+     * {@link #codeDigit(int)}. A report that disagrees with the platform about which DSP is fitted
+     * is worse than no report, so the test is the platform's own.
      *
      * @return "AK7738", "AK7604" or "none"
      */
     public static synchronized String audioHub() {
         if (audioHub == null) {
-            audioHub = "none";
-            String code = mcuCode();
-            if (code != null && code.length() >= 6) {
-                char c = code.charAt(1);
-                int type = Character.isDigit(c) ? c - '0' : c + 10 - 'a';
-                if (type == 2) audioHub = "AK7738";
-                else if (type == 3) audioHub = "AK7604";
-            }
-            Log.i(TAG, "audio hub=" + audioHub + " from MCU code=" + code);
+            int type = codeDigit(1);
+            if (type == 2) audioHub = "AK7738";
+            else if (type == 3) audioHub = "AK7604";
+            else audioHub = "none";
+            Log.i(TAG, "audio hub=" + audioHub + " from MCU code=" + mcuCode());
         }
         return audioHub;
     }
@@ -84,20 +197,18 @@ public final class HardwareProfile {
     private static String audioHub;
 
     /**
-     * True when the unit carries the ROHM BU32107, false when it is the cut-down BD37544.
+     * True when the unit carries the ROHM BU32107, false when it is the cut-down BD37534.
      *
      * The MCU speaks one command set to both chips and makes the lesser one look complete, so the
      * commands cannot tell them apart - only the firmware code can. When the answer is not known
      * at all, the caller gets false: claiming the better chip on a unit that does not have it
-     * would promise the user something the hardware cannot do.
+     * would promise the user something the hardware cannot do. A unit with an AK hub is also not
+     * a BU32107 as far as this question goes - {@link #soundProcessor()} says which it is.
      */
     public static synchronized boolean hasBu32107() {
         if (bu32107 == null) {
-            String code = mcuCode();
-            bu32107 = code != null && code.length() == 6
-                    && code.startsWith("00") && code.endsWith("21");
-            Log.i(TAG, "sound processor: " + (bu32107 ? "BU32107" : "not BU32107 (BD37544?)")
-                    + ", code=" + code);
+            bu32107 = codeDigit(1) == 0;
+            Log.i(TAG, "sound processor: " + soundProcessor() + ", code=" + mcuCode());
         }
         return bu32107;
     }
@@ -121,8 +232,9 @@ public final class HardwareProfile {
     /** One line for the log and for the diagnostics screen. */
     public static String describe() {
         return String.format(Locale.US,
-                "MCU code=%s, sound processor=%s, capture effects: AEC=%b NS=%b AGC=%b",
-                mcuCode(), hasBu32107() ? "BU32107" : "BD37544 or unknown",
+                "MCU code=%s (%s), sound processor=%s, tuner=%s, path=%s, "
+                        + "capture effects: AEC=%b NS=%b AGC=%b",
+                mcuCode(), mcuType(), soundProcessor(), tuner(), outputPath(),
                 AcousticEchoCanceler.isAvailable(), NoiseSuppressor.isAvailable(),
                 AutomaticGainControl.isAvailable());
     }

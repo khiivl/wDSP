@@ -25,17 +25,19 @@ last dot-separated field and reads it character by character; `ProductInfoConsta
 each value maps to. Both are decompiled factory code, not inference.
 
 ```java
-mcuType              = charAt(0)
+mcuType              = charAt(0)      // decimal only
 dspType              = charAt(1)      // hex-capable: (c + 10 - 97)
 radioType            = charAt(2)      // hex-capable
-mpuMode              = charAt(3)
+mpuMode              = charAt(3)      // decimal only
 exDeviceType         = charAt(4)      // hex-capable
-forcePowerOff        = charAt(5) & 1
-operationalAmplifier = charAt(5) & 2
+int power = Integer.parseInt(String.valueOf(charAt(5)));   // decimal only
+forcePowerOff        = power & 1
+operationalAmplifier = power & 2
 ```
 
 | position | field | values (factory strings) |
 |---|---|---|
+| `[0]` | **MCU family** | `0` ST · `1` MM (MindMotion) · `2` BYD — ✍️ *Gemini, 07.09.2026*, `MCU_TYPE_ARRAY` |
 | `[1]` | **sound processor** | `0` BU32107 · `1` BD37534 · `2` AK7738 · `3` AK7604 |
 | `[2]` | **tuner** | `0` Build-in · `1` TSC4745 · `2` TDA7708 · `3` QN8035 · `4` TEF6686(NXP) · `5` TDA7708L · `6` TDA7708LX · `7` LXH4745 · `8` TDA7786 · `9` SI4755 |
 | `[3]` | **output path** | `0` analogue · `1` IIS |
@@ -63,6 +65,24 @@ operationalAmplifier = charAt(5) & 2
 `${HW_CODE:4:2} == "21"` reads the control panel plus the power bitmask — two things unrelated to
 audio, and identical across the fleet, so the test is **always true**. That is how a BD unit ends up
 with the 24-bit I2S profile. See [10-BITPERFECT-MODULE.md](10-BITPERFECT-MODULE.md) §4.
+
+### Three details that decide whether a parser of this code is right
+
+🔬 ✍️ *Gemini, 07.09.2026, from `McuVersionUtils.java` and `ProductInfoConstants.java`.* Each of
+these was got wrong once already, here or in another project's code.
+
+- **The hex continuation is not general.** Letters count on past 9 on **`[1]`, `[2]` and `[4]`
+  only** (`c - 'a' + 10`, lines 54 / 62 / 71). `[0]`, `[3]` and `[5]` go through
+  `Integer.parseInt` and accept digits and nothing else. ⇒ A letter in one of those three is not a
+  value: it is a code we do not understand, and "unknown" is the honest reading of it.
+- **`[5]` is masked on the number, not on the character.** The factory code is
+  `int power = Integer.parseInt(String.valueOf(charAt(5)))`, then `power & 1` and `power & 2`.
+  Masking the `char` instead reads the ASCII byte — `'1'` is `0x31` — and produces a plausible,
+  wrong answer.
+- **`[0]` has three values, so "the code begins with 0" is not a safe assumption.** `MCU_TYPE_ARRAY`
+  is `{ST, MM, BYD}`: STMicroelectronics/APM32, MindMotion MM32, BYD. 🧩 Boards on the second and
+  third exist; none has been in front of us. wDSP's own detector required `startsWith("00")` until
+  07.09.2026 and would have called every one of them "not a BU32107" on that ground alone.
 
 ## 1-bis. What the platform publishes from it
 
