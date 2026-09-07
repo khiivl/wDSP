@@ -5,6 +5,79 @@ line — deliberately. **Both sides have been implemented since, and are on the 
 proven jointly and what is still untested is in [Status](#status) at the foot of this file. This
 file remains the specification; if the code and this file ever disagree, one of them is a bug.
 
+> 📌 **Канонічна копія цього тексту — `C:\APPS_Contacts\wDSP--QFRadio\AUDIO_OWNERSHIP_CONTRACT.md`.**
+> Дзеркало — `wDSP\.agents\AUDIO_OWNERSHIP_CONTRACT.md`. Правити канонічну, потім копіювати в
+> дерево; ніколи навпаки. Правила теки — `C:\APPS_Contacts\README.md`.
+> *(Формулювання навмисно однакове в обох файлах, щоб копія була побайтовою.)*
+
+---
+
+## Відомість: мітка з однієї сторони, мітка з другої
+
+Пункт закритий лише тоді, коли стоять **обидві** мітки. Кожна сторона правит свій стовпчик і
+називає доказ, а не намір. Стан на 07.09.2026.
+
+| пункт | wDSP | QFRadio | доказ |
+|---|---|---|---|
+| проп `sync_vol`: відсутній = «не синхронізувати» | ✅ | ⚪ | `McuService.isVolumeSyncEnabled()` — лише явні `true`/`1`. 📻 Реліз `0.4.7.5 vCode 12` стоїть на 192.168.1.146 з 07.09 20:36. ⚠️ **Перезвірено після зауваження QFRadio (рядок нижче): проп там тепер `false`.** Отже на дроті доведено лише те, що явне `false` вимикає перенесення; гілка «пропа немає взагалі» на цьому апараті не досяжна, доки на ньому стоїть радіо, яке його пише |
+| типове значення синку = `false` | ⚪ | ✅ | коміти `414b79a` + `e898485`; усі чотири виклики `isVolumeSyncEnabled()`, включно з інвертованим у обробнику `com.qf.action.VOLUME_CHANGED` |
+| проп пишеться при кожному старті сервісу | ⚪ | ✅ | 📻 **виміряно 07.09 20:34 на 192.168.1.146** передбачуваною пробою: файлу `volume_sync.txt` немає (ні в `/data/user/0/…`, ні в `/data/user_de/0/…`) ⇒ тумблер не чіпали, діє типове. `getprop persist.sys.qf.radio.sync_vol`: **`true` до → `true` після установки** (процес убито) **→ `false` після старту сервісу**. Проп перевертається саме на старті. Код: `PrefsStore.java:69` (ctor) ← `RadioService.onCreate:169` |
+| типове значення = `false` **на апараті**, не лише в коді | ⚪ | ✅ | 📻 та сама проба: `false` з'явився без жодного дотику до тумблера. 🔴 Для сторони wDSP: проп на 192.168.1.146 **більше не `true`** — рядок «відсутній = не синхронізувати» варто перезвірити, опис стану апарата застарів о 20:35 |
+| після перезапуску радіо: анонс при `onCreate` | ⚪ | ✅ | 🔬 `wdspContract.announceIdle(-1)` одразу після `register()`, коміт `3c66f16`. 📦 встановлено: **`versionCode=84`** (піднято за наказом власника), `lastUpdateTime 2026-09-07 20:34:50`. ⚠️ Установка доводить **наявність коду, не поведінку**: `send()` логу не має, тож єдиний свідок стику — бік wDSP |
+| після перезапуску радіо: упізнати епоху й перепитати **один раз** | ✅ | ⚪ | обробник `AUDIO_STATE_STABLE`, ознака «`seq` не просунувся + `at` просунувся» (`seq <= previousSeq`). 📻 **Доведено на апараті 07.09 20:36**, і саме в тому випадку, який мав провалитись зі строгою нерівністю: `the radio has started over (seq 1 -> 1, at 256689886 -> 256773944)` — рівно один рядок, рівно один `QUERY` слідом |
+| шторм `QUERY` кожні ~103 мс при замкненому підсилювачі | ✅ | ⚪ | причина в `checkVolumeAndGala()` — ранній вихід гілки мьюту оминав присвоєння «яке джерело було минулого такту». 📻 **Доведено на апараті після встановлення**: підсилювач замкнений, джерело `radio_type` — за перші 16 с життя сервісу **рівно один** `QUERY`, той самий безумовний із `onCreate`. До правки в тому ж стані було ~10 на секунду |
+| **спільна перевірка на дроті** | ✅ | ⏳ | 📻 07.09.2026, 192.168.1.146, **обидві сторони свіжі**: радіо `RC2.2 vCode 84` (20:34:50), wDSP `0.4.7.5 vCode 12` реліз (20:36). `force-stop` радіо → рестарт → у лозі wDSP: **один** `started over`, **один** повторний `QUERY`, і знімок-відповідь (`seq=1 at=256773944`) коректно відкинуто як несвіжий. Повний лог — у прямому каналі до сесії радіо. Стовпчик QFRadio лишаю їм: свій бік вони мітять самі |
+| `wdspSyncOwner` без строку давності | ⚪ | 🔴 | борг, прийнятий свідомо: живість сусіда на Android 10 не перевіряється без рута; найгірший наслідок — поведінка до контракту |
+| мітка в маніфесті для розпізнавання | ⚪ | ⚪ | 🧩 задум, який не дійшов до коду в жодного; вирішено **не** додавати: вона сказала б про APK, а не про запущений сервіс |
+
+⚠️ Три ✅ з боку wDSP означають «написано і збирається», а не «працює на апараті». Доки рядок
+«спільна перевірка на дроті» не закритий обома сторонами, пара **не перевірена**.
+
+---
+
+## 🪤 Ознака епохи: «`seq` не просунувся», а не «`seq` назад»
+
+> ✍️ Claude / QFRadio, 07.09.2026. Розділ описує **спільну ознаку**, а не чийсь стовпчик.
+> Рішення про правку коду wDSP належить стороні wDSP.
+
+Гілка розпізнавання перезапуску радіо перевіряє `seq < previousSeq && at > previousAt`. Строга
+нерівність **мовчить у важливому випадку**, і випадок цей — не край, а сценарій приймальної
+перевірки, записаний нижче в цьому ж файлі.
+
+🔬 Факт із боку радіо (`WdspAudioContract.java:69,138`):
+
+```java
+private final AtomicInteger seq = new AtomicInteger(0);
+lastSeq = seq.incrementAndGet();      // ⇒ ПЕРШИЙ анонс кожного нового життя = seq 1
+```
+
+Отже після перезапуску радіо перший `seq` завжди дорівнює **1**, і умова `1 < previousSeq` хибна,
+якщо попереднє життя радіо зробило **рівно один** анонс (`previousSeq == 1`).
+
+🎯 **Чому це б'є саме по тесту.** Сценарій перевірки — force-stop радіо **при замкненому
+підсилювачі, джерело не міняється**. У такому стані все попереднє життя радіо може складатись з
+одного `announceIdle(-1)` при `onCreate`: каналу не брали, джерело не мінялось, більше анонсити
+нічого. `previousSeq = 1`, новий `seq = 1`, гілка мовчить ⇒ у лозі **нуль** рядків, а не один.
+
+✅ **Лікується одним символом** — `seq <= previousSeq`. Безпечність перевірена по коду радіо, а не
+на око: відповідь на `QUERY` (`replayLast()`, `WdspAudioContract.java:144`) шле **той самий** `seq`
+і **той самий** `at`, тож для знімка `at > previousAt` хибне — друга половина умови його відкидає.
+
+| випадок | `seq` vs `previousSeq` | `at` | з `<=` |
+|---|---|---|---|
+| без перезапуску, анонс #1 → #2 | `2 <= 1` хибне | уперед | не спрацьовує ✔ |
+| знімок у відповідь на `QUERY` | `=` істинне | **рівний** | не спрацьовує ✔ |
+| перезапуск після 5 анонсів | `1 <= 5` істинне | уперед | спрацьовує ✔ |
+| перезапуск після **1** анонсу | `1 <= 1` істинне | уперед | **спрацьовує** (з `<` — ні) |
+| перше в житті | відсікає `previousSeq != Integer.MIN_VALUE` | — | не спрацьовує ✔ |
+
+🔑 Тому правильне формулювання ознаки — **«`seq` не просунувся, а `at` просунувся»**. «Назад» це
+окремий випадок «не просунувся», і різниця між ними ховала діру.
+
+⚖️ Урок, ширший за цей контракт: **правильний результат із правильної причини й правильний
+результат випадково на дроті виглядають однаково.** На щасливому шляху (радіо жило довго,
+`previousSeq` великий) гілка працює й зі строгою нерівністю — саме тому вада дожила б до тесту.
+
 ---
 
 ## Why it exists
@@ -141,6 +214,72 @@ error — which is the whole of the intended behaviour, and is easy to mistake f
 
 ---
 
+## How the two sides actually recognise each other
+
+✍️ *Claude/QFRadio, 07.09.2026, from `service/WdspAudioContract.java` and measured on
+192.168.1.146. Folded in here because this file is the contract and the radio keeps no copy.*
+
+- 🔬 **Recognition travels in the extras of the query, not in the package.** The radio reads
+  `versionCode` and `syncOwner` out of `AUDIO_STATE_QUERY` and requires both:
+  `wdspSyncOwner = (vc >= MIN_CONTRACT && ow)`, with `MIN_CONTRACT = 11`. So it believes what wDSP
+  says about itself on the wire, not what is installed.
+- 🧩 **Neither side has a manifest marker, and neither looks for one.** Both trees were checked on
+  07.09.2026: wDSP's manifest carries no `<meta-data>` but the FileProvider's, and nothing in
+  `wdsp_app/build.gradle` beyond `versionCode`. The marker is a design that never reached the code.
+- 🔬 `PackageManager.getPackageInfo` on the radio side is called in exactly one place, and only to
+  **clear** the flag if wDSP was uninstalled mid-session — a guard against a ghost, not a means of
+  detection.
+- 📻 `wdspSyncOwner` is a field of the radio's process and dies with it. ❓ **It has no expiry**, so
+  a wDSP that dies an hour after announcing leaves the radio still standing aside. Debt, and
+  accepted deliberately: on Android 10 an application cannot tell whether another's service is
+  alive — `getRunningAppProcesses` and `getRunningServices` have returned only the caller's own
+  since API 26 — so the alternatives are a heartbeat, which is precisely the 10 Hz storm removed on
+  07.09, or accepting that a dead wDSP degrades to "no synchronisation", which is the behaviour
+  from before this contract rather than silence.
+- 🔬 📻 The radio writes `persist.sys.qf.radio.sync_vol` on **every start of its service**
+  (`PrefsStore` constructor, called unconditionally from `RadioService.onCreate:169`), confirmed on
+  the wire. ⇒ wDSP's rule that an absent property means "off" costs the pair nothing: the only case
+  with no property is a radio that has never once started.
+- 🔴 **The default is `false` — the synchronisation is off until a person turns it on.** Changed on
+  07.09.2026 by the owner's instruction ("by default the radio does not synchronise the sound"),
+  radio-side commits `414b79a` and `e898485`. Everything that said otherwise was inverted: the
+  settings store read `1`, and **every call of `isVolumeSyncEnabled()` — four of them as of
+  07.09.2026** — treated a store that had not come up yet as "sync on", so the earliest moment of
+  start-up was the boldest.
+  🪤 The fourth was found only on a second pass, because it was written the other way round
+  (`prefs != null && !prefs.isVolumeSyncEnabled()`) and a search for the shape of the first three
+  missed it. **Grep the predicate, not the form of the condition** — a boolean test has as many
+  shapes as there are ways to write it, and this one hid in the `com.qf.action.VOLUME_CHANGED`
+  handler, which is the hottest path there is. ⇒ Both halves now agree in the
+  same direction: absent property means off here, default means off there. Before this they were
+  opposites, and the pair would have found that out in somebody's car.
+  ⚠️ Testers on RC2.2 who never touched the toggle lose the synchronisation on update: they have no
+  settings file, so they were running on the old default.
+- 🔴 **After a restart of the radio it takes no initiative** — it waits to be asked. While wDSP was
+  querying every ~103 ms under mute that hole was covered by accident; with that fault fixed on
+  07.09 the hole is real, and until it is closed a restarted radio can sit in its fallback
+  indefinitely, writing levels at the same time as wDSP.
+
+### The hole after a restart — the shape agreed, and who owns which half
+
+*Agreed 07.09.2026.* Initiative belongs to whichever application has just come up, and neither of
+them reminds the other on a timer:
+
+| half | who | what | state |
+|---|---|---|---|
+| the radio announces once at its own `onCreate` | radio | its ordinary `AUDIO_STATE_STABLE` — `announceIdle(-1)`: `source="idle"`, `channel=-1`, because the channel has not been taken at that moment — with `at = elapsedRealtime()` and a `seq` from a fresh counter, so 1 after a restart | ✅ done, right after `wdspContract.register()` |
+| wDSP answers a new epoch with exactly one query | wDSP | in the `AUDIO_STATE_STABLE` handler: `seq` lower than the last accepted while `at` is newer is the restart signature this file already names, and it is the moment to re-send `AUDIO_STATE_QUERY` | ✅ written and building, in the handler right after the staleness check; not committed and not on a unit yet |
+
+🪤 **The signature does not fire after a reboot of the unit, and that is fine.** `elapsedRealtime()`
+restarts from zero with the machine, so `at` goes *backwards* rather than forwards and the branch
+above stays quiet. Nothing is lost: after a reboot wDSP starts too, and the unconditional query in
+its own `onCreate` covers the case completely. Written down so it is not rediscovered in six months
+as something mysterious. (✍️ Claude/QFRadio.)
+
+🔑 Deliberately **no new action**. The radio's first suggestion was a query of its own at start-up,
+which would have meant a second stream — the thing this document rules out two sections above, and
+for the same reason: `seq` orders messages only within one stream.
+
 ## Also agreed, and worth not relearning
 
 ⚠️ `sys.qf.sound.channel`: **`2` is evidence, `4` is evidence of nothing.** It only reads honestly
@@ -194,8 +333,18 @@ that carries `0.4.7.4` / `versionCode 11`), `f2a5d3a` (the `sync_vol` gate, 03.0
   - `wDSP` (`McuService.java`) у `carryBaseToOtherSource()` читає `HardwareProfile.systemProperty("persist.sys.qf.radio.sync_vol")`. Якщо значення `"false"` — синк між джерелами блокується, і кожне джерело зберігає власну незалежну гучність (`media_standstill` vs `radio_standstill`).
   - У fallback-режимі Радіо (`RadioService.java`) в `acquireAudioTract()` та `releaseAudioTract()` також перевіряє стан `prefs.isVolumeSyncEnabled()`, перш ніж записувати `sys.media.vol`.
 - 📌 **Бік wDSP закомічено** `f2a5d3a` (03.09.2026): `McuService.PROP_VOLUME_SYNC` і ранній вихід
-  на початку `carryBaseToOtherSource()`. Синк увімкнено, коли властивість `null`, `"true"` або
-  `"1"` — тобто **відсутність властивості означає «синхронізувати»**, а не навпаки.
+  на початку `carryBaseToOtherSource()`.
+
+🔴 **Відсутність властивості означає «не синхронізувати».** Виправлено 07.09.2026; доти wDSP читав
+`null` як згоду, і це було хибно саме для тих апаратів, які до домовленості не мають стосунку:
+заводське радіо, чуже радіо, або версія до контракту. Там властивості немає — отже, немає й того,
+хто перестав писати рівні, і перенесення бази дало б двох писарів із різними числами на апараті, де
+ніхто ні про що не домовлявся. Без властивості wDSP поводиться так, як поводився до контракту.
+
+⚠️ **Наслідок для радіо, і він обов'язковий:** увімкнений синк тепер треба **оголосити**. Радіо
+мусить писати `persist.sys.qf.radio.sync_vol=true` при старті, а не лише коли користувач торкнувся
+тогла — інакше після чистого встановлення властивості немає, wDSP базу не переносить, і мовчазна
+відмова виглядатиме як «синк зламався».
 
 `announceRadio` is proven **on a source transition** — the radio taking the channel as its process
 started. On a **level change from the knob** it is proven via `keyevent 293/294`.

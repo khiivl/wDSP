@@ -136,9 +136,29 @@ public class McuService extends Service implements LocationListener {
     private static final String ACTION_AUDIO_STATE_QUERY = RADIO_PACKAGE + ".AUDIO_STATE_QUERY";
     private static final String PROP_VOLUME_SYNC = "persist.sys.qf.radio.sync_vol";
 
+    /**
+     * Whether the base level may be carried between sources - and the answer is no unless
+     * somebody says otherwise, out loud.
+     *
+     * <h2>🔴 An absent property is not consent</h2>
+     *
+     * Carrying the level from one source to another is half of a bargain. The other half is a
+     * radio that has stopped writing levels itself, and only one radio does that: the one that
+     * writes this property. On a unit running the factory radio, somebody else's radio, or a
+     * version from before the contract, the property is simply not there - and there is nobody on
+     * the other side of the bargain. Doing it anyway would mean two writers with different numbers
+     * on a unit where nothing had agreed to anything.
+     *
+     * <p>So the absence is read as "off", which is what this application did before the contract
+     * existed, and the behaviour a stock unit gets. Only an explicit {@code true} (or {@code 1})
+     * turns it on: it is the radio's job to say so, once it is running and has taken ownership.
+     *
+     * <p>⚠️ This used to read the other way round - absent meant on - and it was wrong for exactly
+     * the units that were never part of the arrangement.
+     */
     private boolean isVolumeSyncEnabled() {
         String prop = HardwareProfile.systemProperty(PROP_VOLUME_SYNC);
-        return prop == null || "true".equalsIgnoreCase(prop) || "1".equals(prop);
+        return "true".equalsIgnoreCase(prop) || "1".equals(prop);
     }
 
     /**
@@ -216,7 +236,18 @@ public class McuService extends Service implements LocationListener {
     private boolean isBootStart = true;
     private String presetBeforeCall;
 
-    private String galavoltype_last = VolumeHelper.getActivePlayerType();
+    /**
+     * The source the previous poll reasoned about, or null until the first poll has run.
+     *
+     * 🔴 Null on purpose. This used to be initialised by calling
+     * {@link VolumeHelper#getActivePlayerType()} right here, and a field initialiser runs while
+     * the service object is still being constructed - before {@code VolumeHelper.init()}. At that
+     * moment the reflection handles are null, so the call cannot do anything but take its fallback
+     * branch and answer {@code "media_type"}, whatever the unit is actually playing. Every later
+     * poll then compared the real source against that invention and saw a source switch that had
+     * never happened.
+     */
+    private String galavoltype_last;
 
     private StatusBarVisualizerManager statusBarManager;
 
@@ -802,8 +833,50 @@ public class McuService extends Service implements LocationListener {
                     + lastAudioStateSeq + " at=" + lastAudioStateAt);
             return;
         }
+        final int previousSeq = lastAudioStateSeq;
+        final long previousAt = lastAudioStateAt;
         lastAudioStateSeq = seq;
         lastAudioStateAt = at;
+
+        // 🔴 A counter that did NOT advance while the clock did is the radio starting over, and it
+        // is the one moment this service has to speak up.
+        //
+        // 🪤 "Did not advance", not "went backwards". The radio's counter starts at zero and its
+        // first announcement of a new life is always `seq = 1`, so a radio whose previous life
+        // managed exactly one announcement restarts from 1 to 1 - and a test for `seq < previous`
+        // stays silent through the very case this branch exists for. That is not a corner: a radio
+        // started while the amplifier is muted and the source never changes announces once, at
+        // `onCreate`, and has nothing else to say. Found by the radio's own session, 07.09.2026,
+        // by reading where its counter begins rather than assuming.
+        //
+        // ⚠️ `at > previousAt` is what keeps `<=` safe. The radio answers a query by replaying its
+        // last announcement verbatim - the same `seq` and the same `at` - so the clock does not
+        // move and this branch ignores it. (The staleness test above discards that replay first
+        // anyway; the conjunction is the second lock, not the only one.)
+        //
+        // What the radio knows about us - our versionCode, and whether this unit can carry a level
+        // between sources at all - it learned from the extras of our query, and it keeps that in a
+        // field of its own process. The field dies with the process. So a radio that restarts has
+        // forgotten us, falls back to writing the levels itself, and this service carries the base
+        // at the same time: two writers with different numbers, which is the whole reason this
+        // contract exists.
+        //
+        // Until 07.09.2026 nothing closed that, and nothing had to: a fault in the poll was asking
+        // the radio for its state ten times a second under mute, so a restarted radio was told
+        // almost immediately, by accident. Fixing the fault took the accident away with it.
+        //
+        // The radio's half is to announce once when it comes up - `source="idle"`, a fresh `at`,
+        // a `seq` from a new counter. This is the other half: recognise that epoch and re-send the
+        // query exactly once. No new action and no second stream, which the contract forbids.
+        //
+        // 🪤 It deliberately does not fire when the whole unit reboots: `elapsedRealtime()` starts
+        // again from zero, so `at` moves backwards rather than forwards. Nothing is missed, because
+        // this service starts then too and greets the radio unconditionally from onCreate.
+        if (previousSeq != Integer.MIN_VALUE && seq <= previousSeq && at > previousAt) {
+            Log.i(TAG, "the radio has started over (seq " + previousSeq + " -> " + seq
+                    + ", at " + previousAt + " -> " + at + "), introducing ourselves again");
+            askRadioForItsState();
+        }
 
         int live = VolumeHelper.getVolume();
 
@@ -933,7 +1006,13 @@ public class McuService extends Service implements LocationListener {
         // if the player has changed since the last run
         // Whether the source changed on this very poll. Nothing may be carried to another source
         // in that cycle - see the guard on the manual-adjustment branch below.
-        boolean sourceChangedThisPoll = !galavoltype.equals(galavoltype_last);
+        //
+        // A null previous source is the first poll after this service started: there is nothing to
+        // have changed from, so the poll simply learns which source is live. Treating it as a
+        // change would greet the radio a second time, on top of the greeting onCreate already
+        // sent.
+        boolean sourceChangedThisPoll =
+                galavoltype_last != null && !galavoltype.equals(galavoltype_last);
         if (sourceChangedThisPoll) lastSourceChangeMs = System.currentTimeMillis();
 
         if (sourceChangedThisPoll) {
@@ -1040,6 +1119,23 @@ public class McuService extends Service implements LocationListener {
                 }
             }
         }
+
+        // 🔴 Remember the source here rather than at the foot of this method, because two branches
+        // below return early - the muted guard and the unmute restore - and both used to skip the
+        // assignment altogether. While the amplifier is muted the poll takes the first of them on
+        // every single tick, so this field kept whatever it started with and
+        // `sourceChangedThisPoll` stayed true for ever.
+        //
+        // 📻 Measured on the unit 07.09.2026: wDSP asked the radio for its state every ~103 ms -
+        // one query per poll - the radio answered every one of them, and every answer was then
+        // discarded as a duplicate. Two processes woken ten times a second on a parked car, for as
+        // long as it stayed muted. Unmuting stopped it within one tick, and that is what named the
+        // cause.
+        //
+        // It is `galavoltype` and not a fresh read on purpose: everything above reasoned about
+        // that value, so that is what the next poll must compare against. Reading the source again
+        // here would let one that moved during the poll be recorded as though it never had.
+        galavoltype_last = galavoltype;
 
         // this gets the speed
         float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
@@ -1269,8 +1365,6 @@ public class McuService extends Service implements LocationListener {
                 sendBroadcast(volumeChangedIntent);
             }
         }
-
-        galavoltype_last = VolumeHelper.getActivePlayerType();
     }
 
     private void checkPlayer() {
