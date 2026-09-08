@@ -705,7 +705,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         seekSolidHue.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
-        seekSolidHue.setThumb(ThemeManager.whiteThumbDrawable(this));
+        int initialSolidHue = seekSolidHue.getProgress();
+        seekSolidHue.setThumb(ThemeManager.coloredThumbDrawable(this, Color.HSVToColor(new float[]{initialSolidHue, 1f, 1f})));
 
         seekSolidVal.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
         seekSolidVal.setThumb(ThemeManager.whiteThumbDrawable(this));
@@ -721,6 +722,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (tvSolidValVal != null) tvSolidValVal.setText(getString(R.string.lbl_percent_fmt, (int) (v * 100)));
 
                 int pureColor = Color.HSVToColor(new float[]{h, 1f, 1f});
+                seekSolidHue.setThumb(ThemeManager.coloredThumbDrawable(SettingsActivity.this, pureColor));
                 if (bgSolidVal != null) {
                     bgSolidVal.setBackground(ThemeManager.brightnessGradientDrawable(SettingsActivity.this, pureColor, 14f, 14));
                 }
@@ -1162,6 +1164,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvSolidValVal != null) tvSolidValVal.setText(getString(R.string.lbl_percent_fmt, (int) (hsv[2] * 100)));
 
         int pureColor = Color.HSVToColor(new float[]{hsv[0], 1f, 1f});
+        if (seekSolidHue != null) {
+            seekSolidHue.setThumb(ThemeManager.coloredThumbDrawable(this, pureColor));
+        }
         if (bgSolidVal != null) {
             bgSolidVal.setBackground(ThemeManager.brightnessGradientDrawable(this, pureColor, 14f, 14));
         }
