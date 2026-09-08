@@ -739,9 +739,6 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/fm_controls_title"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_theme_aware"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
@@ -2222,9 +2219,6 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:text="@string/gala_section_speed_gain"
-                                android:textSize="13.5sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/text_theme_aware"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent" />
@@ -2405,9 +2399,6 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:text="@string/gala_section_smoothing_sim"
-                                android:textSize="13.5sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/text_theme_aware"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent" />

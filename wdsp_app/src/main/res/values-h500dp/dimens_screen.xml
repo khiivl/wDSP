@@ -5,7 +5,7 @@
     <dimen name="ctl_button_height">40dp</dimen>
     <dimen name="eq_value_text">12sp</dimen>
     <dimen name="eq_small_text">10sp</dimen>
-    <dimen name="card_title_text">16sp</dimen>
+    <dimen name="card_title_text">15sp</dimen>
     <dimen name="eq_pad">6dp</dimen>
     <dimen name="visualizer_height">130dp</dimen>
 </resources>

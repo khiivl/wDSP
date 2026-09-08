@@ -73,8 +73,9 @@
          віддає колесам ~16dp кожному — на вузьких панелях це помітно. -->
     <dimen name="settings_pad">12dp</dimen>
     <dimen name="settings_row_gap">14dp</dimen>
-    <dimen name="settings_row_text">17sp</dimen>
-    <dimen name="settings_note_text">14sp</dimen>
+    <dimen name="settings_row_text">15sp</dimen>
+    <dimen name="settings_subtitle_text">15sp</dimen>
+    <dimen name="settings_note_text">12sp</dimen>
     <!-- 🎨 СТЕЛЯ HUE-КОЛЕСА, виведена з ВИСОТИ екрана (вимога користувача 30.07.2026:
          «варто зробити їх так, щоб кожне зі своїм титульним написом та своїми повзунками
          яскравості повністю влізали по висоті в любий екран. Бо по іншому вони будуть або
@@ -87,7 +88,7 @@
          Бюджет блоку: підпис ~20dp + колесо + повзунок ~30dp + відступи ~26dp.
          Тут 128dp -> блок 204dp при доступних ~208dp на екрані 480. -->
     <dimen name="wheel_max_size">110dp</dimen>
-    <dimen name="wheel_label_text">14sp</dimen>
+    <dimen name="wheel_label_text">13sp</dimen>
     <dimen name="settings_section_text">20sp</dimen>
-    <dimen name="settings_btn_text">15sp</dimen>
+    <dimen name="settings_btn_text">14sp</dimen>
 </resources>

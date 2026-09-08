@@ -600,8 +600,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_height_manual"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/tv_status_bar_height"
@@ -650,8 +649,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_offset_y"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/tv_status_bar_offset_y"
@@ -700,8 +698,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_alpha"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/tv_status_bar_alpha"
@@ -760,7 +757,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_style_label"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <Spinner
@@ -797,7 +794,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/vis_effects_select_style"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <!-- Рядок 1: Класика, Outrun Піки, Градієнт -->
@@ -906,7 +903,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/status_bar_peaks_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -944,7 +941,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/status_bar_mirror_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -978,7 +975,7 @@
                         android:layout_weight="1"
                         android:text="@string/status_bar_bands_count"
                         android:textColor="@color/text_theme_aware"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <LinearLayout
@@ -1036,7 +1033,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/vis_oscillo_persistence_label"
-                                android:textSize="16sp"
+                                android:textSize="@dimen/settings_subtitle_text"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -1096,7 +1093,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="@string/status_bar_visualizer_theme"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <LinearLayout
@@ -1213,7 +1210,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:text="@string/status_bar_palettes_fastled"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <!-- Рядок 1: Synthwave (purple_gp), Sherbet (rainbowsherbet_gp), Warm VU (redyellow_gp) -->
@@ -1370,7 +1367,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1436,7 +1433,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/eq_vis_enable_label"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1451,7 +1448,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/eq_vis_color_mode_label"
-                    android:textSize="13sp" />
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1502,7 +1500,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1558,7 +1556,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/agc_main_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1588,7 +1586,7 @@
                         android:layout_width="140dp"
                         android:layout_height="wrap_content"
                         android:text="@string/agc_strength_label"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <SeekBar
                         android:id="@+id/seek_agc_main_strength"
@@ -1623,7 +1621,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/agc_bar_label"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/settings_subtitle_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1653,7 +1651,7 @@
                         android:layout_width="140dp"
                         android:layout_height="wrap_content"
                         android:text="@string/agc_strength_label"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <SeekBar
                         android:id="@+id/seek_agc_bar_strength"
@@ -1676,7 +1674,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:text="@string/latency_trim_label"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1715,7 +1713,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:text="@string/sync_measure_label"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1764,7 +1762,7 @@
                         android:layout_width="140dp"
                         android:layout_height="wrap_content"
                         android:text="@string/range_db_label"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <SeekBar
                         android:id="@+id/seek_range_db"
@@ -1969,7 +1967,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_enable"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1999,8 +1997,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_delay"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_delay"
@@ -2042,8 +2039,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_bg_alpha_day"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_bg_day"
@@ -2085,8 +2081,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_bg_alpha_night"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_bg_night"
@@ -2129,7 +2124,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_style_label"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/settings_subtitle_text"
                         android:textStyle="bold" />
 
                     <Spinner
@@ -2152,8 +2147,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_width"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_width"
@@ -2195,8 +2189,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_height"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_height"
@@ -2238,8 +2231,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_bright_day"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_bright_day"
@@ -2281,8 +2273,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_bright_night"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_bright_night"
@@ -2324,8 +2315,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_info_h"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_info_h"
@@ -2360,7 +2350,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/screensaver_apps"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -2426,7 +2416,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/room_measure_label"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2451,7 +2441,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="@string/room_mic_spot_label"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2664,7 +2654,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/system_report_label"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/settings_subtitle_text"
                     android:textStyle="bold" />
 
                 <TextView

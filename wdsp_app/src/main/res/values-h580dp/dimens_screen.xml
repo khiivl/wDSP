@@ -8,7 +8,7 @@
     <dimen name="ctl_button_height">48dp</dimen>
     <dimen name="eq_value_text">13sp</dimen>
     <dimen name="eq_small_text">11sp</dimen>
-    <dimen name="card_title_text">18sp</dimen>
+    <dimen name="card_title_text">15sp</dimen>
     <dimen name="eq_pad">8dp</dimen>
     <dimen name="visualizer_height">170dp</dimen>
 </resources>
