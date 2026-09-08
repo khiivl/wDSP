@@ -216,27 +216,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updatePermissionButtonsState() {
-        if (btnBatteryOpt != null) {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            boolean granted = pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
-            btnBatteryOpt.setText(getString(R.string.perm_battery_opt) + (granted ? " ✓" : ""));
-        }
-        if (btnOverlayPerm != null) {
-            boolean granted = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
-            btnOverlayPerm.setText(getString(R.string.settings_perm_overlay) + (granted ? " ✓" : ""));
-        }
-        if (btnNotificationPerm != null) {
-            boolean granted = NowPlaying.getInstance(this).canReadSessions();
-            btnNotificationPerm.setText(getString(R.string.perm_notification_access) + (granted ? " ✓" : ""));
-        }
-        if (btnAudioPerm != null) {
-            boolean granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-            btnAudioPerm.setText(getString(R.string.perm_audio_record) + (granted ? " ✓" : ""));
-        }
-        if (btnLocationPerm != null) {
-            boolean granted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-            btnLocationPerm.setText(getString(R.string.perm_gps_location) + (granted ? " ✓" : ""));
-        }
+        updatePermissionButtons();
     }
 
     private void initLauncher() {
@@ -1102,6 +1082,17 @@ public class SettingsActivity extends AppCompatActivity {
         // 4. GPS Location
         boolean locationGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         stylePermissionButton(btnLocationPerm, locationGranted, getString(R.string.perm_gps_location), accent, border);
+
+        // 5. Notification Access (Metadata)
+        boolean notifGranted = NowPlaying.getInstance(this).canReadSessions();
+        stylePermissionButton(btnNotificationPerm, notifGranted, getString(R.string.perm_notification_access), accent, border);
+
+        // 6. Permissions Wizard Button
+        if (btnPermissionsWizard != null) {
+            boolean allGranted = batteryGranted && overlayGranted && audioGranted && locationGranted && notifGranted;
+            btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + (allGranted ? " ✓" : ""));
+            stylePill(btnPermissionsWizard, false, accent, border);
+        }
     }
 
     private void stylePermissionButton(TextView btn, boolean granted, String title, int accent, int border) {
