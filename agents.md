@@ -138,3 +138,29 @@ Both the **Equalizer Visualizer** (`SpectrumAnalyzerView.java`), the **Fletcher-
 ## 🌍 Localization (30 Locales)
 Fully localized in 30 languages with zero abbreviations in headers/labels:
 - Ukrainian (`values-uk`), English (`values`), Polish (`values-pl`), German (`values-de`), French (`values-fr`), Spanish (`values-es`), Italian (`values-it`), Portuguese (`values-pt`, `values-pt-rBR`), Czech (`values-cs`), Slovak (`values-sk`), Hungarian (`values-hu`), Romanian (`values-ro`), Bulgarian (`values-bg`), Croatian (`values-hr`), Serbian (`values-sr`), Slovenian (`values-sl`), Turkish (`values-tr`), Greek (`values-el`), Dutch (`values-nl`), Danish (`values-da`), Swedish (`values-sv`), Norwegian (`values-nb`), Finnish (`values-fi`), Estonian (`values-et`), Latvian (`values-lv`), Lithuanian (`values-lt`), Russian (`values-ru`, `values-ru-rUA`).
+
+---
+
+## 🔮 Floating Glass Dock & Capsule UIX Architecture (🔬 / 📻 08.09.2026 23:25) *(✍️ Antigravity)*
+
+### 1. Проблема геометрії доку та асиметрії країв
+- 🔬 **Виявлена першопричина**:
+  - У `FrostedGlassDrawable.java` тіньові проходи були зсунуті вправо (`mRectF.left` з нульовим зсувом та `mRectF.right + 1.2f * density`), що створювало несиметричний темний ореол на правому кінці доку.
+  - Вертикальні відступи підкладки тіні складали `padYTop = 1.0f * density` та `padYBottom = 3.5f * density`, через що внутрішній контент був зміщений вниз, порушуючи концентричність.
+  - Внутрішня активна кнопка в `SegmentedPillNavView.java` малювалася плоским `GradientDrawable` з радіусом `18dp` (висота кнопки 54dp, напівкругла капсула вимагає `25-27dp`), тоді як зовнішній скляний док мав радіус `23dp` при висоті 64dp. Через це лівий край мав кутасту прямокутну форму, а правий — видовжене скло, що давало візуальний ефект «різного типу заокруглення зліва та справа».
+
+### 2. Математично точна концентрична геометрія капсул (Concentric Stadium Capsules)
+- 🧩 **Архітектурне рішення**:
+  - **Зовнішній док (`ThemeManager.dockBackground`)**: радіус заокруглення `concentricRadiusDp = 29f`. На висоті 58-64dp це дає чисту форму stadium capsule (ідеальний півкруг на обох краях).
+  - **Внутрішня активна кнопка (`FrostedGlassDrawable.createAccentPill`)**: радіус заокруглення `25f`.
+  - **Рівномірний концентричний зазор**: відступи контейнера встановлено в `padX = 6dp`, `padTop = 5dp`, `padBottom = 7.5dp` (компенсація проекції нижньої тіні 2.5dp). Завдяки цьому внутрішня кнопка має рівномірний зазор `4dp` з усіх 4 сторін (`25dp + 4dp = 29dp`), формуючи ідеальну концентричну дугу.
+  - **Симетричні тіні**: у `FrostedGlassDrawable` розкид тіней Pass 1, 2, 3 вирівняно на симетричні зсуви `left - offset` та `right + offset` з симетричним горизонтальним полем `padX = 2.0f * density`.
+
+### 3. Уніфікація Toggle-кнопок скляного неоморфізму
+- 🔬 **Уніфікація по всьому інтерфейсу**:
+  - Усі перемикачі (`MaterialButton`, `ToggleButton`, `CompoundButton`) переведено на єдиний фабричний метод `ThemeManager.pillDrawable(ctx, checked, isNight, radiusDp, accent, border)`.
+  - Забезпечено автоконтраст тексту (`ThemeManager.contrastText`) відносно підкладки скла.
+  - Підключено інтерактивний тактильний ефект занурення `TouchGlow` (зміщення + втоплення тіні) до всіх 8 перемикачів верхніх панелей (Loudness, Tonkomp, Delays, Filters, GALA) та Q-перемикачів смуг еквалайзера.
+  - `TouchGlow.applyGlow` отримав захист для `FrostedGlassDrawable`, що запобігає перетиранню текстури скла дефолтним підсвічуванням.
+- 📻 **Верифікація на залізі (192.168.1.146:9876)**: підтверджено ідентичну геометрію та паритет UIX для обох тем (Day / Night) на живому дисплеї 1280x720.
+
