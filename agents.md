@@ -9,6 +9,15 @@
 
 ---
 
+## 📻 Canonical Radio Project Location
+- **Офіційний канонічний проєкт радіо (`kostyamat_fmradio`)**:
+  - Розташований **ВИКЛЮЧНО ТА ЛИШЕ ТУТ**: `C:\Users\kosty\AndroidStudioProjects\kostyamat_fmradio`
+  - Будь-які інші каталоги на диску (наприклад, `D:\qf_fmradio` чи архіви) не є робочими проєктами.
+  - Для перевірки стилю UI, ресурсів, розкладки, динамічної розмітки чи міжпрограмних контрактів — дивитися суворо на вказаний канонічний шлях.
+  - ✍️ Зафіксовано Antigravity (Gemini) за наказом Костянтина — 08.09.2026 08:30.
+
+---
+
 ## 🔴 Platform knowledge — read this before changing anything that makes sound
 
 This file describes **the app**. Everything about **the machine underneath** — and that is where
