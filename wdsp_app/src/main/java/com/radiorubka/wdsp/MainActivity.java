@@ -55,6 +55,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.radiorubka.wdsp.ui.PermissionsWizard;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -320,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
             ensureCallPresetExists();
             startMcuService();
             refreshAllUiValues();
+            PermissionsWizard.checkAndShowIfNeeded(this);
         }, 50);
     }
 
@@ -391,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionsWizard.refreshCurrent();
 
         if (requestCode == 102) {
             // Check if Fine Location was granted (at minimum)
@@ -444,6 +447,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        PermissionsWizard.refreshCurrent();
+        NowPlaying.getInstance(this).refresh();
         applyAppTheme();
         handleTargetTab(getIntent());
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));

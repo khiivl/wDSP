@@ -48,6 +48,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.radiorubka.wdsp.ui.ThemedDialog;
+import com.radiorubka.wdsp.ui.PermissionsWizard;
 import com.radiorubka.wdsp.ui.SettingsAccordion;
 import com.radiorubka.wdsp.ui.TouchGlow;
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
@@ -123,6 +124,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
+    private TextView btnPermissionsWizard;
     private TextView btnBatteryOpt, btnNotificationPerm, btnAudioPerm, btnLocationPerm, btnAppDetails;
     private TextView btnBackupSettings, btnRestoreSettings;
 
@@ -186,6 +188,33 @@ public class SettingsActivity extends AppCompatActivity {
         super.onResume();
         loadSettings();
         applyTheme();
+        PermissionsWizard.refreshCurrent();
+        NowPlaying.getInstance(this).refresh();
+        updatePermissionButtonsState();
+    }
+
+    private void updatePermissionButtonsState() {
+        if (btnBatteryOpt != null) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            boolean granted = pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+            btnBatteryOpt.setText(getString(R.string.perm_battery_opt) + (granted ? " ✓" : ""));
+        }
+        if (btnOverlayPerm != null) {
+            boolean granted = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+            btnOverlayPerm.setText(getString(R.string.settings_perm_overlay) + (granted ? " ✓" : ""));
+        }
+        if (btnNotificationPerm != null) {
+            boolean granted = NowPlaying.getInstance(this).canReadSessions();
+            btnNotificationPerm.setText(getString(R.string.perm_notification_access) + (granted ? " ✓" : ""));
+        }
+        if (btnAudioPerm != null) {
+            boolean granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+            btnAudioPerm.setText(getString(R.string.perm_audio_record) + (granted ? " ✓" : ""));
+        }
+        if (btnLocationPerm != null) {
+            boolean granted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            btnLocationPerm.setText(getString(R.string.perm_gps_location) + (granted ? " ✓" : ""));
+        }
     }
 
     private void initLauncher() {
@@ -213,6 +242,8 @@ public class SettingsActivity extends AppCompatActivity {
                 isGranted -> {
                     loadSettings();
                     applyTheme();
+                    PermissionsWizard.refreshCurrent();
+                    updatePermissionButtonsState();
                 }
         );
 
@@ -487,6 +518,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         // Permissions & Backup
+        btnPermissionsWizard = findViewById(R.id.btn_permissions_wizard);
         btnBatteryOpt = findViewById(R.id.btn_battery_opt);
         btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
         btnNotificationPerm = findViewById(R.id.btn_notification_perm);
@@ -496,6 +528,10 @@ public class SettingsActivity extends AppCompatActivity {
         btnBackupSettings = findViewById(R.id.btn_backup_settings);
         btnRestoreSettings = findViewById(R.id.btn_restore_settings);
 
+        if (btnPermissionsWizard != null) {
+            TouchGlow.attach(btnPermissionsWizard);
+            btnPermissionsWizard.setOnClickListener(v -> PermissionsWizard.show(this));
+        }
         TouchGlow.attach(btnBatteryOpt);
         TouchGlow.attach(btnOverlayPerm);
         TouchGlow.attach(btnNotificationPerm);
