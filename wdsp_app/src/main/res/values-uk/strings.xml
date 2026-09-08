@@ -230,6 +230,12 @@
     <string name="toast_backup_failed">Помилка створення бекапу: %s</string>
     <string name="toast_restore_success">Налаштування успішно відновлено</string>
     <string name="toast_restore_failed">Помилка відновлення: %s</string>
+    <string name="toast_restore_is_preset_hint">Цей файл є окремим пресетом еквалайзера, а не повним бекапом. Для його додавання скористайтесь кнопкою «Імпорт» біля списку пресетів на головному екрані.</string>
+    <string name="dialog_restore_title">Відновлення налаштувань</string>
+    <string name="dialog_restore_presets_prompt">Чи бажаєте ви також відновити пресети еквалайзера та прив\'язки плеєрів з цієї резервної копії?</string>
+    <string name="dialog_restore_all">Відновити все (з пресетами)</string>
+    <string name="dialog_restore_settings_only">Тільки налаштування (зберегти мої пресети)</string>
+    <string name="toast_import_is_backup_hint">Цей файл є повним бекапом усіх налаштувань. Для його відновлення перейдіть у Налаштування ➔ Дозволи та система ➔ Відновити налаштування.</string>
     <string name="vis_normalization_label">Динамічна нормалізація (AGC)</string>
     <string name="vis_normalization_desc">М\'яке вирівнювання динамічного діапазону для тихих треків</string>
     <string name="status_bar_bands_count">Кількість смуг:</string>

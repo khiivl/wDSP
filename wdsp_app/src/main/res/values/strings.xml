@@ -242,6 +242,12 @@
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>
     <string name="toast_restore_failed">Restore failed: %s</string>
+    <string name="toast_restore_is_preset_hint">This file is an individual EQ preset, not a full settings backup. To import it, use the \"Import\" button near the presets list on the main screen.</string>
+    <string name="dialog_restore_title">Restore Settings</string>
+    <string name="dialog_restore_presets_prompt">Do you want to restore EQ presets and player mappings from this backup as well?</string>
+    <string name="dialog_restore_all">Restore All (With Presets)</string>
+    <string name="dialog_restore_settings_only">Settings Only (Keep Presets)</string>
+    <string name="toast_import_is_backup_hint">This file is a full settings backup, not an individual preset. To restore it, go to Settings ➔ Permissions &amp; System ➔ Restore Settings.</string>
     <string name="vis_normalization_label">Dynamic Normalization (AGC)</string>
     <string name="vis_normalization_desc">Gentle dynamic range leveling for quiet audio tracks</string>
     <string name="lbl_px_fmt">%1$d px</string>
