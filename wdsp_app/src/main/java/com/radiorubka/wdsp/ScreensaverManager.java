@@ -868,7 +868,33 @@ public final class ScreensaverManager {
             return;
         }
 
-        // 3. Lower half transport controls (Track -, Play/Pause, Track +)
+        // 3. Hit-test Now Playing album art / player icon (bottom-left) to launch player
+        float infoH = infoBarPx();
+        if (y >= (screenH - infoH) && x <= Math.max(infoH * 2.0f, 120f * density)) {
+            NowPlaying np = NowPlaying.getInstance(context);
+            String pkg = np.playerPackage();
+            if (pkg == null || pkg.isEmpty() || "com.android.fmradio".equals(pkg)) {
+                try {
+                    context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
+                    pkg = "com.kostyamat.fmradio";
+                } catch (Throwable ignored) {}
+            }
+            if (pkg != null && !pkg.isEmpty()) {
+                try {
+                    Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
+                    if (launch != null) {
+                        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(launch);
+                        hide();
+                        return;
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "could not launch player: " + pkg, t);
+                }
+            }
+        }
+
+        // 4. Lower half transport controls (Track -, Play/Pause, Track +)
         // Space free from edge sliders (left and right margins defined by EDGE_F)
         float leftBound = screenW * EDGE_F;
         float rightBound = screenW * (1.0f - EDGE_F);
