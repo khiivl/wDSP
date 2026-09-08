@@ -32,16 +32,16 @@
     <color name="track_color_inactive">#33000000</color>
     <color name="halo_color">#00000000</color>
 
-    <color name="visualizer_container_bg">#40000000</color>
+    <color name="visualizer_container_bg">#1A000000</color>
     <color name="simulate_speed_color">#FF5722</color>
 
     <!-- Button & Card Strokes -->
-    <color name="stroke_color">#4D1FE7C4</color>
-    <color name="stroke_color_top">#801FE7C4</color>
+    <color name="stroke_color">#D7DDE1</color>
+    <color name="stroke_color_top">#B0BEC5</color>
 
     <color name="status_bar">#FFFFFF</color>
 
     <!-- Toast Colors -->
-    <color name="toast_bg">#12161B</color>
-    <color name="toast_stroke">#801FE7C4</color>
+    <color name="toast_bg">#FFFFFF</color>
+    <color name="toast_stroke">#D7DDE1</color>
 </resources>

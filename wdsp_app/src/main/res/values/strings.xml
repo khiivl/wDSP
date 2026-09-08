@@ -198,6 +198,8 @@
     <string name="settings_primary_text_title">Main Text</string>
     <string name="settings_label_color_title">Labels</string>
     <string name="settings_on_accent_title">On Accent</string>
+    <string name="settings_reset_palette">Reset palette to default</string>
+    <string name="toast_palette_reset">Palette reset to defaults</string>
     <string name="settings_wallpaper_title">Wallpaper</string>
     <string name="settings_wallpaper_none">Built-in / Default</string>
     <string name="settings_wallpaper_load">Pick Photo</string>

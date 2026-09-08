@@ -68,13 +68,13 @@
                     app:boxCornerRadiusBottomStart="14dp"
                     app:boxCornerRadiusTopEnd="14dp"
                     app:boxCornerRadiusTopStart="14dp"
-                    app:boxBackgroundColor="#20121820"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
                     app:boxStrokeWidth="1.2dp"
-                    app:boxStrokeColor="@color/cyan_custom"
-                    app:hintTextColor="@color/cyan_custom"
+                    app:boxStrokeColor="@color/panel_border_theme_aware"
+                    app:hintTextColor="@color/text_theme_aware_2"
                     android:hint="@string/default_preset_name_hint"
                     android:textColorHint="@color/text_theme_aware_2"
-                    app:endIconTint="@color/cyan_custom">
+                    app:endIconTint="@color/text_theme_aware_2">
 
                     <AutoCompleteTextView
                         android:id="@+id/spinner_presets"
@@ -85,7 +85,7 @@
                         android:paddingHorizontal="12dp"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:textColor="@color/cyan_custom"
+                        android:textColor="@color/text_theme_aware"
                         android:textStyle="bold"
                         android:textSize="@dimen/eq_value_text" />
 
@@ -111,7 +111,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_auto"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                     <!-- 2. Duplicate / Add -->
@@ -123,7 +124,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_add"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                     <!-- 3. Rename -->
@@ -135,7 +137,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_rename"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                     <!-- 4. Delete -->
@@ -147,7 +150,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_delete"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                     <!-- 5. Import -->
@@ -159,7 +163,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_import"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                     <!-- 6. Export -->
@@ -171,7 +176,8 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_preset_export"
                         android:scaleType="centerInside"
-                        android:tint="#FFFFFF"
+                        android:tint="@color/text_theme_aware"
+                        app:tint="@color/text_theme_aware"
                         android:background="@drawable/bg_icon_button" />
 
                 </LinearLayout>
@@ -288,7 +294,7 @@
                         app:cornerRadius="10dp"
                         app:strokeWidth="1.2dp"
                         app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:textSize="@dimen/card_title_text"
                         android:textStyle="bold"
                         android:text="@string/btn_minus" />
@@ -311,7 +317,7 @@
                         app:cornerRadius="10dp"
                         app:strokeWidth="1.2dp"
                         app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:textSize="@dimen/card_title_text"
                         android:textStyle="bold"
                         android:text="@string/btn_plus" />
@@ -389,7 +395,7 @@
                     app:boxCornerRadiusTopEnd="10dp"
                     app:boxCornerRadiusBottomStart="10dp"
                     app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxBackgroundColor="#20121820"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
                     app:boxStrokeWidth="1.2dp"
                     app:boxStrokeColor="@color/cyan_custom"
                     app:hintTextColor="@color/cyan_custom"
@@ -438,7 +444,7 @@
                         app:cornerRadius="10dp"
                         app:strokeWidth="1.2dp"
                         app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:textSize="@dimen/card_title_text"
                         android:textStyle="bold"
                         android:text="@string/btn_minus" />
@@ -461,7 +467,7 @@
                         app:cornerRadius="10dp"
                         app:strokeWidth="1.2dp"
                         app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:textSize="@dimen/card_title_text"
                         android:textStyle="bold"
                         android:text="@string/btn_plus" />
@@ -484,7 +490,7 @@
                         app:cornerRadius="10dp"
                         app:strokeWidth="1.2dp"
                         app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:textSize="@dimen/card_title_text"
                         android:textStyle="bold"
                         android:text="@string/btn_center" />
@@ -529,6 +535,7 @@
 
                         <!-- Status Pill Badge -->
                         <LinearLayout
+                            android:id="@+id/layout_fm_status_badge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
@@ -633,7 +640,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/enable_loudness"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -658,7 +665,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/trim_highs"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -683,7 +690,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/sub_tweaking"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -895,6 +902,7 @@
 
                     <!-- Precise Delays Column -->
                     <LinearLayout
+                        android:id="@+id/card_delays_precise"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -922,7 +930,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/spatial_correction"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -1165,6 +1173,7 @@
 
                     <!-- Legacy Delays Column -->
                     <LinearLayout
+                        android:id="@+id/card_delays_legacy"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -1192,7 +1201,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/surround_mode"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -1479,6 +1488,7 @@
                     android:layout_height="wrap_content">
 
                     <LinearLayout
+                        android:id="@+id/card_filters_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -1490,6 +1500,7 @@
                         app:layout_constraintWidth_max="@dimen/control_block_max_width">
 
                         <TextView
+                            android:id="@+id/tv_front_bass_title"
                             style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -1609,7 +1620,7 @@
                                 app:boxCornerRadiusTopEnd="10dp"
                                 app:boxCornerRadiusBottomStart="10dp"
                                 app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxBackgroundColor="#33000000"
+                                app:boxBackgroundColor="@color/card_bg_theme_aware"
                                 app:boxStrokeWidth="1.5dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
@@ -1630,6 +1641,7 @@
                         </LinearLayout>
 
                         <TextView
+                            android:id="@+id/tv_rear_bass_title"
                             style="@style/TextHeader"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -1749,7 +1761,7 @@
                                 app:boxCornerRadiusTopEnd="10dp"
                                 app:boxCornerRadiusBottomStart="10dp"
                                 app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxBackgroundColor="#33000000"
+                                app:boxBackgroundColor="@color/card_bg_theme_aware"
                                 app:boxStrokeWidth="1.5dp"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
@@ -1787,7 +1799,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/built_in_loudness_legacy"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -2057,6 +2069,7 @@
                 android:overScrollMode="never">
 
                 <LinearLayout
+                    android:id="@+id/card_gala_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="16dp"
@@ -2080,6 +2093,7 @@
 
                         <!-- Live Metrics Badges -->
                         <LinearLayout
+                            android:id="@+id/layout_gala_status_badge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
@@ -2152,7 +2166,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/enable_gala"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -2177,7 +2191,7 @@
                             app:cornerRadius="10dp"
                             app:strokeWidth="1.2dp"
                             app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="#20121820"
+                            android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/gala_global"
                             android:textAllCaps="false"
                             android:textSize="@dimen/eq_value_text"
@@ -2194,6 +2208,7 @@
 
                         <!-- Card 1: Швидкість та Компенсація -->
                         <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/card_gala_c1"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -2376,6 +2391,7 @@
 
                         <!-- Card 2: Плавність та Симуляція -->
                         <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/card_gala_c2"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

@@ -227,6 +227,20 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/btn_reset_palette"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/settings_reset_palette"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
             <!-- Блок Шпалер -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -2456,7 +2470,7 @@
                     android:layout_marginTop="8dp"
                     android:hint="@string/room_mic_place_hint"
                     android:textColorHint="@color/text_theme_aware_2"
-                    app:boxBackgroundColor="#20121820"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
                     app:boxCornerRadiusBottomEnd="10dp"
                     app:boxCornerRadiusBottomStart="10dp"
                     app:boxCornerRadiusTopEnd="10dp"

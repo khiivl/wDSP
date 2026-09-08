@@ -3,10 +3,19 @@
     <style name="Base.Theme.WDSP" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <item name="colorPrimary">@color/cyan_custom</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:soundEffectsEnabled">false</item>
         <item name="android:fontFamily">@font/main_font</item>
         <item name="android:statusBarColor">@color/transparent</item>
         <item name="fontFamily">@font/main_font</item>
+
+        <!-- Global UI Widgets Styling matching QFRadio -->
+        <item name="seekBarStyle">@style/CustomSeekBarStyle</item>
+        <item name="android:seekBarStyle">@style/CustomSeekBarStyle</item>
+        <item name="sliderStyle">@style/CustomSliderStyle</item>
+        <item name="bottomNavigationStyle">@style/CustomBottomNavStyle</item>
+        <item name="materialAlertDialogTheme">@style/CustomDialogTheme</item>
+        <item name="alertDialogTheme">@style/CustomDialogTheme</item>
+        <item name="materialButtonStyle">@style/CustomMaterialButtonStyle</item>
     </style>
 </resources>

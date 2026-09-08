@@ -184,8 +184,10 @@
     <string name="settings_theme_auto">Авто</string>
     <string name="settings_accent_title">Акцент</string>
     <string name="settings_primary_text_title">Основний текст</string>
-    <string name="settings_label_color_title">Написи</string>
+    <string name="settings_label_color_title">Колір написів</string>
     <string name="settings_on_accent_title">На акценті</string>
+    <string name="settings_reset_palette">Скинути палітру до дефолтної</string>
+    <string name="toast_palette_reset">Палітру скинуто до дефолтної</string>
     <string name="settings_wallpaper_title">Шпалери</string>
     <string name="settings_wallpaper_none">Вбудовані / Дефолт</string>
     <string name="settings_wallpaper_load">Вибрати фото</string>

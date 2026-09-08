@@ -24,11 +24,11 @@
     <style name="CustomDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="colorSurface">#12161b</item>
-        <item name="colorOnSurface">#F0F4F8</item>
-        <item name="colorOnSurfaceVariant">#B0BAC4</item>
-        <item name="android:textColorPrimary">#F0F4F8</item>
-        <item name="android:textColorSecondary">#B0BAC4</item>
+        <item name="colorSurface">@color/card_bg_theme_aware</item>
+        <item name="colorOnSurface">@color/text_theme_aware</item>
+        <item name="colorOnSurfaceVariant">@color/text_theme_aware_2</item>
+        <item name="android:textColorPrimary">@color/text_theme_aware</item>
+        <item name="android:textColorSecondary">@color/text_theme_aware_2</item>
         <item name="colorPrimary">@color/cyan_custom</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
@@ -38,7 +38,7 @@
     <style name="DialogButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">@color/cyan_custom</item>
         <item name="android:textStyle">bold</item>
-        <item name="rippleColor">#331FE7C4</item>
+        <item name="rippleColor">@color/custom_square</item>
     </style>
 
     <style name="CustomMaterialButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
@@ -48,10 +48,10 @@
         <item name="android:insetRight">0dp</item>
         <item name="cornerRadius">10dp</item>
         <item name="strokeWidth">1.2dp</item>
-        <item name="strokeColor">#33FFFFFF</item>
-        <item name="backgroundTint">#20121820</item>
-        <item name="rippleColor">#331FE7C4</item>
-        <item name="android:textColor">#FFFFFF</item>
+        <item name="strokeColor">@color/panel_border_theme_aware</item>
+        <item name="backgroundTint">@color/card_bg_theme_aware</item>
+        <item name="rippleColor">@color/custom_square</item>
+        <item name="android:textColor">@color/text_theme_aware</item>
     </style>
 
     <!-- SeekBar Styling -->
@@ -88,7 +88,7 @@
     </style>
 
     <style name="CustomNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:color">#261FE7C4</item>
+        <item name="android:color">@color/custom_square</item>
         <item name="android:width">48dp</item>
         <item name="android:height">32dp</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Square</item>
