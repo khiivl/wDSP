@@ -492,11 +492,15 @@ public final class ThemeManager {
     }
 
     public static Drawable whiteThumbDrawable(Context ctx) {
+        return coloredThumbDrawable(ctx, Color.WHITE);
+    }
+
+    public static Drawable coloredThumbDrawable(Context ctx, int color) {
         float d = ctx.getResources().getDisplayMetrics().density;
         android.graphics.drawable.GradientDrawable thumb = new android.graphics.drawable.GradientDrawable();
         thumb.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-        thumb.setColor(Color.WHITE);
-        thumb.setStroke((int) Math.max(1, 1.5f * d), Color.parseColor("#40000000"));
+        thumb.setColor(color);
+        thumb.setStroke((int) Math.max(2, 2f * d), Color.WHITE);
         int size = (int) (20 * d);
         thumb.setSize(size, size);
         return thumb;

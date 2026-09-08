@@ -45,6 +45,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -107,7 +108,8 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvStatusBarHeight, tvStatusBarOffsetY, tvStatusBarAlpha, labelStatusBarAlpha;
     private SeekBar seekStatusBarHue;
     private TextView tvStatusBarWidth, tvStatusBarPos, tvStatusBarHue;
-    private Spinner spinnerStatusBarStyle;
+    private AutoCompleteTextView spinnerStatusBarStyle;
+    private TextInputLayout layoutSpinnerStatusBarStyle;
     private View containerVisPeaks, containerVisMirror, containerVisBands;
     private View containerVisOscilloPersistence;
     private Slider seekVisOscilloPersistence;
@@ -426,6 +428,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnStatusBarMirrorToggle = findViewById(R.id.btn_sb_vis_mirror_toggle);
 
         spinnerStatusBarStyle = findViewById(R.id.spinner_status_bar_style);
+        layoutSpinnerStatusBarStyle = findViewById(R.id.layout_spinner_status_bar_style);
         containerVisPeaks = findViewById(R.id.container_vis_peaks);
         containerVisMirror = findViewById(R.id.container_vis_mirror);
         containerVisBands = findViewById(R.id.container_vis_bands);
@@ -749,7 +752,8 @@ public class SettingsActivity extends AppCompatActivity {
             bgStatusBarHue.setBackground(ThemeManager.hueGradientDrawable(this, 14f, 14));
         }
         seekStatusBarHue.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
-        seekStatusBarHue.setThumb(ThemeManager.whiteThumbDrawable(this));
+        int initialHue = StatusBarVisualizerManager.getInstance(this).getHueForStyle(editingEffect, editNight);
+        seekStatusBarHue.setThumb(ThemeManager.coloredThumbDrawable(this, Color.HSVToColor(new float[]{initialHue, 1f, 1f})));
 
         if (btnStatusBarVisToggle != null) {
             btnStatusBarVisToggle.setOnClickListener(v -> {
@@ -819,6 +823,8 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tvStatusBarHue.setText(getString(R.string.lbl_degrees_fmt, progress));
+                int thumbColor = Color.HSVToColor(new float[]{progress, 1f, 1f});
+                seekStatusBarHue.setThumb(ThemeManager.coloredThumbDrawable(SettingsActivity.this, thumbColor));
                 if (fromUser) {
                     StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(SettingsActivity.this);
                     sbm.setHueForStyle(editingEffect, editNight, progress);
@@ -901,7 +907,7 @@ public class SettingsActivity extends AppCompatActivity {
             StatusBarVisualizerView.STYLE_OSCILLOSCOPE
     };
 
-    private void setupStyleSpinner(Spinner spinner, java.util.function.IntConsumer onSelect) {
+    private void setupStyleSpinner(AutoCompleteTextView spinner, java.util.function.IntConsumer onSelect) {
         if (spinner == null) return;
         String[] styleNames = {
                 getString(R.string.status_bar_style_classic),
@@ -913,30 +919,27 @@ public class SettingsActivity extends AppCompatActivity {
         };
         ThemeManager.ThemedDropdownAdapter<String> adapter = new ThemeManager.ThemedDropdownAdapter<>(this, java.util.Arrays.asList(styleNames));
         spinner.setAdapter(adapter);
-        spinner.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            private boolean initialized = false;
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!initialized) {
-                    initialized = true;
-                    return;
-                }
-                if (isUpdatingStyleUi) return;
-                if (position >= 0 && position < VIS_STYLE_VALUES.length) {
-                    onSelect.accept(VIS_STYLE_VALUES[position]);
-                }
+        spinner.setOnItemClickListener((parent, view, position, id) -> {
+            if (isUpdatingStyleUi) return;
+            if (position >= 0 && position < VIS_STYLE_VALUES.length) {
+                onSelect.accept(VIS_STYLE_VALUES[position]);
             }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
-    private void selectSpinnerStyle(Spinner spinner, int styleValue) {
+    private void selectSpinnerStyle(AutoCompleteTextView spinner, int styleValue) {
         if (spinner == null) return;
+        String[] styleNames = {
+                getString(R.string.status_bar_style_classic),
+                getString(R.string.status_bar_style_outrun),
+                getString(R.string.status_bar_style_gradient),
+                getString(R.string.status_bar_style_center),
+                getString(R.string.status_bar_style_vu),
+                getString(R.string.status_bar_style_oscillo)
+        };
         for (int i = 0; i < VIS_STYLE_VALUES.length; i++) {
             if (VIS_STYLE_VALUES[i] == styleValue) {
-                spinner.setSelection(i);
+                spinner.setText(styleNames[i], false);
                 break;
             }
         }
@@ -989,6 +992,8 @@ public class SettingsActivity extends AppCompatActivity {
             int styleHue = sbm.getHueForStyle(style, editNight);
             if (seekStatusBarHue != null) {
                 seekStatusBarHue.setProgress(styleHue);
+                int thumbColor = Color.HSVToColor(new float[]{styleHue, 1f, 1f});
+                seekStatusBarHue.setThumb(ThemeManager.coloredThumbDrawable(this, thumbColor));
             }
             if (tvStatusBarHue != null) {
                 tvStatusBarHue.setText(getString(R.string.lbl_degrees_fmt, styleHue));
@@ -1263,7 +1268,8 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvScreensaverDelay, tvScreensaverBgDay, tvScreensaverBgNight, tvScreensaverApps;
     private TextView tvScreensaverWidth, tvScreensaverHeight;
     private TextView tvScreensaverBrightDay, tvScreensaverBrightNight;
-    private Spinner spinnerScreensaverStyle;
+    private AutoCompleteTextView spinnerScreensaverStyle;
+    private TextInputLayout layoutSpinnerScreensaverStyle;
     private TextView tvSystemReportStatus;
 
     /**
@@ -1337,6 +1343,7 @@ public class SettingsActivity extends AppCompatActivity {
         seekScreensaverBgNight = findViewById(R.id.seek_screensaver_bg_night);
         tvScreensaverBgNight = findViewById(R.id.tv_screensaver_bg_night);
         spinnerScreensaverStyle = findViewById(R.id.spinner_screensaver_style);
+        layoutSpinnerScreensaverStyle = findViewById(R.id.layout_spinner_screensaver_style);
         tvScreensaverDelay = findViewById(R.id.tv_screensaver_delay);
         tvScreensaverApps = findViewById(R.id.tv_screensaver_apps);
         seekScreensaverWidth = findViewById(R.id.seek_screensaver_width);
@@ -2630,11 +2637,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         // Spinners popup styling
-        if (spinnerStatusBarStyle != null) {
-            spinnerStatusBarStyle.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
+        if (layoutSpinnerStatusBarStyle != null && spinnerStatusBarStyle != null) {
+            ThemeManager.tintTextInputLayout(layoutSpinnerStatusBarStyle, spinnerStatusBarStyle, accent, secondaryText, primaryText);
         }
-        if (spinnerScreensaverStyle != null) {
-            spinnerScreensaverStyle.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
+        if (layoutSpinnerScreensaverStyle != null && spinnerScreensaverStyle != null) {
+            ThemeManager.tintTextInputLayout(layoutSpinnerScreensaverStyle, spinnerScreensaverStyle, accent, secondaryText, primaryText);
         }
         AutoCompleteTextView roomSpinner = findViewById(R.id.spinner_room_mic_place);
         if (roomSpinner != null) {
