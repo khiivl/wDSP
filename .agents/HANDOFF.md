@@ -151,6 +151,12 @@ direct message — by the owner's instruction, because lone testers' files get l
 
 ## Working rules that cost something when forgotten
 
+- **A criterion that cannot fail proves nothing.** "At least one" is satisfied by one and by three
+  alike, so a test written that way passes while the fault it was meant to catch is happening in
+  front of it. ✍️ Formulated with the QF Radio session, 08.09.2026, after a burst of three
+  announcements where one was expected lived for weeks behind exactly such a check — and was found
+  only when somebody counted. Before running an acceptance test, write down the number you expect;
+  if the honest answer is "some", the test is not yet a test.
 - **Name the state by reading it, never by remembering what you did.** The action may not have
   landed, may have been overwritten, or may have touched a different source of truth from the one
   the reader consults. ✍️ Formulated with the QF Radio session on 08.09.2026, after both sides
