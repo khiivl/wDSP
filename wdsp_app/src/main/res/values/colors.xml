@@ -13,8 +13,8 @@
     <color name="seek_track">#33000000</color>
     <color name="colored_button_text">#FFFFFF</color>
     <color name="transparent">#00000000</color>
-    <color name="panel_border_theme_aware">#D7DDE1</color>
-    <color name="card_bg_theme_aware">#FFFFFF</color>
+    <color name="panel_border_theme_aware">#38000000</color>
+    <color name="card_bg_theme_aware">#59FFFFFF</color>
 
     <!-- Preset Button Colors (QFRadio gradient spectrum) -->
     <color name="btn_auto_bg">#1FE7C4</color>

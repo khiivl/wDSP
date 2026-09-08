@@ -4,7 +4,7 @@
     android:id="@+id/root_settings"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_night"
+    android:background="@android:color/transparent"
     android:fitsSystemWindows="true">
 
     <ScrollView
@@ -13,8 +13,10 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="76dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_bar">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:id="@+id/settings_column"
@@ -61,7 +63,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
+                    android:background="@null"
                     android:text="@string/settings_theme_day"
                     android:textSize="@dimen/settings_btn_text" />
 
@@ -73,7 +75,7 @@
                     android:layout_marginStart="8dp"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
+                    android:background="@null"
                     android:text="@string/settings_theme_night"
                     android:textSize="@dimen/settings_btn_text" />
 
@@ -85,7 +87,7 @@
                     android:layout_marginStart="8dp"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:background="@drawable/rds_btn_bg"
+                    android:background="@null"
                     android:text="@string/settings_theme_auto"
                     android:textSize="@dimen/settings_btn_text" />
             </LinearLayout>
@@ -247,7 +249,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -287,7 +289,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_wallpaper_load"
                         android:textSize="13sp" />
 
@@ -299,7 +301,7 @@
                         android:layout_marginStart="8dp"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_wallpaper_default"
                         android:textSize="13sp" />
 
@@ -311,7 +313,7 @@
                         android:layout_marginStart="8dp"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_wallpaper_solid_switch"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -473,7 +475,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -811,7 +813,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -837,7 +839,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_classic"
                         android:textSize="11sp" />
 
@@ -849,7 +851,7 @@
                         android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_outrun"
                         android:textSize="11sp" />
 
@@ -861,7 +863,7 @@
                         android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_gradient"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -880,7 +882,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_center"
                         android:textSize="11sp" />
 
@@ -892,7 +894,7 @@
                         android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_vu"
                         android:textSize="11sp" />
 
@@ -904,7 +906,7 @@
                         android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/status_bar_style_oscillo"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -1031,7 +1033,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="16"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -1043,7 +1045,7 @@
                             android:layout_marginStart="8dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="32"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -1138,7 +1140,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_spectrum"
                             android:textSize="11sp" />
 
@@ -1150,7 +1152,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_solid_hue"
                             android:textSize="11sp" />
 
@@ -1162,7 +1164,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_auto_day_night"
                             android:textSize="11sp" />
 
@@ -1174,7 +1176,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_eq_groups"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1192,7 +1194,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_monochrome_white"
                             android:textSize="11sp" />
 
@@ -1204,7 +1206,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_monochrome_black"
                             android:textSize="11sp" />
 
@@ -1216,7 +1218,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_fire"
                             android:textSize="11sp" />
 
@@ -1228,7 +1230,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_neon"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1247,7 +1249,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_purple"
                             android:textSize="11sp" />
 
@@ -1259,7 +1261,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_rainbow_sherbet"
                             android:textSize="11sp" />
 
@@ -1271,7 +1273,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_warm_vu"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1290,7 +1292,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_colorfull"
                             android:textSize="11sp" />
 
@@ -1302,7 +1304,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_ocean_breeze"
                             android:textSize="11sp" />
 
@@ -1314,7 +1316,7 @@
                             android:layout_marginStart="6dp"
                             android:gravity="center"
                             android:padding="8dp"
-                            android:background="@drawable/rds_btn_bg"
+                            android:background="@null"
                             android:text="@string/status_bar_theme_sunset_real"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1437,7 +1439,7 @@
                     android:layout_marginTop="16dp"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:background="@drawable/rds_btn_bg"
+                    android:background="@null"
                     android:text="@string/btn_vis_preview_screensaver"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -1461,7 +1463,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -1515,7 +1517,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/eq_vis_mode_spectrum"
                         android:textSize="12sp" />
 
@@ -1527,7 +1529,7 @@
                         android:layout_marginStart="8dp"
                         android:gravity="center"
                         android:padding="8dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/eq_vis_mode_monochrome"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -1593,7 +1595,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -1933,7 +1935,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -1944,7 +1946,7 @@
                     android:layout_marginBottom="10dp"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:background="@drawable/rds_btn_bg"
+                    android:background="@null"
                     android:text="@string/perm_wizard_btn_open"
                     android:textStyle="bold"
                     android:textSize="13sp" />
@@ -1961,7 +1963,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/battery_dialog_title"
                         android:textSize="12sp" />
 
@@ -1973,7 +1975,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_perm_overlay"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -1991,7 +1993,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/perm_audio_record"
                         android:textSize="12sp" />
 
@@ -2003,7 +2005,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/perm_gps_location"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -2021,7 +2023,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/perm_notification_access"
                         android:textSize="12sp" />
 
@@ -2033,7 +2035,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_app_details"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -2051,7 +2053,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_backup_btn"
                         android:textSize="12sp" />
 
@@ -2063,7 +2065,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:text="@string/settings_restore_btn"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -2087,7 +2089,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -2557,7 +2559,7 @@
                         android:id="@+id/btn_screensaver_apps"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/screensaver_apps_pick"
@@ -2600,7 +2602,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_licence_card"
+                android:background="@null"
                 android:orientation="vertical"
                 android:padding="14dp">
 
@@ -2798,7 +2800,7 @@
                         android:id="@+id/btn_room_measure"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/room_measure_button"
@@ -2824,7 +2826,7 @@
                         android:id="@+id/btn_room_send"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/room_measure_send"
@@ -2869,7 +2871,7 @@
                         android:id="@+id/btn_system_report"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/rds_btn_bg"
+                        android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/system_report_button"
