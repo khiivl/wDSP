@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
@@ -194,11 +195,24 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (ThemeManager.getThemeMode(this) == ThemeManager.THEME_MODE_AUTO) {
+            editNight = ThemeManager.isNight(this);
+        }
         loadSettings();
         applyTheme();
         PermissionsWizard.refreshCurrent();
         NowPlaying.getInstance(this).refresh();
         updatePermissionButtonsState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (ThemeManager.getThemeMode(this) == ThemeManager.THEME_MODE_AUTO) {
+            editNight = ThemeManager.isNight(this);
+            loadSettings();
+            applyTheme();
+        }
     }
 
     private void updatePermissionButtonsState() {

@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -463,6 +464,17 @@ public class MainActivity extends AppCompatActivity {
         updateVisualizer();
         applyAppTheme();
         checkAndStartSpectrumAnalyzer();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        applyAppTheme();
+        if (isFullyInitialized) {
+            refreshAllUiValues();
+            SelectTab();
+        }
+        updateVisualizer();
     }
 
     @Override

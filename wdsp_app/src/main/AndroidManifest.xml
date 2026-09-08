@@ -53,6 +53,7 @@
         android:theme="@style/Theme.WDSP">
         <activity
             android:name="com.radiorubka.wdsp.MainActivity"
+            android:configChanges="uiMode"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -62,6 +63,7 @@
 
         <activity
             android:name="com.radiorubka.wdsp.SettingsActivity"
+            android:configChanges="uiMode"
             android:exported="false" />
 
         <!-- Listed so that MediaSessionManager will answer "what is playing"; it overrides

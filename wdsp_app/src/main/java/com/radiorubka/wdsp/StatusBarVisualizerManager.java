@@ -1,7 +1,10 @@
 package com.radiorubka.wdsp;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -199,6 +202,24 @@ public class StatusBarVisualizerManager {
         }
 
         loadPreferences();
+
+        // Listen for system configuration changes (uiMode day/night switch)
+        IntentFilter configFilter = new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED);
+        try {
+            this.context.registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context ctx, Intent intent) {
+                    onPreferenceChanged("ui_mode_config");
+                }
+            }, configFilter);
+        } catch (Throwable ignored) {}
+
+        // Listen for ThemeMode changes in prefs (Auto / Day / Night)
+        this.prefs.registerOnSharedPreferenceChangeListener((sp, key) -> {
+            if (ThemeManager.PREF_THEME_MODE.equals(key)) {
+                onPreferenceChanged(key);
+            }
+        });
     }
 
     public void loadPreferences() {
