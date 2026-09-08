@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -887,10 +888,9 @@ public class SettingsActivity extends AppCompatActivity {
                 getString(R.string.status_bar_style_vu),
                 getString(R.string.status_bar_style_oscillo)
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, styleNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ThemeManager.ThemedDropdownAdapter<String> adapter = new ThemeManager.ThemedDropdownAdapter<>(this, java.util.Arrays.asList(styleNames));
         spinner.setAdapter(adapter);
+        spinner.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             private boolean initialized = false;
             @Override
@@ -2307,8 +2307,8 @@ public class SettingsActivity extends AppCompatActivity {
             if (tv != null) tv.setTextColor(secondaryText);
         }
 
-        // Value text views: always use accent color
-        int valueColor = accent;
+        // Value text views: use primaryText for readability & WCAG contrast
+        int valueColor = primaryText;
         if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
         if (tvStatusBarPos != null) tvStatusBarPos.setTextColor(valueColor);
         if (tvStatusBarHue != null) tvStatusBarHue.setTextColor(valueColor);
@@ -2385,6 +2385,37 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
+        // Section cards dynamic styling (ensures light theme substrate is white, not dark)
+        int cardBg = ThemeManager.cardBackground(this, editNight);
+        int[] settingsCards = {
+            R.id.card_settings_wallpaper,
+            R.id.card_settings_statusbar,
+            R.id.card_settings_effects,
+            R.id.card_settings_eq,
+            R.id.card_settings_analyzer,
+            R.id.card_settings_permissions,
+            R.id.card_settings_screensaver,
+            R.id.card_settings_debug
+        };
+        for (int id : settingsCards) {
+            View card = findViewById(id);
+            if (card != null) {
+                card.setBackground(ThemeManager.roundedDrawable(this, 14f, cardBg, border, 1.2f));
+            }
+        }
+
+        // Spinners popup styling
+        if (spinnerStatusBarStyle != null) {
+            spinnerStatusBarStyle.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
+        }
+        if (spinnerScreensaverStyle != null) {
+            spinnerScreensaverStyle.setPopupBackgroundDrawable(ThemeManager.dropdownBackground(this, editNight));
+        }
+        AutoCompleteTextView roomSpinner = findViewById(R.id.spinner_room_mic_place);
+        if (roomSpinner != null) {
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_room_mic_place), roomSpinner, accent, secondaryText, primaryText);
+        }
+
         // Update toggle and permission button states
         updateThemeModeButtons(ThemeManager.getThemeMode(this));
         styleToggleButton(btnSolidWallpaper, ThemeManager.isSolidWallpaper(this, editNight));
@@ -2397,7 +2428,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButtons();
 
         // Repaint accordion headers last so open headers always remain highlighted in accent
-        SettingsAccordion.repaint(settingsColumn, primaryText, accent);
+        SettingsAccordion.repaint(settingsColumn, primaryText, accent, cardBg, border);
     }
 
     /** Re-applies the accent to every button that performs an action rather than toggling one. */

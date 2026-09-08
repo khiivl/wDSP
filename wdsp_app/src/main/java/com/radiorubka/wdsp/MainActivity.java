@@ -285,8 +285,9 @@ public class MainActivity extends AppCompatActivity {
                 ContextCompat.getColor(this, R.color.btn_auto_bg)
         };
 
-        // 1. Instant UI: Minimal views needed for the first screen
+        // 1. Instant UI: Views initialization for all tabs
         initPrimaryViews();
+        initSecondaryViews();
         registerServiceReceiver();
 
         if (savedInstanceState != null) {
@@ -557,18 +558,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void applyThemeToContainer(View root, int primaryText, int secondaryText, int accent, int border, java.util.Set<Integer> accentIds, java.util.Set<Integer> titleIds) {
+    private void applyThemeToContainer(View root, int primaryText, int secondaryText, int valueColor, int border, java.util.Set<Integer> valueIds, java.util.Set<Integer> titleIds) {
         if (root == null) return;
         if (root instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) root;
             for (int i = 0; i < vg.getChildCount(); i++) {
-                applyThemeToContainer(vg.getChildAt(i), primaryText, secondaryText, accent, border, accentIds, titleIds);
+                applyThemeToContainer(vg.getChildAt(i), primaryText, secondaryText, valueColor, border, valueIds, titleIds);
             }
         } else if (root instanceof TextView && !(root instanceof MaterialButton || root instanceof ToggleButton || root instanceof CompoundButton)) {
             TextView tv = (TextView) root;
             int id = tv.getId();
-            if (id != View.NO_ID && accentIds.contains(id)) {
-                tv.setTextColor(accent);
+            if (id != View.NO_ID && valueIds.contains(id)) {
+                tv.setTextColor(valueColor);
             } else if (id != View.NO_ID && titleIds.contains(id)) {
                 tv.setTextColor(primaryText);
             } else {
@@ -609,12 +610,13 @@ public class MainActivity extends AppCompatActivity {
             for (Slider s : gainSliders) {
                 tintSlider(s, csl, cslTrack);
             }
+            int eqCardBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
+            int dbTextColor = ThemeManager.contrastText(primaryText, eqCardBg);
             for (TextView db : dbLabels) {
                 if (db != null) {
-                    db.setTextColor(accent);
+                    db.setTextColor(dbTextColor);
                 }
             }
-            int eqCardBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
             int freqTextColor = ThemeManager.contrastText(secondaryText, eqCardBg);
             for (TextView l : freqLabels) {
                 if (l != null) {
@@ -639,7 +641,6 @@ public class MainActivity extends AppCompatActivity {
                 R.id.card_delays_precise,
                 R.id.card_delays_legacy,
                 R.id.card_filters_container,
-                R.id.card_gala_container,
                 R.id.card_gala_c1,
                 R.id.card_gala_c2
             };
@@ -758,10 +759,10 @@ public class MainActivity extends AppCompatActivity {
                 if (tv != null) tv.setTextColor(primaryText);
             }
 
-            // Accent Values: ALWAYS ACCENT in Day and Night modes
-            int valueColor = accent;
-            int faderIconTint = accent;
-            int[] accentValues = {
+            // Data Values: formatted numbers/results MUST use primaryText for readability & contrast
+            int valueColor = primaryText;
+            int faderIconTint = secondaryText;
+            int[] dataValues = {
                 R.id.tv_pwr_db, R.id.tv_sub_db,
                 R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
                 R.id.tv_delay_fl_val, R.id.tv_delay_fr_val, R.id.tv_delay_rl_val, R.id.tv_delay_rr_val, R.id.tv_delay_sub_val,
@@ -771,7 +772,7 @@ public class MainActivity extends AppCompatActivity {
                 R.id.tv_gala_increment_val, R.id.tv_gala_speed, R.id.tv_gala_minspeed_val, R.id.tv_gala_offset,
                 R.id.tv_gala_max_adj_val, R.id.tv_gala_fade_ms_val, R.id.tv_gala_hold_ms_val, R.id.tv_simulate_speed_val
             };
-            for (int id : accentValues) {
+            for (int id : dataValues) {
                 TextView tv = findViewById(id);
                 if (tv != null) tv.setTextColor(valueColor);
             }
@@ -786,8 +787,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Recursive styling for all cards and containers to guarantee consistent contrast
-            java.util.Set<Integer> accentIdSet = new java.util.HashSet<>();
-            for (int id : accentValues) accentIdSet.add(id);
+            java.util.Set<Integer> valueIdSet = new java.util.HashSet<>();
+            for (int id : dataValues) valueIdSet.add(id);
             java.util.Set<Integer> titleIdSet = new java.util.HashSet<>();
             for (int id : primaryTitles) titleIdSet.add(id);
 
@@ -804,7 +805,7 @@ public class MainActivity extends AppCompatActivity {
             for (int cid : containersToStyle) {
                 View cv = findViewById(cid);
                 if (cv != null) {
-                    applyThemeToContainer(cv, primaryText, secondaryText, valueColor, border, accentIdSet, titleIdSet);
+                    applyThemeToContainer(cv, primaryText, secondaryText, valueColor, border, valueIdSet, titleIdSet);
                 }
             }
 
@@ -973,6 +974,7 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_delete_preset));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_export_presets));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_import_presets));
+        applyAppTheme();
     }
 
     private void initSecondaryViews() {
@@ -1123,7 +1125,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             db.setText("0");
-            db.setTextColor(accentColor);
+            db.setTextColor(com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this));
             db.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
             db.setTypeface(null, Typeface.BOLD);
             db.setGravity(Gravity.CENTER);
