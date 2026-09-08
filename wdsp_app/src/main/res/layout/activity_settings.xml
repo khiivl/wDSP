@@ -476,270 +476,284 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Параметри розміру та положення (динамічно через ConstraintLayout + Barrier) -->
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp">
-
-                    <TextView
-                        android:id="@+id/label_status_bar_width"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/status_bar_visualizer_width"
-                        android:textSize="13sp"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="parent" />
-
-                    <TextView
-                        android:id="@+id/label_status_bar_pos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="@string/status_bar_visualizer_offset_x"
-                        android:textSize="13sp"
-                        app:layout_constraintTop_toBottomOf="@id/seek_status_bar_width"
-                        app:layout_constraintStart_toStartOf="parent" />
-
-                    <androidx.constraintlayout.widget.Barrier
-                        android:id="@+id/barrier_sb_params"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:barrierDirection="end"
-                        app:constraint_referenced_ids="label_status_bar_width,label_status_bar_pos" />
-
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/seek_status_bar_width"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:valueFrom="10"
-                        android:valueTo="100"
-                        android:stepSize="1"
-                        android:value="40"
-                        app:thumbHeight="20dp"
-                        app:thumbWidth="20dp"
-                        app:thumbRadius="10dp"
-                        app:haloRadius="0dp"
-                        app:haloColor="@color/transparent"
-                        app:thumbColor="@color/cyan_custom"
-                        app:tickColorActive="@color/transparent"
-                        app:tickColorInactive="@color/transparent"
-                        app:trackColorActive="@color/track_color_active"
-                        app:trackColorInactive="@color/track_color_inactive"
-                        app:trackHeight="5dp"
-                        app:trackStopIndicatorSize="0dp"
-                        app:tickVisibilityMode="hidden"
-                        app:labelBehavior="gone"
-                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
-                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_width"
-                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
-                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
-
-                    <TextView
-                        android:id="@+id/tv_status_bar_width"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="44dp"
-                        android:gravity="end"
-                        android:text="40%"
-                        android:textSize="13sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/label_status_bar_width"
-                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_width" />
-
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/seek_status_bar_pos"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:valueFrom="0"
-                        android:valueTo="100"
-                        android:stepSize="1"
-                        android:value="50"
-                        app:thumbHeight="20dp"
-                        app:thumbWidth="20dp"
-                        app:thumbRadius="10dp"
-                        app:haloRadius="0dp"
-                        app:haloColor="@color/transparent"
-                        app:thumbColor="@color/cyan_custom"
-                        app:tickColorActive="@color/transparent"
-                        app:tickColorInactive="@color/transparent"
-                        app:trackColorActive="@color/track_color_active"
-                        app:trackColorInactive="@color/track_color_inactive"
-                        app:trackHeight="5dp"
-                        app:trackStopIndicatorSize="0dp"
-                        app:tickVisibilityMode="hidden"
-                        app:labelBehavior="gone"
-                        app:layout_constraintStart_toEndOf="@id/barrier_sb_params"
-                        app:layout_constraintEnd_toStartOf="@id/tv_status_bar_pos"
-                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
-                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
-
-                    <TextView
-                        android:id="@+id/tv_status_bar_pos"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="44dp"
-                        android:gravity="end"
-                        android:text="50%"
-                        android:textSize="13sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/label_status_bar_pos"
-                        app:layout_constraintBottom_toBottomOf="@id/label_status_bar_pos" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-                <!-- Ручне розміщення смуги: потрібне там, де бар малює лаунчер -->
+                <!-- Параметри розміру та положення (2 адаптивні колонки 50/50 як в GALA/AGC) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/label_status_bar_height"
+                    <!-- Ліва колонка: Ширина та Положення X -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/status_bar_height_manual"
-                        android:textSize="13sp" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_status_bar_height"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
+                        <!-- Ширина -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_width"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_visualizer_width"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_width"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="40%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_width"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="40" />
+
+                        <!-- Положення X -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_pos"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_visualizer_offset_x"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_pos"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="50%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_pos"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="50" />
+                    </LinearLayout>
+
+                    <!-- Права колонка: Висота смуги та Відступ Y -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:text="@string/settings_theme_auto"
-                        android:textSize="13sp" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <!-- Висота смуги -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_height"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_height_manual"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_height"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/settings_theme_auto"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_height"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="200"
+                            android:stepSize="1"
+                            android:value="0" />
+
+                        <!-- Відступ Y -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_offset_y"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_offset_y"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_offset_y"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/val_px_zero"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_offset_y"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="200"
+                            android:stepSize="1"
+                            android:value="0" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_status_bar_height"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0"
-                    android:valueTo="200"
-                    android:stepSize="1"
-                    android:value="0"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    app:trackHeight="5dp"
-                    app:trackStopIndicatorSize="0dp"
-                    app:tickVisibilityMode="hidden"
-                    app:labelBehavior="gone" />
-
+                <!-- Другий рядок: Непрозорість (ліворуч) та Ефект віджета (праворуч) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/label_status_bar_offset_y"
+                    <!-- Ліворуч: Непрозорість -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/status_bar_offset_y"
-                        android:textSize="13sp" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_status_bar_offset_y"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:text="@string/val_px_zero"
-                        android:textSize="13sp" />
-                </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_status_bar_offset_y"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0"
-                    android:valueTo="200"
-                    android:stepSize="1"
-                    android:value="0"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    app:trackHeight="5dp"
-                    app:trackStopIndicatorSize="0dp"
-                    app:tickVisibilityMode="hidden"
-                    app:labelBehavior="gone" />
+                            <TextView
+                                android:id="@+id/label_status_bar_alpha"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_alpha"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                            <TextView
+                                android:id="@+id/tv_status_bar_alpha"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="100%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/label_status_bar_alpha"
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_alpha"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Праворуч: Ефект віджета Dropdown -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/status_bar_alpha"
-                        android:textSize="13sp" />
+                        android:layout_marginStart="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tv_status_bar_alpha"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:text="100%"
-                        android:textSize="13sp" />
+                        <TextView
+                            android:id="@+id/label_status_bar_style_select"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/status_bar_style_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_spinner_status_bar_style"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="170dp"
+                            android:layout_height="wrap_content"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxBackgroundColor="@color/card_bg_theme_aware"
+                            app:boxStrokeWidth="1.2dp"
+                            app:boxStrokeColor="@color/panel_border_theme_aware"
+                            app:hintTextColor="@color/text_theme_aware_2"
+                            app:endIconTint="@color/text_theme_aware_2">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinner_status_bar_style"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:paddingVertical="7dp"
+                                android:paddingHorizontal="12dp"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:textColor="@color/text_theme_aware"
+                                android:textStyle="bold"
+                                android:textSize="@dimen/eq_value_text" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
                 </LinearLayout>
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_status_bar_alpha"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="10"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="100"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    app:trackHeight="5dp"
-                    app:trackStopIndicatorSize="0dp"
-                    app:tickVisibilityMode="hidden"
-                    app:labelBehavior="gone" />
 
                 <TextView
                     android:id="@+id/tv_status_bar_placement_hint"
@@ -749,30 +763,6 @@
                     android:lineSpacingExtra="3dp"
                     android:text="@string/status_bar_placement_hint"
                     android:textSize="@dimen/settings_note_text" />
-
-                <!-- Вибір активного ефекту для статус-бара -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/label_status_bar_style_select"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/status_bar_style_label"
-                        android:textSize="@dimen/settings_subtitle_text"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/spinner_status_bar_style"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="140dp" />
-                </LinearLayout>
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
@@ -1073,34 +1063,21 @@
                             style="@style/TextValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:minWidth="56dp"
+                            android:minWidth="48dp"
                             android:gravity="end"
                             android:text="60%"
-                            android:textSize="13sp" />
+                            android:textSize="@dimen/text_size_value" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
                         android:id="@+id/seek_vis_oscillo_persistence"
+                        style="@style/CustomSliderStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:valueFrom="0"
                         android:valueTo="100"
                         android:stepSize="1"
-                        android:value="60"
-                        app:thumbHeight="20dp"
-                        app:thumbWidth="20dp"
-                        app:thumbRadius="10dp"
-                        app:haloRadius="0dp"
-                        app:haloColor="@color/transparent"
-                        app:thumbColor="@color/cyan_custom"
-                        app:tickColorActive="@color/transparent"
-                        app:tickColorInactive="@color/transparent"
-                        app:trackColorActive="@color/track_color_active"
-                        app:trackColorInactive="@color/track_color_inactive"
-                        app:trackHeight="5dp"
-                        app:trackStopIndicatorSize="0dp"
-                        app:tickVisibilityMode="hidden"
-                        app:labelBehavior="gone" />
+                        android:value="60" />
                 </LinearLayout>
 
                 <!-- 4. Динамічний контейнер: Теми та FastLED палітри -->
@@ -1337,7 +1314,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/status_bar_visualizer_hue"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
 
                     <FrameLayout
                         android:layout_width="0dp"
@@ -1362,12 +1340,13 @@
 
                     <TextView
                         android:id="@+id/tv_status_bar_hue"
+                        style="@style/TextValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minWidth="44dp"
+                        android:minWidth="48dp"
                         android:gravity="end"
                         android:text="0°"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_value" />
                 </LinearLayout>
 
                 <!-- 6. Динамічний контейнер: Динамічна нормалізація (AGC) -->
@@ -1665,26 +1644,13 @@
 
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_agc_main_strength"
+                            style="@style/CustomSliderStyle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:valueFrom="0"
                             android:valueTo="100"
                             android:stepSize="1"
-                            android:value="60"
-                            app:thumbHeight="20dp"
-                            app:thumbWidth="20dp"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="0dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:tickColorActive="@color/transparent"
-                            app:tickColorInactive="@color/transparent"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="5dp"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:labelBehavior="gone" />
+                            android:value="60" />
                     </LinearLayout>
 
                     <!-- Віджет статус-бара -->
@@ -1746,7 +1712,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/agc_strength_label"
-                                android:textSize="@dimen/text_size_label" />
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/tv_agc_bar_strength"
@@ -1756,32 +1723,18 @@
                                 android:minWidth="48dp"
                                 android:gravity="end"
                                 android:text="100%"
-                                android:textSize="@dimen/text_size_value"
-                                android:textStyle="bold" />
+                                android:textSize="@dimen/text_size_value" />
                         </LinearLayout>
 
                         <com.google.android.material.slider.Slider
                             android:id="@+id/seek_agc_bar_strength"
+                            style="@style/CustomSliderStyle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:valueFrom="0"
                             android:valueTo="100"
                             android:stepSize="1"
-                            android:value="100"
-                            app:thumbHeight="20dp"
-                            app:thumbWidth="20dp"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="0dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:tickColorActive="@color/transparent"
-                            app:tickColorInactive="@color/transparent"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="5dp"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:labelBehavior="gone" />
+                            android:value="100" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -1825,26 +1778,13 @@
 
                 <com.google.android.material.slider.Slider
                     android:id="@+id/seek_latency_trim"
+                    style="@style/CustomSliderStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:valueFrom="-250"
                     android:valueTo="250"
                     android:stepSize="5"
-                    android:value="0"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    app:trackHeight="5dp"
-                    app:trackStopIndicatorSize="0dp"
-                    app:tickVisibilityMode="hidden"
-                    app:labelBehavior="gone" />
+                    android:value="0" />
 
                 <!-- 3. Вимірювання синхронізації зі звуком -->
                 <TextView
@@ -1925,35 +1865,21 @@
                         style="@style/TextValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minWidth="56dp"
+                        android:minWidth="48dp"
                         android:gravity="end"
                         android:text="60 dB"
-                        android:textSize="@dimen/text_size_value"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/text_size_value" />
                 </LinearLayout>
 
                 <com.google.android.material.slider.Slider
                     android:id="@+id/seek_range_db"
+                    style="@style/CustomSliderStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:valueFrom="20"
                     android:valueTo="80"
                     android:stepSize="1"
-                    android:value="60"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:thumbColor="@color/cyan_custom"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:trackColorActive="@color/track_color_active"
-                    app:trackColorInactive="@color/track_color_inactive"
-                    app:trackHeight="5dp"
-                    app:trackStopIndicatorSize="0dp"
-                    app:tickVisibilityMode="hidden"
-                    app:labelBehavior="gone" />
+                    android:value="60" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
@@ -2181,118 +2107,124 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_delay"
-                        android:textSize="@dimen/text_size_label" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_delay"
                         style="@style/TextValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minWidth="56dp"
+                        android:minWidth="48dp"
                         android:gravity="end"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_value" />
                 </LinearLayout>
 
                 <com.google.android.material.slider.Slider
                     android:id="@+id/seek_screensaver_delay"
+                    style="@style/CustomSliderStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:valueFrom="5"
                     android:valueTo="600"
                     android:stepSize="5"
-                    android:value="60"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
+                    android:value="60" />
 
+                <!-- Рядок: Прозорість фону Вдень (ліворуч) та Вночі (праворуч) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/label_screensaver_bg_day"
+                    <!-- Прозорість фону: День -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_bg_alpha_day"
-                        android:textSize="@dimen/text_size_label" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_screensaver_bg_day"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
-                </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_bg_day"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="85"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
+                            <TextView
+                                android:id="@+id/label_screensaver_bg_day"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bg_alpha_day"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                            <TextView
+                                android:id="@+id/tv_screensaver_bg_day"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/label_screensaver_bg_night"
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bg_day"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="85" />
+                    </LinearLayout>
+
+                    <!-- Прозорість фону: Ніч -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_bg_alpha_night"
-                        android:textSize="@dimen/text_size_label" />
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_screensaver_bg_night"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bg_night"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bg_alpha_night"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bg_night"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bg_night"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="95" />
+                    </LinearLayout>
                 </LinearLayout>
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_bg_night"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="95"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
 
                 <!-- Вибір активного ефекту для скрінсейвера -->
                 <LinearLayout
@@ -2308,184 +2240,233 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_style_label"
-                        android:textSize="@dimen/settings_subtitle_text"
+                        android:textSize="@dimen/text_size_label"
                         android:textStyle="bold" />
 
-                    <Spinner
-                        android:id="@+id/spinner_screensaver_style"
-                        android:layout_width="wrap_content"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_spinner_screensaver_style"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="220dp"
                         android:layout_height="wrap_content"
-                        android:minWidth="140dp" />
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxBackgroundColor="@color/card_bg_theme_aware"
+                        app:boxStrokeWidth="1.2dp"
+                        app:boxStrokeColor="@color/panel_border_theme_aware"
+                        app:hintTextColor="@color/text_theme_aware_2"
+                        app:endIconTint="@color/text_theme_aware_2">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinner_screensaver_style"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:paddingVertical="7dp"
+                            android:paddingHorizontal="12dp"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:textColor="@color/text_theme_aware"
+                            android:textStyle="bold"
+                            android:textSize="@dimen/eq_value_text" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
+                <!-- Рядок: Розміри скрінсейвера: Ширина (ліворуч) та Висота (праворуч) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/label_screensaver_width"
+                    <!-- Ширина смуги -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_width"
-                        android:textSize="@dimen/text_size_label" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_screensaver_width"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_width"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_width"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_width"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_width"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Висота смуги -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_height"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_height"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_height"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_height"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="3"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="25" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_width"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="10"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="100"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
-
+                <!-- Рядок: Яскравість візуалізатора: Вдень (ліворуч) та Вночі (праворуч) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/label_screensaver_height"
+                    <!-- Яскравість: День -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_height"
-                        android:textSize="@dimen/text_size_label" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_screensaver_height"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
-                </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_height"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="3"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="25"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
+                            <TextView
+                                android:id="@+id/label_screensaver_bright_day"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bright_day"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                            <TextView
+                                android:id="@+id/tv_screensaver_bright_day"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/label_screensaver_bright_day"
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bright_day"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Яскравість: Ніч -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/screensaver_bright_day"
-                        android:textSize="@dimen/text_size_label" />
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_screensaver_bright_day"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bright_night"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bright_night"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bright_night"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bright_night"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="70" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_bright_day"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="10"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="100"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/label_screensaver_bright_night"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/screensaver_bright_night"
-                        android:textSize="@dimen/text_size_label" />
-
-                    <TextView
-                        android:id="@+id/tv_screensaver_bright_night"
-                        style="@style/TextValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="56dp"
-                        android:gravity="end"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/seek_screensaver_bright_night"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="10"
-                    android:valueTo="100"
-                    android:stepSize="1"
-                    android:value="70"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
-
+                <!-- Рядок: Висота інфо-панелі треку -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -2499,34 +2480,28 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_info_h"
-                        android:textSize="@dimen/text_size_label" />
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_info_h"
                         style="@style/TextValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minWidth="56dp"
+                        android:minWidth="48dp"
                         android:gravity="end"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_value" />
                 </LinearLayout>
 
                 <com.google.android.material.slider.Slider
                     android:id="@+id/seek_screensaver_info_h"
+                    style="@style/CustomSliderStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:valueFrom="8"
                     android:valueTo="25"
                     android:stepSize="1"
-                    android:value="14"
-                    app:thumbHeight="20dp"
-                    app:thumbWidth="20dp"
-                    app:thumbRadius="10dp"
-                    app:haloRadius="0dp"
-                    app:haloColor="@color/transparent"
-                    app:tickColorActive="@color/transparent"
-                    app:tickColorInactive="@color/transparent"
-                    app:labelBehavior="gone" />
+                    android:value="14" />
 
                 <TextView
                     android:id="@+id/label_screensaver_apps"
