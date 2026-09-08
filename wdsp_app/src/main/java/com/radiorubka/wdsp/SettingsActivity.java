@@ -1044,50 +1044,38 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void stylePermissionButton(TextView btn, boolean granted, String title, int accent, int border) {
         if (btn == null) return;
-        int primaryText = editNight ? 0xFFFFFFFF : 0xFF101418;
-        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
-        int ungrantedBorder = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
-        if (granted) {
-            btn.setText("✓ " + title);
-            btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
-            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
-        } else {
-            btn.setText(title);
-            btn.setTextColor(primaryText);
-            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, ungrantedBorder, 1.2f));
-        }
+        btn.setText(granted ? "✓ " + title : title);
+        stylePill(btn, granted, accent, border);
     }
 
-    /**
-     * Makes a button look like one, in either theme.
-     *
-     * The measurement and synchronise buttons started out with a plain drawable background, and in
-     * practice they disappeared: the author of the app had to hunt for the synchronise button on
-     * his own screen, knowing exactly where it was. Everything else on this screen that can be
-     * pressed is filled with the accent colour, so these are too, with text picked for contrast
-     * against whatever accent the user has chosen.
-     */
-    private void styleActionButton(TextView btn) {
-        if (btn == null) return;
-        int accent = ThemeManager.accent(this, editNight);
-        btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
-        btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
+    private void styleActionButton(View v) {
+        if (v instanceof TextView) {
+            int accent = ThemeManager.accent(this, editNight);
+            int border = ThemeManager.panelBorder(this, editNight);
+            stylePill((TextView) v, false, accent, border);
+        }
     }
 
     private void styleToggleButton(TextView btn, boolean active) {
         if (btn == null) return;
         int accent = ThemeManager.accent(this, editNight);
-        int primaryText = editNight ? 0xFFFFFFFF : 0xFF101418;
-        int border = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
-        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        int border = ThemeManager.panelBorder(this, editNight);
+        stylePill(btn, active, accent, border);
+    }
 
-        if (active) {
-            btn.setTextColor(ThemeManager.getContrastingTextColor(accent));
-            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, accent, accent, 1.2f));
-        } else {
-            btn.setTextColor(primaryText);
-            btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, border, 1.2f));
-        }
+    private void stylePill(TextView btn, boolean active, int accent, int border) {
+        if (btn == null) return;
+        int cardBg = editNight ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
+        int btnBg = active ? accent : cardBg;
+        int btnBorder = active ? accent : (editNight ? Color.parseColor("#2a3540") : Color.parseColor("#c5cdd3"));
+
+        int userFg = active ? ThemeManager.onAccent(this, editNight) : ThemeManager.textPrimary(this, editNight);
+        int fg = ThemeManager.contrastText(userFg, btnBg);
+
+        btn.setBackground(ThemeManager.roundedDrawable(this, 14, btnBg, btnBorder, 1.2f));
+        btn.setTextColor(fg);
+        btn.setTypeface(null, android.graphics.Typeface.BOLD);
+        btn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
     }
 
     private void loadSettings() {
@@ -2255,30 +2243,24 @@ public class SettingsActivity extends AppCompatActivity {
         if (rootSettings != null) {
             rootSettings.setBackground(ThemeManager.wallpaperBackground(this, editNight));
         }
-        SettingsAccordion.repaint(settingsColumn, primaryText, accent);
 
         TextView title = findViewById(R.id.title);
         if (title != null) title.setTextColor(primaryText);
 
-        // Section labels & headers
+        // Section labels & headers (accordion headers are styled exclusively by SettingsAccordion.repaint)
         int[] primaryLabels = {
-            R.id.label_theme_section, R.id.label_statusbar_section,
-            R.id.label_vis_effects_section, R.id.label_vis_effects_select_style,
+            R.id.label_vis_effects_select_style,
             R.id.label_status_bar_style_select, R.id.label_screensaver_style,
             R.id.label_vis_oscillo_persistence,
-            R.id.label_eq_vis_section, R.id.label_permissions_section,
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
             R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
             R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
-            // The analyzer and diagnostics folds were never on either list, so every label in them
-            // kept the layout's own colour and looked washed out next to the rest of the screen.
-            // The screen is themed by walking these arrays rather than by styles, so an id that is
-            // not here is not themed. 13sp bold is a heading; 11-12sp belongs in secondaryLabels.
-            R.id.label_analyzer_section, R.id.label_debug_section,
+            R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
+            R.id.label_status_bar_palettes,
             R.id.label_agc_main, R.id.label_agc_bar,
             R.id.label_latency_trim, R.id.label_sync_measure,
-            R.id.label_room_measure, R.id.label_system_report,
-            R.id.label_screensaver_section, R.id.label_screensaver_enable
+            R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
+            R.id.label_screensaver_enable
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -2294,10 +2276,11 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_status_bar_hue, R.id.label_eq_vis_mode,
             R.id.label_status_bar_height, R.id.label_status_bar_offset_y,
             R.id.label_status_bar_alpha, R.id.tv_status_bar_placement_hint,
+            R.id.desc_sb_vis_peaks, R.id.desc_sb_vis_mirror,
             R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization,
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
-            R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_system_report,
+            R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
             R.id.label_agc_main_strength, R.id.label_agc_bar_strength, R.id.label_range_db,
             R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
@@ -2379,16 +2362,14 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         // Action buttons styling
-        int actionBorder = editNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
-        int normalBtnBg = editNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
+        int border = ThemeManager.panelBorder(this, editNight);
         TextView[] normalActionButtons = {
             btnWallpaperPick, btnWallpaperReset, btnAppDetails,
             btnBackupSettings, btnRestoreSettings
         };
         for (TextView btn : normalActionButtons) {
             if (btn != null) {
-                btn.setTextColor(primaryText);
-                btn.setBackground(ThemeManager.roundedDrawable(this, 10f, normalBtnBg, actionBorder, 1.2f));
+                stylePill(btn, false, accent, border);
             }
         }
 
@@ -2402,6 +2383,9 @@ public class SettingsActivity extends AppCompatActivity {
         updateEqVisModeHighlights(eqVisMode);
         updatePermissionButtons();
         styleActionButtons();
+
+        // Repaint accordion headers last so open headers always remain highlighted in accent
+        SettingsAccordion.repaint(settingsColumn, primaryText, accent);
     }
 
     /** Re-applies the accent to every button that performs an action rather than toggling one. */
@@ -2419,7 +2403,7 @@ public class SettingsActivity extends AppCompatActivity {
         ColorStateList csl = ColorStateList.valueOf(accent);
         s.setThumbTintList(csl);
         s.setTrackActiveTintList(csl);
-        s.setTrackInactiveTintList(ColorStateList.valueOf(editNight ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000")));
+        s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(editNight)));
         s.setHaloRadius(0);
         s.setTrackStopIndicatorSize(0);
         float density = getResources().getDisplayMetrics().density;

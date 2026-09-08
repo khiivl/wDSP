@@ -485,10 +485,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void tintSlider(Slider s, ColorStateList csl, ColorStateList cslTrack) {
         if (s == null) return;
+        boolean isNight = ThemeManager.isNight(this);
         float density = getResources().getDisplayMetrics().density;
         s.setThumbTintList(csl);
         s.setTrackActiveTintList(csl);
-        s.setTrackInactiveTintList(ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
+        s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(isNight)));
         s.setHaloRadius(0);
         s.setTrackHeight((int) (5 * density));
         s.setThumbRadius((int) (10 * density));
@@ -500,15 +501,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateToggleStyle(View v) {
         if (v == null) return;
-        int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
-        int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
-        int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
-        int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
-
         boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
-        int unselectedBg = isNight ? Color.parseColor("#25FFFFFF") : Color.parseColor("#18000000");
-        int unselectedBorder = isNight ? Color.parseColor("#4DFFFFFF") : Color.parseColor("#4D000000");
-        int onAccentColor = com.radiorubka.wdsp.ui.theme.ThemeManager.getContrastingTextColor(accent);
+        int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this, isNight);
+        int onAccentColor = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this, isNight);
+        int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
+        int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
+
+        int unselectedBg = isNight ? Color.parseColor("#18FFFFFF") : Color.parseColor("#0D000000");
+        int unselectedBorder = border;
 
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
@@ -600,8 +600,9 @@ public class MainActivity extends AppCompatActivity {
             // Main EQ Card styling
             View cardMainEq = findViewById(R.id.card_main_eq);
             if (cardMainEq != null) {
-                int eqBorder = ColorUtils.setAlphaComponent(accent, isNight ? 80 : 120);
-                cardMainEq.setBackground(ThemeManager.roundedDrawable(this, 18f, eqCardBg, eqBorder, 1.2f));
+                int eqBorder = ThemeManager.panelBorder(this, isNight);
+                int eqBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#40FFFFFF");
+                cardMainEq.setBackground(ThemeManager.roundedDrawable(this, 18f, eqBg, eqBorder, 1.2f));
             }
 
             // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
@@ -614,7 +615,7 @@ public class MainActivity extends AppCompatActivity {
                 if (v instanceof androidx.appcompat.widget.AppCompatImageButton) {
                     androidx.appcompat.widget.AppCompatImageButton b = (androidx.appcompat.widget.AppCompatImageButton) v;
                     b.setBackground(ThemeManager.buttonDrawable(this, isNight));
-                    b.setImageTintList(ColorStateList.valueOf(accent));
+                    b.setImageTintList(ColorStateList.valueOf(secondaryText));
                 }
             }
 
@@ -671,10 +672,10 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchGalaGlobal);
 
             // Spinners
-            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText);
-            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText);
-            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText);
-            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText, primaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText, primaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText, primaryText);
+            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText, primaryText);
 
             // Primary Section Titles & Headers
             int[] primaryTitles = {
@@ -725,9 +726,9 @@ public class MainActivity extends AppCompatActivity {
                 if (btn != null) {
                     btn.setBackground(ThemeManager.buttonDrawable(this, isNight));
                     if (btn instanceof ImageView) {
-                        ((ImageView) btn).setImageTintList(ColorStateList.valueOf(faderIconTint));
+                        ((ImageView) btn).setImageTintList(ColorStateList.valueOf(secondaryText));
                     } else if (btn instanceof TextView) {
-                        ((TextView) btn).setTextColor(valueColor);
+                        ((TextView) btn).setTextColor(primaryText);
                     }
                 }
             }
