@@ -76,6 +76,7 @@
                     android:id="@+id/scroll_presets"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:fillViewport="true"
                     android:scrollbars="none"
                     android:overScrollMode="never"
@@ -85,6 +86,8 @@
                         android:id="@+id/layout_presets_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:baselineAligned="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingStart="6dp"
@@ -97,6 +100,8 @@
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="230dp"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            app:hintEnabled="false"
                             app:boxCornerRadiusBottomEnd="14dp"
                             app:boxCornerRadiusBottomStart="14dp"
                             app:boxCornerRadiusTopEnd="14dp"
@@ -104,15 +109,13 @@
                             app:boxBackgroundColor="@color/card_bg_theme_aware"
                             app:boxStrokeWidth="1.2dp"
                             app:boxStrokeColor="@color/panel_border_theme_aware"
-                            app:hintTextColor="@color/text_theme_aware_2"
-                            android:hint="@string/default_preset_name_hint"
-                            android:textColorHint="@color/text_theme_aware_2"
                             app:endIconTint="@color/text_theme_aware_2">
 
                             <AutoCompleteTextView
                                 android:id="@+id/spinner_presets"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
                                 android:inputType="none"
                                 android:paddingVertical="7dp"
                                 android:paddingHorizontal="12dp"
@@ -133,6 +136,7 @@
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
