@@ -153,7 +153,7 @@ public class FrostedGlassDrawable extends Drawable {
 
         float density = mContext.getResources().getDisplayMetrics().density;
         if (mEnableShadow) {
-            float padX = 1.5f * density;
+            float padX = 2.0f * density;
             float padYTop = 1.0f * density;
             float padYBottom = 3.5f * density;
             mRectF.set(bounds.left + padX, bounds.top + padYTop, bounds.right - padX, bounds.bottom - padYBottom);
@@ -233,18 +233,18 @@ public class FrostedGlassDrawable extends Drawable {
             int shCol2 = mIsNight ? Color.argb(50, 0, 0, 0) : Color.argb(30, 20, 30, 45);
             int shCol3 = mIsNight ? Color.argb(22, 0, 0, 0) : Color.argb(14, 20, 30, 45);
 
-            // Pass 1: Outer ambient halo
-            mShadowRectF.set(mRectF.left, mRectF.top + 2.0f * density, mRectF.right + 1.2f * density, mRectF.bottom + 3.2f * density);
+            // Pass 1: Outer ambient halo (symmetric horizontal spread)
+            mShadowRectF.set(mRectF.left - 0.8f * density, mRectF.top + 1.5f * density, mRectF.right + 0.8f * density, mRectF.bottom + 3.2f * density);
             mShadowPaint.setColor(shCol3);
             canvas.drawRoundRect(mShadowRectF, radiusPx + 1.2f * density, radiusPx + 1.2f * density, mShadowPaint);
 
             // Pass 2: Mid diffuse shadow
-            mShadowRectF.set(mRectF.left, mRectF.top + 1.2f * density, mRectF.right + 0.6f * density, mRectF.bottom + 2.0f * density);
+            mShadowRectF.set(mRectF.left - 0.4f * density, mRectF.top + 1.0f * density, mRectF.right + 0.4f * density, mRectF.bottom + 2.0f * density);
             mShadowPaint.setColor(shCol2);
             canvas.drawRoundRect(mShadowRectF, radiusPx + 0.5f * density, radiusPx + 0.5f * density, mShadowPaint);
 
             // Pass 3: Core occlusion contact shadow
-            mShadowRectF.set(mRectF.left, mRectF.top + 0.8f * density, mRectF.right, mRectF.bottom + 1.2f * density);
+            mShadowRectF.set(mRectF.left, mRectF.top + 0.6f * density, mRectF.right, mRectF.bottom + 1.2f * density);
             mShadowPaint.setColor(shCol1);
             canvas.drawRoundRect(mShadowRectF, radiusPx, radiusPx, mShadowPaint);
         }

@@ -84,8 +84,10 @@ public class SegmentedPillNavView extends HorizontalScrollView {
         mContentContainer.setGravity(Gravity.CENTER);
 
         float density = getResources().getDisplayMetrics().density;
-        int pad = (int) (5 * density);
-        mContentContainer.setPadding(pad, pad, pad, pad);
+        int padX = (int) (6 * density);
+        int padTop = (int) (5 * density);
+        int padBottom = (int) (7.5f * density);
+        mContentContainer.setPadding(padX, padTop, padX, padBottom);
 
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -166,7 +168,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
             // Округла підкладка для ripple-ефекту
             GradientDrawable rippleMask = new GradientDrawable();
             rippleMask.setShape(GradientDrawable.RECTANGLE);
-            rippleMask.setCornerRadius(18 * density);
+            rippleMask.setCornerRadius(25 * density);
             rippleMask.setColor(Color.WHITE);
             RippleDrawable ripple = new RippleDrawable(
                     ColorStateList.valueOf(Color.parseColor("#33888888")),
@@ -289,11 +291,14 @@ public class SegmentedPillNavView extends HorizontalScrollView {
         for (NavItemViewHolder holder : mHolders) {
             boolean isSelected = (holder.menuItem.getItemId() == id);
             if (isSelected) {
-                // Замальовування активної кнопки суцільним акцентним кольором
-                GradientDrawable activeBg = new GradientDrawable();
-                activeBg.setShape(GradientDrawable.RECTANGLE);
-                activeBg.setCornerRadius(18 * density);
-                activeBg.setColor(accentColor);
+                // Замальовування активної кнопки капсулою з акцентного скла (FrostedGlassDrawable)
+                com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable activeBg =
+                        com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable.createAccentPill(
+                                getContext(),
+                                night,
+                                25f,
+                                accentColor
+                        );
 
                 RippleDrawable ripple = new RippleDrawable(
                         ColorStateList.valueOf(Color.parseColor("#33FFFFFF")),
@@ -324,7 +329,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
                 // Неактивна кнопка: прозора підкладка з м'яким ripple
                 GradientDrawable mask = new GradientDrawable();
                 mask.setShape(GradientDrawable.RECTANGLE);
-                mask.setCornerRadius(18 * density);
+                mask.setCornerRadius(25 * density);
                 mask.setColor(Color.WHITE);
 
                 RippleDrawable ripple = new RippleDrawable(

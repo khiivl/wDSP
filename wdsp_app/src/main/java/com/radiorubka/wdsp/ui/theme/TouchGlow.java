@@ -68,6 +68,12 @@ public final class TouchGlow {
     }
 
     private static void applyGlow(View v, boolean on) {
+        if (v.getBackground() instanceof FrostedGlassDrawable) {
+            // FrostedGlassDrawable handles its own glass texture, bevel, and 3-pass shadow drop on press.
+            // Do not override its background tint, stroke, or checked styling!
+            return;
+        }
+
         int accent = ThemeManager.accent(v.getContext());
         int border = ThemeManager.panelBorder(v.getContext());
 

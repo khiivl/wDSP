@@ -564,8 +564,8 @@ public final class ThemeManager {
         int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
 
-        // Концентрична кривизна: радіус кнопки 18dp + рівномірний відступ 5dp = 23dp
-        float concentricRadiusDp = 23f;
+        // Концентрична капсула: радіус внутрішньої кнопки 25dp + рівномірний відступ 4dp = 29dp
+        float concentricRadiusDp = 29f;
 
         return new FrostedGlassDrawable(
                 ctx,

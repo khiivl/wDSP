@@ -514,36 +514,32 @@ public class MainActivity extends AppCompatActivity {
         int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
         int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
 
-        int unselectedBg = isNight ? Color.parseColor("#18FFFFFF") : Color.parseColor("#26FFFFFF");
-        int unselectedBorder = isNight ? border : Color.parseColor("#38000000");
+        int substrate = com.radiorubka.wdsp.ui.theme.ThemeManager.dockSubstrateColor(this, isNight);
 
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
             boolean checked = mb.isChecked();
-            if (checked) {
-                mb.setBackgroundTintList(ColorStateList.valueOf(accent));
-                mb.setTextColor(onAccentColor);
-                mb.setStrokeColor(ColorStateList.valueOf(accent));
-            } else {
-                mb.setBackgroundTintList(ColorStateList.valueOf(unselectedBg));
-                mb.setTextColor(textPrimary);
-                mb.setStrokeColor(ColorStateList.valueOf(unselectedBorder));
-            }
+            mb.setBackgroundTintList(null);
+            mb.setStrokeWidth(0);
+            mb.setRippleColor(null);
+            mb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            int userFg = checked ? onAccentColor : textPrimary;
+            int fg = checked ? userFg : com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(userFg, substrate);
+            mb.setTextColor(fg);
+            mb.setTypeface(null, Typeface.BOLD);
+            mb.getPaint().setFakeBoldText(true);
             return;
         }
 
         if (v instanceof ToggleButton) {
             ToggleButton tb = (ToggleButton) v;
             boolean checked = tb.isChecked();
-            float density = getResources().getDisplayMetrics().density;
-            int radius = (int) (6 * density);
-            if (checked) {
-                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
-                tb.setTextColor(onAccentColor);
-            } else {
-                tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
-                tb.setTextColor(textPrimary);
-            }
+            tb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 10f, accent, border));
+            int userFg = checked ? onAccentColor : textPrimary;
+            int fg = checked ? userFg : com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(userFg, substrate);
+            tb.setTextColor(fg);
+            tb.setTypeface(null, Typeface.BOLD);
+            tb.getPaint().setFakeBoldText(true);
             return;
         }
 
@@ -551,16 +547,14 @@ public class MainActivity extends AppCompatActivity {
             CompoundButton toggle = (CompoundButton) v;
             boolean checked = toggle.isChecked();
             float density = getResources().getDisplayMetrics().density;
-            int radius = (int) (10 * density);
             toggle.setPadding((int) (14 * density), (int) (6 * density), (int) (14 * density), (int) (6 * density));
             toggle.setGravity(Gravity.CENTER);
-            if (checked) {
-                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, accent, accent, 1.2f));
-                toggle.setTextColor(onAccentColor);
-            } else {
-                toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.roundedDrawable(this, radius, unselectedBg, unselectedBorder, 1.2f));
-                toggle.setTextColor(textPrimary);
-            }
+            toggle.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            int userFg = checked ? onAccentColor : textPrimary;
+            int fg = checked ? userFg : com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(userFg, substrate);
+            toggle.setTextColor(fg);
+            toggle.setTypeface(null, Typeface.BOLD);
+            toggle.getPaint().setFakeBoldText(true);
         }
     }
 
@@ -1074,6 +1068,16 @@ public class MainActivity extends AppCompatActivity {
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
+
+        // Tactile touch attachment for all 8 toggles (shift down-right & shadow depression)
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLoud);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchPreciseEnable);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLegacyEnable);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmEnable);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -1141,6 +1145,7 @@ public class MainActivity extends AppCompatActivity {
             Slider s = new Slider(this, null);
             gainSliders.add(s);
             qSwitches.add(q);
+            com.radiorubka.wdsp.ui.theme.TouchGlow.attach(q);
             dbLabels.add(db);
 
             LinearLayout layout = new LinearLayout(this);
