@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_theme_aware">#FFFFFF</color>
-    <color name="text_theme_aware_2">#8B9198</color>
-    <color name="text_theme_aware_3">#808B9198</color>
-    <color name="cyan_custom">#1FE7C4</color>
-    <color name="custom_square">#261FE7C4</color>
-    <color name="visualizer_grid">#26FFFFFF</color>
-    <color name="visualizer_line">#991FE7C4</color>
-    <color name="visualizer_fill">#401FE7C4</color>
-    <color name="band_label">#80FFFFFF</color>
-    <color name="q_switch_text">#1FE7C4</color>
-    <color name="seek_track">#33808080</color>
+    <color name="text_theme_aware">#11171D</color>
+    <color name="text_theme_aware_2">#455A64</color>
+    <color name="text_theme_aware_3">#80455A64</color>
+    <color name="cyan_custom">#00838F</color>
+    <color name="custom_square">#2600838F</color>
+    <color name="visualizer_grid">#26000000</color>
+    <color name="visualizer_line">#9900838F</color>
+    <color name="visualizer_fill">#4000838F</color>
+    <color name="band_label">#8011171D</color>
+    <color name="q_switch_text">#00838F</color>
+    <color name="seek_track">#33000000</color>
     <color name="colored_button_text">#FFFFFF</color>
     <color name="transparent">#00000000</color>
-    <color name="panel_border_theme_aware">#33FFFFFF</color>
-    <color name="card_bg_theme_aware">#12161B</color>
+    <color name="panel_border_theme_aware">#D7DDE1</color>
+    <color name="card_bg_theme_aware">#FFFFFF</color>
 
     <!-- Preset Button Colors (QFRadio gradient spectrum) -->
     <color name="btn_auto_bg">#1FE7C4</color>
@@ -28,8 +28,8 @@
     <!-- Slider Colors -->
     <color name="tick_color_inactive">#80FFFFFF</color>
     <color name="tick_color_active">#FFFFFF</color>
-    <color name="track_color_active">#1FE7C4</color>
-    <color name="track_color_inactive">#33808080</color>
+    <color name="track_color_active">#00838F</color>
+    <color name="track_color_inactive">#33000000</color>
     <color name="halo_color">#00000000</color>
 
     <color name="visualizer_container_bg">#40000000</color>

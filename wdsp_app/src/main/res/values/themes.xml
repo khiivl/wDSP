@@ -65,9 +65,9 @@
 
     <!-- Material Slider Styling -->
     <style name="CustomSliderStyle" parent="Widget.Material3.Slider">
-        <item name="trackColorActive">@color/cyan_custom</item>
-        <item name="trackColorInactive">#26FFFFFF</item>
-        <item name="thumbColor">@color/cyan_custom</item>
+        <item name="trackColorActive">@color/track_color_active</item>
+        <item name="trackColorInactive">@color/track_color_inactive</item>
+        <item name="thumbColor">@color/track_color_active</item>
         <item name="haloColor">@color/transparent</item>
         <item name="thumbRadius">10dp</item>
         <item name="thumbWidth">20dp</item>
