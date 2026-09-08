@@ -71,6 +71,8 @@ Active dev branch for UI & Platform QF integration. **Everything committed & tes
   - На контейнер додано `baselineAligned="false"`, а на елементи — `layout_gravity="center_vertical"`.
   - Верхній та нижній відступи спінера відносно скляної підкладки стали однаковими (4dp), рамка ідеально лежить по центру піли.
   - Зібрано, встановлено на девайс `192.168.1.146:9876` і запущено.
+- **Documentation**:
+  - Створено `WHATS_NEW.md` (анотація «Що нового» v0.4.8 для публікації в Telegram та релізу: окремо соковитий дружній пост українською та англійською від першої особи Костянтина, з посиланням на FireLamp).
 
 
 ## What landed between 26.08 and 03.09
