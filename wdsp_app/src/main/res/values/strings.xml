@@ -166,7 +166,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">F-M Curve</string>
+    <string name="FMtab">Loudness</string>
     <string name="DLtab">Delays</string>
     <string name="OTtab">Other</string>
     <string name="GLtab">Speed</string>

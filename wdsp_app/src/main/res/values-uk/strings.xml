@@ -157,10 +157,10 @@
 
     <!-- Menu -->
     <string name="EQtab">Еквалайзер</string>
-    <string name="FMtab">Тонкомпенсація</string>
+    <string name="FMtab">Тонкомп.</string>
     <string name="DLtab">Затримки</string>
     <string name="OTtab">Інше</string>
-    <string name="GLtab">Адаптивна гучність</string>
+    <string name="GLtab">GALA</string>
     <string name="lbl_pwr">Підсилення:</string>
     <string name="hint_sub_freq">Частота</string>
 
@@ -181,7 +181,7 @@
     <string name="status_bar_theme_fire">Вогонь</string>
     <string name="status_bar_theme_neon">Неон</string>
 
-    <string name="settings_title">Налаштування wDSP</string>
+    <string name="settings_title">Налаштування</string>
     <string name="settings_appearance">Оформлення та Теми</string>
     <string name="settings_theme_day">День</string>
     <string name="settings_theme_night">Ніч</string>

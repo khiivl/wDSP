@@ -2051,27 +2051,26 @@
 
     <LinearLayout
         android:id="@+id/bottom_navigation_bar"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:background="@android:color/transparent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="6dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
+        <com.radiorubka.wdsp.ui.views.SegmentedPillNavView
             android:id="@+id/bottom_navigation"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:background="@android:color/transparent"
-            app:elevation="0dp"
-            app:backgroundTint="@android:color/transparent"
-            app:menu="@menu/bottom_nav_menu"
-            app:itemActiveIndicatorStyle="@style/IndicatorSquare"
-            app:labelVisibilityMode="labeled"
-            app:itemIconTint="@color/text_theme_aware_3"
-            app:itemTextColor="@color/text_theme_aware_2"
-            app:itemTextAppearanceActiveBoldEnabled="false"/>
+            app:menu="@menu/bottom_nav_menu" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_apply"
