@@ -7,6 +7,7 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -68,10 +69,7 @@ public class EqVisualizerView extends View {
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextSize(9.5f * density);
         textPaint.setTextAlign(Paint.Align.RIGHT);
-        try {
-            textPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
-        } catch (Exception ignored) {
-        }
+        textPaint.setTypeface(Typeface.SANS_SERIF);
     }
 
     public void setGains(int[] newGains) {

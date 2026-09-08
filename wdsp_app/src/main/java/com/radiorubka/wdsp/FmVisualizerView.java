@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -114,15 +115,14 @@ public class FmVisualizerView extends View {
         textPaint.setTextSize(12 * density);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
-        textPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
+        textPaint.setTypeface(Typeface.SANS_SERIF);
 
         warningPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         warningPaint.setColor(Color.RED);
         warningPaint.setTextSize(12 * density);
         warningPaint.setTextAlign(Paint.Align.CENTER);
         warningPaint.setFakeBoldText(true);
-
-        warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
+        warningPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
     }
 
     public void setGains(int[] newGains) {
