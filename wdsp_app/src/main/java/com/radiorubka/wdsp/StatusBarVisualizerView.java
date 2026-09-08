@@ -453,14 +453,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             case THEME_EQ_GROUPS: {
                 int group = Math.min(5, (int) (fraction * 6f));
                 int groupBase = GROUP_BASE_COLORS[group];
-                if (hueShift != 0) {
-                    Color.colorToHSV(groupBase, hsvBuffer);
-                    hsvBuffer[0] = (hsvBuffer[0] + hueShift) % 360f;
-                    int c = Color.HSVToColor(hsvBuffer);
-                    return Color.argb(baseAlpha, Color.red(c), Color.green(c), Color.blue(c));
-                } else {
-                    return Color.argb(baseAlpha, Color.red(groupBase), Color.green(groupBase), Color.blue(groupBase));
-                }
+                return Color.argb(baseAlpha, Color.red(groupBase), Color.green(groupBase), Color.blue(groupBase));
             }
 
             case THEME_FIRE: {

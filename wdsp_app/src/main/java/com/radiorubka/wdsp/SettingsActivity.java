@@ -2462,7 +2462,6 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_eq_vis_mode,
             R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
             R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
-            R.id.label_status_bar_palettes,
             R.id.label_latency_trim, R.id.label_sync_measure,
             R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
