@@ -30,6 +30,7 @@ public class FrostedGlassDrawable extends Drawable {
     private final Context mContext;
     private final boolean mIsNight;
     private final float mCornerRadiusDp;
+    private final float[] mCornerRadiiDp;
     private final float mStrokeWidthDp;
     private final int[] mChromaticColors;
     private final int mBaseGlassColor;
@@ -43,6 +44,8 @@ public class FrostedGlassDrawable extends Drawable {
     private final Paint mShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final Path mClipPath = new Path();
+    private final Path mStrokePath = new Path();
+    private final Path mShadowPath = new Path();
     private final RectF mRectF = new RectF();
     private final RectF mStrokeRectF = new RectF();
     private final RectF mShadowRectF = new RectF();
@@ -92,6 +95,7 @@ public class FrostedGlassDrawable extends Drawable {
         this.mContext = context.getApplicationContext();
         this.mIsNight = isNight;
         this.mCornerRadiusDp = cornerRadiusDp;
+        this.mCornerRadiiDp = null;
         this.mStrokeWidthDp = strokeWidthDp;
         this.mChromaticColors = chromaticColors;
         this.mBaseGlassColor = baseGlassColor;
@@ -104,6 +108,51 @@ public class FrostedGlassDrawable extends Drawable {
 
         mChromaPaint.setStyle(Paint.Style.FILL);
         // Хроматичне світіння шпалер: 100 вночі, 110 вдень для чистої передачі пастельного спектру
+        mChromaPaint.setAlpha(mIsNight ? 100 : 110);
+
+        mDepthPaint.setStyle(Paint.Style.FILL);
+
+        mSpecularPaint.setStyle(Paint.Style.FILL);
+
+        mStrokePaint.setStyle(Paint.Style.STROKE);
+
+        mShadowPaint.setStyle(Paint.Style.FILL);
+    }
+
+    public FrostedGlassDrawable(@NonNull Context context,
+                                boolean isNight,
+                                @NonNull float[] cornerRadiiDp,
+                                float strokeWidthDp,
+                                @NonNull int[] chromaticColors,
+                                int baseGlassColor,
+                                int substrateColor) {
+        this(context, isNight, cornerRadiiDp, strokeWidthDp, chromaticColors, baseGlassColor, substrateColor, true, false);
+    }
+
+    public FrostedGlassDrawable(@NonNull Context context,
+                                boolean isNight,
+                                @NonNull float[] cornerRadiiDp,
+                                float strokeWidthDp,
+                                @NonNull int[] chromaticColors,
+                                int baseGlassColor,
+                                int substrateColor,
+                                boolean enableShadow,
+                                boolean isSolidAccent) {
+        this.mContext = context.getApplicationContext();
+        this.mIsNight = isNight;
+        this.mCornerRadiiDp = cornerRadiiDp;
+        this.mCornerRadiusDp = (cornerRadiiDp != null && cornerRadiiDp.length > 0) ? cornerRadiiDp[0] : 0f;
+        this.mStrokeWidthDp = strokeWidthDp;
+        this.mChromaticColors = chromaticColors;
+        this.mBaseGlassColor = baseGlassColor;
+        this.mSubstrateColor = substrateColor;
+        this.mEnableShadow = enableShadow;
+        this.mIsSolidAccent = isSolidAccent;
+
+        mBasePaint.setStyle(Paint.Style.FILL);
+        mBasePaint.setColor(baseGlassColor);
+
+        mChromaPaint.setStyle(Paint.Style.FILL);
         mChromaPaint.setAlpha(mIsNight ? 100 : 110);
 
         mDepthPaint.setStyle(Paint.Style.FILL);
@@ -233,24 +282,75 @@ public class FrostedGlassDrawable extends Drawable {
             int shCol2 = mIsNight ? Color.argb(50, 0, 0, 0) : Color.argb(30, 20, 30, 45);
             int shCol3 = mIsNight ? Color.argb(22, 0, 0, 0) : Color.argb(14, 20, 30, 45);
 
-            // Pass 1: Outer ambient halo (symmetric horizontal spread)
-            mShadowRectF.set(mRectF.left - 0.8f * density, mRectF.top + 1.5f * density, mRectF.right + 0.8f * density, mRectF.bottom + 3.2f * density);
-            mShadowPaint.setColor(shCol3);
-            canvas.drawRoundRect(mShadowRectF, radiusPx + 1.2f * density, radiusPx + 1.2f * density, mShadowPaint);
+            if (mCornerRadiiDp != null && mCornerRadiiDp.length >= 4) {
+                // Pass 1: Outer ambient halo
+                mShadowRectF.set(mRectF.left - 0.8f * density, mRectF.top + 1.5f * density, mRectF.right + 0.8f * density, mRectF.bottom + 3.2f * density);
+                mShadowPaint.setColor(shCol3);
+                mShadowPath.reset();
+                float[] sh1Radii = new float[]{
+                        (mCornerRadiiDp[0] + 1.2f) * density, (mCornerRadiiDp[0] + 1.2f) * density,
+                        (mCornerRadiiDp[1] + 1.2f) * density, (mCornerRadiiDp[1] + 1.2f) * density,
+                        (mCornerRadiiDp[2] + 1.2f) * density, (mCornerRadiiDp[2] + 1.2f) * density,
+                        (mCornerRadiiDp[3] + 1.2f) * density, (mCornerRadiiDp[3] + 1.2f) * density
+                };
+                mShadowPath.addRoundRect(mShadowRectF, sh1Radii, Path.Direction.CW);
+                canvas.drawPath(mShadowPath, mShadowPaint);
 
-            // Pass 2: Mid diffuse shadow
-            mShadowRectF.set(mRectF.left - 0.4f * density, mRectF.top + 1.0f * density, mRectF.right + 0.4f * density, mRectF.bottom + 2.0f * density);
-            mShadowPaint.setColor(shCol2);
-            canvas.drawRoundRect(mShadowRectF, radiusPx + 0.5f * density, radiusPx + 0.5f * density, mShadowPaint);
+                // Pass 2: Mid diffuse shadow
+                mShadowRectF.set(mRectF.left - 0.4f * density, mRectF.top + 1.0f * density, mRectF.right + 0.4f * density, mRectF.bottom + 2.0f * density);
+                mShadowPaint.setColor(shCol2);
+                mShadowPath.reset();
+                float[] sh2Radii = new float[]{
+                        (mCornerRadiiDp[0] + 0.5f) * density, (mCornerRadiiDp[0] + 0.5f) * density,
+                        (mCornerRadiiDp[1] + 0.5f) * density, (mCornerRadiiDp[1] + 0.5f) * density,
+                        (mCornerRadiiDp[2] + 0.5f) * density, (mCornerRadiiDp[2] + 0.5f) * density,
+                        (mCornerRadiiDp[3] + 0.5f) * density, (mCornerRadiiDp[3] + 0.5f) * density
+                };
+                mShadowPath.addRoundRect(mShadowRectF, sh2Radii, Path.Direction.CW);
+                canvas.drawPath(mShadowPath, mShadowPaint);
 
-            // Pass 3: Core occlusion contact shadow
-            mShadowRectF.set(mRectF.left, mRectF.top + 0.6f * density, mRectF.right, mRectF.bottom + 1.2f * density);
-            mShadowPaint.setColor(shCol1);
-            canvas.drawRoundRect(mShadowRectF, radiusPx, radiusPx, mShadowPaint);
+                // Pass 3: Core occlusion contact shadow
+                mShadowRectF.set(mRectF.left, mRectF.top + 0.6f * density, mRectF.right, mRectF.bottom + 1.2f * density);
+                mShadowPaint.setColor(shCol1);
+                mShadowPath.reset();
+                float[] sh3Radii = new float[]{
+                        mCornerRadiiDp[0] * density, mCornerRadiiDp[0] * density,
+                        mCornerRadiiDp[1] * density, mCornerRadiiDp[1] * density,
+                        mCornerRadiiDp[2] * density, mCornerRadiiDp[2] * density,
+                        mCornerRadiiDp[3] * density, mCornerRadiiDp[3] * density
+                };
+                mShadowPath.addRoundRect(mShadowRectF, sh3Radii, Path.Direction.CW);
+                canvas.drawPath(mShadowPath, mShadowPaint);
+            } else {
+                // Pass 1: Outer ambient halo (symmetric horizontal spread)
+                mShadowRectF.set(mRectF.left - 0.8f * density, mRectF.top + 1.5f * density, mRectF.right + 0.8f * density, mRectF.bottom + 3.2f * density);
+                mShadowPaint.setColor(shCol3);
+                canvas.drawRoundRect(mShadowRectF, radiusPx + 1.2f * density, radiusPx + 1.2f * density, mShadowPaint);
+
+                // Pass 2: Mid diffuse shadow
+                mShadowRectF.set(mRectF.left - 0.4f * density, mRectF.top + 1.0f * density, mRectF.right + 0.4f * density, mRectF.bottom + 2.0f * density);
+                mShadowPaint.setColor(shCol2);
+                canvas.drawRoundRect(mShadowRectF, radiusPx + 0.5f * density, radiusPx + 0.5f * density, mShadowPaint);
+
+                // Pass 3: Core occlusion contact shadow
+                mShadowRectF.set(mRectF.left, mRectF.top + 0.6f * density, mRectF.right, mRectF.bottom + 1.2f * density);
+                mShadowPaint.setColor(shCol1);
+                canvas.drawRoundRect(mShadowRectF, radiusPx, radiusPx, mShadowPaint);
+            }
         }
 
         mClipPath.reset();
-        mClipPath.addRoundRect(mRectF, radiusPx, radiusPx, Path.Direction.CW);
+        if (mCornerRadiiDp != null && mCornerRadiiDp.length >= 4) {
+            float[] bodyRadii = new float[]{
+                    mCornerRadiiDp[0] * density, mCornerRadiiDp[0] * density,
+                    mCornerRadiiDp[1] * density, mCornerRadiiDp[1] * density,
+                    mCornerRadiiDp[2] * density, mCornerRadiiDp[2] * density,
+                    mCornerRadiiDp[3] * density, mCornerRadiiDp[3] * density
+            };
+            mClipPath.addRoundRect(mRectF, bodyRadii, Path.Direction.CW);
+        } else {
+            mClipPath.addRoundRect(mRectF, radiusPx, radiusPx, Path.Direction.CW);
+        }
 
         canvas.save();
         canvas.clipPath(mClipPath);
@@ -274,8 +374,21 @@ public class FrostedGlassDrawable extends Drawable {
         canvas.restore();
 
         // 5. Оптична скляна рамка (beveled rim)
-        float strokeRadius = Math.max(0, radiusPx - (mStrokeWidthDp * density / 2f));
-        canvas.drawRoundRect(mStrokeRectF, strokeRadius, strokeRadius, mStrokePaint);
+        if (mCornerRadiiDp != null && mCornerRadiiDp.length >= 4) {
+            float strokeInset = mStrokeWidthDp * density / 2f;
+            float[] strokeRadii = new float[]{
+                    Math.max(0, mCornerRadiiDp[0] * density - strokeInset), Math.max(0, mCornerRadiiDp[0] * density - strokeInset),
+                    Math.max(0, mCornerRadiiDp[1] * density - strokeInset), Math.max(0, mCornerRadiiDp[1] * density - strokeInset),
+                    Math.max(0, mCornerRadiiDp[2] * density - strokeInset), Math.max(0, mCornerRadiiDp[2] * density - strokeInset),
+                    Math.max(0, mCornerRadiiDp[3] * density - strokeInset), Math.max(0, mCornerRadiiDp[3] * density - strokeInset)
+            };
+            mStrokePath.reset();
+            mStrokePath.addRoundRect(mStrokeRectF, strokeRadii, Path.Direction.CW);
+            canvas.drawPath(mStrokePath, mStrokePaint);
+        } else {
+            float strokeRadius = Math.max(0, radiusPx - (mStrokeWidthDp * density / 2f));
+            canvas.drawRoundRect(mStrokeRectF, strokeRadius, strokeRadius, mStrokePaint);
+        }
     }
 
     public int getSubstrateColor() {

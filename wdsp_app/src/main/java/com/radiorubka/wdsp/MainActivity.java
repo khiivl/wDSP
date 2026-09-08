@@ -671,16 +671,17 @@ public class MainActivity extends AppCompatActivity {
                 galaBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
-            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
+            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export) - round buttons
             int[] presetBtns = {
                 R.id.btn_auto_preset, R.id.btn_add_preset, R.id.btn_rename_preset,
                 R.id.btn_delete_preset, R.id.btn_import_presets, R.id.btn_export_presets
             };
+            float btnRadiusDp = getResources().getDimension(R.dimen.toggle_height) / (2f * getResources().getDisplayMetrics().density);
             for (int id : presetBtns) {
                 View v = findViewById(id);
                 if (v instanceof androidx.appcompat.widget.AppCompatImageButton) {
                     androidx.appcompat.widget.AppCompatImageButton b = (androidx.appcompat.widget.AppCompatImageButton) v;
-                    b.setBackground(ThemeManager.buttonDrawable(this, isNight));
+                    b.setBackground(ThemeManager.buttonDrawable(this, isNight, btnRadiusDp));
                     b.setImageTintList(ColorStateList.valueOf(secondaryText));
                 }
             }
@@ -877,10 +878,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Top Presets Dock with rounded pill shape
+            // Top Presets Dock with asymmetric organic contour (spinner curve on left, round button curve on right)
             View topBar = findViewById(R.id.layout_presets);
             if (topBar != null) {
-                topBar.setBackground(ThemeManager.dockBackground(this, isNight));
+                topBar.setBackground(ThemeManager.presetsDockBackground(this, isNight));
                 topBar.setPadding(0, 0, 0, 0);
             }
 

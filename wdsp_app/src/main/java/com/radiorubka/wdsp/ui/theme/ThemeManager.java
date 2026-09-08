@@ -578,6 +578,32 @@ public final class ThemeManager {
         );
     }
 
+    /**
+     * Фонова підкладка верхнього бару пресетів з органічним асиметричним огинанням:
+     * - Лівий край огинає прямокутний дропдаун (спінер) пресетів (концентричний радіус 18dp під внутрішній 14dp).
+     * - Правий край огинає круглу кнопку дій експорту (напівкруглий радіус 24dp = повна піла).
+     */
+    public static Drawable presetsDockBackground(Context ctx, boolean night) {
+        int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
+        int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
+        int substrateColor = dockSubstrateColor(ctx, night);
+
+        // [Top-Left, Top-Right, Bottom-Right, Bottom-Left]
+        // Зліва: радіус 18dp (наслідує форму спінера).
+        // Справа: радіус 24dp (наслідує форму круглої кнопки дій).
+        float[] radii = new float[]{18f, 24f, 24f, 18f};
+
+        return new FrostedGlassDrawable(
+                ctx,
+                night,
+                radii,
+                1.2f,
+                chroma,
+                baseGlass,
+                substrateColor
+        );
+    }
+
     public static int navDividerColor(Context ctx, boolean night) {
         return panelBorder(ctx, night);
     }
@@ -737,7 +763,7 @@ public final class ThemeManager {
             layout.setHintTextColor(ColorStateList.valueOf(secondaryText));
             layout.setDefaultHintTextColor(ColorStateList.valueOf(secondaryText));
             layout.setEndIconTintList(ColorStateList.valueOf(secondaryText));
-            float radius = 12 * layout.getResources().getDisplayMetrics().density;
+            float radius = 14 * layout.getResources().getDisplayMetrics().density;
             layout.setBoxCornerRadii(radius, radius, radius, radius);
         }
         if (spinner != null) {
