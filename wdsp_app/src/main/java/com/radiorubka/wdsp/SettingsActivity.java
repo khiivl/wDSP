@@ -2208,7 +2208,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (rootSettings != null) {
             rootSettings.setBackground(ThemeManager.wallpaperBackground(this, editNight));
         }
-        SettingsAccordion.repaint(settingsColumn, accent);
+        SettingsAccordion.repaint(settingsColumn, primaryText, accent);
 
         TextView title = findViewById(R.id.title);
         if (title != null) title.setTextColor(primaryText);
@@ -2265,8 +2265,8 @@ public class SettingsActivity extends AppCompatActivity {
             if (tv != null) tv.setTextColor(secondaryText);
         }
 
-        // Value text views
-        int valueColor = editNight ? accent : primaryText;
+        // Value text views: always use accent color
+        int valueColor = accent;
         if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
         if (tvStatusBarPos != null) tvStatusBarPos.setTextColor(valueColor);
         if (tvStatusBarHue != null) tvStatusBarHue.setTextColor(valueColor);
@@ -2317,7 +2317,13 @@ public class SettingsActivity extends AppCompatActivity {
         updateWheelBrightnessGradient(pickerLabelWheel, pickerLabelBrightness);
         updateWheelBrightnessGradient(pickerOnAccentWheel, pickerOnAccentBrightness);
 
-        // Tint Bottom Navigation Bar
+        // Tint Bottom Navigation Bar & Dock
+        View bottomBar = findViewById(R.id.bottom_navigation_bar);
+        if (bottomBar != null) {
+            bottomBar.setBackground(ThemeManager.dockBackground(this, editNight));
+            float density = getResources().getDisplayMetrics().density;
+            bottomBar.setPadding(0, (int) (4 * density), 0, (int) (2 * density));
+        }
         if (bottomNav != null) {
             ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this, editNight);
             bottomNav.setItemIconTintList(navCsl);

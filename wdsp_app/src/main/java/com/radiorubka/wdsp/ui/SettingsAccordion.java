@@ -48,11 +48,22 @@ public final class SettingsAccordion {
     private SettingsAccordion() {
     }
 
+    private static int sTextPrimary = 0xFFFFFFFF;
+    private static int sAccent = 0xFF1FE7C4;
+
     public static void repaint(LinearLayout column, int accent) {
+        repaint(column, com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(column.getContext()), accent);
+    }
+
+    public static void repaint(LinearLayout column, int textPrimary, int accent) {
+        sTextPrimary = textPrimary;
+        sAccent = accent;
         for (int i = 0; i < column.getChildCount(); i++) {
             View v = column.getChildAt(i);
             if (v instanceof TextView && TAG_HEADER.equals(v.getTag())) {
-                ((TextView) v).setTextColor(accent);
+                View body = (i + 1 < column.getChildCount()) ? column.getChildAt(i + 1) : null;
+                boolean isOpen = (body != null && body.getVisibility() == View.VISIBLE);
+                ((TextView) v).setTextColor(isOpen ? accent : textPrimary);
             }
         }
     }
@@ -60,6 +71,8 @@ public final class SettingsAccordion {
     public static void build(LinearLayout column, int accent) {
         Context ctx = column.getContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        sAccent = accent;
+        sTextPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(ctx);
 
         List<View> children = new ArrayList<>();
         for (int i = 0; i < column.getChildCount(); i++) {
@@ -93,7 +106,7 @@ public final class SettingsAccordion {
 
             final CharSequence text = title.getText();
             title.setText(mark(open) + " " + text);
-            title.setTextColor(accent);
+            title.setTextColor(open ? accent : sTextPrimary);
             title.setTag(TAG_HEADER);
             title.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
 
@@ -108,6 +121,7 @@ public final class SettingsAccordion {
                 boolean nowOpen = section.getVisibility() != View.VISIBLE;
                 section.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
                 title.setText(mark(nowOpen) + " " + text);
+                title.setTextColor(nowOpen ? sAccent : sTextPrimary);
                 prefs.edit().putBoolean(key, nowOpen).apply();
             });
 

@@ -297,6 +297,43 @@ public final class ThemeManager {
         return d;
     }
 
+    public static Drawable dockBackground(Context ctx) {
+        return dockBackground(ctx, isNight(ctx));
+    }
+
+    public static Drawable dockBackground(Context ctx, boolean night) {
+        int bg = night ? Color.parseColor("#E612161B") : Color.parseColor("#EBF0F4F8");
+        int border = panelBorder(ctx, night);
+        float d = ctx.getResources().getDisplayMetrics().density;
+        float r = 16f * d;
+        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+        gd.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        gd.setCornerRadii(new float[]{r, r, r, r, 0, 0, 0, 0});
+        gd.setColor(bg);
+        gd.setStroke(Math.max(1, (int) (1.2f * d)), border);
+        return gd;
+    }
+
+    public static Drawable cardDrawable(Context ctx) {
+        return cardDrawable(ctx, isNight(ctx));
+    }
+
+    public static Drawable cardDrawable(Context ctx, boolean night) {
+        int bg = night ? Color.parseColor("#D912161B") : Color.parseColor("#E6FFFFFF");
+        int border = panelBorder(ctx, night);
+        return roundedDrawable(ctx, 16f, bg, border, 1.2f);
+    }
+
+    public static Drawable buttonDrawable(Context ctx) {
+        return buttonDrawable(ctx, isNight(ctx));
+    }
+
+    public static Drawable buttonDrawable(Context ctx, boolean night) {
+        int bg = night ? Color.parseColor("#25FFFFFF") : Color.parseColor("#14000000");
+        int border = ColorUtils.setAlphaComponent(accent(ctx, night), night ? 90 : 130);
+        return roundedDrawable(ctx, 10f, bg, border, 1.2f);
+    }
+
     public static ColorStateList bottomNavColorStateList(Context ctx) {
         return bottomNavColorStateList(ctx, isNight(ctx));
     }

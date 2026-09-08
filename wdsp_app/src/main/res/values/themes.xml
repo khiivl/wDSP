@@ -22,9 +22,13 @@
 
     <!-- Material Dialog Theme -->
     <style name="CustomDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="android:background">@drawable/bg_dialog</item>
+        <item name="android:background">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="colorSurface">#12161b</item>
+        <item name="colorOnSurface">#F0F4F8</item>
+        <item name="colorOnSurfaceVariant">#B0BAC4</item>
+        <item name="android:textColorPrimary">#F0F4F8</item>
+        <item name="android:textColorSecondary">#B0BAC4</item>
         <item name="colorPrimary">@color/cyan_custom</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>

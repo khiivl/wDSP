@@ -38,7 +38,7 @@ public class Toaster {
             // 2. Compute theme-aware colors
             int bg = ThemeManager.cardBackground(appContext);
             int border = ThemeManager.panelBorder(appContext);
-            int textColor = ThemeManager.textPrimary(appContext);
+            int textColor = ThemeManager.contrastText(ThemeManager.textPrimary(appContext), bg);
 
             float density = appContext.getResources().getDisplayMetrics().density;
             GradientDrawable shape = new GradientDrawable();

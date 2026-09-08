@@ -554,7 +554,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyAppTheme() {
         try {
-            Drawable wallpaper = com.radiorubka.wdsp.ui.theme.ThemeManager.wallpaperBackground(this);
+            boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
+            Drawable wallpaper = com.radiorubka.wdsp.ui.theme.ThemeManager.wallpaperBackground(this, isNight);
             View mainView = findViewById(R.id.main);
             if (mainView != null) {
                 mainView.setBackground(wallpaper);
@@ -564,11 +565,11 @@ public class MainActivity extends AppCompatActivity {
                 root.setBackground(wallpaper);
             }
 
-            int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this);
-            int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this);
-            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this);
-            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this);
-            int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this);
+            int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this, isNight);
+            int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this, isNight);
+            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
+            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this, isNight);
+            int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
             float density = getResources().getDisplayMetrics().density;
 
             ColorStateList csl = ColorStateList.valueOf(accent);
@@ -583,9 +584,32 @@ public class MainActivity extends AppCompatActivity {
                     db.setTextColor(accent);
                 }
             }
+            int eqCardBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
+            int freqTextColor = ThemeManager.contrastText(secondaryText, eqCardBg);
             for (TextView l : freqLabels) {
                 if (l != null) {
-                    l.setTextColor(secondaryText);
+                    l.setTextColor(freqTextColor);
+                }
+            }
+
+            // Main EQ Card styling
+            View cardMainEq = findViewById(R.id.card_main_eq);
+            if (cardMainEq != null) {
+                int eqBorder = ColorUtils.setAlphaComponent(accent, isNight ? 80 : 120);
+                cardMainEq.setBackground(ThemeManager.roundedDrawable(this, 18f, eqCardBg, eqBorder, 1.2f));
+            }
+
+            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
+            int[] presetBtns = {
+                R.id.btn_auto_preset, R.id.btn_add_preset, R.id.btn_rename_preset,
+                R.id.btn_delete_preset, R.id.btn_import_presets, R.id.btn_export_presets
+            };
+            for (int id : presetBtns) {
+                View v = findViewById(id);
+                if (v instanceof androidx.appcompat.widget.AppCompatImageButton) {
+                    androidx.appcompat.widget.AppCompatImageButton b = (androidx.appcompat.widget.AppCompatImageButton) v;
+                    b.setBackground(ThemeManager.buttonDrawable(this, isNight));
+                    b.setImageTintList(ColorStateList.valueOf(accent));
                 }
             }
 
@@ -656,10 +680,9 @@ public class MainActivity extends AppCompatActivity {
                 if (tv != null) tv.setTextColor(primaryText);
             }
 
-            // Accent Values
-            boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
-            int valueColor = isNight ? accent : primaryText;
-            int faderIconTint = isNight ? accent : primaryText;
+            // Accent Values: ALWAYS ACCENT in Day and Night modes
+            int valueColor = accent;
+            int faderIconTint = accent;
             int[] accentValues = {
                 R.id.tv_pwr_db, R.id.tv_sub_db,
                 R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
@@ -684,32 +707,35 @@ public class MainActivity extends AppCompatActivity {
                 if (tv != null) tv.setTextColor(secondaryText);
             }
 
-            // Fader Buttons
-            int[] faderArrows = {
+            // Action Buttons styling (fader arrows, volume buttons, plus, minus, center, apply)
+            int[] actionButtons = {
                 R.id.btn_fader_fr_plus, R.id.btn_fader_fr_minus,
-                R.id.btn_fader_lr_plus, R.id.btn_fader_lr_minus
-            };
-            for (int id : faderArrows) {
-                ImageView iv = findViewById(id);
-                if (iv != null) iv.setImageTintList(ColorStateList.valueOf(faderIconTint));
-            }
-
-            // Power / Sub Buttons
-            int[] subButtons = {
+                R.id.btn_fader_lr_plus, R.id.btn_fader_lr_minus,
                 R.id.btn_pwr_vol_plus, R.id.btn_pwr_vol_minus,
-                R.id.btn_plus, R.id.btn_minus
+                R.id.btn_plus, R.id.btn_minus,
+                R.id.btn_center, R.id.btn_apply
             };
-            for (int id : subButtons) {
+            for (int id : actionButtons) {
                 View btn = findViewById(id);
-                if (btn instanceof TextView) {
-                    ((TextView) btn).setTextColor(valueColor);
+                if (btn != null) {
+                    btn.setBackground(ThemeManager.buttonDrawable(this, isNight));
+                    if (btn instanceof ImageView) {
+                        ((ImageView) btn).setImageTintList(ColorStateList.valueOf(faderIconTint));
+                    } else if (btn instanceof TextView) {
+                        ((TextView) btn).setTextColor(valueColor);
+                    }
                 }
             }
 
-            // Bottom Navigation Bar
+            // Bottom Navigation Dock with rounded top corners
+            View bottomBar = findViewById(R.id.bottom_navigation_bar);
+            if (bottomBar != null) {
+                bottomBar.setBackground(ThemeManager.dockBackground(this, isNight));
+                bottomBar.setPadding(0, (int) (4 * density), 0, (int) (2 * density));
+            }
             BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
             if (bottomNav != null) {
-                ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this);
+                ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this, isNight);
                 bottomNav.setItemIconTintList(navCsl);
                 bottomNav.setItemTextColor(navCsl);
                 bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));

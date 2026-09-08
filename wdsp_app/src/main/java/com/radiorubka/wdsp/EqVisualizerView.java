@@ -106,16 +106,24 @@ public class EqVisualizerView extends View {
             yCoords[i] = drawStartY + drawHeight - (gains[i] / MAX_GAIN) * drawHeight;
         }
 
+        boolean isNight = ThemeManager.isNight(getContext());
+        int gridColorNormal = isNight ? Color.parseColor("#20FFFFFF") : Color.parseColor("#25000000");
+        int gridColorZero = androidx.core.graphics.ColorUtils.setAlphaComponent(accent, isNight ? 85 : 120);
+        int textNormalColor = ThemeManager.contrastText(
+                ThemeManager.textSecondary(getContext(), isNight),
+                isNight ? 0xFF12161B : 0xFFFFFFFF);
+        int verticalGridColor = isNight ? Color.parseColor("#12FFFFFF") : Color.parseColor("#15000000");
+
         // 2. Draw Horizontal Grid Lines and Left dB Labels
         for (int i = 0; i <= 12; i++) {
             float y = drawStartY + drawHeight - (i / MAX_GAIN) * drawHeight;
 
             // Highlight 0 dB line (i == 6) with slightly brighter line
             if (i == 6) {
-                gridPaint.setColor(Color.parseColor("#4D1FE7C4"));
+                gridPaint.setColor(gridColorZero);
                 gridPaint.setStrokeWidth(1.4f * density);
             } else {
-                gridPaint.setColor(Color.parseColor("#18FFFFFF"));
+                gridPaint.setColor(gridColorNormal);
                 gridPaint.setStrokeWidth(1.0f * density);
             }
 
@@ -127,14 +135,14 @@ public class EqVisualizerView extends View {
                 textPaint.setColor(accent);
                 textPaint.setFakeBoldText(true);
             } else {
-                textPaint.setColor(Color.parseColor("#808B9198"));
+                textPaint.setColor(textNormalColor);
                 textPaint.setFakeBoldText(false);
             }
             canvas.drawText(DB_LABELS[i], leftMargin - (6 * density), y + (textPaint.getTextSize() / 3f), textPaint);
         }
 
         // 3. Draw Vertical Slider Center Grid Tracks
-        gridPaint.setColor(Color.parseColor("#10FFFFFF"));
+        gridPaint.setColor(verticalGridColor);
         gridPaint.setStrokeWidth(1.0f * density);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             canvas.drawLine(xCoords[i], drawStartY, xCoords[i], gridBottom, gridPaint);
