@@ -123,7 +123,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
-    private TextView btnBatteryOpt, btnAudioPerm, btnLocationPerm, btnAppDetails;
+    private TextView btnBatteryOpt, btnNotificationPerm, btnAudioPerm, btnLocationPerm, btnAppDetails;
     private TextView btnBackupSettings, btnRestoreSettings;
 
     private ActivityResultLauncher<String[]> wallpaperPickerLauncher;
@@ -489,6 +489,7 @@ public class SettingsActivity extends AppCompatActivity {
         // Permissions & Backup
         btnBatteryOpt = findViewById(R.id.btn_battery_opt);
         btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
+        btnNotificationPerm = findViewById(R.id.btn_notification_perm);
         btnAudioPerm = findViewById(R.id.btn_audio_perm);
         btnLocationPerm = findViewById(R.id.btn_location_perm);
         btnAppDetails = findViewById(R.id.btn_app_details);
@@ -497,6 +498,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         TouchGlow.attach(btnBatteryOpt);
         TouchGlow.attach(btnOverlayPerm);
+        TouchGlow.attach(btnNotificationPerm);
         TouchGlow.attach(btnAudioPerm);
         TouchGlow.attach(btnLocationPerm);
         TouchGlow.attach(btnAppDetails);
@@ -509,6 +511,15 @@ public class SettingsActivity extends AppCompatActivity {
                     Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         });
+        if (btnNotificationPerm != null) {
+            btnNotificationPerm.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+                } catch (Throwable t) {
+                    Toaster.show(this, "Cannot open notification settings");
+                }
+            });
+        }
         btnAudioPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO));
         btnLocationPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION));
         btnAppDetails.setOnClickListener(v -> {

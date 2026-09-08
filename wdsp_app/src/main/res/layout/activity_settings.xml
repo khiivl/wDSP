@@ -1840,9 +1840,22 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_app_details"
-                        android:layout_width="match_parent"
+                        android:id="@+id/btn_notification_perm"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@drawable/rds_btn_bg"
+                        android:text="@string/perm_notification_access"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_app_details"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
                         android:background="@drawable/rds_btn_bg"

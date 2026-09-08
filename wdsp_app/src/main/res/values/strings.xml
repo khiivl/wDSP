@@ -215,6 +215,7 @@
 
     <string name="fm_controls_title">Calibration &amp; Correction Intensity</string>
     <string name="perm_battery_opt">Battery Optimization</string>
+    <string name="perm_notification_access">Notification Access (Metadata)</string>
     <string name="perm_audio_record">Audio Record (EQ)</string>
     <string name="perm_gps_location">GPS Location (GALA)</string>
     <string name="settings_backup_btn">Backup All Settings</string>

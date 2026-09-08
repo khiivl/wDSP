@@ -203,6 +203,7 @@
 
     <string name="fm_controls_title">Параметри калібрування та інтенсивність</string>
     <string name="perm_battery_opt">Оптимізація батареї</string>
+    <string name="perm_notification_access">Доступ до сповіщень (метадані)</string>
     <string name="perm_audio_record">Запис аудіо (EQ)</string>
     <string name="perm_gps_location">GPS Локація (GALA)</string>
     <string name="settings_backup_btn">Резервна копія налаштувань</string>

@@ -643,12 +643,12 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     }
 
     public boolean isPointInNowPlayingArt(float x, float y) {
-        if (nowPlaying == null || (!nowPlaying.hasTrack() && !nowPlaying.isPlaying())) return false;
+        if (nowPlaying == null) return false;
         float h = bottomInset;
         if (h <= 8) return false;
         float top = getHeight() - h;
-        if (y < top || y > getHeight()) return false;
-        float artRightBound = h * 2.2f;
+        if (y < top - h * 0.5f || y > getHeight()) return false;
+        float artRightBound = h * 2.8f;
         return x >= 0 && x <= artRightBound;
     }
 
@@ -1293,7 +1293,11 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     }
 
     private void drawNowPlaying(Canvas canvas, float viewW, float viewH) {
-        if (nowPlaying == null || (!nowPlaying.hasTrack() && !nowPlaying.isPlaying())) return;
+        if (nowPlaying == null) return;
+        String pkg = nowPlaying.playerPackage();
+        boolean hasContent = nowPlaying.hasTrack() || nowPlaying.isPlaying() || (pkg != null && !pkg.isEmpty());
+        if (!hasContent) return;
+
         float h = bottomInset;
         float top = viewH - h;
         float pad = h * 0.16f;
@@ -1302,7 +1306,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
         android.graphics.drawable.Drawable icon = nowPlaying.playerIcon();
         if (icon != null) {
-            float size = h * 0.46f;
+            float size = h * 0.54f;
             int left = Math.round(x);
             int iconTop = Math.round(top + (h - size) / 2f);
             icon.setBounds(left, iconTop, Math.round(left + size), Math.round(iconTop + size));
@@ -1313,7 +1317,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
         android.graphics.Bitmap art = nowPlaying.art();
         if (art != null && !art.isRecycled()) {
-            float size = h * 0.72f;
+            float size = h * 0.76f;
             android.graphics.RectF dst = new android.graphics.RectF(
                     x, top + (h - size) / 2f, x + size, top + (h + size) / 2f);
             infoPaint.setAlpha(Math.round(255 * alpha));
@@ -1327,7 +1331,11 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
             line = nowPlaying.line();
             artist = null;
         }
-        if (line == null) return;
+        if (line == null || line.trim().isEmpty()) {
+            line = nowPlaying.playerLabel();
+            artist = null;
+        }
+        if (line == null) line = "";
         float right = viewW - pad;
         if (line != null && right > x) {
             infoPaint.setTextSize(h * 0.38f);

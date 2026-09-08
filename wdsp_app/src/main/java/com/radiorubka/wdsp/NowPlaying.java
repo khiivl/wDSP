@@ -50,6 +50,9 @@ public final class NowPlaying {
 
     private static final String ACTION_QF_MUSIC = "com.qf.musicplayer.action.UPDATE_ACTION";
     private static final String EXTRA_QF_MUSIC = "com.qf.musicplayer.action.UPDATE_ACTION_musicinfo";
+    private static final String ACTION_LAUNCHER_MEDIA_INFO = "com.qf.action.UPDATE_MEDIA_INFO";
+    private static final String ACTION_LAUNCHER_MEDIA_STATE = "com.qf.action.UPDATE_MEDIA_STATE";
+    private static final String ACTION_LAUNCHER_RADIO_UPDATE = "com.qf.radio.update_action";
     private static final String PROP_AUDIO_SRC = "sys.qf.last_audio_src";
     private static final String PROP_RADIO_STATUS = "sys.qf.radio.status";
     private static final String PROP_SOUND_CHANNEL = "sys.qf.sound.channel";
@@ -178,6 +181,10 @@ public final class NowPlaying {
             if (sb.length() > 0) sb.append(" — ");
             sb.append(title);
         }
+        if (sb.length() == 0 && !notEmpty(artist)) {
+            String lbl = playerLabel();
+            return lbl != null ? lbl : "";
+        }
         return sb.length() == 0 ? null : sb.toString();
     }
 
@@ -195,7 +202,11 @@ public final class NowPlaying {
             if (sb.length() > 0) sb.append(" — ");
             sb.append(title);
         }
-        return sb.length() == 0 ? null : sb.toString();
+        if (sb.length() == 0) {
+            String lbl = playerLabel();
+            return lbl != null ? lbl : "";
+        }
+        return sb.toString();
     }
 
     /**
@@ -246,7 +257,7 @@ public final class NowPlaying {
      * moment the music stops.
      */
     public synchronized boolean hasTrack() {
-        return notEmpty(title) || notEmpty(artist) || notEmpty(album) || art != null;
+        return notEmpty(title) || notEmpty(artist) || notEmpty(album) || art != null || isRadioSource() || !currentPackage().isEmpty();
     }
 
     /**
@@ -256,7 +267,15 @@ public final class NowPlaying {
      * recording one player and nothing else starts with knowing which package that is.
      */
     public synchronized String playerPackage() {
-        return currentPackage();
+        String pkg = currentPackage();
+        if ("com.android.fmradio".equals(pkg)) {
+            try {
+                context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
+                return "com.kostyamat.fmradio";
+            } catch (Throwable ignored) {
+            }
+        }
+        return pkg;
     }
 
     private synchronized String currentPackage() {
@@ -264,7 +283,11 @@ public final class NowPlaying {
             return playerPackage;
         }
         String prop = HardwareProfile.systemProperty(PROP_AUDIO_SRC);
-        return prop == null ? "" : prop;
+        if (notEmpty(prop)) return prop;
+        prop = HardwareProfile.systemProperty("persist.sys.qf.last_audio_src");
+        if (notEmpty(prop)) return prop;
+        if (isRadioSource()) return "com.kostyamat.fmradio";
+        return "";
     }
 
     public static boolean isRadioPackage(String pkg) {
@@ -337,14 +360,27 @@ public final class NowPlaying {
             @Override
             public void onReceive(Context ctx, Intent intent) {
                 try {
-                    MusicInfoData info = intent.getParcelableExtra(EXTRA_QF_MUSIC);
-                    if (info != null) acceptBroadcast(info);
+                    String action = intent != null ? intent.getAction() : null;
+                    if (ACTION_QF_MUSIC.equals(action)) {
+                        MusicInfoData info = intent.getParcelableExtra(EXTRA_QF_MUSIC);
+                        if (info != null) acceptBroadcast(info);
+                    } else if (ACTION_LAUNCHER_MEDIA_INFO.equals(action)) {
+                        acceptLauncherMediaInfo(intent);
+                    } else if (ACTION_LAUNCHER_MEDIA_STATE.equals(action)) {
+                        acceptLauncherMediaState(intent);
+                    } else if (ACTION_LAUNCHER_RADIO_UPDATE.equals(action)) {
+                        acceptRadioUpdate(intent);
+                    }
                 } catch (Throwable t) {
-                    Log.w(TAG, "could not read the platform's now-playing parcel", t);
+                    Log.w(TAG, "could not read now-playing broadcast", t);
                 }
             }
         };
-        IntentFilter filter = new IntentFilter(ACTION_QF_MUSIC);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_QF_MUSIC);
+        filter.addAction(ACTION_LAUNCHER_MEDIA_INFO);
+        filter.addAction(ACTION_LAUNCHER_MEDIA_STATE);
+        filter.addAction(ACTION_LAUNCHER_RADIO_UPDATE);
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
@@ -352,9 +388,44 @@ public final class NowPlaying {
                 context.registerReceiver(receiver, filter);
             }
         } catch (Throwable t) {
-            Log.w(TAG, "could not listen for the platform's player", t);
+            Log.w(TAG, "could not listen for the platform player broadcasts", t);
             receiver = null;
         }
+    }
+
+    private synchronized void acceptLauncherMediaInfo(Intent intent) {
+        String t = intent.getStringExtra("media_title");
+        String a = intent.getStringExtra("media_artist");
+        String pkg = intent.getStringExtra("media_pkg");
+        long dur = intent.getLongExtra("media_duration", 0L);
+
+        if (notEmpty(pkg)) playerPackage = pkg;
+        if (notEmpty(t)) title = t;
+        if (notEmpty(a)) artist = a;
+        if (dur > 0) durationMs = dur;
+        playing = true;
+        notifyMetadataChanged();
+    }
+
+    private synchronized void acceptLauncherMediaState(Intent intent) {
+        boolean state = intent.getBooleanExtra("media_state", false);
+        long pos = intent.getLongExtra("media_position", 0L);
+        String pkg = intent.getStringExtra("media_pkg");
+        if (notEmpty(pkg)) playerPackage = pkg;
+        playing = state;
+        positionMs = pos;
+        positionTakenAt = System.currentTimeMillis();
+        notifyMetadataChanged();
+    }
+
+    private synchronized void acceptRadioUpdate(Intent intent) {
+        String name = intent.getStringExtra("com.qf.radio.update_action_name_key");
+        String freq = intent.getStringExtra("com.qf.radio.update_action_key");
+        playerPackage = "com.kostyamat.fmradio";
+        if (notEmpty(name)) artist = name;
+        if (notEmpty(freq)) title = freq;
+        playing = true;
+        notifyMetadataChanged();
     }
 
     private synchronized void acceptBroadcast(MusicInfoData info) {
@@ -610,14 +681,6 @@ public final class NowPlaying {
             playing = state.getState() == PlaybackState.STATE_PLAYING;
             positionMs = state.getPosition();
             positionTakenAt = System.currentTimeMillis();
-            if (isRadioPackage(playerPackage) && !playing) {
-                title = null;
-                artist = null;
-                album = null;
-                art = null;
-                artKey = null;
-                playerPackage = "";
-            }
             started = playing && !was;
             stopped = !playing && was;
         }

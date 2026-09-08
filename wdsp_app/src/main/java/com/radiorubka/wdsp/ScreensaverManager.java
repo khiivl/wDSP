@@ -844,13 +844,23 @@ public final class ScreensaverManager {
             return;
         }
 
-        // 2. Hit-test Now Playing album art / player icon (bottom-left)
+        // 2. Hit-test Now Playing album art / player icon / track line (bottom-left)
         float transportFromY = top + usableH * TRANSPORT_FROM;
         if (y >= transportFromY) {
-            float artRightBound = infoBarPx() * 2.2f;
-            NowPlaying np = NowPlaying.getInstance(context);
-            if (x <= artRightBound && (np.hasTrack() || np.isPlaying())) {
+            float infoH = infoBarPx();
+            boolean inInfoBar = y >= (screenH - Math.max(infoH * 1.5f, 60f * density));
+            boolean inArtZone = x <= Math.max(infoH * 2.5f, 160f * density);
+            boolean inNowPlayingLeft = inInfoBar && (x < screenW * 0.50f);
+
+            if (inArtZone || inNowPlayingLeft) {
+                NowPlaying np = NowPlaying.getInstance(context);
                 String pkg = np.playerPackage();
+                if (pkg == null || pkg.isEmpty() || "com.android.fmradio".equals(pkg)) {
+                    try {
+                        context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
+                        pkg = "com.kostyamat.fmradio";
+                    } catch (Throwable ignored) {}
+                }
                 if (pkg != null && !pkg.isEmpty()) {
                     try {
                         Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
@@ -1232,11 +1242,9 @@ public final class ScreensaverManager {
         return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
     }
 
-    /** The strip is for what we can honestly show: tracks/RDS when playing or with active metadata, nothing when idle. */
+    /** The strip is for what we can honestly show: tracks/RDS when playing or with active metadata, or active player info. */
     private NowPlaying infoSource() {
-        NowPlaying np = NowPlaying.getInstance(context);
-        if (!np.isPlaying() && !np.hasTrack()) return null;
-        return np;
+        return NowPlaying.getInstance(context);
     }
 
     /**

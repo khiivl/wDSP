@@ -476,7 +476,7 @@ public class StatusBarVisualizerManager {
         np.refresh();
         boolean isRadio = np.isRadioSource();
         visualizerView.setScreensaverState(true, isRadio || screensaverPaused);
-        visualizerView.setNowPlayingSource((np.hasTrack() || np.isPlaying()) ? np : null);
+        visualizerView.setNowPlayingSource(np);
         np.setMetadataListener(visualizerView::postInvalidate);
 
         layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
