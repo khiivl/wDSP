@@ -78,6 +78,8 @@ public final class SettingsAccordion {
             title.setBackground(null);
             title.setTextColor(textPrimary);
         }
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+        title.setTypeface(null, Typeface.BOLD);
         title.setPadding(padH, padV, padH, padV);
     }
 
@@ -163,7 +165,7 @@ public final class SettingsAccordion {
             int padH = Math.round(10 * ctx.getResources().getDisplayMetrics().density);
             int padV = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
             title.setPadding(padH, padV, padH, padV);
-            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f);
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
             title.setTypeface(null, Typeface.BOLD);
             TouchGlow.attach(title);
 
