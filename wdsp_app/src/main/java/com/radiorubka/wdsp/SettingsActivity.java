@@ -2654,14 +2654,38 @@ public class SettingsActivity extends AppCompatActivity {
         // Spinners popup styling
         if (layoutSpinnerStatusBarStyle != null && spinnerStatusBarStyle != null) {
             ThemeManager.tintTextInputLayout(layoutSpinnerStatusBarStyle, spinnerStatusBarStyle, accent, secondaryText, primaryText);
+            if (spinnerStatusBarStyle.isPopupShowing()) {
+                spinnerStatusBarStyle.dismissDropDown();
+                if (spinnerStatusBarStyle.getAdapter() instanceof android.widget.ArrayAdapter) {
+                    ((android.widget.ArrayAdapter<?>) spinnerStatusBarStyle.getAdapter()).notifyDataSetChanged();
+                }
+                spinnerStatusBarStyle.post(spinnerStatusBarStyle::showDropDown);
+            }
         }
         if (layoutSpinnerScreensaverStyle != null && spinnerScreensaverStyle != null) {
             ThemeManager.tintTextInputLayout(layoutSpinnerScreensaverStyle, spinnerScreensaverStyle, accent, secondaryText, primaryText);
+            if (spinnerScreensaverStyle.isPopupShowing()) {
+                spinnerScreensaverStyle.dismissDropDown();
+                if (spinnerScreensaverStyle.getAdapter() instanceof android.widget.ArrayAdapter) {
+                    ((android.widget.ArrayAdapter<?>) spinnerScreensaverStyle.getAdapter()).notifyDataSetChanged();
+                }
+                spinnerScreensaverStyle.post(spinnerScreensaverStyle::showDropDown);
+            }
         }
         AutoCompleteTextView roomSpinner = findViewById(R.id.spinner_room_mic_place);
         if (roomSpinner != null) {
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_room_mic_place), roomSpinner, accent, secondaryText, primaryText);
+            if (roomSpinner.isPopupShowing()) {
+                roomSpinner.dismissDropDown();
+                if (roomSpinner.getAdapter() instanceof android.widget.ArrayAdapter) {
+                    ((android.widget.ArrayAdapter<?>) roomSpinner.getAdapter()).notifyDataSetChanged();
+                }
+                roomSpinner.post(roomSpinner::showDropDown);
+            }
         }
+
+        // Live update active dialogs (notice, confirmation, input, options, etc.)
+        ThemedDialog.refreshActiveDialogs(this);
 
         // Update toggle and permission button states
         updateThemeModeButtons(ThemeManager.getThemeMode(this));

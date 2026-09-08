@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import com.qf.musicplayer.bean.MusicInfoData;
 
@@ -276,6 +277,88 @@ public final class NowPlaying {
             }
         }
         return pkg;
+    }
+
+    public void skipToPrevious() {
+        if (isRadioSource()) {
+            try {
+                context.sendBroadcast(new Intent("/customize/radio/pre"));
+                context.sendBroadcast(new Intent("com.kostyamat.radio.action.PREV"));
+            } catch (Throwable ignored) {}
+        }
+        MediaController mc = controller;
+        if (mc != null) {
+            try {
+                MediaController.TransportControls tc = mc.getTransportControls();
+                if (tc != null) {
+                    tc.skipToPrevious();
+                    return;
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "failed to skipToPrevious via TransportControls", t);
+            }
+        }
+        sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+    }
+
+    public void skipToNext() {
+        if (isRadioSource()) {
+            try {
+                context.sendBroadcast(new Intent("/customize/radio/next"));
+                context.sendBroadcast(new Intent("com.kostyamat.radio.action.NEXT"));
+            } catch (Throwable ignored) {}
+        }
+        MediaController mc = controller;
+        if (mc != null) {
+            try {
+                MediaController.TransportControls tc = mc.getTransportControls();
+                if (tc != null) {
+                    tc.skipToNext();
+                    return;
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "failed to skipToNext via TransportControls", t);
+            }
+        }
+        sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_NEXT);
+    }
+
+    public void playPause() {
+        if (isRadioSource()) {
+            try {
+                context.sendBroadcast(new Intent("/customize/radio/play_pause"));
+            } catch (Throwable ignored) {}
+        }
+        MediaController mc = controller;
+        if (mc != null) {
+            try {
+                MediaController.TransportControls tc = mc.getTransportControls();
+                if (tc != null) {
+                    if (isPlaying()) {
+                        tc.pause();
+                    } else {
+                        tc.play();
+                    }
+                    return;
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "failed to playPause via TransportControls", t);
+            }
+        }
+        sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+    }
+
+    public void sendMediaKeyFallback(int keyCode) {
+        try {
+            android.media.AudioManager am =
+                    (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return;
+            long now = android.os.SystemClock.uptimeMillis();
+            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0));
+            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0));
+        } catch (Throwable t) {
+            Log.w(TAG, "could not send fallback media key: " + keyCode, t);
+        }
     }
 
     private synchronized String currentPackage() {

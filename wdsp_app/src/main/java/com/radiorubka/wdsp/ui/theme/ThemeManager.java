@@ -695,8 +695,8 @@ public final class ThemeManager {
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             TextView tv = (TextView) super.getView(position, convertView, parent);
             boolean night = ThemeManager.isNight(context);
-            int cardBg = ThemeManager.cardBackground(context, night);
-            tv.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(context, night), cardBg));
+            int dropBg = night ? Color.parseColor("#F012161B") : Color.parseColor("#F8FFFFFF");
+            tv.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(context, night), dropBg));
             tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f);
             return tv;
         }

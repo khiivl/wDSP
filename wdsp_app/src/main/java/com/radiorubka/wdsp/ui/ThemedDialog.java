@@ -25,6 +25,12 @@ import androidx.core.graphics.ColorUtils;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 /**
  * Unified dialogs that strictly follow the app's palette and ThemeManager.
  *
@@ -39,6 +45,55 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 public final class ThemedDialog {
 
     public static final int DANGER = 0xFFE5352B;
+
+    private static final Map<Dialog, Runnable> sActiveDialogs = new WeakHashMap<>();
+
+    public static synchronized void registerActiveDialog(Dialog dialog, Runnable rebinder) {
+        if (dialog == null || rebinder == null) return;
+        sActiveDialogs.put(dialog, rebinder);
+    }
+
+    public static synchronized void refreshActiveDialogs(Context context) {
+        Iterator<Map.Entry<Dialog, Runnable>> it = sActiveDialogs.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Dialog, Runnable> entry = it.next();
+            Dialog d = entry.getKey();
+            Runnable r = entry.getValue();
+            if (d == null || !d.isShowing()) {
+                it.remove();
+                continue;
+            }
+            if (r != null) {
+                try {
+                    r.run();
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    private static final class MultiChoiceRowHolder {
+        final View row;
+        final CheckBox cb;
+        final TextView tv;
+        MultiChoiceRowHolder(View row, CheckBox cb, TextView tv) {
+            this.row = row;
+            this.cb = cb;
+            this.tv = tv;
+        }
+    }
+
+    private static final class OptionCardHolder {
+        final View card;
+        final TextView tvGlyph;
+        final TextView tvName;
+        final TextView tvDesc;
+        OptionCardHolder(View card, TextView tvGlyph, TextView tvName, TextView tvDesc) {
+            this.card = card;
+            this.tvGlyph = tvGlyph;
+            this.tvName = tvName;
+            this.tvDesc = tvDesc;
+        }
+    }
 
     public interface OnInputListener {
         void onInput(Dialog dialog, String text);
@@ -252,8 +307,9 @@ public final class ThemedDialog {
             root.setBackground(ThemeManager.roundedDrawable(context, 16, cardBg, border, 1.2f));
 
             // Title
+            TextView tvTitle = null;
             if (title != null && title.length() > 0) {
-                TextView tvTitle = new TextView(context);
+                tvTitle = new TextView(context);
                 tvTitle.setText(title);
                 tvTitle.setTextColor(textPrimary);
                 tvTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19);
@@ -263,8 +319,9 @@ public final class ThemedDialog {
             }
 
             // Message
+            TextView tvMsg = null;
             if (message != null && message.length() > 0) {
-                TextView tvMsg = new TextView(context);
+                tvMsg = new TextView(context);
                 tvMsg.setText(message);
                 tvMsg.setTextColor(textSecondary);
                 tvMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
@@ -283,6 +340,7 @@ public final class ThemedDialog {
             }
 
             // Multi-choice list
+            final List<MultiChoiceRowHolder> multiChoiceHolders = new ArrayList<>();
             if (multiChoiceItems != null && multiChoiceItems.length > 0) {
                 ScrollView sv = new ScrollView(context);
                 LinearLayout list = new LinearLayout(context);
@@ -314,6 +372,8 @@ public final class ThemedDialog {
                     tv.setPadding((int) dp(context, 8), 0, 0, 0);
                     row.addView(tv, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
+                    multiChoiceHolders.add(new MultiChoiceRowHolder(row, cb, tv));
+
                     row.setOnClickListener(v -> {
                         boolean next = !cb.isChecked();
                         cb.setChecked(next);
@@ -339,6 +399,9 @@ public final class ThemedDialog {
             }
 
             // Buttons row
+            TextView btnNeutral = null;
+            TextView btnNegative = null;
+            TextView btnPositive = null;
             boolean hasButtons = positiveText != null || negativeText != null || neutralText != null;
             if (hasButtons) {
                 LinearLayout btnRow = new LinearLayout(context);
@@ -347,7 +410,7 @@ public final class ThemedDialog {
                 btnRow.setPadding(0, (int) dp(context, 8), 0, 0);
 
                 if (neutralText != null) {
-                    TextView btnNeutral = new TextView(context);
+                    btnNeutral = new TextView(context);
                     btnNeutral.setText(neutralText);
                     btnNeutral.setTextColor(textMuted);
                     btnNeutral.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
@@ -361,7 +424,7 @@ public final class ThemedDialog {
                 }
 
                 if (negativeText != null) {
-                    TextView btnNegative = new TextView(context);
+                    btnNegative = new TextView(context);
                     btnNegative.setText(negativeText);
                     btnNegative.setTextColor(textSecondary);
                     btnNegative.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
@@ -378,7 +441,7 @@ public final class ThemedDialog {
                 }
 
                 if (positiveText != null) {
-                    TextView btnPositive = new TextView(context);
+                    btnPositive = new TextView(context);
                     btnPositive.setText(positiveText);
                     btnPositive.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
                     btnPositive.setTypeface(null, Typeface.BOLD);
@@ -402,6 +465,42 @@ public final class ThemedDialog {
                 root.addView(btnRow, new LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             }
+
+            final TextView finalTvTitle = tvTitle;
+            final TextView finalTvMsg = tvMsg;
+            final TextView finalBtnNeutral = btnNeutral;
+            final TextView finalBtnNegative = btnNegative;
+            final TextView finalBtnPositive = btnPositive;
+            final boolean finalIsPositiveDanger = isPositiveDanger;
+
+            registerActiveDialog(dialog, () -> {
+                Context c = root.getContext();
+                boolean night = ThemeManager.isNight(c);
+                int cBg = ThemeManager.cardBackground(c, night);
+                int bdr = ThemeManager.panelBorder(c, night);
+                int tPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(c, night), cBg);
+                int tSecondary = ThemeManager.contrastText(ThemeManager.textSecondary(c, night), cBg);
+                int tMuted = ThemeManager.textMuted(c, night);
+                int acc = ThemeManager.accent(c, night);
+                int onAcc = ThemeManager.onAccent(c, night);
+
+                root.setBackground(ThemeManager.roundedDrawable(c, 16, cBg, bdr, 1.2f));
+                if (finalTvTitle != null) finalTvTitle.setTextColor(tPrimary);
+                if (finalTvMsg != null) finalTvMsg.setTextColor(tSecondary);
+                for (MultiChoiceRowHolder h : multiChoiceHolders) {
+                    h.row.setBackground(ThemeManager.roundedDrawable(c, 10, cBg, bdr, 1f));
+                    h.cb.setButtonTintList(ColorStateList.valueOf(acc));
+                    h.tv.setTextColor(tPrimary);
+                }
+                if (finalBtnNeutral != null) finalBtnNeutral.setTextColor(tMuted);
+                if (finalBtnNegative != null) finalBtnNegative.setTextColor(tSecondary);
+                if (finalBtnPositive != null) {
+                    int posBg = finalIsPositiveDanger ? DANGER : acc;
+                    int posText = finalIsPositiveDanger ? Color.WHITE : onAcc;
+                    finalBtnPositive.setTextColor(posText);
+                    finalBtnPositive.setBackground(ThemeManager.roundedDrawable(c, 10, posBg, posBg, 0));
+                }
+            });
 
             dialog.setContentView(root);
             return dialog;
@@ -444,8 +543,9 @@ public final class ThemedDialog {
         int pad = (int) dp(context, 20);
         root.setPadding(pad, pad, pad, (int) dp(context, 14));
 
+        TextView tvTitle = null;
         if (title != null && !title.isEmpty()) {
-            TextView tvTitle = new TextView(context);
+            tvTitle = new TextView(context);
             tvTitle.setText(title);
             tvTitle.setTextColor(textPrimary);
             tvTitle.setTextSize(20);
@@ -453,8 +553,9 @@ public final class ThemedDialog {
             root.addView(tvTitle);
         }
 
+        TextView tvSub = null;
         if (subtitle != null && !subtitle.isEmpty()) {
-            TextView tvSub = new TextView(context);
+            tvSub = new TextView(context);
             tvSub.setText(subtitle);
             tvSub.setTextColor(textMuted);
             tvSub.setTextSize(14);
@@ -518,6 +619,28 @@ public final class ThemedDialog {
 
         root.addView(buttons, btnRowParams);
 
+        final TextView finalInputTitle = tvTitle;
+        final TextView finalInputSub = tvSub;
+        registerActiveDialog(dialog, () -> {
+            boolean night = ThemeManager.isNight(context);
+            int acc = ThemeManager.accent(context, night);
+            int onAcc = ThemeManager.onAccent(context, night);
+            int tPrimary = ThemeManager.textPrimary(context, night);
+            int tMuted = ThemeManager.textMuted(context, night);
+            int cBg = ThemeManager.cardBackground(context, night);
+            int bdr = ThemeManager.panelBorder(context, night);
+
+            root.setBackground(ThemeManager.roundedDrawable(context, 16, cBg, bdr, 1.2f));
+            if (finalInputTitle != null) finalInputTitle.setTextColor(tPrimary);
+            if (finalInputSub != null) finalInputSub.setTextColor(tMuted);
+            input.setTextColor(tPrimary);
+            input.setHintTextColor(tMuted);
+            input.setBackground(ThemeManager.roundedDrawable(context, 12, cBg, bdr, 1.5f));
+            btnCancel.setTextColor(tMuted);
+            btnOk.setTextColor(onAcc);
+            btnOk.setBackground(ThemeManager.roundedDrawable(context, 12, acc, acc, 0));
+        });
+
         dialog.setContentView(root);
         Window window = dialog.getWindow();
         if (window != null) {
@@ -557,8 +680,9 @@ public final class ThemedDialog {
         int pad = (int) dp(context, 20);
         root.setPadding(pad, pad, pad, (int) dp(context, 14));
 
+        TextView tvTitle = null;
         if (title != null && !title.isEmpty()) {
-            TextView tvTitle = new TextView(context);
+            tvTitle = new TextView(context);
             tvTitle.setText(title);
             tvTitle.setTextColor(textPrimary);
             tvTitle.setTextSize(20);
@@ -566,8 +690,9 @@ public final class ThemedDialog {
             root.addView(tvTitle);
         }
 
+        TextView tvMsg = null;
         if (message != null && !message.isEmpty()) {
-            TextView tvMsg = new TextView(context);
+            tvMsg = new TextView(context);
             tvMsg.setText(message);
             tvMsg.setTextColor(textSecondary);
             tvMsg.setTextSize(15);
@@ -615,6 +740,26 @@ public final class ThemedDialog {
 
         root.addView(buttons, btnRowParams);
 
+        final TextView finalConfTitle = tvTitle;
+        final TextView finalConfMsg = tvMsg;
+        registerActiveDialog(dialog, () -> {
+            boolean night = ThemeManager.isNight(context);
+            int acc = isDestructive ? DANGER : ThemeManager.accent(context, night);
+            int onAcc = isDestructive ? Color.WHITE : ThemeManager.onAccent(context, night);
+            int tPrimary = ThemeManager.textPrimary(context, night);
+            int tSecondary = ThemeManager.textSecondary(context, night);
+            int tMuted = ThemeManager.textMuted(context, night);
+            int cBg = ThemeManager.cardBackground(context, night);
+            int bdr = isDestructive ? DANGER : ThemeManager.panelBorder(context, night);
+
+            root.setBackground(ThemeManager.roundedDrawable(context, 16, cBg, bdr, 1.2f));
+            if (finalConfTitle != null) finalConfTitle.setTextColor(tPrimary);
+            if (finalConfMsg != null) finalConfMsg.setTextColor(tSecondary);
+            btnCancel.setTextColor(tMuted);
+            btnOk.setTextColor(onAcc);
+            btnOk.setBackground(ThemeManager.roundedDrawable(context, 12, acc, acc, 0));
+        });
+
         dialog.setContentView(root);
         Window window = dialog.getWindow();
         if (window != null) {
@@ -656,8 +801,9 @@ public final class ThemedDialog {
         tvTitle.setTypeface(null, Typeface.BOLD);
         root.addView(tvTitle);
 
+        TextView tvSub = null;
         if (subtitle != null && !subtitle.isEmpty()) {
-            TextView tvSub = new TextView(context);
+            tvSub = new TextView(context);
             tvSub.setText(subtitle);
             tvSub.setTextColor(textSecondary);
             tvSub.setTextSize(14);
@@ -673,6 +819,7 @@ public final class ThemedDialog {
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
+        final List<OptionCardHolder> cardHolders = new ArrayList<>();
         for (int i = 0; i < options.length; i++) {
             final int index = i;
             Option opt = options[i];
@@ -703,8 +850,9 @@ public final class ThemedDialog {
             tvName.setTypeface(null, Typeface.BOLD);
             texts.addView(tvName);
 
+            TextView tvDesc = null;
             if (opt.description != null && !opt.description.isEmpty()) {
-                TextView tvDesc = new TextView(context);
+                tvDesc = new TextView(context);
                 tvDesc.setText(opt.description);
                 tvDesc.setTextColor(textSecondary);
                 tvDesc.setTextSize(13);
@@ -713,21 +861,29 @@ public final class ThemedDialog {
                 texts.addView(tvDesc);
             }
 
+            cardHolders.add(new OptionCardHolder(card, tvGlyph, tvName, tvDesc));
+
             card.addView(texts, new LinearLayout.LayoutParams(0,
                     ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
             card.setOnTouchListener((v, event) -> {
+                boolean curNight = ThemeManager.isNight(context);
+                int curCardBg = ThemeManager.cardBackground(context, curNight);
+                int curBorder = ThemeManager.panelBorder(context, curNight);
+                int curAccent = ThemeManager.accent(context, curNight);
+                int curOnAccent = ThemeManager.onAccent(context, curNight);
+                int curPrimary = ThemeManager.textPrimary(context, curNight);
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        v.setBackground(ThemeManager.roundedDrawable(context, 14, accent, accent, 1.2f));
-                        tvGlyph.setTextColor(onAccent);
-                        tvName.setTextColor(onAccent);
+                        v.setBackground(ThemeManager.roundedDrawable(context, 14, curAccent, curAccent, 1.2f));
+                        tvGlyph.setTextColor(curOnAccent);
+                        tvName.setTextColor(curOnAccent);
                         return false;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        v.setBackground(ThemeManager.roundedDrawable(context, 14, cardBg, border, 1.2f));
-                        tvGlyph.setTextColor(accent);
-                        tvName.setTextColor(textPrimary);
+                        v.setBackground(ThemeManager.roundedDrawable(context, 14, curCardBg, curBorder, 1.2f));
+                        tvGlyph.setTextColor(curAccent);
+                        tvName.setTextColor(curPrimary);
                         return false;
                     default:
                         return false;
@@ -763,6 +919,28 @@ public final class ThemedDialog {
         buttons.addView(btnCancel);
         root.addView(buttons);
 
+        final TextView finalOptTitle = tvTitle;
+        final TextView finalOptSub = tvSub;
+        registerActiveDialog(dialog, () -> {
+            boolean night = ThemeManager.isNight(context);
+            int acc = ThemeManager.accent(context, night);
+            int tPrimary = ThemeManager.textPrimary(context, night);
+            int tSecondary = ThemeManager.textSecondary(context, night);
+            int cBg = ThemeManager.cardBackground(context, night);
+            int bdr = ThemeManager.panelBorder(context, night);
+
+            root.setBackground(ThemeManager.roundedDrawable(context, 16, cBg, bdr, 1.2f));
+            finalOptTitle.setTextColor(tPrimary);
+            if (finalOptSub != null) finalOptSub.setTextColor(tSecondary);
+            for (OptionCardHolder ch : cardHolders) {
+                ch.card.setBackground(ThemeManager.roundedDrawable(context, 14, cBg, bdr, 1.2f));
+                ch.tvGlyph.setTextColor(acc);
+                ch.tvName.setTextColor(tPrimary);
+                if (ch.tvDesc != null) ch.tvDesc.setTextColor(tSecondary);
+            }
+            btnCancel.setTextColor(ThemeManager.contrastText(tSecondary, cBg));
+        });
+
         dialog.setContentView(root);
         Window window = dialog.getWindow();
         if (window != null) {
@@ -795,8 +973,9 @@ public final class ThemedDialog {
         int pad = (int) dp(context, 20);
         root.setPadding(pad, pad, pad, pad);
 
+        TextView tvTitle = null;
         if (title != null && !title.isEmpty()) {
-            TextView tvTitle = new TextView(context);
+            tvTitle = new TextView(context);
             tvTitle.setText(title);
             tvTitle.setTextColor(textPrimary);
             tvTitle.setTextSize(20);
@@ -815,6 +994,7 @@ public final class ThemedDialog {
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
         root.addView(scroll, scrollParams);
 
+        final List<TextView> itemButtons = new ArrayList<>();
         for (int i = 0; i < items.length; i++) {
             final int index = i;
             TextView btn = new TextView(context);
@@ -825,15 +1005,21 @@ public final class ThemedDialog {
             btn.setBackground(ThemeManager.roundedDrawable(context, 12, cardBg, border, 1.2f));
 
             btn.setOnTouchListener((v, event) -> {
+                boolean curNight = ThemeManager.isNight(context);
+                int curCardBg = ThemeManager.cardBackground(context, curNight);
+                int curBorder = ThemeManager.panelBorder(context, curNight);
+                int curAccent = ThemeManager.accent(context, curNight);
+                int curOnAccent = ThemeManager.onAccent(context, curNight);
+                int curPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(context, curNight), curCardBg);
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        v.setBackground(ThemeManager.roundedDrawable(context, 12, accent, accent, 1.2f));
-                        btn.setTextColor(onAccent);
+                        v.setBackground(ThemeManager.roundedDrawable(context, 12, curAccent, curAccent, 1.2f));
+                        btn.setTextColor(curOnAccent);
                         return false;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        v.setBackground(ThemeManager.roundedDrawable(context, 12, cardBg, border, 1.2f));
-                        btn.setTextColor(textPrimary);
+                        v.setBackground(ThemeManager.roundedDrawable(context, 12, curCardBg, curBorder, 1.2f));
+                        btn.setTextColor(curPrimary);
                         return false;
                     default:
                         return false;
@@ -845,11 +1031,28 @@ public final class ThemedDialog {
                 if (listener != null) listener.onClick(dialog, index);
             });
 
+            itemButtons.add(btn);
+
             LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             if (i > 0) ip.topMargin = (int) dp(context, 8);
             list.addView(btn, ip);
         }
+
+        final TextView finalListTitle = tvTitle;
+        registerActiveDialog(dialog, () -> {
+            boolean night = ThemeManager.isNight(context);
+            int curCardBg = ThemeManager.cardBackground(context, night);
+            int curBorder = ThemeManager.panelBorder(context, night);
+            int curTextPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(context, night), curCardBg);
+
+            root.setBackground(ThemeManager.roundedDrawable(context, 16, curCardBg, curBorder, 1.2f));
+            if (finalListTitle != null) finalListTitle.setTextColor(curTextPrimary);
+            for (TextView b : itemButtons) {
+                b.setTextColor(curTextPrimary);
+                b.setBackground(ThemeManager.roundedDrawable(context, 12, curCardBg, curBorder, 1.2f));
+            }
+        });
 
         dialog.setContentView(root);
         Window window = dialog.getWindow();
@@ -883,8 +1086,9 @@ public final class ThemedDialog {
         int pad = (int) dp(context, 20);
         root.setPadding(pad, pad, pad, (int) dp(context, 14));
 
+        TextView tvTitle = null;
         if (title != null && !title.isEmpty()) {
-            TextView tvTitle = new TextView(context);
+            tvTitle = new TextView(context);
             tvTitle.setText(title);
             tvTitle.setTextColor(textPrimary);
             tvTitle.setTextSize(20);
@@ -906,8 +1110,9 @@ public final class ThemedDialog {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         btnRowParams.topMargin = (int) dp(context, 16);
 
+        TextView btnCancel = null;
         if (negativeBtn != null) {
-            TextView btnCancel = new TextView(context);
+            btnCancel = new TextView(context);
             btnCancel.setText(negativeBtn);
             btnCancel.setTextColor(textMuted);
             btnCancel.setTextSize(16);
@@ -920,8 +1125,9 @@ public final class ThemedDialog {
             buttons.addView(btnCancel);
         }
 
+        TextView btnOk = null;
         if (positiveBtn != null) {
-            TextView btnOk = new TextView(context);
+            btnOk = new TextView(context);
             btnOk.setText(positiveBtn);
             btnOk.setTextColor(onAccent);
             btnOk.setTextSize(16);
@@ -940,6 +1146,27 @@ public final class ThemedDialog {
         }
 
         root.addView(buttons, btnRowParams);
+
+        final TextView finalCustomTitle = tvTitle;
+        final TextView finalCustomCancel = btnCancel;
+        final TextView finalCustomOk = btnOk;
+        registerActiveDialog(dialog, () -> {
+            boolean night = ThemeManager.isNight(context);
+            int acc = ThemeManager.accent(context, night);
+            int onAcc = ThemeManager.onAccent(context, night);
+            int curPrimary = ThemeManager.textPrimary(context, night);
+            int curMuted = ThemeManager.textMuted(context, night);
+            int curCardBg = ThemeManager.cardBackground(context, night);
+            int curBorder = ThemeManager.panelBorder(context, night);
+
+            root.setBackground(ThemeManager.roundedDrawable(context, 16, curCardBg, curBorder, 1.2f));
+            if (finalCustomTitle != null) finalCustomTitle.setTextColor(curPrimary);
+            if (finalCustomCancel != null) finalCustomCancel.setTextColor(curMuted);
+            if (finalCustomOk != null) {
+                finalCustomOk.setTextColor(onAcc);
+                finalCustomOk.setBackground(ThemeManager.roundedDrawable(context, 12, acc, acc, 0));
+            }
+        });
 
         dialog.setContentView(root);
         Window window = dialog.getWindow();

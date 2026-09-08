@@ -752,6 +752,21 @@ public class MainActivity extends AppCompatActivity {
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText, primaryText);
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText, primaryText);
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText, primaryText);
+            AutoCompleteTextView[] dropdownSpinners = {
+                spinnerPresets, spinnerSubFreq, spinnerBassFreqFront, spinnerBassFreqRear
+            };
+            for (AutoCompleteTextView sp : dropdownSpinners) {
+                if (sp != null && sp.isPopupShowing()) {
+                    sp.dismissDropDown();
+                    if (sp.getAdapter() instanceof android.widget.ArrayAdapter) {
+                        ((android.widget.ArrayAdapter<?>) sp.getAdapter()).notifyDataSetChanged();
+                    }
+                    sp.post(sp::showDropDown);
+                }
+            }
+
+            // Live update active dialogs
+            com.radiorubka.wdsp.ui.ThemedDialog.refreshActiveDialogs(this);
 
             // 1. Main Page Titles (24sp BOLD - чітко видно з відстані 1 м на 7" екрані)
             int[] mainPageTitles = {
@@ -1423,12 +1438,6 @@ public class MainActivity extends AppCompatActivity {
                 if (!isUpdatingUi) autoSaveCurrent();
             });
         }
-        updateToggleStyle(switchLoud);
-        switchLoud.addOnCheckedChangeListener((bv, checked) -> {
-            updateToggleStyle(bv);
-            if (!isUpdatingUi) {
-                autoSaveCurrent();
-            } });
     }
 
     private void setupDelayControls() {
@@ -1505,6 +1514,20 @@ public class MainActivity extends AppCompatActivity {
         switchFmEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
+                if (checked && switchLoud != null && switchLoud.isChecked()) {
+                    switchLoud.setChecked(false);
+                }
+                autoSaveCurrent();
+                updateFmVisualizer();
+            }
+        });
+        updateToggleStyle(switchLoud);
+        switchLoud.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            if (!isUpdatingUi) {
+                if (checked && switchFmEnable != null && switchFmEnable.isChecked()) {
+                    switchFmEnable.setChecked(false);
+                }
                 autoSaveCurrent();
                 updateFmVisualizer();
             }

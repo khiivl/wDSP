@@ -763,7 +763,7 @@ public final class ScreensaverManager {
      * <p>They cost nothing that was being used. The sliders only ever act on a drag, so a tap in
      * the same place was doing nothing at all before - it just dismissed the screensaver.
      */
-    private static final float TRANSPORT_FROM = 0.66f;
+    private static final float TRANSPORT_FROM = 0.50f;
 
 
     private static final int GRAB_NONE = 0;
@@ -843,9 +843,19 @@ public final class ScreensaverManager {
         int screenW = strip.screenWidth();
         int screenH = strip.screenHeight();
         float top = strip.systemStatusBarHeight();
-        float usableH = Math.max(1f, screenH - top);
+        float bottom = screenH - infoBarPx();
+        float usableH = Math.max(1f, bottom - top);
 
-        // 1. Hit-test bottom-right style cycle button (visible sine wave icon)
+        // Lower half boundary: evenly distributed between the statusbar and the bottom stripe
+        float midY = top + usableH * 0.5f;
+
+        // 1. Taps in upper area dismiss the screensaver
+        if (y < midY) {
+            hide();
+            return;
+        }
+
+        // 2. Hit-test bottom-right style cycle button (visible sine wave icon)
         float density = context.getResources().getDisplayMetrics().density;
         float btnHitRadius = 38f * density;
         float btnCx = screenW - 32f * density;
@@ -858,62 +868,30 @@ public final class ScreensaverManager {
             return;
         }
 
-        // 2. Hit-test Now Playing album art / player icon / track line (bottom-left)
-        float transportFromY = top + usableH * TRANSPORT_FROM;
-        if (y >= transportFromY) {
-            float infoH = infoBarPx();
-            boolean inInfoBar = y >= (screenH - Math.max(infoH * 1.5f, 60f * density));
-            boolean inArtZone = x <= Math.max(infoH * 2.5f, 160f * density);
-            boolean inNowPlayingLeft = inInfoBar && (x < screenW * 0.50f);
+        // 3. Lower half transport controls (Track -, Play/Pause, Track +)
+        // Space free from edge sliders (left and right margins defined by EDGE_F)
+        float leftBound = screenW * EDGE_F;
+        float rightBound = screenW * (1.0f - EDGE_F);
+        float freeW = Math.max(1f, rightBound - leftBound);
+        float zoneW = freeW / 3.0f;
 
-            if (inArtZone || inNowPlayingLeft) {
-                NowPlaying np = NowPlaying.getInstance(context);
-                String pkg = np.playerPackage();
-                if (pkg == null || pkg.isEmpty() || "com.android.fmradio".equals(pkg)) {
-                    try {
-                        context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
-                        pkg = "com.kostyamat.fmradio";
-                    } catch (Throwable ignored) {}
-                }
-                if (pkg != null && !pkg.isEmpty()) {
-                    try {
-                        Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
-                        if (launch != null) {
-                            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(launch);
-                            hide();
-                            return;
-                        }
-                    } catch (Throwable t) {
-                        Log.w(TAG, "could not launch player: " + pkg, t);
-                    }
-                }
-            }
-        }
-
-        if (y < transportFromY) {
-            hide();
-            return;
-        }
-        int key;
+        NowPlaying np = NowPlaying.getInstance(context);
         int glyph;
-        if (x < screenW / 3f) {
-            key = KeyEvent.KEYCODE_MEDIA_PREVIOUS;
+        if (x < leftBound + zoneW) {
+            np.skipToPrevious();
             glyph = StatusBarVisualizerView.GLYPH_PREVIOUS;
-        } else if (x > screenW * 2f / 3f) {
-            key = KeyEvent.KEYCODE_MEDIA_NEXT;
+        } else if (x > leftBound + 2.0f * zoneW) {
+            np.skipToNext();
             glyph = StatusBarVisualizerView.GLYPH_NEXT;
         } else {
-            key = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
-            boolean playing = NowPlaying.getInstance(context).isPlaying();
+            boolean playing = np.isPlaying();
+            np.playPause();
             glyph = playing ? StatusBarVisualizerView.GLYPH_PAUSE : StatusBarVisualizerView.GLYPH_PLAY;
             ownPause = playing;
         }
-        sendMediaKey(key);
         strip.flashTransport(glyph);
         if (standIn != null) standIn.flashTransport(glyph);
-        // The screensaver stays. Skipping a track is not a reason to lose the picture, and being
-        // thrown back to the launcher for it is the thing these areas exist to avoid.
+        // The screensaver stays. Skipping a track is not a reason to lose the picture.
         resetIdleClock();
     }
 
