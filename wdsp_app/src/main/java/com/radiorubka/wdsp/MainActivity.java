@@ -883,14 +883,6 @@ public class MainActivity extends AppCompatActivity {
                 topBar.setBackground(ThemeManager.dockBackground(this, isNight));
                 topBar.setPadding(0, 0, 0, 0);
             }
-            View divLogo = findViewById(R.id.divider_preset_logo);
-            if (divLogo != null) {
-                divLogo.setBackgroundColor(border);
-            }
-            View divActions = findViewById(R.id.divider_preset_actions);
-            if (divActions != null) {
-                divActions.setBackgroundColor(border);
-            }
 
             // Bottom Navigation Dock with rounded pill shape
             View bottomBar = findViewById(R.id.bottom_navigation_bar);
