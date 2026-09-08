@@ -243,6 +243,7 @@
 
             <!-- Блок Шпалер -->
             <LinearLayout
+                android:id="@+id/card_settings_wallpaper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
@@ -439,6 +440,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_statusbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -782,6 +784,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_effects"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -1413,6 +1416,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_eq"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -1528,6 +1532,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_analyzer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -1790,6 +1795,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_permissions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -1943,6 +1949,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_screensaver"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -2406,6 +2413,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/card_settings_debug"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

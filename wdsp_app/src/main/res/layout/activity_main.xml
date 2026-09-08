@@ -2072,8 +2072,8 @@
                     android:id="@+id/card_gala_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:background="@drawable/ui_bg_layer"
+                    android:padding="0dp"
+                    android:background="@android:color/transparent"
                     android:orientation="vertical">
 
                     <!-- Title & Header Bar -->
@@ -2213,7 +2213,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:background="@drawable/bg_licence_card"
-                            android:padding="14dp"
+                            android:padding="10dp"
                             android:layout_marginEnd="6dp">
 
                             <TextView
@@ -2222,7 +2222,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:text="@string/gala_section_speed_gain"
-                                android:textSize="14sp"
+                                android:textSize="13.5sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_theme_aware"
                                 app:layout_constraintTop_toTopOf="parent"
@@ -2235,7 +2235,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/vol_step_every"
                                 app:layout_constraintTop_toBottomOf="@id/gala_c1_title"
                                 app:layout_constraintStart_toStartOf="parent" />
@@ -2246,7 +2246,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="14dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/standstill_speed"
                                 app:layout_constraintTop_toBottomOf="@id/seek_gala_increment"
                                 app:layout_constraintStart_toStartOf="parent" />
@@ -2257,7 +2257,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="14dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/max_adjustment"
                                 app:layout_constraintTop_toBottomOf="@id/seek_gala_minspeed"
                                 app:layout_constraintStart_toStartOf="parent" />
@@ -2396,7 +2396,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:background="@drawable/bg_licence_card"
-                            android:padding="14dp"
+                            android:padding="10dp"
                             android:layout_marginStart="6dp">
 
                             <TextView
@@ -2405,7 +2405,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:text="@string/gala_section_smoothing_sim"
-                                android:textSize="14sp"
+                                android:textSize="13.5sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_theme_aware"
                                 app:layout_constraintTop_toTopOf="parent"
@@ -2418,7 +2418,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/gala_fade_delay"
                                 app:layout_constraintTop_toBottomOf="@id/gala_c2_title"
                                 app:layout_constraintStart_toStartOf="parent" />
@@ -2429,7 +2429,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="14dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/gala_hold_timer"
                                 app:layout_constraintTop_toBottomOf="@id/seek_gala_fade_ms"
                                 app:layout_constraintStart_toStartOf="parent" />
@@ -2440,7 +2440,7 @@
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="14dp"
+                                android:layout_marginTop="6dp"
                                 android:text="@string/simulate_speed"
                                 app:layout_constraintTop_toBottomOf="@id/seek_gala_hold_ms"
                                 app:layout_constraintStart_toStartOf="parent" />
