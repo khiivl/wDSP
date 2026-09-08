@@ -53,6 +53,8 @@ public final class SettingsAccordion {
     private static int sTextPrimary = 0xFFFFFFFF;
     private static int sAccent = 0xFF1FE7C4;
 
+    private static boolean sNight = true;
+
     private static void setHeaderState(TextView title, View body, boolean open, int accent, int textPrimary) {
         if (body != null) {
             body.setVisibility(open ? View.VISIBLE : View.GONE);
@@ -66,14 +68,13 @@ public final class SettingsAccordion {
             title.setText((open ? "▾ " : "▸ ") + s);
         }
         Context ctx = title.getContext();
-        boolean night = ThemeManager.isNight(ctx);
         int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
         int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
         if (open) {
-            int openBg = ColorUtils.setAlphaComponent(accent, night ? 38 : 42);
-            title.setBackground(ThemeManager.roundedDrawable(ctx, 10f, openBg, accent, 1.2f));
-            int openText = night ? accent : 0xFF004D40;
-            title.setTextColor(openText);
+            int openBg = ColorUtils.setAlphaComponent(accent, sNight ? 30 : 25);
+            int openBorder = ColorUtils.setAlphaComponent(accent, sNight ? 75 : 60);
+            title.setBackground(ThemeManager.roundedDrawable(ctx, 12f, openBg, openBorder, 1.0f));
+            title.setTextColor(accent);
         } else {
             title.setBackground(null);
             title.setTextColor(textPrimary);
@@ -89,14 +90,17 @@ public final class SettingsAccordion {
     }
 
     public static void repaint(LinearLayout column, int textPrimary, int accent) {
-        repaint(column, textPrimary, accent,
-                ThemeManager.cardBackground(column.getContext()),
-                ThemeManager.panelBorder(column.getContext()));
+        repaint(column, textPrimary, accent, ThemeManager.isNight(column.getContext()));
     }
 
     public static void repaint(LinearLayout column, int textPrimary, int accent, int cardBg, int border) {
+        repaint(column, textPrimary, accent, ThemeManager.isNight(column.getContext()));
+    }
+
+    public static void repaint(LinearLayout column, int textPrimary, int accent, boolean night) {
         sTextPrimary = textPrimary;
         sAccent = accent;
+        sNight = night;
         Context ctx = column.getContext();
         for (int i = 0; i < column.getChildCount(); i++) {
             View v = column.getChildAt(i);
@@ -117,7 +121,7 @@ public final class SettingsAccordion {
                         cId == R.id.card_settings_permissions ||
                         cId == R.id.card_settings_screensaver ||
                         cId == R.id.card_settings_debug) {
-                        child.setBackground(ThemeManager.roundedDrawable(ctx, 14f, cardBg, border, 1.2f));
+                        child.setBackground(ThemeManager.cardDrawable(ctx, night, 16f));
                     }
                 }
             }
@@ -238,8 +242,9 @@ public final class SettingsAccordion {
             View titleView = column.getChildAt(i);
             if (titleView instanceof TextView && titleView.getId() == headerId && (i + 1) < column.getChildCount()) {
                 View targetBody = column.getChildAt(i + 1);
-                int acc = sAccent != 0 ? sAccent : com.radiorubka.wdsp.ui.theme.ThemeManager.accent(ctx, false);
-                int prim = sTextPrimary != 0 ? sTextPrimary : com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(ctx, false);
+                boolean night = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(ctx);
+                int acc = sAccent != 0 ? sAccent : com.radiorubka.wdsp.ui.theme.ThemeManager.accent(ctx, night);
+                int prim = sTextPrimary != 0 ? sTextPrimary : com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(ctx, night);
 
                 for (int j = 0; j < column.getChildCount(); j++) {
                     View otherTitle = column.getChildAt(j);

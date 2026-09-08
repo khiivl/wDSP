@@ -30,13 +30,16 @@ public final class TouchGlow {
         v.setOnTouchListener((view, e) -> {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    view.setPressed(true);
                     flash(view, true);
                     break;
                 case MotionEvent.ACTION_UP:
+                    view.setPressed(false);
                     view.performClick();
                     flash(view, false);
                     break;
                 case MotionEvent.ACTION_CANCEL:
+                    view.setPressed(false);
                     flash(view, false);
                     break;
                 default:
@@ -48,13 +51,20 @@ public final class TouchGlow {
 
     public static void flash(View v, boolean down) {
         if (v == null) return;
+        float density = v.getResources().getDisplayMetrics().density;
+        float shift = 2.0f * density;
         if (down) {
             UI.removeCallbacksAndMessages(v);
+            v.setTranslationX(shift);
+            v.setTranslationY(shift);
             applyGlow(v, true);
             return;
         }
-        UI.postAtTime(() -> applyGlow(v, false), v,
-                android.os.SystemClock.uptimeMillis() + AFTERGLOW_MS);
+        UI.postAtTime(() -> {
+            v.setTranslationX(0f);
+            v.setTranslationY(0f);
+            applyGlow(v, false);
+        }, v, android.os.SystemClock.uptimeMillis() + AFTERGLOW_MS);
     }
 
     private static void applyGlow(View v, boolean on) {

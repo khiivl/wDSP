@@ -1125,16 +1125,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void stylePill(TextView btn, boolean active, int accent, int border) {
         if (btn == null) return;
-        int cardBg = editNight ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
-        int btnBg = active ? accent : cardBg;
-        int btnBorder = active ? accent : (editNight ? Color.parseColor("#2a3540") : Color.parseColor("#c5cdd3"));
-
+        btn.setBackground(ThemeManager.pillDrawable(this, active, editNight, 14f, accent, border));
         int userFg = active ? ThemeManager.onAccent(this, editNight) : ThemeManager.textPrimary(this, editNight);
-        int fg = ThemeManager.contrastText(userFg, btnBg);
-
-        btn.setBackground(ThemeManager.roundedDrawable(this, 14, btnBg, btnBorder, 1.2f));
+        int substrate = ThemeManager.dockSubstrateColor(this, editNight);
+        int fg = active ? userFg : ThemeManager.contrastText(userFg, substrate);
         btn.setTextColor(fg);
         btn.setTypeface(null, android.graphics.Typeface.BOLD);
+        btn.getPaint().setFakeBoldText(true);
         btn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
     }
 
@@ -2443,8 +2440,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void applyTheme() {
         int accent = ThemeManager.accent(this, editNight);
-        int primaryText = ThemeManager.textPrimary(this, editNight);
-        int secondaryText = ThemeManager.textSecondary(this, editNight);
+        int substrateColor = ThemeManager.dockSubstrateColor(this, editNight);
+        int primaryText = ThemeManager.contrastText(ThemeManager.textPrimary(this, editNight), substrateColor);
+        int secondaryText = ThemeManager.contrastText(ThemeManager.textSecondary(this, editNight), substrateColor);
 
         if (rootSettings != null) {
             rootSettings.setBackground(ThemeManager.wallpaperBackground(this, editNight));
@@ -2633,8 +2631,9 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
-        // Section cards dynamic styling (ensures light theme substrate is white, not dark)
         int cardBg = ThemeManager.cardBackground(this, editNight);
+
+        // Section cards dynamic styling with FrostedGlassDrawable
         int[] settingsCards = {
             R.id.card_settings_wallpaper,
             R.id.card_settings_statusbar,
@@ -2648,7 +2647,7 @@ public class SettingsActivity extends AppCompatActivity {
         for (int id : settingsCards) {
             View card = findViewById(id);
             if (card != null) {
-                card.setBackground(ThemeManager.roundedDrawable(this, 14f, cardBg, border, 1.2f));
+                card.setBackground(ThemeManager.cardDrawable(this, editNight, 14f));
             }
         }
 
@@ -2707,7 +2706,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButtons();
 
         // Repaint accordion headers last so open headers always remain highlighted in accent
-        SettingsAccordion.repaint(settingsColumn, primaryText, accent, cardBg, border);
+        SettingsAccordion.repaint(settingsColumn, primaryText, accent, editNight);
         enforceBoldHierarchy(rootSettings);
     }
 

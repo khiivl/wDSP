@@ -224,8 +224,23 @@ public class SegmentedPillNavView extends HorizontalScrollView {
             mHolders.add(holder);
 
             final int itemId = item.getItemId();
-            itemView.setOnClickListener(v -> {
-                setSelectedItemId(itemId);
+            itemView.setOnTouchListener((v, event) -> {
+                switch (event.getActionMasked()) {
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        v.setTranslationX(1.5f * density);
+                        v.setTranslationY(2.0f * density);
+                        break;
+                    case android.view.MotionEvent.ACTION_UP:
+                        v.setTranslationX(0f);
+                        v.setTranslationY(0f);
+                        setSelectedItemId(itemId);
+                        break;
+                    case android.view.MotionEvent.ACTION_CANCEL:
+                        v.setTranslationX(0f);
+                        v.setTranslationY(0f);
+                        break;
+                }
+                return true;
             });
 
             mContentContainer.addView(itemView);

@@ -514,8 +514,8 @@ public class MainActivity extends AppCompatActivity {
         int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
         int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
 
-        int unselectedBg = isNight ? Color.parseColor("#12161B") : Color.parseColor("#FFFFFF");
-        int unselectedBorder = border;
+        int unselectedBg = isNight ? Color.parseColor("#18FFFFFF") : Color.parseColor("#26FFFFFF");
+        int unselectedBorder = isNight ? border : Color.parseColor("#38000000");
 
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
@@ -613,8 +613,9 @@ public class MainActivity extends AppCompatActivity {
 
             int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this, isNight);
             int onAccent = com.radiorubka.wdsp.ui.theme.ThemeManager.onAccent(this, isNight);
-            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
-            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this, isNight);
+            int substrateColor = com.radiorubka.wdsp.ui.theme.ThemeManager.dockSubstrateColor(this, isNight);
+            int primaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight), substrateColor);
+            int secondaryText = com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this, isNight), substrateColor);
             int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
             float density = getResources().getDisplayMetrics().density;
 
@@ -639,18 +640,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Main EQ Card styling
+            // Main EQ Card styling with FrostedGlassDrawable
             View cardMainEq = findViewById(R.id.card_main_eq);
             if (cardMainEq != null) {
-                int eqBorder = ThemeManager.panelBorder(this, isNight);
-                int eqBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
-                cardMainEq.setBackground(ThemeManager.roundedDrawable(this, 18f, eqBg, eqBorder, 1.2f));
+                cardMainEq.setBackground(ThemeManager.cardDrawable(this, isNight, 18f));
             }
 
-            // All cards styling across tabs
-            int cardBg = isNight ? Color.parseColor("#D912161B") : Color.parseColor("#E6FFFFFF");
-            int badgeBg = isNight ? Color.parseColor("#12161B") : Color.parseColor("#FFFFFF");
-
+            // All cards styling across tabs with FrostedGlassDrawable
             int[] cards16dp = {
                 R.id.card_fm_controls,
                 R.id.card_delays_precise,
@@ -662,23 +658,23 @@ public class MainActivity extends AppCompatActivity {
             for (int id : cards16dp) {
                 View c = findViewById(id);
                 if (c != null) {
-                    c.setBackground(ThemeManager.roundedDrawable(this, 16f, cardBg, border, 1.2f));
+                    c.setBackground(ThemeManager.cardDrawable(this, isNight, 16f));
                 }
             }
 
             View fmVis = findViewById(R.id.fm_visualizer_container);
             if (fmVis != null) {
-                fmVis.setBackground(ThemeManager.roundedDrawable(this, 14f, cardBg, border, 1.2f));
+                fmVis.setBackground(ThemeManager.cardDrawable(this, isNight, 14f));
             }
 
             View fmBadge = findViewById(R.id.layout_fm_status_badge);
             if (fmBadge != null) {
-                fmBadge.setBackground(ThemeManager.roundedDrawable(this, 10f, badgeBg, border, 1.2f));
+                fmBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
             View galaBadge = findViewById(R.id.layout_gala_status_badge);
             if (galaBadge != null) {
-                galaBadge.setBackground(ThemeManager.roundedDrawable(this, 10f, badgeBg, border, 1.2f));
+                galaBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
             // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
@@ -1013,6 +1009,7 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_fr_minus));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_fader_fr_plus));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_apply));
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_auto_preset));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_add_preset));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_rename_preset));
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(findViewById(R.id.btn_delete_preset));

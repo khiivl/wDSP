@@ -511,7 +511,7 @@ public final class ThemeManager {
             if (night) {
                 cachedDockSubstrateColor = ColorUtils.blendARGB(avgChroma, Color.parseColor("#101418"), 0.55f);
             } else {
-                cachedDockSubstrateColor = ColorUtils.blendARGB(avgChroma, Color.parseColor("#FFFFFF"), 0.65f);
+                cachedDockSubstrateColor = ColorUtils.blendARGB(avgChroma, Color.parseColor("#FFFFFF"), 0.50f);
             }
 
             return chroma;
@@ -561,7 +561,7 @@ public final class ThemeManager {
 
     public static Drawable dockBackground(Context ctx, boolean night) {
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
-        int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#B3FFFFFF");
+        int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
 
         // Концентрична кривизна: радіус кнопки 18dp + рівномірний відступ 5dp = 23dp
@@ -591,9 +591,22 @@ public final class ThemeManager {
     }
 
     public static Drawable cardDrawable(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#D912161B") : Color.parseColor("#E6FFFFFF");
-        int border = panelBorder(ctx, night);
-        return roundedDrawable(ctx, 16f, bg, border, 1.2f);
+        return cardDrawable(ctx, night, 16f);
+    }
+
+    public static Drawable cardDrawable(Context ctx, boolean night, float cornerRadiusDp) {
+        int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
+        int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
+        int substrateColor = dockSubstrateColor(ctx, night);
+        return new FrostedGlassDrawable(
+                ctx,
+                night,
+                cornerRadiusDp,
+                1.2f,
+                chroma,
+                baseGlass,
+                substrateColor
+        );
     }
 
     public static Drawable buttonDrawable(Context ctx) {
@@ -601,9 +614,30 @@ public final class ThemeManager {
     }
 
     public static Drawable buttonDrawable(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#18FFFFFF") : Color.parseColor("#0D000000");
-        int border = panelBorder(ctx, night);
-        return roundedDrawable(ctx, 10f, bg, border, 1.2f);
+        return buttonDrawable(ctx, night, 14f);
+    }
+
+    public static Drawable buttonDrawable(Context ctx, boolean night, float cornerRadiusDp) {
+        int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
+        int baseGlass = night ? Color.parseColor("#40101419") : Color.parseColor("#4DFFFFFF");
+        int substrateColor = dockSubstrateColor(ctx, night);
+        return new FrostedGlassDrawable(
+                ctx,
+                night,
+                cornerRadiusDp,
+                1.2f,
+                chroma,
+                baseGlass,
+                substrateColor
+        );
+    }
+
+    public static Drawable pillDrawable(Context ctx, boolean active, boolean night, float cornerRadiusDp, int accent, int border) {
+        if (active) {
+            return FrostedGlassDrawable.createAccentPill(ctx, night, cornerRadiusDp, accent);
+        } else {
+            return buttonDrawable(ctx, night, cornerRadiusDp);
+        }
     }
 
     public static ColorStateList bottomNavColorStateList(Context ctx) {
@@ -629,9 +663,18 @@ public final class ThemeManager {
     }
 
     public static Drawable dropdownBackground(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#F012161B") : Color.parseColor("#F8FFFFFF");
-        int border = panelBorder(ctx, night);
-        return roundedDrawable(ctx, 14f, bg, border, 1.2f);
+        int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
+        int baseGlass = night ? Color.parseColor("#99101419") : Color.parseColor("#80FFFFFF");
+        int substrateColor = dockSubstrateColor(ctx, night);
+        return new FrostedGlassDrawable(
+                ctx,
+                night,
+                14f,
+                1.2f,
+                chroma,
+                baseGlass,
+                substrateColor
+        );
     }
 
     public static class ThemedDropdownAdapter<T> extends android.widget.ArrayAdapter<T> {

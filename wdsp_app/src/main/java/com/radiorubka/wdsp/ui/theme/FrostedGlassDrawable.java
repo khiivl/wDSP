@@ -37,12 +37,27 @@ public class FrostedGlassDrawable extends Drawable {
 
     private final Paint mBasePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mChromaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mDepthPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mSpecularPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final Path mClipPath = new Path();
     private final RectF mRectF = new RectF();
     private final RectF mStrokeRectF = new RectF();
+    private final RectF mShadowRectF = new RectF();
+
+    private boolean mEnableShadow = true;
+    private boolean mIsPressed = false;
+    private final boolean mIsSolidAccent;
+
+    public static FrostedGlassDrawable createAccentPill(@NonNull Context context,
+                                                        boolean isNight,
+                                                        float cornerRadiusDp,
+                                                        int accentColor) {
+        return new FrostedGlassDrawable(context, isNight, cornerRadiusDp, 1.2f,
+                new int[]{accentColor}, accentColor, accentColor, true, true);
+    }
 
     public FrostedGlassDrawable(@NonNull Context context,
                                 boolean isNight,
@@ -51,6 +66,29 @@ public class FrostedGlassDrawable extends Drawable {
                                 @NonNull int[] chromaticColors,
                                 int baseGlassColor,
                                 int substrateColor) {
+        this(context, isNight, cornerRadiusDp, strokeWidthDp, chromaticColors, baseGlassColor, substrateColor, true, false);
+    }
+
+    public FrostedGlassDrawable(@NonNull Context context,
+                                boolean isNight,
+                                float cornerRadiusDp,
+                                float strokeWidthDp,
+                                @NonNull int[] chromaticColors,
+                                int baseGlassColor,
+                                int substrateColor,
+                                boolean enableShadow) {
+        this(context, isNight, cornerRadiusDp, strokeWidthDp, chromaticColors, baseGlassColor, substrateColor, enableShadow, false);
+    }
+
+    public FrostedGlassDrawable(@NonNull Context context,
+                                boolean isNight,
+                                float cornerRadiusDp,
+                                float strokeWidthDp,
+                                @NonNull int[] chromaticColors,
+                                int baseGlassColor,
+                                int substrateColor,
+                                boolean enableShadow,
+                                boolean isSolidAccent) {
         this.mContext = context.getApplicationContext();
         this.mIsNight = isNight;
         this.mCornerRadiusDp = cornerRadiusDp;
@@ -58,17 +96,54 @@ public class FrostedGlassDrawable extends Drawable {
         this.mChromaticColors = chromaticColors;
         this.mBaseGlassColor = baseGlassColor;
         this.mSubstrateColor = substrateColor;
+        this.mEnableShadow = enableShadow;
+        this.mIsSolidAccent = isSolidAccent;
 
         mBasePaint.setStyle(Paint.Style.FILL);
         mBasePaint.setColor(baseGlassColor);
 
         mChromaPaint.setStyle(Paint.Style.FILL);
-        // 40% напівпрозорість для м'якого хроматичного світіння шпалер
-        mChromaPaint.setAlpha(mIsNight ? 100 : 80);
+        // Хроматичне світіння шпалер: 100 вночі, 110 вдень для чистої передачі пастельного спектру
+        mChromaPaint.setAlpha(mIsNight ? 100 : 110);
+
+        mDepthPaint.setStyle(Paint.Style.FILL);
 
         mSpecularPaint.setStyle(Paint.Style.FILL);
 
         mStrokePaint.setStyle(Paint.Style.STROKE);
+
+        mShadowPaint.setStyle(Paint.Style.FILL);
+    }
+
+    public void setEnableShadow(boolean enable) {
+        if (this.mEnableShadow != enable) {
+            this.mEnableShadow = enable;
+            invalidateSelf();
+        }
+    }
+
+    @Override
+    public boolean isStateful() {
+        return true;
+    }
+
+    @Override
+    protected boolean onStateChange(int[] state) {
+        boolean pressed = false;
+        if (state != null) {
+            for (int s : state) {
+                if (s == android.R.attr.state_pressed) {
+                    pressed = true;
+                    break;
+                }
+            }
+        }
+        if (mIsPressed != pressed) {
+            mIsPressed = pressed;
+            invalidateSelf();
+            return true;
+        }
+        return super.onStateChange(state);
     }
 
     @Override
@@ -76,41 +151,69 @@ public class FrostedGlassDrawable extends Drawable {
         super.onBoundsChange(bounds);
         if (bounds.isEmpty()) return;
 
-        mRectF.set(bounds);
         float density = mContext.getResources().getDisplayMetrics().density;
+        if (mEnableShadow) {
+            float padX = 1.5f * density;
+            float padYTop = 1.0f * density;
+            float padYBottom = 3.5f * density;
+            mRectF.set(bounds.left + padX, bounds.top + padYTop, bounds.right - padX, bounds.bottom - padYBottom);
+        } else {
+            mRectF.set(bounds);
+        }
+
         float strokePx = Math.max(1f, mStrokeWidthDp * density);
         float strokeHalf = strokePx / 2f;
         mStrokePaint.setStrokeWidth(strokePx);
 
-        mStrokeRectF.set(bounds.left + strokeHalf, bounds.top + strokeHalf,
-                bounds.right - strokeHalf, bounds.bottom - strokeHalf);
+        mStrokeRectF.set(mRectF.left + strokeHalf, mRectF.top + strokeHalf,
+                mRectF.right - strokeHalf, mRectF.bottom - strokeHalf);
 
         // 1. Горизонтальний хроматичний спектр шпалер
         if (mChromaticColors.length > 1) {
             LinearGradient chromaGrad = new LinearGradient(
-                    bounds.left, bounds.top, bounds.right, bounds.top,
+                    mRectF.left, mRectF.top, mRectF.right, mRectF.top,
                     mChromaticColors, null, Shader.TileMode.CLAMP
             );
             mChromaPaint.setShader(chromaGrad);
         } else if (mChromaticColors.length == 1) {
             mChromaPaint.setColor(mChromaticColors[0]);
-            mChromaPaint.setAlpha(mIsNight ? 100 : 80);
+            mChromaPaint.setAlpha(mIsNight ? 100 : 110);
         }
 
         // 2. Верхній оптичний відблиск скла (Specular Sheen)
-        int specTop = mIsNight ? Color.argb(90, 255, 255, 255) : Color.argb(140, 255, 255, 255);
+        // Вночі 90 альфа над темним склом, вдень делікатний кришталевий блік 70 альфа (не вибілює скло)
+        int specTop = mIsNight ? Color.argb(90, 255, 255, 255) : Color.argb(70, 255, 255, 255);
         int specBottom = Color.argb(0, 255, 255, 255);
+        float sheenHeight = mRectF.top + (mRectF.height() * (mIsNight ? 0.45f : 0.35f));
         LinearGradient specGrad = new LinearGradient(
-                bounds.left, bounds.top, bounds.left, bounds.top + (bounds.height() * 0.45f),
+                mRectF.left, mRectF.top, mRectF.left, sheenHeight,
                 specTop, specBottom, Shader.TileMode.CLAMP
         );
         mSpecularPaint.setShader(specGrad);
 
-        // 3. Світлова 3D-фаска облямівки скла (світло зверху, темніший кант знизу)
-        int borderTop = mIsNight ? Color.argb(100, 255, 255, 255) : Color.argb(160, 255, 255, 255);
-        int borderBottom = ThemeManager.panelBorder(mContext, mIsNight);
+        // 3. Об'ємна фізична глибина скла в денному режимі (заломлення нижньої грані)
+        if (!mIsNight) {
+            LinearGradient depthGrad = new LinearGradient(
+                    mRectF.left, mRectF.top, mRectF.left, mRectF.bottom,
+                    new int[]{ Color.argb(0, 20, 30, 45), Color.argb(22, 20, 30, 45) },
+                    new float[]{ 0.35f, 1.0f },
+                    Shader.TileMode.CLAMP
+            );
+            mDepthPaint.setShader(depthGrad);
+        }
+
+        // 4. Світлова 3D-фаска облямівки скла (кришталевий кант зверху, контрастне темне заломлення знизу)
+        int borderTop;
+        int borderBottom;
+        if (mIsSolidAccent) {
+            borderTop = Color.argb(130, 255, 255, 255);
+            borderBottom = Color.argb(70, 0, 0, 0);
+        } else {
+            borderTop = mIsNight ? Color.argb(100, 255, 255, 255) : Color.argb(220, 255, 255, 255);
+            borderBottom = mIsNight ? ThemeManager.panelBorder(mContext, true) : Color.argb(65, 25, 40, 60);
+        }
         LinearGradient strokeGrad = new LinearGradient(
-                bounds.left, bounds.top, bounds.left, bounds.bottom,
+                mRectF.left, mRectF.top, mRectF.left, mRectF.bottom,
                 borderTop, borderBottom, Shader.TileMode.CLAMP
         );
         mStrokePaint.setShader(strokeGrad);
@@ -124,24 +227,53 @@ public class FrostedGlassDrawable extends Drawable {
         float density = mContext.getResources().getDisplayMetrics().density;
         float radiusPx = mCornerRadiusDp * density;
 
+        // 0. Soft drop shadow (drawn only when floating, hidden when pressed into the surface)
+        if (mEnableShadow && !mIsPressed) {
+            int shCol1 = mIsNight ? Color.argb(85, 0, 0, 0) : Color.argb(50, 20, 30, 45);
+            int shCol2 = mIsNight ? Color.argb(50, 0, 0, 0) : Color.argb(30, 20, 30, 45);
+            int shCol3 = mIsNight ? Color.argb(22, 0, 0, 0) : Color.argb(14, 20, 30, 45);
+
+            // Pass 1: Outer ambient halo
+            mShadowRectF.set(mRectF.left, mRectF.top + 2.0f * density, mRectF.right + 1.2f * density, mRectF.bottom + 3.2f * density);
+            mShadowPaint.setColor(shCol3);
+            canvas.drawRoundRect(mShadowRectF, radiusPx + 1.2f * density, radiusPx + 1.2f * density, mShadowPaint);
+
+            // Pass 2: Mid diffuse shadow
+            mShadowRectF.set(mRectF.left, mRectF.top + 1.2f * density, mRectF.right + 0.6f * density, mRectF.bottom + 2.0f * density);
+            mShadowPaint.setColor(shCol2);
+            canvas.drawRoundRect(mShadowRectF, radiusPx + 0.5f * density, radiusPx + 0.5f * density, mShadowPaint);
+
+            // Pass 3: Core occlusion contact shadow
+            mShadowRectF.set(mRectF.left, mRectF.top + 0.8f * density, mRectF.right, mRectF.bottom + 1.2f * density);
+            mShadowPaint.setColor(shCol1);
+            canvas.drawRoundRect(mShadowRectF, radiusPx, radiusPx, mShadowPaint);
+        }
+
         mClipPath.reset();
         mClipPath.addRoundRect(mRectF, radiusPx, radiusPx, Path.Direction.CW);
 
         canvas.save();
         canvas.clipPath(mClipPath);
 
-        // 1. Напівпрозоре тіло скла
+        // 1. Напівпрозоре кришталеве тіло скла (або насичений акцент)
         canvas.drawRect(mRectF, mBasePaint);
 
-        // 2. Компіляція хроматичного потоку шпалер
-        canvas.drawRect(mRectF, mChromaPaint);
+        if (!mIsSolidAccent) {
+            // 2. Компіляція хроматичного потоку шпалер
+            canvas.drawRect(mRectF, mChromaPaint);
 
-        // 3. Верхній дзеркальний відблиск
+            // 3. Фізична об'ємна глибина (тільки вдень)
+            if (!mIsNight) {
+                canvas.drawRect(mRectF, mDepthPaint);
+            }
+        }
+
+        // 4. Верхній дзеркальний відблиск
         canvas.drawRect(mRectF, mSpecularPaint);
 
         canvas.restore();
 
-        // 4. Оптична скляна рамка (beveled rim)
+        // 5. Оптична скляна рамка (beveled rim)
         float strokeRadius = Math.max(0, radiusPx - (mStrokeWidthDp * density / 2f));
         canvas.drawRoundRect(mStrokeRectF, strokeRadius, strokeRadius, mStrokePaint);
     }
