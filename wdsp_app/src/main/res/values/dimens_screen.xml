@@ -22,7 +22,7 @@
     <!-- Band captions under the sliders, and other fine print. -->
     <dimen name="eq_small_text">9sp</dimen>
     <!-- Section titles inside the cards. -->
-    <dimen name="card_title_text">15sp</dimen>
+    <dimen name="card_title_text">18sp</dimen>
     <!-- Padding inside the rows of the equaliser card. -->
     <dimen name="eq_pad">4dp</dimen>
     <!-- Height of the boxed visualizers on the loudness tab. -->

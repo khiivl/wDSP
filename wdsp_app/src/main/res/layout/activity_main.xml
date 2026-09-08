@@ -888,7 +888,9 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/padding_standard">
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:paddingHorizontal="@dimen/padding_standard">
 
                     <androidx.constraintlayout.widget.Guideline
                         android:id="@+id/guideline_delays"
@@ -903,19 +905,19 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toStartOf="@+id/guideline_delays"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         android:background="@drawable/ui_bg_layer"
-                        android:padding="16dp"
-                        app:layout_constraintWidth_max="@dimen/control_block_max_width">
+                        android:padding="12dp">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_precise_enable"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/toggle_height"
-                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:layout_height="38dp"
+                            android:layout_marginBottom="8dp"
                             android:paddingHorizontal="14dp"
                             android:paddingVertical="0dp"
                             android:minWidth="0dp"
@@ -930,7 +932,7 @@
                             android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/spatial_correction"
                             android:textAllCaps="false"
-                            android:textSize="@dimen/eq_value_text"
+                            android:textSize="@dimen/text_size_header"
                             android:textStyle="bold"
                             android:checkable="true" />
 
@@ -938,7 +940,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -984,7 +986,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1030,7 +1032,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1076,7 +1078,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
+                            android:layout_marginBottom="8dp"
                             tools:ignore="TooManyViews">
 
                             <TextView
@@ -1124,7 +1126,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="0dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1174,19 +1176,19 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:layout_marginStart="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/guideline_delays"
                         app:layout_constraintTop_toTopOf="parent"
                         android:background="@drawable/ui_bg_layer"
-                        android:padding="16dp"
-                        app:layout_constraintWidth_max="@dimen/control_block_max_width">
+                        android:padding="12dp">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_legacy_enable"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/toggle_height"
-                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:layout_height="38dp"
+                            android:layout_marginBottom="8dp"
                             android:paddingHorizontal="14dp"
                             android:paddingVertical="0dp"
                             android:minWidth="0dp"
@@ -1201,7 +1203,7 @@
                             android:backgroundTint="@color/card_bg_theme_aware"
                             android:text="@string/surround_mode"
                             android:textAllCaps="false"
-                            android:textSize="@dimen/eq_value_text"
+                            android:textSize="@dimen/text_size_header"
                             android:textStyle="bold"
                             android:checkable="true" />
 
@@ -1209,7 +1211,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1255,7 +1257,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1301,7 +1303,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1347,7 +1349,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1393,7 +1395,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginBottom="0dp">
 
                             <TextView
                                 style="@style/TextLabel"
@@ -1490,11 +1492,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="@dimen/padding_standard"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="16dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:background="@drawable/ui_bg_layer"
-                        app:layout_constraintWidth_max="@dimen/control_block_max_width">
+                        android:background="@drawable/ui_bg_layer">
 
                         <TextView
                             android:id="@+id/tv_front_bass_title"

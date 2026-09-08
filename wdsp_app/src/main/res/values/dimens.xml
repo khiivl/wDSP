@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Text Sizes Hierarchy: Title (20sp) -> Subtitle/Header (15sp bold) -> Label/Slider (13sp) -> Desc/Note (12sp) -->
-    <dimen name="text_size_title">20sp</dimen>
-    <dimen name="text_size_header">15sp</dimen>
-    <dimen name="text_size_subtitle">15sp</dimen>
-    <dimen name="text_size_label">13sp</dimen>
-    <dimen name="text_size_value">13sp</dimen>
-    <dimen name="text_size_small">12sp</dimen>
-    <dimen name="text_size_note">12sp</dimen>
-    <dimen name="text_size_log">11sp</dimen>
-    <dimen name="text_size_button">14sp</dimen>
+    <!-- Text Sizes Hierarchy: Title (24sp) -> Subtitle/Header (18sp bold) -> Label/Slider (16sp) -> Desc/Note (14sp) -->
+    <dimen name="text_size_title">24sp</dimen>
+    <dimen name="text_size_header">18sp</dimen>
+    <dimen name="text_size_subtitle">18sp</dimen>
+    <dimen name="text_size_label">16sp</dimen>
+    <dimen name="text_size_value">16sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_note">14sp</dimen>
+    <dimen name="text_size_log">12sp</dimen>
+    <dimen name="text_size_button">16sp</dimen>
 
     <!-- Paddings and Margins -->
     <dimen name="padding_standard">16dp</dimen>
