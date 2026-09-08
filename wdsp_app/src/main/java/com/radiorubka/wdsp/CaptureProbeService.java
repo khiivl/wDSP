@@ -233,7 +233,7 @@ public class CaptureProbeService extends Service {
         }
         return new Notification.Builder(this, CHANNEL)
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("capture probe")
+                .setContentText(getString(R.string.notif_capture_probe))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
     }

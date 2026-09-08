@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
 //                Log.e("MainActivity", "RECEIVED GALA UPDATE INTENT");
                 float speed = intent.getFloatExtra("speed", 0.0f);
                 int offset = intent.getIntExtra("waveOffset", 0);
-                if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
+                if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), getString(R.string.speed_kmh_float_format), speed));
                 if (tvGalaOffset != null) tvGalaOffset.setText(String.format(Locale.getDefault(), "+%d", offset));
             }
             // Sub gain was adjusted by McuService (e.g. via an external HID key daemon
@@ -1502,7 +1502,7 @@ public class MainActivity extends AppCompatActivity {
         if (switchFmSubComp.isChecked()) {
             tvSubOffsetVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), currentFmSubOffset));
             float subPot = currentFmSubOffset + seekSubGain.getValue();
-            tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : "OK");
+            tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : getString(R.string.btn_ok));
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
     }
@@ -1595,7 +1595,7 @@ public class MainActivity extends AppCompatActivity {
     private void addNewPreset() {
         int c = 1;
         String n;
-        String prefix = getString(R.string.default_preset_name).split(" ")[0] + " ";
+        String prefix = getString(R.string.default_preset_name_hint) + " ";
         do {
             n = prefix + c++;
         } while (presetNames.contains(n));
@@ -2503,7 +2503,7 @@ public class MainActivity extends AppCompatActivity {
             String sourcePresetName = (String) importedMap.get("preset_name_label");
             String newPresetName = sourcePresetName;
             if (newPresetName == null || newPresetName.trim().isEmpty()) {
-                newPresetName = "Imported_" + (System.currentTimeMillis() / 1000);
+                newPresetName = getString(R.string.preset_imported_prefix) + "_" + (System.currentTimeMillis() / 1000);
             }
 
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);

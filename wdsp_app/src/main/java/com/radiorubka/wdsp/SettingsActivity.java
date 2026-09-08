@@ -58,6 +58,7 @@ import com.radiorubka.wdsp.ui.views.HueWheelView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -565,7 +566,7 @@ public class SettingsActivity extends AppCompatActivity {
                 try {
                     startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
                 } catch (Throwable t) {
-                    Toaster.show(this, "Cannot open notification settings");
+                    Toaster.show(this, getString(R.string.toast_cannot_open_notification_settings));
                 }
             });
         }
@@ -1171,7 +1172,7 @@ public class SettingsActivity extends AppCompatActivity {
         tvStatusBarAlpha.setText(getString(R.string.lbl_percent_fmt, alpha));
         if (labelStatusBarAlpha != null) {
             String themeName = getString(editNight ? R.string.settings_theme_night : R.string.settings_theme_day);
-            labelStatusBarAlpha.setText(getString(R.string.status_bar_alpha) + " (" + themeName + ")");
+            labelStatusBarAlpha.setText(getString(R.string.status_bar_alpha_theme, getString(R.string.status_bar_alpha), themeName));
         }
 
         isUpdatingStyleUi = true;
@@ -2131,7 +2132,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void restoreAllSettings(Uri uri) {
         try (InputStream is = getContentResolver().openInputStream(uri)) {
-            if (is == null) return;
+            if (is == null) throw new IOException(getString(R.string.backup_cannot_open_stream));
             JsonObject root = parseBackupFromStream(is);
             handleParsedBackup(root);
         } catch (Exception e) {
@@ -2159,7 +2160,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void handleParsedBackup(JsonObject root) {
         if (root == null) {
-            throw new IllegalArgumentException("Invalid backup: empty content");
+            throw new IllegalArgumentException(getString(R.string.backup_invalid_empty));
         }
         if (root.has("is_single_preset") && root.get("is_single_preset").getAsBoolean()) {
             ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
@@ -2167,7 +2168,7 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
         if (!root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
-            throw new IllegalArgumentException("Invalid wDSP backup format");
+            throw new IllegalArgumentException(getString(R.string.backup_invalid_format));
         }
 
         boolean hasPresets = root.has("eq_preferences")
@@ -2193,7 +2194,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (root != null && root.has("is_single_preset") && root.get("is_single_preset").getAsBoolean()) {
                 throw new IllegalArgumentException(getString(R.string.toast_restore_is_preset_hint));
             }
-            throw new IllegalArgumentException("Invalid wDSP backup format");
+            throw new IllegalArgumentException(getString(R.string.backup_invalid_format));
         }
         applyRestoredData(root, true);
     }

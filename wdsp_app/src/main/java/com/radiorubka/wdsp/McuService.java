@@ -604,7 +604,7 @@ public class McuService extends Service implements LocationListener {
         applyCurrentSettings();
 
         if (showToast && isBootStart) {
-            mainHandler.post(() -> Toaster.show(getApplicationContext(), "Preset Applied: " + currentPresetName));
+            mainHandler.post(() -> Toaster.show(getApplicationContext(), getString(R.string.toast_preset_applied, currentPresetName)));
         }
     }
 
@@ -644,8 +644,8 @@ public class McuService extends Service implements LocationListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("wDSP Active")
-                .setContentText("Foreground EQ processing enabled")
+                .setContentTitle(getString(R.string.notif_service_title))
+                .setContentText(getString(R.string.notif_service_text))
                 .setSmallIcon(android.R.drawable.ic_menu_compass)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOngoing(true)
@@ -1872,7 +1872,7 @@ public class McuService extends Service implements LocationListener {
 
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, "wDSP Background Service", NotificationManager.IMPORTANCE_LOW);
+                CHANNEL_ID, getString(R.string.notif_channel_name), NotificationManager.IMPORTANCE_LOW);
         channel.setShowBadge(false);
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm != null) nm.createNotificationChannel(channel);
