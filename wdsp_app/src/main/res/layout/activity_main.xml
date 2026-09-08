@@ -87,7 +87,8 @@
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="14dp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:paddingVertical="4dp">
 
                         <!-- Preset dropdown capsule (Hint = Preset) -->
