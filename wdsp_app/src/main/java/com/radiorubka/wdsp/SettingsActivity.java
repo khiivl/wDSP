@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -16,7 +17,9 @@ import android.os.PowerManager;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -2373,7 +2376,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         TextView title = findViewById(R.id.title);
-        if (title != null) title.setTextColor(primaryText);
+        if (title != null) {
+            title.setTextColor(primaryText);
+            title.setTypeface(null, Typeface.BOLD);
+            title.getPaint().setFakeBoldText(true);
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f);
+        }
 
         // Section labels & headers (accordion headers are styled exclusively by SettingsAccordion.repaint)
         int[] primaryLabels = {
@@ -2382,17 +2390,23 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_vis_oscillo_persistence,
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
             R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
+            R.id.label_eq_vis_mode,
             R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
             R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
             R.id.label_status_bar_palettes,
             R.id.label_agc_main, R.id.label_agc_bar,
             R.id.label_latency_trim, R.id.label_sync_measure,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
-            R.id.label_screensaver_enable
+            R.id.label_screensaver_enable, R.id.label_screensaver_apps
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
-            if (tv != null) tv.setTextColor(primaryText);
+            if (tv != null) {
+                tv.setTextColor(primaryText);
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.getPaint().setFakeBoldText(true);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            }
         }
 
         // Secondary / Row labels
@@ -2420,7 +2434,12 @@ public class SettingsActivity extends AppCompatActivity {
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
-            if (tv != null) tv.setTextColor(secondaryText);
+            if (tv != null) {
+                tv.setTextColor(secondaryText);
+                tv.setTypeface(null, Typeface.NORMAL);
+                tv.getPaint().setFakeBoldText(false);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
+            }
         }
 
         // Value text views: use primaryText for readability & WCAG contrast
@@ -2545,6 +2564,23 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Repaint accordion headers last so open headers always remain highlighted in accent
         SettingsAccordion.repaint(settingsColumn, primaryText, accent, cardBg, border);
+        enforceBoldHierarchy(rootSettings);
+    }
+
+    private void enforceBoldHierarchy(View root) {
+        if (root == null) return;
+        if (root instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) root;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                enforceBoldHierarchy(vg.getChildAt(i));
+            }
+        } else if (root instanceof TextView) {
+            TextView tv = (TextView) root;
+            Typeface tf = tv.getTypeface();
+            if (tf != null && tf.isBold()) {
+                tv.getPaint().setFakeBoldText(true);
+            }
+        }
     }
 
     /** Re-applies the accent to every button that performs an action rather than toggling one. */

@@ -558,14 +558,23 @@ public class MainActivity extends AppCompatActivity {
             int id = tv.getId();
             if (id != View.NO_ID && valueIds.contains(id)) {
                 tv.setTextColor(valueColor);
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.getPaint().setFakeBoldText(true);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             } else if (id != View.NO_ID && titleIds.contains(id)) {
                 tv.setTextColor(primaryText);
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.getPaint().setFakeBoldText(true);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             } else {
                 CharSequence text = tv.getText();
                 if (text != null && "|".equals(text.toString().trim())) {
                     tv.setTextColor(border);
                 } else {
                     tv.setTextColor(secondaryText);
+                    tv.setTypeface(null, Typeface.NORMAL);
+                    tv.getPaint().setFakeBoldText(false);
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
                 }
             }
         }
@@ -736,20 +745,51 @@ public class MainActivity extends AppCompatActivity {
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_front), spinnerBassFreqFront, accent, secondaryText, primaryText);
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_bass_freq_rear), spinnerBassFreqRear, accent, secondaryText, primaryText);
 
-            // Primary Section Titles & Headers
-            int[] primaryTitles = {
-                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.fm_controls_title,
-                R.id.tv_delays_title, R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
-                R.id.tv_gala_title, R.id.gala_c1_title, R.id.gala_c2_title
+            // 1. Main Page Titles (24sp BOLD - чітко видно з відстані 1 м на 7" екрані)
+            int[] mainPageTitles = {
+                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title
             };
-            for (int id : primaryTitles) {
+            for (int id : mainPageTitles) {
                 TextView tv = findViewById(id);
-                if (tv != null) tv.setTextColor(primaryText);
+                if (tv != null) {
+                    tv.setTextColor(primaryText);
+                    tv.setTypeface(null, Typeface.BOLD);
+                    tv.getPaint().setFakeBoldText(true);
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f);
+                }
+            }
+
+            // 2. Subtitles / Section Headers (18sp BOLD - однаковий розмір, трохи більший за елементи)
+            int[] subTitles = {
+                R.id.fm_controls_title, R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
+                R.id.gala_c1_title, R.id.gala_c2_title
+            };
+            for (int id : subTitles) {
+                TextView tv = findViewById(id);
+                if (tv != null) {
+                    tv.setTextColor(primaryText);
+                    tv.setTypeface(null, Typeface.BOLD);
+                    tv.getPaint().setFakeBoldText(true);
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+                }
+            }
+
+            // 3. Secondary Labels / Elements below (16sp NORMAL - без болду, комфортно для очей)
+            int[] secondaryLabels = {
+                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength
+            };
+            for (int id : secondaryLabels) {
+                TextView tv = findViewById(id);
+                if (tv != null) {
+                    tv.setTextColor(secondaryText);
+                    tv.setTypeface(null, Typeface.NORMAL);
+                    tv.getPaint().setFakeBoldText(false);
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+                }
             }
 
             // Data Values: formatted numbers/results MUST use primaryText for readability & contrast
             int valueColor = primaryText;
-            int faderIconTint = secondaryText;
             int[] dataValues = {
                 R.id.tv_pwr_db, R.id.tv_sub_db,
                 R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
@@ -762,23 +802,20 @@ public class MainActivity extends AppCompatActivity {
             };
             for (int id : dataValues) {
                 TextView tv = findViewById(id);
-                if (tv != null) tv.setTextColor(valueColor);
-            }
-
-            // Secondary Labels
-            int[] secondaryLabels = {
-                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength
-            };
-            for (int id : secondaryLabels) {
-                TextView tv = findViewById(id);
-                if (tv != null) tv.setTextColor(secondaryText);
+                if (tv != null) {
+                    tv.setTextColor(valueColor);
+                    tv.setTypeface(null, Typeface.BOLD);
+                    tv.getPaint().setFakeBoldText(true);
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+                }
             }
 
             // Recursive styling for all cards and containers to guarantee consistent contrast
             java.util.Set<Integer> valueIdSet = new java.util.HashSet<>();
             for (int id : dataValues) valueIdSet.add(id);
             java.util.Set<Integer> titleIdSet = new java.util.HashSet<>();
-            for (int id : primaryTitles) titleIdSet.add(id);
+            for (int id : mainPageTitles) titleIdSet.add(id);
+            for (int id : subTitles) titleIdSet.add(id);
 
             int[] containersToStyle = {
                 R.id.layout_fm_status_badge,
