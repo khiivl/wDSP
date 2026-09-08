@@ -263,12 +263,7 @@ public class StatusBarVisualizerManager {
     }
 
     public int systemStatusBarHeight() {
-        int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resId > 0) {
-            int h = context.getResources().getDimensionPixelSize(resId);
-            if (h > 0) return h;
-        }
-        return 0;
+        return getStatusBarHeight();
     }
 
     public int maxOffsetY() {
