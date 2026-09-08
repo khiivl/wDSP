@@ -480,6 +480,43 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:text="@string/built_in_loudness_legacy" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_loud"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="#20121820"
+                            android:text=""
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/trim_highs" />
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fatigue_enable"
@@ -1599,30 +1636,6 @@
                             app:layout_constraintBottom_toBottomOf="@id/imageView" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/switch_loud"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/toggle_height"
-                        android:layout_marginBottom="@dimen/margin_standard"
-                        android:paddingHorizontal="14dp"
-                        android:paddingVertical="0dp"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:insetLeft="0dp"
-                        android:insetRight="0dp"
-                        app:cornerRadius="10dp"
-                        app:strokeWidth="1.2dp"
-                        app:strokeColor="@color/panel_border_theme_aware"
-                        android:backgroundTint="#20121820"
-                        android:text="@string/built_in_loudness_legacy"
-                        android:textAllCaps="false"
-                        android:textSize="@dimen/eq_value_text"
-                        android:textStyle="bold"
-                        android:checkable="true" />
 
                 </LinearLayout>
             </ScrollView>

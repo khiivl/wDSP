@@ -651,6 +651,31 @@
                             android:checkable="true" />
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_loud"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="@color/card_bg_theme_aware"
+                            android:text="@string/built_in_loudness_legacy"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
+
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_fatigue_enable"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
@@ -1790,31 +1815,6 @@
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/switch_loud"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/toggle_height"
-                            android:layout_marginTop="16dp"
-                            android:layout_gravity="center_horizontal"
-                            android:paddingHorizontal="14dp"
-                            android:paddingVertical="0dp"
-                            android:minWidth="0dp"
-                            android:minHeight="0dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:insetLeft="0dp"
-                            android:insetRight="0dp"
-                            app:cornerRadius="10dp"
-                            app:strokeWidth="1.2dp"
-                            app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="@color/card_bg_theme_aware"
-                            android:text="@string/built_in_loudness_legacy"
-                            android:textAllCaps="false"
-                            android:textSize="@dimen/eq_value_text"
-                            android:textStyle="bold"
-                            android:checkable="true" />
 
                     </LinearLayout>
 
