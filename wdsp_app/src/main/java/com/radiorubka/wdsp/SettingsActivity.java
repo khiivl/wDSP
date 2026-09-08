@@ -37,12 +37,12 @@ import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
 import com.google.gson.GsonBuilder;
@@ -101,7 +101,7 @@ public class SettingsActivity extends AppCompatActivity {
     private View bgSolidHue, bgSolidVal, bgStatusBarHue;
 
     // Status Bar Visualizer & Effects
-    private SwitchCompat switchStatusBarVis, switchStatusBarNormalization;
+    private TextView btnStatusBarVisToggle, btnStatusBarNormalizationToggle;
     private Slider seekStatusBarWidth, seekStatusBarPos;
     private Slider seekStatusBarHeight, seekStatusBarOffsetY, seekStatusBarAlpha;
     private TextView tvStatusBarHeight, tvStatusBarOffsetY, tvStatusBarAlpha, labelStatusBarAlpha;
@@ -116,7 +116,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnThemeSpectrum, btnThemeSolidHue, btnThemeAutoDayNight, btnThemeEqGroups;
     private TextView btnThemeWhite, btnThemeBlack, btnThemeFire, btnThemeNeon;
     private TextView btnStyleClassic, btnStyleOutrun, btnStyleGradient, btnStyleCenter, btnStyleVu, btnStyleOscillo;
-    private SwitchCompat switchStatusBarPeaks, switchStatusBarMirror;
+    private TextView btnStatusBarPeaksToggle, btnStatusBarMirrorToggle;
     private TextView btnThemePurple, btnThemeRainbowSherbet, btnThemeWarmVu,
             btnThemeColorfull, btnThemeOceanBreeze, btnThemeSunsetReal;
     private TextView btnStatusBarBands16, btnStatusBarBands32;
@@ -126,7 +126,7 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean isUpdatingStyleUi = false;
 
     // EQ Visualizer
-    private SwitchCompat switchEqVisualizerEnable, switchEqVisNormalization;
+    private TextView btnEqVisToggle, btnVisNormalizationToggle;
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
@@ -387,8 +387,8 @@ public class SettingsActivity extends AppCompatActivity {
         initSolidControls();
 
         // Status Bar Visualizer
-        switchStatusBarVis = findViewById(R.id.switch_status_bar_vis);
-        switchStatusBarNormalization = findViewById(R.id.switch_status_bar_normalization);
+        btnStatusBarVisToggle = findViewById(R.id.btn_status_bar_vis_toggle);
+        btnStatusBarNormalizationToggle = findViewById(R.id.btn_sb_vis_normalization_toggle);
         seekStatusBarWidth = findViewById(R.id.seek_status_bar_width);
         seekStatusBarPos = findViewById(R.id.seek_status_bar_pos);
         seekStatusBarHeight = findViewById(R.id.seek_status_bar_height);
@@ -422,8 +422,8 @@ public class SettingsActivity extends AppCompatActivity {
         btnStyleVu = findViewById(R.id.btn_style_vu);
         btnStyleOscillo = findViewById(R.id.btn_style_oscillo);
 
-        switchStatusBarPeaks = findViewById(R.id.switch_status_bar_peaks);
-        switchStatusBarMirror = findViewById(R.id.switch_status_bar_mirror);
+        btnStatusBarPeaksToggle = findViewById(R.id.btn_sb_vis_peaks_toggle);
+        btnStatusBarMirrorToggle = findViewById(R.id.btn_sb_vis_mirror_toggle);
 
         spinnerStatusBarStyle = findViewById(R.id.spinner_status_bar_style);
         containerVisPeaks = findViewById(R.id.container_vis_peaks);
@@ -500,27 +500,36 @@ public class SettingsActivity extends AppCompatActivity {
         initScreensaverControls();
 
         // EQ Spectrum Visualizer
-        switchEqVisualizerEnable = findViewById(R.id.switch_eq_visualizer_enable);
-        switchEqVisNormalization = findViewById(R.id.switch_vis_normalization);
+        btnEqVisToggle = findViewById(R.id.btn_eq_vis_toggle);
+        btnVisNormalizationToggle = findViewById(R.id.btn_vis_normalization_toggle);
         btnEqVisSpectrum = findViewById(R.id.btn_eq_vis_spectrum);
         btnEqVisMonochrome = findViewById(R.id.btn_eq_vis_monochrome);
 
         TouchGlow.attach(btnEqVisSpectrum);
         TouchGlow.attach(btnEqVisMonochrome);
 
-        switchEqVisualizerEnable.setOnCheckedChangeListener((btn, isChecked) -> {
-            ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_enabled", isChecked).apply();
-        });
-
-        if (switchStatusBarNormalization != null) {
-            switchStatusBarNormalization.setOnCheckedChangeListener((btn, isChecked) -> {
-                if (isUpdatingStyleUi) return;
-                StatusBarVisualizerManager.getInstance(this).setNormalizationForStyle(editingEffect, isChecked);
+        if (btnEqVisToggle != null) {
+            btnEqVisToggle.setOnClickListener(v -> {
+                boolean active = !ThemeManager.prefs(this).getBoolean("pref_eq_visualizer_enabled", true);
+                ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_enabled", active).apply();
+                styleOnOffButton(btnEqVisToggle, active);
             });
         }
-        if (switchEqVisNormalization != null) {
-            switchEqVisNormalization.setOnCheckedChangeListener((btn, isChecked) -> {
-                ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_normalization", isChecked).apply();
+
+        if (btnStatusBarNormalizationToggle != null) {
+            btnStatusBarNormalizationToggle.setOnClickListener(v -> {
+                if (isUpdatingStyleUi) return;
+                StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
+                boolean active = !sbm.getNormalizationForStyle(editingEffect);
+                sbm.setNormalizationForStyle(editingEffect, active);
+                styleOnOffButton(btnStatusBarNormalizationToggle, active);
+            });
+        }
+        if (btnVisNormalizationToggle != null) {
+            btnVisNormalizationToggle.setOnClickListener(v -> {
+                boolean active = !ThemeManager.prefs(this).getBoolean("pref_eq_visualizer_normalization", false);
+                ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_normalization", active).apply();
+                styleOnOffButton(btnVisNormalizationToggle, active);
             });
         }
 
@@ -742,10 +751,14 @@ public class SettingsActivity extends AppCompatActivity {
         seekStatusBarHue.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
         seekStatusBarHue.setThumb(ThemeManager.whiteThumbDrawable(this));
 
-        switchStatusBarVis.setOnCheckedChangeListener((btn, isChecked) -> {
-            p.edit().putBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, isChecked).apply();
-            StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
-        });
+        if (btnStatusBarVisToggle != null) {
+            btnStatusBarVisToggle.setOnClickListener(v -> {
+                boolean active = !p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, true);
+                p.edit().putBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, active).apply();
+                styleOnOffButton(btnStatusBarVisToggle, active);
+                StatusBarVisualizerManager.getInstance(SettingsActivity.this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
+            });
+        }
 
         seekStatusBarWidth.addOnChangeListener((slider, value, fromUser) -> {
             int progress = Math.round(value);
@@ -835,17 +848,23 @@ public class SettingsActivity extends AppCompatActivity {
         setupStyleButton(btnStyleVu, StatusBarVisualizerView.STYLE_VU_GRADIENT);
         setupStyleButton(btnStyleOscillo, StatusBarVisualizerView.STYLE_OSCILLOSCOPE);
 
-        if (switchStatusBarPeaks != null) {
-            switchStatusBarPeaks.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        if (btnStatusBarPeaksToggle != null) {
+            btnStatusBarPeaksToggle.setOnClickListener(v -> {
                 if (isUpdatingStyleUi) return;
-                StatusBarVisualizerManager.getInstance(this).setPeaksForStyle(editingEffect, isChecked);
+                StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
+                boolean active = !sbm.getPeaksForStyle(editingEffect);
+                sbm.setPeaksForStyle(editingEffect, active);
+                styleOnOffButton(btnStatusBarPeaksToggle, active);
             });
         }
 
-        if (switchStatusBarMirror != null) {
-            switchStatusBarMirror.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        if (btnStatusBarMirrorToggle != null) {
+            btnStatusBarMirrorToggle.setOnClickListener(v -> {
                 if (isUpdatingStyleUi) return;
-                StatusBarVisualizerManager.getInstance(this).setMirrorForStyle(editingEffect, isChecked);
+                StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
+                boolean active = !sbm.getMirrorForStyle(editingEffect);
+                sbm.setMirrorForStyle(editingEffect, active);
+                styleOnOffButton(btnStatusBarMirrorToggle, active);
             });
         }
 
@@ -980,18 +999,18 @@ public class SettingsActivity extends AppCompatActivity {
             updateStatusBarBandsHighlights(styleBands);
 
             // 4. Peaks for this style
-            if (switchStatusBarPeaks != null) {
-                switchStatusBarPeaks.setChecked(sbm.getPeaksForStyle(style));
+            if (btnStatusBarPeaksToggle != null) {
+                styleOnOffButton(btnStatusBarPeaksToggle, sbm.getPeaksForStyle(style));
             }
 
             // 5. Mirror for this style
-            if (switchStatusBarMirror != null) {
-                switchStatusBarMirror.setChecked(sbm.getMirrorForStyle(style));
+            if (btnStatusBarMirrorToggle != null) {
+                styleOnOffButton(btnStatusBarMirrorToggle, sbm.getMirrorForStyle(style));
             }
 
             // 6. Normalization for this style
-            if (switchStatusBarNormalization != null) {
-                switchStatusBarNormalization.setChecked(sbm.getNormalizationForStyle(style));
+            if (btnStatusBarNormalizationToggle != null) {
+                styleOnOffButton(btnStatusBarNormalizationToggle, sbm.getNormalizationForStyle(style));
             }
 
             // 7. Persistence for this style (Oscilloscope)
@@ -1079,6 +1098,12 @@ public class SettingsActivity extends AppCompatActivity {
         stylePill(btn, active, accent, border);
     }
 
+    private void styleOnOffButton(TextView btn, boolean active) {
+        if (btn == null) return;
+        btn.setText(active ? R.string.state_on : R.string.state_off);
+        styleToggleButton(btn, active);
+    }
+
     private void stylePill(TextView btn, boolean active, int accent, int border) {
         if (btn == null) return;
         int cardBg = editNight ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
@@ -1137,7 +1162,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         // Visualizer
-        switchStatusBarVis.setChecked(p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, true));
+        if (btnStatusBarVisToggle != null) {
+            styleOnOffButton(btnStatusBarVisToggle, p.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, true));
+        }
         int w = Math.round(p.getFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F, 0.40f) * 100);
         int pos = Math.round(p.getFloat(StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F, 0.50f) * 100);
 
@@ -1192,12 +1219,14 @@ public class SettingsActivity extends AppCompatActivity {
 
         // EQ Spectrum Visualizer
         boolean eqVisEnabled = p.getBoolean("pref_eq_visualizer_enabled", true);
-        switchEqVisualizerEnable.setChecked(eqVisEnabled);
+        if (btnEqVisToggle != null) {
+            styleOnOffButton(btnEqVisToggle, eqVisEnabled);
+        }
         int eqVisMode = p.getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
 
-        if (switchEqVisNormalization != null) {
-            switchEqVisNormalization.setChecked(p.getBoolean("pref_eq_visualizer_normalization", false));
+        if (btnVisNormalizationToggle != null) {
+            styleOnOffButton(btnVisNormalizationToggle, p.getBoolean("pref_eq_visualizer_normalization", false));
         }
 
         loadAnalyzerSettings(p);
@@ -1220,12 +1249,12 @@ public class SettingsActivity extends AppCompatActivity {
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
 
-    private SwitchCompat switchAgcMain, switchAgcBar;
-    private SeekBar seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
+    private TextView btnAgcMainToggle, btnAgcBarToggle;
+    private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
     private TextView tvRoomStatus;
-    private SwitchCompat switchScreensaver;
+    private TextView btnScreensaverToggle;
     private Slider seekScreensaverDelay, seekScreensaverBgDay, seekScreensaverBgNight;
     private Slider seekScreensaverWidth, seekScreensaverHeight;
     private Slider seekScreensaverBrightDay, seekScreensaverBrightNight;
@@ -1243,12 +1272,9 @@ public class SettingsActivity extends AppCompatActivity {
      */
     private static final String PREF_ASKED_RECORD_AUDIO = "asked_record_audio";
 
-    /** Trim slider spans +/-250 ms, stored centred on this offset because SeekBar has no sign. */
-    private static final int LATENCY_TRIM_OFFSET = 250;
-
     private void initAnalyzerControls() {
-        switchAgcMain = findViewById(R.id.switch_agc_main);
-        switchAgcBar = findViewById(R.id.switch_agc_bar);
+        btnAgcMainToggle = findViewById(R.id.btn_agc_main_toggle);
+        btnAgcBarToggle = findViewById(R.id.btn_agc_bar_toggle);
         seekAgcMainStrength = findViewById(R.id.seek_agc_main_strength);
         seekAgcBarStrength = findViewById(R.id.seek_agc_bar_strength);
         seekLatencyTrim = findViewById(R.id.seek_latency_trim);
@@ -1258,24 +1284,35 @@ public class SettingsActivity extends AppCompatActivity {
         tvLatencyTrim = findViewById(R.id.tv_latency_trim);
         tvRangeDb = findViewById(R.id.tv_range_db);
 
-        switchAgcMain.setOnCheckedChangeListener((btn, checked) -> saveAnalyzerPref(
-                AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, checked));
-        switchAgcBar.setOnCheckedChangeListener((btn, checked) -> saveAnalyzerPref(
-                AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, checked));
+        if (btnAgcMainToggle != null) {
+            btnAgcMainToggle.setOnClickListener(v -> {
+                SharedPreferences p = ThemeManager.prefs(this);
+                boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
+                saveAnalyzerPref(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, active);
+                styleOnOffButton(btnAgcMainToggle, active);
+            });
+        }
+        if (btnAgcBarToggle != null) {
+            btnAgcBarToggle.setOnClickListener(v -> {
+                SharedPreferences p = ThemeManager.prefs(this);
+                boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
+                saveAnalyzerPref(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, active);
+                styleOnOffButton(btnAgcBarToggle, active);
+            });
+        }
 
-        bindAnalyzerSeek(seekAgcMainStrength, tvAgcMainStrength,
-                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 0, getString(R.string.format_percent));
-        bindAnalyzerSeek(seekAgcBarStrength, tvAgcBarStrength,
-                AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 0, getString(R.string.format_percent));
-        bindAnalyzerSeek(seekLatencyTrim, tvLatencyTrim,
-                AudioSpectrumEngine.PREF_LATENCY_TRIM, LATENCY_TRIM_OFFSET,
-                getString(R.string.format_latency_ms));
-        bindAnalyzerSeek(seekRangeDb, tvRangeDb,
-                AudioSpectrumEngine.PREF_RANGE_DB, 0, getString(R.string.format_range_db));
+        bindAnalyzerSlider(seekAgcMainStrength, tvAgcMainStrength,
+                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, getString(R.string.format_percent));
+        bindAnalyzerSlider(seekAgcBarStrength, tvAgcBarStrength,
+                AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, getString(R.string.format_percent));
+        bindAnalyzerSlider(seekLatencyTrim, tvLatencyTrim,
+                AudioSpectrumEngine.PREF_LATENCY_TRIM, getString(R.string.format_latency_ms));
+        bindAnalyzerSlider(seekRangeDb, tvRangeDb,
+                AudioSpectrumEngine.PREF_RANGE_DB, getString(R.string.format_range_db));
 
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         showSyncStatus();
-        TextView syncButton = findViewById(R.id.btn_sync_measure);
+        View syncButton = findViewById(R.id.btn_sync_measure);
         TouchGlow.attach(syncButton);
         syncButton.setOnClickListener(v -> startLatencyMeasurement());
 
@@ -1293,7 +1330,7 @@ public class SettingsActivity extends AppCompatActivity {
      * tyre-pressure display, a dashcam.
      */
     private void initScreensaverControls() {
-        switchScreensaver = findViewById(R.id.switch_screensaver);
+        btnScreensaverToggle = findViewById(R.id.btn_screensaver_toggle);
         seekScreensaverDelay = findViewById(R.id.seek_screensaver_delay);
         seekScreensaverBgDay = findViewById(R.id.seek_screensaver_bg_day);
         tvScreensaverBgDay = findViewById(R.id.tv_screensaver_bg_day);
@@ -1320,18 +1357,19 @@ public class SettingsActivity extends AppCompatActivity {
 
         ScreensaverManager ss = ScreensaverManager.getInstance(this);
 
-        if (switchScreensaver != null) {
-            switchScreensaver.setOnCheckedChangeListener((button, checked) -> {
-                if (!button.isPressed()) return;
-                if (checked && !ss.canDrawOverlays()) {
+        if (btnScreensaverToggle != null) {
+            btnScreensaverToggle.setOnClickListener(v -> {
+                boolean active = !ss.isEnabled();
+                if (active && !ss.canDrawOverlays()) {
                     // The same permission the status-bar strip needs. Asking here rather than
                     // failing silently, because a switch that flips back on its own reads as a bug.
-                    button.setChecked(false);
+                    styleOnOffButton(btnScreensaverToggle, false);
                     startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:" + getPackageName())));
                     return;
                 }
-                ss.setEnabled(checked);
+                ss.setEnabled(active);
+                styleOnOffButton(btnScreensaverToggle, active);
             });
         }
 
@@ -1405,7 +1443,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void loadScreensaverSettings() {
         ScreensaverManager ss = ScreensaverManager.getInstance(this);
-        if (switchScreensaver != null) switchScreensaver.setChecked(ss.isEnabled());
+        if (btnScreensaverToggle != null) styleOnOffButton(btnScreensaverToggle, ss.isEnabled());
         if (seekScreensaverDelay != null) {
             int delay = Math.max(5, Math.min(600, ss.delaySeconds()));
             seekScreensaverDelay.setValue(delay);
@@ -1934,26 +1972,14 @@ public class SettingsActivity extends AppCompatActivity {
      * @param offset added to the stored value to get the slider position, so a slider that only
      *               counts upwards can carry a signed setting such as the latency trim
      */
-    private void bindAnalyzerSeek(SeekBar seek, TextView label, String key, int offset,
-                                  String format) {
-        if (seek == null) return;
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
-                int value = progress - offset;
-                if (label != null) {
-                    label.setText(String.format(java.util.Locale.US, format, value));
-                }
-                if (fromUser) saveAnalyzerPref(key, value);
+    private void bindAnalyzerSlider(Slider slider, TextView label, String key, String format) {
+        if (slider == null) return;
+        slider.addOnChangeListener((s, value, fromUser) -> {
+            int intVal = Math.round(value);
+            if (label != null) {
+                label.setText(String.format(java.util.Locale.US, format, intVal));
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar bar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar bar) {
-            }
+            if (fromUser) saveAnalyzerPref(key, intVal);
         });
     }
 
@@ -1981,16 +2007,41 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void loadAnalyzerSettings(SharedPreferences p) {
-        if (switchAgcMain == null) return;
-        // The main analyser defaults to absolute levels: it is an instrument, and one that quietly
-        // rescales itself tells you nothing. The status bar widget defaults the other way.
-        switchAgcMain.setChecked(p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false));
-        switchAgcBar.setChecked(p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));
-        seekAgcMainStrength.setProgress(p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60));
-        seekAgcBarStrength.setProgress(p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100));
-        seekLatencyTrim.setProgress(
-                p.getInt(AudioSpectrumEngine.PREF_LATENCY_TRIM, 0) + LATENCY_TRIM_OFFSET);
-        seekRangeDb.setProgress(p.getInt(AudioSpectrumEngine.PREF_RANGE_DB, 60));
+        if (btnAgcMainToggle == null) return;
+        boolean agcMain = p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
+        boolean agcBar = p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
+        styleOnOffButton(btnAgcMainToggle, agcMain);
+        styleOnOffButton(btnAgcBarToggle, agcBar);
+
+        int mainStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60);
+        int barStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100);
+        int latencyTrim = p.getInt(AudioSpectrumEngine.PREF_LATENCY_TRIM, 0);
+        int rangeDb = p.getInt(AudioSpectrumEngine.PREF_RANGE_DB, 60);
+
+        if (seekAgcMainStrength != null) {
+            seekAgcMainStrength.setValue(mainStrength);
+            if (tvAgcMainStrength != null) {
+                tvAgcMainStrength.setText(String.format(java.util.Locale.US, getString(R.string.format_percent), mainStrength));
+            }
+        }
+        if (seekAgcBarStrength != null) {
+            seekAgcBarStrength.setValue(barStrength);
+            if (tvAgcBarStrength != null) {
+                tvAgcBarStrength.setText(String.format(java.util.Locale.US, getString(R.string.format_percent), barStrength));
+            }
+        }
+        if (seekLatencyTrim != null) {
+            seekLatencyTrim.setValue(latencyTrim);
+            if (tvLatencyTrim != null) {
+                tvLatencyTrim.setText(String.format(java.util.Locale.US, getString(R.string.format_latency_ms), latencyTrim));
+            }
+        }
+        if (seekRangeDb != null) {
+            seekRangeDb.setValue(rangeDb);
+            if (tvRangeDb != null) {
+                tvRangeDb.setText(String.format(java.util.Locale.US, getString(R.string.format_range_db), rangeDb));
+            }
+        }
     }
 
     private void updateStatusBarBandsHighlights(int bands) {
@@ -2394,8 +2445,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
             R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
             R.id.label_status_bar_palettes,
-            R.id.label_agc_main, R.id.label_agc_bar,
             R.id.label_latency_trim, R.id.label_sync_measure,
+            R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
             R.id.label_screensaver_enable, R.id.label_screensaver_apps
         };
@@ -2405,7 +2456,7 @@ public class SettingsActivity extends AppCompatActivity {
                 tv.setTextColor(primaryText);
                 tv.setTypeface(null, Typeface.BOLD);
                 tv.getPaint().setFakeBoldText(true);
-                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             }
         }
 
@@ -2423,7 +2474,6 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
-            R.id.label_agc_main_strength, R.id.label_agc_bar_strength, R.id.label_range_db,
             R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
@@ -2442,6 +2492,20 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
+        // Parameter row labels for sliders (16sp normal for high visibility from 1m)
+        int[] sliderLabels = {
+            R.id.label_agc_main_strength, R.id.label_agc_bar_strength
+        };
+        for (int id : sliderLabels) {
+            TextView tv = findViewById(id);
+            if (tv != null) {
+                tv.setTextColor(primaryText);
+                tv.setTypeface(null, Typeface.NORMAL);
+                tv.getPaint().setFakeBoldText(false);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            }
+        }
+
         // Value text views: use primaryText for readability & WCAG contrast
         int valueColor = primaryText;
         if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
@@ -2453,11 +2517,31 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvVisOscilloPersistence != null) tvVisOscilloPersistence.setTextColor(valueColor);
         if (tvSolidHueVal != null) tvSolidHueVal.setTextColor(valueColor);
         if (tvSolidValVal != null) tvSolidValVal.setTextColor(valueColor);
-        // The analyzer fold's own values were missed the same way its labels were.
-        if (tvAgcMainStrength != null) tvAgcMainStrength.setTextColor(valueColor);
-        if (tvAgcBarStrength != null) tvAgcBarStrength.setTextColor(valueColor);
-        if (tvLatencyTrim != null) tvLatencyTrim.setTextColor(valueColor);
-        if (tvRangeDb != null) tvRangeDb.setTextColor(valueColor);
+        // The analyzer fold's own values (16sp bold for clear 1m readability)
+        if (tvAgcMainStrength != null) {
+            tvAgcMainStrength.setTextColor(valueColor);
+            tvAgcMainStrength.setTypeface(null, Typeface.BOLD);
+            tvAgcMainStrength.getPaint().setFakeBoldText(true);
+            tvAgcMainStrength.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        }
+        if (tvAgcBarStrength != null) {
+            tvAgcBarStrength.setTextColor(valueColor);
+            tvAgcBarStrength.setTypeface(null, Typeface.BOLD);
+            tvAgcBarStrength.getPaint().setFakeBoldText(true);
+            tvAgcBarStrength.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        }
+        if (tvLatencyTrim != null) {
+            tvLatencyTrim.setTextColor(valueColor);
+            tvLatencyTrim.setTypeface(null, Typeface.BOLD);
+            tvLatencyTrim.getPaint().setFakeBoldText(true);
+            tvLatencyTrim.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        }
+        if (tvRangeDb != null) {
+            tvRangeDb.setTextColor(valueColor);
+            tvRangeDb.setTypeface(null, Typeface.BOLD);
+            tvRangeDb.getPaint().setFakeBoldText(true);
+            tvRangeDb.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        }
         if (tvSyncStatus != null) tvSyncStatus.setTextColor(secondaryText);
         if (tvScreensaverDelay != null) tvScreensaverDelay.setTextColor(valueColor);
         if (tvScreensaverBgDay != null) tvScreensaverBgDay.setTextColor(valueColor);
@@ -2487,6 +2571,12 @@ public class SettingsActivity extends AppCompatActivity {
         tintSlider(seekScreensaverBrightNight, accent);
         tintSlider(seekScreensaverInfoH, accent);
         tintSlider(seekStatusBarAlpha, accent);
+
+        // Tint analyzer Sliders
+        tintSlider(seekAgcMainStrength, accent);
+        tintSlider(seekAgcBarStrength, accent);
+        tintSlider(seekLatencyTrim, accent);
+        tintSlider(seekRangeDb, accent);
 
         // Update wheel brightness backgrounds
         updateWheelBrightnessGradient(pickerAccentWheel, pickerAccentBrightness);
@@ -2560,6 +2650,37 @@ public class SettingsActivity extends AppCompatActivity {
         int eqVisMode = ThemeManager.prefs(this).getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
         updatePermissionButtons();
+        SharedPreferences prefs = ThemeManager.prefs(this);
+        StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
+        ScreensaverManager ss = ScreensaverManager.getInstance(this);
+
+        if (btnStatusBarVisToggle != null) {
+            styleOnOffButton(btnStatusBarVisToggle, prefs.getBoolean(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED, true));
+        }
+        if (btnStatusBarPeaksToggle != null) {
+            styleOnOffButton(btnStatusBarPeaksToggle, sbm.getPeaksForStyle(editingEffect));
+        }
+        if (btnStatusBarMirrorToggle != null) {
+            styleOnOffButton(btnStatusBarMirrorToggle, sbm.getMirrorForStyle(editingEffect));
+        }
+        if (btnStatusBarNormalizationToggle != null) {
+            styleOnOffButton(btnStatusBarNormalizationToggle, sbm.getNormalizationForStyle(editingEffect));
+        }
+        if (btnEqVisToggle != null) {
+            styleOnOffButton(btnEqVisToggle, prefs.getBoolean("pref_eq_visualizer_enabled", true));
+        }
+        if (btnVisNormalizationToggle != null) {
+            styleOnOffButton(btnVisNormalizationToggle, prefs.getBoolean("pref_eq_visualizer_normalization", false));
+        }
+        if (btnAgcMainToggle != null) {
+            styleOnOffButton(btnAgcMainToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false));
+        }
+        if (btnAgcBarToggle != null) {
+            styleOnOffButton(btnAgcBarToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));
+        }
+        if (btnScreensaverToggle != null) {
+            styleOnOffButton(btnScreensaverToggle, ss.isEnabled());
+        }
         styleActionButtons();
 
         // Repaint accordion headers last so open headers always remain highlighted in accent
