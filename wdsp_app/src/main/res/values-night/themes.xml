@@ -5,9 +5,7 @@
         <item name="colorPrimary">@color/cyan_custom</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:soundEffectsEnabled">false</item>
-        <item name="android:fontFamily">@font/main_font</item>
         <item name="android:statusBarColor">@color/transparent</item>
-        <item name="fontFamily">@font/main_font</item>
 
         <!-- Global UI Widgets Styling matching QFRadio -->
         <item name="seekBarStyle">@style/CustomSeekBarStyle</item>
