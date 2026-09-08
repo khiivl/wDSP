@@ -897,6 +897,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         setupStyleSpinner(spinnerStatusBarStyle, style -> {
             StatusBarVisualizerManager.getInstance(this).setStyle(editNight, style);
+            editingEffect = style;
+            updateStyleButtonHighlights(style);
+            updateDynamicControls(style);
+            loadStyleControls(style);
         });
     }
 
@@ -975,6 +979,8 @@ public class SettingsActivity extends AppCompatActivity {
         if (btn == null) return;
         btn.setOnClickListener(v -> {
             editingEffect = styleIndex;
+            StatusBarVisualizerManager.getInstance(this).setStyle(editNight, styleIndex);
+            selectSpinnerStyle(spinnerStatusBarStyle, styleIndex);
             updateStyleButtonHighlights(styleIndex);
             updateDynamicControls(styleIndex);
             loadStyleControls(styleIndex);
