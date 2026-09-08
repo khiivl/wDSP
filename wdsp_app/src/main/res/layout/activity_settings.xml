@@ -658,7 +658,7 @@
                         android:layout_height="wrap_content"
                         android:minWidth="56dp"
                         android:gravity="end"
-                        android:text="0 px"
+                        android:text="@string/val_px_zero"
                         android:textSize="13sp" />
                 </LinearLayout>
 
