@@ -49,7 +49,7 @@ WSL — the keys are there, and a Windows-side push fails silently.
 
 ---
 
-## The state of `gemini_ui_dev` branch (09.09.2026 01:25)
+## The state of `gemini_ui_dev` branch (09.09.2026 01:30)
 
 Active dev branch for UI & Platform QF integration. **Everything committed & tested on hardware (`192.168.1.146:9876`)**:
 - `7e12c25`: Loudness relocated to Tone Compensation tab.
@@ -61,9 +61,15 @@ Active dev branch for UI & Platform QF integration. **Everything committed & tes
 - `af93c27`: Core(UI): динамічне накладання FrostedGlass підкладки та розділювачів на верхню пілу пресетів.
 - `04d3c1e`: UI(layout): винесення логотипу вліво за межі піли та розтягування піли пресетів на всю ширину.
 - `07c4548`: Core(UI): очищення коду теми від застарілих розділювачів верхньої піли пресетів.
+- `ed4688d`: UI(layout): оптимізація бічних відступів піли пресетів (paddingStart=6dp, paddingEnd=6dp) під огинання спінера та кнопки.
+- `7daf584`: Core(UI): асиметричне огинання піли пресетів (FrostedGlassDrawable з підтримкою float[] cornerRadiiDp [18dp, 24dp, 24dp, 18dp], круговий радіус кнопок дій).
 
-### 🛑 Checkpoint: UI Look & Geometry Verification (09.09.2026 01:25)
-- **Current Visual Status**: Логотип повернено на звичне місце ліворуч (`layout_logo`), а плаваюча піла пресетів (`layout_presets`) розтягнута на всю решту ширини екрана (`width="0dp"`). Дропдаун вибору пресету притиснутий ліворуч у пілі, кнопки дій — праворуч, розділені пружним спейсером (`weight="1"`). Усередині піли діє `HorizontalScrollView` (`scroll_presets`) для захисту від обрізання на вузьких екранах (Split-Screen / Tesla). Зібрано, встановлено на девайс `192.168.1.146:9876` і запущено.
+### 🛑 Checkpoint: UI Look & Geometry Verification (09.09.2026 01:30)
+- **Current Visual Status**: Реалізовано органічне асиметричне огинання піли пресетів:
+  - Зліва: концентричний радіус 18dp та бічний відступ 6dp огинають прямокутну форму дропдауну вибору пресету (14dp).
+  - Справа: напівкруглий купол радіусом 24dp та бічний відступ 6dp концентрично огинають крайню круглу кнопку дій експорту (діаметр 38dp, радіус 19dp).
+  - Усі кнопки дій пресетів переведено на повноцінний круговий радіус (`toggle_height / 2`).
+  - Зібрано, встановлено на девайс `192.168.1.146:9876` і запущено.
 
 
 ## What landed between 26.08 and 03.09
