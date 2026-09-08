@@ -507,7 +507,7 @@ public class MainActivity extends AppCompatActivity {
         int textPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this, isNight);
         int border = com.radiorubka.wdsp.ui.theme.ThemeManager.panelBorder(this, isNight);
 
-        int unselectedBg = isNight ? Color.parseColor("#18FFFFFF") : Color.parseColor("#0D000000");
+        int unselectedBg = isNight ? Color.parseColor("#12161B") : Color.parseColor("#FFFFFF");
         int unselectedBorder = border;
 
         if (v instanceof MaterialButton) {
@@ -557,6 +557,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void applyThemeToContainer(View root, int primaryText, int secondaryText, int accent, int border, java.util.Set<Integer> accentIds, java.util.Set<Integer> titleIds) {
+        if (root == null) return;
+        if (root instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) root;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                applyThemeToContainer(vg.getChildAt(i), primaryText, secondaryText, accent, border, accentIds, titleIds);
+            }
+        } else if (root instanceof TextView && !(root instanceof MaterialButton || root instanceof ToggleButton || root instanceof CompoundButton)) {
+            TextView tv = (TextView) root;
+            int id = tv.getId();
+            if (id != View.NO_ID && accentIds.contains(id)) {
+                tv.setTextColor(accent);
+            } else if (id != View.NO_ID && titleIds.contains(id)) {
+                tv.setTextColor(primaryText);
+            } else {
+                CharSequence text = tv.getText();
+                if (text != null && "|".equals(text.toString().trim())) {
+                    tv.setTextColor(border);
+                } else {
+                    tv.setTextColor(secondaryText);
+                }
+            }
+        }
+    }
+
     private void applyAppTheme() {
         try {
             boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
@@ -601,8 +626,43 @@ public class MainActivity extends AppCompatActivity {
             View cardMainEq = findViewById(R.id.card_main_eq);
             if (cardMainEq != null) {
                 int eqBorder = ThemeManager.panelBorder(this, isNight);
-                int eqBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#40FFFFFF");
+                int eqBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
                 cardMainEq.setBackground(ThemeManager.roundedDrawable(this, 18f, eqBg, eqBorder, 1.2f));
+            }
+
+            // All cards styling across tabs
+            int cardBg = isNight ? Color.parseColor("#D912161B") : Color.parseColor("#E6FFFFFF");
+            int badgeBg = isNight ? Color.parseColor("#12161B") : Color.parseColor("#FFFFFF");
+
+            int[] cards16dp = {
+                R.id.card_fm_controls,
+                R.id.card_delays_precise,
+                R.id.card_delays_legacy,
+                R.id.card_filters_container,
+                R.id.card_gala_container,
+                R.id.card_gala_c1,
+                R.id.card_gala_c2
+            };
+            for (int id : cards16dp) {
+                View c = findViewById(id);
+                if (c != null) {
+                    c.setBackground(ThemeManager.roundedDrawable(this, 16f, cardBg, border, 1.2f));
+                }
+            }
+
+            View fmVis = findViewById(R.id.fm_visualizer_container);
+            if (fmVis != null) {
+                fmVis.setBackground(ThemeManager.roundedDrawable(this, 14f, cardBg, border, 1.2f));
+            }
+
+            View fmBadge = findViewById(R.id.layout_fm_status_badge);
+            if (fmBadge != null) {
+                fmBadge.setBackground(ThemeManager.roundedDrawable(this, 10f, badgeBg, border, 1.2f));
+            }
+
+            View galaBadge = findViewById(R.id.layout_gala_status_badge);
+            if (galaBadge != null) {
+                galaBadge.setBackground(ThemeManager.roundedDrawable(this, 10f, badgeBg, border, 1.2f));
             }
 
             // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
@@ -661,6 +721,16 @@ public class MainActivity extends AppCompatActivity {
             tintSlider(seekGalaFadeMs, csl, cslTrack);
             tintSlider(seekGalaHoldMs, csl, cslTrack);
 
+            // Ensure toggle buttons are bound
+            if (switchLoud == null) switchLoud = findViewById(R.id.switch_loud);
+            if (switchPreciseEnable == null) switchPreciseEnable = findViewById(R.id.switch_precise_enable);
+            if (switchLegacyEnable == null) switchLegacyEnable = findViewById(R.id.switch_legacy_enable);
+            if (switchFmEnable == null) switchFmEnable = findViewById(R.id.switch_fm_enable);
+            if (switchFatigueEnable == null) switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
+            if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
+            if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
+            if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
+
             // Style all toggle buttons
             updateToggleStyle(switchLoud);
             updateToggleStyle(switchPreciseEnable);
@@ -679,7 +749,9 @@ public class MainActivity extends AppCompatActivity {
 
             // Primary Section Titles & Headers
             int[] primaryTitles = {
-                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title
+                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.fm_controls_title,
+                R.id.tv_delays_title, R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
+                R.id.tv_gala_title, R.id.gala_c1_title, R.id.gala_c2_title
             };
             for (int id : primaryTitles) {
                 TextView tv = findViewById(id);
@@ -711,6 +783,29 @@ public class MainActivity extends AppCompatActivity {
             for (int id : secondaryLabels) {
                 TextView tv = findViewById(id);
                 if (tv != null) tv.setTextColor(secondaryText);
+            }
+
+            // Recursive styling for all cards and containers to guarantee consistent contrast
+            java.util.Set<Integer> accentIdSet = new java.util.HashSet<>();
+            for (int id : accentValues) accentIdSet.add(id);
+            java.util.Set<Integer> titleIdSet = new java.util.HashSet<>();
+            for (int id : primaryTitles) titleIdSet.add(id);
+
+            int[] containersToStyle = {
+                R.id.layout_fm_status_badge,
+                R.id.layout_gala_status_badge,
+                R.id.card_fm_controls,
+                R.id.card_delays_precise,
+                R.id.card_delays_legacy,
+                R.id.card_filters_container,
+                R.id.card_gala_c1,
+                R.id.card_gala_c2
+            };
+            for (int cid : containersToStyle) {
+                View cv = findViewById(cid);
+                if (cv != null) {
+                    applyThemeToContainer(cv, primaryText, secondaryText, valueColor, border, accentIdSet, titleIdSet);
+                }
             }
 
             // Action Buttons styling (fader arrows, volume buttons, plus, minus, center, apply)

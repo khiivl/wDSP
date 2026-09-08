@@ -85,6 +85,7 @@ public class SettingsActivity extends AppCompatActivity {
     // 4 Hue Wheels
     private HueWheelView pickerAccentWheel, pickerPrimaryTextWheel, pickerLabelWheel, pickerOnAccentWheel;
     private SeekBar pickerAccentBrightness, pickerPrimaryTextBrightness, pickerLabelBrightness, pickerOnAccentBrightness;
+    private TextView btnResetPalette;
 
     // Wallpaper
     private TextView labelWallpaper, wallpaperName;
@@ -326,6 +327,17 @@ public class SettingsActivity extends AppCompatActivity {
         setupColorWheel(pickerPrimaryTextWheel, pickerPrimaryTextBrightness, 1);
         setupColorWheel(pickerLabelWheel, pickerLabelBrightness, 2);
         setupColorWheel(pickerOnAccentWheel, pickerOnAccentBrightness, 3);
+
+        btnResetPalette = findViewById(R.id.btn_reset_palette);
+        if (btnResetPalette != null) {
+            TouchGlow.attach(btnResetPalette);
+            btnResetPalette.setOnClickListener(v -> {
+                ThemeManager.resetPalette(this, editNight);
+                loadSettings();
+                applyTheme();
+                Toaster.show(this, getString(R.string.toast_palette_reset));
+            });
+        }
 
         // Wallpaper controls
         labelWallpaper = findViewById(R.id.label_wallpaper);
@@ -2364,7 +2376,7 @@ public class SettingsActivity extends AppCompatActivity {
         // Action buttons styling
         int border = ThemeManager.panelBorder(this, editNight);
         TextView[] normalActionButtons = {
-            btnWallpaperPick, btnWallpaperReset, btnAppDetails,
+            btnWallpaperPick, btnWallpaperReset, btnResetPalette, btnAppDetails,
             btnBackupSettings, btnRestoreSettings
         };
         for (TextView btn : normalActionButtons) {
