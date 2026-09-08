@@ -166,7 +166,7 @@ Yleinen oletus: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektri (HUE-kierto)</string>
     <string name="status_bar_theme_solid_hue">Yksivärinen HUEsta</string>
     <string name="status_bar_theme_auto_day_night">Auto Päivä/Yö (Valkoinen/Musta)</string>
-    <string name="status_bar_theme_eq_groups">EQ-ryhmät (HUE-kierto)</string>
+    <string name="status_bar_theme_eq_groups">EQ-ryhmät</string>
     <string name="status_bar_theme_monochrome_white">Aina valkoinen</string>
     <string name="status_bar_theme_monochrome_black">Aina musta</string>
     <string name="status_bar_theme_fire">Tuli</string>

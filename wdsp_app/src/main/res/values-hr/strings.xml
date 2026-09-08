@@ -166,7 +166,7 @@ Globalno zadano: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektar (HUE rotacija)</string>
     <string name="status_bar_theme_solid_hue">Jednobojno iz HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Dan/Noć (Bijelo/Crno)</string>
-    <string name="status_bar_theme_eq_groups">EQ grupe (HUE rotacija)</string>
+    <string name="status_bar_theme_eq_groups">EQ grupe</string>
     <string name="status_bar_theme_monochrome_white">Uvijek bijelo</string>
     <string name="status_bar_theme_monochrome_black">Uvijek crno</string>
     <string name="status_bar_theme_fire">Vatra</string>

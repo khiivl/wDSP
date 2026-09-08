@@ -166,7 +166,7 @@ Genel Varsayılan: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrum (HUE Döndürme)</string>
     <string name="status_bar_theme_solid_hue">HUE\'den Tek Renk</string>
     <string name="status_bar_theme_auto_day_night">Otomatik Gündüz/Gece (Beyaz/Siyah)</string>
-    <string name="status_bar_theme_eq_groups">EQ Grupları (HUE Döndürme)</string>
+    <string name="status_bar_theme_eq_groups">EQ Grupları</string>
     <string name="status_bar_theme_monochrome_white">Her Zaman Beyaz</string>
     <string name="status_bar_theme_monochrome_black">Her Zaman Siyah</string>
     <string name="status_bar_theme_fire">Ateş</string>

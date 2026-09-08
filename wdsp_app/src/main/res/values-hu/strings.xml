@@ -166,7 +166,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrum (HUE forgatás)</string>
     <string name="status_bar_theme_solid_hue">Egyszínű HUE-ból</string>
     <string name="status_bar_theme_auto_day_night">Auto Nappal/Éjjel (Fehér/Fekete)</string>
-    <string name="status_bar_theme_eq_groups">EQ csoportok (HUE forgatás)</string>
+    <string name="status_bar_theme_eq_groups">EQ csoportok</string>
     <string name="status_bar_theme_monochrome_white">Mindig fehér</string>
     <string name="status_bar_theme_monochrome_black">Mindig fekete</string>
     <string name="status_bar_theme_fire">Tűz</string>

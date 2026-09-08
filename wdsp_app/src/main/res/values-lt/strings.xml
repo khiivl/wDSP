@@ -166,7 +166,7 @@ Bendras numatytasis: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektras (HUE sukimas)</string>
     <string name="status_bar_theme_solid_hue">Vientisa spalva iš HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Diena/Naktis (Balta/Juoda)</string>
-    <string name="status_bar_theme_eq_groups">EQ grupės (HUE sukimas)</string>
+    <string name="status_bar_theme_eq_groups">EQ grupės</string>
     <string name="status_bar_theme_monochrome_white">Visada balta</string>
     <string name="status_bar_theme_monochrome_black">Visada juoda</string>
     <string name="status_bar_theme_fire">Ugnis</string>

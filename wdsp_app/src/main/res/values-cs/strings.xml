@@ -166,7 +166,7 @@ Globální výchozí: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrum (Rotace HUE)</string>
     <string name="status_bar_theme_solid_hue">Jednolitá barva z HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Den/Noc (Bílá/Černá)</string>
-    <string name="status_bar_theme_eq_groups">Skupiny EQ (Rotace HUE)</string>
+    <string name="status_bar_theme_eq_groups">Skupiny EQ</string>
     <string name="status_bar_theme_monochrome_white">Vždy bílá</string>
     <string name="status_bar_theme_monochrome_black">Vždy černá</string>
     <string name="status_bar_theme_fire">Oheň</string>

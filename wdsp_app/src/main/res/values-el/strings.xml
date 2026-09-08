@@ -166,7 +166,7 @@
     <string name="status_bar_theme_spectrum">Φάσμα (Περιστροφή HUE)</string>
     <string name="status_bar_theme_solid_hue">Μονόχρωμο από HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Ημέρα/Νύχτα (Λευκό/Μαύρο)</string>
-    <string name="status_bar_theme_eq_groups">Ομάδες EQ (Περιστροφή HUE)</string>
+    <string name="status_bar_theme_eq_groups">Ομάδες EQ</string>
     <string name="status_bar_theme_monochrome_white">Πάντα λευκό</string>
     <string name="status_bar_theme_monochrome_black">Πάντα μαύρο</string>
     <string name="status_bar_theme_fire">Φωτιά</string>

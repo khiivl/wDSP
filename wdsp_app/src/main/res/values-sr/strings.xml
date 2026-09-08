@@ -166,7 +166,7 @@
     <string name="status_bar_theme_spectrum">Спектар (HUE ротација)</string>
     <string name="status_bar_theme_solid_hue">Једнобојно из HUE</string>
     <string name="status_bar_theme_auto_day_night">Ауто Дан/Ноћ (Бело/Црно)</string>
-    <string name="status_bar_theme_eq_groups">EQ групе (HUE ротација)</string>
+    <string name="status_bar_theme_eq_groups">EQ групе</string>
     <string name="status_bar_theme_monochrome_white">Увек бело</string>
     <string name="status_bar_theme_monochrome_black">Увек црно</string>
     <string name="status_bar_theme_fire">Ватра</string>

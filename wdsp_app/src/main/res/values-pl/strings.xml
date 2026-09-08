@@ -155,7 +155,7 @@
     <string name="status_bar_theme_spectrum">Widmo (Obrót HUE)</string>
     <string name="status_bar_theme_solid_hue">Jednolity kolor z HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Dzień/Noc (Biały/Czarny)</string>
-    <string name="status_bar_theme_eq_groups">Grupy EQ (Obrót HUE)</string>
+    <string name="status_bar_theme_eq_groups">Grupy EQ</string>
     <string name="status_bar_theme_monochrome_white">Zawsze biały</string>
     <string name="status_bar_theme_monochrome_black">Zawsze czarny</string>
     <string name="status_bar_theme_fire">Ogień</string>

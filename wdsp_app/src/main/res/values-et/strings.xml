@@ -166,7 +166,7 @@
     <string name="status_bar_theme_spectrum">Spekter (HUE pöörlemine)</string>
     <string name="status_bar_theme_solid_hue">Ühevärviline HUE-st</string>
     <string name="status_bar_theme_auto_day_night">Auto Päev/Öö (Valge/Must)</string>
-    <string name="status_bar_theme_eq_groups">EQ rühmad (HUE pöörlemine)</string>
+    <string name="status_bar_theme_eq_groups">EQ rühmad</string>
     <string name="status_bar_theme_monochrome_white">Alati valge</string>
     <string name="status_bar_theme_monochrome_black">Alati must</string>
     <string name="status_bar_theme_fire">Tuli</string>

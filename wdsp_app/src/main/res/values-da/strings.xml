@@ -166,7 +166,7 @@ Global standard: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrum (HUE-rotation)</string>
     <string name="status_bar_theme_solid_hue">Ensfarvet fra HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Dag/Nat (Hvid/Sort)</string>
-    <string name="status_bar_theme_eq_groups">EQ-grupper (HUE-rotation)</string>
+    <string name="status_bar_theme_eq_groups">EQ-grupper</string>
     <string name="status_bar_theme_monochrome_white">Altid hvid</string>
     <string name="status_bar_theme_monochrome_black">Altid sort</string>
     <string name="status_bar_theme_fire">Ild</string>

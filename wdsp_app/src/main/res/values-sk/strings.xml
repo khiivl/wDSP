@@ -166,7 +166,7 @@ Globálne predvolené: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrum (Rotácia HUE)</string>
     <string name="status_bar_theme_solid_hue">Jednoliatá farba z HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Deň/Noc (Biela/Čierna)</string>
-    <string name="status_bar_theme_eq_groups">Skupiny EQ (Rotácia HUE)</string>
+    <string name="status_bar_theme_eq_groups">Skupiny EQ</string>
     <string name="status_bar_theme_monochrome_white">Vždy biela</string>
     <string name="status_bar_theme_monochrome_black">Vždy čierna</string>
     <string name="status_bar_theme_fire">Oheň</string>

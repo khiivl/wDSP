@@ -164,7 +164,7 @@
     <string name="status_bar_theme_spectrum">Спектр (Вращение HUE)</string>
     <string name="status_bar_theme_solid_hue">Единый цвет из HUE</string>
     <string name="status_bar_theme_auto_day_night">Авто День/Ночь (Белый/Черный)</string>
-    <string name="status_bar_theme_eq_groups">Группы EQ (Вращение HUE)</string>
+    <string name="status_bar_theme_eq_groups">Группы EQ</string>
     <string name="status_bar_theme_monochrome_white">Всегда белый</string>
     <string name="status_bar_theme_monochrome_black">Всегда черный</string>
     <string name="status_bar_theme_fire">Огонь</string>

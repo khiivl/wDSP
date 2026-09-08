@@ -166,7 +166,7 @@ Globāli noklusējums: %1$s</string>
     <string name="status_bar_theme_spectrum">Spektrs (HUE rotācija)</string>
     <string name="status_bar_theme_solid_hue">Vienkrāsains no HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Diena/Nakts (Balts/Melns)</string>
-    <string name="status_bar_theme_eq_groups">EQ grupas (HUE rotācija)</string>
+    <string name="status_bar_theme_eq_groups">EQ grupas</string>
     <string name="status_bar_theme_monochrome_white">Vienmēr balts</string>
     <string name="status_bar_theme_monochrome_black">Vienmēr melns</string>
     <string name="status_bar_theme_fire">Uguns</string>

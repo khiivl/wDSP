@@ -186,7 +186,7 @@
     <string name="status_bar_theme_spectrum">Spectrum (HUE Rotation)</string>
     <string name="status_bar_theme_solid_hue">Custom Solid Color (HUE)</string>
     <string name="status_bar_theme_auto_day_night">Auto Day/Night (White/Black)</string>
-    <string name="status_bar_theme_eq_groups">EQ Groups (HUE Rotation)</string>
+    <string name="status_bar_theme_eq_groups">EQ Groups</string>
     <string name="status_bar_theme_monochrome_white">Always White</string>
     <string name="status_bar_theme_monochrome_black">Always Black</string>
     <string name="status_bar_theme_fire">Fire</string>

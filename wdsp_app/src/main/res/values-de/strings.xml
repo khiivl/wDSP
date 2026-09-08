@@ -155,7 +155,7 @@
     <string name="status_bar_theme_spectrum">Spektrum (HUE-Drehung)</string>
     <string name="status_bar_theme_solid_hue">Feste Farbe aus HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Tag/Nacht (Weiß/Schwarz)</string>
-    <string name="status_bar_theme_eq_groups">EQ-Gruppen (HUE-Drehung)</string>
+    <string name="status_bar_theme_eq_groups">EQ-Gruppen</string>
     <string name="status_bar_theme_monochrome_white">Immer Weiß</string>
     <string name="status_bar_theme_monochrome_black">Immer Schwarz</string>
     <string name="status_bar_theme_fire">Feuer</string>

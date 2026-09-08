@@ -1233,15 +1233,6 @@
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/label_status_bar_palettes"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/status_bar_palettes_fastled"
-                        android:textSize="@dimen/settings_subtitle_text"
-                        android:textStyle="bold" />
-
                     <!-- Рядок 1: Synthwave (purple_gp), Sherbet (rainbowsherbet_gp), Warm VU (redyellow_gp) -->
                     <LinearLayout
                         android:layout_width="match_parent"

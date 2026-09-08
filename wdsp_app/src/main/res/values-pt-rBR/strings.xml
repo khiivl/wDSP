@@ -164,7 +164,7 @@
     <string name="status_bar_theme_spectrum">Espectro (Rotação HUE)</string>
     <string name="status_bar_theme_solid_hue">Cor Sólida do HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Dia/Noite (Branco/Preto)</string>
-    <string name="status_bar_theme_eq_groups">Grupos EQ (Rotação HUE)</string>
+    <string name="status_bar_theme_eq_groups">Grupos EQ</string>
     <string name="status_bar_theme_monochrome_white">Sempre Branco</string>
     <string name="status_bar_theme_monochrome_black">Sempre Preto</string>
     <string name="status_bar_theme_fire">Fogo</string>

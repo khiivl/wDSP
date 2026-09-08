@@ -166,7 +166,7 @@ Predefinito globale: %1$s</string>
     <string name="status_bar_theme_spectrum">Spettro (Rotazione HUE)</string>
     <string name="status_bar_theme_solid_hue">Tinta unita da HUE</string>
     <string name="status_bar_theme_auto_day_night">Auto Giorno/Notte (Bianco/Nero)</string>
-    <string name="status_bar_theme_eq_groups">Gruppi EQ (Rotazione HUE)</string>
+    <string name="status_bar_theme_eq_groups">Gruppi EQ</string>
     <string name="status_bar_theme_monochrome_white">Sempre Bianco</string>
     <string name="status_bar_theme_monochrome_black">Sempre Nero</string>
     <string name="status_bar_theme_fire">Fuoco</string>
