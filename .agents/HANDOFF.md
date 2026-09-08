@@ -49,6 +49,22 @@ WSL — the keys are there, and a Windows-side push fails silently.
 
 ---
 
+## The state of `gemini_ui_dev` branch (09.09.2026 01:00)
+
+Active dev branch for UI & Platform QF integration. **Everything committed & tested on hardware (`192.168.1.146:9876`)**:
+- `7e12c25`: Loudness relocated to Tone Compensation tab.
+- `2c765cb`: Dynamic Day/Night theming for dialogs (`ThemedDialog`) & dropdowns (`ThemedDropdownAdapter`); mutual exclusion of Loudness vs FM Curve; Screensaver touch transport geometry rewritten (Y split: top 50% closes, bottom 50% never closes; X split into 3 equal zones for Previous, Play/Pause, Next; right corner style toggle; triple NowPlaying dispatch).
+- `f77d705`: Added `.agents/SCREEN_MATRIX.md` (132 factory QF panels, hwrotation=90, 160/320 dpi, status bar rules).
+- `4d462d3`: Bound `systemStatusBarHeight()` in `StatusBarVisualizerManager` to calibrated QF status bar height (65dp/72dp).
+
+### 🛑 Checkpoint: UI Look & Geometry Verification (09.09.2026 00:55)
+- **Current Visual Status**: On owner's reference unit (1280×720 @160dpi), the current layout looks completely balanced and fully satisfies the owner.
+- **Context on "Де ми звернули не туди" (Clarification on screen width discussion)**:
+  - On full 1280×720, nothing is clipped — 650dp of content is comfortably separated by ~630dp empty center spacer.
+  - The discussion of potential clipping of the rightmost button (Export/Import) was raised strictly in the context of Android 10 Split-Screen (640dp) and Tesla-like portrait consoles (600dp) where fixed content exceeds width.
+  - Decision: Safely wrap `layout_presets` into a floating pill with `HorizontalScrollView` (matching the bottom navigation dock) to eliminate any risk of edge clipping on narrow screens while maintaining an elegant, unified look.
+
+
 ## What landed between 26.08 and 03.09
 
 | commit | what |
