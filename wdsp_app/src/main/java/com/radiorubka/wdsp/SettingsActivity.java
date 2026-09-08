@@ -1177,6 +1177,7 @@ public class SettingsActivity extends AppCompatActivity {
         isUpdatingStyleUi = true;
         try {
             int currentWidgetStyle = sbm.getStyle(editNight);
+            editingEffect = currentWidgetStyle;
             selectSpinnerStyle(spinnerStatusBarStyle, currentWidgetStyle);
         } finally {
             isUpdatingStyleUi = false;
@@ -1200,6 +1201,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Permissions
         updatePermissionButtons();
+        refreshRoomMeasurementUi();
+    }
+
+    private void refreshRoomMeasurementUi() {
+        BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
+        if (micSpot != null) {
+            micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
+                    RoomMeasurement.micSpotFrontRear(this));
+        }
+        wireMicPlace();
+        showRoomStatus();
     }
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
@@ -2120,131 +2132,234 @@ public class SettingsActivity extends AppCompatActivity {
     private void restoreAllSettings(Uri uri) {
         try (InputStream is = getContentResolver().openInputStream(uri)) {
             if (is == null) return;
-            restoreFromStream(is);
-            Toaster.show(this, R.string.toast_restore_success);
+            JsonObject root = parseBackupFromStream(is);
+            handleParsedBackup(root);
         } catch (Exception e) {
             Log.e(TAG, "Restore failed", e);
-            Toaster.show(this, getString(R.string.toast_restore_failed, e.getMessage()));
+            ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
+                    getString(R.string.toast_restore_failed, e.getMessage()));
         }
     }
 
     public void restoreFromFile(File file) {
         try (FileInputStream fis = new FileInputStream(file)) {
-            restoreFromStream(fis);
-            Log.i(TAG, "Successfully restored settings from " + file.getAbsolutePath());
-            Toaster.show(this, R.string.toast_restore_success);
+            JsonObject root = parseBackupFromStream(fis);
+            handleParsedBackup(root);
         } catch (Exception e) {
             Log.e(TAG, "restoreFromFile failed", e);
-            Toaster.show(this, getString(R.string.toast_restore_failed, e.getMessage()));
+            ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
+                    getString(R.string.toast_restore_failed, e.getMessage()));
+        }
+    }
+
+    private JsonObject parseBackupFromStream(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        return JsonParser.parseReader(reader).getAsJsonObject();
+    }
+
+    private void handleParsedBackup(JsonObject root) {
+        if (root == null) {
+            throw new IllegalArgumentException("Invalid backup: empty content");
+        }
+        if (root.has("is_single_preset") && root.get("is_single_preset").getAsBoolean()) {
+            ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
+                    getString(R.string.toast_restore_is_preset_hint));
+            return;
+        }
+        if (!root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
+            throw new IllegalArgumentException("Invalid wDSP backup format");
+        }
+
+        boolean hasPresets = root.has("eq_preferences")
+                && root.get("eq_preferences").isJsonObject()
+                && root.getAsJsonObject("eq_preferences").size() > 0;
+
+        if (hasPresets) {
+            ThemedDialog.builder(this)
+                    .setTitle(getString(R.string.dialog_restore_title))
+                    .setMessage(getString(R.string.dialog_restore_presets_prompt))
+                    .setPositiveButton(getString(R.string.dialog_restore_all), (d, w) -> applyRestoredData(root, true))
+                    .setNegativeButton(getString(R.string.dialog_restore_settings_only), (d, w) -> applyRestoredData(root, false))
+                    .setNeutralButton(getString(R.string.btn_cancel), null)
+                    .show();
+        } else {
+            applyRestoredData(root, false);
         }
     }
 
     public void restoreFromStream(InputStream is) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-        JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+        JsonObject root = parseBackupFromStream(is);
         if (root == null || !root.has("app") || !"wDSP".equals(root.get("app").getAsString())) {
+            if (root != null && root.has("is_single_preset") && root.get("is_single_preset").getAsBoolean()) {
+                throw new IllegalArgumentException(getString(R.string.toast_restore_is_preset_hint));
+            }
             throw new IllegalArgumentException("Invalid wDSP backup format");
         }
+        applyRestoredData(root, true);
+    }
 
-        // 1. Restore Default preferences
-        if (root.has("default_preferences") && root.get("default_preferences").isJsonObject()) {
-            SharedPreferences.Editor defEditor = ThemeManager.prefs(this).edit();
-            defEditor.clear();
-            restoreJsonToPrefs(root.getAsJsonObject("default_preferences"), defEditor);
+    private void applyRestoredData(JsonObject root, boolean restorePresets) {
+        try {
+            // 1. Restore Default preferences
+            if (root.has("default_preferences") && root.get("default_preferences").isJsonObject()) {
+                SharedPreferences.Editor defEditor = ThemeManager.prefs(this).edit();
+                defEditor.clear();
+                restoreJsonToPrefs(root.getAsJsonObject("default_preferences"), defEditor);
+                defEditor.apply();
+            }
+
+            // 2. Restore Eq preferences if selected
+            if (restorePresets && root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
+                SharedPreferences.Editor eqEditor = getSharedPreferences("EqPresets", MODE_PRIVATE).edit();
+                eqEditor.clear();
+                restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
+                eqEditor.apply();
+            }
+
+            // 3. Legacy Migration: status bar / screensaver fallback
+            migrateLegacyBackupIfNeeded(root);
+
+            // 4. Notify status bar manager, screensaver manager, audio spectrum engine, and all activities/services
+            StatusBarVisualizerManager.getInstance(this).loadPreferences();
+            StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
+            ScreensaverManager.getInstance(this).onPreferencesRestored();
+            AudioSpectrumEngine.getInstance().loadDisplaySettings(this);
+            sendBroadcast(new Intent("com.radiorubka.wdsp.SETTINGS_RESTORED").setPackage(getPackageName()));
+
+            // 5. Reload activity settings & theme
+            loadSettings();
+            applyTheme();
+
+            ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
+                    getString(R.string.toast_restore_success));
+        } catch (Exception e) {
+            Log.e(TAG, "Apply restored data failed", e);
+            ThemedDialog.notice(this, getString(R.string.settings_restore_btn),
+                    getString(R.string.toast_restore_failed, e.getMessage()));
+        }
+    }
+
+    private void migrateLegacyBackupIfNeeded(JsonObject root) {
+        if (root == null) return;
+        SharedPreferences defPrefs = ThemeManager.prefs(this);
+        SharedPreferences.Editor defEditor = defPrefs.edit();
+        boolean defChanged = false;
+
+        // Migrate status bar keys if stored in eq_preferences in legacy backups
+        if (root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
+            JsonObject eqJson = root.getAsJsonObject("eq_preferences");
+            String[] sbKeys = {
+                StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED,
+                StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F,
+                StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F,
+                StatusBarVisualizerManager.PREF_STATUS_BAR_THEME,
+                StatusBarVisualizerManager.PREF_STATUS_BAR_HUE
+            };
+            for (String k : sbKeys) {
+                if (eqJson.has(k) && !defPrefs.contains(k)) {
+                    restoreSingleJsonEntry(k, eqJson.get(k), defEditor);
+                    defChanged = true;
+                }
+            }
+        }
+
+        // Migrate single screensaver alpha/style to day/night keys if needed
+        if (defPrefs.contains(ScreensaverManager.PREF_BG_ALPHA) && !defPrefs.contains(ScreensaverManager.PREF_BG_ALPHA_DAY)) {
+            int a = defPrefs.getInt(ScreensaverManager.PREF_BG_ALPHA, ScreensaverManager.DEFAULT_BG_ALPHA);
+            defEditor.putInt(ScreensaverManager.PREF_BG_ALPHA_DAY, a);
+            defChanged = true;
+        }
+        if (defPrefs.contains(ScreensaverManager.PREF_STYLE) && !defPrefs.contains(ScreensaverManager.PREF_STYLE_DAY)) {
+            int s = defPrefs.getInt(ScreensaverManager.PREF_STYLE, StatusBarVisualizerManager.DEFAULT_STYLE);
+            defEditor.putInt(ScreensaverManager.PREF_STYLE_DAY, s);
+            defChanged = true;
+        }
+
+        if (defChanged) {
             defEditor.apply();
         }
-
-        // 2. Restore Eq preferences
-        if (root.has("eq_preferences") && root.get("eq_preferences").isJsonObject()) {
-            SharedPreferences.Editor eqEditor = getSharedPreferences("EqPresets", MODE_PRIVATE).edit();
-            eqEditor.clear();
-            restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
-            eqEditor.apply();
-        }
-
-        // 3. Notify status bar manager and all activities/services
-        StatusBarVisualizerManager.getInstance(this).loadPreferences();
-        StatusBarVisualizerManager.getInstance(this).onPreferenceChanged(StatusBarVisualizerManager.PREF_STATUS_BAR_ENABLED);
-        sendBroadcast(new Intent("com.radiorubka.wdsp.SETTINGS_RESTORED").setPackage(getPackageName()));
-
-        // 4. Reload activity settings & theme
-        loadSettings();
-        applyTheme();
     }
 
     private void restoreJsonToPrefs(JsonObject jsonObj, SharedPreferences.Editor editor) {
         for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
-            String key = entry.getKey();
-            JsonElement elem = entry.getValue();
-            if (elem == null || elem.isJsonNull()) continue;
+            restoreSingleJsonEntry(entry.getKey(), entry.getValue(), editor);
+        }
+    }
 
-            // V2 Format with explicit type tag "t" and value "v"
-            if (elem.isJsonObject()) {
-                JsonObject item = elem.getAsJsonObject();
-                if (item.has("t") && item.has("v")) {
-                    String type = item.get("t").getAsString();
-                    JsonElement val = item.get("v");
-                    switch (type) {
-                        case "b":
-                            editor.putBoolean(key, val.getAsBoolean());
-                            break;
-                        case "i":
-                            editor.putInt(key, val.getAsInt());
-                            break;
-                        case "l":
-                            editor.putLong(key, val.getAsLong());
-                            break;
-                        case "f":
-                            editor.putFloat(key, val.getAsFloat());
-                            break;
-                        case "s":
-                            editor.putString(key, val.getAsString());
-                            break;
-                        case "ss":
-                            Set<String> set = new HashSet<>();
-                            if (val.isJsonArray()) {
-                                for (JsonElement se : val.getAsJsonArray()) {
-                                    set.add(se.getAsString());
-                                }
+    private void restoreSingleJsonEntry(String key, JsonElement elem, SharedPreferences.Editor editor) {
+        if (elem == null || elem.isJsonNull()) return;
+
+        // V2 Format with explicit type tag "t" and value "v"
+        if (elem.isJsonObject()) {
+            JsonObject item = elem.getAsJsonObject();
+            if (item.has("t") && item.has("v")) {
+                String type = item.get("t").getAsString();
+                JsonElement val = item.get("v");
+                switch (type) {
+                    case "b":
+                        editor.putBoolean(key, val.getAsBoolean());
+                        break;
+                    case "i":
+                        editor.putInt(key, val.getAsInt());
+                        break;
+                    case "l":
+                        editor.putLong(key, val.getAsLong());
+                        break;
+                    case "f":
+                        editor.putFloat(key, val.getAsFloat());
+                        break;
+                    case "s":
+                        editor.putString(key, val.getAsString());
+                        break;
+                    case "ss":
+                        Set<String> set = new HashSet<>();
+                        if (val.isJsonArray()) {
+                            for (JsonElement se : val.getAsJsonArray()) {
+                                set.add(se.getAsString());
                             }
-                            editor.putStringSet(key, set);
-                            break;
-                    }
-                    continue;
+                        }
+                        editor.putStringSet(key, set);
+                        break;
                 }
+                return;
             }
+        }
 
-            // V1 Legacy Fallback
-            if (elem.isJsonPrimitive()) {
-                JsonPrimitive prim = elem.getAsJsonPrimitive();
-                if (prim.isBoolean()) {
-                    editor.putBoolean(key, prim.getAsBoolean());
-                } else if (prim.isNumber()) {
-                    Number num = prim.getAsNumber();
-                    double d = num.doubleValue();
-                    if (isFloatKey(key)) {
-                        editor.putFloat(key, (float) d);
-                    } else if (d == Math.rint(d)) {
-                        editor.putInt(key, (int) d);
-                    } else {
-                        editor.putFloat(key, (float) d);
-                    }
-                } else if (prim.isString()) {
-                    editor.putString(key, prim.getAsString());
+        // V1 Legacy Fallback
+        if (elem.isJsonPrimitive()) {
+            JsonPrimitive prim = elem.getAsJsonPrimitive();
+            if (prim.isBoolean()) {
+                editor.putBoolean(key, prim.getAsBoolean());
+            } else if (prim.isNumber()) {
+                Number num = prim.getAsNumber();
+                double d = num.doubleValue();
+                if (isFloatKey(key)) {
+                    editor.putFloat(key, (float) d);
+                } else if (d == Math.rint(d)) {
+                    editor.putInt(key, (int) d);
+                } else {
+                    editor.putFloat(key, (float) d);
                 }
-            } else if (elem.isJsonArray()) {
-                Set<String> set = new HashSet<>();
-                for (JsonElement item : elem.getAsJsonArray()) {
-                    if (item.isJsonPrimitive()) set.add(item.getAsString());
-                }
-                editor.putStringSet(key, set);
+            } else if (prim.isString()) {
+                editor.putString(key, prim.getAsString());
             }
+        } else if (elem.isJsonArray()) {
+            Set<String> set = new HashSet<>();
+            for (JsonElement item : elem.getAsJsonArray()) {
+                if (item.isJsonPrimitive()) set.add(item.getAsString());
+            }
+            editor.putStringSet(key, set);
         }
     }
 
     private static boolean isFloatKey(String key) {
         return StatusBarVisualizerManager.PREF_STATUS_BAR_WIDTH_F.equals(key)
-                || StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F.equals(key);
+                || StatusBarVisualizerManager.PREF_STATUS_BAR_POS_F.equals(key)
+                || ScreensaverManager.PREF_WIDTH_F.equals(key)
+                || ScreensaverManager.PREF_HEIGHT_F.equals(key)
+                || ScreensaverManager.PREF_INFO_H.equals(key)
+                || "room_mic_lr".equals(key)
+                || "room_mic_fr".equals(key);
     }
 
     private void applyTheme() {

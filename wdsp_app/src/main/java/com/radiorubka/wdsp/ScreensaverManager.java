@@ -273,6 +273,20 @@ public final class ScreensaverManager {
         }
     }
 
+    /**
+     * Called when preferences have been restored from backup or migrated.
+     * Re-evaluates polling state, idle clock, and hides the overlay if it was switched off.
+     */
+    public void onPreferencesRestored() {
+        handler.post(() -> {
+            resetIdleClock();
+            if (attached && !isEnabled()) {
+                hide();
+            }
+            startPolling();
+        });
+    }
+
     public int delaySeconds() {
         return Math.max(5, prefs.getInt(PREF_DELAY_S, DEFAULT_DELAY_S));
     }

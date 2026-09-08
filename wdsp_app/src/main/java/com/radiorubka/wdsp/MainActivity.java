@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
             else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
                 Log.i("MainActivity", "SETTINGS_RESTORED received, reloading all UI components");
                 applyAppTheme();
+                updateGalaGlobalModeFromPrefs();
                 setupPresets();
                 refreshAllUiValues();
                 SelectTab();
@@ -453,24 +454,11 @@ public class MainActivity extends AppCompatActivity {
         applyAppTheme();
         handleTargetTab(getIntent());
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_ACTIVE").setPackage(getPackageName()));
+        updateGalaGlobalModeFromPrefs();
         if (isFullyInitialized) {
+            setupPresets();
             refreshAllUiValues();
             SelectTab();
-        }
-        // Force the UI to match the saved preference
-        if (isFullyInitialized && presetNames != null) {
-            refreshAllUiValues();
-            SelectTab();
-
-            // Only run this if presetNames is actually ready
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            String current = prefs.getString("last_selected_preset", defaultPreset);
-            int index = presetNames.indexOf(current);
-            if (index >= 0 && index < presetNames.size()) {
-                String newName = presetNames.get(index);
-                spinnerPresets.setText(newName, false);
-                loadPreset(newName);
-            }
         }
         updateVisualizer();
         applyAppTheme();
@@ -2325,6 +2313,17 @@ public class MainActivity extends AppCompatActivity {
                 getString(R.string.btn_ok), null, null, null);
     }
 
+    private void updateGalaGlobalModeFromPrefs() {
+        SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+        if (switchGalaGlobal != null) {
+            isUpdatingUi = true;
+            switchGalaGlobal.setChecked(galaGlobalMode);
+            updateToggleStyle(switchGalaGlobal);
+            isUpdatingUi = false;
+        }
+    }
+
     private void setupGalaControls() {
         updateToggleStyle(switchGalaEnable);
         switchGalaEnable.addOnCheckedChangeListener((bv, checked) -> { 
@@ -2336,11 +2335,7 @@ public class MainActivity extends AppCompatActivity {
         // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
         // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
         // see the GALA sections of savePreset()/loadPreset().
-        updateToggleStyle(switchGalaGlobal);
-        SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
-        switchGalaGlobal.setChecked(galaGlobalMode);
-        updateToggleStyle(switchGalaGlobal);
+        updateGalaGlobalModeFromPrefs();
         switchGalaGlobal.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (isUpdatingUi) return;
@@ -2471,7 +2466,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        os.write(new Gson().toJson(filteredData)
+        os.write(new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(filteredData)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
@@ -2497,6 +2492,13 @@ public class MainActivity extends AppCompatActivity {
 
             Map<String, Object> importedMap = new Gson().fromJson(sb.toString(), new TypeToken<Map<String, Object>>() {}.getType());
             if (importedMap == null) return;
+
+            // Check if user accidentally selected a full system backup instead of an individual preset
+            if (importedMap.containsKey("default_preferences") || importedMap.containsKey("eq_preferences")) {
+                com.radiorubka.wdsp.ui.ThemedDialog.notice(this, getString(R.string.btn_import),
+                        getString(R.string.toast_import_is_backup_hint));
+                return;
+            }
 
             String sourcePresetName = (String) importedMap.get("preset_name_label");
             String newPresetName = sourcePresetName;

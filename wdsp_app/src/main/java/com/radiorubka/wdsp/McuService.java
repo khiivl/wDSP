@@ -451,6 +451,8 @@ public class McuService extends Service implements LocationListener {
                         statusBarManager.loadPreferences();
                         statusBarManager.evaluateVisibility();
                     }
+                    ScreensaverManager.getInstance(getApplicationContext()).onPreferencesRestored();
+                    AudioSpectrumEngine.getInstance().loadDisplaySettings(getApplicationContext());
                 }
             });
         }
