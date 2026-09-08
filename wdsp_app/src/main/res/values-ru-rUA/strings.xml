@@ -292,5 +292,45 @@
     <string name="room_mic_place_dash">Торпедо</string>
     <string name="room_mic_place_pillar_top">Стійка лобового, вгорі</string>
     <string name="room_mic_place_pillar_bottom">Стійка лобового, внизу</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Удалить пресет</string>
+    <string name="dialog_delete_preset_confirm">Вы действительно хотите удалить пресет «%1$s»?</string>
+    <string name="auto_preset_title">Автоматизация пресетов</string>
+    <string name="auto_preset_active_player">Активный аудиоплеер</string>
+    <string name="auto_preset_selected_preset">Выбранный пресет: %1$s</string>
+    <string name="auto_preset_btn_assign">Привязать к этому плееру</string>
+    <string name="auto_preset_btn_set_default">Сделать стандартом для всех</string>
+    <string name="auto_preset_associations_title">Сохранённые привязки</string>
+    <string name="auto_preset_no_associations">Нет сохранённых привязок</string>
+    <string name="auto_preset_unassign">Отвязать</string>
+    <string name="auto_preset_default_label">Глобальный стандарт</string>
+    <string name="auto_preset_call_label">Телефонный звонок</string>
+    <string name="status_bar_visualizer_style">Стиль визуализации</string>
+    <string name="status_bar_style_classic">Классика</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Градиент</string>
+    <string name="status_bar_style_center">Центрированный</string>
+    <string name="status_bar_style_vu">VU-метр</string>
+    <string name="status_bar_style_oscillo">Осциллограф</string>
+    <string name="status_bar_peaks_label">Плавающие пиковые метки</string>
+    <string name="status_bar_peaks_desc">Удержание и плавный гравитационный спад пиков сигнала</string>
+    <string name="status_bar_mirror_label">Симметричный спектр</string>
+    <string name="status_bar_mirror_desc">Басы по центру, высокие частоты по краям (стерео-симметрия)</string>
+    <string name="status_bar_palettes_fastled">Палитры FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Щербет</string>
+    <string name="status_bar_theme_warm_vu">Тёплый VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Морской бриз</string>
+    <string name="status_bar_theme_sunset_real">Закат</string>
+    <string name="vis_effects_title">Эффекты визуализации</string>
+    <string name="vis_effects_select_style">Эффект для настройки:</string>
+    <string name="status_bar_style_label">Эффект виджета:</string>
+    <string name="screensaver_style_label">Эффект скринсейвера:</string>
+    <string name="screensaver_bg_alpha_day">Подложка (День)</string>
+    <string name="screensaver_bg_alpha_night">Подложка (Ночь)</string>
+    <string name="vis_oscillo_persistence_label">Послесвечение люминофора</string>
+    <string name="vis_oscillo_persistence_desc">Эффект аналоговой ЭЛТ: длительность и шлейфы угасания луча осциллографа</string>
+    <string name="btn_vis_preview_screensaver">Показать на скринсейвере</string>
 </resources>
 

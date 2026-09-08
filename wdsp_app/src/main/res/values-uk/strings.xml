@@ -5,8 +5,8 @@
     <!-- Presets -->
     <string name="btn_auto">Авто</string>
     <string name="btn_add">Додaти</string>
-    <string name="btn_rename">Перейм.</string>
-    <string name="btn_delete">Видал.</string>
+    <string name="btn_rename">Перейменувати</string>
+    <string name="btn_delete">Видалити</string>
     <string name="btn_export">Експорт</string>
     <string name="btn_import">Імпорт</string>
 
@@ -23,8 +23,8 @@
     <string name="sub_tweaking">Налаштування сабвуфера</string>
     <string name="fm_visualizer_label">Попередній перегляд корекції</string>
     <string name="lbl_volume">Гучність:</string>
-    <string name="lbl_sub_offset">Зміщення сабв.:</string>
-    <string name="lbl_lower_sub_by">Знизити рівень сабв. на:</string>
+    <string name="lbl_sub_offset">Зміщення сабвуфера:</string>
+    <string name="lbl_lower_sub_by">Знизити рівень сабвуфера на:</string>
     <string name="lbl_calibration_point">Точка калібрування (має бути ~80 дБ):</string>
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
 
@@ -46,9 +46,9 @@
     <string name="front_speaker_bass">Бас передніх динаміків</string>
     <string name="rear_speaker_bass">Бас задніх динаміків</string>
     <string name="lbl_filter">Фільтр</string>
-    <string name="lbl_boost">Підсил.</string>
+    <string name="lbl_boost">Підсилення</string>
     <string name="lbl_freq">Частота</string>
-    <string name="lbl_freq_boost">Част. Підс.</string>
+    <string name="lbl_freq_boost">Частота підсилення</string>
     <string name="lbl_center">Центр</string>
     <string name="fader_balance">Фейдер та Баланс</string>
 
@@ -108,15 +108,27 @@
 
     <!-- Preset Dialogs -->
     <string name="dialog_rename_title">Перейменувати</string>
+    <string name="dialog_delete_preset_title">Видалити пресет</string>
+    <string name="dialog_delete_preset_confirm">Ви дійсно бажаєте видалити пресет «%1$s»?</string>
 
     <!-- Automation Dialog -->
     <string name="automation_title_fmt">Автоматизація: %1$s</string>
     <string name="active_player_fmt">Активний плеєр: %1$s</string>
     <string name="current_associations">Поточні призначення:\n</string>
-    <string name="global_default_fmt">\nГлоб. Стандарт: %1$s</string>
+    <string name="global_default_fmt">\nГлобальний стандарт: %1$s</string>
     <string name="btn_assign">Призначити</string>
     <string name="btn_set_default">Зробити стандартним</string>
     <string name="btn_unassign">Скасувати призначення</string>
+    <string name="auto_preset_title">Автоматизація пресетів</string>
+    <string name="auto_preset_active_player">Активний аудіоплеєр</string>
+    <string name="auto_preset_selected_preset">Обраний пресет: %1$s</string>
+    <string name="auto_preset_btn_assign">Прив\'язати до цього плеєра</string>
+    <string name="auto_preset_btn_set_default">Зробити стандартом для всіх</string>
+    <string name="auto_preset_associations_title">Збережені прив\'язки</string>
+    <string name="auto_preset_no_associations">Немає збережених прив\'язок</string>
+    <string name="auto_preset_unassign">Відв\'язати</string>
+    <string name="auto_preset_default_label">Глобальний стандарт</string>
+    <string name="auto_preset_call_label">Телефонний дзвінок</string>
 
     <!-- Default Names -->
     <string name="default_preset_name">Пресет 1</string>
@@ -144,7 +156,7 @@
     <string name="FMtab">Тонкомпенсація</string>
     <string name="DLtab">Затримки</string>
     <string name="OTtab">Інше</string>
-    <string name="GLtab">Адапт. Гучн.</string>
+    <string name="GLtab">Адаптивна гучність</string>
     <string name="lbl_pwr">Підсилення:</string>
     <string name="hint_sub_freq">Частота</string>
 
@@ -171,7 +183,7 @@
     <string name="settings_theme_night">Ніч</string>
     <string name="settings_theme_auto">Авто</string>
     <string name="settings_accent_title">Акцент</string>
-    <string name="settings_primary_text_title">Осн. текст</string>
+    <string name="settings_primary_text_title">Основний текст</string>
     <string name="settings_label_color_title">Написи</string>
     <string name="settings_on_accent_title">На акценті</string>
     <string name="settings_wallpaper_title">Шпалери</string>

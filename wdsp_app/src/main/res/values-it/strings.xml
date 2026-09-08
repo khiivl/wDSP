@@ -300,5 +300,45 @@ Predefinito globale: %1$s</string>
     <string name="room_mic_place_dash">Cruscotto</string>
     <string name="room_mic_place_pillar_top">Montante A, in alto</string>
     <string name="room_mic_place_pillar_bottom">Montante A, in basso</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Elimina preset</string>
+    <string name="dialog_delete_preset_confirm">Sei sicuro di voler eliminare il preset \"%1$s\"?</string>
+    <string name="auto_preset_title">Automazione dei preset</string>
+    <string name="auto_preset_active_player">Lettore audio attivo</string>
+    <string name="auto_preset_selected_preset">Preset selezionato: %1$s</string>
+    <string name="auto_preset_btn_assign">Assegna a questo lettore</string>
+    <string name="auto_preset_btn_set_default">Imposta come predefinito per tutti</string>
+    <string name="auto_preset_associations_title">Associazioni salvate</string>
+    <string name="auto_preset_no_associations">Nessuna associazione salvata</string>
+    <string name="auto_preset_unassign">Rimuovi associazione</string>
+    <string name="auto_preset_default_label">Standard globale</string>
+    <string name="auto_preset_call_label">Chiamata telefonica</string>
+    <string name="status_bar_visualizer_style">Stile di visualizzazione</string>
+    <string name="status_bar_style_classic">Classico</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradiente</string>
+    <string name="status_bar_style_center">Centrato</string>
+    <string name="status_bar_style_vu">VU meter</string>
+    <string name="status_bar_style_oscillo">Oscilloscopio</string>
+    <string name="status_bar_peaks_label">Picchi fluttuanti</string>
+    <string name="status_bar_peaks_desc">Mantenimento e decadimento gravitazionale dei picchi</string>
+    <string name="status_bar_mirror_label">Spettro simmetrico</string>
+    <string name="status_bar_mirror_desc">Bassi al centro, alti ai lati (simmetria stereo)</string>
+    <string name="status_bar_palettes_fastled">Palette FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorbetto</string>
+    <string name="status_bar_theme_warm_vu">VU caldo</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Brezza marina</string>
+    <string name="status_bar_theme_sunset_real">Tramonto</string>
+    <string name="vis_effects_title">Effetti di visualizzazione</string>
+    <string name="vis_effects_select_style">Effetto da configurare:</string>
+    <string name="status_bar_style_label">Effetto widget:</string>
+    <string name="screensaver_style_label">Effetto salvaschermo:</string>
+    <string name="screensaver_bg_alpha_day">Sfondo (Giorno)</string>
+    <string name="screensaver_bg_alpha_night">Sfondo (Notte)</string>
+    <string name="vis_oscillo_persistence_label">Persistenza dei fosfori</string>
+    <string name="vis_oscillo_persistence_desc">Effetto CRT analogico: tempo di decadimento e scie del fascio oscilloscopio</string>
+    <string name="btn_vis_preview_screensaver">Mostra su salvaschermo</string>
 </resources>
 

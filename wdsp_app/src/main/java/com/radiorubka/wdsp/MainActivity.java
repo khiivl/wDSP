@@ -34,6 +34,7 @@ import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import androidx.appcompat.widget.SwitchCompat;
@@ -74,6 +75,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1499,49 +1501,22 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 1. Create the EditText with Material styling
-        com.google.android.material.textfield.TextInputEditText editText = new com.google.android.material.textfield.TextInputEditText(this);
-        editText.setText(oldName);
-        editText.setSelection(oldName.length());
-        editText.setSingleLine(true);
-
-        // 2. Wrap it in a TextInputLayout to get the Material look (outline/hint)
-        com.google.android.material.textfield.TextInputLayout inputLayout = new com.google.android.material.textfield.TextInputLayout(this);
-        inputLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
-        inputLayout.setHint(getString(R.string.dialog_rename_title));
-        inputLayout.setBoxCornerRadii(12, 12, 12, 12); // Optional: match your app's roundness
-
-        // 3. Add margins to the container so the input isn't flush against the dialog edges
-        FrameLayout container = new FrameLayout(this);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
-        params.leftMargin = margin;
-        params.rightMargin = margin;
-        params.topMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
-        inputLayout.setLayoutParams(params);
-
-        inputLayout.addView(editText);
-        container.addView(inputLayout);
-
-        // 4. Build using MaterialAlertDialogBuilder
-        com.radiorubka.wdsp.ui.ThemedDialog.show(
-                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
-                .setTitle(R.string.dialog_rename_title)
-                .setView(container)
-                .setPositiveButton(R.string.btn_ok, (d, w) -> {
-                    String newName = Objects.requireNonNull(editText.getText()).toString().trim();
-                    if (!newName.isEmpty() && !newName.equals(oldName)) {
-                        if (presetNames.contains(newName)) {
+        com.radiorubka.wdsp.ui.ThemedDialog.showInput(this,
+                getString(R.string.dialog_rename_title),
+                null,
+                oldName,
+                getString(R.string.btn_ok),
+                getString(R.string.btn_cancel),
+                (dialog, newName) -> {
+                    String trimmed = newName != null ? newName.trim() : "";
+                    if (!trimmed.isEmpty() && !trimmed.equals(oldName)) {
+                        if (presetNames.contains(trimmed)) {
                             Toaster.show(this, getString(R.string.toast_exists));
                         } else {
-                            performRename(oldName, newName);
+                            performRename(oldName, trimmed);
                         }
                     }
-                })
-                .setNegativeButton(R.string.btn_cancel, null));
+                });
     }
 
     private void performRename(String o, String n) {
@@ -1614,30 +1589,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteCurrentPreset() {
-        String curr = spinnerPresets.getText().toString();
-        int currindex = presetNames.indexOf(curr);
-        if ("Call".equals(curr)) return;
+        final String curr = spinnerPresets.getText().toString();
+        if ("Call".equals(curr)) {
+            Toaster.show(this, getString(R.string.error));
+            return;
+        }
         if (presetNames.size() <= 1) {
             Toaster.show(this, getString(R.string.toast_cannot_delete_last));
             return;
         }
+
+        com.radiorubka.wdsp.ui.ThemedDialog.showConfirmation(this,
+                getString(R.string.dialog_delete_preset_title),
+                getString(R.string.dialog_delete_preset_confirm, curr),
+                getString(R.string.btn_delete),
+                getString(R.string.btn_cancel),
+                true,
+                () -> performDeletePreset(curr));
+    }
+
+    private void performDeletePreset(String curr) {
+        int currindex = presetNames.indexOf(curr);
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
         for (String key : p.getAll().keySet()) if (key.startsWith(curr + "_")) e.remove(key);
         try {
-            JSONObject playerMap = new JSONObject(p.getString("player_preset_map", "{}"));
+            JSONObject playerMap = new JSONObject(p.getString(PREF_PLAYER_MAP, "{}"));
             JSONObject updatedMap = new JSONObject();
             Iterator<String> keys = playerMap.keys();
             while (keys.hasNext()) {
                 String playerName = keys.next(); String linkedPreset = playerMap.getString(playerName);
                 if (!linkedPreset.equals(curr)) updatedMap.put(playerName, linkedPreset);
             }
-            e.putString("player_preset_map", updatedMap.toString());
+            e.putString(PREF_PLAYER_MAP, updatedMap.toString());
         } catch (Exception err) {
             Log.e(TAG, "Error updating player map: " + err.getMessage());
         }
         String defaultPreset = getString(R.string.default_preset_name);
-        if (curr.equals(p.getString("default_preset_name", ""))) e.putString("default_preset_name", defaultPreset);
+        if (curr.equals(p.getString(PREF_DEFAULT_PRESET, ""))) e.putString(PREF_DEFAULT_PRESET, defaultPreset);
         presetNames.remove(curr);
         if (presetNames.isEmpty()) { presetNames.add(defaultPreset); resetUiInternal(); savePreset(defaultPreset); }
         e.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
@@ -1935,42 +1924,276 @@ public class MainActivity extends AppCompatActivity {
         return "Unknown";
     }
 
+    private String getFriendlyPlayerName(String pkg) {
+        if ("Call".equalsIgnoreCase(pkg)) {
+            return getString(R.string.auto_preset_call_label);
+        }
+        if ("Default".equalsIgnoreCase(pkg)) {
+            return getString(R.string.auto_preset_default_label);
+        }
+        try {
+            android.content.pm.PackageManager pm = getPackageManager();
+            CharSequence label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0));
+            if (label != null && label.length() > 0) {
+                return label.toString();
+            }
+        } catch (Throwable ignored) {
+        }
+        return pkg;
+    }
+
+    private String getPlayerIconGlyph(String pkg) {
+        if ("Call".equalsIgnoreCase(pkg)) return "📞";
+        if ("Default".equalsIgnoreCase(pkg)) return "⚙️";
+        if (pkg != null && (pkg.toLowerCase(Locale.ROOT).contains("radio") || pkg.toLowerCase(Locale.ROOT).contains("fm"))) return "📻";
+        return "🎵";
+    }
+
     private void showAutoPresetDialog() {
         String ass = getSystemProperty();
         if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
             ass = "Call";
-        }
-        else if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
+        } else if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
             ass = "Default";
         }
-        String p = ass;
-        String cur = spinnerPresets.getText().toString();
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        Map<String, String> map = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), new TypeToken<Map<String, String>>(){}.getType());
-        // String def = prefs.getString(PREF_DEFAULT_PRESET, getString(R.string.none));
+        final String p = ass;
+        final String cur = spinnerPresets.getText().toString();
+        final SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        java.lang.reflect.Type type = new TypeToken<Map<String, String>>(){}.getType();
+        Map<String, String> loadedMap = new Gson().fromJson(prefs.getString(PREF_PLAYER_MAP, "{}"), type);
+        final Map<String, String> map = loadedMap != null ? new LinkedHashMap<>(loadedMap) : new LinkedHashMap<>();
 
-        StringBuilder sb = new StringBuilder(getString(R.string.current_associations));
-        for (Map.Entry<String, String> entry : map.entrySet()) sb.append("- ").append(entry.getKey()).append(" -> ").append(entry.getValue()).append("\n");
-//        sb.append(getString(R.string.global_default_fmt, def));
+        final int accent = ThemeManager.accent(this);
+        final int onAccent = ThemeManager.onAccent(this);
+        final int textPrimary = ThemeManager.textPrimary(this);
+        final int textSecondary = ThemeManager.textSecondary(this);
+        final int textMuted = ThemeManager.textMuted(this);
+        final int cardBg = ThemeManager.cardBackground(this);
+        final int border = ThemeManager.panelBorder(this);
+        final float density = getResources().getDisplayMetrics().density;
 
-        com.radiorubka.wdsp.ui.ThemedDialog.show(
-                com.radiorubka.wdsp.ui.ThemedDialog.builder(this)
-                .setTitle(getString(R.string.automation_title_fmt, cur))
-                .setMessage(getString(R.string.active_player_fmt, p) + "\n\n" + sb)
-                .setPositiveButton(R.string.btn_assign, (d, w) -> {
-                    map.put(p, cur);
-                    prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
-                })
-                .setNeutralButton(R.string.btn_set_default, (d, w) -> {
-                        map.put("Default", cur);
-                        prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
-                })
-                .setNegativeButton(R.string.btn_unassign, (d, w) -> {
-                    if (map.containsKey(p)) {
-                        map.remove(p);
-                        prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+
+        // 1. Active player card
+        LinearLayout activeCard = new LinearLayout(this);
+        activeCard.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (14 * density);
+        activeCard.setPadding(pad, pad, pad, pad);
+        activeCard.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1.2f));
+
+        TextView tvActiveHeader = new TextView(this);
+        tvActiveHeader.setText(getString(R.string.auto_preset_active_player).toUpperCase(Locale.getDefault()));
+        tvActiveHeader.setTextColor(textMuted);
+        tvActiveHeader.setTextSize(11);
+        tvActiveHeader.setTypeface(null, Typeface.BOLD);
+        activeCard.addView(tvActiveHeader);
+
+        LinearLayout playerRow = new LinearLayout(this);
+        playerRow.setOrientation(LinearLayout.HORIZONTAL);
+        playerRow.setGravity(Gravity.CENTER_VERTICAL);
+        playerRow.setPadding(0, (int) (6 * density), 0, (int) (6 * density));
+
+        TextView tvGlyph = new TextView(this);
+        tvGlyph.setText(getPlayerIconGlyph(p));
+        tvGlyph.setTextSize(24);
+        tvGlyph.setPadding(0, 0, (int) (10 * density), 0);
+        playerRow.addView(tvGlyph);
+
+        LinearLayout playerTextCol = new LinearLayout(this);
+        playerTextCol.setOrientation(LinearLayout.VERTICAL);
+
+        TextView tvPlayerName = new TextView(this);
+        String friendlyName = getFriendlyPlayerName(p);
+        tvPlayerName.setText(friendlyName);
+        tvPlayerName.setTextColor(textPrimary);
+        tvPlayerName.setTextSize(16);
+        tvPlayerName.setTypeface(null, Typeface.BOLD);
+        playerTextCol.addView(tvPlayerName);
+
+        if (!friendlyName.equals(p)) {
+            TextView tvPkg = new TextView(this);
+            tvPkg.setText(p);
+            tvPkg.setTextColor(textSecondary);
+            tvPkg.setTextSize(12);
+            playerTextCol.addView(tvPkg);
+        }
+        playerRow.addView(playerTextCol);
+        activeCard.addView(playerRow);
+
+        TextView tvTarget = new TextView(this);
+        tvTarget.setText(getString(R.string.auto_preset_selected_preset, cur));
+        tvTarget.setTextColor(accent);
+        tvTarget.setTextSize(13);
+        tvTarget.setTypeface(null, Typeface.BOLD);
+        activeCard.addView(tvTarget);
+
+        // Buttons for active player
+        LinearLayout actBtnRow = new LinearLayout(this);
+        actBtnRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams abrParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        abrParams.topMargin = (int) (10 * density);
+        actBtnRow.setLayoutParams(abrParams);
+
+        TextView btnAssign = new TextView(this);
+        btnAssign.setText(getString(R.string.auto_preset_btn_assign));
+        btnAssign.setTextColor(onAccent);
+        btnAssign.setTextSize(13);
+        btnAssign.setTypeface(null, Typeface.BOLD);
+        btnAssign.setGravity(Gravity.CENTER);
+        btnAssign.setPadding((int) (12 * density), (int) (8 * density), (int) (12 * density), (int) (8 * density));
+        btnAssign.setBackground(ThemeManager.roundedDrawable(this, 10, accent, accent, 0));
+        LinearLayout.LayoutParams baParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        baParams.rightMargin = (int) (6 * density);
+        btnAssign.setLayoutParams(baParams);
+        actBtnRow.addView(btnAssign);
+
+        TextView btnSetDefault = new TextView(this);
+        btnSetDefault.setText(getString(R.string.auto_preset_btn_set_default));
+        btnSetDefault.setTextColor(textPrimary);
+        btnSetDefault.setTextSize(13);
+        btnSetDefault.setTypeface(null, Typeface.BOLD);
+        btnSetDefault.setGravity(Gravity.CENTER);
+        btnSetDefault.setPadding((int) (12 * density), (int) (8 * density), (int) (12 * density), (int) (8 * density));
+        btnSetDefault.setBackground(ThemeManager.roundedDrawable(this, 10, cardBg, border, 1f));
+        LinearLayout.LayoutParams bsdParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        btnSetDefault.setLayoutParams(bsdParams);
+        actBtnRow.addView(btnSetDefault);
+
+        activeCard.addView(actBtnRow);
+        root.addView(activeCard);
+
+        // 2. Section: Saved Associations
+        TextView tvSecTitle = new TextView(this);
+        tvSecTitle.setText(getString(R.string.auto_preset_associations_title));
+        tvSecTitle.setTextColor(textPrimary);
+        tvSecTitle.setTextSize(15);
+        tvSecTitle.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams stParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        stParams.topMargin = (int) (16 * density);
+        stParams.bottomMargin = (int) (6 * density);
+        root.addView(tvSecTitle, stParams);
+
+        // 3. Scrollable List of associations
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout.LayoutParams svParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (220 * density));
+        scroll.setLayoutParams(svParams);
+
+        LinearLayout listContainer = new LinearLayout(this);
+        listContainer.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(listContainer);
+        root.addView(scroll);
+
+        Runnable refreshList = new Runnable() {
+            @Override
+            public void run() {
+                listContainer.removeAllViews();
+                if (map.isEmpty()) {
+                    TextView empty = new TextView(MainActivity.this);
+                    empty.setText(getString(R.string.auto_preset_no_associations));
+                    empty.setTextColor(textMuted);
+                    empty.setTextSize(13);
+                    empty.setGravity(Gravity.CENTER);
+                    empty.setPadding(0, (int) (30 * density), 0, (int) (30 * density));
+                    listContainer.addView(empty);
+                    return;
+                }
+
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    final String playerKey = entry.getKey();
+                    final String presetVal = entry.getValue();
+
+                    LinearLayout item = new LinearLayout(MainActivity.this);
+                    item.setOrientation(LinearLayout.HORIZONTAL);
+                    item.setGravity(Gravity.CENTER_VERTICAL);
+                    int ipad = (int) (10 * density);
+                    item.setPadding(ipad, ipad, ipad, ipad);
+                    item.setBackground(ThemeManager.roundedDrawable(MainActivity.this, 10, cardBg, border, 1f));
+
+                    TextView glyph = new TextView(MainActivity.this);
+                    glyph.setText(getPlayerIconGlyph(playerKey));
+                    glyph.setTextSize(18);
+                    glyph.setGravity(Gravity.CENTER);
+                    LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams((int) (28 * density), ViewGroup.LayoutParams.WRAP_CONTENT);
+                    item.addView(glyph, gp);
+
+                    LinearLayout txtCol = new LinearLayout(MainActivity.this);
+                    txtCol.setOrientation(LinearLayout.VERTICAL);
+                    TextView title = new TextView(MainActivity.this);
+                    String friendly = getFriendlyPlayerName(playerKey);
+                    title.setText(friendly);
+                    title.setTextColor(textPrimary);
+                    title.setTextSize(14);
+                    title.setTypeface(null, Typeface.BOLD);
+                    txtCol.addView(title);
+
+                    if (!friendly.equals(playerKey)) {
+                        TextView sub = new TextView(MainActivity.this);
+                        sub.setText(playerKey);
+                        sub.setTextColor(textSecondary);
+                        sub.setTextSize(11);
+                        txtCol.addView(sub);
                     }
-                }));
+                    item.addView(txtCol, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView arrow = new TextView(MainActivity.this);
+                    arrow.setText("➔");
+                    arrow.setTextColor(textMuted);
+                    arrow.setTextSize(12);
+                    arrow.setPadding((int) (6 * density), 0, (int) (6 * density), 0);
+                    item.addView(arrow);
+
+                    TextView badge = new TextView(MainActivity.this);
+                    badge.setText(presetVal);
+                    badge.setTextColor(accent);
+                    badge.setTextSize(13);
+                    badge.setTypeface(null, Typeface.BOLD);
+                    badge.setPadding((int) (10 * density), (int) (4 * density), (int) (10 * density), (int) (4 * density));
+                    badge.setBackground(ThemeManager.roundedDrawable(MainActivity.this, 8, ColorUtils.setAlphaComponent(accent, 35), accent, 1f));
+                    item.addView(badge);
+
+                    TextView btnDel = new TextView(MainActivity.this);
+                    btnDel.setText("✕");
+                    btnDel.setTextColor(textMuted);
+                    btnDel.setTextSize(16);
+                    btnDel.setTypeface(null, Typeface.BOLD);
+                    btnDel.setPadding((int) (10 * density), (int) (4 * density), (int) (4 * density), (int) (4 * density));
+                    btnDel.setOnClickListener(v -> {
+                        map.remove(playerKey);
+                        prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+                        run();
+                    });
+                    item.addView(btnDel);
+
+                    LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    itemParams.topMargin = (int) (6 * density);
+                    listContainer.addView(item, itemParams);
+                }
+            }
+        };
+
+        btnAssign.setOnClickListener(v -> {
+            map.put(p, cur);
+            prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+            refreshList.run();
+            Toaster.show(MainActivity.this, getString(R.string.toast_settings_applied));
+        });
+
+        btnSetDefault.setOnClickListener(v -> {
+            map.put("Default", cur);
+            prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
+            refreshList.run();
+            Toaster.show(MainActivity.this, getString(R.string.toast_settings_applied));
+        });
+
+        refreshList.run();
+
+        com.radiorubka.wdsp.ui.ThemedDialog.showCustom(this, getString(R.string.auto_preset_title), root,
+                getString(R.string.btn_ok), null, null, null);
     }
 
     private void setupGalaControls() {

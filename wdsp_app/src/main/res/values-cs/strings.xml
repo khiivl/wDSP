@@ -300,5 +300,45 @@ Globální výchozí: %1$s</string>
     <string name="room_mic_place_dash">Palubní deska</string>
     <string name="room_mic_place_pillar_top">A-sloupek, nahoře</string>
     <string name="room_mic_place_pillar_bottom">A-sloupek, dole</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Smazat předvolbu</string>
+    <string name="dialog_delete_preset_confirm">Opravdu chcete smazat předvolbu „%1$s“?</string>
+    <string name="auto_preset_title">Automatizace předvoleb</string>
+    <string name="auto_preset_active_player">Aktivní audio přehrávač</string>
+    <string name="auto_preset_selected_preset">Vybraná předvolba: %1$s</string>
+    <string name="auto_preset_btn_assign">Přiřadit k tomuto přehrávači</string>
+    <string name="auto_preset_btn_set_default">Nastavit jako výchozí pro všechny</string>
+    <string name="auto_preset_associations_title">Uložená přiřazení</string>
+    <string name="auto_preset_no_associations">Žádná uložená přiřazení</string>
+    <string name="auto_preset_unassign">Zrušit přiřazení</string>
+    <string name="auto_preset_default_label">Globální výchozí</string>
+    <string name="auto_preset_call_label">Telefonní hovor</string>
+    <string name="status_bar_visualizer_style">Styl vizualizéru</string>
+    <string name="status_bar_style_classic">Klasika</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Přechod</string>
+    <string name="status_bar_style_center">Vystředěný</string>
+    <string name="status_bar_style_vu">VU metr</string>
+    <string name="status_bar_style_oscillo">Osciloskop</string>
+    <string name="status_bar_peaks_label">Plovoucí špičky</string>
+    <string name="status_bar_peaks_desc">Přidržení a plynulý pokles špiček signálu</string>
+    <string name="status_bar_mirror_label">Symetrické spektrum</string>
+    <string name="status_bar_mirror_desc">Basy uprostřed, výšky po stranách (stereo symetrie)</string>
+    <string name="status_bar_palettes_fastled">Palety FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Šerbet</string>
+    <string name="status_bar_theme_warm_vu">Teplý VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Mořský vánek</string>
+    <string name="status_bar_theme_sunset_real">Západ slunce</string>
+    <string name="vis_effects_title">Efekty vizualizéru</string>
+    <string name="vis_effects_select_style">Efekt k nastavení:</string>
+    <string name="status_bar_style_label">Efekt widgetu:</string>
+    <string name="screensaver_style_label">Efekt spořiče:</string>
+    <string name="screensaver_bg_alpha_day">Podklad (Den)</string>
+    <string name="screensaver_bg_alpha_night">Podklad (Noc)</string>
+    <string name="vis_oscillo_persistence_label">Dosvit luminoforu</string>
+    <string name="vis_oscillo_persistence_desc">Efekt analogové obrazovky: trvání a stopy paprsku osciloskopu</string>
+    <string name="btn_vis_preview_screensaver">Zobrazit na spořiči</string>
 </resources>
 

@@ -318,8 +318,7 @@ public class SettingsActivity extends AppCompatActivity {
             try {
                 wallpaperPickerLauncher.launch(new String[]{"image/*"});
             } catch (Exception e) {
-                Toast.makeText(this, getString(R.string.toast_saf_error, e.getMessage()),
-                        Toast.LENGTH_SHORT).show();
+                Toaster.show(this, getString(R.string.toast_saf_error, e.getMessage()));
             }
         });
 
@@ -2075,10 +2074,10 @@ public class SettingsActivity extends AppCompatActivity {
         try (InputStream is = getContentResolver().openInputStream(uri)) {
             if (is == null) return;
             restoreFromStream(is);
-            Toast.makeText(this, R.string.toast_restore_success, Toast.LENGTH_SHORT).show();
+            Toaster.show(this, R.string.toast_restore_success);
         } catch (Exception e) {
             Log.e(TAG, "Restore failed", e);
-            Toast.makeText(this, getString(R.string.toast_restore_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+            Toaster.show(this, getString(R.string.toast_restore_failed, e.getMessage()));
         }
     }
 
@@ -2086,10 +2085,10 @@ public class SettingsActivity extends AppCompatActivity {
         try (FileInputStream fis = new FileInputStream(file)) {
             restoreFromStream(fis);
             Log.i(TAG, "Successfully restored settings from " + file.getAbsolutePath());
-            Toast.makeText(this, R.string.toast_restore_success, Toast.LENGTH_SHORT).show();
+            Toaster.show(this, R.string.toast_restore_success);
         } catch (Exception e) {
             Log.e(TAG, "restoreFromFile failed", e);
-            Toast.makeText(this, getString(R.string.toast_restore_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+            Toaster.show(this, getString(R.string.toast_restore_failed, e.getMessage()));
         }
     }
 

@@ -288,5 +288,45 @@
     <string name="room_mic_place_dash">Deska rozdzielcza</string>
     <string name="room_mic_place_pillar_top">Słupek A, góra</string>
     <string name="room_mic_place_pillar_bottom">Słupek A, dół</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Usuń preset</string>
+    <string name="dialog_delete_preset_confirm">Czy na pewno chcesz usunąć preset „%1$s”?</string>
+    <string name="auto_preset_title">Automatyzacja presetów</string>
+    <string name="auto_preset_active_player">Aktywny odtwarzacz audio</string>
+    <string name="auto_preset_selected_preset">Wybrany preset: %1$s</string>
+    <string name="auto_preset_btn_assign">Przypisz do tego odtwarzacza</string>
+    <string name="auto_preset_btn_set_default">Ustaw jako domyślny dla wszystkich</string>
+    <string name="auto_preset_associations_title">Zapisane powiązania</string>
+    <string name="auto_preset_no_associations">Brak zapisanych powiązań</string>
+    <string name="auto_preset_unassign">Odłącz</string>
+    <string name="auto_preset_default_label">Globalny standard</string>
+    <string name="auto_preset_call_label">Połączenie telefoniczne</string>
+    <string name="status_bar_visualizer_style">Styl wizualizacji</string>
+    <string name="status_bar_style_classic">Klasyczny</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradient</string>
+    <string name="status_bar_style_center">Wyśrodkowany</string>
+    <string name="status_bar_style_vu">VU-metr</string>
+    <string name="status_bar_style_oscillo">Oscyloskop</string>
+    <string name="status_bar_peaks_label">Pływające znaczniki szczytów</string>
+    <string name="status_bar_peaks_desc">Zatrzymanie i płynne grawitacyjne opadanie szczytów sygnału</string>
+    <string name="status_bar_mirror_label">Symetryczne widmo</string>
+    <string name="status_bar_mirror_desc">Basy w centrum, wysokie tony na zewnątrz (symetria stereo)</string>
+    <string name="status_bar_palettes_fastled">Palety FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorbet</string>
+    <string name="status_bar_theme_warm_vu">Ciepły VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Morska bryza</string>
+    <string name="status_bar_theme_sunset_real">Zachód słońca</string>
+    <string name="vis_effects_title">Efekty wizualizacji</string>
+    <string name="vis_effects_select_style">Efekt do konfiguracji:</string>
+    <string name="status_bar_style_label">Efekt widżetu:</string>
+    <string name="screensaver_style_label">Efekt wygaszacza:</string>
+    <string name="screensaver_bg_alpha_day">Podkład (Dzień)</string>
+    <string name="screensaver_bg_alpha_night">Podkład (Noc)</string>
+    <string name="vis_oscillo_persistence_label">Poświata luminoforu</string>
+    <string name="vis_oscillo_persistence_desc">Efekt analogowego kineskopu: czas wygasania i smugi wiązki oscyloskopu</string>
+    <string name="btn_vis_preview_screensaver">Pokaż na wygaszaczu</string>
 </resources>
 

@@ -298,5 +298,45 @@
     <string name="room_mic_place_dash">Painel de instrumentos</string>
     <string name="room_mic_place_pillar_top">Coluna A, em cima</string>
     <string name="room_mic_place_pillar_bottom">Coluna A, embaixo</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Eliminar predefinição</string>
+    <string name="dialog_delete_preset_confirm">Tem a certeza de que deseja eliminar a predefinição \"%1$s\"?</string>
+    <string name="auto_preset_title">Automação de predefinições</string>
+    <string name="auto_preset_active_player">Reprodutor de áudio ativo</string>
+    <string name="auto_preset_selected_preset">Predefinição selecionada: %1$s</string>
+    <string name="auto_preset_btn_assign">Atribuir a este reprodutor</string>
+    <string name="auto_preset_btn_set_default">Definir como padrão global</string>
+    <string name="auto_preset_associations_title">Associações guardadas</string>
+    <string name="auto_preset_no_associations">Nenhuma associação guardada</string>
+    <string name="auto_preset_unassign">Desvincular</string>
+    <string name="auto_preset_default_label">Padrão global</string>
+    <string name="auto_preset_call_label">Chamada telefónica</string>
+    <string name="status_bar_visualizer_style">Estilo de visualização</string>
+    <string name="status_bar_style_classic">Clássico</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradiente</string>
+    <string name="status_bar_style_center">Centrado</string>
+    <string name="status_bar_style_vu">VU meter</string>
+    <string name="status_bar_style_oscillo">Osciloscópio</string>
+    <string name="status_bar_peaks_label">Picos flutuantes</string>
+    <string name="status_bar_peaks_desc">Retenção e queda suave dos picos de sinal</string>
+    <string name="status_bar_mirror_label">Espectro simétrico</string>
+    <string name="status_bar_mirror_desc">Graves no centro, agudos nos lados (simetria estéreo)</string>
+    <string name="status_bar_palettes_fastled">Paletas FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorvete</string>
+    <string name="status_bar_theme_warm_vu">VU quente</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Brisa marítima</string>
+    <string name="status_bar_theme_sunset_real">Pôr do sol</string>
+    <string name="vis_effects_title">Efeitos de visualização</string>
+    <string name="vis_effects_select_style">Efeito para configurar:</string>
+    <string name="status_bar_style_label">Efeito do widget:</string>
+    <string name="screensaver_style_label">Efeito do protetor de ecrã:</string>
+    <string name="screensaver_bg_alpha_day">Fundo (Dia)</string>
+    <string name="screensaver_bg_alpha_night">Fundo (Noite)</string>
+    <string name="vis_oscillo_persistence_label">Persistência do fósforo</string>
+    <string name="vis_oscillo_persistence_desc">Efeito CRT analógico: duração e rasto do feixe do osciloscópio</string>
+    <string name="btn_vis_preview_screensaver">Exibir no protetor de ecrã</string>
 </resources>
 

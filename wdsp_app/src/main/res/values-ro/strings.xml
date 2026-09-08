@@ -300,5 +300,45 @@ Implicit global: %1$s</string>
     <string name="room_mic_place_dash">Bord</string>
     <string name="room_mic_place_pillar_top">Stâlpul A, sus</string>
     <string name="room_mic_place_pillar_bottom">Stâlpul A, jos</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Delete Preset</string>
+    <string name="dialog_delete_preset_confirm">Are you sure you want to delete preset \"%1$s\"?</string>
+    <string name="auto_preset_title">Preset Automation</string>
+    <string name="auto_preset_active_player">Active Player</string>
+    <string name="auto_preset_selected_preset">Selected Preset: %1$s</string>
+    <string name="auto_preset_btn_assign">Assign to active player</string>
+    <string name="auto_preset_btn_set_default">Set as Global Default</string>
+    <string name="auto_preset_associations_title">Saved Associations</string>
+    <string name="auto_preset_no_associations">No saved associations</string>
+    <string name="auto_preset_unassign">Unassign</string>
+    <string name="auto_preset_default_label">Global Default</string>
+    <string name="auto_preset_call_label">Phone Call</string>
+    <string name="status_bar_visualizer_style">Visualizer Style</string>
+    <string name="status_bar_style_classic">Classic</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradient</string>
+    <string name="status_bar_style_center">Center</string>
+    <string name="status_bar_style_vu">VU-Meter</string>
+    <string name="status_bar_style_oscillo">Oscilloscope</string>
+    <string name="status_bar_peaks_label">Floating Peak Caps</string>
+    <string name="status_bar_peaks_desc">Peak hold markers with smooth gravity decay</string>
+    <string name="status_bar_mirror_label">Symmetrical Spectrum</string>
+    <string name="status_bar_mirror_desc">Center bass with treble on sides (stereo symmetry)</string>
+    <string name="status_bar_palettes_fastled">FastLED Palettes (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sherbet</string>
+    <string name="status_bar_theme_warm_vu">Warm VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Ocean Breeze</string>
+    <string name="status_bar_theme_sunset_real">Sunset Real</string>
+    <string name="vis_effects_title">Visualizer Effects</string>
+    <string name="vis_effects_select_style">Configure Effect:</string>
+    <string name="status_bar_style_label">Widget Visualizer Effect</string>
+    <string name="screensaver_style_label">Screensaver Default Effect</string>
+    <string name="screensaver_bg_alpha_day">Backdrop (Day)</string>
+    <string name="screensaver_bg_alpha_night">Backdrop (Night)</string>
+    <string name="vis_oscillo_persistence_label">Phosphor Afterglow</string>
+    <string name="vis_oscillo_persistence_desc">Analog CRT persistence: decay duration and glow trails of the oscilloscope beam</string>
+    <string name="btn_vis_preview_screensaver">Show on screensaver</string>
 </resources>
 

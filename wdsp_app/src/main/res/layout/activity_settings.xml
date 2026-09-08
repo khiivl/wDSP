@@ -594,7 +594,7 @@
                         android:layout_height="wrap_content"
                         android:minWidth="56dp"
                         android:gravity="end"
-                        android:text="auto"
+                        android:text="@string/settings_theme_auto"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -1817,7 +1817,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="Audio Record"
+                        android:text="@string/perm_audio_record"
                         android:textSize="12sp" />
 
                     <TextView
@@ -1829,7 +1829,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:background="@drawable/rds_btn_bg"
-                        android:text="GPS Location"
+                        android:text="@string/perm_gps_location"
                         android:textSize="12sp" />
                 </LinearLayout>
 

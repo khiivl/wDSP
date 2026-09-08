@@ -300,5 +300,45 @@ Genel Varsayılan: %1$s</string>
     <string name="room_mic_place_dash">Gösterge paneli</string>
     <string name="room_mic_place_pillar_top">A sütunu, üst</string>
     <string name="room_mic_place_pillar_bottom">A sütunu, alt</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Önayarı Sil</string>
+    <string name="dialog_delete_preset_confirm">\"%1$s\" önayarını silmek istediğinizden emin misiniz?</string>
+    <string name="auto_preset_title">Önayar Otomasyonu</string>
+    <string name="auto_preset_active_player">Etkin Ses Çalar</string>
+    <string name="auto_preset_selected_preset">Seçili Önayar: %1$s</string>
+    <string name="auto_preset_btn_assign">Bu çalara ata</string>
+    <string name="auto_preset_btn_set_default">Genel varsayılan yap</string>
+    <string name="auto_preset_associations_title">Kayıtlı Eşleştirmeler</string>
+    <string name="auto_preset_no_associations">Kayıtlı eşleştirme yok</string>
+    <string name="auto_preset_unassign">Eşleştirmeyi kaldır</string>
+    <string name="auto_preset_default_label">Genel Varsayılan</string>
+    <string name="auto_preset_call_label">Telefon Araması</string>
+    <string name="status_bar_visualizer_style">Görselleştirici Stili</string>
+    <string name="status_bar_style_classic">Klasik</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Gradyan</string>
+    <string name="status_bar_style_center">Ortalanmış</string>
+    <string name="status_bar_style_vu">VU-Metre</string>
+    <string name="status_bar_style_oscillo">Osilaskop</string>
+    <string name="status_bar_peaks_label">Yüzen Tepe İşaretçileri</string>
+    <string name="status_bar_peaks_desc">Sinyal tepelerinin tutulması ve yumuşak düşüşü</string>
+    <string name="status_bar_mirror_label">Simetrik Spektrum</string>
+    <string name="status_bar_mirror_desc">Ortada baslar, kenarlarda tizler (stereo simetrisi)</string>
+    <string name="status_bar_palettes_fastled">FastLED Paletleri (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Şerbet</string>
+    <string name="status_bar_theme_warm_vu">Sıcak VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Okyanus Esintisi</string>
+    <string name="status_bar_theme_sunset_real">Gün Batımı</string>
+    <string name="vis_effects_title">Görselleştirici Efektleri</string>
+    <string name="vis_effects_select_style">Ayarlanacak Efekt:</string>
+    <string name="status_bar_style_label">Araç Takımı Efekti:</string>
+    <string name="screensaver_style_label">Ekran Koruyucu Efekti:</string>
+    <string name="screensaver_bg_alpha_day">Arka Plan (Gündüz)</string>
+    <string name="screensaver_bg_alpha_night">Arka Plan (Gece)</string>
+    <string name="vis_oscillo_persistence_label">Fosfor Sonrası Işıma</string>
+    <string name="vis_oscillo_persistence_desc">Analog CRT efekti: osiloskop ışınının sönme süresi ve ışık izleri</string>
+    <string name="btn_vis_preview_screensaver">Ekran koruyucuda göster</string>
 </resources>
 

@@ -300,5 +300,45 @@ Globale standaard: %1$s</string>
     <string name="room_mic_place_dash">Dashboard</string>
     <string name="room_mic_place_pillar_top">A-stijl, boven</string>
     <string name="room_mic_place_pillar_bottom">A-stijl, onder</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Preset verwijderen</string>
+    <string name="dialog_delete_preset_confirm">Weet u zeker dat u preset \"%1$s\" wilt verwijderen?</string>
+    <string name="auto_preset_title">Preset-automatisering</string>
+    <string name="auto_preset_active_player">Actieve audiospeler</string>
+    <string name="auto_preset_selected_preset">Geselecteerde preset: %1$s</string>
+    <string name="auto_preset_btn_assign">Aan deze speler toewijzen</string>
+    <string name="auto_preset_btn_set_default">Als algemene standaard instellen</string>
+    <string name="auto_preset_associations_title">Opgeslagen koppelingen</string>
+    <string name="auto_preset_no_associations">Geen opgeslagen koppelingen</string>
+    <string name="auto_preset_unassign">Koppeling verwijderen</string>
+    <string name="auto_preset_default_label">Algemene standaard</string>
+    <string name="auto_preset_call_label">Telefoongesprek</string>
+    <string name="status_bar_visualizer_style">Visualisatiestijl</string>
+    <string name="status_bar_style_classic">Klassiek</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Kleurverloop</string>
+    <string name="status_bar_style_center">Gecentreerd</string>
+    <string name="status_bar_style_vu">VU-meter</string>
+    <string name="status_bar_style_oscillo">Oscilloscoop</string>
+    <string name="status_bar_peaks_label">Zwevende piekmarkeringen</string>
+    <string name="status_bar_peaks_desc">Vasthouden en geleidelijk afvallen van signaalpieken</string>
+    <string name="status_bar_mirror_label">Symmetrisch spectrum</string>
+    <string name="status_bar_mirror_desc">Bassen in het midden, hoge tonen aan de zijkanten (stereosymmetrie)</string>
+    <string name="status_bar_palettes_fastled">FastLED-paletten (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorbet</string>
+    <string name="status_bar_theme_warm_vu">Warme VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Zeebries</string>
+    <string name="status_bar_theme_sunset_real">Zonsondergang</string>
+    <string name="vis_effects_title">Visualisatie-effecten</string>
+    <string name="vis_effects_select_style">Effect om aan te passen:</string>
+    <string name="status_bar_style_label">Widget-effect:</string>
+    <string name="screensaver_style_label">Schermbeveiligingseffect:</string>
+    <string name="screensaver_bg_alpha_day">Achtergrond (Dag)</string>
+    <string name="screensaver_bg_alpha_night">Achtergrond (Nacht)</string>
+    <string name="vis_oscillo_persistence_label">Fosfor-nalichten</string>
+    <string name="vis_oscillo_persistence_desc">Analoog CRT-effect: nagloeiduur en lichtsporen van de oscilloscoopstraal</string>
+    <string name="btn_vis_preview_screensaver">Weergeven op schermbeveiliging</string>
 </resources>
 

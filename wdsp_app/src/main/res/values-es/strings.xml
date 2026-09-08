@@ -289,5 +289,45 @@
     <string name="room_mic_place_dash">Salpicadero</string>
     <string name="room_mic_place_pillar_top">Pilar A, arriba</string>
     <string name="room_mic_place_pillar_bottom">Pilar A, abajo</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Eliminar preajuste</string>
+    <string name="dialog_delete_preset_confirm">¿Seguro que desea eliminar el preajuste \"%1$s\"?</string>
+    <string name="auto_preset_title">Automatización de preajustes</string>
+    <string name="auto_preset_active_player">Reproductor de audio activo</string>
+    <string name="auto_preset_selected_preset">Preajuste seleccionado: %1$s</string>
+    <string name="auto_preset_btn_assign">Asignar a este reproductor</string>
+    <string name="auto_preset_btn_set_default">Establecer como estándar global</string>
+    <string name="auto_preset_associations_title">Asociaciones guardadas</string>
+    <string name="auto_preset_no_associations">No hay asociaciones guardadas</string>
+    <string name="auto_preset_unassign">Desvincular</string>
+    <string name="auto_preset_default_label">Estándar global</string>
+    <string name="auto_preset_call_label">Llamada telefónica</string>
+    <string name="status_bar_visualizer_style">Estilo de visualización</string>
+    <string name="status_bar_style_classic">Clásico</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Degradado</string>
+    <string name="status_bar_style_center">Centrado</string>
+    <string name="status_bar_style_vu">Vúmetro</string>
+    <string name="status_bar_style_oscillo">Osciloscopio</string>
+    <string name="status_bar_peaks_label">Marcadores de picos flotantes</string>
+    <string name="status_bar_peaks_desc">Retención y caída gravitatoria suave de picos</string>
+    <string name="status_bar_mirror_label">Espectro simétrico</string>
+    <string name="status_bar_mirror_desc">Graves al centro, agudos a los extremos (simetría estéreo)</string>
+    <string name="status_bar_palettes_fastled">Paletas FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorbete</string>
+    <string name="status_bar_theme_warm_vu">VU cálido</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Brisa marina</string>
+    <string name="status_bar_theme_sunset_real">Atardecer</string>
+    <string name="vis_effects_title">Efectos de visualización</string>
+    <string name="vis_effects_select_style">Efecto a configurar:</string>
+    <string name="status_bar_style_label">Efecto del widget:</string>
+    <string name="screensaver_style_label">Efecto del protector:</string>
+    <string name="screensaver_bg_alpha_day">Fondo (Día)</string>
+    <string name="screensaver_bg_alpha_night">Fondo (Noche)</string>
+    <string name="vis_oscillo_persistence_label">Persistencia del fósforo</string>
+    <string name="vis_oscillo_persistence_desc">Efecto TRC analógico: persistencia y estelas del haz del osciloscopio</string>
+    <string name="btn_vis_preview_screensaver">Mostrar en protector</string>
 </resources>
 

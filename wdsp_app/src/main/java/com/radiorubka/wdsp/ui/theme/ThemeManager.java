@@ -147,6 +147,25 @@ public final class ThemeManager {
         prefs(ctx).edit().putInt(key, color).apply();
     }
 
+    public static int textMuted(Context ctx) {
+        return textMuted(ctx, isNight(ctx));
+    }
+
+    public static int textMuted(Context ctx, boolean night) {
+        int sec = textSecondary(ctx, night);
+        return androidx.core.graphics.ColorUtils.setAlphaComponent(sec, 0xB0);
+    }
+
+    public static int contrastText(int textColor, int background) {
+        float lum1 = (float) androidx.core.graphics.ColorUtils.calculateLuminance(textColor);
+        float lum2 = (float) androidx.core.graphics.ColorUtils.calculateLuminance(background);
+        float ratio = (Math.max(lum1, lum2) + 0.05f) / (Math.min(lum1, lum2) + 0.05f);
+        if (ratio >= 2.8f) {
+            return textColor;
+        }
+        return getContrastingTextColor(background);
+    }
+
     public static int background(Context ctx) {
         return background(isNight(ctx));
     }

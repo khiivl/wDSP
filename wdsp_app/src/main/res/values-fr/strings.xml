@@ -300,5 +300,45 @@ Par défaut global : %1$s</string>
     <string name="room_mic_place_dash">Tableau de bord</string>
     <string name="room_mic_place_pillar_top">Montant de pare-brise, en haut</string>
     <string name="room_mic_place_pillar_bottom">Montant de pare-brise, en bas</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Supprimer le préréglage</string>
+    <string name="dialog_delete_preset_confirm">Voulez-vous vraiment supprimer le préréglage « %1$s » ?</string>
+    <string name="auto_preset_title">Automatisation des préréglages</string>
+    <string name="auto_preset_active_player">Lecteur audio actif</string>
+    <string name="auto_preset_selected_preset">Préréglage sélectionné : %1$s</string>
+    <string name="auto_preset_btn_assign">Associer à ce lecteur</string>
+    <string name="auto_preset_btn_set_default">Définir par défaut pour tous</string>
+    <string name="auto_preset_associations_title">Associations enregistrées</string>
+    <string name="auto_preset_no_associations">Aucune association enregistrée</string>
+    <string name="auto_preset_unassign">Dissocier</string>
+    <string name="auto_preset_default_label">Standard global</string>
+    <string name="auto_preset_call_label">Appel téléphonique</string>
+    <string name="status_bar_visualizer_style">Style de visualisation</string>
+    <string name="status_bar_style_classic">Classique</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Dégradé</string>
+    <string name="status_bar_style_center">Centré</string>
+    <string name="status_bar_style_vu">VU-mètre</string>
+    <string name="status_bar_style_oscillo">Oscilloscope</string>
+    <string name="status_bar_peaks_label">Pics flottants</string>
+    <string name="status_bar_peaks_desc">Maintien et chute progressive des crêtes de signal</string>
+    <string name="status_bar_mirror_label">Spectre symétrique</string>
+    <string name="status_bar_mirror_desc">Basses au centre, aigus sur les côtés (symétrie stéréo)</string>
+    <string name="status_bar_palettes_fastled">Palettes FastLED (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sorbet</string>
+    <string name="status_bar_theme_warm_vu">VU chaleureux</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Brise marine</string>
+    <string name="status_bar_theme_sunset_real">Coucher de soleil</string>
+    <string name="vis_effects_title">Effets de visualisation</string>
+    <string name="vis_effects_select_style">Effet à configurer :</string>
+    <string name="status_bar_style_label">Effet du widget :</string>
+    <string name="screensaver_style_label">Effet de l\'économiseur :</string>
+    <string name="screensaver_bg_alpha_day">Fond (Jour)</string>
+    <string name="screensaver_bg_alpha_night">Fond (Nuit)</string>
+    <string name="vis_oscillo_persistence_label">Persistance du phosphore</string>
+    <string name="vis_oscillo_persistence_desc">Effet CRT analogique : durée d\'extinction et traînées lumineuses du faisceau</string>
+    <string name="btn_vis_preview_screensaver">Afficher sur l\'économiseur</string>
 </resources>
 

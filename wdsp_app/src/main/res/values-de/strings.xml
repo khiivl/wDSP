@@ -288,5 +288,45 @@
     <string name="room_mic_place_dash">Armaturenbrett</string>
     <string name="room_mic_place_pillar_top">A-Säule, oben</string>
     <string name="room_mic_place_pillar_bottom">A-Säule, unten</string>
+    <!-- Added missing localization keys -->
+    <string name="dialog_delete_preset_title">Preset löschen</string>
+    <string name="dialog_delete_preset_confirm">Möchten Sie das Preset \"%1$s\" wirklich löschen?</string>
+    <string name="auto_preset_title">Preset-Automatisierung</string>
+    <string name="auto_preset_active_player">Aktiver Audio-Player</string>
+    <string name="auto_preset_selected_preset">Ausgewähltes Preset: %1$s</string>
+    <string name="auto_preset_btn_assign">Diesem Player zuweisen</string>
+    <string name="auto_preset_btn_set_default">Als globalen Standard festlegen</string>
+    <string name="auto_preset_associations_title">Gespeicherte Zuweisungen</string>
+    <string name="auto_preset_no_associations">Keine gespeicherten Zuweisungen</string>
+    <string name="auto_preset_unassign">Zuweisung aufheben</string>
+    <string name="auto_preset_default_label">Globaler Standard</string>
+    <string name="auto_preset_call_label">Telefonanruf</string>
+    <string name="status_bar_visualizer_style">Visualisierungsstil</string>
+    <string name="status_bar_style_classic">Klassisch</string>
+    <string name="status_bar_style_outrun">Outrun</string>
+    <string name="status_bar_style_gradient">Farbverlauf</string>
+    <string name="status_bar_style_center">Zentriert</string>
+    <string name="status_bar_style_vu">VU-Meter</string>
+    <string name="status_bar_style_oscillo">Oszilloskop</string>
+    <string name="status_bar_peaks_label">Schwebende Peak-Spitzen</string>
+    <string name="status_bar_peaks_desc">Halten und sanftes Abfallen der Signalspitzen</string>
+    <string name="status_bar_mirror_label">Symmetrisches Spektrum</string>
+    <string name="status_bar_mirror_desc">Bässe in der Mitte, Höhen an den Seiten (Stereo-Symmetrie)</string>
+    <string name="status_bar_palettes_fastled">FastLED-Paletten (FireLamp)</string>
+    <string name="status_bar_theme_purple">Synthwave</string>
+    <string name="status_bar_theme_rainbow_sherbet">Sherbet</string>
+    <string name="status_bar_theme_warm_vu">Warmes VU</string>
+    <string name="status_bar_theme_colorfull">Colorfull</string>
+    <string name="status_bar_theme_ocean_breeze">Meeresbrise</string>
+    <string name="status_bar_theme_sunset_real">Sonnenuntergang</string>
+    <string name="vis_effects_title">Visualisierungseffekte</string>
+    <string name="vis_effects_select_style">Effekt zum Anpassen:</string>
+    <string name="status_bar_style_label">Widget-Effekt:</string>
+    <string name="screensaver_style_label">Bildschirmschoner-Effekt:</string>
+    <string name="screensaver_bg_alpha_day">Hintergrund (Tag)</string>
+    <string name="screensaver_bg_alpha_night">Hintergrund (Nacht)</string>
+    <string name="vis_oscillo_persistence_label">Leuchtstoff-Nachleuchten</string>
+    <string name="vis_oscillo_persistence_desc">Analoger Kathodenstrahl-Effekt: Nachleuchtdauer und Lichtspuren des Oszilloskops</string>
+    <string name="btn_vis_preview_screensaver">Auf Bildschirmschoner anzeigen</string>
 </resources>
 

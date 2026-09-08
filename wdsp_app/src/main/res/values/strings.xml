@@ -114,6 +114,8 @@
 
     <!-- Preset Dialogs -->
     <string name="dialog_rename_title">Rename</string>
+    <string name="dialog_delete_preset_title">Delete Preset</string>
+    <string name="dialog_delete_preset_confirm">Are you sure you want to delete preset \"%1$s\"?</string>
 
     <!-- Automation Dialog -->
     <string name="automation_title_fmt">Automation: %1$s</string>
@@ -123,6 +125,16 @@
     <string name="btn_assign">Assign</string>
     <string name="btn_set_default">Set Default</string>
     <string name="btn_unassign">Unassign</string>
+    <string name="auto_preset_title">Preset Automation</string>
+    <string name="auto_preset_active_player">Active Player</string>
+    <string name="auto_preset_selected_preset">Selected Preset: %1$s</string>
+    <string name="auto_preset_btn_assign">Assign to active player</string>
+    <string name="auto_preset_btn_set_default">Set as Global Default</string>
+    <string name="auto_preset_associations_title">Saved Associations</string>
+    <string name="auto_preset_no_associations">No saved associations</string>
+    <string name="auto_preset_unassign">Unassign</string>
+    <string name="auto_preset_default_label">Global Default</string>
+    <string name="auto_preset_call_label">Phone Call</string>
 
     <!-- Default Names -->
     <string name="default_preset_name">Preset 1</string>
