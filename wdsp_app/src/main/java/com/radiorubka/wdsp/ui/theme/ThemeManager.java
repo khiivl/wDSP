@@ -62,6 +62,15 @@ public final class ThemeManager {
 
     private static String cachedWallpaperKey;
     private static Bitmap cachedWallpaper;
+    private static String cachedFrostedKey;
+    private static int[] cachedChromaColors;
+    private static int cachedDockSubstrateColor;
+
+    public static synchronized void clearFrostedCache() {
+        cachedFrostedKey = null;
+        cachedChromaColors = null;
+        cachedDockSubstrateColor = 0;
+    }
 
     private ThemeManager() {
     }
@@ -76,6 +85,7 @@ public final class ThemeManager {
 
     public static void setThemeMode(Context ctx, int mode) {
         prefs(ctx).edit().putInt(PREF_THEME_MODE, mode).apply();
+        clearFrostedCache();
     }
 
     public static boolean isNight(Context ctx) {
@@ -241,6 +251,7 @@ public final class ThemeManager {
     public static void setSolidWallpaper(Context ctx, boolean night, boolean solid) {
         String key = PREF_SOLID_PREFIX + (night ? "night" : "day");
         prefs(ctx).edit().putBoolean(key, solid).apply();
+        clearFrostedCache();
     }
 
     public static int getSolidWallpaperColor(Context ctx, boolean night) {
@@ -252,6 +263,7 @@ public final class ThemeManager {
     public static void setSolidWallpaperColor(Context ctx, boolean night, int color) {
         String key = PREF_SOLID_COLOR_PREFIX + (night ? "night" : "day");
         prefs(ctx).edit().putInt(key, color).apply();
+        clearFrostedCache();
     }
 
     public static String getWallpaperUri(Context ctx, boolean night) {
@@ -260,6 +272,7 @@ public final class ThemeManager {
 
     public static void setWallpaperUri(Context ctx, boolean night, String uri) {
         prefs(ctx).edit().putString(night ? PREF_WALLPAPER_NIGHT : PREF_WALLPAPER_DAY, uri).apply();
+        clearFrostedCache();
     }
 
     public static Drawable wallpaperBackground(Context ctx) {
@@ -292,6 +305,35 @@ public final class ThemeManager {
         BitmapDrawable img = new BitmapDrawable(ctx.getResources(), bmp);
         int scrim = (background(night) & 0x00FFFFFF) | 0x8C000000;
         return new LayerDrawable(new Drawable[]{img, new ColorDrawable(scrim)});
+    }
+
+    public static synchronized Bitmap getWallpaperBitmap(Context ctx, boolean night) {
+        if (isSolidWallpaper(ctx, night)) {
+            return null;
+        }
+        String uriStr = getWallpaperUri(ctx, night);
+        if (uriStr != null) {
+            Bitmap bmp = loadWallpaper(ctx, uriStr);
+            if (bmp != null) return bmp;
+        }
+        String resKey = night ? "default_res_night" : "default_res_day";
+        if (resKey.equals(cachedWallpaperKey) && cachedWallpaper != null && !cachedWallpaper.isRecycled()) {
+            return cachedWallpaper;
+        }
+        try {
+            int resId = night ? R.drawable.bg_night : R.drawable.bg_day;
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap bmp = BitmapFactory.decodeResource(ctx.getResources(), resId, opts);
+            if (bmp != null) {
+                cachedWallpaperKey = resKey;
+                cachedWallpaper = bmp;
+                return bmp;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to decode default wallpaper", e);
+        }
+        return null;
     }
 
     private static synchronized Bitmap loadWallpaper(Context ctx, String uriStr) {
@@ -331,6 +373,176 @@ public final class ThemeManager {
         return null;
     }
 
+    /**
+     * Швидке розмиття (Box blur, 2-3 проходи) у пам'яті для генерації матового скла.
+     */
+    public static Bitmap fastBlur(Bitmap src, int radius, int passes) {
+        if (src == null || src.isRecycled()) return null;
+        int w = src.getWidth();
+        int h = src.getHeight();
+        int[] pix = new int[w * h];
+        src.getPixels(pix, 0, w, 0, 0, w, h);
+
+        int div = 2 * radius + 1;
+        int[] temp = new int[w * h];
+
+        for (int p = 0; p < passes; p++) {
+            // Горизонтальний прохід
+            for (int y = 0; y < h; y++) {
+                int rSum = 0, gSum = 0, bSum = 0;
+                int rowStart = y * w;
+                int firstPixel = pix[rowStart];
+                int fr = (firstPixel >> 16) & 0xFF;
+                int fg = (firstPixel >> 8) & 0xFF;
+                int fb = firstPixel & 0xFF;
+                rSum = fr * radius;
+                gSum = fg * radius;
+                bSum = fb * radius;
+                for (int x = 0; x <= radius; x++) {
+                    int px = pix[rowStart + Math.min(w - 1, x)];
+                    rSum += (px >> 16) & 0xFF;
+                    gSum += (px >> 8) & 0xFF;
+                    bSum += px & 0xFF;
+                }
+                temp[rowStart] = 0xFF000000 | ((rSum / div) << 16) | ((gSum / div) << 8) | (bSum / div);
+
+                for (int x = 1; x < w; x++) {
+                    int prevX = Math.max(0, x - radius - 1);
+                    int nextX = Math.min(w - 1, x + radius);
+                    int prevPx = pix[rowStart + prevX];
+                    int nextPx = pix[rowStart + nextX];
+
+                    rSum += ((nextPx >> 16) & 0xFF) - ((prevPx >> 16) & 0xFF);
+                    gSum += ((nextPx >> 8) & 0xFF) - ((prevPx >> 8) & 0xFF);
+                    bSum += (nextPx & 0xFF) - (prevPx & 0xFF);
+
+                    temp[rowStart + x] = 0xFF000000 | ((rSum / div) << 16) | ((gSum / div) << 8) | (bSum / div);
+                }
+            }
+
+            // Вертикальний прохід
+            for (int x = 0; x < w; x++) {
+                int rSum = 0, gSum = 0, bSum = 0;
+                int firstPixel = temp[x];
+                int fr = (firstPixel >> 16) & 0xFF;
+                int fg = (firstPixel >> 8) & 0xFF;
+                int fb = firstPixel & 0xFF;
+                rSum = fr * radius;
+                gSum = fg * radius;
+                bSum = fb * radius;
+                for (int y = 0; y <= radius; y++) {
+                    int px = temp[Math.min(h - 1, y) * w + x];
+                    rSum += (px >> 16) & 0xFF;
+                    gSum += (px >> 8) & 0xFF;
+                    bSum += px & 0xFF;
+                }
+                pix[x] = 0xFF000000 | ((rSum / div) << 16) | ((gSum / div) << 8) | (bSum / div);
+
+                for (int y = 1; y < h; y++) {
+                    int prevY = Math.max(0, y - radius - 1);
+                    int nextY = Math.min(h - 1, y + radius);
+                    int prevPx = temp[prevY * w + x];
+                    int nextPx = temp[nextY * w + x];
+
+                    rSum += ((nextPx >> 16) & 0xFF) - ((prevPx >> 16) & 0xFF);
+                    gSum += ((nextPx >> 8) & 0xFF) - ((prevPx >> 8) & 0xFF);
+                    bSum += (nextPx & 0xFF) - (prevPx & 0xFF);
+
+                    pix[y * w + x] = 0xFF000000 | ((rSum / div) << 16) | ((gSum / div) << 8) | (bSum / div);
+                }
+            }
+        }
+
+        Bitmap out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        out.setPixels(pix, 0, w, 0, 0, w, h);
+        return out;
+    }
+
+    /**
+     * Компілює горизонтальний спектр кольорів шпалер (8 точок) для скляного бару.
+     */
+    public static synchronized int[] getWallpaperChromaticSpectrum(Context ctx, boolean night) {
+        if (isSolidWallpaper(ctx, night)) {
+            int solid = getSolidWallpaperColor(ctx, night);
+            return new int[]{ solid };
+        }
+        String key = (night ? "n_" : "d_") + getWallpaperUri(ctx, night);
+        if (key.equals(cachedFrostedKey) && cachedChromaColors != null) {
+            return cachedChromaColors;
+        }
+
+        Bitmap bmp = getWallpaperBitmap(ctx, night);
+        if (bmp == null) {
+            int fallback = night ? Color.parseColor("#1B232D") : Color.parseColor("#E4EBF1");
+            return new int[]{ fallback };
+        }
+
+        try {
+            int bw = bmp.getWidth();
+            int bh = bmp.getHeight();
+            // Беремо активну кольорову смугу шпалер (по центру 30%-70% висоти, де розташовані хвилі/композиція)
+            int cropY = (int) (bh * 0.30f);
+            int cropH = Math.max(1, (int) (bh * 0.40f));
+            if (cropY + cropH > bh) cropH = bh - cropY;
+
+            Bitmap crop = Bitmap.createBitmap(bmp, 0, cropY, bw, cropH);
+            Bitmap small = Bitmap.createScaledBitmap(crop, 8, 1, true);
+            if (crop != bmp) crop.recycle();
+
+            int[] chroma = new int[8];
+            small.getPixels(chroma, 0, 8, 0, 0, 8, 1);
+            small.recycle();
+
+            cachedFrostedKey = key;
+            cachedChromaColors = chroma;
+
+            // Обчислення середнього кольору для автоконтрасту
+            long r = 0, g = 0, b = 0;
+            for (int c : chroma) {
+                r += (c >> 16) & 0xFF;
+                g += (c >> 8) & 0xFF;
+                b += c & 0xFF;
+            }
+            int avgR = (int) (r / 8);
+            int avgG = (int) (g / 8);
+            int avgB = (int) (b / 8);
+            int avgChroma = Color.rgb(avgR, avgG, avgB);
+
+            if (night) {
+                cachedDockSubstrateColor = ColorUtils.blendARGB(avgChroma, Color.parseColor("#101418"), 0.55f);
+            } else {
+                cachedDockSubstrateColor = ColorUtils.blendARGB(avgChroma, Color.parseColor("#FFFFFF"), 0.65f);
+            }
+
+            return chroma;
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to compile wallpaper chromatic spectrum", e);
+        }
+
+        int fallback = night ? Color.parseColor("#1B232D") : Color.parseColor("#E4EBF1");
+        return new int[]{ fallback };
+    }
+
+    /**
+     * Повертає ефективний середній колір скомпільованої підкладки дока для перевірки автоконтрасту.
+     */
+    public static int dockSubstrateColor(Context ctx) {
+        return dockSubstrateColor(ctx, isNight(ctx));
+    }
+
+    public static int dockSubstrateColor(Context ctx, boolean night) {
+        if (isSolidWallpaper(ctx, night)) {
+            int solid = getSolidWallpaperColor(ctx, night);
+            return night ? ColorUtils.blendARGB(solid, Color.parseColor("#12161B"), 0.6f)
+                         : ColorUtils.blendARGB(solid, Color.parseColor("#FFFFFF"), 0.6f);
+        }
+        getWallpaperChromaticSpectrum(ctx, night);
+        if (cachedDockSubstrateColor != 0) {
+            return cachedDockSubstrateColor;
+        }
+        return night ? Color.parseColor("#161B22") : Color.parseColor("#F0F4F8");
+    }
+
     public static Drawable roundedDrawable(Context ctx, float radiusDp, int fillColor, int strokeColor, float strokeWidthDp) {
         float density = ctx.getResources().getDisplayMetrics().density;
         android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
@@ -348,16 +560,30 @@ public final class ThemeManager {
     }
 
     public static Drawable dockBackground(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#E612161B") : Color.parseColor("#EBF0F4F8");
-        int border = panelBorder(ctx, night);
-        float d = ctx.getResources().getDisplayMetrics().density;
-        float r = 16f * d;
-        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
-        gd.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-        gd.setCornerRadii(new float[]{r, r, r, r, 0, 0, 0, 0});
-        gd.setColor(bg);
-        gd.setStroke(Math.max(1, (int) (1.2f * d)), border);
-        return gd;
+        int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
+        int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#B3FFFFFF");
+        int substrateColor = dockSubstrateColor(ctx, night);
+
+        // Концентрична кривизна: радіус кнопки 18dp + рівномірний відступ 5dp = 23dp
+        float concentricRadiusDp = 23f;
+
+        return new FrostedGlassDrawable(
+                ctx,
+                night,
+                concentricRadiusDp,
+                1.2f,
+                chroma,
+                baseGlass,
+                substrateColor
+        );
+    }
+
+    public static int navDividerColor(Context ctx, boolean night) {
+        return panelBorder(ctx, night);
+    }
+
+    public static int navDividerColor(boolean night) {
+        return panelBorder(night);
     }
 
     public static Drawable cardDrawable(Context ctx) {

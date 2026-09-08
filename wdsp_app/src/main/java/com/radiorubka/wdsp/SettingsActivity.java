@@ -42,7 +42,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.radiorubka.wdsp.ui.views.SegmentedPillNavView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
@@ -83,7 +83,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private View rootSettings;
     private LinearLayout settingsColumn;
-    private BottomNavigationView bottomNav;
+    private SegmentedPillNavView bottomNav;
 
     // Theme Mode
     private TextView btnThemeDay, btnThemeNight, btnThemeAuto;
@@ -279,6 +279,7 @@ public class SettingsActivity extends AppCompatActivity {
                 }
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.putExtra("target_tab", id);
+                intent.putExtra("target_tab_id", id);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 finish();
@@ -2610,14 +2611,14 @@ public class SettingsActivity extends AppCompatActivity {
         View bottomBar = findViewById(R.id.bottom_navigation_bar);
         if (bottomBar != null) {
             bottomBar.setBackground(ThemeManager.dockBackground(this, editNight));
-            float density = getResources().getDisplayMetrics().density;
-            bottomBar.setPadding(0, (int) (4 * density), 0, (int) (2 * density));
+            bottomBar.setPadding(0, 0, 0, 0);
         }
         if (bottomNav != null) {
             ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this, editNight);
             bottomNav.setItemIconTintList(navCsl);
             bottomNav.setItemTextColor(navCsl);
             bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+            bottomNav.updateTheme(editNight);
         }
 
         // Action buttons styling

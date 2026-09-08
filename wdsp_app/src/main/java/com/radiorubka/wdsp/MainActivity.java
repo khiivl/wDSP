@@ -57,7 +57,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.radiorubka.wdsp.ui.PermissionsWizard;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.radiorubka.wdsp.ui.views.SegmentedPillNavView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -292,12 +292,17 @@ public class MainActivity extends AppCompatActivity {
         initSecondaryViews();
         registerServiceReceiver();
 
-        if (savedInstanceState != null) {
-            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        int targetTabId = (getIntent() != null) ? getIntent().getIntExtra("target_tab", getIntent().getIntExtra("target_tab_id", -1)) : -1;
+        if (targetTabId != -1) {
+            SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
+            bottomNav.setSelectedItemId(targetTabId);
+            getIntent().removeExtra("target_tab_id");
+            getIntent().removeExtra("target_tab");
+        } else if (savedInstanceState != null) {
+            SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
             int tabId = savedInstanceState.getInt(KEY_SELECTED_TAB);
             bottomNav.setSelectedItemId(tabId);
-        }
-        else {
+        } else {
             SelectTab();
         }
 
@@ -332,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         // Save the currently selected ID
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
         outState.putInt(KEY_SELECTED_TAB, bottomNav.getSelectedItemId());
     }
 
@@ -437,13 +442,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleTargetTab(Intent intent) {
         if (intent == null) return;
-        int targetTabId = intent.getIntExtra("target_tab_id", -1);
+        int targetTabId = intent.getIntExtra("target_tab", intent.getIntExtra("target_tab_id", -1));
         if (targetTabId != -1) {
-            BottomNavigationView bn = findViewById(R.id.bottom_navigation);
+            SegmentedPillNavView bn = findViewById(R.id.bottom_navigation);
             if (bn != null) {
                 bn.setSelectedItemId(targetTabId);
             }
             intent.removeExtra("target_tab_id");
+            intent.removeExtra("target_tab");
         }
     }
 
@@ -866,18 +872,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Bottom Navigation Dock with rounded top corners
+            // Bottom Navigation Dock with rounded pill shape
             View bottomBar = findViewById(R.id.bottom_navigation_bar);
             if (bottomBar != null) {
                 bottomBar.setBackground(ThemeManager.dockBackground(this, isNight));
-                bottomBar.setPadding(0, (int) (4 * density), 0, (int) (2 * density));
+                bottomBar.setPadding(0, 0, 0, 0);
             }
-            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
             if (bottomNav != null) {
                 ColorStateList navCsl = ThemeManager.bottomNavColorStateList(this, isNight);
                 bottomNav.setItemIconTintList(navCsl);
                 bottomNav.setItemTextColor(navCsl);
                 bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+                bottomNav.updateTheme(isNight);
             }
 
             ImageView carView = findViewById(R.id.imageView);
@@ -902,7 +909,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SelectTab() {
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
     }
 
@@ -2007,7 +2014,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupNavigation() {
-        BottomNavigationView bn = findViewById(R.id.bottom_navigation);
+        SegmentedPillNavView bn = findViewById(R.id.bottom_navigation);
 
         // 1. Reference all your layout containers
         final View eq = findViewById(R.id.layout_eq);
