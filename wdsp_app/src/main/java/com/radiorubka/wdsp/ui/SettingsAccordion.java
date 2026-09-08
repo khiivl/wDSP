@@ -51,6 +51,21 @@ public final class SettingsAccordion {
     private static int sTextPrimary = 0xFFFFFFFF;
     private static int sAccent = 0xFF1FE7C4;
 
+    private static void setHeaderState(TextView title, View body, boolean open, int accent, int textPrimary) {
+        if (body != null) {
+            body.setVisibility(open ? View.VISIBLE : View.GONE);
+        }
+        CharSequence current = title.getText();
+        if (current != null) {
+            String s = current.toString().trim();
+            while (s.startsWith("▾") || s.startsWith("▸")) {
+                s = s.substring(1).trim();
+            }
+            title.setText((open ? "▾ " : "▸ ") + s);
+        }
+        title.setTextColor(open ? accent : textPrimary);
+    }
+
     public static void repaint(LinearLayout column, int accent) {
         repaint(column, com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(column.getContext()), accent);
     }
@@ -63,16 +78,20 @@ public final class SettingsAccordion {
             if (v instanceof TextView && TAG_HEADER.equals(v.getTag())) {
                 View body = (i + 1 < column.getChildCount()) ? column.getChildAt(i + 1) : null;
                 boolean isOpen = (body != null && body.getVisibility() == View.VISIBLE);
-                ((TextView) v).setTextColor(isOpen ? accent : textPrimary);
+                setHeaderState((TextView) v, body, isOpen, accent, textPrimary);
             }
         }
     }
 
     public static void build(LinearLayout column, int accent) {
+        build(column, com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(column.getContext()), accent);
+    }
+
+    public static void build(LinearLayout column, int textPrimary, int accent) {
         Context ctx = column.getContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
         sAccent = accent;
-        sTextPrimary = com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(ctx);
+        sTextPrimary = textPrimary;
 
         List<View> children = new ArrayList<>();
         for (int i = 0; i < column.getChildCount(); i++) {
@@ -102,26 +121,21 @@ public final class SettingsAccordion {
 
             final String key = PREF_PREFIX + title.getId();
             boolean open = prefs.getBoolean(key, false);
-            body.setVisibility(open ? View.VISIBLE : View.GONE);
-
-            final CharSequence text = title.getText();
-            title.setText(mark(open) + " " + text);
-            title.setTextColor(open ? accent : sTextPrimary);
+            setHeaderState(title, body, open, accent, textPrimary);
             title.setTag(TAG_HEADER);
             title.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
 
             int padH = Math.round(10 * ctx.getResources().getDisplayMetrics().density);
             int padV = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
             title.setPadding(padH, padV, padH, padV);
-            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f);
+            title.setTypeface(null, Typeface.BOLD);
             TouchGlow.attach(title);
 
             final LinearLayout section = body;
             title.setOnClickListener(b -> {
                 boolean nowOpen = section.getVisibility() != View.VISIBLE;
-                section.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
-                title.setText(mark(nowOpen) + " " + text);
-                title.setTextColor(nowOpen ? sAccent : sTextPrimary);
+                setHeaderState(title, section, nowOpen, sAccent, sTextPrimary);
                 prefs.edit().putBoolean(key, nowOpen).apply();
             });
 

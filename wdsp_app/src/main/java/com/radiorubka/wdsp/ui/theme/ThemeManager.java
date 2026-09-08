@@ -50,13 +50,15 @@ public final class ThemeManager {
     public static final String PREF_SOLID_PREFIX = "theme_solid_enabled_";
     public static final String PREF_SOLID_COLOR_PREFIX = "theme_solid_color_";
 
-    public static final int DEFAULT_ACCENT_COLOR = 0xFF1FE7C4;
+    public static final int DEFAULT_ACCENT_COLOR_NIGHT = 0xFF1FE7C4;
+    public static final int DEFAULT_ACCENT_COLOR_DAY = 0xFF00838F; // Насичений океанічний ціан (4.8:1 контраст на білому)
+    public static final int DEFAULT_ACCENT_COLOR = DEFAULT_ACCENT_COLOR_NIGHT;
     public static final int DEFAULT_PRIMARY_TEXT_COLOR_NIGHT = 0xFFFFFFFF;
-    public static final int DEFAULT_PRIMARY_TEXT_COLOR_DAY = 0xFF101418;
-    public static final int DEFAULT_SECONDARY_TEXT_COLOR_NIGHT = 0xFFD0D8E0;
-    public static final int DEFAULT_SECONDARY_TEXT_COLOR_DAY = 0xFF303840;
-    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF101418;
-    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFF101418;
+    public static final int DEFAULT_PRIMARY_TEXT_COLOR_DAY = 0xFF11171D; // Глибокий вугільний (15:1 контраст)
+    public static final int DEFAULT_SECONDARY_TEXT_COLOR_NIGHT = 0xFF8B9198;
+    public static final int DEFAULT_SECONDARY_TEXT_COLOR_DAY = 0xFF455A64; // Шляхетний графітово-сірий (6.5:1 контраст)
+    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF000000;
+    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFFFFFFFF; // Чіткий білий на глибокому ціані (4.8:1)
 
     private static String cachedWallpaperKey;
     private static Bitmap cachedWallpaper;
@@ -88,13 +90,43 @@ public final class ThemeManager {
         return uiMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
+    /**
+     * Визначає, чи є колір темним за формулою відносної яскравості (WCAG / ITU-R BT.601).
+     */
+    public static boolean isColorDark(int color) {
+        double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0;
+        return darkness >= 0.5;
+    }
+
+    /**
+     * Повертає гарантовано контрастний колір (білий або темний #11171D) для заданого фону.
+     */
+    public static int getContrastColor(int background) {
+        return isColorDark(background) ? Color.WHITE : Color.parseColor("#11171D");
+    }
+
+    /**
+     * Перевіряє контраст тексту до фону. Якщо контраст занизький (< 2.8),
+     * повертає автоматично підібраний контрастний білий/чорний, інакше повертає обраний textColor.
+     */
+    public static int contrastText(int textColor, int background) {
+        float lum1 = (float) ColorUtils.calculateLuminance(textColor);
+        float lum2 = (float) ColorUtils.calculateLuminance(background);
+        float ratio = (Math.max(lum1, lum2) + 0.05f) / (Math.min(lum1, lum2) + 0.05f);
+        if (ratio >= 2.8f) {
+            return textColor;
+        }
+        return getContrastColor(background);
+    }
+
     public static int accent(Context ctx) {
         return accent(ctx, isNight(ctx));
     }
 
     public static int accent(Context ctx, boolean night) {
         String key = PREF_ACCENT_PREFIX + (night ? "night" : "day");
-        return prefs(ctx).getInt(key, DEFAULT_ACCENT_COLOR);
+        int def = night ? DEFAULT_ACCENT_COLOR_NIGHT : DEFAULT_ACCENT_COLOR_DAY;
+        return prefs(ctx).getInt(key, def);
     }
 
     public static void setAccent(Context ctx, boolean night, int color) {
@@ -109,7 +141,8 @@ public final class ThemeManager {
     public static int textPrimary(Context ctx, boolean night) {
         String key = PREF_PRIMARY_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_PRIMARY_TEXT_COLOR_NIGHT : DEFAULT_PRIMARY_TEXT_COLOR_DAY;
-        return prefs(ctx).getInt(key, def);
+        int color = prefs(ctx).getInt(key, def);
+        return contrastText(color, background(night));
     }
 
     public static void setTextPrimary(Context ctx, boolean night, int color) {
@@ -124,7 +157,8 @@ public final class ThemeManager {
     public static int textSecondary(Context ctx, boolean night) {
         String key = PREF_SECONDARY_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_SECONDARY_TEXT_COLOR_NIGHT : DEFAULT_SECONDARY_TEXT_COLOR_DAY;
-        return prefs(ctx).getInt(key, def);
+        int color = prefs(ctx).getInt(key, def);
+        return contrastText(color, background(night));
     }
 
     public static void setTextSecondary(Context ctx, boolean night, int color) {
@@ -139,7 +173,9 @@ public final class ThemeManager {
     public static int onAccent(Context ctx, boolean night) {
         String key = PREF_ON_ACCENT_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT : DEFAULT_ON_ACCENT_TEXT_COLOR_DAY;
-        return prefs(ctx).getInt(key, def);
+        int userOnAccent = prefs(ctx).getInt(key, def);
+        int accentColor = accent(ctx, night);
+        return contrastText(userOnAccent, accentColor);
     }
 
     public static void setOnAccent(Context ctx, boolean night, int color) {
@@ -152,18 +188,7 @@ public final class ThemeManager {
     }
 
     public static int textMuted(Context ctx, boolean night) {
-        int sec = textSecondary(ctx, night);
-        return androidx.core.graphics.ColorUtils.setAlphaComponent(sec, 0xB0);
-    }
-
-    public static int contrastText(int textColor, int background) {
-        float lum1 = (float) androidx.core.graphics.ColorUtils.calculateLuminance(textColor);
-        float lum2 = (float) androidx.core.graphics.ColorUtils.calculateLuminance(background);
-        float ratio = (Math.max(lum1, lum2) + 0.05f) / (Math.min(lum1, lum2) + 0.05f);
-        if (ratio >= 2.8f) {
-            return textColor;
-        }
-        return getContrastingTextColor(background);
+        return textSecondary(ctx, night);
     }
 
     public static int background(Context ctx) {
@@ -175,7 +200,11 @@ public final class ThemeManager {
     }
 
     public static int cardBackground(Context ctx) {
-        return isNight(ctx) ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
+        return cardBackground(ctx, isNight(ctx));
+    }
+
+    public static int cardBackground(Context ctx, boolean night) {
+        return night ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
     }
 
     public static int panelBorder(Context ctx) {
@@ -183,8 +212,15 @@ public final class ThemeManager {
     }
 
     public static int panelBorder(Context ctx, boolean night) {
-        int acc = accent(ctx, night);
-        return androidx.core.graphics.ColorUtils.setAlphaComponent(acc, 110);
+        return night ? Color.parseColor("#1b2126") : Color.parseColor("#d7dde1");
+    }
+
+    public static int panelBorder(boolean night) {
+        return night ? Color.parseColor("#1b2126") : Color.parseColor("#d7dde1");
+    }
+
+    public static int sliderInactiveColor(boolean night) {
+        return night ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000");
     }
 
     public static boolean isSolidWallpaper(Context ctx, boolean night) {
@@ -329,8 +365,8 @@ public final class ThemeManager {
     }
 
     public static Drawable buttonDrawable(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#25FFFFFF") : Color.parseColor("#14000000");
-        int border = ColorUtils.setAlphaComponent(accent(ctx, night), night ? 90 : 130);
+        int bg = night ? Color.parseColor("#18FFFFFF") : Color.parseColor("#0D000000");
+        int border = panelBorder(ctx, night);
         return roundedDrawable(ctx, 10f, bg, border, 1.2f);
     }
 
@@ -357,8 +393,8 @@ public final class ThemeManager {
     }
 
     public static Drawable dropdownBackground(Context ctx, boolean night) {
-        int bg = night ? Color.parseColor("#F0121A24") : Color.parseColor("#F51E2838");
-        int border = ColorUtils.setAlphaComponent(accent(ctx, night), 100);
+        int bg = night ? Color.parseColor("#F012161B") : Color.parseColor("#F8FFFFFF");
+        int border = panelBorder(ctx, night);
         return roundedDrawable(ctx, 14f, bg, border, 1.2f);
     }
 
@@ -379,32 +415,45 @@ public final class ThemeManager {
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             TextView tv = (TextView) super.getView(position, convertView, parent);
-            tv.setTextColor(ThemeManager.accent(context));
+            tv.setTextColor(ThemeManager.textPrimary(context));
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
             return tv;
         }
 
         @Override
         public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
             TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-            tv.setTextColor(ThemeManager.textPrimary(context));
-            tv.setBackgroundResource(R.drawable.bg_icon_button);
+            boolean night = ThemeManager.isNight(context);
+            tv.setTextColor(ThemeManager.textPrimary(context, night));
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
+            int padH = Math.round(16 * context.getResources().getDisplayMetrics().density);
+            int padV = Math.round(10 * context.getResources().getDisplayMetrics().density);
+            tv.setPadding(padH, padV, padH, padV);
+            tv.setBackgroundColor(ThemeManager.cardBackground(context, night));
             return tv;
         }
     }
 
-    public static void tintTextInputLayout(TextInputLayout layout, AutoCompleteTextView spinner, int accent, int secondaryText) {
+    public static void tintTextInputLayout(TextInputLayout layout, AutoCompleteTextView spinner, int accent, int secondaryText, int primaryText) {
         if (layout != null) {
             layout.setBoxStrokeColor(accent);
-            layout.setHintTextColor(ColorStateList.valueOf(accent));
+            layout.setHintTextColor(ColorStateList.valueOf(secondaryText));
             layout.setDefaultHintTextColor(ColorStateList.valueOf(secondaryText));
-            layout.setEndIconTintList(ColorStateList.valueOf(accent));
+            layout.setEndIconTintList(ColorStateList.valueOf(secondaryText));
             float radius = 12 * layout.getResources().getDisplayMetrics().density;
             layout.setBoxCornerRadii(radius, radius, radius, radius);
         }
         if (spinner != null) {
-            spinner.setTextColor(accent);
+            spinner.setTextColor(primaryText);
+            spinner.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
             spinner.setDropDownBackgroundDrawable(dropdownBackground(spinner.getContext()));
         }
+    }
+
+    public static void tintTextInputLayout(TextInputLayout layout, AutoCompleteTextView spinner, int accent, int secondaryText) {
+        Context ctx = layout != null ? layout.getContext() : (spinner != null ? spinner.getContext() : null);
+        int primary = ctx != null ? textPrimary(ctx) : DEFAULT_PRIMARY_TEXT_COLOR_NIGHT;
+        tintTextInputLayout(layout, spinner, accent, secondaryText, primary);
     }
 
     public static int getContrastingTextColor(int backgroundColor) {
