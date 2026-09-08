@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">wDSP</string>
 
+    <!-- Common toggle states -->
+    <string name="state_on">On</string>
+    <string name="state_off">Off</string>
+
     <!-- Presets -->
     <string name="btn_auto">Auto-Preset</string>
     <string name="btn_add">Duplicate</string>

@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">wDSP</string>
 
+    <!-- Common toggle states -->
+    <string name="state_on">Увімкнено</string>
+    <string name="state_off">Вимкнено</string>
+
     <!-- Presets -->
     <string name="btn_auto">Авто</string>
     <string name="btn_add">Додaти</string>

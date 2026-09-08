@@ -460,13 +460,20 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/status_bar_visualizer_enable"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_label"
                         android:textStyle="bold" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_status_bar_vis"
+                    <TextView
+                        android:id="@+id/btn_status_bar_vis_toggle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_on"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <!-- Параметри розміру та положення (динамічно через ConstraintLayout + Barrier) -->
@@ -889,36 +896,44 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/label_sb_vis_peaks"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/status_bar_peaks_label"
-                            android:textSize="@dimen/settings_subtitle_text"
+                            android:textSize="@dimen/text_size_label"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/desc_sb_vis_peaks"
+                            android:id="@+id/btn_sb_vis_peaks_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
-                            android:text="@string/status_bar_peaks_desc"
-                            android:textSize="@dimen/settings_note_text" />
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_status_bar_peaks"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/desc_sb_vis_peaks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/status_bar_peaks_desc"
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
 
                 <!-- 2. Динамічний контейнер: Симетричний спектр (Mirror / Center Bass) -->
@@ -927,36 +942,44 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/label_sb_vis_mirror"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/status_bar_mirror_label"
-                            android:textSize="@dimen/settings_subtitle_text"
+                            android:textSize="@dimen/text_size_label"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/desc_sb_vis_mirror"
+                            android:id="@+id/btn_sb_vis_mirror_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
-                            android:text="@string/status_bar_mirror_desc"
-                            android:textSize="@dimen/settings_note_text" />
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_status_bar_mirror"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/desc_sb_vis_mirror"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/status_bar_mirror_desc"
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
 
                 <!-- 3. Динамічний контейнер: Кількість смуг візуалізатора (16 / 32) -->
@@ -1353,36 +1376,44 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/label_sb_vis_normalization"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="@dimen/settings_subtitle_text"
+                            android:textSize="@dimen/text_size_label"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/desc_sb_vis_normalization"
+                            android:id="@+id/btn_sb_vis_normalization_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
-                            android:text="@string/vis_normalization_desc"
-                            android:textSize="@dimen/settings_note_text" />
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_status_bar_normalization"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/desc_sb_vis_normalization"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/vis_normalization_desc"
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
 
                 <!-- Кнопка "Показати на скрінсейвері" -->
@@ -1433,13 +1464,20 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/eq_vis_enable_label"
-                        android:textSize="@dimen/settings_subtitle_text"
+                        android:textSize="@dimen/text_size_label"
                         android:textStyle="bold" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_eq_visualizer_enable"
+                    <TextView
+                        android:id="@+id/btn_eq_vis_toggle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_off"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <TextView
@@ -1486,36 +1524,44 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/label_vis_normalization"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="@dimen/settings_subtitle_text"
+                            android:textSize="@dimen/text_size_label"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/desc_vis_normalization"
+                            android:id="@+id/btn_vis_normalization_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
-                            android:text="@string/vis_normalization_desc"
-                            android:textSize="@dimen/settings_note_text" />
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_vis_normalization"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/desc_vis_normalization"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/vis_normalization_desc"
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -1538,246 +1584,376 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
+                <!-- 1. Автоматичний рівень посилення (AGC): 2 колонки (50/50) з пігулками -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
                     android:orientation="horizontal">
 
+                    <!-- Головний аналізатор -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/label_agc_main"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/agc_main_label"
-                            android:textSize="@dimen/settings_subtitle_text"
-                            android:textStyle="bold" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_main"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_main_label"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_agc_main_toggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="18dp"
+                                android:paddingRight="18dp"
+                                android:paddingTop="8dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/state_off"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/desc_agc_main"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
+                            android:layout_marginTop="4dp"
+                            android:minLines="2"
+                            android:lineSpacingExtra="2dp"
                             android:text="@string/agc_main_desc"
                             android:textSize="@dimen/settings_note_text" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_main_strength"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_strength_label"
+                                android:textSize="@dimen/text_size_label" />
+
+                            <TextView
+                                android:id="@+id/tv_agc_main_strength"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="60%"
+                                android:textSize="@dimen/text_size_value"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_agc_main_strength"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="60"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="0dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:labelBehavior="gone" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_agc_main"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/label_agc_main_strength"
-                        android:layout_width="140dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/agc_strength_label"
-                        android:textSize="@dimen/text_size_label" />
-
-                    <SeekBar
-                        android:id="@+id/seek_agc_main_strength"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:max="100" />
-
-                    <TextView
-                        android:id="@+id/tv_agc_main_strength"
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
+                    <!-- Віджет статус-бара -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:layout_marginStart="16dp"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/label_agc_bar"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/agc_bar_label"
-                            android:textSize="@dimen/settings_subtitle_text"
-                            android:textStyle="bold" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_bar"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_bar_label"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_agc_bar_toggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="18dp"
+                                android:paddingRight="18dp"
+                                android:paddingTop="8dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/state_on"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/desc_agc_bar"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:lineSpacingExtra="3dp"
+                            android:layout_marginTop="4dp"
+                            android:minLines="2"
+                            android:lineSpacingExtra="2dp"
                             android:text="@string/agc_bar_desc"
                             android:textSize="@dimen/settings_note_text" />
-                    </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_agc_bar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_bar_strength"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_strength_label"
+                                android:textSize="@dimen/text_size_label" />
+
+                            <TextView
+                                android:id="@+id/tv_agc_bar_strength"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="100%"
+                                android:textSize="@dimen/text_size_value"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_agc_bar_strength"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="0dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:labelBehavior="gone" />
+                    </LinearLayout>
                 </LinearLayout>
 
+                <!-- 2. Синхронізація картинки і звуку (Latency Trim) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/label_agc_bar_strength"
-                        android:layout_width="140dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/agc_strength_label"
-                        android:textSize="@dimen/text_size_label" />
-
-                    <SeekBar
-                        android:id="@+id/seek_agc_bar_strength"
+                        android:id="@+id/label_latency_trim"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:max="100" />
+                        android:text="@string/latency_trim_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tv_agc_bar_strength"
-                        android:layout_width="48dp"
+                        android:id="@+id/tv_latency_trim"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:minWidth="56dp"
                         android:gravity="end"
-                        android:textSize="12sp" />
+                        android:text="+0 ms"
+                        android:textSize="@dimen/text_size_value"
+                        android:textStyle="bold" />
                 </LinearLayout>
-
-                <TextView
-                    android:id="@+id/label_latency_trim"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="@string/latency_trim_label"
-                    android:textSize="@dimen/settings_subtitle_text"
-                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_latency_trim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:lineSpacingExtra="3dp"
+                    android:layout_marginTop="2dp"
+                    android:lineSpacingExtra="2dp"
                     android:text="@string/latency_trim_desc"
                     android:textSize="@dimen/settings_note_text" />
 
-                <LinearLayout
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_latency_trim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:valueFrom="-250"
+                    android:valueTo="250"
+                    android:stepSize="5"
+                    android:value="0"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
+                    app:trackHeight="5dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:tickVisibilityMode="hidden"
+                    app:labelBehavior="gone" />
 
-                    <SeekBar
-                        android:id="@+id/seek_latency_trim"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:max="500" />
-
-                    <TextView
-                        android:id="@+id/tv_latency_trim"
-                        android:layout_width="72dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
+                <!-- 3. Вимірювання синхронізації зі звуком -->
                 <TextView
                     android:id="@+id/label_sync_measure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="12dp"
                     android:text="@string/sync_measure_label"
-                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textSize="@dimen/text_size_label"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_sync_measure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:lineSpacingExtra="3dp"
+                    android:layout_marginTop="2dp"
+                    android:lineSpacingExtra="2dp"
                     android:text="@string/sync_measure_desc"
                     android:textSize="@dimen/settings_note_text" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_sync_measure"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/rds_btn_bg"
-                        android:gravity="center"
-                        android:padding="10dp"
+                        android:layout_height="38dp"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="@color/card_bg_theme_aware"
                         android:text="@string/sync_measure_button"
-                        android:textSize="12sp" />
+                        android:textAllCaps="false"
+                        android:textSize="@dimen/text_size_button"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_sync_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
 
+                <!-- 4. Діапазон шкали спектра (Range dB) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/label_range_db"
-                        android:layout_width="140dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/range_db_label"
-                        android:textSize="@dimen/text_size_label" />
-
-                    <SeekBar
-                        android:id="@+id/seek_range_db"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:max="80" />
+                        android:text="@string/range_db_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_range_db"
-                        android:layout_width="72dp"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:minWidth="56dp"
                         android:gravity="end"
-                        android:textSize="12sp" />
+                        android:text="60 dB"
+                        android:textSize="@dimen/text_size_value"
+                        android:textStyle="bold" />
                 </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_range_db"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="20"
+                    android:valueTo="80"
+                    android:stepSize="1"
+                    android:value="60"
+                    app:thumbHeight="20dp"
+                    app:thumbWidth="20dp"
+                    app:thumbRadius="10dp"
+                    app:haloRadius="0dp"
+                    app:haloColor="@color/transparent"
+                    app:thumbColor="@color/cyan_custom"
+                    app:tickColorActive="@color/transparent"
+                    app:tickColorInactive="@color/transparent"
+                    app:trackColorActive="@color/track_color_active"
+                    app:trackColorInactive="@color/track_color_inactive"
+                    app:trackHeight="5dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:tickVisibilityMode="hidden"
+                    app:labelBehavior="gone" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
@@ -1967,20 +2143,28 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_enable"
-                        android:textSize="@dimen/settings_subtitle_text"
+                        android:textSize="@dimen/text_size_label"
                         android:textStyle="bold" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_screensaver"
+                    <TextView
+                        android:id="@+id/btn_screensaver_toggle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_off"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/desc_screensaver_enable"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:lineSpacingExtra="3dp"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
                     android:text="@string/screensaver_enable_desc"
                     android:textSize="@dimen/settings_note_text" />
 
