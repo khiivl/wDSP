@@ -10,7 +10,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.graphics.ColorUtils;
 import com.radiorubka.wdsp.R;
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,22 +65,58 @@ public final class SettingsAccordion {
             }
             title.setText((open ? "▾ " : "▸ ") + s);
         }
-        title.setTextColor(open ? accent : textPrimary);
+        Context ctx = title.getContext();
+        boolean night = ThemeManager.isNight(ctx);
+        int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
+        int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
+        if (open) {
+            int openBg = ColorUtils.setAlphaComponent(accent, night ? 38 : 42);
+            title.setBackground(ThemeManager.roundedDrawable(ctx, 10f, openBg, accent, 1.2f));
+            int openText = night ? accent : 0xFF004D40;
+            title.setTextColor(openText);
+        } else {
+            title.setBackground(null);
+            title.setTextColor(textPrimary);
+        }
+        title.setPadding(padH, padV, padH, padV);
     }
 
     public static void repaint(LinearLayout column, int accent) {
-        repaint(column, com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(column.getContext()), accent);
+        repaint(column, ThemeManager.textPrimary(column.getContext()), accent);
     }
 
     public static void repaint(LinearLayout column, int textPrimary, int accent) {
+        repaint(column, textPrimary, accent,
+                ThemeManager.cardBackground(column.getContext()),
+                ThemeManager.panelBorder(column.getContext()));
+    }
+
+    public static void repaint(LinearLayout column, int textPrimary, int accent, int cardBg, int border) {
         sTextPrimary = textPrimary;
         sAccent = accent;
+        Context ctx = column.getContext();
         for (int i = 0; i < column.getChildCount(); i++) {
             View v = column.getChildAt(i);
             if (v instanceof TextView && TAG_HEADER.equals(v.getTag())) {
                 View body = (i + 1 < column.getChildCount()) ? column.getChildAt(i + 1) : null;
                 boolean isOpen = (body != null && body.getVisibility() == View.VISIBLE);
                 setHeaderState((TextView) v, body, isOpen, accent, textPrimary);
+            } else if (v instanceof LinearLayout) {
+                LinearLayout body = (LinearLayout) v;
+                for (int j = 0; j < body.getChildCount(); j++) {
+                    View child = body.getChildAt(j);
+                    int cId = child.getId();
+                    if (cId == R.id.card_settings_wallpaper ||
+                        cId == R.id.card_settings_statusbar ||
+                        cId == R.id.card_settings_effects ||
+                        cId == R.id.card_settings_eq ||
+                        cId == R.id.card_settings_analyzer ||
+                        cId == R.id.card_settings_permissions ||
+                        cId == R.id.card_settings_screensaver ||
+                        cId == R.id.card_settings_debug) {
+                        child.setBackground(ThemeManager.roundedDrawable(ctx, 14f, cardBg, border, 1.2f));
+                    }
+                }
             }
         }
     }

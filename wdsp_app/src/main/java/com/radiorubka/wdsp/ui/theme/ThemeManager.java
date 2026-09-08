@@ -51,14 +51,14 @@ public final class ThemeManager {
     public static final String PREF_SOLID_COLOR_PREFIX = "theme_solid_color_";
 
     public static final int DEFAULT_ACCENT_COLOR_NIGHT = 0xFF1FE7C4;
-    public static final int DEFAULT_ACCENT_COLOR_DAY = 0xFF00838F; // Насичений океанічний ціан (4.8:1 контраст на білому)
+    public static final int DEFAULT_ACCENT_COLOR_DAY = 0xFF1FE7C4; // Єдиний фірмовий ціан радіо (Radio Standard)
     public static final int DEFAULT_ACCENT_COLOR = DEFAULT_ACCENT_COLOR_NIGHT;
     public static final int DEFAULT_PRIMARY_TEXT_COLOR_NIGHT = 0xFFFFFFFF;
     public static final int DEFAULT_PRIMARY_TEXT_COLOR_DAY = 0xFF11171D; // Глибокий вугільний (15:1 контраст)
     public static final int DEFAULT_SECONDARY_TEXT_COLOR_NIGHT = 0xFF8B9198;
     public static final int DEFAULT_SECONDARY_TEXT_COLOR_DAY = 0xFF455A64; // Шляхетний графітово-сірий (6.5:1 контраст)
     public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF000000;
-    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFFFFFFFF; // Чіткий білий на глибокому ціані (4.8:1)
+    public static final int DEFAULT_ON_ACCENT_TEXT_COLOR_DAY = 0xFF000000; // Контрастний чорний на яскравому ціані
 
     private static String cachedWallpaperKey;
     private static Bitmap cachedWallpaper;
@@ -230,7 +230,7 @@ public final class ThemeManager {
     }
 
     public static int sliderInactiveColor(boolean night) {
-        return night ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000");
+        return night ? Color.parseColor("#2A343D") : Color.parseColor("#B0BEC5");
     }
 
     public static boolean isSolidWallpaper(Context ctx, boolean night) {
@@ -533,7 +533,7 @@ public final class ThemeManager {
         Context ctx = sb.getContext();
         float d = ctx.getResources().getDisplayMetrics().density;
 
-        int inactiveColor = isNight ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000");
+        int inactiveColor = sliderInactiveColor(isNight);
 
         android.graphics.drawable.GradientDrawable bgTrack = new android.graphics.drawable.GradientDrawable();
         bgTrack.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
