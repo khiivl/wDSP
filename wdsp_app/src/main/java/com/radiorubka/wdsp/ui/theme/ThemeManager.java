@@ -134,6 +134,16 @@ public final class ThemeManager {
         prefs(ctx).edit().putInt(key, color).apply();
     }
 
+    public static void resetPalette(Context ctx, boolean night) {
+        String suffix = night ? "night" : "day";
+        prefs(ctx).edit()
+                .remove(PREF_ACCENT_PREFIX + suffix)
+                .remove(PREF_PRIMARY_TEXT_PREFIX + suffix)
+                .remove(PREF_SECONDARY_TEXT_PREFIX + suffix)
+                .remove(PREF_ON_ACCENT_TEXT_PREFIX + suffix)
+                .apply();
+    }
+
     public static int textPrimary(Context ctx) {
         return textPrimary(ctx, isNight(ctx));
     }
@@ -415,8 +425,10 @@ public final class ThemeManager {
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             TextView tv = (TextView) super.getView(position, convertView, parent);
-            tv.setTextColor(ThemeManager.textPrimary(context));
-            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
+            boolean night = ThemeManager.isNight(context);
+            int cardBg = ThemeManager.cardBackground(context, night);
+            tv.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(context, night), cardBg));
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f);
             return tv;
         }
 
@@ -424,19 +436,35 @@ public final class ThemeManager {
         public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
             TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
             boolean night = ThemeManager.isNight(context);
-            tv.setTextColor(ThemeManager.textPrimary(context, night));
-            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
+            int dropBg = night ? Color.parseColor("#F012161B") : Color.parseColor("#F8FFFFFF");
+            tv.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(context, night), dropBg));
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f);
             int padH = Math.round(16 * context.getResources().getDisplayMetrics().density);
             int padV = Math.round(10 * context.getResources().getDisplayMetrics().density);
             tv.setPadding(padH, padV, padH, padV);
-            tv.setBackgroundColor(ThemeManager.cardBackground(context, night));
             return tv;
         }
     }
 
     public static void tintTextInputLayout(TextInputLayout layout, AutoCompleteTextView spinner, int accent, int secondaryText, int primaryText) {
+        Context ctx = layout != null ? layout.getContext() : (spinner != null ? spinner.getContext() : null);
+        if (ctx == null) return;
+        boolean night = isNight(ctx);
+        int cardBg = cardBackground(ctx, night);
+        int border = panelBorder(ctx, night);
+
         if (layout != null) {
+            layout.setBoxBackgroundColor(cardBg);
             layout.setBoxStrokeColor(accent);
+            int[][] states = new int[][]{
+                    new int[]{android.R.attr.state_focused},
+                    new int[]{}
+            };
+            int[] colors = new int[]{
+                    accent,
+                    border
+            };
+            layout.setBoxStrokeColorStateList(new ColorStateList(states, colors));
             layout.setHintTextColor(ColorStateList.valueOf(secondaryText));
             layout.setDefaultHintTextColor(ColorStateList.valueOf(secondaryText));
             layout.setEndIconTintList(ColorStateList.valueOf(secondaryText));
@@ -444,9 +472,11 @@ public final class ThemeManager {
             layout.setBoxCornerRadii(radius, radius, radius, radius);
         }
         if (spinner != null) {
-            spinner.setTextColor(primaryText);
-            spinner.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
-            spinner.setDropDownBackgroundDrawable(dropdownBackground(spinner.getContext()));
+            int textColor = contrastText(primaryText, cardBg);
+            spinner.setTextColor(textColor);
+            spinner.setBackgroundColor(Color.TRANSPARENT);
+            spinner.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13.5f);
+            spinner.setDropDownBackgroundDrawable(dropdownBackground(ctx, night));
         }
     }
 
