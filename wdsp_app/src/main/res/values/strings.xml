@@ -366,4 +366,18 @@
     <string name="vis_oscillo_persistence_label">Phosphor Afterglow</string>
     <string name="vis_oscillo_persistence_desc">Analog CRT persistence: decay duration and glow trails of the oscilloscope beam</string>
     <string name="btn_vis_preview_screensaver">Show on screensaver</string>
+    <!-- Extracted hardcoded UI strings -->
+    <string name="toast_cannot_open_notification_settings">Cannot open notification settings</string>
+    <string name="backup_invalid_empty">Invalid backup: empty content</string>
+    <string name="backup_invalid_format">Invalid wDSP backup format</string>
+    <string name="backup_cannot_open_stream">Cannot open input stream</string>
+    <string name="preset_imported_prefix">Imported</string>
+    <string name="speed_kmh_float_format">%.1f km/h</string>
+    <string name="toast_preset_applied">Preset applied: %1$s</string>
+    <string name="notif_service_title">wDSP Active</string>
+    <string name="notif_service_text">Foreground EQ processing enabled</string>
+    <string name="notif_channel_name">wDSP Background Service</string>
+    <string name="notif_capture_probe">Acoustic probe active</string>
+    <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
+    <string name="val_px_zero">0 px</string>
 </resources>

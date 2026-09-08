@@ -332,5 +332,50 @@
     <string name="vis_oscillo_persistence_label">Послесвечение люминофора</string>
     <string name="vis_oscillo_persistence_desc">Эффект аналоговой ЭЛТ: длительность и шлейфы угасания луча осциллографа</string>
     <string name="btn_vis_preview_screensaver">Показать на скринсейвере</string>
+    <string name="btn_plus" translatable="false">＋</string>
+    <string name="btn_minus" translatable="false">－</string>
+    <string name="btn_center" translatable="false">０</string>
+    <string name="btn_left" translatable="false">←L</string>
+    <string name="btn_right" translatable="false">R→</string>
+    <string name="btn_front" translatable="false">F↑</string>
+    <string name="btn_rear" translatable="false">↓R</string>
+    <string name="eqc" translatable="false">"EQ:"</string>
+    <string name="settings_reset_palette">Сбросить палитру по умолчанию</string>
+    <string name="toast_palette_reset">Палитра сброшена по умолчанию</string>
+    <string name="perm_notification_access">Доступ к уведомлениям (Метаданные)</string>
+    <string name="perm_wizard_title">Разрешения приложения</string>
+    <string name="perm_wizard_subtitle">Для работы всех функций wDSP предоставьте необходимые разрешения:</string>
+    <string name="perm_wizard_status_granted">✓ Предоставлено</string>
+    <string name="perm_wizard_status_action">Предоставить</string>
+    <string name="perm_wizard_btn_continue">Продолжить</string>
+    <string name="perm_wizard_btn_open">Мастер разрешений</string>
+    <string name="perm_wizard_item_notif_title">Доступ к уведомлениям (Метаданные)</string>
+    <string name="perm_wizard_item_notif_desc">Названия радиостанций, треков, исполнителей и обложки альбомов на заставке</string>
+    <string name="perm_wizard_item_overlay_title">Поверх других приложений</string>
+    <string name="perm_wizard_item_overlay_desc">Необходимо для полноэкранной заставки и визуализатора в строке состояния</string>
+    <string name="perm_wizard_item_battery_title">Фоновая оптимизация питания</string>
+    <string name="perm_wizard_item_battery_desc">Защищает фоновую службу и соединение с MCU от засыпания и закрытия</string>
+    <string name="perm_wizard_item_location_title">Геолокация GPS (Скорость GALA)</string>
+    <string name="perm_wizard_item_location_desc">Автоматическая регулировка громкости в зависимости от скорости движения</string>
+    <string name="perm_wizard_item_audio_title">Микрофон (Запись звука)</string>
+    <string name="perm_wizard_item_audio_desc">Калибровка акустики салона свип-тоном и спектроанализатор</string>
+    <string name="toast_restore_is_preset_hint">Этот файл является отдельным пресетом, а не полной резервной копией. Для его добавления нажмите кнопку «Импорт» возле списка пресетов на главном экране.</string>
+    <string name="dialog_restore_title">Восстановление настроек</string>
+    <string name="dialog_restore_presets_prompt">Хотите также восстановить пресеты эквалайзера и привязки плееров из этой резервной копии?</string>
+    <string name="dialog_restore_all">Восстановить всё (вместе с пресетами)</string>
+    <string name="dialog_restore_settings_only">Только настройки (сохранить мои пресеты)</string>
+    <string name="toast_import_is_backup_hint">Этот файл является полной резервной копией настроек. Для его восстановления перейдите в Настройки ➔ Разрешения и система ➔ Восстановить настройки.</string>
+    <string name="toast_cannot_open_notification_settings">Не удалось открыть настройки уведомлений</string>
+    <string name="backup_invalid_empty">Неверная резервная копия: пустое содержимое</string>
+    <string name="backup_invalid_format">Неверный формат резервной копии wDSP</string>
+    <string name="backup_cannot_open_stream">Не удалось открыть файл резервной копии</string>
+    <string name="preset_imported_prefix">Импорт</string>
+    <string name="speed_kmh_float_format">%.1f км/ч</string>
+    <string name="toast_preset_applied">Применен пресет: %1$s</string>
+    <string name="notif_service_title">wDSP активен</string>
+    <string name="notif_service_text">Фоновая обработка эквалайзера включена</string>
+    <string name="notif_channel_name">Фоновая служба wDSP</string>
+    <string name="notif_capture_probe">Акустический зонд активен</string>
+    <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
+    <string name="val_px_zero">0 пкс</string>
 </resources>
-
