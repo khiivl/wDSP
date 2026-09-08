@@ -31,7 +31,7 @@
                 android:gravity="center"
                 android:layout_marginBottom="8dp"
                 android:text="@string/settings_title"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_theme_aware"
                 android:textSize="@dimen/settings_section_text"
                 android:textStyle="bold" />
 
@@ -726,9 +726,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:alpha="0.7"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/status_bar_placement_hint"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <!-- Вибір активного ефекту для статус-бара -->
                 <LinearLayout
@@ -889,15 +889,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/status_bar_peaks_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_sb_vis_peaks"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/status_bar_peaks_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -926,15 +927,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/status_bar_mirror_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_sb_vis_mirror"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/status_bar_mirror_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1017,15 +1019,16 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/vis_oscillo_persistence_label"
-                                android:textSize="13sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/desc_vis_oscillo_persistence"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:lineSpacingExtra="3dp"
                                 android:text="@string/vis_oscillo_persistence_desc"
-                                android:textSize="11sp" />
+                                android:textSize="@dimen/settings_note_text" />
                         </LinearLayout>
 
                         <TextView
@@ -1350,15 +1353,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_sb_vis_normalization"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/vis_normalization_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1480,15 +1484,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/vis_normalization_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_vis_normalization"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/vis_normalization_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1534,15 +1539,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/agc_main_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_agc_main"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/agc_main_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1598,15 +1604,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/agc_bar_label"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/desc_agc_bar"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
                             android:text="@string/agc_bar_desc"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/settings_note_text" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1650,15 +1657,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:text="@string/latency_trim_label"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_latency_trim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/latency_trim_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1688,15 +1696,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:text="@string/sync_measure_label"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_sync_measure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/sync_measure_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1939,7 +1948,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_enable"
-                        android:textSize="15sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -1952,8 +1961,9 @@
                     android:id="@+id/desc_screensaver_enable"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/screensaver_enable_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1968,7 +1978,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/screensaver_delay"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -2363,8 +2373,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/screensaver_note"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
@@ -2393,15 +2404,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/room_measure_label"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_room_measure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/room_measure_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <!--
                      Where the microphone is, pointed at rather than described.
@@ -2417,15 +2429,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="@string/room_mic_spot_label"
-                    android:textSize="12sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_room_mic_spot"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/room_mic_spot_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <!-- What the microphone is fitted to, by name.
                      The dot on the car gives the spot on the floor plan, which is enough for the
@@ -2618,8 +2631,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
+                        android:lineSpacingExtra="3dp"
                         android:text="@string/room_measure_telegram"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
 
                 <TextView
@@ -2628,15 +2642,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/system_report_label"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/desc_system_report"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/system_report_desc"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/settings_note_text" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
