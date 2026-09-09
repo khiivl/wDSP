@@ -2631,6 +2631,11 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
+        // The two support capsules are rebuilt rather than re-tinted: a dozen views, only
+        // on a theme change, and no colour can survive from the other half of the day.
+        com.radiorubka.wdsp.ui.SupportBanners.build(
+                this, findViewById(R.id.banners_support), editNight);
+
         int cardBg = ThemeManager.cardBackground(this, editNight);
 
         // Section cards dynamic styling with FrostedGlassDrawable

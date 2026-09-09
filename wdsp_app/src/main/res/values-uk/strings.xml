@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Common toggle states -->
     <string name="state_on">Увімкнено</string>
@@ -372,5 +372,23 @@
     <string name="notif_capture_probe">Акустичне зондування активне</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 пкс</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — оригінальний проєкт</string>
+    <string name="banner_upstream_note">Ця збірка — мод на його основі. База, і подяка за неї, — авторові.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Ця збірка. Вона безкоштовна: жодних ліцензій і розблокувань — лише добровільна подяка.</string>
+    <string name="banner_github">GitHub — обговорення wDSP</string>
+    <string name="banner_telegram">Група в Telegram</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Обговорення моду</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Криптовалюта — TRC-20 (Tron)</string>
+    <string name="banner_ton">Криптовалюта — TON (гаманець Telegram)</string>
+    <string name="banner_copied">Скопійовано в буфер обміну</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>
 

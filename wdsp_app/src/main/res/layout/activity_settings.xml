@@ -25,6 +25,16 @@
             android:orientation="vertical"
             android:padding="@dimen/settings_pad">
 
+            <!-- Два банери: спершу оригінальний автор, потім цей мод.
+                 Порядок — рішення власника, не переставляти. Вміст будується кодом,
+                 див. ui/SupportBanners.java -->
+            <LinearLayout
+                android:id="@+id/banners_support"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp" />
+
             <!-- Головний заголовок -->
             <TextView
                 android:id="@+id/title"
