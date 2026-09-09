@@ -75,6 +75,11 @@ Active dev branch for UI & Platform QF integration. **Everything committed & tes
   - `WHATS_NEW.md`: розширено анотацію «Що нового» v0.4.8 (додано повний опис переходу в майн поточного плеєра по тапу на обкладинку, відображення живих метаданих/RDS, сліпого 50/50 транспорту, невидимих крайових слайдерів та детальну «Шпаргалку водія» щодо жестів скрінсейвера; завершення словом «Скоро!»).
   - Створено окремі файли анотації до релізу: `RELEASE_NOTES_UK.md` (українська), `RELEASE_NOTES_EN.md` (англійська) та `RELEASE_NOTES_RU.md` (російська).
   - `ScreensaverManager.java`: відновлено точний хіт-тест тапу по обкладинці треку / іконці в нижньому лівому кутку для миттєвого запуску Main Activity активного плеєра.
+- **Review Fixes (09.09.2026 04:40, commit `b24a9ff`)**:
+  - `ThemedDialog`: додано `setOnDismissListener` для миттєвого видалення з `sActiveDialogs`, ліквідовано retention-пастку WeakHashMap.
+  - `NowPlaying`: додано `return;` після радіо-команд у `skipToPrevious`/`skipToNext`/`playPause`, виключено подвійне спрацьовування на сторонніх плеєрах; паузу радіо зведено до `/customize/radio/close`.
+  - `ScreensaverManager`: прив'язано `midY` до `TRANSPORT_FROM`, видалено мертвий метод `sendMediaKey()`.
+  - `FrostedGlassDrawable`: винесено 5 масивів `float[8]` радіусів у поля класу з розрахунком в `onBoundsChange()`, усунено алокації об'єктів у `draw()`.
 
 
 ## What landed between 26.08 and 03.09
