@@ -324,16 +324,6 @@ public final class NowPlaying {
     }
 
     public void playPause() {
-        if (isRadioSource()) {
-            try {
-                if (isPlaying()) {
-                    context.sendBroadcast(new Intent("/customize/radio/close"));
-                } else {
-                    sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-                }
-            } catch (Throwable ignored) {}
-            return;
-        }
         MediaController mc = controller;
         if (mc != null) {
             try {
