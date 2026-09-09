@@ -19,7 +19,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 
 | file | what |
 |---|---|
-| [HANDOFF.md](HANDOFF.md) | **read first after a compaction** — where things stand, what is uncommitted, what is open, and the rules that cost something when forgotten |
+| [HANDOFF.md](HANDOFF.md) | **read first after a compaction, and first of all on a new machine** — opens with a cold-start section written for a session that has none of this history: which build is where, what is deliberate and must not be "fixed", which of our own conclusions were wrong. Then — where things stand, what is uncommitted, what is open, and the rules that cost something when forgotten |
 | [BUILDING.md](BUILDING.md) | how a fresh clone builds itself, what is committed on purpose, and why R8 must stay off |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | the cabin measurement: sweep, deconvolution, what it can and cannot honestly tell a user, and where it is going |
 | [SCREENSAVER_RADIO_CONTRACT.md](SCREENSAVER_RADIO_CONTRACT.md) | screensaver lifecycle, Radio MCU integration, MediaSession metadata sync, clock 10 FPS breathing, and overlay layering (✍️ Antigravity 25.08.2026) |

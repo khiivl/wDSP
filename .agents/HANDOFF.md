@@ -8,6 +8,10 @@ somewhere else in full; this is the map, not the territory.
 
 ## Where to start
 
+0. **[🚀 Cold start](#-cold-start--for-a-session-on-another-machine-under-another-account)**, just
+   below — if this machine, this account or this pair of sessions is new to you. It carries the
+   things that would not survive us: which build is where, what is deliberate and must not be
+   "fixed", and which of our own conclusions turned out to be wrong.
 1. **[platform/INDEX.md](platform/INDEX.md)** — the machine itself. Opens with the eleven things
    most likely to cost a day. Everything there carries a provenance mark (🔬 read in firmware,
    📻 measured on the wire, 🧩 inferred, ❓ unverified). **If you add to it, mark what you add.**
@@ -15,6 +19,102 @@ somewhere else in full; this is the map, not the territory.
 3. `../CLAUDE.md` — how the app is put together.
 4. `C:\APPS_Contacts\wDSP--QFRadio\` — **anything agreed with QF Radio**, and the ledger where each
    side marks what it has actually done. The copies in this folder are mirrors of it.
+
+---
+
+## 🚀 Cold start — for a session on another machine, under another account
+
+Written 09.09.2026 by the owner's instruction, together with the QF Radio session, which wrote its
+own half in `kostyamat_fmradio/.agents/HANDOFF.md`. The two halves do not repeat each other, and
+neither repeats `C:\APPS_Contacts\wDSP--QFRadio\`, which is the single source of truth for anything
+agreed **between** the two applications.
+
+🔴 **The selection rule for everything below: it is here because it would not survive us.** What
+lives in the code is not repeated here; what lived only in a conversation is written down or lost.
+
+### The numbers that will mislead you first
+
+| | wDSP | QF Radio |
+|---|---|---|
+| in testers' hands | **0.4.7.2** | **`versionCode 83`** |
+| on the test unit 192.168.1.146 | **0.4.8 / `versionCode 15`** | **`versionCode 90`** |
+| in the tree | 0.4.8 / 15, pushed (`8e0c82a`) | `versionCode 91` |
+
+🪤 The radio calls **all three** of its builds `RC2.2` — its `versionName` has not moved since
+August. **Do not trust `versionName`, read `versionCode`.** The same disease cost a day on this
+side once: 0.4.7.6 existed on the unit in two different shapes.
+
+🔴 **A consequence nobody would derive on their own: the testers' radio is `83`, below both
+thresholds that matter.** Under `84` the radio's volume-sync switch defaulted to *on*, so those
+units have it enabled without anybody choosing it. Under `86` wDSP now refuses the bargain and
+reports `syncOwner=false`, which puts that radio into its own fallback — and that fallback
+equalises `sys.radio.vol` with `sys.media.vol`, which is exactly the condition the platform's
+`resetDefValIfNeed` keys on. Why the level is nevertheless not lost, and the race that is still
+open, are in the two rows below.
+
+### What has actually been handed out
+
+**Nothing since 0.4.7.2.** Packs sit in `~/Downloads/`: 0.4.7.1 and 0.4.7.2 (zipped, distributed),
+0.4.7.5 (built, never handed out), 0.4.8 (staged — APK and the two cabin documents only; the
+READMEs are deliberately unwritten while the owner formulates one condition for the release).
+Measurements from testers go to <https://t.me/wDSPapp/79> or a forum PM, **never** a direct
+message: the owner's standing instruction, because lone files in DMs get lost.
+
+### 🛑 What looks like a defect and is deliberate
+
+Change any of these only with a measurement in hand, and rewrite the row when you do.
+
+| looks wrong | why it is like that |
+|---|---|
+| **GALA does not write the volume when its boost is zero** — it follows the hardware instead | the original never wrote the volume at all. Writing `base + 0` overrules the person turning the knob: measured, 4→5 by hand and back to 4 eighty milliseconds later. Fixed in `85cc392`; restoring the write reintroduces the regression |
+| the default-preset fallback is a **three-step chain** in a fixed order | the player's own preset, then the one mapped to `Default`, then `PREF_DEFAULT_PRESET`. That last key was written by `MainActivity` for months while nothing read it. The order is the original's |
+| the **restore after a platform reset is not gated** by the sync property or by the radio version | it repairs a platform fault — `resetDefValIfNeed` wipes every source that happens to hold the same number — not a bargain with anybody. Gating it would leave the level lost on exactly the units that never agreed to anything. ⚠️ Open race: if the radio announces the wiped level before the next poll (100 ms) restores it, this side adopts that level as the new base and the level really is lost. Measured delivery skew between applications is 191 ms, so the poll usually wins. "Usually" is not "always" — the guard is named in the open items |
+| `AUDIO_STATE_STABLE` carries a `volume` extra this side **never reads** | it is advisory by contract; the level is always re-read from the hardware. That is why the neighbour announcing a stale number cost us nothing — and why our log could not settle what the neighbour had sent, which is a separate debt |
+| `MIN_RADIO_VERSION_CODE = 86` | 86 is the first radio **measured** staying silent with the sync switch off (08.09, ledger row "контракт МОВЧИТЬ"). One constant, and the only place the decision is taken. ⚠️ 86 and 84 are different boundaries: 86 is about the contract being honoured, 84 about the radio's own default being *on* |
+| the screensaver's two broadcasts have **no** `setPackage` | the owner's decision, 07.09 — other applications on this unit listen for them |
+| `targetSdk 29` | the QF framework and its hidden APIs behave as Android 10. Raising it is not modernisation, it is breakage |
+| **two** `TouchGlow` classes and **two** copies of `activity_main.xml` | both live, both known. Run `tools/layout_diff.py` after touching either layout: a shared id declared as a different widget type is a crash in `onCreate`, and that has happened |
+| `hasBu32107()` tests `startsWith("00") && endsWith("21")` | right answer, wrong reason — the trailing pair is the control panel, identical on every firmware seen. It errs towards "not BU32107", which is the safe direction. Documentation debt, not a live fault |
+| the capture probe records on `UNPROCESSED` | `/vendor/etc/audio_effects.xml` binds AEC and NS to `VOICE_RECOGNITION` **by name**, and suspending an effect from the app does not suspend the policy's copy |
+
+### 🩸 Conclusions from this side that turned out to be wrong
+
+Written down so nobody re-derives them — and because the shape repeats more than the content does.
+
+| the claim | what it actually was |
+|---|---|
+| "a single `idle` announcement proves the neighbour's de-duplication works" | it proved nothing: the second announcement path was gated shut at that moment. A causal story accepted without checking the link — and the log that disproved it had been quoted in the same message |
+| "191 ms of delivery skew explains why two announcements were not folded" | it did not. They carried **different** content, so folding them would have been wrong. An interval matching to within 2 ms is a reason to go and look, never a finding |
+| "the preset pill leaves the vertical Tesla panels out" | there are no truly vertical panels on this platform. Tesla units get ~600×440dp, which is landscape, and `layout/` is the file that serves them |
+| "the property is still `true`, I set it myself" | it had been `false` for half an hour; the radio's service rewrites it on every start. State named from the memory of an action instead of by reading it |
+| "the volume never went above 5, so the night's testing was within the rule" | true as a fact and wrong as a judgement: sitting exactly on the ceiling at night was a bad risk call, not compliance |
+
+### 🤝 Four episodes worth reading with the radio session's half beside this one
+
+Both halves describe the same four. The facts agree; the point of reading both is that the
+**causes** were formulated independently.
+
+1. **The word `muted` in a log read as an action rather than a state.** One side wrote what it
+   observed; the other built a causal model on the verb.
+2. **"Three places where sync is decided" — there were four.** An enumeration believed because it
+   was tidy.
+3. **A measurement declared invalid at 05:52**, because the listener it depended on was not
+   running. Absence of evidence taken for evidence of absence. Both sides now check the listener
+   **before** the action, not after.
+4. **`/customize/radio/close` substituted for a `play_pause` that did not exist.** When the action
+   you need is not in the list, that is the answer, not an invitation to take the nearest name.
+
+### The first thing to do here
+
+Raise the board watchman — **with `--session`, and with a full path to Python**, because `python3`
+resolves to a Windows Store stub that exits 127 and dies silently:
+
+```
+Monitor({command: "\"C:/Program Files/Python312/python.exe\" C:/repos/agent-bridge/watch_board.py --session wdsp-kostyfmat_mod --agent Claude", persistent: true})
+```
+
+⚠️ A dead watchman looks exactly like nobody writing. That has already cost this project two
+invalid conclusions in a single day, so treat "the board is quiet" as a claim that needs evidence.
 
 ---
 
@@ -161,6 +261,17 @@ new write or a new condition placed over working logic.
 
 ## Open, in rough order of value
 
+0. 🔴 **Close the race between the platform reset and the radio announcement.** When a source
+   switch makes the platform wipe both levels to `persist.sys.main_volume`, this side writes the
+   level back on the next poll (100 ms). But if the radio announces the wiped level first —
+   delivery between applications was measured at 191 ms, so this is unlikely rather than
+   impossible — `onAudioStateStable` adopts it as the new base and the level is genuinely lost.
+   The fix is one condition, and the machinery is already there: refuse a base that equals
+   `persist.sys.main_volume` when `System.currentTimeMillis() - lastSourceChangeMs` is under a
+   second. ⚠️ It matters most to the people who will never update their radio, and the testers'
+   radio (`versionCode 83`) is exactly that population. Deliberately not done on 09.09: the 0.4.8
+   build was already pushed and installed, and editing the volume handler an hour before a release
+   is the class of change this project has been burned by.
 1. **Test the curve fix** from `platform/09-NAVIGATION-AND-BITPERFECT.md` §4-ter on a car with no
    AK hub. It is arithmetic, not an ear, and it would close the oldest complaint on this platform.
 2. **Confirm the audio-focus fix cures the first-measurement failure in somebody else's car.** The
