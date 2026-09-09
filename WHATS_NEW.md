@@ -65,7 +65,21 @@
 
 *Усі налаштування жестів зберігаються автоматично після відпускання пальця.*
 
-...Скоро! 🚀
+### 🔊 Гучність радіо і плеєра — тепер одна
+
+wDSP навчився тримати рівень гучності спільним для плеєра й радіо: ви виставили комфортну
+гучність на музиці — перемкнулись на радіо і не тягнетесь до ручки. Це не «вирівнювання на слух»,
+а перенесення саме того рівня, який ви обрали.
+
+⚙️ **У wDSP нічого налаштовувати не треба.** Вмикається воно з боку радіо, і запрацює автоматично
+з найближчим оновленням застосунку радіо — просто одного дня перемикання джерела перестане збивати
+гучність. З чужим або старішим радіо wDSP свідомо стоїть осторонь і нічого не чіпає.
+
+🎚️ **А якщо радіо і плеєр звучать по-різному за гучністю або тембром** — це лікується не ручкою, а
+пресетом. У wDSP кожен плеєр має власний пресет, і радіо теж: відкрийте головний екран еквалайзера
+з увімкненим радіо і підніміть у його пресеті те, чого бракує. Налаштування запам'ятається саме
+для радіо і підхопиться щоразу, коли ви на нього перемкнетесь.
+
 
 ---
 
@@ -127,7 +141,22 @@ Here’s the breakdown of what’s new:
 
 *All edge slider adjustments save automatically the moment you lift your finger.*
 
-...Coming soon! 🚀
+### 🔊 One volume for the radio and the player
+
+wDSP now keeps a single volume level across the player and the radio. Set a comfortable level on
+music, switch to the radio, and you are not reaching for the knob. It carries the level you chose
+rather than guessing a loudness match.
+
+⚙️ **Nothing to configure in wDSP.** It is switched on from the radio side and will start working
+by itself with the next update of the radio application — one day, switching source simply stops
+disturbing the volume. With a different or older radio, wDSP deliberately stands aside and touches
+nothing.
+
+🎚️ **If the radio and the player sound different** in level or tone, the fix is a preset, not the
+knob. Every player in wDSP has its own preset, and so does the radio: open the equaliser's main
+screen while the radio is playing and raise what is missing in its preset. It is remembered for the
+radio and comes back every time you switch to it.
+
 
 ---
 
@@ -189,5 +218,20 @@ Here’s the breakdown of what’s new:
 
 *Все настройки жестов сохраняются автоматически сразу после отпускания пальца.*
 
-...Скоро! 🚀
+### 🔊 Громкость радио и плеера — теперь общая
+
+wDSP научился держать уровень громкости общим для плеера и радио: выставили комфортную громкость на
+музыке — переключились на радио и не тянетесь к ручке. Это перенос именно того уровня, который вы
+выбрали, а не подгонка на слух.
+
+⚙️ **В wDSP настраивать ничего не нужно.** Включается это со стороны радио и заработает
+автоматически с ближайшим обновлением приложения радио — просто однажды переключение источника
+перестанет сбивать громкость. С чужим или более старым радио wDSP осознанно стоит в стороне и
+ничего не трогает.
+
+🎚️ **А если радио и плеер звучат по-разному** по громкости или тембру — лечится это не ручкой, а
+пресетом. В wDSP у каждого плеера свой пресет, и у радио тоже: откройте главный экран эквалайзера
+при включённом радио и поднимите в его пресете то, чего не хватает. Настройка запомнится именно для
+радио и подхватится каждый раз при переключении на него.
+
 

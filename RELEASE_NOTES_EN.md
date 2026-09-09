@@ -56,4 +56,19 @@ Here’s the breakdown of what’s new:
 
 *All edge slider adjustments save automatically the moment you lift your finger.*
 
-...Coming soon! 🚀
+### 🔊 One volume for the radio and the player
+
+wDSP now keeps a single volume level across the player and the radio. Set a comfortable level on
+music, switch to the radio, and you are not reaching for the knob. It carries the level you chose
+rather than guessing a loudness match.
+
+⚙️ **Nothing to configure in wDSP.** It is switched on from the radio side and will start working
+by itself with the next update of the radio application — one day, switching source simply stops
+disturbing the volume. With a different or older radio, wDSP deliberately stands aside and touches
+nothing.
+
+🎚️ **If the radio and the player sound different** in level or tone, the fix is a preset, not the
+knob. Every player in wDSP has its own preset, and so does the radio: open the equaliser's main
+screen while the radio is playing and raise what is missing in its preset. It is remembered for the
+radio and comes back every time you switch to it.
+
