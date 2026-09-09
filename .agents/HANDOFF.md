@@ -77,9 +77,11 @@ Active dev branch for UI & Platform QF integration. **Everything committed & tes
   - `ScreensaverManager.java`: відновлено точний хіт-тест тапу по обкладинці треку / іконці в нижньому лівому кутку для миттєвого запуску Main Activity активного плеєра.
 - **Review Fixes (09.09.2026 04:40, commit `b24a9ff`)**:
   - `ThemedDialog`: додано `setOnDismissListener` для миттєвого видалення з `sActiveDialogs`, ліквідовано retention-пастку WeakHashMap.
-  - `NowPlaying`: додано `return;` після радіо-команд у `skipToPrevious`/`skipToNext`/`playPause`, виключено подвійне спрацьовування на сторонніх плеєрах; паузу радіо зведено до `/customize/radio/close`.
+  - `NowPlaying`: додано `return;` після радіо-команд у `skipToPrevious`/`skipToNext`.
   - `ScreensaverManager`: прив'язано `midY` до `TRANSPORT_FROM`, видалено мертвий метод `sendMediaKey()`.
   - `FrostedGlassDrawable`: винесено 5 масивів `float[8]` радіусів у поля класу з розрахунком в `onBoundsChange()`, усунено алокації об'єктів у `draw()`.
+- **Review Follow-up (09.09.2026 05:40, commit `74fe007` — Варіант А)**:
+  - `NowPlaying.playPause()`: видалено неіснуючий бродкаст `/customize/radio/close` та сліпий `return;`. Керування паузою/плей на радіо тепер іде штатно через `MediaController` (`TransportControls.pause()` / `.play()`), до якого під'єднана `MediaSessionCompat` радіо, не блокуючи роботу на сторонніх плеєрах та усуваючи подвійні виклики. Методи `skipToPrevious()`/`skipToNext()` зберігають прямі фабричні бродкасти `/customize/radio/pre` та `/customize/radio/next` з термінальним `return;`.
 
 
 ## What landed between 26.08 and 03.09
