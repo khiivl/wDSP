@@ -321,23 +321,34 @@ new write or a new condition placed over working logic.
 
 ## Open, in rough order of value
 
-0. 🔴 **Close the race between the platform reset and the radio announcement.** When a source
-   switch makes the platform wipe both levels to `persist.sys.main_volume`, this side writes the
-   level back on the next poll (100 ms). But if the radio announces the wiped level first —
-   delivery between applications was measured at 191 ms, so this is unlikely rather than
-   impossible — `onAudioStateStable` adopts it as the new base and the level is genuinely lost.
-   The fix is one condition, and the machinery is already there: refuse a base that equals
-   `persist.sys.main_volume` when `System.currentTimeMillis() - lastSourceChangeMs` is under a
-   second. ⚠️ It matters most to the people who will never update their radio, and the testers'
-   radio (`versionCode 83`) is exactly that population — confirmed from the radio's git rather
-   than from memory: `versionCode <= 83` is precisely the class whose sync switch defaulted to
-   *on*, the flip landed in `414b79a` on 07.09 at 17:30, and the tester release was built on 06.09
-   at 08:10, a day and a half earlier. 🪤 Worse for this race specifically: 83 announces the level
-   it read from the `VOLUME_CHANGED` extra rather than the live one, so what it announces after a
-   platform wipe **is** the wiped number. On the stand (radio 90) a late announcement is harmless
-   because the level it carries is the restored one; in the field on 83 it is poison if it wins. Deliberately not done on 09.09: the 0.4.8
-   build was already pushed and installed, and editing the volume handler an hour before a release
-   is the class of change this project has been burned by.
+0. ⚠️ **Close the remaining case where an announcement can be believed over the level a person
+   chose.** ✍️ Scope corrected 09.09.2026 by the owner, and the correction shrank it: a Bluetooth
+   call is not an ordinary source switch here. It moves the active type to `btcall_type`, which
+   loads the protected **Call** preset and remembers what was playing before it — and, more to the
+   point for the volume, the poll keeps a **standstill level per source** (`media_standstill`,
+   `radio_standstill`, `btcall_standstill`, `aux_standstill`). On every source change it saves the
+   outgoing source's level and restores the incoming one's from that memory, which no property
+   reset can reach.
+
+   ⇒ So the earlier description of this — "an incoming call wipes both levels and wDSP may believe
+   the wiped one" — **was overstated**, and it was reported to the owner in that form. The platform
+   wipe happens, and the level comes back from this side's own memory both on the way into the call
+   and on the way out of it. An announcement carrying the wiped level arrives ~191 ms later, by
+   which time the source is already `btcall_type`, so poisoning `baseStandstillVolume` there is
+   healed on return, when the base is overwritten from `radio_standstill`.
+
+   🪤 What is left is narrow and real: the poison sticks only if the announcement is believed
+   **while the source still reads as the old one**, because the outgoing level is saved into
+   `radio_standstill` at that moment. That needs the announcement to beat a 100 ms poll over a
+   191 ms delivery — possible only if the platform flips the level before it flips
+   `sys.current.vol.type`, which has not been measured either way.
+
+   The guard is still worth having and is still one condition: refuse a base equal to
+   `persist.sys.main_volume` within a second of a source change (`lastSourceChangeMs` already
+   exists). It costs nothing and closes the case without needing the ordering to be established.
+   ⚠️ Measure the ordering first if you want to know whether it was ever reachable — and record the
+   answer here, because this item has now been described two different ways in one day.
+
 1. **Test the curve fix** from `platform/09-NAVIGATION-AND-BITPERFECT.md` §4-ter on a car with no
    AK hub. It is arithmetic, not an ear, and it would close the oldest complaint on this platform.
 2. **Confirm the audio-focus fix cures the first-measurement failure in somebody else's car.** The
