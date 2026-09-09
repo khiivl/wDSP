@@ -37,7 +37,7 @@ lives in the code is not repeated here; what lived only in a conversation is wri
 | | wDSP | QF Radio |
 |---|---|---|
 | in testers' hands | **0.4.7.2** | **`versionCode 83`** |
-| on the test unit 192.168.1.146 | **0.4.8 / `versionCode 15`** | **`versionCode 90`** |
+| on the test unit 192.168.1.146 | **0.4.8 / `versionCode 15`** | **`versionCode 91`** (since 09.09 05:22) |
 | in the tree | 0.4.8 / 15, pushed (`8e0c82a`) | `versionCode 91` |
 
 🪤 The radio calls **all three** of its builds `RC2.2` — its `versionName` has not moved since
@@ -51,6 +51,32 @@ reports `syncOwner=false`, which puts that radio into its own fallback — and t
 equalises `sys.radio.vol` with `sys.media.vol`, which is exactly the condition the platform's
 `resetDefValIfNeed` keys on. Why the level is nevertheless not lost, and the race that is still
 open, are in the two rows below.
+
+### The version gate: why it stays at 86
+
+Radio 91 is on the unit and 91 fixes real faults, so raising the gate to 91 is tempting and would
+be wrong. The two numbers answer different questions:
+
+- **86** — the oldest radio with which the bargain *means* anything. That is what a gate is for.
+- **91** — the oldest radio with which the bargain works *without known faults*. That is a
+  recommendation, not a condition, and enforcing it would cut off units that are behaving perfectly
+  well and would leave their volume to nobody.
+
+✍️ The QF Radio session, which had every reason to argue for its own newest build, advised against
+raising it. Keep 86 until a radio changes the bargain itself — not merely fixes things inside it.
+
+🪤 One detail about reading the log: `volume sync allowed: … versionCode NN` is printed **only when
+the answer changes**, so the number in it is the version at the moment of the decision, not the
+version installed now. On 09.09 the last such line said 90 while the unit already held 91 — both
+are above the gate, so nothing flipped and nothing was printed. Read the package, not the log line.
+
+### The one measurement that is set up and not taken
+
+**Step 5 of `TEST_SYNC_ON.md` has never been run against radio 91.** The expected number is written
+down and exact: taking the channel must produce **exactly one** `source=radio` announcement. It is
+the only test in this project that can fail — every earlier version of it was phrased so that it
+could not — and it survives in the shared folder rather than in either session's memory. Run it
+before believing the pair is finished.
 
 ### What has actually been handed out
 
