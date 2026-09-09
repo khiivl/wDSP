@@ -321,7 +321,12 @@ new write or a new condition placed over working logic.
 
 ## Open, in rough order of value
 
-0. ⚠️ **Close the remaining case where an announcement can be believed over the level a person
+0. 📮 **Handed to the next session by the owner, 09.09.2026 — deliberately not done here.** The
+   measurement and the guard both belong to whoever picks this up on the other machine; this
+   session was told to leave it rather than squeeze it in after a release. Treat the item as
+   assigned, not as something nobody noticed.
+
+   ⚠️ **Close the remaining case where an announcement can be believed over the level a person
    chose.** ✍️ Scope corrected 09.09.2026 by the owner, and the correction shrank it: a Bluetooth
    call is not an ordinary source switch here. It moves the active type to `btcall_type`, which
    loads the protected **Call** preset and remembers what was playing before it — and, more to the
