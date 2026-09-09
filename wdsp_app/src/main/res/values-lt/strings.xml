@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Išankstinis nustatymas</string>
@@ -378,4 +378,22 @@ Bendras numatytasis: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — originalus projektas</string>
+    <string name="banner_upstream_note">Ši versija yra ja pagrįstas modas. Pagrindas ir padėka už jį priklauso autoriui.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Ši versija. Ji yra nemokama: jokių licencijų ar atrakinimų — tik savanoriška padėka.</string>
+    <string name="banner_github">GitHub — wDSP diskusija</string>
+    <string name="banner_telegram">Telegram grupė</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Modo diskusija</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Kripto — TON (Telegram piniginė)</string>
+    <string name="banner_copied">Nukopijuota į iškarpinę</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>

@@ -140,7 +140,7 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Andere</string>
     <string name="GLtab">GALA</string>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
     <string name="lbl_pwr">Amp Power:</string>
     <string name="hint_sub_freq">Freq</string>
 
@@ -374,4 +374,22 @@
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — das Originalprojekt</string>
+    <string name="banner_upstream_note">Dieser Build ist ein darauf basierender Mod. Die Basis und der Dank dafür gebühren dem Autor.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Dieser Build. Er ist kostenlos: keine Lizenzen, keine Freischaltungen — nur freiwilliger Dank.</string>
+    <string name="banner_github">GitHub — wDSP-Diskussion</string>
+    <string name="banner_telegram">Telegram-Gruppe</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Diskussion über den Mod</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Krypto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Krypto — TON (Telegram-Wallet)</string>
+    <string name="banner_copied">In die Zwischenablage kopiert</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>

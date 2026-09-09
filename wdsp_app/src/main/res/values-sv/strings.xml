@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto</string>
@@ -374,4 +374,22 @@
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — ursprungsprojektet</string>
+    <string name="banner_upstream_note">Detta bygge är en modd baserad på det. Grunden och tacket för den tillhör skaparen.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Detta bygge. Det är gratis: inga licenser, inga upplåsningar — bara ett frivilligt tack.</string>
+    <string name="banner_github">GitHub — wDSP-diskussion</string>
+    <string name="banner_telegram">Telegram-grupp</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Diskussion om modden</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Krypto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Krypto — TON (Telegram-plånbok)</string>
+    <string name="banner_copied">Kopierat till urklipp</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>

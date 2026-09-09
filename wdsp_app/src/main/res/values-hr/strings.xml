@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Predpodešavanje</string>
@@ -340,5 +340,23 @@ Globalno zadano: %1$s</string>
     <string name="vis_oscillo_persistence_label">Phosphor Afterglow</string>
     <string name="vis_oscillo_persistence_desc">Analog CRT persistence: decay duration and glow trails of the oscilloscope beam</string>
     <string name="btn_vis_preview_screensaver">Show on screensaver</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — originalni projekt</string>
+    <string name="banner_upstream_note">Ova verzija je mod temeljen na njemu. Osnova i zahvala za nju pripadaju autoru.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Ova verzija. Besplatna je: bez licenci i otključavanja — samo dobrovoljna zahvala.</string>
+    <string name="banner_github">GitHub — wDSP rasprava</string>
+    <string name="banner_telegram">Telegram grupa</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Rasprava o modu</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Kripto — TON (Telegram novčanik)</string>
+    <string name="banner_copied">Kopirano u međuspremnik</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>
 

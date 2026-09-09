@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Preset</string>
@@ -378,4 +378,22 @@ Implicit global: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — proiectul original</string>
+    <string name="banner_upstream_note">Această versiune este un mod bazat pe el. Baza și mulțumirile pentru ea aparțin autorului.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Această versiune. Este gratuită: fără licențe, fără deblocări — doar mulțumiri voluntare.</string>
+    <string name="banner_github">GitHub — discuții wDSP</string>
+    <string name="banner_telegram">Grup Telegram</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Discuții despre mod</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Cripto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Cripto — TON (portofel Telegram)</string>
+    <string name="banner_copied">Copiat în clipboard</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>

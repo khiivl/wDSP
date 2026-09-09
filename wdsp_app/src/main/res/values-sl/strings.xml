@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Samodejna prednastavitev</string>
@@ -378,4 +378,22 @@ Globalno privzeto: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — izvirni projekt</string>
+    <string name="banner_upstream_note">Ta različica je mod, ki temelji nanj. Osnova in zahvala zanjo pripadata avtorju.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Ta različica. Je brezplačna: brez licenc ali odklepanj — le prostovoljna zahvala.</string>
+    <string name="banner_github">GitHub — razprava o wDSP</string>
+    <string name="banner_telegram">Skupina Telegram</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">Razprava o modu</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Kripto — TON (denarnica Telegram)</string>
+    <string name="banner_copied">Kopirano v odložišče</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>

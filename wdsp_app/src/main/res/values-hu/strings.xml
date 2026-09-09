@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP</string>
+    <string name="app_name">wDSP kostyamat mod</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Előbeállítás</string>
@@ -340,5 +340,23 @@ Globális alapértelmezett: %1$s</string>
     <string name="vis_oscillo_persistence_label">Phosphor Afterglow</string>
     <string name="vis_oscillo_persistence_desc">Analog CRT persistence: decay duration and glow trails of the oscilloscope beam</string>
     <string name="btn_vis_preview_screensaver">Show on screensaver</string>
+
+    <!-- Банери підтримки в налаштуваннях -->
+    <string name="banner_upstream_title">wDSP — az eredeti projekt</string>
+    <string name="banner_upstream_note">Ez az összeállítás egy azon alapuló mod. Az alap és a köszönet érte a szerzőt illeti.</string>
+    <string name="banner_mod_title">wDSP kostyamat mod</string>
+    <string name="banner_mod_note">Ez az összeállítás. Ingyenes: nincsenek licencek, nincsenek feloldások — csak önkéntes köszönet.</string>
+    <string name="banner_github">GitHub — wDSP megbeszélés</string>
+    <string name="banner_telegram">Telegram csoport</string>
+    <string name="banner_coffee">Buy me a coffee</string>
+    <string name="banner_paypal">PayPal</string>
+    <string name="banner_mod_discussion">A mod megvitatása</string>
+    <string name="banner_mod_support">Buy me a coffee</string>
+    <string name="banner_revolut">Revolut</string>
+    <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
+    <string name="banner_ton">Kripto — TON (Telegram tárca)</string>
+    <string name="banner_copied">Másolva a vágólapra</string>
+    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
+    <string name="app_title_short">wDSP</string>
 </resources>
 
