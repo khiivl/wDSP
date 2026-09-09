@@ -368,3 +368,14 @@ direct message — by the owner's instruction, because lone testers' files get l
 - **A stale document is worse than none.** Two claims in `ROOM_CALIBRATION.md` contradicted the
   code and nearly caused a non-bug to be "fixed"; this file spent ten days describing work as
   uncommitted that had been pushed. If the code moves, move the file.
+
+---
+
+## Localization of Support Banners (09.09.2026 05:20)
+
+- **Commit `63ddfb3`**: `Res(strings): локалізація банерів підтримки та назви моду для всіх 27 мов`
+  - 14 нових ключів підтримки (`banner_upstream_title`, `banner_upstream_note`, `banner_mod_title`, `banner_mod_note`, `banner_github`, `banner_telegram`, `banner_coffee`, `banner_paypal`, `banner_mod_discussion`, `banner_mod_support`, `banner_revolut`, `banner_trc20`, `banner_ton`, `banner_copied`) та `app_title_short` перекладено й додано до всіх 27 мов (`values-*`).
+  - `app_name` уніфіковано на `wDSP kostyamat mod` по всіх 27 мовах.
+  - Дотримано всіх правил локалізації: незмінні власні назви, незмінний короткий заголовок `wDSP`, латинські назви платіжних систем, переклад лише слова «криптовалюта» для блокчейн-мереж, та виключно добровільна підтримка без згадок про ліцензії.
+  - Усі 27 ресурсних файлів перевірено компіляцією через `:wdsp_app:assembleDebug` (BUILD SUCCESSFUL).
+
