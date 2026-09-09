@@ -51,6 +51,12 @@ public final class ThemedDialog {
     public static synchronized void registerActiveDialog(Dialog dialog, Runnable rebinder) {
         if (dialog == null || rebinder == null) return;
         sActiveDialogs.put(dialog, rebinder);
+        // Очищаємо запис при закритті діалогу, щоб лямбда-rebinder не тримала View/Dialog у WeakHashMap
+        dialog.setOnDismissListener(d -> {
+            synchronized (ThemedDialog.class) {
+                sActiveDialogs.remove(d);
+            }
+        });
     }
 
     public static synchronized void refreshActiveDialogs(Context context) {

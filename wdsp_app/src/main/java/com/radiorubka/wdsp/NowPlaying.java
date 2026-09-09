@@ -283,8 +283,8 @@ public final class NowPlaying {
         if (isRadioSource()) {
             try {
                 context.sendBroadcast(new Intent("/customize/radio/pre"));
-                context.sendBroadcast(new Intent("com.kostyamat.radio.action.PREV"));
             } catch (Throwable ignored) {}
+            return;
         }
         MediaController mc = controller;
         if (mc != null) {
@@ -305,8 +305,8 @@ public final class NowPlaying {
         if (isRadioSource()) {
             try {
                 context.sendBroadcast(new Intent("/customize/radio/next"));
-                context.sendBroadcast(new Intent("com.kostyamat.radio.action.NEXT"));
             } catch (Throwable ignored) {}
+            return;
         }
         MediaController mc = controller;
         if (mc != null) {
@@ -326,8 +326,13 @@ public final class NowPlaying {
     public void playPause() {
         if (isRadioSource()) {
             try {
-                context.sendBroadcast(new Intent("/customize/radio/play_pause"));
+                if (isPlaying()) {
+                    context.sendBroadcast(new Intent("/customize/radio/close"));
+                } else {
+                    sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+                }
             } catch (Throwable ignored) {}
+            return;
         }
         MediaController mc = controller;
         if (mc != null) {

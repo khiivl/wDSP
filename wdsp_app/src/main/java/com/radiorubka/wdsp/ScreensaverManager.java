@@ -847,7 +847,7 @@ public final class ScreensaverManager {
         float usableH = Math.max(1f, bottom - top);
 
         // Lower half boundary: evenly distributed between the statusbar and the bottom stripe
-        float midY = top + usableH * 0.5f;
+        float midY = top + usableH * TRANSPORT_FROM;
 
         // 1. Taps in upper area dismiss the screensaver
         if (y < midY) {
@@ -919,26 +919,6 @@ public final class ScreensaverManager {
         if (standIn != null) standIn.flashTransport(glyph);
         // The screensaver stays. Skipping a track is not a reason to lose the picture.
         resetIdleClock();
-    }
-
-    /**
-     * Sends the key to whoever is playing.
-     *
-     * <p>Through AudioManager rather than to a package we picked: the media button routing already
-     * knows which session is active, including a Bluetooth phone acting as the source, and it
-     * keeps working when the owner changes players without us being told.
-     */
-    private void sendMediaKey(int keyCode) {
-        try {
-            android.media.AudioManager am =
-                    (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            if (am == null) return;
-            long now = android.os.SystemClock.uptimeMillis();
-            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0));
-            am.dispatchMediaKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0));
-        } catch (Throwable t) {
-            Log.w(TAG, "could not send the media key", t);
-        }
     }
 
     /**
