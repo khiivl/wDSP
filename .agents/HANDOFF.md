@@ -78,19 +78,27 @@ the only test in this project that can fail — every earlier version of it was 
 could not — and it survives in the shared folder rather than in either session's memory. Run it
 before believing the pair is finished.
 
-### What has actually been handed out
+### 📦 What was actually handed out, and to whom
 
-**0.4.8 is packed and approved for release** (09.09.2026): `~/Downloads/wDSP-kostyamat-mod-0.4.8.zip`,
-sha256 `addb1769ff8b…`, holding the signed APK, READMEs in English and Russian, the release notes as
-offline HTML in three languages, and the two cabin-measurement documents unchanged. Before it, the
-last thing testers actually received was **0.4.7.2** — 0.4.7.1 and 0.4.7.2 are zipped in the same
-folder, and 0.4.7.5 was built and never handed out.
+🔴 **The owner's standing rule, 09.09.2026: record which versions were distributed, and to which
+audience.** Not every release that was packed went to people — several went to testers only, and
+some never left this machine. The owner says each time which it is. **Nothing here may be filled in
+by inference**: "a zip exists" is not distribution, and "testers had it" is not "it was public".
 
-🔑 One rule was applied while packing and is worth keeping: the APK in the pack is byte-identical to
-the one installed on the unit, checked by hash rather than by having copied it. Two artefacts under
-one version is the mistake this project has made twice; comparing hashes costs a second.
-Measurements from testers go to <https://t.me/wDSPapp/79> or a forum PM, **never** a direct
-message: the owner's standing instruction, because lone files in DMs get lost.
+| version | built | pack | handed to | evidence |
+|---|---|---|---|---|
+| 0.4.7.1 | 23.08.2026 | zipped | ❓ **not recorded** | pack and zip exist in `~/Downloads/`; nothing on this machine says whether they went out, or to whom |
+| 0.4.7.2 | 26.08.2026 | zipped | **testers** (public status ❓) | the handover has said since 03.09 that "testers still have 0.4.7.2"; whether it was also public was never written down |
+| 0.4.7.5 | 07.09.2026 | packed, never zipped | ❌ **nobody** | packed the night of 07-08.09 and superseded before it went anywhere |
+| 0.4.7.7 | 08.09.2026 | no pack | ❌ **nobody** | built and installed on the test unit only, to carry the interface merge |
+| **0.4.8** | 09.09.2026 | `wDSP-kostyamat-mod-0.4.8.zip`, sha256 `addb1769ff8b…` | ⏳ **approved for release, audience not yet stated** | the owner approved the pack; he had not yet said testers or public when this session closed. **Ask before sending it anywhere** |
+
+⚠️ Three rows carry a `❓`. They are unknown rather than empty: this session could not establish
+them from anything on the machine, and guessing them would put a false fact into the one document a
+new machine trusts. The owner can settle all three in a sentence.
+
+📌 The APK inside a pack is verified against the one installed on the unit **by hash**, not by
+having just copied it. Two artefacts under one version number has happened twice here.
 
 ### 🛑 What looks like a defect and is deliberate
 
@@ -390,6 +398,13 @@ direct message — by the owner's instruction, because lone testers' files get l
   no gate, then a reply with no gate, then a handover that announced nothing at all. Each fix was
   correct and each was half. Taking a channel has a pair in releasing it; a gate on the way out has
   a pair in the answer to a query. The second half is never found by re-reading the first.
+- **Name the thing, never the index.** "Open item zero", "debt #4", "the 86 gate" mean something
+  to whoever holds the list open and nothing to the person being reported to. ✍️ The owner, on
+  09.09.2026: he was told that one decision was waiting on him and given its number instead of its
+  content, and answered that the number tells him nothing. A report is not a pointer into your own
+  notes — say what the thing is and what it would change, then the number if anyone needs to find
+  it. The same applies to commit hashes, version codes and file paths offered without a sentence
+  saying what is in them.
 - **Argue before obeying** when there is evidence against a request, and say so first.
 - **Verify on the wire yourself** when the owner is away. When the owner is *at* the unit, install
   and be quiet — no `input tap`, no screenshots, no scripted runs. They will look.
