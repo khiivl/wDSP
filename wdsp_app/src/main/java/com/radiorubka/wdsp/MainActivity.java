@@ -1523,7 +1523,13 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 if (checked && switchLoud != null && switchLoud.isChecked()) {
+                    // 🔴 Guarded, or the partner's own listener saves and redraws first and this
+                    // one does it again: one press of a button, two full saves and two visualiser
+                    // rebuilds. Harmless only because mcuCache swallows the repeat - and relying on
+                    // that is how a second writer gets in unnoticed.
+                    isUpdatingUi = true;
                     switchLoud.setChecked(false);
+                    isUpdatingUi = false;
                 }
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -1534,7 +1540,9 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 if (checked && switchFmEnable != null && switchFmEnable.isChecked()) {
+                    isUpdatingUi = true;
                     switchFmEnable.setChecked(false);
+                    isUpdatingUi = false;
                 }
                 autoSaveCurrent();
                 updateFmVisualizer();

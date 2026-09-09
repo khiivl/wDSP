@@ -84,6 +84,71 @@ hardware volume onto Android's `STREAM_MUSIC` as `i * 15 / 32` — and as `i * 1
 *consequence* of the hardware volume, so anything that writes `STREAM_MUSIC` directly is fighting
 the platform and will be overwritten at the next source change.
 
+### 📻 The level carried by `com.qf.action.VOLUME_CHANGED` is not a reliable level
+
+Measured 08.09.2026 on 192.168.1.146. The broadcast's `EXTRA_VOLUME_VALUE` can carry a number that
+matches nothing live. Four transitions in a row, with both stored levels read at the same instant:
+
+```
+16:50:39.690  pushed=5  type=radio_type  media=9  radio=9
+16:53:19.161  pushed=5  type=radio_type  media=9  radio=9
+16:53:51.332  pushed=5  type=media_type  media=9  radio=9
+16:53:57.841  pushed=5  type=radio_type  media=9  radio=9
+```
+
+Each was followed 6-20 ms later by a second broadcast carrying the live 9. Earlier the same
+afternoon `pushed=5` did agree with `media=5`, so the extra is not always wrong - which is worse
+than always wrong, because it cannot be corrected by a constant.
+
+🔬 **The extra does not lie on its own - it faithfully re-broadcasts somebody's write, including a
+stale one.** The stale number equalled `sys.qf.radio.saved_vol`, read passively minutes later as
+**5** while `sys.radio.vol` and `sys.media.vol` both read **9**. QF Radio then found the writer in
+its own source, which settles it: `saved_vol` is refreshed *only* on its fallback branch, which
+stops running the moment wDSP owns the synchronisation - but the line that pushes that value into
+the chip, `tuner.link().setVolume(radioVol)`, sits **outside** that branch and therefore runs every
+time. So every release of the audio tract writes a frozen level straight to the MCU, and the
+platform re-broadcasts it as a volume change. ✍️ Found by QF Radio in its own code, from this side's
+four log lines; neither half could have seen it alone.
+
+🔬 **Both writers reach the same knob, and that is settled, not guessed.** The decompiled
+`VolumeState.setVolumeVal(int)` - transcribed in `VolumeHelper`'s javadoc - stores `propSave`
+*always* and then calls `RPC_SetVolume` only when the state being written is the live source. The
+radio's `tuner.link().setVolume()` calls `RPC_SetVolume` directly. So:
+
+| write | property | chip |
+|---|---|---|
+| through the framework, live source | ✅ | ✅ `RPC_SetVolume` |
+| through the framework, a source that is not live | ✅ | ❌ silent - which is what makes carrying a level across sources inaudible |
+| **direct `RPC_SetVolume`** | ❌ **no trace** | ✅ |
+
+⇒ A framework write moves both together; a direct one moves only the chip. That is the whole
+mechanism by which the two readings drift apart, and why no property reader can notice.
+
+🎯 **It also bounds the symptom.** Because every framework write to the live source rewrites the
+chip, the divergence lasts only until the next volume write of any kind - the first knob step heals
+it. Expect it to present not as "the radio is permanently quieter" but as *"switch away and back
+and the radio is quieter than the dial says; touch the knob one step and it jumps up several"*. ⚠️
+At a standstill nothing heals it on its own: wDSP's GALA deliberately does **not** write at a zero
+offset, it follows. Moving, the first GALA step fixes it.
+
+🔴 **A write straight to the chip is invisible to everything that works on properties.** wDSP's
+carry between sources, its recovery from `resetDefValIfNeed`, and GALA's base all read and write
+the framework and `sys.*.vol`. None of them can see an MCU-direct write, let alone correct it - and
+`applyVolumeDependentSettings()` computes the Fletcher-Munson curve and the sub compensation from
+the level it *can* read. ❓ Whether that becomes audible depends on something not established here:
+whether re-acquiring the channel writes the chip's volume again. If it does, the divergence lives
+only inside the pause; if it does not, the radio plays several steps below what every reading
+reports, with the loudness curve computed for the number nobody is hearing.
+
+🔴 The practical rule either way: **poll the hardware, do not believe the event.** `McuService` does
+that already - the extra is read only by `SystemDiagnostics`, as a record - and a design that took
+the level from the event to save a read would have shown up as a volume that occasionally drops, on
+a source change, to a figure nobody set.
+
+🔑 It is the same shape as the other half of that day's findings: **both applications were reading a
+field that nobody writes any more in the current mode.** A field does not announce that it has
+been abandoned; it just keeps returning its last value.
+
 ---
 
 ## 2. Source switching: `RPC_SetChannel`
@@ -521,6 +586,38 @@ before and after are side by side.
 difference between the two hardware classes is one character.
 
 ---
+
+## 📻 A broadcast between two applications takes about 190 ms to arrive
+
+Measured 08.09.2026 on 192.168.1.146, during the joint sync test with QF Radio. wDSP sent its
+explicit `AUDIO_STATE_QUERY` (addressed with `setPackage`) at `16:53:57.863`; the radio logged
+receiving it at `16:53:58.054`. **191 ms.** Both applications were up as foreground services and
+both lines come from the same `logcat`, i.e. the same clock - so this is delivery time, not a clock
+difference between two machines.
+
+What it is good for, stated carefully, because the first thing it was used for was wrong:
+
+- 🔴 **It sets the floor for any de-duplication that works on a time window.** A window narrower
+  than the delivery skew cannot fold two copies of one event, because by the time the second
+  arrives the first is already older than the window. On this platform such a window would have to
+  be at least ~300 ms - and that is a guess resting on a number measured once on one unit, which is
+  itself the argument for **de-duplicating on content**: keep the last thing announced and suppress
+  an identical repeat, and the width of the window stops existing as a question.
+- 🪤 **It is not an explanation on its own.** In the very test that produced it, the radio announced
+  twice 193 ms apart - almost exactly the skew - and the temptation to call that the cause was
+  taken, by this side, and was wrong. The two announcements carried *different* content: one
+  reported the stored level, the other the live one, so the neighbour's de-duplication was right not
+  to fold them and the window never came into it. The cause was in the code and was found by
+  reading it. **An order-of-magnitude match between a measured interval and an observed one is a
+  reason to go and look, never a finding.**
+
+🪤 And a trap for whoever reads two applications' logs side by side: "A logged sending at *t*, B
+logged receiving at *t+e*" says nothing until *e* is compared with ~190 ms. The direction that
+survives is the strict one - a message *we received* before the other side *received our query*
+cannot be an answer to that query, because delivery only ever adds delay. Reasoning the other way
+round ("it arrived after, so it is the reply") reads a coincidence as a causal chain: on 08.09.2026
+an announcement landing 3 ms on the far side of a query was the reply, and one landing 2 ms on the
+near side was not.
 
 ## The AK hub is in the software on every unit, and in the hardware on some
 

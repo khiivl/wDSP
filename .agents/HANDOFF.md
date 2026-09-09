@@ -20,10 +20,15 @@ somewhere else in full; this is the map, not the territory.
 
 ## The state of the tree
 
-Version **0.4.7.5**, `versionCode 12`, branch `kostyfmat_mod`, **everything committed and pushed**
-as of the night of 07-08.09.2026. Run `git log origin/kostyfmat_mod..HEAD` anyway before assuming
-the remote has what you are reading about — that is the only honest way to know, and this sentence
-goes stale the moment somebody commits.
+Version **0.4.8**, `versionCode 15`, branch `kostyfmat_mod`. The number was chosen 09.09.2026 by the
+owner's instruction: the interface work of the Antigravity session had already announced itself as
+0.4.8 in its release notes while the build file still said 0.4.7.7, and two different builds sharing
+one version is a thing this project has already paid for once. `versionCode` moves with it, because
+0.4.7.7 is on the test unit and in the release pack.
+
+⚠️ Do not read the sentence above as "and it is pushed". Run `git log origin/kostyfmat_mod..HEAD`
+before assuming the remote has what you are reading about — that is the only honest way to know,
+and any claim written here goes stale the moment somebody commits.
 
 The working tree carries two `.idea/` files and three untracked helpers from the localisation pass
 — `translations.json`, `translate_instructions.txt`, `apply_and_sync.ps1`. They are the source data
@@ -186,6 +191,17 @@ direct message — by the owner's instruction, because lone testers' files get l
 
 ## Working rules that cost something when forgotten
 
+- **A matching number is a reason to look, not a finding.** An interval you measured and an
+  interval you observed can agree to within 2 ms and still have nothing to do with each other.
+  ✍️ 08.09.2026: the broadcast delivery skew between two applications here is 191 ms, the radio's
+  two announcements were 193 ms apart, and this side declared the one the cause of the other. The
+  real cause was in the neighbour's code - two call sites reading the level from different places,
+  so the two announcements carried different numbers and its de-duplication was right not to fold
+  them. 🪤 The coincidence was strong enough that it never occurred to me to ask for the code, and
+  it took the other side reading its own source to end it. Also worth keeping from the same hour:
+  the same reflex ran once more that day, when a single announcement was credited to the
+  neighbour's de-duplication while the log in front of me showed the second path had simply been
+  gated shut.
 - **A criterion that cannot fail proves nothing.** "At least one" is satisfied by one and by three
   alike, so a test written that way passes while the fault it was meant to catch is happening in
   front of it. ✍️ Formulated with the QF Radio session, 08.09.2026, after a burst of three

@@ -143,6 +143,40 @@ public class McuService extends Service implements LocationListener {
     private static final String PROP_VOLUME_SYNC = "persist.sys.qf.radio.sync_vol";
 
     /**
+     * The oldest radio this side will synchronise a volume with.
+     *
+     * <h2>🔴 Why a version gate and not just the property</h2>
+     *
+     * <p>The property says a radio <em>wants</em> synchronisation. It does not say that the radio
+     * on this unit is the one the contract was measured against. Versions before
+     * {@code 86} either announce nothing, announce without gating on the switch, or report a level
+     * from a field they no longer keep - each of which ends with two writers holding different
+     * numbers for the same knob, which is the exact failure the contract exists to prevent.
+     *
+     * <p>⚠️ The number is not a guess: {@code 86} is the first radio that stayed silent with the
+     * switch off, measured on the wire 08.09.2026 and recorded in the ledger. Raise it when a newer
+     * radio changes the bargain again - it is one constant, and it is the only place this decision
+     * is taken.
+     *
+     * <p>When the radio is older, this side does two things and no more: it stops carrying the base
+     * between sources, and it tells the radio {@code syncOwner=false}. The second matters as much as
+     * the first - an old radio hearing that falls back to writing the levels itself, which is what
+     * it did before any of this existed and is the behaviour its own build was tested with.
+     */
+    private static final int MIN_RADIO_VERSION_CODE = 86;
+
+    /**
+     * Re-read rather than cached for the life of the service: a radio can be replaced while this
+     * runs, and a decision cached at boot would outlive the reason for it. A minute is far longer
+     * than any poll and far shorter than a person noticing.
+     */
+    private static final long RADIO_VERSION_TTL_MS = 60_000L;
+
+    private int     cachedRadioVersion = Integer.MIN_VALUE;
+    private long    cachedRadioVersionAt;
+    private Boolean lastRadioCompatible;
+
+    /**
      * Whether the base level may be carried between sources - and the answer is no unless
      * somebody says otherwise, out loud.
      *
@@ -165,6 +199,50 @@ public class McuService extends Service implements LocationListener {
     private boolean isVolumeSyncEnabled() {
         String prop = HardwareProfile.systemProperty(PROP_VOLUME_SYNC);
         return "true".equalsIgnoreCase(prop) || "1".equals(prop);
+    }
+
+    /**
+     * The installed radio's versionCode, or -1 when it is not installed or not visible.
+     *
+     * <p>Read from the package rather than from anything the radio sends: a radio too old to be
+     * trusted with the contract is also too old to be trusted to describe itself, and a version
+     * that arrives in a broadcast is only known once the radio has spoken. This is known before.
+     */
+    private int radioVersionCode() {
+        long now = System.currentTimeMillis();
+        if (cachedRadioVersion != Integer.MIN_VALUE
+                && now - cachedRadioVersionAt < RADIO_VERSION_TTL_MS) {
+            return cachedRadioVersion;
+        }
+        int found;
+        try {
+            found = getPackageManager().getPackageInfo(RADIO_PACKAGE, 0).versionCode;
+        } catch (Throwable t) {
+            found = -1;
+        }
+        cachedRadioVersion   = found;
+        cachedRadioVersionAt = now;
+        return found;
+    }
+
+    /**
+     * Whether the radio on this unit is new enough to hold up its half of the bargain.
+     *
+     * <p>Logged only when the answer changes, because it is consulted on every announcement and a
+     * line per announcement would bury the ones that matter.
+     */
+    private boolean radioIsCompatible() {
+        int v = radioVersionCode();
+        boolean ok = v >= MIN_RADIO_VERSION_CODE;
+        if (lastRadioCompatible == null || lastRadioCompatible != ok) {
+            lastRadioCompatible = ok;
+            Log.i(TAG, ok
+                    ? "volume sync allowed: " + RADIO_PACKAGE + " versionCode " + v
+                    : "volume sync withheld: " + RADIO_PACKAGE + " is "
+                      + (v < 0 ? "not installed" : "versionCode " + v)
+                      + ", this build needs " + MIN_RADIO_VERSION_CODE + " or newer");
+        }
+        return ok;
     }
 
     /**
@@ -750,7 +828,10 @@ public class McuService extends Service implements LocationListener {
             // politely stand aside for somebody unable to act. Nothing would synchronise and
             // nothing would say why.
             int versionCode = ownVersionCode();
-            boolean canSync = VolumeHelper.canReachOtherSources();
+            // 🔴 And the radio has to be new enough to be on the other side of it: see
+            // MIN_RADIO_VERSION_CODE. Claiming ownership to a radio that cannot honour it leaves
+            // the level to nobody.
+            boolean canSync = VolumeHelper.canReachOtherSources() && radioIsCompatible();
             query.putExtra("versionCode", versionCode);
             query.putExtra("syncOwner", canSync);
             sendBroadcast(query);
@@ -803,6 +884,7 @@ public class McuService extends Service implements LocationListener {
     private void carryBaseToOtherSource(String currentType, int base) {
         if (base < 0 || !VolumeHelper.canReachOtherSources()) return;
         if (!isVolumeSyncEnabled()) return;
+        if (!radioIsCompatible()) return;
         final String other;
         if (VOL_TYPE_MEDIA.equals(currentType)) other = VOL_TYPE_RADIO;
         else if (VOL_TYPE_RADIO.equals(currentType)) other = VOL_TYPE_MEDIA;
