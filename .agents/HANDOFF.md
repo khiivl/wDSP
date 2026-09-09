@@ -269,7 +269,13 @@ new write or a new condition placed over working logic.
    The fix is one condition, and the machinery is already there: refuse a base that equals
    `persist.sys.main_volume` when `System.currentTimeMillis() - lastSourceChangeMs` is under a
    second. ⚠️ It matters most to the people who will never update their radio, and the testers'
-   radio (`versionCode 83`) is exactly that population. Deliberately not done on 09.09: the 0.4.8
+   radio (`versionCode 83`) is exactly that population — confirmed from the radio's git rather
+   than from memory: `versionCode <= 83` is precisely the class whose sync switch defaulted to
+   *on*, the flip landed in `414b79a` on 07.09 at 17:30, and the tester release was built on 06.09
+   at 08:10, a day and a half earlier. 🪤 Worse for this race specifically: 83 announces the level
+   it read from the `VOLUME_CHANGED` extra rather than the live one, so what it announces after a
+   platform wipe **is** the wiped number. On the stand (radio 90) a late announcement is harmless
+   because the level it carries is the restored one; in the field on 83 it is poison if it wins. Deliberately not done on 09.09: the 0.4.8
    build was already pushed and installed, and editing the volume handler an hour before a release
    is the class of change this project has been burned by.
 1. **Test the curve fix** from `platform/09-NAVIGATION-AND-BITPERFECT.md` §4-ter on a car with no
