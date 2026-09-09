@@ -91,8 +91,28 @@ Written down so nobody re-derives them — and because the shape repeats more th
 
 ### 🤝 Four episodes worth reading with the radio session's half beside this one
 
-Both halves describe the same four. The facts agree; the point of reading both is that the
-**causes** were formulated independently.
+🔴 **Read both halves, not the one that looks like yours.** The worst fault the two applications
+found in two days lived in neither of them: the equalising is in the radio's fallback, the
+consequence is in this side's announcement handler, and neither session could see the chain alone.
+A session that reads only its own half will believe it has the whole picture, which is the exact
+condition under which that chain stayed invisible for a fortnight.
+
+Both halves describe the same four episodes. The facts agree; the point of reading both is that the
+**causes** were formulated independently — and, compared afterwards, they did not match. Where they
+differ, neither is a correction of the other:
+
+- **1** — this side explained it by the ambiguity of the word `muted`; the radio explained it by its
+  own prior, having been told the regression *might* be its fault and then reading for confirmation
+  rather than for cause. The `read 8` that disproved it stood in the same line. ⇒ It took **both**:
+  an ambiguous source and a reader who already knew what it was looking for.
+- **2** — this side: a list believed because it was tidy. The radio: a list built by grepping the
+  *shape* of a condition instead of the predicate. ⇒ Consumer and author of the same list. A tidy
+  enumeration invites trust precisely because the way it was built is invisible.
+- **4** — this side: when the action you need is not in the list, that is the answer. The radio adds
+  the half underneath: its own naming lied, because `close` does not close, it pauses. ⇒ The nearest
+  name was not merely nearest, it was actively misleading.
+- **3** was reached independently in almost the same words, which is the one place agreement means
+  something.
 
 1. **The word `muted` in a log read as an action rather than a state.** One side wrote what it
    observed; the other built a causal model on the verb.
@@ -333,6 +353,11 @@ direct message — by the owner's instruction, because lone testers' files get l
   from the memory of its own `setprop`, half an hour after the radio's service had rewritten it.
   🪤 Both mistakes look like confidence. A claim narrowed to what was actually read seems weaker
   than a confident one and is stronger by exactly the amount it never has to be withdrawn.
+- **Fix one side of a transition and go and look at its pair.** ✍️ Formulated by the QF Radio
+  session, 09.09.2026, after it repaired the same seam three times running — an announcement with
+  no gate, then a reply with no gate, then a handover that announced nothing at all. Each fix was
+  correct and each was half. Taking a channel has a pair in releasing it; a gate on the way out has
+  a pair in the answer to a query. The second half is never found by re-reading the first.
 - **Argue before obeying** when there is evidence against a request, and say so first.
 - **Verify on the wire yourself** when the owner is away. When the owner is *at* the unit, install
   and be quiet — no `input tap`, no screenshots, no scripted runs. They will look.
