@@ -91,7 +91,7 @@ by inference**: "a zip exists" is not distribution, and "testers had it" is not 
 | 0.4.7.2 | 26.08.2026 | zipped | **testers** (public status ❓) | the handover has said since 03.09 that "testers still have 0.4.7.2"; whether it was also public was never written down |
 | 0.4.7.5 | 07.09.2026 | packed, never zipped | ❌ **nobody** | packed the night of 07-08.09 and superseded before it went anywhere |
 | 0.4.7.7 | 08.09.2026 | no pack | ❌ **nobody** | built and installed on the test unit only, to carry the interface merge |
-| **0.4.8** | 09.09.2026 | `wDSP-kostyamat-mod-0.4.8.zip`, sha256 `addb1769ff8b…` | ⏳ **approved for release, audience not yet stated** | the owner approved the pack; he had not yet said testers or public when this session closed. **Ask before sending it anywhere** |
+| **0.4.8** | 09.09.2026 | `wDSP-kostyamat-mod-0.4.8.zip`, sha256 `addb1769ff8b…` | 🌍 **PUBLIC** | the owner approved the pack and then said, in as many words, that this release is public — 09.09.2026. First public release since 0.4.7.2, and the first to carry the upstream author's links, the mod's own name on the icon, and the volume-sync gate |
 
 ⚠️ Three rows carry a `❓`. They are unknown rather than empty: this session could not establish
 them from anything on the machine, and guessing them would put a false fact into the one document a
