@@ -54,9 +54,15 @@ open, are in the two rows below.
 
 ### What has actually been handed out
 
-**Nothing since 0.4.7.2.** Packs sit in `~/Downloads/`: 0.4.7.1 and 0.4.7.2 (zipped, distributed),
-0.4.7.5 (built, never handed out), 0.4.8 (staged — APK and the two cabin documents only; the
-READMEs are deliberately unwritten while the owner formulates one condition for the release).
+**0.4.8 is packed and approved for release** (09.09.2026): `~/Downloads/wDSP-kostyamat-mod-0.4.8.zip`,
+sha256 `addb1769ff8b…`, holding the signed APK, READMEs in English and Russian, the release notes as
+offline HTML in three languages, and the two cabin-measurement documents unchanged. Before it, the
+last thing testers actually received was **0.4.7.2** — 0.4.7.1 and 0.4.7.2 are zipped in the same
+folder, and 0.4.7.5 was built and never handed out.
+
+🔑 One rule was applied while packing and is worth keeping: the APK in the pack is byte-identical to
+the one installed on the unit, checked by hash rather than by having copied it. Two artefacts under
+one version is the mistake this project has made twice; comparing hashes costs a second.
 Measurements from testers go to <https://t.me/wDSPapp/79> or a forum PM, **never** a direct
 message: the owner's standing instruction, because lone files in DMs get lost.
 
