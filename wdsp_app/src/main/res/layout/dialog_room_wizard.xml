@@ -16,9 +16,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/room_wizard_title"
-            android:textSize="17sp"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="2dp" />
 
         <!-- ============================================================= -->
         <!-- STEP 1: CONFIGURATION & SETUP                                  -->
@@ -35,9 +35,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/room_wizard_setup_desc"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:lineSpacingExtra="1dp"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="4dp" />
 
             <!-- Two-column setup layout for landscape UIS7862 screen -->
             <LinearLayout
@@ -52,7 +52,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:layout_marginEnd="6dp">
+                    android:layout_marginEnd="5dp">
 
                     <!-- Subwoofer configuration card -->
                     <LinearLayout
@@ -60,32 +60,32 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="8dp"
-                        android:layout_marginBottom="6dp">
+                        android:padding="6dp"
+                        android:layout_marginBottom="4dp">
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_title"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginBottom="2dp" />
+                            android:layout_marginBottom="1dp" />
 
                         <CheckBox
                             android:id="@+id/cb_has_subwoofer"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_check"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:checked="false" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_desc"
-                            android:textSize="10.5sp"
+                            android:textSize="9.5sp"
                             android:lineSpacingExtra="1dp"
-                            android:layout_marginStart="32dp" />
+                            android:layout_marginStart="30dp" />
                     </LinearLayout>
 
                     <!-- Target sound profile card -->
@@ -94,16 +94,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="8dp"
-                        android:layout_marginBottom="6dp">
+                        android:padding="6dp"
+                        android:layout_marginBottom="4dp">
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_target_title"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="2dp" />
 
                         <RadioGroup
                             android:id="@+id/rg_target_curve"
@@ -116,70 +116,70 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_harman"
-                                android:textSize="12.5sp"
+                                android:textSize="11.5sp"
                                 android:checked="true" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_harman_desc"
-                                android:textSize="10sp"
-                                android:layout_marginStart="30dp"
-                                android:layout_marginBottom="2dp" />
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
 
                             <RadioButton
                                 android:id="@+id/rb_target_dolby"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_dolby"
-                                android:textSize="12.5sp" />
+                                android:textSize="11.5sp" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_dolby_desc"
-                                android:textSize="10sp"
-                                android:layout_marginStart="30dp"
-                                android:layout_marginBottom="2dp" />
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
 
                             <RadioButton
                                 android:id="@+id/rb_target_bass"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_bass"
-                                android:textSize="12.5sp" />
+                                android:textSize="11.5sp" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_bass_desc"
-                                android:textSize="10sp"
-                                android:layout_marginStart="30dp"
-                                android:layout_marginBottom="2dp" />
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
 
                             <RadioButton
                                 android:id="@+id/rb_target_vocal"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_vocal"
-                                android:textSize="12.5sp" />
+                                android:textSize="11.5sp" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_vocal_desc"
-                                android:textSize="10sp"
-                                android:layout_marginStart="30dp"
-                                android:layout_marginBottom="2dp" />
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
 
                             <RadioButton
                                 android:id="@+id/rb_target_flat"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_flat"
-                                android:textSize="12.5sp" />
+                                android:textSize="11.5sp" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_flat_desc"
-                                android:textSize="10sp"
-                                android:layout_marginStart="30dp" />
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp" />
                         </RadioGroup>
                     </LinearLayout>
                 </LinearLayout>
@@ -189,19 +189,19 @@
                     android:id="@+id/card_soundstage"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
+                    android:layout_weight="1.1"
                     android:orientation="vertical"
-                    android:padding="8dp"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginBottom="6dp">
+                    android:padding="6dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginBottom="4dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/room_wizard_soundstage_title"
-                        android:textSize="13sp"
+                        android:textSize="12sp"
                         android:textStyle="bold"
-                        android:layout_marginBottom="4dp" />
+                        android:layout_marginBottom="2dp" />
 
                     <RadioGroup
                         android:id="@+id/rg_soundstage_mode"
@@ -214,56 +214,56 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_driver"
-                            android:textSize="13sp"
+                            android:textSize="11.5sp"
                             android:checked="true" />
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_driver_desc"
-                            android:textSize="10.5sp"
-                            android:layout_marginStart="32dp"
-                            android:layout_marginBottom="3dp" />
+                            android:textSize="9.5sp"
+                            android:layout_marginStart="28dp"
+                            android:layout_marginBottom="1dp" />
 
                         <RadioButton
                             android:id="@+id/rb_stage_front_center"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_front_center"
-                            android:textSize="13sp" />
+                            android:textSize="11.5sp" />
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_front_center_desc"
-                            android:textSize="10.5sp"
-                            android:layout_marginStart="32dp"
-                            android:layout_marginBottom="3dp" />
+                            android:textSize="9.5sp"
+                            android:layout_marginStart="28dp"
+                            android:layout_marginBottom="1dp" />
 
                         <RadioButton
                             android:id="@+id/rb_stage_cabin_center"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_cabin_center"
-                            android:textSize="13sp" />
+                            android:textSize="11.5sp" />
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_cabin_center_desc"
-                            android:textSize="10.5sp"
-                            android:layout_marginStart="32dp"
-                            android:layout_marginBottom="3dp" />
+                            android:textSize="9.5sp"
+                            android:layout_marginStart="28dp"
+                            android:layout_marginBottom="1dp" />
 
                         <RadioButton
                             android:id="@+id/rb_stage_off"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_off"
-                            android:textSize="13sp" />
+                            android:textSize="11.5sp" />
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_stage_off_desc"
-                            android:textSize="10.5sp"
-                            android:layout_marginStart="32dp" />
+                            android:textSize="9.5sp"
+                            android:layout_marginStart="28dp" />
                     </RadioGroup>
                 </LinearLayout>
             </LinearLayout>
@@ -274,31 +274,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="end|center_vertical"
-                android:layout_marginTop="4dp">
+                android:layout_marginTop="2dp">
 
                 <TextView
                     android:id="@+id/btn_wizard_cancel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_cancel"
-                    android:textSize="14sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:layout_marginEnd="8dp" />
+                    android:textSize="13sp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:layout_marginEnd="6dp" />
 
                 <TextView
                     android:id="@+id/btn_wizard_start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_start"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp" />
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp" />
             </LinearLayout>
         </LinearLayout>
 
