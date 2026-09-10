@@ -383,4 +383,172 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     }
 }
 
+void SweepMeasurement::spectrum16Db(const float* signal, int length, float* out16) const {
+    for (int b = 0; b < kHwBands; b++) out16[b] = -120.0f;
+    if (signal == nullptr || length < 256) return;
+
+    const int windowLen = std::min(kAnalysisWindow, length);
+    const int n = nextPowerOfTwo(windowLen);
+    std::vector<float> re(n, 0.0f);
+    std::vector<float> im(n, 0.0f);
+
+    // Full Hann window for stationary noise / ambient signal
+    for (int i = 0; i < windowLen; i++) {
+        const float w = 0.5f - 0.5f * std::cos(2.0f * kPi * static_cast<float>(i)
+                                               / static_cast<float>(windowLen - 1));
+        re[i] = signal[i] * w;
+    }
+
+    fft(re, im, false);
+
+    const float binHz = static_cast<float>(sampleRate_) / static_cast<float>(n);
+    const float third = std::pow(2.0f, 1.0f / 3.0f);
+
+    for (int b = 0; b < kHwBands; b++) {
+        const float low = kHwCenters[b] / third;
+        const float high = std::min(kHwCenters[b] * third,
+                                    static_cast<float>(sampleRate_) * 0.5f);
+        int first = static_cast<int>(std::ceil(low / binHz));
+        int last = static_cast<int>(std::floor(high / binHz));
+        first = std::max(first, 1);
+        last = std::min(last, n / 2);
+        if (last < first) {
+            first = last = std::max(1, std::min(n / 2,
+                                                static_cast<int>(kHwCenters[b] / binHz + 0.5f)));
+        }
+
+        double power = 0.0;
+        for (int i = first; i <= last; i++) {
+            power += static_cast<double>(re[i]) * re[i] + static_cast<double>(im[i]) * im[i];
+        }
+        const int bins = last - first + 1;
+        const double mean = power / bins;
+        out16[b] = 10.0f * std::log10(static_cast<float>(mean) + 1e-20f);
+    }
+}
+
+void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseDb16,
+                                     float* outCleanDb16, float* outSnrDb16) {
+    if (sweepDb16 == nullptr || noiseDb16 == nullptr) return;
+    for (int b = 0; b < kHwBands; b++) {
+        const float pSweep = std::pow(10.0f, sweepDb16[b] * 0.1f);
+        const float pNoise = std::pow(10.0f, noiseDb16[b] * 0.1f);
+        const float pClean = std::max(pSweep - pNoise, 1e-12f);
+        if (outCleanDb16 != nullptr) {
+            outCleanDb16[b] = 10.0f * std::log10(pClean);
+        }
+        if (outSnrDb16 != nullptr) {
+            outSnrDb16[b] = sweepDb16[b] - noiseDb16[b];
+        }
+    }
+}
+
+void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* outCompensation16) {
+    if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
+    for (int b = 0; b < kHwBands; b++) {
+        outCompensation16[b] = 0.0f;
+    }
+
+    // 1. Low-frequency cabin gain anchor (+12 dB/octave below 80 Hz)
+    // kHwCenters[3] = 80 Hz
+    const float ref80 = avgClean16[3];
+    for (int b = 0; b < 3; b++) {
+        const float octaves = std::log2(80.0f / kHwCenters[b]);
+        const float expected = ref80 + 12.0f * octaves;
+        const float deficit = expected - avgClean16[b];
+        if (deficit > 0.0f) {
+            // Cap maximum low-frequency boost to +15 dB
+            outCompensation16[b] = std::min(deficit, 15.0f);
+        }
+    }
+
+    // 2. High-frequency acoustic port roll-off correction (12.5 kHz and 20 kHz)
+    // kHwCenters[12] = 5000 Hz
+    const float ref5k = avgClean16[12];
+    for (int b = 14; b < kHwBands; b++) {
+        const float drop = ref5k - avgClean16[b];
+        if (drop > 2.0f) {
+            outCompensation16[b] = std::min(drop - 2.0f, 8.0f);
+        }
+    }
+}
+
+float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,
+                                     const float* hCh, int chLen,
+                                     float& peakProminence) {
+    peakProminence = 0.0f;
+    if (hRef == nullptr || hCh == nullptr || refLen < 16 || chLen < 16) return 0.0f;
+
+    const int maxLen = std::max(refLen, chLen);
+    const int n = nextPowerOfTwo(maxLen * 2);
+    if (n < 64) return 0.0f;
+
+    std::vector<float> reRef(n, 0.0f);
+    std::vector<float> imRef(n, 0.0f);
+    std::vector<float> reCh(n, 0.0f);
+    std::vector<float> imCh(n, 0.0f);
+
+    for (int i = 0; i < refLen; i++) reRef[i] = hRef[i];
+    for (int i = 0; i < chLen; i++) reCh[i] = hCh[i];
+
+    fft(reRef, imRef, false);
+    fft(reCh, imCh, false);
+
+    // Cross spectrum: G = Ch * conj(Ref)
+    std::vector<float> gRe(n, 0.0f);
+    std::vector<float> gIm(n, 0.0f);
+    float maxMag = 0.0f;
+
+    for (int i = 0; i < n; i++) {
+        const float r = reCh[i] * reRef[i] + imCh[i] * imRef[i];
+        const float im = imCh[i] * reRef[i] - reCh[i] * imRef[i];
+        gRe[i] = r;
+        gIm[i] = im;
+        const float mag = std::sqrt(r * r + im * im);
+        if (mag > maxMag) maxMag = mag;
+    }
+
+    const float eps = maxMag * 1e-6f + 1e-12f;
+    for (int i = 0; i < n; i++) {
+        const float mag = std::sqrt(gRe[i] * gRe[i] + gIm[i] * gIm[i]) + eps;
+        gRe[i] /= mag;
+        gIm[i] /= mag;
+    }
+
+    fft(gRe, gIm, true);
+
+    int bestIdx = 0;
+    float bestVal = -1.0f;
+    double sumVal = 0.0;
+
+    for (int i = 0; i < n; i++) {
+        const float v = std::fabs(gRe[i]);
+        sumVal += v;
+        if (v > bestVal) {
+            bestVal = v;
+            bestIdx = i;
+        }
+    }
+
+    const float avgVal = static_cast<float>(sumVal / n);
+    peakProminence = avgVal > 1e-12f ? (bestVal / avgVal) : 0.0f;
+
+    int intDelay = bestIdx < n / 2 ? bestIdx : (bestIdx - n);
+
+    int prevIdx = (bestIdx - 1 + n) % n;
+    int nextIdx = (bestIdx + 1) % n;
+    float y0 = std::fabs(gRe[prevIdx]);
+    float y1 = std::fabs(gRe[bestIdx]);
+    float y2 = std::fabs(gRe[nextIdx]);
+
+    float delta = 0.0f;
+    float denom = 2.0f * (y0 - 2.0f * y1 + y2);
+    if (std::fabs(denom) > 1e-12f) {
+        delta = (y0 - y2) / denom;
+        if (delta < -1.0f || delta > 1.0f) delta = 0.0f;
+    }
+
+    return static_cast<float>(intDelay) + delta;
+}
+
 } // namespace wdsp

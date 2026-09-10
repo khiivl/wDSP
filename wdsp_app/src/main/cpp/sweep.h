@@ -102,6 +102,37 @@ public:
      */
     void bandLevelsDb(const float* impulse, int length, int arrival, float* out16) const;
 
+    /**
+     * 16-band energy spectrum (in dB) of an arbitrary signal slice (such as ambient noise floor).
+     * Uses the hardware center frequencies (kHwCenters) and mean power per bin scaling.
+     */
+    void spectrum16Db(const float* signal, int length, float* out16) const;
+
+    /**
+     * Performs spectral subtraction band-by-band:
+     *   clean_power = max(sweep_power - noise_power, 1e-12)
+     *   snr_db = sweep_db - noise_db
+     */
+    static void subtractNoise(const float* sweepDb16, const float* noiseDb16,
+                              float* outCleanDb16, float* outSnrDb16);
+
+    /**
+     * Estimates the 16-band microphone inverse compensation curve from the 4-channel average
+     * clean response using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency
+     * acoustic port roll-off correction.
+     */
+    static void estimateMicCompensation(const float* avgClean16, float* outCompensation16);
+
+    /**
+     * Time difference of arrival (TDOA) in fractional samples between a channel impulse response
+     * and a reference channel impulse response using Generalized Cross-Correlation with Phase
+     * Transform (GCC-PHAT) and sub-sample parabolic interpolation.
+     * Returns fractional sample delay (positive means ch arrives after ref).
+     */
+    static float gccPhatDelay(const float* hRef, int refLen,
+                              const float* hCh, int chLen,
+                              float& peakProminence);
+
 private:
     int sampleRate_;
     float startHz_;
