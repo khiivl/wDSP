@@ -649,12 +649,12 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
 
         switch (targetCurveType) {
             case TARGET_DOLBY_ATMOS:
-                // 1) Cinematic sub-bass shelf below 60 Hz (+6 dB with sub, +3 dB without sub down to cutoff)
+                // 1) Cinematic sub-bass shelf below 60 Hz (+6 dB with sub, +3.5 dB without sub down to 45 Hz)
                 if (freq <= 50.0f) {
-                    target += hasSub ? +6.0f : (freq >= cutoffHz ? +3.0f : 0.0f);
+                    target += hasSub ? +6.0f : (freq >= 45.0f ? +3.5f : 0.0f);
                 } else if (freq < 160.0f) {
                     float factor = std::log10(160.0f / freq) / std::log10(160.0f / 50.0f);
-                    target += hasSub ? (6.0f * factor) : (freq >= cutoffHz ? (3.0f * factor) : 0.0f);
+                    target += hasSub ? (6.0f * factor) : (3.5f * factor);
                 }
                 // 2) Dialogue clarity & speech presence bump (1.25 kHz .. 3.15 kHz)
                 if (freq >= 1200.0f && freq <= 3200.0f) {
@@ -669,12 +669,12 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
                 break;
 
             case TARGET_BASS_HEAVY:
-                // Deep massive punch shelf below 80 Hz (+7 dB with sub, +3.5 dB without sub)
+                // Deep massive punch shelf below 80 Hz (+7 dB with sub, +4 dB without sub down to 45 Hz)
                 if (freq <= 80.0f) {
-                    target += hasSub ? +7.0f : (freq >= cutoffHz ? +3.5f : 0.0f);
+                    target += hasSub ? +7.0f : (freq >= 45.0f ? +4.0f : 0.0f);
                 } else if (freq < 200.0f) {
                     float factor = std::log10(200.0f / freq) / std::log10(200.0f / 80.0f);
-                    target += hasSub ? (7.0f * factor) : (freq >= cutoffHz ? (3.5f * factor) : 0.0f);
+                    target += hasSub ? (7.0f * factor) : (4.0f * factor);
                 }
                 // Mild midrange depression around 500 Hz to prevent boominess/mud
                 if (freq >= 315.0f && freq <= 800.0f) {
@@ -721,10 +721,11 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
                             target = 5.0f * (std::log10(160.0f / freq) / std::log10(160.0f / 60.0f));
                         }
                     } else {
-                        if (freq >= cutoffHz) {
-                            target = +2.0f * (std::log10(160.0f / freq) / std::log10(160.0f / cutoffHz));
+                        // Maximize door bass response down to 45 Hz when no subwoofer is installed
+                        if (freq >= 45.0f) {
+                            target = +3.5f * (std::log10(160.0f / freq) / std::log10(160.0f / 45.0f));
                         } else {
-                            target = 0.0f;
+                            target = 0.0f; // natural roll-off below 45 Hz
                         }
                     }
                 }

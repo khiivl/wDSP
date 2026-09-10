@@ -1902,20 +1902,26 @@ public class SettingsActivity extends AppCompatActivity {
                     }
 
                     // 2. Crossover
-                    tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
                     if (result.hasSubwoofer) {
+                        tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
                         tvSub.setText(getString(R.string.room_wizard_crossover_sub, result.subLpfFreqHz, result.subGain));
                     } else {
+                        tvHpf.setText(R.string.room_wizard_crossover_hpf_through);
                         tvSub.setText(R.string.room_wizard_crossover_no_sub);
                     }
 
                     // 3. Delays
-                    tvDelays.setText(String.format(Locale.US,
+                    String delaysStr = String.format(Locale.US,
                             "ПЛ: %4.1f мс (%2d кр)  |  ПП: %4.1f мс (%2d кр)\nЗЛ: %4.1f мс (%2d кр)  |  ЗП: %4.1f мс (%2d кр)",
                             result.suggestedDelayMs[2], result.suggestedDelaySteps[2],
                             result.suggestedDelayMs[3], result.suggestedDelaySteps[3],
                             result.suggestedDelayMs[0], result.suggestedDelaySteps[0],
-                            result.suggestedDelayMs[1], result.suggestedDelaySteps[1]));
+                            result.suggestedDelayMs[1], result.suggestedDelaySteps[1]);
+                    if (result.hasSubwoofer) {
+                        delaysStr += String.format(Locale.US, "\nСабвуфер: %4.1f мс (%2d кр)",
+                                result.suggestedSubDelayMs, result.suggestedSubDelaySteps);
+                    }
+                    tvDelays.setText(delaysStr);
 
                     // 4. Auto-EQ 16 bands
                     TextView tvAutoEqTitle = layoutReport.findViewById(R.id.tv_report_autoeq_title);

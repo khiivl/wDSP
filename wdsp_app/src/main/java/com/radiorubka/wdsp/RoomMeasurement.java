@@ -173,19 +173,12 @@ public final class RoomMeasurement {
      */
     private static final float MIN_CLARITY_DB = 9f;
     /**
-     * The largest difference in arrival times a vehicle can physically produce.
-     *
-     * Sound covers about thirty-four centimetres in a millisecond, so sixty milliseconds is twenty
-     * metres - absurd for anything, which is exactly what makes it a safe limit. It is set that
-     * high on purpose: **this app runs in vans and minibuses as well as cars**, where a rear
-     * speaker really can be five or six metres from a microphone on the windscreen pillar, and a
-     * limit tuned to a saloon would throw away their most interesting measurement.
-     *
-     * Nothing is lost by being generous. A channel that was not heard at all does not miss by
-     * metres, it misses by hundreds of milliseconds: measured on a bench with the rear pair
-     * disconnected, the phantoms landed 700 ms from the reference.
+     * The largest difference in arrival times a vehicle cabin can physically produce.
+     * In passenger cars and vans, the distance between any two speakers is under 3.5 metres (< 10 ms).
+     * For subwoofers placed in the trunk (with sub amplifier/DSP latency), up to 18 ms (~6.2 m) is allowed.
      */
-    private static final float MAX_PLAUSIBLE_SPREAD_MS = 60f;
+    private static final float MAX_PLAUSIBLE_SPREAD_MS = 10.0f;
+    private static final float MAX_PLAUSIBLE_SUB_SPREAD_MS = 18.0f;
 
     /**
      * The largest delay that can be entered, in slider steps.
@@ -542,7 +535,8 @@ public final class RoomMeasurement {
         REAR_LEFT("rear left", FADER_MIN, FADER_MIN),
         REAR_RIGHT("rear right", FADER_MAX, FADER_MIN),
         FRONT_LEFT("front left", FADER_MIN, FADER_MAX),
-        FRONT_RIGHT("front right", FADER_MAX, FADER_MAX);
+        FRONT_RIGHT("front right", FADER_MAX, FADER_MAX),
+        SUBWOOFER("subwoofer", FADER_CENTRE, FADER_CENTRE);
 
         final String label;
         /** Balance: the value written to {@code <preset>_f_lr}. */
@@ -631,7 +625,7 @@ public final class RoomMeasurement {
 
     /** Everything a full measurement produced, ready to be logged or shown. */
     public static final class Result {
-        public final ChannelResult[] channels = new ChannelResult[4];
+        public ChannelResult[] channels = new ChannelResult[0];
         /** Delay in milliseconds to add to each channel so that all four arrive together. */
         public final float[] suggestedDelayMs = new float[4];
         /** The same delays in slider steps; the hardware moves in half-millisecond increments. */
@@ -656,8 +650,8 @@ public final class RoomMeasurement {
         public boolean hasSubwoofer;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
         public TargetCurve targetCurve = TargetCurve.HARMAN;
-        public int midbassHpfIdx = 5; // default 63 Hz
-        public int midbassHpfFreqHz = 63;
+        public int midbassHpfIdx = 0; // default Through
+        public int midbassHpfFreqHz = 0;
         public int subLpfIdx = 4; // default 63 Hz
         public int subLpfFreqHz = 63;
         public int subGain = 8; // default +4 dB
@@ -668,6 +662,7 @@ public final class RoomMeasurement {
         public String wiringWarning = null;
 
         public boolean isUsable() {
+            if (channels == null || channels.length == 0) return false;
             for (ChannelResult c : channels) {
                 if (c == null || !c.ok) return false;
             }
@@ -769,6 +764,7 @@ public final class RoomMeasurement {
         result.hasSubwoofer = hasSubwoofer;
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
+        result.channels = new ChannelResult[hasSubwoofer ? 5 : 4];
 
         Context app = context.getApplicationContext();
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -887,7 +883,9 @@ public final class RoomMeasurement {
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
                                    NativeSweep sweep, float amplitude, Result result,
                                    Listener listener) {
-        final Channel[] channels = Channel.values();
+        final Channel[] channels = result.hasSubwoofer ? Channel.values() : new Channel[]{
+                Channel.REAR_LEFT, Channel.REAR_RIGHT, Channel.FRONT_LEFT, Channel.FRONT_RIGHT
+        };
         final int sweepLen = sweep.length();
         final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
         final int lead = (int) (LEAD_SECONDS * SAMPLE_RATE);
@@ -1043,10 +1041,13 @@ public final class RoomMeasurement {
             if (effects != null) effects.restore();
             closeQuietly(track);
             closeQuietly(record);
-            // Reset scratch routing back to center so it never lingers on an extreme corner
+            // Reset scratch routing and filters back to neutral
             prefs.edit()
                     .putInt(preset + "_f_lr", FADER_CENTRE)
                     .putInt(preset + "_f_fr", FADER_CENTRE)
+                    .putInt(preset + "_sub_g", 0)
+                    .putInt(preset + "_bf_f", 0)
+                    .putInt(preset + "_bf_r", 0)
                     .apply();
             abandonFocus(context);
         }
@@ -1300,10 +1301,22 @@ public final class RoomMeasurement {
         }
         Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
                 + " fader=" + channel.frontRear + " ---");
-        prefs.edit()
-                .putInt(preset + "_f_lr", channel.leftRight)
-                .putInt(preset + "_f_fr", channel.frontRear)
-                .apply();
+        SharedPreferences.Editor ed = prefs.edit();
+        if (channel == Channel.SUBWOOFER) {
+            ed.putInt(preset + "_f_lr", FADER_CENTRE)
+              .putInt(preset + "_f_fr", FADER_CENTRE)
+              .putInt(preset + "_sub_g", 12)  // Subwoofer active (+6 dB)
+              .putInt(preset + "_sub_f", 8)   // 160 Hz LPF
+              .putInt(preset + "_bf_f", 11)  // 250 Hz HPF on front (attenuates main door speakers)
+              .putInt(preset + "_bf_r", 11); // 250 Hz HPF on rear
+        } else {
+            ed.putInt(preset + "_f_lr", channel.leftRight)
+              .putInt(preset + "_f_fr", channel.frontRear)
+              .putInt(preset + "_sub_g", 0)   // Subwoofer muted during door speaker sweeps
+              .putInt(preset + "_bf_f", 0)   // Through HPF on front
+              .putInt(preset + "_bf_r", 0);  // Through HPF on rear
+        }
+        ed.apply();
     }
 
     /**
@@ -1316,7 +1329,8 @@ public final class RoomMeasurement {
     private static void computeDelays(Result result, SoundstageMode mode) {
         if (mode == null) mode = SoundstageMode.DRIVER;
         ChannelResult anchor = null;
-        for (ChannelResult c : result.channels) {
+        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
+            ChannelResult c = result.channels[i];
             if (c == null || !c.ok) continue;
             if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
         }
@@ -1327,26 +1341,41 @@ public final class RoomMeasurement {
             return;
         }
 
-        for (ChannelResult c : result.channels) {
+        for (int i = 0; i < result.channels.length; i++) {
+            ChannelResult c = result.channels[i];
             if (c == null || !c.ok || c == anchor) continue;
             final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
-            if (apart > MAX_PLAUSIBLE_SPREAD_MS) {
+            final float maxSpread = (i == Channel.SUBWOOFER.ordinal())
+                    ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
+            if (apart > maxSpread) {
                 c.ok = false;
                 Log.w(TAG, String.format(Locale.US,
-                        "%s: arrived %.0f ms from the clearest channel, which no car can do "
-                                + "(%.0f ms is already ten metres) - not a real arrival",
-                        c.label, apart, apart));
+                        "%s: arrived %.1f ms from anchor %s (> %.1f ms) - disqualified phantom/reflection",
+                        c.label, apart, anchor.label, maxSpread));
             }
         }
 
         float latest = Float.NEGATIVE_INFINITY;
         float earliest = Float.POSITIVE_INFINITY;
         int heard = 0;
+        int confidentCount = 0;
         for (ChannelResult c : result.channels) {
             if (c == null || !c.ok) continue;
-            latest = Math.max(latest, c.arrivalMs);
-            earliest = Math.min(earliest, c.arrivalMs);
-            heard++;
+            if (c.confident || c.clarityDb >= MIN_CLARITY_DB) {
+                latest = Math.max(latest, c.arrivalMs);
+                earliest = Math.min(earliest, c.arrivalMs);
+                confidentCount++;
+            }
+        }
+        if (confidentCount == 0) {
+            for (ChannelResult c : result.channels) {
+                if (c == null || !c.ok) continue;
+                latest = Math.max(latest, c.arrivalMs);
+                earliest = Math.min(earliest, c.arrivalMs);
+            }
+        }
+        for (ChannelResult c : result.channels) {
+            if (c != null && c.ok) heard++;
         }
         if (heard < 2) {
             result.error = "only " + heard + " speaker(s) were heard - nothing to align against";
@@ -1378,19 +1407,40 @@ public final class RoomMeasurement {
             result.suggestedDelayMs[Channel.FRONT_RIGHT.ordinal()] = 0f;
             result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()] = 0;
 
-            // Rear speakers get 5 ms delay (10 steps) to provide subtle Haas surround fill
-            result.suggestedDelayMs[Channel.REAR_LEFT.ordinal()] = 5.0f;
-            result.suggestedDelaySteps[Channel.REAR_LEFT.ordinal()] = 10;
-            result.suggestedDelayMs[Channel.REAR_RIGHT.ordinal()] = 5.0f;
-            result.suggestedDelaySteps[Channel.REAR_RIGHT.ordinal()] = 10;
+            // Rear speakers get 5 ms delay (10 steps) to provide subtle Haas surround fill if present
+            for (Channel ch : new Channel[]{Channel.REAR_LEFT, Channel.REAR_RIGHT}) {
+                int idx = ch.ordinal();
+                if (result.channels.length > idx && result.channels[idx] != null && result.channels[idx].ok) {
+                    result.suggestedDelayMs[idx] = 5.0f;
+                    result.suggestedDelaySteps[idx] = 10;
+                } else {
+                    result.suggestedDelayMs[idx] = 0f;
+                    result.suggestedDelaySteps[idx] = 0;
+                }
+            }
 
-            result.suggestedSubDelayMs = 0f;
-            result.suggestedSubDelaySteps = 0;
+            // Subwoofer aligned with front stage if measured
+            if (result.hasSubwoofer && result.channels.length > Channel.SUBWOOFER.ordinal()) {
+                ChannelResult subCr = result.channels[Channel.SUBWOOFER.ordinal()];
+                if (subCr != null && subCr.ok && anchor != null) {
+                    float diff = subCr.arrivalMs - anchor.arrivalMs;
+                    if (diff < 0) {
+                        result.suggestedSubDelayMs = -diff;
+                        result.suggestedSubDelaySteps = Math.min(MAX_DELAY_STEPS, Math.round(result.suggestedSubDelayMs / DELAY_STEP_MS));
+                    } else {
+                        result.suggestedSubDelayMs = 0f;
+                        result.suggestedSubDelaySteps = 0;
+                    }
+                }
+            } else {
+                result.suggestedSubDelayMs = 0f;
+                result.suggestedSubDelaySteps = 0;
+            }
             return;
         }
 
         if (mode == SoundstageMode.CABIN_CENTER) {
-            // Symmetrical across cabin center: all 4 channels 0 delay
+            // Symmetrical across cabin center: all channels 0 delay
             Arrays.fill(result.suggestedDelayMs, 0f);
             Arrays.fill(result.suggestedDelaySteps, 0);
             result.suggestedSubDelayMs = 0f;
@@ -1399,11 +1449,15 @@ public final class RoomMeasurement {
         }
 
         // Default: DRIVER focus (delays based on microphone TDOA)
-        for (int i = 0; i < result.channels.length; i++) {
+        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
             ChannelResult c = result.channels[i];
-            if (c == null || !c.ok) continue;
+            if (c == null || !c.ok) {
+                result.suggestedDelayMs[i] = 0f;
+                result.suggestedDelaySteps[i] = 0;
+                continue;
+            }
             // The speaker heard last needs no delay; every other one waits for it.
-            result.suggestedDelayMs[i] = latest - c.arrivalMs;
+            result.suggestedDelayMs[i] = Math.max(0f, latest - c.arrivalMs);
             final int wanted = Math.round(result.suggestedDelayMs[i] / DELAY_STEP_MS);
             result.suggestedDelaySteps[i] = Math.min(wanted, MAX_DELAY_STEPS);
             if (wanted > MAX_DELAY_STEPS) {
@@ -1417,15 +1471,33 @@ public final class RoomMeasurement {
                         MAX_DELAY_STEPS * DELAY_STEP_MS * 0.343f));
             }
         }
-        result.suggestedSubDelayMs = 0f;
-        result.suggestedSubDelaySteps = 0;
+
+        // Subwoofer channel delay
+        if (result.hasSubwoofer && result.channels.length > Channel.SUBWOOFER.ordinal()) {
+            ChannelResult subCr = result.channels[Channel.SUBWOOFER.ordinal()];
+            if (subCr != null && subCr.ok) {
+                result.suggestedSubDelayMs = Math.max(0f, latest - subCr.arrivalMs);
+                final int subWanted = Math.round(result.suggestedSubDelayMs / DELAY_STEP_MS);
+                result.suggestedSubDelaySteps = Math.min(subWanted, MAX_DELAY_STEPS);
+                Log.i(TAG, String.format(Locale.US,
+                        "Subwoofer arrival %.2f ms -> suggested delay %.1f ms (%d steps)",
+                        subCr.arrivalMs, result.suggestedSubDelayMs, result.suggestedSubDelaySteps));
+            } else {
+                result.suggestedSubDelayMs = 0f;
+                result.suggestedSubDelaySteps = 0;
+            }
+        } else {
+            result.suggestedSubDelayMs = 0f;
+            result.suggestedSubDelaySteps = 0;
+        }
     }
 
     private static void analyzeAcousticsAndSynthesize(Result result) {
         // 1. Check wiring polarity
         int positive = 0, negative = 0;
         StringBuilder inverted = new StringBuilder();
-        for (ChannelResult c : result.channels) {
+        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
+            ChannelResult c = result.channels[i];
             if (c == null || !c.ok || !c.confident) continue;
             if (c.polarity < 0) {
                 negative++;
@@ -1461,12 +1533,18 @@ public final class RoomMeasurement {
         }
 
         // 3. Detect midbass roll-off HPF cutoff index
-        result.midbassHpfIdx = NativeSweep.detectMidbassRollOff(avgClean);
-        if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < BASS_FILTER_FREQS_HZ.length) {
-            result.midbassHpfFreqHz = BASS_FILTER_FREQS_HZ[result.midbassHpfIdx];
+        if (result.hasSubwoofer) {
+            result.midbassHpfIdx = NativeSweep.detectMidbassRollOff(avgClean);
+            if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < BASS_FILTER_FREQS_HZ.length) {
+                result.midbassHpfFreqHz = BASS_FILTER_FREQS_HZ[result.midbassHpfIdx];
+            } else {
+                result.midbassHpfIdx = 5;
+                result.midbassHpfFreqHz = 63;
+            }
         } else {
-            result.midbassHpfIdx = 5;
-            result.midbassHpfFreqHz = 63;
+            // No subwoofer installed: keep door speakers full-range (Through / 20 Hz, idx 0)
+            result.midbassHpfIdx = 0;
+            result.midbassHpfFreqHz = 0; // Displayed as Through (0 Hz / 20 Hz)
         }
 
         // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
@@ -1518,21 +1596,13 @@ public final class RoomMeasurement {
         e.putInt(presetName + "_sub_g", result.hasSubwoofer ? result.subGain : 0);
         e.putBoolean(presetName + "_sub_comp", false);
 
-        // 4. Delays
-        boolean enableDelays = result.soundstageMode != SoundstageMode.OFF;
-        e.putBoolean(presetName + "_d_en", enableDelays);
-        e.putInt(presetName + "_d_rl", result.suggestedDelaySteps[Channel.REAR_LEFT.ordinal()]);
-        e.putInt(presetName + "_d_rr", result.suggestedDelaySteps[Channel.REAR_RIGHT.ordinal()]);
-        e.putInt(presetName + "_d_fl", result.suggestedDelaySteps[Channel.FRONT_LEFT.ordinal()]);
-        e.putInt(presetName + "_d_fr", result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()]);
-        e.putInt(presetName + "_d_sub", result.suggestedSubDelaySteps);
-
-        // 5. Centered balance & surround
-        e.putInt(presetName + "_f_lr", FADER_CENTRE);
-        e.putInt(presetName + "_f_fr", FADER_CENTRE);
-        e.putBoolean(presetName + "_loud", false);
-
+        // 4. Delays & Surround - Enforce mutual exclusivity!
+        // BU32107 / AK7604 share the same internal delay RAM registers 0400-040D for both
+        // Time Alignment (_d_en / 0x8C) and Surround Expansion (_d1_en / 0x89).
+        // They CANNOT run concurrently.
         if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
+            // Dolby Atmos preset uses Surround Expansion (_d1_en = true), so positional delays are disabled (_d_en = false)
+            e.putBoolean(presetName + "_d_en", false);
             e.putBoolean(presetName + "_d1_en", true);
             e.putInt(presetName + "_rsse_val", 14); // Rear Space Sound Expander (+4 dB)
             e.putInt(presetName + "_d1_rl", 6);    // ~12.75 ms surround delay rear-left
@@ -1540,6 +1610,8 @@ public final class RoomMeasurement {
             e.putInt(presetName + "_d1_fl", 0);
             e.putInt(presetName + "_d1_fr", 0);
         } else {
+            boolean enableDelays = result.soundstageMode != SoundstageMode.OFF;
+            e.putBoolean(presetName + "_d_en", enableDelays);
             e.putBoolean(presetName + "_d1_en", false);
             e.putInt(presetName + "_rsse_val", 10);
             e.putInt(presetName + "_d1_rl", 0);
@@ -1547,6 +1619,17 @@ public final class RoomMeasurement {
             e.putInt(presetName + "_d1_fl", 0);
             e.putInt(presetName + "_d1_fr", 0);
         }
+
+        e.putInt(presetName + "_d_rl", result.suggestedDelaySteps[Channel.REAR_LEFT.ordinal()]);
+        e.putInt(presetName + "_d_rr", result.suggestedDelaySteps[Channel.REAR_RIGHT.ordinal()]);
+        e.putInt(presetName + "_d_fl", result.suggestedDelaySteps[Channel.FRONT_LEFT.ordinal()]);
+        e.putInt(presetName + "_d_fr", result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()]);
+        e.putInt(presetName + "_d_sub", result.hasSubwoofer ? result.suggestedSubDelaySteps : 0);
+
+        // 5. Centered balance
+        e.putInt(presetName + "_f_lr", FADER_CENTRE);
+        e.putInt(presetName + "_f_fr", FADER_CENTRE);
+        e.putBoolean(presetName + "_loud", false);
 
         // 6. Add to preset list
         Set<String> presetNames = new HashSet<>(prefs.getStringSet(PREF_PRESET_NAMES, new HashSet<>()));
@@ -1841,7 +1924,8 @@ public final class RoomMeasurement {
         int positive = 0;
         int negative = 0;
         StringBuilder inverted = new StringBuilder();
-        for (ChannelResult c : result.channels) {
+        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
+            ChannelResult c = result.channels[i];
             if (c == null || !c.ok || !c.confident) continue;
             if (c.polarity < 0) {
                 negative++;
@@ -1994,9 +2078,11 @@ public final class RoomMeasurement {
                         !c.ok ? "   NOT HEARD"
                               : c.confident ? "   heard directly"
                                             : "   mostly reflections"));
+                float delayMs = (i == Channel.SUBWOOFER.ordinal()) ? result.suggestedSubDelayMs : result.suggestedDelayMs[i];
+                int delaySteps = (i == Channel.SUBWOOFER.ordinal()) ? result.suggestedSubDelaySteps : result.suggestedDelaySteps[i];
                 sb.append("             suggested delay ")
                         .append(String.format(Locale.US, "%.1f ms (%d steps)",
-                                result.suggestedDelayMs[i], result.suggestedDelaySteps[i]))
+                                delayMs, delaySteps))
                         .append('\n');
                 sb.append("             response dB:");
                 for (float band : c.bandsDb) {
@@ -2139,10 +2225,12 @@ public final class RoomMeasurement {
                         c.label, c.prominence, 20 * Math.log10(c.recordedPeak + 1e-9f)));
                 continue;
             }
+            float delayMs = (i == Channel.SUBWOOFER.ordinal()) ? result.suggestedSubDelayMs : result.suggestedDelayMs[i];
+            int delaySteps = (i == Channel.SUBWOOFER.ordinal()) ? result.suggestedSubDelaySteps : result.suggestedDelaySteps[i];
             Log.i(TAG, String.format(Locale.US,
                     "%-12s arrival %7.2f ms -> delay %4.1f ms (%d steps)  polarity %+d",
-                    c.label, c.arrivalMs, result.suggestedDelayMs[i],
-                    result.suggestedDelaySteps[i], c.polarity));
+                    c.label, c.arrivalMs, delayMs,
+                    delaySteps, c.polarity));
         }
         if (!result.isUsable()) {
             Log.w(TAG, "at least one channel was not heard clearly. Turn the volume up a little, "
