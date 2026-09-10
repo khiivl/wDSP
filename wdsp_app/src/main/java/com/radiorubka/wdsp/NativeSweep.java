@@ -142,16 +142,32 @@ public final class NativeSweep implements AutoCloseable {
         return isAvailable() && avgClean16 != null ? nativeDetectMidbassRollOff(avgClean16) : 5;
     }
 
+    public static final int TARGET_HARMAN = 0;
+    public static final int TARGET_DOLBY_ATMOS = 1;
+    public static final int TARGET_BASS_HEAVY = 2;
+    public static final int TARGET_VOCAL_SPEECH = 3;
+    public static final int TARGET_FLAT_STUDIO = 4;
+
+    /**
+     * Synthesizes 16-band Auto-EQ gains and subwoofer settings matching the chosen TargetCurve.
+     */
+    public static void synthesizeAutoEq16(float[] avgClean16, float[] micComp16,
+                                          int hpfCutoffIdx, boolean hasSub, int targetCurveType,
+                                          int[] outGains16, int[] outSubSettings2) {
+        if (isAvailable() && avgClean16 != null && outGains16 != null) {
+            nativeSynthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, targetCurveType,
+                    outGains16, outSubSettings2);
+        }
+    }
+
     /**
      * Synthesizes 16-band Harman Auto-EQ gains and subwoofer settings.
      */
     public static void synthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
                                             int hpfCutoffIdx, boolean hasSub,
                                             int[] outGains16, int[] outSubSettings2) {
-        if (isAvailable() && avgClean16 != null && outGains16 != null) {
-            nativeSynthesizeHarmanEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub,
-                    outGains16, outSubSettings2);
-        }
+        synthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
+                outGains16, outSubSettings2);
     }
 
     @Override
@@ -193,8 +209,12 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native int nativeDetectMidbassRollOff(float[] avgClean16);
 
+    private static native void nativeSynthesizeAutoEq16(float[] avgClean16, float[] micComp16,
+                                                        int hpfCutoffIdx, boolean hasSub, int targetCurveType,
+                                                        int[] outGains16, int[] outSubSettings2);
+
     private static native void nativeSynthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
-                                                         int hpfCutoffIdx, boolean hasSub,
-                                                         int[] outGains16, int[] outSubSettings2);
+                                                          int hpfCutoffIdx, boolean hasSub,
+                                                          int[] outGains16, int[] outSubSettings2);
 }
 

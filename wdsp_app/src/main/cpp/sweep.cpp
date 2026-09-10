@@ -591,9 +591,9 @@ int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
     return 7; // 100 Hz
 }
 
-void SweepMeasurement::synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
-                                           int hpfCutoffIdx, bool hasSub,
-                                           int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                         int hpfCutoffIdx, bool hasSub, int targetCurveType,
+                                         int* outGains16, int& outSubLpfIdx, int& outSubGain) {
     if (outGains16 == nullptr) return;
 
     // Default Flat gains (index 6 = 0 dB)
@@ -620,7 +620,17 @@ void SweepMeasurement::synthesizeHarmanEq16(const float* avgClean16, const float
             }
         }
         outSubLpfIdx = bestSubIdx;
-        outSubGain = 8; // +4 dB shelf
+        if (targetCurveType == TARGET_DOLBY_ATMOS) {
+            outSubGain = 9; // +6 dB cinema sub shelf
+        } else if (targetCurveType == TARGET_BASS_HEAVY) {
+            outSubGain = 10; // +8 dB heavy bass shelf
+        } else if (targetCurveType == TARGET_VOCAL_SPEECH) {
+            outSubGain = 4; // -4 dB attenuated sub
+        } else if (targetCurveType == TARGET_FLAT_STUDIO) {
+            outSubGain = 6; // 0 dB flat sub
+        } else {
+            outSubGain = 8; // +4 dB default Harman shelf
+        }
     }
 
     // 1. Calculate compensated acoustic response M[b] = avgClean16[b] + micComp16[b]
@@ -632,30 +642,93 @@ void SweepMeasurement::synthesizeHarmanEq16(const float* avgClean16, const float
     // Midrange reference (bands 5..8: 200..800 Hz)
     const float refMid = 0.25f * (m[5] + m[6] + m[7] + m[8]);
 
-    // 2. Synthesize Harman In-Car target curve T[b] relative to refMid
+    // 2. Synthesize Target curve T[b] relative to refMid
     for (int b = 0; b < kHwBands; b++) {
         float target = 0.0f;
         const float freq = kHwCenters[b];
 
-        if (freq >= 2500.0f) {
-            // High frequency tilt: -0.8 dB / octave above 2.5 kHz
-            target = -0.8f * std::log2(freq / 2500.0f);
-        } else if (freq < 160.0f) {
-            if (hasSub) {
-                // Sub-bass shelf +5 dB below 60 Hz, transitioning to 0 dB at 160 Hz
-                if (freq <= 60.0f) {
-                    target = +5.0f;
-                } else {
-                    target = 5.0f * (std::log10(160.0f / freq) / std::log10(160.0f / 60.0f));
+        switch (targetCurveType) {
+            case TARGET_DOLBY_ATMOS:
+                // 1) Cinematic sub-bass shelf below 60 Hz (+6 dB with sub, +3 dB without sub down to cutoff)
+                if (freq <= 50.0f) {
+                    target += hasSub ? +6.0f : (freq >= cutoffHz ? +3.0f : 0.0f);
+                } else if (freq < 160.0f) {
+                    float factor = std::log10(160.0f / freq) / std::log10(160.0f / 50.0f);
+                    target += hasSub ? (6.0f * factor) : (freq >= cutoffHz ? (3.0f * factor) : 0.0f);
                 }
-            } else {
-                // No sub: modest +2 dB warmth above cutoff, rolled off below cutoff
-                if (freq >= cutoffHz) {
-                    target = +2.0f * (std::log10(160.0f / freq) / std::log10(160.0f / cutoffHz));
-                } else {
-                    target = 0.0f; // No boost below midbass cutoff!
+                // 2) Dialogue clarity & speech presence bump (1.25 kHz .. 3.15 kHz)
+                if (freq >= 1200.0f && freq <= 3200.0f) {
+                    target += +2.5f;
                 }
-            }
+                // 3) Air & spatial ambiance extension (>10 kHz)
+                if (freq >= 12000.0f) {
+                    target += +2.5f;
+                } else if (freq > 3200.0f && freq < 12000.0f) {
+                    target += -0.5f * std::log2(freq / 3200.0f);
+                }
+                break;
+
+            case TARGET_BASS_HEAVY:
+                // Deep massive punch shelf below 80 Hz (+7 dB with sub, +3.5 dB without sub)
+                if (freq <= 80.0f) {
+                    target += hasSub ? +7.0f : (freq >= cutoffHz ? +3.5f : 0.0f);
+                } else if (freq < 200.0f) {
+                    float factor = std::log10(200.0f / freq) / std::log10(200.0f / 80.0f);
+                    target += hasSub ? (7.0f * factor) : (freq >= cutoffHz ? (3.5f * factor) : 0.0f);
+                }
+                // Mild midrange depression around 500 Hz to prevent boominess/mud
+                if (freq >= 315.0f && freq <= 800.0f) {
+                    target += -1.5f;
+                }
+                // Smooth high roll-off above 4 kHz
+                if (freq >= 4000.0f) {
+                    target += -1.0f * std::log2(freq / 4000.0f);
+                }
+                break;
+
+            case TARGET_VOCAL_SPEECH:
+                // Low-cut rumble filter below 100 Hz
+                if (freq < 100.0f) {
+                    target += -3.5f;
+                } else if (freq < 200.0f) {
+                    target += -1.5f;
+                }
+                // Speech presence peak (315 Hz .. 3.15 kHz)
+                if (freq >= 300.0f && freq <= 3200.0f) {
+                    target += +3.5f;
+                }
+                // Gentle sibilance attenuation
+                if (freq >= 6000.0f) {
+                    target += -1.5f;
+                }
+                break;
+
+            case TARGET_FLAT_STUDIO:
+                // Flat target: 0 dB across all bands
+                target = 0.0f;
+                break;
+
+            case TARGET_HARMAN:
+            default:
+                // Standard Harman In-Car target curve
+                if (freq >= 2500.0f) {
+                    target = -0.8f * std::log2(freq / 2500.0f);
+                } else if (freq < 160.0f) {
+                    if (hasSub) {
+                        if (freq <= 60.0f) {
+                            target = +5.0f;
+                        } else {
+                            target = 5.0f * (std::log10(160.0f / freq) / std::log10(160.0f / 60.0f));
+                        }
+                    } else {
+                        if (freq >= cutoffHz) {
+                            target = +2.0f * (std::log10(160.0f / freq) / std::log10(160.0f / cutoffHz));
+                        } else {
+                            target = 0.0f;
+                        }
+                    }
+                }
+                break;
         }
 
         // Error delta
@@ -672,7 +745,6 @@ void SweepMeasurement::synthesizeHarmanEq16(const float* avgClean16, const float
         deltaDb = std::max(deltaDb, -9.0f);
 
         // Quantize to BU32107 gain index (2 dB per step, 6 = 0 dB)
-        // deltaDb = (index - 6) * 2  =>  index = round(deltaDb / 2) + 6
         int gainIdx = static_cast<int>(std::round(deltaDb / 2.0f)) + 6;
         gainIdx = std::max(1, std::min(8, gainIdx)); // safe indices: 1 (-10 dB) .. 8 (+4 dB)
         outGains16[b] = gainIdx;

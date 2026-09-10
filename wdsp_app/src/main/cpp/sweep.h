@@ -140,14 +140,31 @@ public:
      */
     static int detectMidbassRollOff(const float* avgClean16);
 
+    enum TargetCurve {
+        TARGET_HARMAN = 0,
+        TARGET_DOLBY_ATMOS = 1,
+        TARGET_BASS_HEAVY = 2,
+        TARGET_VOCAL_SPEECH = 3,
+        TARGET_FLAT_STUDIO = 4
+    };
+
     /**
-     * Synthesizes the 16-band Auto-EQ gains (indices 0..12, 6=0 dB, 2 dB/step) matching the Harman
-     * In-Car target curve, accounting for fixed Q=2.2 bandwidth and asymmetric boost/cut limits.
+     * Synthesizes the 16-band Auto-EQ gains (indices 0..12, 6=0 dB, 2 dB/step) matching the chosen
+     * TargetCurve profile (Harman, Dolby Atmos, Bass Heavy, Vocal, Flat), accounting for fixed Q=2.2
+     * bandwidth and asymmetric boost/cut limits.
      * Also outputs recommended subwoofer LPF index and gain (if hasSub is true).
      */
+    static void synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                   int hpfCutoffIdx, bool hasSub, int targetCurveType,
+                                   int* outGains16, int& outSubLpfIdx, int& outSubGain);
+
+    /** Backward-compatibility wrapper defaulting to TARGET_HARMAN. */
     static void synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
                                      int hpfCutoffIdx, bool hasSub,
-                                     int* outGains16, int& outSubLpfIdx, int& outSubGain);
+                                     int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+        synthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
+                           outGains16, outSubLpfIdx, outSubGain);
+    }
 
 private:
     int sampleRate_;

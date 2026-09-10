@@ -266,6 +266,31 @@ public final class RoomMeasurement {
          }
      }
 
+     public enum TargetCurve {
+         HARMAN(0, "Harman Reference", "AutoEQ Harman"),
+         DOLBY_ATMOS(1, "Dolby Atmos 3D Cinema", "AutoEQ Dolby Atmos"),
+         BASS_HEAVY(2, "Club / Bass Heavy", "AutoEQ Club Bass"),
+         VOCAL_SPEECH(3, "Vocal / Podcast", "AutoEQ Vocal"),
+         FLAT_STUDIO(4, "Studio Flat", "AutoEQ Flat");
+
+         public final int id;
+         public final String title;
+         public final String presetName;
+
+         TargetCurve(int id, String title, String presetName) {
+             this.id = id;
+             this.title = title;
+             this.presetName = presetName;
+         }
+
+         public static TargetCurve fromId(int id) {
+             for (TargetCurve c : values()) {
+                 if (c.id == id) return c;
+             }
+             return HARMAN;
+         }
+     }
+
     /**
      * Where the owner says the microphone is, on the same −1..1 axes the balance control uses:
      * left/right and rear/front, 0 being the middle of the car.
@@ -630,6 +655,7 @@ public final class RoomMeasurement {
         // Auto-EQ & Soundstage extensions
         public boolean hasSubwoofer;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
+        public TargetCurve targetCurve = TargetCurve.HARMAN;
         public int midbassHpfIdx = 5; // default 63 Hz
         public int midbassHpfFreqHz = 63;
         public int subLpfIdx = 4; // default 63 Hz
@@ -661,10 +687,11 @@ public final class RoomMeasurement {
         return running;
     }
 
-    /** Runs a full measurement on its own thread with subwoofer and soundstage mode parameters. */
+    /** Runs a full measurement on its own thread with subwoofer, soundstage mode and target curve parameters. */
     public static void measureAsync(final Context context, final float amplitude,
                                     final float seconds, final boolean hasSubwoofer,
                                     final SoundstageMode soundstageMode,
+                                    final TargetCurve targetCurve,
                                     final Listener listener) {
         if (running) {
             Log.w(TAG, "a measurement is already running, ignoring this request");
@@ -674,7 +701,7 @@ public final class RoomMeasurement {
             running = true;
             Result result;
             try {
-                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, listener);
+                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, listener);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -687,12 +714,23 @@ public final class RoomMeasurement {
     }
 
     public static void measureAsync(final Context context, final float amplitude,
+                                    final float seconds, final boolean hasSubwoofer,
+                                    final SoundstageMode soundstageMode,
+                                    final Listener listener) {
+        measureAsync(context, amplitude, seconds, hasSubwoofer, soundstageMode, TargetCurve.HARMAN, listener);
+    }
+    public static void measureAsync(final Context context, final float amplitude,
                                     final float seconds, final Listener listener) {
-        measureAsync(context, amplitude, seconds, false, SoundstageMode.DRIVER, listener);
+        measureAsync(context, amplitude, seconds, false, SoundstageMode.DRIVER, TargetCurve.HARMAN, listener);
     }
     public static void measureAsync(final Context context, final boolean hasSubwoofer,
                                     final SoundstageMode soundstageMode, final Listener listener) {
-        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, listener);
+        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, TargetCurve.HARMAN, listener);
+    }
+    public static void measureAsync(final Context context, final boolean hasSubwoofer,
+                                    final SoundstageMode soundstageMode, final TargetCurve targetCurve,
+                                    final Listener listener) {
+        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, targetCurve, listener);
     }
 
 
@@ -721,10 +759,12 @@ public final class RoomMeasurement {
 
     private static Result measure(Context context, float amplitude, float seconds,
                                   boolean hasSubwoofer, SoundstageMode soundstageMode,
+                                  TargetCurve targetCurve,
                                   Listener listener) {
         Result result = new Result();
         result.hasSubwoofer = hasSubwoofer;
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
+        result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
 
         Context app = context.getApplicationContext();
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -1408,10 +1448,11 @@ public final class RoomMeasurement {
             result.midbassHpfFreqHz = 63;
         }
 
-        // 4. Synthesize 16-band Harman Auto-EQ & Sub settings
+        // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
         int[] subSettings = new int[2];
-        NativeSweep.synthesizeHarmanEq16(avgClean, result.micCompensation16,
+        NativeSweep.synthesizeAutoEq16(avgClean, result.micCompensation16,
                 result.midbassHpfIdx, result.hasSubwoofer,
+                result.targetCurve != null ? result.targetCurve.id : NativeSweep.TARGET_HARMAN,
                 result.autoEqGains16, subSettings);
 
         result.subLpfIdx = subSettings[0];
@@ -1424,7 +1465,8 @@ public final class RoomMeasurement {
         result.subGain = subSettings[1];
 
         Log.i(TAG, String.format(Locale.US,
-                "Auto-EQ synthesized: HPF cutoff %d Hz (idx %d), Sub LPF %d Hz (idx %d, gain %d), hasSub=%b",
+                "Auto-EQ (%s) synthesized: HPF cutoff %d Hz (idx %d), Sub LPF %d Hz (idx %d, gain %d), hasSub=%b",
+                result.targetCurve != null ? result.targetCurve.title : "Harman",
                 result.midbassHpfFreqHz, result.midbassHpfIdx,
                 result.subLpfFreqHz, result.subLpfIdx, result.subGain, result.hasSubwoofer));
     }
@@ -1435,7 +1477,7 @@ public final class RoomMeasurement {
     public static void applyAutoEqPreset(Context context, Result result, String presetName) {
         if (context == null || result == null) return;
         if (presetName == null || presetName.trim().isEmpty()) {
-            presetName = "AutoEQ Harman";
+            presetName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
         }
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor e = prefs.edit();
@@ -1464,11 +1506,26 @@ public final class RoomMeasurement {
         e.putInt(presetName + "_d_fr", result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()]);
         e.putInt(presetName + "_d_sub", result.suggestedSubDelaySteps);
 
-        // 5. Centered balance & flat surround
+        // 5. Centered balance & surround
         e.putInt(presetName + "_f_lr", FADER_CENTRE);
         e.putInt(presetName + "_f_fr", FADER_CENTRE);
         e.putBoolean(presetName + "_loud", false);
-        e.putBoolean(presetName + "_d1_en", false);
+
+        if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
+            e.putBoolean(presetName + "_d1_en", true);
+            e.putInt(presetName + "_rsse_val", 14); // Rear Space Sound Expander (+4 dB)
+            e.putInt(presetName + "_d1_rl", 6);    // ~12.75 ms surround delay rear-left
+            e.putInt(presetName + "_d1_rr", 6);    // ~12.75 ms surround delay rear-right
+            e.putInt(presetName + "_d1_fl", 0);
+            e.putInt(presetName + "_d1_fr", 0);
+        } else {
+            e.putBoolean(presetName + "_d1_en", false);
+            e.putInt(presetName + "_rsse_val", 10);
+            e.putInt(presetName + "_d1_rl", 0);
+            e.putInt(presetName + "_d1_rr", 0);
+            e.putInt(presetName + "_d1_fl", 0);
+            e.putInt(presetName + "_d1_fr", 0);
+        }
 
         // 6. Add to preset list
         Set<String> presetNames = new HashSet<>(prefs.getStringSet(PREF_PRESET_NAMES, new HashSet<>()));
@@ -1962,6 +2019,10 @@ public final class RoomMeasurement {
             }
             sb.append(wiringVerdict(result));
             sb.append("Soundstage mode: ").append(result.soundstageMode != null ? result.soundstageMode.title : "Default").append("\n");
+            sb.append("Target sound curve: ").append(result.targetCurve != null ? result.targetCurve.title : "Harman Reference").append("\n");
+            if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
+                sb.append("Dolby Atmos 3D Surround: Active (RSSE +4 dB, Rear Surround Delay 12.7 ms)\n");
+            }
             sb.append(String.format(Locale.US, "Midbass HPF: %d Hz (idx %d)\n", result.midbassHpfFreqHz, result.midbassHpfIdx));
             if (result.hasSubwoofer) {
                 sb.append(String.format(Locale.US, "Subwoofer: Installed, LPF %d Hz (idx %d), Gain %+d dB, Delay %.1f ms (%d steps)\n",
@@ -1969,7 +2030,7 @@ public final class RoomMeasurement {
             } else {
                 sb.append("Subwoofer: None (natural roll-off / infrasonic protection)\n");
             }
-            sb.append("Synthesized Auto-EQ gains (Harman target, dB):");
+            sb.append("Synthesized Auto-EQ gains (").append(result.targetCurve != null ? result.targetCurve.title : "Harman").append(" target, dB):");
             for (int g : result.autoEqGains16) {
                 sb.append(String.format(Locale.US, " %+d", g));
             }
