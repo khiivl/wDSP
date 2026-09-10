@@ -246,16 +246,30 @@ public final class RoomMeasurement {
      public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
 
      public enum SoundstageMode {
-         DRIVER(0, "Водій"),
-         FRONT_CENTER(1, "По центру спереду"),
-         CABIN_CENTER(2, "По центру салону"),
-         OFF(3, "Без затримок");
+         DRIVER(0, "Водій", "Водій"),
+         FRONT_CENTER(1, "По центру спереду", "Центр"),
+         CABIN_CENTER(2, "По центру салону", "Всі"),
+         OFF(3, "Без затримок", "Вимкн");
 
          public final int id;
          public final String title;
-         SoundstageMode(int id, String title) {
+         public final String shortTag;
+
+         SoundstageMode(int id, String title, String shortTag) {
              this.id = id;
              this.title = title;
+             this.shortTag = shortTag;
+         }
+
+         public String getTag() {
+             return "(" + shortTag + ")";
+         }
+
+         public static SoundstageMode fromId(int id) {
+             for (SoundstageMode m : values()) {
+                 if (m.id == id) return m;
+             }
+             return DRIVER;
          }
      }
 
@@ -460,6 +474,69 @@ public final class RoomMeasurement {
         if (context == null) return;
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
                 .putInt(PREF_ROOM_LISTENING_DIST_CM, Math.max(40, Math.min(120, distCm)))
+                .apply();
+    }
+
+    public static final String PREF_ROOM_HAS_SUBWOOFER = "room_has_subwoofer";
+    public static final String PREF_ROOM_SOUNDSTAGE = "room_soundstage";
+    public static final String PREF_ROOM_TARGET_CURVE = "room_target_curve";
+    public static final String PREF_LAST_AUTOEQ_PRESET = "room_last_autoeq_preset";
+
+    public static boolean hasSubwoofer(Context context) {
+        if (context == null) return true;
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(PREF_ROOM_HAS_SUBWOOFER, true);
+    }
+
+    public static void setHasSubwoofer(Context context, boolean hasSub) {
+        if (context == null) return;
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putBoolean(PREF_ROOM_HAS_SUBWOOFER, hasSub)
+                .apply();
+    }
+
+    public static SoundstageMode getSoundstageMode(Context context) {
+        if (context == null) return SoundstageMode.DRIVER;
+        int id = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(PREF_ROOM_SOUNDSTAGE, SoundstageMode.DRIVER.id);
+        return SoundstageMode.fromId(id);
+    }
+
+    public static void setSoundstageMode(Context context, SoundstageMode mode) {
+        if (context == null) return;
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(PREF_ROOM_SOUNDSTAGE, mode != null ? mode.id : SoundstageMode.DRIVER.id)
+                .apply();
+    }
+
+    public static TargetCurve getTargetCurve(Context context) {
+        if (context == null) return TargetCurve.HARMAN;
+        String name = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_ROOM_TARGET_CURVE, TargetCurve.HARMAN.name());
+        try {
+            return TargetCurve.valueOf(name);
+        } catch (Exception e) {
+            return TargetCurve.HARMAN;
+        }
+    }
+
+    public static void setTargetCurve(Context context, TargetCurve curve) {
+        if (context == null) return;
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(PREF_ROOM_TARGET_CURVE, curve != null ? curve.name() : TargetCurve.HARMAN.name())
+                .apply();
+    }
+
+    public static String getLastAutoEqPreset(Context context) {
+        if (context == null) return null;
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_LAST_AUTOEQ_PRESET, null);
+    }
+
+    public static void setLastAutoEqPreset(Context context, String presetName) {
+        if (context == null) return;
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(PREF_LAST_AUTOEQ_PRESET, presetName)
                 .apply();
     }
 
@@ -1860,7 +1937,9 @@ public final class RoomMeasurement {
     public static void applyAutoEqPreset(Context context, Result result, String presetName) {
         if (context == null || result == null) return;
         if (presetName == null || presetName.trim().isEmpty()) {
-            presetName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+            String base = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+            String tag = result.soundstageMode != null ? result.soundstageMode.getTag() : "(Водій)";
+            presetName = base + " " + tag;
         }
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor e = prefs.edit();
@@ -1922,6 +2001,7 @@ public final class RoomMeasurement {
 
         // 7. Activate preset
         e.putString(PREF_LAST_SELECTED, presetName);
+        e.putString(PREF_LAST_AUTOEQ_PRESET, presetName);
         e.apply();
 
         // Broadcast to McuService

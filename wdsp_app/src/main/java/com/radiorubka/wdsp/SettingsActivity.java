@@ -1583,7 +1583,7 @@ public class SettingsActivity extends AppCompatActivity {
         TextView debugMeasureButton = findViewById(R.id.btn_debug_room_measure);
         if (debugMeasureButton != null) {
             TouchGlow.attach(debugMeasureButton);
-            debugMeasureButton.setOnClickListener(v -> startRoomMeasurement());
+            debugMeasureButton.setOnClickListener(v -> startDiagnosticSweep());
         }
 
         TextView sendButton = findViewById(R.id.btn_room_send);
@@ -1623,18 +1623,26 @@ public class SettingsActivity extends AppCompatActivity {
             tvTelegram.setOnClickListener(v -> openTelegram());
         }
         showRoomStatus();
-    }
-
-    private void setRoomStatusText(String text) {
-        if (tvRoomStatus != null) tvRoomStatus.setText(text);
-        if (tvDebugRoomStatus != null) tvDebugRoomStatus.setText(text);
+        showDebugRoomStatus();
     }
 
     private void showRoomStatus() {
-        String text = RoomMeasurement.hasResult(this)
-                ? getString(R.string.room_measure_done)
-                : getString(R.string.room_measure_nothing);
-        setRoomStatusText(text);
+        if (tvRoomStatus == null) return;
+        String lastPreset = RoomMeasurement.getLastAutoEqPreset(this);
+        if (lastPreset != null && !lastPreset.trim().isEmpty()) {
+            tvRoomStatus.setText(getString(R.string.room_measure_done, lastPreset));
+        } else {
+            tvRoomStatus.setText(getString(R.string.room_measure_nothing));
+        }
+    }
+
+    private void showDebugRoomStatus() {
+        if (tvDebugRoomStatus == null) return;
+        if (RoomMeasurement.hasResult(this)) {
+            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_done));
+        } else {
+            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_nothing));
+        }
     }
 
     private void startRoomMeasurement() {
@@ -1661,16 +1669,54 @@ public class SettingsActivity extends AppCompatActivity {
         View cardSub = view.findViewById(R.id.card_subwoofer);
         cardSub.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
         CheckBox cbSub = view.findViewById(R.id.cb_has_subwoofer);
+        if (cbSub != null) {
+            cbSub.setChecked(RoomMeasurement.hasSubwoofer(this));
+        }
 
         View cardStage = view.findViewById(R.id.card_soundstage);
         cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
         RadioGroup rgStage = view.findViewById(R.id.rg_soundstage_mode);
+        if (rgStage != null) {
+            RoomMeasurement.SoundstageMode savedStage = RoomMeasurement.getSoundstageMode(this);
+            if (savedStage == RoomMeasurement.SoundstageMode.FRONT_CENTER) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_front_center);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedStage == RoomMeasurement.SoundstageMode.CABIN_CENTER) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_cabin_center);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedStage == RoomMeasurement.SoundstageMode.OFF) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_off);
+                if (rb != null) rb.setChecked(true);
+            } else {
+                RadioButton rb = view.findViewById(R.id.rb_stage_driver);
+                if (rb != null) rb.setChecked(true);
+            }
+        }
 
         View cardTarget = view.findViewById(R.id.card_target_curve);
         if (cardTarget != null) {
             cardTarget.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
         }
         RadioGroup rgTarget = view.findViewById(R.id.rg_target_curve);
+        if (rgTarget != null) {
+            RoomMeasurement.TargetCurve savedCurve = RoomMeasurement.getTargetCurve(this);
+            if (savedCurve == RoomMeasurement.TargetCurve.DOLBY_ATMOS) {
+                RadioButton rb = view.findViewById(R.id.rb_target_dolby);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.BASS_HEAVY) {
+                RadioButton rb = view.findViewById(R.id.rb_target_bass);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.VOCAL_SPEECH) {
+                RadioButton rb = view.findViewById(R.id.rb_target_vocal);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.FLAT_STUDIO) {
+                RadioButton rb = view.findViewById(R.id.rb_target_flat);
+                if (rb != null) rb.setChecked(true);
+            } else {
+                RadioButton rb = view.findViewById(R.id.rb_target_harman);
+                if (rb != null) rb.setChecked(true);
+            }
+        }
 
         View cardGeometry = view.findViewById(R.id.card_cabin_geometry);
         if (cardGeometry != null) {
@@ -1792,10 +1838,6 @@ public class SettingsActivity extends AppCompatActivity {
         TextView tvAutoEq = view.findViewById(R.id.tv_report_autoeq_gains);
         tvAutoEq.setTextColor(textPrimary);
 
-        TextView btnSave = view.findViewById(R.id.btn_save_report);
-        btnSave.setTextColor(textSecondary);
-        TouchGlow.attach(btnSave);
-
         TextView btnClose = view.findViewById(R.id.btn_close_report);
         btnClose.setTextColor(textSecondary);
         TouchGlow.attach(btnClose);
@@ -1824,7 +1866,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnClose.setOnClickListener(v -> dialog.dismiss());
-        btnSave.setOnClickListener(v -> saveRoomMeasurement());
 
         btnStart.setOnClickListener(v -> {
             boolean hasSub = cbSub.isChecked();
@@ -1867,6 +1908,9 @@ public class SettingsActivity extends AppCompatActivity {
             final RoomMeasurement.CarBodyType selectedBody = bodyType;
             final int selectedDistance = currentDist[0];
 
+            RoomMeasurement.setHasSubwoofer(this, hasSub);
+            RoomMeasurement.setSoundstageMode(this, selectedMode);
+            RoomMeasurement.setTargetCurve(this, selectedTarget);
             RoomMeasurement.setBodyType(this, selectedBody);
             RoomMeasurement.setListeningDistanceCm(this, selectedDistance);
             RoomMeasurement.pauseMedia(this);
@@ -1969,7 +2013,9 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.setCanceledOnTouchOutside(false);
 
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
-        setRoomStatusText(getString(R.string.room_measure_running, ""));
+        if (tvRoomStatus != null) {
+            tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
+        }
 
         RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, listeningDistanceCm, new RoomMeasurement.Listener() {
             @Override
@@ -1979,7 +2025,9 @@ public class SettingsActivity extends AppCompatActivity {
                     tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
                     progressBar.setProgress(percent);
                     tvPercent.setText(percent + "%");
-                    setRoomStatusText(getString(R.string.room_measure_running, stageTitle));
+                    if (tvRoomStatus != null) {
+                        tvRoomStatus.setText(getString(R.string.room_measure_running, stageTitle));
+                    }
                 });
             }
 
@@ -1991,7 +2039,9 @@ public class SettingsActivity extends AppCompatActivity {
                     layoutProgress.setVisibility(View.GONE);
 
                     if (result == null || result.error != null) {
-                        setRoomStatusText(getString(R.string.room_measure_failed));
+                        if (tvRoomStatus != null) {
+                            tvRoomStatus.setText(getString(R.string.room_measure_failed));
+                        }
                         ThemedDialog.notice(SettingsActivity.this,
                                 getString(R.string.room_measure_failed),
                                 result != null && result.error != null ? result.error : "Unknown error");
@@ -1999,7 +2049,7 @@ public class SettingsActivity extends AppCompatActivity {
                         return;
                     }
 
-                    setRoomStatusText(getString(R.string.room_measure_done));
+                    showRoomStatus();
                     layoutReport.setVisibility(View.VISIBLE);
 
                     // 1. Polarity check
@@ -2052,12 +2102,125 @@ public class SettingsActivity extends AppCompatActivity {
 
                     // 5. Apply button
                     btnApply.setOnClickListener(v -> {
-                        final String presetName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+                        final String baseName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+                        final String stageTag = result.soundstageMode != null ? result.soundstageMode.getTag() : "(Водій)";
+                        final String presetName = baseName + " " + stageTag;
                         RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, presetName);
                         Toast.makeText(SettingsActivity.this, getString(R.string.room_wizard_applied_toast, presetName), Toast.LENGTH_LONG).show();
-                        refreshRoomMeasurementUi();
+                        showRoomStatus();
                         dialog.dismiss();
                     });
+                });
+            }
+        });
+    }
+
+    private void startDiagnosticSweep() {
+        if (RoomMeasurement.isRunning()) return;
+        if (!ensureMicrophone()) return;
+
+        ThemedDialog.builder(this)
+                .setTitle(R.string.debug_sweep_button)
+                .setMessage(R.string.room_measure_confirm_msg)
+                .setPositiveButton(R.string.room_measure_confirm_start, (dialog, which) -> {
+                    RoomMeasurement.pauseMedia(this);
+                    if (!RootAccess.hasRoot(this)) {
+                        ThemedDialog.builder(this)
+                                .setTitle(R.string.room_root_title)
+                                .setMessage(R.string.room_root_message)
+                                .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
+                                    RootAccess.Outcome outcome = RootAccess.request(this);
+                                    runOnUiThread(() -> {
+                                        if (outcome == RootAccess.Outcome.GRANTED) {
+                                            runDiagnosticSweep();
+                                        } else {
+                                            ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                                    getString(R.string.room_root_blocked));
+                                        }
+                                    });
+                                }, "root-request").start())
+                                .setNegativeButton(R.string.room_root_no, (d, w) ->
+                                        ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                                getString(R.string.room_root_blocked)))
+                                .setCancelable(false)
+                                .show();
+                        return;
+                    }
+                    runDiagnosticSweep();
+                })
+                .setNegativeButton(R.string.room_measure_confirm_cancel, null)
+                .show();
+    }
+
+    private void runDiagnosticSweep() {
+        if (tvDebugRoomStatus != null) {
+            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_running, ""));
+        }
+
+        boolean hasSub = RoomMeasurement.hasSubwoofer(this);
+        RoomMeasurement.SoundstageMode mode = RoomMeasurement.getSoundstageMode(this);
+        RoomMeasurement.TargetCurve targetCurve = RoomMeasurement.getTargetCurve(this);
+        RoomMeasurement.CarBodyType bodyType = RoomMeasurement.getBodyType(this);
+        int distance = RoomMeasurement.getListeningDistanceCm(this);
+
+        final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setMax(100);
+        progressBar.setIndeterminate(false);
+
+        final TextView tvMsg = new TextView(this);
+        tvMsg.setText(getString(R.string.debug_sweep_running, ""));
+        tvMsg.setTextColor(ThemeManager.textPrimary(this, editNight));
+        tvMsg.setPadding(0, (int) ThemedDialog.dp(this, 8), 0, (int) ThemedDialog.dp(this, 8));
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) ThemedDialog.dp(this, 16);
+        container.setPadding(pad, pad, pad, pad);
+        container.addView(tvMsg);
+        container.addView(progressBar);
+
+        final Dialog progressDialog = ThemedDialog.builder(this)
+                .setTitle(R.string.debug_sweep_button)
+                .setView(container)
+                .setCancelable(false)
+                .create();
+        progressDialog.show();
+
+        HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+
+        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, distance, new RoomMeasurement.Listener() {
+            @Override
+            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+                runOnUiThread(() -> {
+                    progressBar.setProgress(percent);
+                    tvMsg.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s\n%s (%d%%)",
+                            step, totalSteps, stageTitle, stageDetail != null ? stageDetail : "", percent));
+                    if (tvDebugRoomStatus != null) {
+                        tvDebugRoomStatus.setText(getString(R.string.debug_sweep_running, stageTitle));
+                    }
+                });
+            }
+
+            @Override
+            public void onFinished(RoomMeasurement.Result result) {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    if (result == null || result.error != null) {
+                        if (tvDebugRoomStatus != null) {
+                            tvDebugRoomStatus.setText(getString(R.string.room_measure_failed));
+                        }
+                        ThemedDialog.notice(SettingsActivity.this,
+                                getString(R.string.room_measure_failed),
+                                result != null && result.error != null ? result.error : "Unknown error");
+                        return;
+                    }
+                    showDebugRoomStatus();
+                    ThemedDialog.builder(SettingsActivity.this)
+                            .setTitle(R.string.debug_sweep_button)
+                            .setMessage(getString(R.string.debug_sweep_done))
+                            .setPositiveButton(R.string.room_measure_send, (d, w) -> saveRoomMeasurement())
+                            .setNegativeButton(android.R.string.ok, null)
+                            .show();
                 });
             }
         });
