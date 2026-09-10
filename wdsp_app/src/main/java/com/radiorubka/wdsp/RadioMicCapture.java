@@ -47,10 +47,17 @@ public class RadioMicCapture {
     private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     public static final int CHUNK_SIZE = 512;
 
+    // AGC parameters for quiet cabin radio listening
+    private static final float TARGET_PEAK = 24000.0f; // ~ -2.7 dBFS
+    private static final float MIN_GAIN = 0.5f;        // -6 dB attenuation for loud listening
+    private static final float MAX_GAIN = 16.0f;       // +24 dB boost for quiet volumes (2-4 units)
+    private static final int NOISE_GATE_THRESHOLD = 150; // Silence floor
+
     private AudioRecord audioRecord;
     private MicProbe.Suspension suspension;
     private Thread captureThread;
     private volatile boolean running = false;
+    private float currentGain = 1.0f;
 
     public synchronized boolean start(Context context, PcmCallback callback) {
         if (running) return true;
@@ -104,11 +111,30 @@ public class RadioMicCapture {
             return false;
         }
 
+        // Ensure Google Assistant hotword listener is not constraining the HAL stream to 16 kHz.
+        // Explicitly triggers Magisk prompt if root is available and cleanly frees the 48 kHz HAL.
+        if (RootAccess.alreadyGranted()) {
+            try {
+                Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
+            } catch (Throwable ignored) {}
+        } else {
+            new Thread(() -> {
+                RootAccess.Outcome outcome = RootAccess.request();
+                if (outcome == RootAccess.Outcome.GRANTED) {
+                    try {
+                        Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
+                    } catch (Throwable ignored) {}
+                }
+            }, "wDSP_RootRequest").start();
+        }
+
         running = true;
+        currentGain = 1.0f;
 
         captureThread = new Thread(() -> {
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
             short[] shortChunk = new short[CHUNK_SIZE];
+            short[] agcChunk = new short[CHUNK_SIZE];
 
             while (running) {
                 AudioRecord rec = audioRecord;
@@ -131,8 +157,43 @@ public class RadioMicCapture {
                     continue;
                 }
 
+                // Measure peak amplitude of this chunk
+                int peak = 0;
+                for (int i = 0; i < read; i++) {
+                    int abs = Math.abs(shortChunk[i]);
+                    if (abs > peak) peak = abs;
+                }
+
+                float startGain = currentGain;
+                if (peak > NOISE_GATE_THRESHOLD) {
+                    float desiredGain = TARGET_PEAK / peak;
+                    if (desiredGain > MAX_GAIN) desiredGain = MAX_GAIN;
+                    if (desiredGain < MIN_GAIN) desiredGain = MIN_GAIN;
+
+                    if (desiredGain < currentGain) {
+                        // Fast attack (~20 ms) against clipping
+                        currentGain += (desiredGain - currentGain) * 0.35f;
+                    } else {
+                        // Smooth release (~200 ms) for musical breathing
+                        currentGain += (desiredGain - currentGain) * 0.05f;
+                    }
+                } else {
+                    // Decay towards 1.0 during silence so cabin rumble isn't amplified
+                    currentGain += (1.0f - currentGain) * 0.10f;
+                }
+
+                // Smooth linear interpolation across the chunk to prevent clicks
+                float gainStep = (currentGain - startGain) / read;
+                for (int i = 0; i < read; i++) {
+                    float g = startGain + gainStep * i;
+                    int boosted = Math.round(shortChunk[i] * g);
+                    if (boosted > 32767) boosted = 32767;
+                    else if (boosted < -32768) boosted = -32768;
+                    agcChunk[i] = (short) boosted;
+                }
+
                 try {
-                    callback.onPcmChunk(shortChunk, read);
+                    callback.onPcmChunk(agcChunk, read);
                 } catch (Throwable t) {
                     Log.w(TAG, "PCM callback exception: " + t);
                 }
@@ -141,7 +202,7 @@ public class RadioMicCapture {
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
         captureThread.start();
-        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (native direct streaming)");
+        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (Adaptive AGC enabled)");
         return true;
     }
 

@@ -123,6 +123,16 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativeFrames(handle);
     }
 
+    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
+    public void setIsAcoustic(boolean acoustic) {
+        if (handle != 0) nativeSetIsAcoustic(handle, acoustic);
+    }
+
+    /** Reads latest samples into byte array as 8-bit unsigned waveform centered at 128. */
+    public int getWaveform(byte[] outBuffer) {
+        return handle != 0 && outBuffer != null ? nativeGetWaveform(handle, outBuffer) : 0;
+    }
+
     private static native long nativeCreate(int sampleRate, int captureSize);
 
     private static native void nativeDestroy(long handle);
@@ -130,6 +140,10 @@ public final class NativeAnalyzer {
     private static native int nativePush(long handle, byte[] block, int len);
 
     private static native void nativePushPcm16(long handle, short[] samples, int count, float gain);
+
+    private static native void nativeSetIsAcoustic(long handle, boolean acoustic);
+
+    private static native int nativeGetWaveform(long handle, byte[] outBuffer);
 
     private static native void nativeProcess(long handle, int timeoutMs);
 

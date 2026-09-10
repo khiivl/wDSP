@@ -47,7 +47,8 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
           lastProcessedSample_(0),
           longFftDueAt_(0),
           frameMaxPower_(0.0f),
-          running_(true) {
+          running_(true),
+          isAcoustic_(false) {
     (void) captureSize;
     for (int i = 0; i < kBands; i++) {
         bandPower_[i] = 0.0f;
@@ -58,6 +59,26 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
     frameRing_.resize(kFrameRingSize);
     for (auto& frame : frameRing_) frame.assign(kBands, -120.0f);
     buildBandPlan();
+}
+
+Analyzer::~Analyzer() = default;
+
+void Analyzer::setIsAcoustic(bool acoustic) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    isAcoustic_ = acoustic;
+}
+
+int Analyzer::getWaveform(uint8_t* out, int maxLen) {
+    if (out == nullptr || maxLen <= 0) return 0;
+    std::lock_guard<std::mutex> lock(ringMutex_);
+    int count = std::min(maxLen, 1024);
+    std::vector<float> tmp(static_cast<size_t>(count));
+    if (!stitcher_.readNewest(tmp.data(), count)) return 0;
+    for (int i = 0; i < count; i++) {
+        int val = static_cast<int>(tmp[static_cast<size_t>(i)] * 128.0f) + 128;
+        out[i] = static_cast<uint8_t>(std::max(0, std::min(255, val)));
+    }
+    return count;
 }
 
 void Analyzer::buildBandPlan() {
@@ -260,11 +281,11 @@ void Analyzer::processFrame(bool haveLong) {
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
     for (int i = 0; i < kBands; i++) {
         float power = bandPower_[i];
-        if (quiet) {
+        if (quiet && !isAcoustic_) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;
         }
-        float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
+        float signal = isAcoustic_ ? power : (power - noiseFloor_[i] * kNoiseFloorMargin);
         if (signal < 0.0f) signal = 0.0f;
 
         float db = toDb(signal) + curve[i];

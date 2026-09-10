@@ -56,11 +56,18 @@ public:
     };
 
     Analyzer(int sampleRate, int captureSize);
+    ~Analyzer();
 
     void setConfig(const Config& config);
     void setAgcConfig(int consumer, const AgcConfig& config);
     /** Response the hardware DSP will add, in dB, on the 16 hardware bands. */
     void setDspCurve(const float* curve16);
+
+    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
+    void setIsAcoustic(bool acoustic);
+
+    /** Reads the newest samples as 8-bit unsigned waveform (0..255, centered 128). */
+    int getWaveform(uint8_t* out, int maxLen);
 
     /**
      * Feeds one polled Visualizer block. Returns the number of genuinely new samples.
@@ -170,6 +177,7 @@ private:
     mutable std::mutex mutex_;       // published frames, configuration, gain state
     std::condition_variable ringSignal_;
     bool running_;
+    bool isAcoustic_;
 };
 
 } // namespace wdsp

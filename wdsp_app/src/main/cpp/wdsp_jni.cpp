@@ -66,6 +66,29 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativePushPcm16(JNIEnv* env, jclass, jlo
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetIsAcoustic(JNIEnv*, jclass, jlong handle,
+                                                            jboolean acoustic) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->setIsAcoustic(acoustic == JNI_TRUE);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetWaveform(JNIEnv* env, jclass, jlong handle,
+                                                         jbyteArray outBuffer) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || outBuffer == nullptr) return 0;
+    jsize len = env->GetArrayLength(outBuffer);
+    if (len <= 0) return 0;
+
+    jbyte* data = env->GetByteArrayElements(outBuffer, nullptr);
+    if (data == nullptr) return 0;
+
+    int got = analyzer->getWaveform(reinterpret_cast<uint8_t*>(data), len);
+    env->ReleaseByteArrayElements(outBuffer, data, 0);
+    return got;
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeProcess(JNIEnv*, jclass, jlong handle,
                                                       jint timeoutMs) {
     auto* analyzer = asAnalyzer(handle);

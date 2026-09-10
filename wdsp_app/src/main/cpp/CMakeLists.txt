@@ -20,4 +20,4 @@ target_compile_options(wdsp_native PRIVATE
         -Wextra)
 
 find_library(log-lib log)
-target_link_libraries(wdsp_native ${log-lib})
+target_link_libraries(wdsp_native ${log-lib} dl)

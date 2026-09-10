@@ -616,6 +616,7 @@ public class AudioSpectrumEngine {
             }
         }
     }
+
     /** Floor between two resolutions, so a genuinely quiet track cannot start a sweep loop. */
     private static final long RESOLVE_COOLDOWN_MS = 20000;
     /**
@@ -887,23 +888,34 @@ public class AudioSpectrumEngine {
         }
     }
 
+    public boolean isRadioCaptureActive() {
+        return radioMicCapture != null && radioMicCapture.isRunning();
+    }
+
     /** Pushes the current settings - ballistics, latency and both gain profiles - into native. */
     public void applyNativeSettings() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        float latency = (radioMicCapture != null && radioMicCapture.isRunning()) ? 0f : nativeLatencyMs;
+        boolean radioActive = isRadioCaptureActive();
+        float latency = radioActive ? 0f : nativeLatencyMs;
         analyzer.setConfig(nativeAttackMs, nativeReleaseMs, latency,
                 nativeRefMaxDb, nativeRangeDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
-        analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
+        if (radioActive) {
+            // Cabin acoustic microphone capture already has hardware DSP EQ applied by BU32107.
+            // Setting a flat 0 dB curve prevents double-equalization.
+            analyzer.setDspCurve(new float[16]);
+        } else {
+            analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
+        }
     }
 
     /** Picks the frame rate from who is actually watching. */
     private void applyAnalysisProfile() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        if (radioMicCapture != null && radioMicCapture.isRunning()) {
+        if (isRadioCaptureActive()) {
             analyzer.setHop(HOP_ACTIVE);
         } else {
             analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
@@ -1109,16 +1121,19 @@ public class AudioSpectrumEngine {
             Log.w(TAG, "Native analyser did not initialise for Radio MIC");
             return;
         }
-        applyNativeSettings();
-        capturePolling = true;
-        applyAnalysisProfile();
+
+        // Configure analyzer for acoustic capture:
+        // 1. Acoustic mode: bypass cabin rumble noise floor subtraction so 50 Hz sub-bass dances
+        nativeAnalyzer.setIsAcoustic(true);
+        // 2. Flat DSP curve: microphone already hears the acoustic cabin sound shaped by DSP
+        nativeAnalyzer.setDspCurve(new float[16]);
 
         boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
             if (!capturePolling) return;
             noteMicSignal(buffer, len);
             NativeAnalyzer analyzer = nativeAnalyzer;
             if (analyzer != null) {
-                analyzer.pushPcm16(buffer, len, 3.0f);
+                analyzer.pushPcm16(buffer, len, 1.0f);
             }
             synchronized (waveformLock) {
                 int copyLen = Math.min(len, latestWaveform.length);
@@ -1135,6 +1150,10 @@ public class AudioSpectrumEngine {
             stopNativeCapture();
             return;
         }
+
+        applyNativeSettings();
+        capturePolling = true;
+        applyAnalysisProfile();
 
         analysisThread = new Thread(() -> {
             while (capturePolling) {
@@ -1162,12 +1181,15 @@ public class AudioSpectrumEngine {
             }
         }, "wDSP_Display");
         displayThread.start();
-        Log.i(TAG, "Radio MIC analysis pipeline started at 48000 Hz UNPROCESSED (native PCM16)");
+        Log.i(TAG, "Radio MIC analysis pipeline running with adaptive AGC");
     }
 
     private void stopRadioMicCapture() {
         if (radioMicCapture.isRunning()) {
             radioMicCapture.stop();
+        }
+        if (nativeAnalyzer != null) {
+            nativeAnalyzer.setIsAcoustic(false);
         }
     }
 
@@ -1175,12 +1197,12 @@ public class AudioSpectrumEngine {
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
         if (isRadio) {
-            if (visualizer != null || (!radioMicCapture.isRunning() && radioMicVisualizerEnabled)) {
+            if (visualizer != null || (!isRadioCaptureActive() && radioMicVisualizerEnabled)) {
                 Log.i(TAG, "Source is Radio - switching to mic capture pipeline");
                 startInternal(currentSessionId);
             }
         } else {
-            if (radioMicCapture.isRunning()) {
+            if (isRadioCaptureActive()) {
                 Log.i(TAG, "Source switched away from Radio - restoring AudioFlinger capture");
                 startInternal(currentSessionId);
                 requestResolve("source switched from radio");

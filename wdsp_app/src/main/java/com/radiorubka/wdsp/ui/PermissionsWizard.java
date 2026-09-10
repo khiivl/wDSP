@@ -27,6 +27,7 @@ import androidx.core.graphics.ColorUtils;
 
 import com.radiorubka.wdsp.NowPlaying;
 import com.radiorubka.wdsp.R;
+import com.radiorubka.wdsp.RootAccess;
 import com.radiorubka.wdsp.Toaster;
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
@@ -49,6 +50,25 @@ public final class PermissionsWizard {
     private static final String PREF_LAST_WIZARD_VERSION = "pref_last_wizard_version_code";
     private static WeakReference<PermissionsWizard> sCurrentInstance;
 
+    private static volatile boolean sRootChecked = false;
+    private static volatile boolean sRootGranted = false;
+
+    public static boolean isRootGranted(Context context) {
+        if (!sRootChecked) {
+            sRootChecked = true;
+            new Thread(() -> {
+                boolean granted = RootAccess.alreadyGranted();
+                sRootGranted = granted;
+                if (granted) {
+                    if (context instanceof Activity) {
+                        ((Activity) context).runOnUiThread(PermissionsWizard::refreshCurrent);
+                    }
+                }
+            }, "wDSP_RootCheck").start();
+        }
+        return sRootGranted;
+    }
+
     private final Activity activity;
     private final Runnable onDismissCallback;
     private Dialog dialog;
@@ -69,13 +89,19 @@ public final class PermissionsWizard {
         public final int descRes;
         public final PermissionChecker checker;
         public final PermissionAction action;
+        public final boolean optional;
 
         public Item(int id, int titleRes, int descRes, PermissionChecker checker, PermissionAction action) {
+            this(id, titleRes, descRes, checker, action, false);
+        }
+
+        public Item(int id, int titleRes, int descRes, PermissionChecker checker, PermissionAction action, boolean optional) {
             this.id = id;
             this.titleRes = titleRes;
             this.descRes = descRes;
             this.checker = checker;
             this.action = action;
+            this.optional = optional;
         }
     }
 
@@ -101,12 +127,12 @@ public final class PermissionsWizard {
     }
 
     /**
-     * Перевіряє чи всі дозволи надані.
+     * Перевіряє чи всі обов'язкові дозволи надані.
      */
     public static boolean areAllGranted(Context context) {
         List<Item> items = getItems();
         for (Item item : items) {
-            if (!item.checker.isGranted(context)) {
+            if (!item.optional && !item.checker.isGranted(context)) {
                 return false;
             }
         }
@@ -132,12 +158,8 @@ public final class PermissionsWizard {
         int currentVer = getAppVersionCode(activity);
 
         if (lastVer < currentVer) {
-            if (!areAllGranted(activity)) {
-                show(activity, () -> prefs.edit().putInt(PREF_LAST_WIZARD_VERSION, currentVer).apply());
-                return true;
-            } else {
-                prefs.edit().putInt(PREF_LAST_WIZARD_VERSION, currentVer).apply();
-            }
+            show(activity, () -> prefs.edit().putInt(PREF_LAST_WIZARD_VERSION, currentVer).apply());
+            return true;
         }
         return false;
     }
@@ -273,6 +295,33 @@ public final class PermissionsWizard {
                 }, REQ_AUDIO)
         ));
 
+        // 6. Суперкористувач (Root Magisk) - для вимірювань салону та повного діапазону мікрофона FM-радіо
+        list.add(new Item(
+                6,
+                R.string.perm_wizard_item_root_title,
+                R.string.perm_wizard_item_root_desc,
+                PermissionsWizard::isRootGranted,
+                act -> new Thread(() -> {
+                    RootAccess.Outcome outcome = RootAccess.request();
+                    if (outcome == RootAccess.Outcome.GRANTED) {
+                        sRootGranted = true;
+                        sRootChecked = true;
+                        try {
+                            Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
+                        } catch (Throwable ignored) {}
+                    } else if (outcome == RootAccess.Outcome.DENIED_BY_POLICY) {
+                        sRootGranted = false;
+                        sRootChecked = true;
+                        act.runOnUiThread(() -> Toaster.show(act, act.getString(R.string.room_root_blocked)));
+                    } else {
+                        sRootGranted = false;
+                        sRootChecked = true;
+                    }
+                    act.runOnUiThread(PermissionsWizard::refreshCurrent);
+                }, "wDSP_WizardRoot").start(),
+                true
+        ));
+
         return list;
     }
 
@@ -353,20 +402,22 @@ public final class PermissionsWizard {
 
         scrollView.addView(listContainer);
 
+        final boolean[] dismissed = new boolean[1];
+        Runnable safeDismiss = () -> {
+            if (!dismissed[0]) {
+                dismissed[0] = true;
+                if (onDismissCallback != null) {
+                    onDismissCallback.run();
+                }
+            }
+        };
+
         dialog = ThemedDialog.builder(context)
                 .setTitle(context.getString(R.string.perm_wizard_title))
                 .setMessage(context.getString(R.string.perm_wizard_subtitle))
                 .setView(scrollView)
-                .setPositiveButton(context.getString(R.string.perm_wizard_btn_continue), (d, which) -> {
-                    if (onDismissCallback != null) {
-                        onDismissCallback.run();
-                    }
-                })
-                .setOnDismissListener(d -> {
-                    if (onDismissCallback != null) {
-                        onDismissCallback.run();
-                    }
-                })
+                .setPositiveButton(context.getString(R.string.perm_wizard_btn_continue), (d, which) -> safeDismiss.run())
+                .setOnDismissListener(d -> safeDismiss.run())
                 .create();
 
         dialog.show();

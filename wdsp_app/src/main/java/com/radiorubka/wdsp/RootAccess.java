@@ -23,7 +23,7 @@ import android.util.Log;
  * signal available, and it is enough to tell an owner which of the two happened - and, when it is
  * the second, that the answer is in Magisk's own settings and not in this app.
  */
-final class RootAccess {
+public final class RootAccess {
 
     private static final String TAG = "wDSP_RootAccess";
 
@@ -36,7 +36,7 @@ final class RootAccess {
     /** Long enough for somebody to notice the dialog and answer it, not so long the app looks hung. */
     private static final long WAIT_SECONDS = 30;
 
-    enum Outcome {
+    public enum Outcome {
         /** Root is ours. */
         GRANTED,
         /** A prompt appeared and the owner said no. */
@@ -59,7 +59,7 @@ final class RootAccess {
      * nothing, costs nothing, and if an owner later looks at Magisk's log the first thing this app
      * ever asked to do was ask who it was.
      */
-    static Outcome request() {
+    public static Outcome request() {
         long started = System.currentTimeMillis();
         Process p = null;
         try {
@@ -92,7 +92,7 @@ final class RootAccess {
     }
 
     /** Whether root has already been granted, without raising a prompt if it has not. */
-    static boolean alreadyGranted() {
+    public static boolean alreadyGranted() {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
