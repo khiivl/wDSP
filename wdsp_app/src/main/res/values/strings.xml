@@ -242,6 +242,8 @@
     <string name="perm_wizard_item_location_desc">Automatic speed-dependent volume leveling while driving</string>
     <string name="perm_wizard_item_audio_title">Microphone (Audio Recording)</string>
     <string name="perm_wizard_item_audio_desc">Cabin acoustic calibration and FM Radio spectrum analyzer</string>
+    <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
+    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
     <string name="toast_backup_success">Settings backed up successfully</string>

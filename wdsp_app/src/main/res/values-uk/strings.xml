@@ -230,6 +230,8 @@
     <string name="perm_wizard_item_location_desc">Автоматична зміна гучності залежно від швидкості руху автомобіля</string>
     <string name="perm_wizard_item_audio_title">Мікрофон (Запис звуку)</string>
     <string name="perm_wizard_item_audio_desc">Вимірювання акустики салону та спектроаналізатор FM-радіо</string>
+    <string name="perm_wizard_item_root_title">Рут-доступ (Magisk Суперкористувач)</string>
+    <string name="perm_wizard_item_root_desc">Опціонально: звільняє повні 48 кГц мікрофона від асистента та калібрує салон</string>
     <string name="settings_backup_btn">Резервна копія налаштувань</string>
     <string name="settings_restore_btn">Відновити налаштування</string>
     <string name="toast_backup_success">Резервну копію збережено</string>
