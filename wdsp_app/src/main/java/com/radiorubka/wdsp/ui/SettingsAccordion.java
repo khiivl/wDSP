@@ -35,6 +35,7 @@ public final class SettingsAccordion {
             R.id.label_analyzer_section,
             R.id.label_permissions_section,
             R.id.label_screensaver_section,
+            R.id.label_room_section,
             R.id.label_debug_section,
     };
 
@@ -120,6 +121,7 @@ public final class SettingsAccordion {
                         cId == R.id.card_settings_analyzer ||
                         cId == R.id.card_settings_permissions ||
                         cId == R.id.card_settings_screensaver ||
+                        cId == R.id.card_settings_room ||
                         cId == R.id.card_settings_debug) {
                         child.setBackground(ThemeManager.cardDrawable(ctx, night, 16f));
                     }
@@ -197,9 +199,21 @@ public final class SettingsAccordion {
             final LinearLayout section = bodies.get(i);
             final String key = PREF_PREFIX + title.getId();
             boolean open = (i == openIdx);
+            if (title.getId() == R.id.label_room_section && !PermissionsWizard.isRootGranted(ctx)) {
+                open = false;
+            }
             setHeaderState(title, section, open, accent, textPrimary);
 
             title.setOnClickListener(b -> {
+                if (title.getId() == R.id.label_room_section) {
+                    if (!PermissionsWizard.isRootGranted(ctx)) {
+                        com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
+                        if (ctx instanceof android.app.Activity) {
+                            PermissionsWizard.show((android.app.Activity) ctx);
+                        }
+                        return;
+                    }
+                }
                 boolean nowOpen = section.getVisibility() != View.VISIBLE;
                 if (nowOpen) {
                     // Collapse all other sections
@@ -241,6 +255,13 @@ public final class SettingsAccordion {
         for (int i = 0; i < column.getChildCount(); i++) {
             View titleView = column.getChildAt(i);
             if (titleView instanceof TextView && titleView.getId() == headerId && (i + 1) < column.getChildCount()) {
+                if (headerId == R.id.label_room_section && !PermissionsWizard.isRootGranted(ctx)) {
+                    com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
+                    if (ctx instanceof android.app.Activity) {
+                        PermissionsWizard.show((android.app.Activity) ctx);
+                    }
+                    return;
+                }
                 View targetBody = column.getChildAt(i + 1);
                 boolean night = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(ctx);
                 int acc = sAccent != 0 ? sAccent : com.radiorubka.wdsp.ui.theme.ThemeManager.accent(ctx, night);

@@ -502,6 +502,16 @@ public final class RoomMeasurement {
     }
 
     /**
+     * Checks if a calibrated microphone compensation curve exists in SharedPreferences.
+     */
+    public static boolean hasMicCompensation(Context context) {
+        if (context == null) return false;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String s = prefs.getString(PREF_MIC_COMPENSATION, null);
+        return s != null && !s.trim().isEmpty();
+    }
+
+    /**
      * Persists the calibrated 16-band microphone inverse compensation curve to SharedPreferences.
      */
     public static void setMicCompensationCurve(Context context, float[] curve) {

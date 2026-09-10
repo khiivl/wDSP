@@ -193,7 +193,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void handleIntent(Intent intent) {
-        if (intent == null || intent.getAction() == null) return;
+        if (intent == null) return;
         String action = intent.getAction();
         if ("com.radiorubka.wdsp.ACTION_BACKUP".equals(action)) {
             String path = intent.getStringExtra("path");
@@ -205,6 +205,13 @@ public class SettingsActivity extends AppCompatActivity {
             if (path != null) {
                 restoreFromFile(new File(path));
             }
+        }
+        int openSectionId = intent.getIntExtra("open_section_id", 0);
+        if (openSectionId != 0 && settingsColumn != null) {
+            settingsColumn.post(() -> {
+                ScrollView scroll = findViewById(R.id.scroll_settings);
+                SettingsAccordion.expandAndScroll(scroll, settingsColumn, openSectionId);
+            });
         }
     }
 
@@ -1244,7 +1251,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
-    private TextView tvRoomStatus;
+    private TextView tvRoomStatus, tvDebugRoomStatus;
     private TextView btnScreensaverToggle;
     private Slider seekScreensaverDelay, seekScreensaverBgDay, seekScreensaverBgNight;
     private Slider seekScreensaverWidth, seekScreensaverHeight;
@@ -1567,27 +1574,29 @@ public class SettingsActivity extends AppCompatActivity {
     private void initDiagnostics() {
         tvRoomStatus = findViewById(R.id.tv_room_status);
         TextView measureButton = findViewById(R.id.btn_room_measure);
+        if (measureButton != null) {
+            TouchGlow.attach(measureButton);
+            measureButton.setOnClickListener(v -> startRoomMeasurement());
+        }
+
+        tvDebugRoomStatus = findViewById(R.id.tv_debug_room_status);
+        TextView debugMeasureButton = findViewById(R.id.btn_debug_room_measure);
+        if (debugMeasureButton != null) {
+            TouchGlow.attach(debugMeasureButton);
+            debugMeasureButton.setOnClickListener(v -> startRoomMeasurement());
+        }
+
         TextView sendButton = findViewById(R.id.btn_room_send);
-        TouchGlow.attach(measureButton);
         TouchGlow.attach(sendButton);
-        measureButton.setOnClickListener(v -> startRoomMeasurement());
         sendButton.setOnClickListener(v -> saveRoomMeasurement());
 
         // Where the microphone is, pointed at rather than typed.
-        //
-        // Four measurements arrived before this existed. The two whose owner said nothing were the
-        // two that failed, both with the microphone sitting on top of one speaker - which from
-        // here is indistinguishable from three dead speakers until the arrival times are compared
-        // by hand. The same car picture the balance control uses, so there is nothing new to learn.
         BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
         if (micSpot != null) {
             micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
                     RoomMeasurement.micSpotFrontRear(this));
             micSpot.setOnBalanceChangeListener((lr, fr) -> RoomMeasurement.setMicSpot(this, lr, fr));
 
-            // Arrows as well as the drag, the way the balance control has them. A finger on a
-            // 190dp car is worth about a tenth of the cabin; somebody who knows the microphone is
-            // just left of centre cannot say that by dragging, and should not have to.
             wireMicPlace();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
@@ -1607,17 +1616,20 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         styleActionButtons();
-        // The address is a link as well as a label: a tester who has never sent anything to a
-        // developer should not have to work out where it goes.
         findViewById(R.id.tv_room_telegram).setOnClickListener(v -> openTelegram());
         showRoomStatus();
     }
 
+    private void setRoomStatusText(String text) {
+        if (tvRoomStatus != null) tvRoomStatus.setText(text);
+        if (tvDebugRoomStatus != null) tvDebugRoomStatus.setText(text);
+    }
+
     private void showRoomStatus() {
-        if (tvRoomStatus == null) return;
-        tvRoomStatus.setText(RoomMeasurement.hasResult(this)
+        String text = RoomMeasurement.hasResult(this)
                 ? getString(R.string.room_measure_done)
-                : getString(R.string.room_measure_nothing));
+                : getString(R.string.room_measure_nothing);
+        setRoomStatusText(text);
     }
 
     private void startRoomMeasurement() {
@@ -1952,7 +1964,7 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.setCanceledOnTouchOutside(false);
 
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
-        tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
+        setRoomStatusText(getString(R.string.room_measure_running, ""));
 
         RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, listeningDistanceCm, new RoomMeasurement.Listener() {
             @Override
@@ -1962,7 +1974,7 @@ public class SettingsActivity extends AppCompatActivity {
                     tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
                     progressBar.setProgress(percent);
                     tvPercent.setText(percent + "%");
-                    tvRoomStatus.setText(getString(R.string.room_measure_running, stageTitle));
+                    setRoomStatusText(getString(R.string.room_measure_running, stageTitle));
                 });
             }
 
@@ -1974,7 +1986,7 @@ public class SettingsActivity extends AppCompatActivity {
                     layoutProgress.setVisibility(View.GONE);
 
                     if (result == null || result.error != null) {
-                        tvRoomStatus.setText(getString(R.string.room_measure_failed));
+                        setRoomStatusText(getString(R.string.room_measure_failed));
                         ThemedDialog.notice(SettingsActivity.this,
                                 getString(R.string.room_measure_failed),
                                 result != null && result.error != null ? result.error : "Unknown error");
@@ -1982,7 +1994,7 @@ public class SettingsActivity extends AppCompatActivity {
                         return;
                     }
 
-                    tvRoomStatus.setText(getString(R.string.room_measure_done));
+                    setRoomStatusText(getString(R.string.room_measure_done));
                     layoutReport.setVisibility(View.VISIBLE);
 
                     // 1. Polarity check
@@ -2211,11 +2223,16 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
         java.io.File dir = RoomMeasurement.outputDir(this);
-        // A timestamp, because a tester measures more than once and the second archive must not
-        // quietly replace the first - the interesting one is often the earlier attempt.
-        String name = "wdsp_room_measurement_"
-                + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
-                        .format(new java.util.Date()) + ".zip";
+        String versionName = "unknown";
+        int versionCode = 0;
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (pi.versionName != null) versionName = pi.versionName;
+            versionCode = pi.versionCode;
+        } catch (Exception ignored) {}
+        String name = String.format(Locale.US, "wdsp_room_measurement_v%s_vc%d_%s.zip",
+                versionName, versionCode,
+                new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()));
 
         Downloads.Pending pending = Downloads.create(this, name, "application/zip");
         if (pending == null) {
@@ -2301,8 +2318,18 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void openTelegram() {
         try {
+            android.content.ClipboardManager clipboard =
+                    (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard != null) {
+                android.content.ClipData clip = android.content.ClipData.newPlainText(
+                        "Telegram Link", "https://t.me/kostyamat_dev/92");
+                clipboard.setPrimaryClip(clip);
+            }
+            Toaster.show(this, getString(R.string.telegram_link_copied));
+        } catch (Throwable ignored) {}
+        try {
             startActivity(new Intent(Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://t.me/kostyamat")));
+                    android.net.Uri.parse("https://t.me/kostyamat_dev/92")));
         } catch (Exception e) {
             Toaster.show(this, getString(R.string.room_measure_telegram));
         }
@@ -3009,6 +3036,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.card_settings_analyzer,
             R.id.card_settings_permissions,
             R.id.card_settings_screensaver,
+            R.id.card_settings_room,
             R.id.card_settings_debug
         };
         for (int id : settingsCards) {
@@ -3124,6 +3152,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void styleActionButtons() {
         styleActionButton(findViewById(R.id.btn_sync_measure));
         styleActionButton(findViewById(R.id.btn_room_measure));
+        styleActionButton(findViewById(R.id.btn_debug_room_measure));
         styleActionButton(findViewById(R.id.btn_room_send));
         styleActionButton(findViewById(R.id.btn_system_report));
         styleActionButton(findViewById(R.id.btn_screen_topology));

@@ -227,6 +227,11 @@ public class AudioSpectrumEngine {
     public static final String PREF_LATENCY_BASE = "spec_latency_base_ms";
     public static final String PREF_RANGE_DB = "spec_range_db";
     public static final String PREF_RADIO_MIC_VISUALIZER = "pref_radio_mic_visualizer";
+    public static final String PREF_SPECTRUM_MODE = "pref_spectrum_mode";
+    public static final String SPECTRUM_MODE_CALC = "calc";
+    public static final String SPECTRUM_MODE_MIC = "mic";
+
+    private String spectrumMode = SPECTRUM_MODE_CALC;
 
     private float nativeAttackMs = 25f;
     private float nativeReleaseMs = 260f;
@@ -300,6 +305,7 @@ public class AudioSpectrumEngine {
         barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
         latencyTrimMs = prefs.getInt(PREF_LATENCY_TRIM, 0);
         nativeRangeDb = prefs.getInt(PREF_RANGE_DB, 60);
+        spectrumMode = prefs.getString(PREF_SPECTRUM_MODE, SPECTRUM_MODE_CALC);
         boolean oldRadioMic = radioMicVisualizerEnabled;
         radioMicVisualizerEnabled = prefs.getBoolean(PREF_RADIO_MIC_VISUALIZER, true);
         int storedBase = prefs.getInt(PREF_LATENCY_BASE, -1);
@@ -309,6 +315,19 @@ public class AudioSpectrumEngine {
         if (oldRadioMic != radioMicVisualizerEnabled) {
             checkSourceState();
         }
+    }
+
+    public String getSpectrumMode() {
+        return spectrumMode;
+    }
+
+    public synchronized void setSpectrumMode(String mode) {
+        this.spectrumMode = mode;
+        if (appContext != null) {
+            com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(appContext).edit()
+                    .putString(PREF_SPECTRUM_MODE, mode).apply();
+        }
+        checkSourceState();
     }
 
     public boolean isRadioMicVisualizerEnabled() {
@@ -1196,22 +1215,51 @@ public class AudioSpectrumEngine {
     public synchronized void checkSourceState() {
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
+        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        boolean hasMicCal = RoomMeasurement.hasMicCompensation(appContext);
+
         if (isRadio) {
-            if (visualizer != null || (!isRadioCaptureActive() && radioMicVisualizerEnabled)) {
-                Log.i(TAG, "Source is Radio - switching to mic capture pipeline");
-                startInternal(currentSessionId);
+            boolean shouldRunMic = (micMode || radioMicVisualizerEnabled) && hasMicCal;
+            if (shouldRunMic) {
+                if (visualizer != null || !isRadioCaptureActive()) {
+                    Log.i(TAG, "Source is Radio - switching to calibrated mic capture pipeline");
+                    startInternal(currentSessionId);
+                }
+            } else {
+                if (isRadioCaptureActive() || visualizer != null) {
+                    Log.i(TAG, "Source is Radio (mic uncalibrated or mode calc) - stopping active capture");
+                    stopRadioMicCapture();
+                    stopNativeCapture();
+                    if (visualizer != null) {
+                        try {
+                            visualizer.setEnabled(false);
+                            visualizer.release();
+                        } catch (Throwable ignored) {}
+                        visualizer = null;
+                    }
+                }
             }
         } else {
-            if (isRadioCaptureActive()) {
-                Log.i(TAG, "Source switched away from Radio - restoring AudioFlinger capture");
-                startInternal(currentSessionId);
-                requestResolve("source switched from radio");
+            if (micMode && hasMicCal) {
+                if (!isRadioCaptureActive()) {
+                    Log.i(TAG, "Spectrum mode is MIC - switching to mic capture pipeline");
+                    startInternal(currentSessionId);
+                }
+            } else {
+                if (isRadioCaptureActive()) {
+                    Log.i(TAG, "Source switched to AudioFlinger - restoring PCM capture");
+                    startInternal(currentSessionId);
+                    requestResolve("source switched to audioflinger");
+                }
             }
         }
     }
 
     private void startInternal(int sessionId) {
         boolean isRadio = appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
+        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        boolean hasMicCal = appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+
         if (isRadio) {
             if (visualizer != null) {
                 try {
@@ -1220,12 +1268,24 @@ public class AudioSpectrumEngine {
                 } catch (Throwable ignored) {}
                 visualizer = null;
             }
-            if (radioMicVisualizerEnabled) {
+            if ((micMode || radioMicVisualizerEnabled) && hasMicCal) {
                 startRadioMicPipeline();
             } else {
                 stopRadioMicCapture();
                 stopNativeCapture();
             }
+            return;
+        }
+
+        if (micMode && hasMicCal) {
+            if (visualizer != null) {
+                try {
+                    visualizer.setEnabled(false);
+                    visualizer.release();
+                } catch (Throwable ignored) {}
+                visualizer = null;
+            }
+            startRadioMicPipeline();
             return;
         }
 

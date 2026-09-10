@@ -107,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
+    private TextView btnSpectrumCalc, btnSpectrumMic;
+    private static boolean sPromptedMicCalibration = false;
 
     private Slider seekSubGain;
     private AutoCompleteTextView spinnerSubFreq;
@@ -470,6 +472,8 @@ public class MainActivity extends AppCompatActivity {
         updateVisualizer();
         applyAppTheme();
         checkAndStartSpectrumAnalyzer();
+        updateSpectrumModeUi();
+        checkRadioMicCalibrationInvite();
     }
 
     @Override
@@ -748,6 +752,13 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
 
+            // Spectrum Mode toggle
+            updateSpectrumModeUi();
+            TextView lblSpec = findViewById(R.id.lbl_spectrum_mode);
+            if (lblSpec != null) {
+                lblSpec.setTextColor(secondaryText);
+            }
+
             // Spinners
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText, primaryText);
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText, primaryText);
@@ -921,6 +932,75 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setupSpectrumModeToggle() {
+        btnSpectrumCalc = findViewById(R.id.btn_spectrum_calc);
+        btnSpectrumMic = findViewById(R.id.btn_spectrum_mic);
+        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumCalc);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumMic);
+
+        btnSpectrumCalc.setOnClickListener(v -> {
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            updateSpectrumModeUi();
+        });
+
+        btnSpectrumMic.setOnClickListener(v -> {
+            if (!RoomMeasurement.hasMicCompensation(this)) {
+                showMicCalibrationInviteDialog();
+                return;
+            }
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
+            updateSpectrumModeUi();
+        });
+
+        updateSpectrumModeUi();
+    }
+
+    private void updateSpectrumModeUi() {
+        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        boolean isNight = ThemeManager.isNight(this);
+        int accent = ThemeManager.accent(this, isNight);
+        int border = ThemeManager.panelBorder(this, isNight);
+        int textPrimary = ThemeManager.textPrimary(this, isNight);
+        int onAccentColor = ThemeManager.onAccent(this, isNight);
+        int substrate = ThemeManager.dockSubstrateColor(this, isNight);
+
+        String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
+        boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode);
+
+        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, !isMic, isNight, 10f, accent, border));
+        int fgCalc = !isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
+        btnSpectrumCalc.setTextColor(fgCalc);
+
+        btnSpectrumMic.setBackground(ThemeManager.pillDrawable(this, isMic, isNight, 10f, accent, border));
+        int fgMic = isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
+        btnSpectrumMic.setTextColor(fgMic);
+    }
+
+    private void showMicCalibrationInviteDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.spectrum_mic_uncalibrated_title)
+                .setMessage(R.string.spectrum_mic_uncalibrated_msg)
+                .setPositiveButton(R.string.spectrum_calibrate_now, (dialog, which) -> {
+                    Intent intent = new Intent(this, SettingsActivity.class);
+                    intent.putExtra("open_section_id", R.id.label_room_section);
+                    startActivity(intent);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void checkRadioMicCalibrationInvite() {
+        if (sPromptedMicCalibration) return;
+        if (!RoomMeasurement.hasMicCompensation(this)) {
+            if (NowPlaying.getInstance(this).isRadioSource()) {
+                sPromptedMicCalibration = true;
+                showMicCalibrationInviteDialog();
+            }
+        }
+    }
+
     private void SelectTab() {
         SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
@@ -970,6 +1050,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);
         tvPowerDb = findViewById(R.id.tv_pwr_db);
+        setupSpectrumModeToggle();
         setupNavigation();
     }
 
