@@ -66,6 +66,10 @@ public class McuService extends Service implements LocationListener {
     private boolean isPolling = false;
     private int lastVolumeRead = -1;
     private int lastAppliedVolume = -1;
+    private long lastUserVolumeActionMs = 0;
+    private static final long GALA_USER_GRACE_PERIOD_MS = 1200;
+    private long lastGalaCommandTimeMs = 0;
+    private int lastGalaCommandVol = -1;
     private String lastPlayerSource = null;
     private Method getPropMethod;
     private Object mcuManagerInstance;
@@ -1033,52 +1037,62 @@ public class McuService extends Service implements LocationListener {
         // The offset is not trusted straight after a source change: it is not cleared when sources
         // switch, so for a moment it belongs to the source we just left, and subtracting it would
         // put the base below where it belongs. There the old behaviour is right, and is kept.
-        boolean offsetIsOurs = currentAppliedOffset > 0
-                && System.currentTimeMillis() - lastSourceChangeMs > OFFSET_TRUST_DELAY_MS;
-        int applied = offsetIsOurs ? currentAppliedOffset : 0;
+        long now = System.currentTimeMillis();
+        lastUserVolumeActionMs = now;
+        lastGalaCommandVol = -1;
 
-        baseStandstillVolume = Math.max(0, live - applied);
-        currentAppliedOffset = applied;   // the hardware still carries it; base + offset = live
-        pendingTargetOffset  = applied;   // no fade is owed, GALA recomputes on the next poll
-        lastGalaTier         = applied;
-        tierChangeTimestamp  = System.currentTimeMillis();
-        lastReadHardwareVol  = live;
-        lastAppliedVolume    = live;
+        float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+        int minSpeed = cachedGalaMinV * 5;
+        int speedIncrement = Math.max(1, cachedGalaInc + 5);
+        int rawOffset = 0;
+        if (isGalaEnabled() && speed >= minSpeed) {
+            rawOffset = Math.min((int) ((speed - minSpeed) / speedIncrement), cachedGalaMaxAdj);
+        }
+        boolean isGalaActiveAtSpeed = isGalaEnabled() && (speed >= minSpeed) && (rawOffset > 0)
+                && (now - lastSourceChangeMs > OFFSET_TRUST_DELAY_MS);
+
+        if (isGalaActiveAtSpeed && baseStandstillVolume >= 0) {
+            if (live >= baseStandstillVolume) {
+                // User trimmed boost at speed: base preserved, boost adjusted directly
+                int newOffset = live - baseStandstillVolume;
+                currentAppliedOffset = newOffset;
+                pendingTargetOffset  = newOffset;
+                lastGalaTier         = rawOffset;
+                tierChangeTimestamp  = now;
+                lastReadHardwareVol  = live;
+                lastAppliedVolume    = live;
+                Log.i(TAG, "AUDIO_STATE_STABLE (at speed): live=" + live
+                        + " >= Base(" + baseStandstillVolume + ") -> New Boost Offset=" + newOffset);
+            } else {
+                // User forced volume below standstill base: explicitly lower the base, annul boost
+                baseStandstillVolume = live;
+                currentAppliedOffset = 0;
+                pendingTargetOffset  = 0;
+                lastGalaTier         = rawOffset;
+                tierChangeTimestamp  = now;
+                lastReadHardwareVol  = live;
+                lastAppliedVolume    = live;
+                carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
+                Log.i(TAG, "AUDIO_STATE_STABLE (quiet override): live=" + live
+                        + " < old Base -> New Base=" + baseStandstillVolume + ", offset=0");
+            }
+        } else {
+            // At standstill / below threshold / GALA off
+            baseStandstillVolume = live;
+            currentAppliedOffset = 0;
+            pendingTargetOffset  = 0;
+            lastGalaTier         = 0;
+            tierChangeTimestamp  = now;
+            lastReadHardwareVol  = live;
+            lastAppliedVolume    = live;
+            carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
+            Log.i(TAG, "AUDIO_STATE_STABLE (standstill/idle): live=" + live + " -> New Base=" + baseStandstillVolume);
+        }
 
         applyVolumeDependentSettings(live);
 
-        // 🔴 Carry it here too, and not only from the poll's manual-adjustment branch.
-        //
-        // Measured on the unit the first minute this ran: the level was wound 6 -> 1 on the radio,
-        // five announces arrived, and only ONE of them reached media. It ended at media 2 against
-        // radio 1 - a quiet one-step disagreement that nobody would trace back to this.
-        //
-        // The cause is this method: re-baselining sets lastReadHardwareVol and lastAppliedVolume,
-        // which is exactly what the poll's detector compares against to decide that a person moved
-        // the volume. So the handler silences the detector, and a carry only happens on a poll
-        // whose timing slips between two announces.
-        //
-        // The right reading is simpler anyway: an announce from the radio *means* the level was
-        // just set deliberately. wDSP owns propagation now, so this is precisely where it belongs -
-        // the poll's branch stays for levels changed on a source the radio never announces.
-        //
-        // 🔴 baseStandstillVolume, not live. They are the same number only while GALA has no boost
-        // applied, which is every test done at a standstill - and different by exactly the boost
-        // as soon as the car moves. Carrying the live level would send the boost into the source
-        // that is not playing, where nothing recomputes it and nothing corrects it: it would sit
-        // there until somebody switched over and found it loud. The whole point of the fix above
-        // is that the boost does not travel, and passing live here would have undone it one line
-        // later.
-        carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
-
-        // 🔴 at is printed on every branch, accepted included. It was missing here, and the gap
-        // showed the moment two applications had to agree on what they had sent each other: the
-        // radio said its reply replayed the stored signal unchanged, and nothing in this log could
-        // confirm or contradict it. The log line is the only evidence that survives on this unit -
-        // its logcat buffer rotates in about six minutes - so anything both sides argue about has
-        // to be in it.
         Log.i(TAG, "AUDIO_STATE_STABLE seq=" + seq + " at=" + at + " source=" + source
-                + " channel=" + channel + " -> base=" + live + ", offset reset, EQ applied once");
+                + " channel=" + channel + " -> base=" + baseStandstillVolume + ", offset=" + currentAppliedOffset + ", EQ applied once");
     }
 
     // True/false state actually used by GALA processing - the shared global switch when
@@ -1255,9 +1269,9 @@ public class McuService extends Service implements LocationListener {
 
         // 2. PRE-CALCULATE RAW OFFSET: What should the GALA boost be at the current speed?
         int rawOffset = 0;
+        int minSpeed = cachedGalaMinV * 5;
         if (isGalaEnabled()) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
-            int minSpeed = cachedGalaMinV * 5;
             if (speed >= minSpeed) {
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
@@ -1288,6 +1302,8 @@ public class McuService extends Service implements LocationListener {
             Log.i(TAG, "GALA is switched off, so the simulated speed changes nothing");
         }
 
+        long now = System.currentTimeMillis();
+
         // 3. THE UNMUTE RECOVERY: If we just came out of a muted/zero state,
         // skip fade & timer — jump directly to the correct offset.
         if (wasMuted) {
@@ -1295,17 +1311,20 @@ public class McuService extends Service implements LocationListener {
             currentAppliedOffset = rawOffset;
             pendingTargetOffset  = rawOffset;
             lastGalaTier         = rawOffset;
-            tierChangeTimestamp  = System.currentTimeMillis();
+            tierChangeTimestamp  = now;
             if (baseStandstillVolume != -1 && rawOffset != 0) {
                 int targetVol = Math.min(32, baseStandstillVolume + rawOffset);
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume   = targetVol;
                 lastReadHardwareVol = targetVol; // set Tracking-Vars to targetVol. No wrong Manual-Adjust in next cycle
+                lastGalaCommandVol  = targetVol;
+                lastGalaCommandTimeMs = now;
                 Log.d(TAG, "Unmuted: Restoring Base(" + baseStandstillVolume + ") + Offset(" + rawOffset + ") = " + targetVol);
                 return; // Exit this poll to let the hardware stabilize
             }
             lastReadHardwareVol = hardwareVol;
             lastAppliedVolume   = hardwareVol;
+            lastGalaCommandVol  = -1;
         }
 
         // 4. INITIALIZE BASE: If this is the first run after service start.
@@ -1320,61 +1339,87 @@ public class McuService extends Service implements LocationListener {
             currentAppliedOffset = initApplied;
             pendingTargetOffset  = rawOffset;
             lastGalaTier         = rawOffset;
-            tierChangeTimestamp  = System.currentTimeMillis();
+            tierChangeTimestamp  = now;
         }
 
-        // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
-        // We detect this because the hardware volume changed since the last poll, and not by us.
-        //
-        // Both halves matter. lastReadHardwareVol must hold what the hardware REPORTED last time,
-        // never what we told it to be: the platform keeps its own volume curve per source and
-        // does not always hand back the number it was given. Storing our own command there made
-        // the first test true for ever, so every poll counted as a person turning the knob, and
-        // re-based GALA to whatever was already playing. Base plus offset then equals the current
-        // volume by construction - a fixed point - and the volume never moves again. That is the
-        // reported failure: GALA dies after one press of volume-down while music plays, and only
-        // then, because only then is anything writing volumes that read back differently.
-        if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
-            baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
-            if (hardwareVol < currentAppliedOffset) {
-                baseStandstillVolume = 0;
-            }
-            Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
-            // Only here, and deliberately: this is the one branch that means a person moved the
-            // volume. GALA's own steps must never travel to the other source - see the note on
-            // carryBaseToOtherSource about the boost compounding.
-            //
-            // 🔴 And never on the poll where the source itself changed. currentAppliedOffset is not
-            // cleared when sources switch, so on that one cycle the branch above subtracts an
-            // offset belonging to the source we just left from a volume the platform has just
-            // loaded for the source we arrived at - and the base comes out low by exactly that
-            // offset. GALA corrects itself over the next polls, so it was harmless while the
-            // number stayed here. It stops being harmless the moment it is written into another
-            // source: that one is not playing, nothing corrects it, and the error waits there
-            // until somebody switches to it.
-            if (!sourceChangedThisPoll) {
-                carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+        // 5. MANUAL ADJUSTMENT DETECTION:
+        // Acknowledge GALA's command if hardware caught up to it
+        if (lastGalaCommandVol != -1) {
+            if (hardwareVol == lastGalaCommandVol) {
+                lastGalaCommandVol = -1;
+                lastAppliedVolume = hardwareVol;
+            } else if (now - lastGalaCommandTimeMs > 350) {
+                lastGalaCommandVol = -1;
             }
         }
+
+        boolean galaCommandPending = (lastGalaCommandVol != -1 && (now - lastGalaCommandTimeMs <= 350));
+        boolean isLaggingEcho = galaCommandPending && (hardwareVol == lastReadHardwareVol);
+        boolean isGalaEcho = (hardwareVol == lastAppliedVolume);
+
+        // Detect user manual adjustment:
+        // A change is from the user if it is neither GALA's command echo nor pre-command hardware lag.
+        // During an active grace period, any deviation from lastAppliedVolume also indicates continued user adjustment.
+        boolean isUserAdjustment = false;
+        if (!isGalaEcho && !isLaggingEcho) {
+            isUserAdjustment = true;
+        } else if (now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS && hardwareVol != lastAppliedVolume) {
+            isUserAdjustment = true;
+        }
+
+        if (isUserAdjustment) {
+            lastUserVolumeActionMs = now;
+            lastGalaCommandVol = -1; // user overrides any pending command
+            lastAppliedVolume = hardwareVol;
+
+            boolean isGalaActiveAtSpeed = isGalaEnabled() && (speed >= minSpeed) && (rawOffset > 0);
+
+            if (isGalaActiveAtSpeed && baseStandstillVolume >= 0) {
+                if (hardwareVol >= baseStandstillVolume) {
+                    // Sub-case A: User is adjusting within or above the standstill base.
+                    // The driver is trimming the BOOST, NOT the standstill base!
+                    // baseStandstillVolume remains unchanged.
+                    int newOffset = hardwareVol - baseStandstillVolume;
+                    currentAppliedOffset = newOffset;
+                    pendingTargetOffset  = newOffset;
+                    lastGalaTier         = rawOffset;
+                    tierChangeTimestamp  = now;
+                    Log.d(TAG, "Manual Adjust (at speed): Vol=" + hardwareVol
+                            + " >= Base(" + baseStandstillVolume + ") -> New Boost Offset=" + newOffset);
+                } else {
+                    // Sub-case B: User turned volume below standstill base (wants it quiet).
+                    // This explicitly sets a new lower standstill base!
+                    baseStandstillVolume = hardwareVol;
+                    currentAppliedOffset = 0;
+                    pendingTargetOffset  = 0;
+                    lastGalaTier         = rawOffset;
+                    tierChangeTimestamp  = now;
+                    Log.d(TAG, "Manual Adjust (quiet override): Vol=" + hardwareVol
+                            + " < old Base -> New Base=" + baseStandstillVolume + ", offset=0");
+                    if (!sourceChangedThisPoll) {
+                        carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+                    }
+                }
+            } else {
+                // Sub-case C: At standstill, or speed < minSpeed, or GALA disabled.
+                baseStandstillVolume = hardwareVol;
+                currentAppliedOffset = 0;
+                pendingTargetOffset  = 0;
+                Log.d(TAG, "Manual Adjust (standstill/idle): New Base=" + baseStandstillVolume);
+                if (!sourceChangedThisPoll) {
+                    carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+                }
+            }
+        }
+
+        boolean userAdjusting = (now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS);
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
-        //
-        // 🔴 isGalaEnabled(), not cachedGalaEn. This was the raw per-preset field, and it was the
-        // only place left reading it directly - step 2 above already asks properly. With the
-        // global switch on, the two disagreed: a preset created while global mode was on never has
-        // "_gala_enabled" written at all, so it read false while the global flag read true. Step 2
-        // then computed a correct offset, logged it, and step 6 took the else branch and faded that
-        // offset straight back to zero. GALA looked switched on, the log showed it working, and the
-        // volume never moved.
         if (isGalaEnabled()) {
-            long now = System.currentTimeMillis();
-
             // 6a. HOLD-TIMER: Has the tier changed?
             if (rawOffset != lastGalaTier) {
-                // New tier seen — record the timestamp and remember it
                 lastGalaTier        = rawOffset;
                 tierChangeTimestamp = now;
-                // pendingTargetOffset stays at the OLD value until the hold expires
             }
 
             // 6b. Only release the new target after it has been stable for cachedGalaHoldMs
@@ -1384,53 +1429,36 @@ public class McuService extends Service implements LocationListener {
 
             // 6c. FADE: move currentAppliedOffset one step towards pendingTargetOffset
             if (currentAppliedOffset < 0) currentAppliedOffset = 0; // first-run safety
-            if (currentAppliedOffset != pendingTargetOffset) {
+            if (!userAdjusting && currentAppliedOffset != pendingTargetOffset) {
                 long fadeDelay = Math.max(0, cachedGalaFadeDelayMs);
                 if (now - lastFadeStepTime >= fadeDelay) {
                     currentAppliedOffset += (currentAppliedOffset < pendingTargetOffset) ? 1 : -1;
                     lastFadeStepTime = now;
                     Log.v(TAG, "GALA Fade: appliedOffset=" + currentAppliedOffset + " target=" + pendingTargetOffset);
                 }
+            } else if (userAdjusting) {
+                // Pause fade steps while user is adjusting volume
+                lastFadeStepTime = now;
             }
 
             // 6d. Apply the faded offset to the hardware
-            //
-            // 🔴 WITH NOTHING TO ADD, WRITE NOTHING. This block used to write `base + offset`
-            // whenever it differed from the live volume, offset zero included - and an offset of
-            // zero means GALA is asking for no change at all, so the only thing such a write can
-            // ever do is overrule the person.
-            //
-            // 📻 Measured on the unit 08.09.2026, standing still, GALA on, offset 0, base 4:
-            //
-            //   00:56:37.228  VOLUME_CHANGED pushed=5   (the knob, moved by a person)
-            //   00:56:37.307  GALA Update: vol=4 -> 4 (offset=0)
-            //   00:56:37.319  VOLUME_CHANGED pushed=4   (their 5 gone, 80 ms later)
-            //
-            // From the driver's seat that is "the encoder does not work": the level springs back
-            // before the hand leaves it. Whether step 5 catches the turn first is a race - the
-            // announce handler can mark the value as our own echo, step 5 then skips, and this
-            // wrote the stale base over the new one. Sometimes the knob took, sometimes it did
-            // not, which is worse than never working.
-            //
-            // 🔑 The original wDSP never wrote the volume at all - it read the hardware and
-            // followed it. GALA is the one deliberate exception, and it is an exception only
-            // WHILE IT IS BOOSTING. At zero it must behave like the original: the live volume is
-            // the base, by definition, because there is no boost to subtract.
             int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
             if (currentAppliedOffset == 0) {
-                // Follow, do not drive. This also makes a knob turn authoritative without
-                // depending on step 5 winning its race.
                 if (hardwareVol != baseStandstillVolume) {
                     Log.v(TAG, "GALA idle: following the volume to " + hardwareVol
                             + " (base was " + baseStandstillVolume + ")");
                 }
                 baseStandstillVolume = hardwareVol;
                 lastAppliedVolume    = hardwareVol;
-            } else if (hardwareVol != targetVol) {
+            } else if (!userAdjusting && hardwareVol != targetVol) {
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
+                lastGalaCommandVol = targetVol;
+                lastGalaCommandTimeMs = now;
                 hardwareVol = targetVol;
                 Log.v(TAG, "GALA Update: vol=" + lastReadHardwareVol + " -> " + targetVol + " (offset=" + currentAppliedOffset + ")");
+            } else if (userAdjusting) {
+                lastAppliedVolume = hardwareVol;
             }
 
             if (isUiVisible) {
@@ -1445,18 +1473,21 @@ public class McuService extends Service implements LocationListener {
             if (currentAppliedOffset < 0) currentAppliedOffset = 0;
 
             if (currentAppliedOffset > 0) {
-                long now = System.currentTimeMillis();
                 long fadeDelay = Math.max(0, cachedGalaFadeDelayMs);
-                if (now - lastFadeStepTime >= fadeDelay) {
+                if (!userAdjusting && now - lastFadeStepTime >= fadeDelay) {
                     currentAppliedOffset--;
                     lastFadeStepTime = now;
                     Log.v(TAG, "GALA Fade-Out (disabled): appliedOffset=" + currentAppliedOffset);
                 }
                 int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
-                if (hardwareVol != targetVol) {
+                if (!userAdjusting && hardwareVol != targetVol) {
                     VolumeHelper.setVolume(targetVol);
                     lastAppliedVolume = targetVol;
+                    lastGalaCommandVol = targetVol;
+                    lastGalaCommandTimeMs = now;
                     hardwareVol = targetVol;
+                } else if (userAdjusting) {
+                    lastAppliedVolume = hardwareVol;
                 }
             } else {
                 currentAppliedOffset = 0;
