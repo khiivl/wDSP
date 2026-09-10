@@ -399,6 +399,9 @@
     <string name="room_mic_place_dash">Dashboard</string>
     <string name="room_mic_place_pillar_top">A-pillar, top</string>
     <string name="room_mic_place_pillar_bottom">A-pillar, bottom</string>
+    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
+    <string name="room_mic_place_armrest">Center armrest / console</string>
     <!-- Status Bar Visualizer Styles & FireLamp EffectVU Additions -->
     <string name="status_bar_visualizer_style">Visualizer Style</string>
     <string name="status_bar_style_classic">Classic</string>

@@ -387,6 +387,9 @@
     <string name="room_mic_place_dash">Торпедо</string>
     <string name="room_mic_place_pillar_top">Стійка лобового, вгорі</string>
     <string name="room_mic_place_pillar_bottom">Стійка лобового, внизу</string>
+    <string name="room_mic_place_headunit">Вбудований мікрофон магнітоли (отвір на панелі)</string>
+    <string name="room_mic_place_headrest">Підголівник водія (рівень вух)</string>
+    <string name="room_mic_place_armrest">Центральний підлокітник / консоль</string>
     <!-- Стилі візуалізатора статусного рядка та палітри FireLamp EffectVU -->
     <string name="status_bar_visualizer_style">Стиль візуалізації</string>
     <string name="status_bar_style_classic">Класика</string>
