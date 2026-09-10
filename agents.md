@@ -273,6 +273,8 @@ Fully localized in 30 languages with zero abbreviations in headers/labels:
 
 ### Покроковий план робіт:
 - **Етап 1**: GCC-PHAT у C++ DSP та верифікація затримок TDOA.
-- **Етап 2**: Cabin Gain Anchor та калібрування мікрофона.
+- **Етап 2**: Замір фонового шуму (Noise Floor у фазі тиші), спектральне віднімання $P_{clean} = P_{sweep} - P_{noise}$, Cabin Gain Anchor та калібрування мікрофона.
 - **Етап 3**: Синтез Auto-EQ Harman та мапінг BU32107.
 - **Етап 4**: UI-інтеграція у `SettingsActivity` та тестування на залізі UIS7862.
+- **Бонус**: Миттєве застосування кривої компенсації мікрофона в `Analyzer.cpp` (`setDspCurve`) для студійного спектру FM-радіо.
+
