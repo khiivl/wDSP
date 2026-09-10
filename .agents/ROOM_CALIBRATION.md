@@ -436,4 +436,27 @@ same minute, because it is read by somebody who was never in that car and cannot
      ```
    - Завдяки цьому візуалізатор радіо відображає студійно-рівну динаміку треків, усуваючи апаратний завал мікрофона на краях діапазону.
 
+---
+
+### ✅ Реалізовано в коді (10.09.2026 15:25) *(✍️ Antigravity & Kostyamat)*:
+
+1. **C++ Ядро (`sweep.h`, `sweep.cpp`)**:
+   - `spectrum16Db`: 16-смуговий розрахунок потужності з Hann-вікном.
+   - `subtractNoise`: спектральне віднімання фонового шуму $P_{clean} = \max(P_{sweep} - P_{noise}, 10^{-12})$ та розрахунок SNR.
+   - `estimateMicCompensation`: сліпе калібрування з моделлю cabin gain (+12 дБ/окт нижче 80 Гц до +15 дБ бусту) та ВЧ компенсацією (>8 кГц до +8 дБ).
+   - `gccPhatDelay`: розрахунок крос-кореляційних затримок TDOA з параболічною субсемплерною інтерполяцією піку.
+2. **JNI міст (`wdsp_jni.cpp`, `NativeSweep.java`)**:
+   - Експортовано нативні методи `nativeNoiseFloor`, `nativeSubtractNoise`, `nativeEstimateMicCompensation`, `nativeDeconvolve`, `nativeGccPhatDelay`.
+3. **Java конвеєр (`RoomMeasurement.java`)**:
+   - Пауза активного медіаплеєра перед стартом свіпу (`KeyEvent.KEYCODE_MEDIA_PAUSE`).
+   - Фіксація апаратної гучності на 16 од. (`VolumeHelper.setVolume(16)`) із збереженням попереднього значення та гарантованим поверненням у `finally` і `applySaved`.
+   - Тимчасовий перехід у Flat пресет (0 дБ EQ, вимкнені затримки/тонкомпенсація) та відновлення пресету користувача після заміру.
+   - `LEAD_SECONDS = 1.0f` для захоплення фонового шуму перед першим імпульсом.
+   - Спектральне віднімання шуму та обчислення SNR для кожного з 4 каналів.
+   - Збереження отриманої кривої мікрофона у `pref_mic_compensation`.
+   - Зв'язка з `AudioSpectrumEngine`: передача кривої в `analyzer.setDspCurve()` для мікрофонного візуалізатора радіо.
+4. **UI діалог (`SettingsActivity.java`, `strings.xml`)**:
+   - Попереджувальний діалог `confirmRoomMeasurement()` перед стартом свіпу із поясненням паузи медіа, гучності 16, Flat-режиму та тиші в салоні.
+
+
 
