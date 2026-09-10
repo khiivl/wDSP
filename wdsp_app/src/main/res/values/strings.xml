@@ -317,10 +317,21 @@
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ &amp; Acoustic Calibration</string>
-    <string name="room_wizard_setup_desc">The wizard plays calibrated sweeps through each speaker to measure arrival times, reflections, and midbass roll-off, then synthesizes an optimal 16-band Harman Auto-EQ curve.</string>
+    <string name="room_wizard_setup_desc">The wizard plays calibrated sweeps through each speaker to measure arrival times, reflections, and midbass roll-off, then synthesizes an optimal 16-band Auto-EQ curve matching your preferred sound profile.</string>
     <string name="room_wizard_subwoofer_title">Subwoofer Configuration</string>
     <string name="room_wizard_subwoofer_check">Audio system includes a Subwoofer</string>
     <string name="room_wizard_subwoofer_desc">With a subwoofer, door midbasses are protected by HPF cutoff at their acoustic roll-off point, and sub-bass is routed to the subwoofer. Without a subwoofer, midbasses play full-range with infrasonic protection.</string>
+    <string name="room_wizard_target_title">Target Sound Profile</string>
+    <string name="room_wizard_target_harman">Harman Reference (In-Car Standard)</string>
+    <string name="room_wizard_target_harman_desc">Warm musical sub-bass, smooth highs. Golden industry standard.</string>
+    <string name="room_wizard_target_dolby">Dolby Atmos 3D Cinema</string>
+    <string name="room_wizard_target_dolby_desc">Deep cinematic sub-bass, crystal vocal presence + hardware 3D surround.</string>
+    <string name="room_wizard_target_bass">Club / Bass Heavy</string>
+    <string name="room_wizard_target_bass_desc">Energetic punch and sub-bass lift for electronic &amp; hip-hop tracks.</string>
+    <string name="room_wizard_target_vocal">Vocal / Podcast</string>
+    <string name="room_wizard_target_vocal_desc">Maximum dialogue intelligibility, cut rumble and speech masking.</string>
+    <string name="room_wizard_target_flat">Studio Flat (Acoustic Linear)</string>
+    <string name="room_wizard_target_flat_desc">Neutral studio monitor response without coloration or artificial boost.</string>
     <string name="room_wizard_soundstage_title">Soundstage Focus (Delays)</string>
     <string name="room_wizard_stage_driver">Driver Focus</string>
     <string name="room_wizard_stage_driver_desc">Time alignment focused on driver (microphone TDOA).</string>
@@ -342,11 +353,11 @@
     <string name="room_wizard_crossover_no_sub">Subwoofer: Not installed (full range / infrasonic protection)</string>
     <string name="room_wizard_delays_title">Time Alignment Delays</string>
     <string name="room_wizard_delays_format">FL: %1$.1f ms (%2$d) | FR: %3$.1f ms (%4$d)\nRL: %5$.1f ms (%6$d) | RR: %7$.1f ms (%8$d)</string>
-    <string name="room_wizard_autoeq_title">Synthesized Auto-EQ Harman Curve (16 bands)</string>
+    <string name="room_wizard_autoeq_title">Synthesized Auto-EQ (%1$s, 16 bands)</string>
     <string name="room_wizard_btn_apply">Apply Auto-EQ</string>
     <string name="room_wizard_btn_save">Save Archive (.zip)</string>
     <string name="room_wizard_btn_close">Close</string>
-    <string name="room_wizard_applied_toast">Preset \"AutoEQ Harman\" applied and activated!</string>
+    <string name="room_wizard_applied_toast">Preset \"%1$s\" applied and activated!</string>
     <string name="toast_saved_to">Saved to %1$s</string>
     <string name="freq_off">Off</string>
     <string name="system_report_label">System report</string>

@@ -293,10 +293,21 @@
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ та калібрування акустики</string>
-    <string name="room_wizard_setup_desc">Майстер відтворить калібровані свіпи через кожен динамік, визначить час прибуття звуку, спад віддачі мідбасів, відбиття салону та синтезує оптимальну 16-смугову криву Auto-EQ Harman.</string>
+    <string name="room_wizard_setup_desc">Майстер відтворить калібровані свіпи через кожен динамік, визначить час прибуття звуку, спад віддачі мідбасів, відбиття салону та синтезує оптимальну 16-смугову криву Auto-EQ під обраний профіль звучання.</string>
     <string name="room_wizard_subwoofer_title">Конфігурація сабвуфера</string>
     <string name="room_wizard_subwoofer_check">В аудіосистемі встановлено сабвуфер</string>
     <string name="room_wizard_subwoofer_desc">З сабвуфером дверні мідбаси захищаються зрізом HPF на частоті спаду їхньої віддачі, а бас нижче передається на сабвуфер. Без сабвуфера мідбаси грають максимально низько із захистом від інфразвуку.</string>
+    <string name="room_wizard_target_title">Цільова крива звучання</string>
+    <string name="room_wizard_target_harman">Harman Reference (еталон автозвуку)</string>
+    <string name="room_wizard_target_harman_desc">Приємний теплий суббас та комфортні ВЧ. Золотий стандарт.</string>
+    <string name="room_wizard_target_dolby">Dolby Atmos 3D Cinema (кінотеатр)</string>
+    <string name="room_wizard_target_dolby_desc">Глибокий бас, розбірливий голос + апаратний об\'ємний 3D-звук.</string>
+    <string name="room_wizard_target_bass">Club / Bass Heavy (клубний драйв)</string>
+    <string name="room_wizard_target_bass_desc">Потужний панч та сабвуфер для електронної музики й хіп-хопу.</string>
+    <string name="room_wizard_target_vocal">Vocal / Podcast (голос та аудіокниги)</string>
+    <string name="room_wizard_target_vocal_desc">Підкреслена чіткість мовлення без бубніння й низькочастотного гулу.</string>
+    <string name="room_wizard_target_flat">Studio Flat (студійна лінійна)</string>
+    <string name="room_wizard_target_flat_desc">Максимально точне та аналітичне студійне відтворення без забарвлення.</string>
     <string name="room_wizard_soundstage_title">Фокусування сцени (затримки)</string>
     <string name="room_wizard_stage_driver">Сцена на водія</string>
     <string name="room_wizard_stage_driver_desc">Часове вирівнювання за мікрофоном (TDOA): звук досягає водія одночасно.</string>
@@ -318,11 +329,11 @@
     <string name="room_wizard_crossover_no_sub">Сабвуфер: Не встановлено (повний діапазон / захист інфразвуку)</string>
     <string name="room_wizard_delays_title">Часові затримки каналів</string>
     <string name="room_wizard_delays_format">ПЛ: %1$.1f мс (%2$d) | ПП: %3$.1f мс (%4$d)\nЗЛ: %5$.1f мс (%6$d) | ЗП: %7$.1f мс (%8$d)</string>
-    <string name="room_wizard_autoeq_title">Синтезована крива Auto-EQ Harman (16 смуг)</string>
+    <string name="room_wizard_autoeq_title">Синтезована крива Auto-EQ (%1$s, 16 смуг)</string>
     <string name="room_wizard_btn_apply">Застосувати Auto-EQ</string>
     <string name="room_wizard_btn_save">Зберегти архів (.zip)</string>
     <string name="room_wizard_btn_close">Закрити</string>
-    <string name="room_wizard_applied_toast">Пресет \"AutoEQ Harman\" успішно застосовано та активовано!</string>
+    <string name="room_wizard_applied_toast">Пресет \"%1$s\" успішно застосовано та активовано!</string>
     <string name="toast_saved_to">Збережено в %1$s</string>
     <string name="lbl_px_fmt">%1$d пкс</string>
     <string name="status_bar_alpha">Непрозорість</string>

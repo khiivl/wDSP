@@ -46,40 +46,142 @@
                 android:orientation="horizontal"
                 android:baselineAligned="false">
 
-                <!-- Left Column: Subwoofer configuration card -->
+                <!-- Left Column: Subwoofer & Target Profile cards -->
                 <LinearLayout
-                    android:id="@+id/card_subwoofer"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:padding="8dp"
-                    android:layout_marginEnd="6dp"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginEnd="6dp">
 
-                    <TextView
+                    <!-- Subwoofer configuration card -->
+                    <LinearLayout
+                        android:id="@+id/card_subwoofer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_subwoofer_title"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="2dp" />
+                        android:orientation="vertical"
+                        android:padding="8dp"
+                        android:layout_marginBottom="6dp">
 
-                    <CheckBox
-                        android:id="@+id/cb_has_subwoofer"
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_subwoofer_title"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
+
+                        <CheckBox
+                            android:id="@+id/cb_has_subwoofer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_subwoofer_check"
+                            android:textSize="13sp"
+                            android:checked="false" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_subwoofer_desc"
+                            android:textSize="10.5sp"
+                            android:lineSpacingExtra="1dp"
+                            android:layout_marginStart="32dp" />
+                    </LinearLayout>
+
+                    <!-- Target sound profile card -->
+                    <LinearLayout
+                        android:id="@+id/card_target_curve"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_subwoofer_check"
-                        android:textSize="13sp"
-                        android:checked="false" />
+                        android:orientation="vertical"
+                        android:padding="8dp"
+                        android:layout_marginBottom="6dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_subwoofer_desc"
-                        android:textSize="10.5sp"
-                        android:lineSpacingExtra="1dp"
-                        android:layout_marginStart="32dp" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_target_title"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="4dp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_target_curve"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rb_target_harman"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_harman"
+                                android:textSize="12.5sp"
+                                android:checked="true" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_harman_desc"
+                                android:textSize="10sp"
+                                android:layout_marginStart="30dp"
+                                android:layout_marginBottom="2dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_target_dolby"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_dolby"
+                                android:textSize="12.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_dolby_desc"
+                                android:textSize="10sp"
+                                android:layout_marginStart="30dp"
+                                android:layout_marginBottom="2dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_target_bass"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_bass"
+                                android:textSize="12.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_bass_desc"
+                                android:textSize="10sp"
+                                android:layout_marginStart="30dp"
+                                android:layout_marginBottom="2dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_target_vocal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_vocal"
+                                android:textSize="12.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_vocal_desc"
+                                android:textSize="10sp"
+                                android:layout_marginStart="30dp"
+                                android:layout_marginBottom="2dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_target_flat"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_flat"
+                                android:textSize="12.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_target_flat_desc"
+                                android:textSize="10sp"
+                                android:layout_marginStart="30dp" />
+                        </RadioGroup>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- Right Column: Soundstage mode card -->
@@ -383,6 +485,7 @@
                     android:layout_marginStart="6dp">
 
                     <TextView
+                        android:id="@+id/tv_report_autoeq_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/room_wizard_autoeq_title"
