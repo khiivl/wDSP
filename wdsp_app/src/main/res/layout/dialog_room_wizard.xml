@@ -16,9 +16,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/room_wizard_title"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="6dp" />
 
         <!-- ============================================================= -->
         <!-- STEP 1: CONFIGURATION & SETUP                                  -->
@@ -35,124 +35,135 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/room_wizard_setup_desc"
-                android:textSize="13sp"
-                android:lineSpacingExtra="2dp"
-                android:layout_marginBottom="12dp" />
+                android:textSize="12sp"
+                android:lineSpacingExtra="1dp"
+                android:layout_marginBottom="6dp" />
 
-            <!-- Subwoofer configuration card -->
+            <!-- Two-column setup layout for landscape UIS7862 screen -->
             <LinearLayout
-                android:id="@+id/card_subwoofer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="10dp">
+                android:orientation="horizontal"
+                android:baselineAligned="false">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_subwoofer_title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
+                <!-- Left Column: Subwoofer configuration card -->
+                <LinearLayout
+                    android:id="@+id/card_subwoofer"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_marginBottom="6dp">
 
-                <CheckBox
-                    android:id="@+id/cb_has_subwoofer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_subwoofer_check"
-                    android:textSize="14sp"
-                    android:checked="false" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_subwoofer_desc"
-                    android:textSize="11sp"
-                    android:lineSpacingExtra="1dp"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginStart="32dp" />
-            </LinearLayout>
-
-            <!-- Soundstage mode card -->
-            <LinearLayout
-                android:id="@+id/card_soundstage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="14dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_soundstage_title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <RadioGroup
-                    android:id="@+id/rg_soundstage_mode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <RadioButton
-                        android:id="@+id/rb_stage_driver"
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_driver"
+                        android:text="@string/room_wizard_subwoofer_title"
                         android:textSize="13sp"
-                        android:checked="true" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_driver_desc"
-                        android:textSize="11sp"
-                        android:layout_marginStart="32dp"
-                        android:layout_marginBottom="6dp" />
+                        android:textStyle="bold"
+                        android:layout_marginBottom="2dp" />
 
-                    <RadioButton
-                        android:id="@+id/rb_stage_front_center"
+                    <CheckBox
+                        android:id="@+id/cb_has_subwoofer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_front_center"
-                        android:textSize="13sp" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_front_center_desc"
-                        android:textSize="11sp"
-                        android:layout_marginStart="32dp"
-                        android:layout_marginBottom="6dp" />
+                        android:text="@string/room_wizard_subwoofer_check"
+                        android:textSize="13sp"
+                        android:checked="false" />
 
-                    <RadioButton
-                        android:id="@+id/rb_stage_cabin_center"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_cabin_center"
-                        android:textSize="13sp" />
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_cabin_center_desc"
-                        android:textSize="11sp"
-                        android:layout_marginStart="32dp"
-                        android:layout_marginBottom="6dp" />
-
-                    <RadioButton
-                        android:id="@+id/rb_stage_off"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_off"
-                        android:textSize="13sp" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_stage_off_desc"
-                        android:textSize="11sp"
+                        android:text="@string/room_wizard_subwoofer_desc"
+                        android:textSize="10.5sp"
+                        android:lineSpacingExtra="1dp"
                         android:layout_marginStart="32dp" />
-                </RadioGroup>
+                </LinearLayout>
+
+                <!-- Right Column: Soundstage mode card -->
+                <LinearLayout
+                    android:id="@+id/card_soundstage"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/room_wizard_soundstage_title"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rg_soundstage_mode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rb_stage_driver"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_driver"
+                            android:textSize="13sp"
+                            android:checked="true" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_driver_desc"
+                            android:textSize="10.5sp"
+                            android:layout_marginStart="32dp"
+                            android:layout_marginBottom="3dp" />
+
+                        <RadioButton
+                            android:id="@+id/rb_stage_front_center"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_front_center"
+                            android:textSize="13sp" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_front_center_desc"
+                            android:textSize="10.5sp"
+                            android:layout_marginStart="32dp"
+                            android:layout_marginBottom="3dp" />
+
+                        <RadioButton
+                            android:id="@+id/rb_stage_cabin_center"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_cabin_center"
+                            android:textSize="13sp" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_cabin_center_desc"
+                            android:textSize="10.5sp"
+                            android:layout_marginStart="32dp"
+                            android:layout_marginBottom="3dp" />
+
+                        <RadioButton
+                            android:id="@+id/rb_stage_off"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_off"
+                            android:textSize="13sp" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_stage_off_desc"
+                            android:textSize="10.5sp"
+                            android:layout_marginStart="32dp" />
+                    </RadioGroup>
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Setup Action Buttons -->
@@ -161,7 +172,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="end|center_vertical"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="4dp">
 
                 <TextView
                     android:id="@+id/btn_wizard_cancel"
@@ -171,8 +182,8 @@
                     android:textSize="14sp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
@@ -184,8 +195,8 @@
                     android:textStyle="bold"
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp" />
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -289,86 +300,104 @@
                     android:lineSpacingExtra="1.5dp" />
             </LinearLayout>
 
-            <!-- Crossover & Subwoofer Card -->
+            <!-- Two-column report layout for landscape screen -->
             <LinearLayout
-                android:id="@+id/card_report_crossover"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="10dp">
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:layout_marginBottom="8dp">
 
-                <TextView
-                    android:layout_width="match_parent"
+                <!-- Left column: Crossover + Delays -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_crossover_title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="6dp">
 
-                <TextView
-                    android:id="@+id/tv_report_crossover_hpf"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="2dp" />
+                    <!-- Crossover & Subwoofer Card -->
+                    <LinearLayout
+                        android:id="@+id/card_report_crossover"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp"
+                        android:layout_marginBottom="6dp">
 
-                <TextView
-                    android:id="@+id/tv_report_crossover_sub"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_crossover_title"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
 
-            <!-- Delays Card -->
-            <LinearLayout
-                android:id="@+id/card_report_delays"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="10dp">
+                        <TextView
+                            android:id="@+id/tv_report_crossover_hpf"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="11.5sp"
+                            android:layout_marginBottom="2dp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_delays_title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                        <TextView
+                            android:id="@+id/tv_report_crossover_sub"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="11.5sp" />
+                    </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_report_delays"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:lineSpacingExtra="2dp" />
-            </LinearLayout>
+                    <!-- Delays Card -->
+                    <LinearLayout
+                        android:id="@+id/card_report_delays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp">
 
-            <!-- Auto-EQ Harman Curve Card -->
-            <LinearLayout
-                android:id="@+id/card_report_autoeq"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="14dp">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_delays_title"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_autoeq_title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                        <TextView
+                            android:id="@+id/tv_report_delays"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="11.5sp"
+                            android:lineSpacingExtra="1.5dp" />
+                    </LinearLayout>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_report_autoeq_gains"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:fontFamily="monospace"
-                    android:lineSpacingExtra="2dp" />
+                <!-- Right column: Auto-EQ Harman Curve Card -->
+                <LinearLayout
+                    android:id="@+id/card_report_autoeq"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.2"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:layout_marginStart="6dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/room_wizard_autoeq_title"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="3dp" />
+
+                    <TextView
+                        android:id="@+id/tv_report_autoeq_gains"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="10.5sp"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="1.5dp" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Report Action Buttons -->
