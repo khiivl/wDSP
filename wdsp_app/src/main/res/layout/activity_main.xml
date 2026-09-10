@@ -132,6 +132,56 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
 
+                        <!-- Spectrum Mode Switch: Calculated vs Microphone -->
+                        <LinearLayout
+                            android:id="@+id/layout_spectrum_mode_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/lbl_spectrum_mode"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="6dp"
+                                android:text="@string/spectrum_mode_label"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textSize="@dimen/settings_note_text"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_spectrum_calc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="6dp"
+                                android:text="@string/spectrum_mode_calc"
+                                android:textColor="@color/text_theme_aware"
+                                android:textSize="@dimen/settings_note_text"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_spectrum_mic"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="6dp"
+                                android:text="@string/spectrum_mode_mic"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textSize="@dimen/settings_note_text"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
                         <!-- 6 Action Icon Buttons -->
                         <LinearLayout
                             android:layout_width="wrap_content"

@@ -288,8 +288,18 @@
     <string name="room_measure_save_failed">Не вдалося записати архів.</string>
     <string name="room_measure_send">Зберегти архів</string>
     <string name="room_measure_share_text">Вимір салону wDSP, версія %1$s</string>
-    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat_dev/92</string>
+    <string name="telegram_link_copied">Посилання скопійовано: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">Вимірів ще немає</string>
+    <string name="room_section_title">Акустичне калібрування салону (експериментальна, root)</string>
+    <string name="room_root_required_toast">Для акустичного калібрування необхідні Root-права</string>
+    <string name="debug_measure_preset_button">Свіп і автопресет</string>
+    <string name="spectrum_mode_label">Спектр:</string>
+    <string name="spectrum_mode_calc">Розрахунковий</string>
+    <string name="spectrum_mode_mic">Мікрофон</string>
+    <string name="spectrum_mic_uncalibrated_title">Калібрування мікрофона</string>
+    <string name="spectrum_mic_uncalibrated_msg">Для точного відображення спектра радіо через мікрофон необхідно виконати калібрування у вкладці акустики салону. Відкрити калібрування зараз?</string>
+    <string name="spectrum_calibrate_now">Калібрувати</string>
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ та калібрування акустики</string>

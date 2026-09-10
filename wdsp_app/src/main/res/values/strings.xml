@@ -312,8 +312,18 @@
     <string name="room_measure_failed">Measurement failed</string>
     <string name="room_measure_send">Save archive</string>
     <string name="room_measure_share_text">wDSP cabin measurement, version %1$s</string>
-    <string name="room_measure_telegram">Telegram: @kostyamat</string>
+    <string name="room_measure_telegram">Telegram: @kostyamat_dev/92</string>
+    <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">Nothing measured yet</string>
+    <string name="room_section_title">Cabin Acoustic Calibration (experimental, root)</string>
+    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
+    <string name="debug_measure_preset_button">Sweep &amp; Auto-Preset</string>
+    <string name="spectrum_mode_label">Spectrum:</string>
+    <string name="spectrum_mode_calc">Calculated</string>
+    <string name="spectrum_mode_mic">Microphone</string>
+    <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
+    <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
+    <string name="spectrum_calibrate_now">Calibrate</string>
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ &amp; Acoustic Calibration</string>
