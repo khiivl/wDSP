@@ -71,14 +71,33 @@ public final class SettingsAccordion {
         CharSequence current = title.getText();
         if (current != null) {
             String s = current.toString().trim();
-            while (s.startsWith("▾") || s.startsWith("▸") || s.startsWith("🔒")) {
-                s = s.substring(1).trim();
+            // Clean any previous leading indicators safely (preserving full surrogate pairs)
+            while (s.startsWith("▾") || s.startsWith("▸") || s.startsWith("🔒") || s.startsWith("\uFFFD")) {
+                if (s.startsWith("▾ ") || s.startsWith("▸ ")) {
+                    s = s.substring(2).trim();
+                } else if (s.startsWith("🔒 ")) {
+                    s = s.substring("🔒 ".length()).trim();
+                } else if (s.startsWith("🔒")) {
+                    s = s.substring("🔒".length()).trim();
+                } else {
+                    s = s.substring(1).trim();
+                }
             }
-            if (isLocked) {
-                title.setText("🔒 " + s);
-            } else {
-                title.setText((open ? "▾ " : "▸ ") + s);
+            // Clean any trailing indicators
+            while (s.endsWith("🔒") || s.endsWith("\uFFFD")) {
+                if (s.endsWith(" 🔒")) {
+                    s = s.substring(0, s.length() - " 🔒".length()).trim();
+                } else if (s.endsWith("🔒")) {
+                    s = s.substring(0, s.length() - "🔒".length()).trim();
+                } else {
+                    s = s.substring(0, s.length() - 1).trim();
+                }
             }
+            s = s.replace("\uFFFD", "").trim();
+
+            String prefix = open ? "▾ " : "▸ ";
+            String suffix = isLocked ? " 🔒" : "";
+            title.setText(prefix + s + suffix);
         }
         int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
         int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
