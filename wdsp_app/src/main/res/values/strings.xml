@@ -349,6 +349,7 @@
     <string name="room_wizard_polarity_warning_title">⚠️ SPEAKER POLARITY WARNING!</string>
     <string name="room_wizard_crossover_title">Acoustic Crossover</string>
     <string name="room_wizard_crossover_hpf">Midbass HPF: %1$d Hz (mechanical protection)</string>
+    <string name="room_wizard_crossover_hpf_through">Midbass HPF: Through (0 Hz / full range)</string>
     <string name="room_wizard_crossover_sub">Subwoofer LPF: %1$d Hz | Gain: %2$+d dB</string>
     <string name="room_wizard_crossover_no_sub">Subwoofer: Not installed (full range / infrasonic protection)</string>
     <string name="room_wizard_delays_title">Time Alignment Delays</string>

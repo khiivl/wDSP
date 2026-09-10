@@ -325,6 +325,7 @@
     <string name="room_wizard_polarity_warning_title">⚠️ УВАГА: ПОЛЯРНІСТЬ ДИНАМІКІВ!</string>
     <string name="room_wizard_crossover_title">Акустичний кросовер</string>
     <string name="room_wizard_crossover_hpf">Зріз мідбасів HPF: %1$d Гц (захист від перевантаження)</string>
+    <string name="room_wizard_crossover_hpf_through">Зріз мідбасів HPF: Без зрізу (Through / повний діапазон)</string>
     <string name="room_wizard_crossover_sub">Сабвуфер LPF: %1$d Гц | Рівень: %2$+d дБ</string>
     <string name="room_wizard_crossover_no_sub">Сабвуфер: Не встановлено (повний діапазон / захист інфразвуку)</string>
     <string name="room_wizard_delays_title">Часові затримки каналів</string>
