@@ -2843,6 +2843,9 @@
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:lineSpacingExtra="3dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:textColor="@color/link_blue"
                         android:text="@string/room_measure_telegram"
                         android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
