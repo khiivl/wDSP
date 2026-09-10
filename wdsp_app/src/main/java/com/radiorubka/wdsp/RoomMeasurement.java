@@ -9,6 +9,7 @@ import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -17,7 +18,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Measures the car, one loudspeaker at a time.
@@ -241,7 +245,26 @@ public final class RoomMeasurement {
       */
      private static final String SCRATCH_PRESET = "wDSP Flat";
 
-     private static final String PREFS_NAME = "EqPresets";
+     public static final String PREFS_NAME = "EqPresets";
+     public static final String PREF_LAST_SELECTED = "last_selected_preset";
+     public static final String PREF_PRESET_NAMES = "preset_names";
+
+     public static final int[] BASS_FILTER_FREQS_HZ = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250};
+     public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
+
+     public enum SoundstageMode {
+         DRIVER(0, "Водій"),
+         FRONT_CENTER(1, "По центру спереду"),
+         CABIN_CENTER(2, "По центру салону"),
+         OFF(3, "Без затримок");
+
+         public final int id;
+         public final String title;
+         SoundstageMode(int id, String title) {
+             this.id = id;
+             this.title = title;
+         }
+     }
 
     /**
      * Where the owner says the microphone is, on the same −1..1 axes the balance control uses:
@@ -602,12 +625,21 @@ public final class RoomMeasurement {
         public float sweepTopHz = SWEEP_END_HZ;
         /** True when a channel needs more delay than the hardware can apply - a long vehicle. */
         public boolean beyondHardware;
-        /**
-         * At least one speaker was heard mainly through the cabin rather than directly, so its
-         * delay may be optimistic. Normal with the microphone on the dashboard; the report says
-         * so instead of presenting the number as if it were exact.
-         */
         public boolean reflectionDominated;
+
+        // Auto-EQ & Soundstage extensions
+        public boolean hasSubwoofer;
+        public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
+        public int midbassHpfIdx = 5; // default 63 Hz
+        public int midbassHpfFreqHz = 63;
+        public int subLpfIdx = 4; // default 63 Hz
+        public int subLpfFreqHz = 63;
+        public int subGain = 8; // default +4 dB
+        public int suggestedSubDelaySteps = 0;
+        public float suggestedSubDelayMs = 0f;
+        public final int[] autoEqGains16 = new int[NativeSweep.BAND_COUNT];
+        public boolean hasPolarityInversion = false;
+        public String wiringWarning = null;
 
         public boolean isUsable() {
             for (ChannelResult c : channels) {
@@ -618,8 +650,10 @@ public final class RoomMeasurement {
     }
 
     public interface Listener {
-        void onProgress(String stage);
-
+        default void onProgress(String stage) {}
+        default void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+            onProgress(stageTitle + (stageDetail != null && !stageDetail.isEmpty() ? ": " + stageDetail : ""));
+        }
         void onFinished(Result result);
     }
 
@@ -627,9 +661,11 @@ public final class RoomMeasurement {
         return running;
     }
 
-    /** Runs a full measurement on its own thread. Takes roughly half a minute. */
+    /** Runs a full measurement on its own thread with subwoofer and soundstage mode parameters. */
     public static void measureAsync(final Context context, final float amplitude,
-                                    final float seconds, final Listener listener) {
+                                    final float seconds, final boolean hasSubwoofer,
+                                    final SoundstageMode soundstageMode,
+                                    final Listener listener) {
         if (running) {
             Log.w(TAG, "a measurement is already running, ignoring this request");
             return;
@@ -638,7 +674,7 @@ public final class RoomMeasurement {
             running = true;
             Result result;
             try {
-                result = measure(context, amplitude, seconds, listener);
+                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, listener);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -649,6 +685,12 @@ public final class RoomMeasurement {
             if (listener != null) listener.onFinished(result);
         }, "wDSP_RoomMeasure").start();
     }
+
+    public static void measureAsync(final Context context, final float amplitude,
+                                    final float seconds, final Listener listener) {
+        measureAsync(context, amplitude, seconds, false, SoundstageMode.DRIVER, listener);
+    }
+
 
     /**
      * Puts back anything a measurement changed but did not manage to restore.
@@ -674,8 +716,12 @@ public final class RoomMeasurement {
     // ---------------------------------------------------------------------------------------
 
     private static Result measure(Context context, float amplitude, float seconds,
+                                  boolean hasSubwoofer, SoundstageMode soundstageMode,
                                   Listener listener) {
         Result result = new Result();
+        result.hasSubwoofer = hasSubwoofer;
+        result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
+
         Context app = context.getApplicationContext();
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String preset = prefs.getString("last_selected_preset", null);
@@ -690,8 +736,12 @@ public final class RoomMeasurement {
             return result;
         }
 
+        if (listener != null) {
+            listener.onProgress(1, 5, "Підготовка", "Пауза медіа та фіксація гучності (16 од.)...", 5);
+        }
+
         Log.i(TAG, "=== room measurement starting ===");
-        Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s");
+        Log.i(TAG, "preset=" + preset + " amplitude=" + amplitude + " sweep=" + seconds + " s sub=" + hasSubwoofer + " stage=" + result.soundstageMode);
         Log.i(TAG, HardwareProfile.describe());
 
         // Take the microphone back if something else has it, then sweep only as high as whatever
@@ -720,9 +770,23 @@ public final class RoomMeasurement {
                 return result;
             }
             runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
-            computeDelays(result);
+
+            if (listener != null) {
+                listener.onProgress(3, 5, "Аналіз затримок", "Розрахунок часового вирівнювання (GCC-PHAT)...", 85);
+            }
+            computeDelays(result, result.soundstageMode);
+
+            if (listener != null) {
+                listener.onProgress(4, 5, "Синтез Auto-EQ", "Аналіз спаду мідбасів, сабвуфера та 16 смуг...", 92);
+            }
+            analyzeAcousticsAndSynthesize(result);
+
             result.sweepTopHz = topHz;
             result.reportPath = writeReport(app, result, preset, amplitude, seconds);
+
+            if (listener != null) {
+                listener.onProgress(5, 5, "Готово", "Калібрування завершено успішно", 100);
+            }
         } finally {
             SharedPreferences.Editor editor = prefs.edit();
             applySaved(editor, saved);
@@ -732,6 +796,7 @@ public final class RoomMeasurement {
             VolumeHelper.setVolume(origVolume);
             Log.i(TAG, "switched back to " + preset);
         }
+
 
         logResult(result);
         return result;
@@ -883,11 +948,17 @@ public final class RoomMeasurement {
                             * 1000L / SAMPLE_RATE);
                     long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
                     if (waitMs > 0) sleep(waitMs);
-                    if (listener != null) listener.onProgress(channels[k].label);
+                    int pct = 15 + (k * 65) / channels.length;
+                    if (listener != null) {
+                        listener.onProgress(2, 5, "Замір динаміків", "Відтворення свіпу: " + channels[k].label, pct);
+                    }
                     applyRouting(prefs, preset, channels[k]);
                 }
             }, "wDSP_RoomRouting");
-            if (listener != null) listener.onProgress(channels[0].label);
+            if (listener != null) {
+                listener.onProgress(2, 5, "Замір динаміків", "Відтворення свіпу: " + channels[0].label, 15);
+            }
+
             router.start();
 
             while (got < recordLen) {
@@ -1177,17 +1248,8 @@ public final class RoomMeasurement {
      * speaker is held back until it arrives at the same moment. This is the one result that is
      * exact no matter what the microphone's response is, because it comes entirely from timing.
      */
-    private static void computeDelays(Result result) {
-        // The clearest channel is the reference. Every sweep is played at the same offset inside
-        // its own window, so a channel that was genuinely heard must arrive within a few
-        // milliseconds of it - the width of a car. A channel that was not driven at all still
-        // produces an impulse response, of room noise, and its loudest moment lands wherever it
-        // pleases: measured on a bench with the rear pair disconnected, the reference sat at
-        // 590 ms and the two phantoms at 1267 and 1309.
-        //
-        // This catches them whatever their clarity happens to be, which matters because clarity
-        // alone does not separate the two cleanly enough - the noisiest phantom measured 7.7 dB
-        // against 10.5 dB for the quietest real speaker.
+    private static void computeDelays(Result result, SoundstageMode mode) {
+        if (mode == null) mode = SoundstageMode.DRIVER;
         ChannelResult anchor = null;
         for (ChannelResult c : result.channels) {
             if (c == null || !c.ok) continue;
@@ -1233,22 +1295,53 @@ public final class RoomMeasurement {
         result.reflectionDominated = confident < heard;
         Log.i(TAG, String.format(Locale.US,
                 "%d speakers agree, spread %.2f ms, reference is the %s at %.1f dB clarity; "
-                        + "%d of them heard directly",
-                heard, latest - earliest, anchor.label, anchor.clarityDb, confident));
+                        + "%d of them heard directly; stage mode=%s",
+                heard, latest - earliest, anchor.label, anchor.clarityDb, confident, mode));
 
+        if (mode == SoundstageMode.OFF) {
+            Arrays.fill(result.suggestedDelayMs, 0f);
+            Arrays.fill(result.suggestedDelaySteps, 0);
+            result.suggestedSubDelayMs = 0f;
+            result.suggestedSubDelaySteps = 0;
+            return;
+        }
+
+        if (mode == SoundstageMode.FRONT_CENTER) {
+            // Symmetrical front stage: Front Left and Front Right get 0 delay
+            result.suggestedDelayMs[Channel.FRONT_LEFT.ordinal()] = 0f;
+            result.suggestedDelaySteps[Channel.FRONT_LEFT.ordinal()] = 0;
+            result.suggestedDelayMs[Channel.FRONT_RIGHT.ordinal()] = 0f;
+            result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()] = 0;
+
+            // Rear speakers get 5 ms delay (10 steps) to provide subtle Haas surround fill
+            result.suggestedDelayMs[Channel.REAR_LEFT.ordinal()] = 5.0f;
+            result.suggestedDelaySteps[Channel.REAR_LEFT.ordinal()] = 10;
+            result.suggestedDelayMs[Channel.REAR_RIGHT.ordinal()] = 5.0f;
+            result.suggestedDelaySteps[Channel.REAR_RIGHT.ordinal()] = 10;
+
+            result.suggestedSubDelayMs = 0f;
+            result.suggestedSubDelaySteps = 0;
+            return;
+        }
+
+        if (mode == SoundstageMode.CABIN_CENTER) {
+            // Symmetrical across cabin center: all 4 channels 0 delay
+            Arrays.fill(result.suggestedDelayMs, 0f);
+            Arrays.fill(result.suggestedDelaySteps, 0);
+            result.suggestedSubDelayMs = 0f;
+            result.suggestedSubDelaySteps = 0;
+            return;
+        }
+
+        // Default: DRIVER focus (delays based on microphone TDOA)
         for (int i = 0; i < result.channels.length; i++) {
             ChannelResult c = result.channels[i];
             if (c == null || !c.ok) continue;
             // The speaker heard last needs no delay; every other one waits for it.
             result.suggestedDelayMs[i] = latest - c.arrivalMs;
-            // The hardware moves in half-millisecond steps, which is about seventeen centimetres
-            // of air - finer than that would be pretending.
             final int wanted = Math.round(result.suggestedDelayMs[i] / DELAY_STEP_MS);
             result.suggestedDelaySteps[i] = Math.min(wanted, MAX_DELAY_STEPS);
             if (wanted > MAX_DELAY_STEPS) {
-                // Say it rather than clamp it silently. In a long vehicle this is the normal
-                // answer, and a user who is told will move the microphone or accept it; a user who
-                // is not told will believe their car is aligned when it is not.
                 result.beyondHardware = true;
                 Log.w(TAG, String.format(Locale.US,
                         "%s needs %.1f ms (%d steps) but the delay line stops at %d steps "
@@ -1259,7 +1352,136 @@ public final class RoomMeasurement {
                         MAX_DELAY_STEPS * DELAY_STEP_MS * 0.343f));
             }
         }
+        result.suggestedSubDelayMs = 0f;
+        result.suggestedSubDelaySteps = 0;
     }
+
+    private static void analyzeAcousticsAndSynthesize(Result result) {
+        // 1. Check wiring polarity
+        int positive = 0, negative = 0;
+        StringBuilder inverted = new StringBuilder();
+        for (ChannelResult c : result.channels) {
+            if (c == null || !c.ok || !c.confident) continue;
+            if (c.polarity < 0) {
+                negative++;
+                if (inverted.length() > 0) inverted.append(", ");
+                inverted.append(c.label);
+            } else {
+                positive++;
+            }
+        }
+        if (positive > 0 && negative > 0) {
+            result.hasPolarityInversion = true;
+            result.wiringWarning = "На динаміку (" + inverted + ") виявлено переплутану полярність (+/-)! Динамік підключений у протифазі та гасить баси в салоні. Рекомендуємо перевірити дроти на клемах акустики.";
+            Log.w(TAG, "POLARITY WARNING: " + result.wiringWarning);
+        }
+
+        // 2. Average clean spectrum of confident channels (Front Left & Front Right prioritized)
+        float[] avgClean = new float[NativeSweep.BAND_COUNT];
+        int usedCount = 0;
+        for (int chIdx : new int[]{Channel.FRONT_LEFT.ordinal(), Channel.FRONT_RIGHT.ordinal(),
+                                   Channel.REAR_LEFT.ordinal(), Channel.REAR_RIGHT.ordinal()}) {
+            ChannelResult c = result.channels[chIdx];
+            if (c != null && c.ok && c.confident) {
+                for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                    avgClean[b] += c.cleanBandsDb[b];
+                }
+                usedCount++;
+            }
+        }
+        if (usedCount > 0) {
+            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                avgClean[b] /= usedCount;
+            }
+        }
+
+        // 3. Detect midbass roll-off HPF cutoff index
+        result.midbassHpfIdx = NativeSweep.detectMidbassRollOff(avgClean);
+        if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < BASS_FILTER_FREQS_HZ.length) {
+            result.midbassHpfFreqHz = BASS_FILTER_FREQS_HZ[result.midbassHpfIdx];
+        } else {
+            result.midbassHpfIdx = 5;
+            result.midbassHpfFreqHz = 63;
+        }
+
+        // 4. Synthesize 16-band Harman Auto-EQ & Sub settings
+        int[] subSettings = new int[2];
+        NativeSweep.synthesizeHarmanEq16(avgClean, result.micCompensation16,
+                result.midbassHpfIdx, result.hasSubwoofer,
+                result.autoEqGains16, subSettings);
+
+        result.subLpfIdx = subSettings[0];
+        if (result.subLpfIdx >= 0 && result.subLpfIdx < SUB_FREQS_HZ.length) {
+            result.subLpfFreqHz = SUB_FREQS_HZ[result.subLpfIdx];
+        } else {
+            result.subLpfIdx = 4;
+            result.subLpfFreqHz = 63;
+        }
+        result.subGain = subSettings[1];
+
+        Log.i(TAG, String.format(Locale.US,
+                "Auto-EQ synthesized: HPF cutoff %d Hz (idx %d), Sub LPF %d Hz (idx %d, gain %d), hasSub=%b",
+                result.midbassHpfFreqHz, result.midbassHpfIdx,
+                result.subLpfFreqHz, result.subLpfIdx, result.subGain, result.hasSubwoofer));
+    }
+
+    /**
+     * Applies the synthesized Auto-EQ preset directly to SharedPreferences and broadcasts to McuService.
+     */
+    public static void applyAutoEqPreset(Context context, Result result, String presetName) {
+        if (context == null || result == null) return;
+        if (presetName == null || presetName.trim().isEmpty()) {
+            presetName = "AutoEQ Harman";
+        }
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e = prefs.edit();
+
+        // 1. Equalizer 16 bands
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            e.putInt(presetName + "_g" + b, result.autoEqGains16[b]);
+            e.putBoolean(presetName + "_q" + b, false); // Fixed Q=2.2
+        }
+
+        // 2. High-pass filter for midbasses
+        e.putInt(presetName + "_bf_f", result.midbassHpfIdx);
+        e.putInt(presetName + "_bf_r", result.midbassHpfIdx);
+
+        // 3. Subwoofer LPF & Gain
+        e.putInt(presetName + "_sub_f", result.hasSubwoofer ? result.subLpfIdx : 5);
+        e.putInt(presetName + "_sub_g", result.hasSubwoofer ? result.subGain : 0);
+        e.putBoolean(presetName + "_sub_comp", false);
+
+        // 4. Delays
+        boolean enableDelays = result.soundstageMode != SoundstageMode.OFF;
+        e.putBoolean(presetName + "_d_en", enableDelays);
+        e.putInt(presetName + "_d_rl", result.suggestedDelaySteps[Channel.REAR_LEFT.ordinal()]);
+        e.putInt(presetName + "_d_rr", result.suggestedDelaySteps[Channel.REAR_RIGHT.ordinal()]);
+        e.putInt(presetName + "_d_fl", result.suggestedDelaySteps[Channel.FRONT_LEFT.ordinal()]);
+        e.putInt(presetName + "_d_fr", result.suggestedDelaySteps[Channel.FRONT_RIGHT.ordinal()]);
+        e.putInt(presetName + "_d_sub", result.suggestedSubDelaySteps);
+
+        // 5. Centered balance & flat surround
+        e.putInt(presetName + "_f_lr", FADER_CENTRE);
+        e.putInt(presetName + "_f_fr", FADER_CENTRE);
+        e.putBoolean(presetName + "_loud", false);
+        e.putBoolean(presetName + "_d1_en", false);
+
+        // 6. Add to preset list
+        Set<String> presetNames = new HashSet<>(prefs.getStringSet(PREF_PRESET_NAMES, new HashSet<>()));
+        presetNames.add(presetName);
+        e.putStringSet(PREF_PRESET_NAMES, presetNames);
+
+        // 7. Activate preset
+        e.putString(PREF_LAST_SELECTED, presetName);
+        e.apply();
+
+        // Broadcast to McuService
+        Intent intent = new Intent("com.radiorubka.wdsp.PRESET_CHANGED");
+        intent.putExtra("preset", presetName);
+        context.sendBroadcast(intent);
+        Log.i(TAG, "Applied and broadcast Auto-EQ preset: " + presetName);
+    }
+
 
     // ---------------------------------------------------------------------------------------
     // borrowing and returning the head unit's settings
@@ -1730,7 +1952,24 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
             sb.append("\n\n");
+            if (result.hasPolarityInversion && result.wiringWarning != null) {
+                sb.append("⚠️ УВАГА: ПОЛЯРНІСТЬ ДИНАМІКІВ!\n");
+                sb.append(result.wiringWarning).append("\n\n");
+            }
             sb.append(wiringVerdict(result));
+            sb.append("Soundstage mode: ").append(result.soundstageMode != null ? result.soundstageMode.title : "Default").append("\n");
+            sb.append(String.format(Locale.US, "Midbass HPF: %d Hz (idx %d)\n", result.midbassHpfFreqHz, result.midbassHpfIdx));
+            if (result.hasSubwoofer) {
+                sb.append(String.format(Locale.US, "Subwoofer: Installed, LPF %d Hz (idx %d), Gain %+d dB, Delay %.1f ms (%d steps)\n",
+                        result.subLpfFreqHz, result.subLpfIdx, result.subGain, result.suggestedSubDelayMs, result.suggestedSubDelaySteps));
+            } else {
+                sb.append("Subwoofer: None (natural roll-off / infrasonic protection)\n");
+            }
+            sb.append("Synthesized Auto-EQ gains (Harman target, dB):");
+            for (int g : result.autoEqGains16) {
+                sb.append(String.format(Locale.US, " %+d", g));
+            }
+            sb.append("\n\n");
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");
             if (result.reflectionDominated) {
