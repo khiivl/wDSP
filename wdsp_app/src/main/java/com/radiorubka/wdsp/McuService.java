@@ -1564,7 +1564,7 @@ public class McuService extends Service implements LocationListener {
         // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
         // The hardware tuner bypasses Android PCM AudioFlinger, so there is nothing to measure.
         // If the spectrum engine hears real signal, or a software media session is active, it is NOT tuner.
-        boolean hasSignal = AudioSpectrumEngine.getInstance().hasSignalNow();
+        boolean hasSignal = AudioSpectrumEngine.getInstance().hasMediaSignalNow();
         boolean isPlayingMedia = NowPlaying.getInstance(this).isPlaying()
                 && !NowPlaying.getInstance(this).isRadioSource();
         // The channel counts as evidence FOR the tuner and never against it: it only reads
@@ -1589,6 +1589,7 @@ public class McuService extends Service implements LocationListener {
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);
         }
+        AudioSpectrumEngine.getInstance().checkSourceState();
 
         // Process the naming convention for the "unknown" preset.
         if (isPlayingMedia && NowPlaying.getInstance(this).playerPackage() != null

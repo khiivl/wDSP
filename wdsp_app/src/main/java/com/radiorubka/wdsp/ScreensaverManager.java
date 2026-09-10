@@ -1230,9 +1230,11 @@ public final class ScreensaverManager {
     }
 
     private boolean believedStopped() {
-        // Radio counts as stopped straight away, with no waiting it out: there is no spectrum to
-        // lose, so there is nothing for the bars to be doing in the meantime.
-        if (NowPlaying.getInstance(context).isRadioSource()) return true;
+        // Radio: if radio mic visualizer is enabled, the cabin microphone captures the speakers,
+        // so there is live spectrum and radio is NOT stopped.
+        if (NowPlaying.getInstance(context).isRadioSource()) {
+            return !AudioSpectrumEngine.getInstance().isRadioMicVisualizerEnabled();
+        }
         // Our own pause, and the player has confirmed it. Both halves matter: without the second
         // one a key that reached nobody - no session, or a player that ignores it - would put a
         // clock over music that never stopped.

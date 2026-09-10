@@ -359,11 +359,13 @@ public class StatusBarVisualizerManager {
                 // When lent to screensaver, visibility is controlled exclusively by ScreensaverManager!
                 return;
             }
+            boolean isRadio = (currentChannel == 2) || NowPlaying.getInstance(context).isRadioSource();
+            boolean radioMicEnabled = AudioSpectrumEngine.getInstance().isRadioMicVisualizerEnabled();
             boolean shouldShow = isEnabled
                     && canDrawOverlays()
                     && isScreenOn
                     && !isMuted
-                    && (currentChannel != 2); // Explicitly hide when Channel 2 (Radio) is active
+                    && (!isRadio || radioMicEnabled);
 
             if (shouldShow) {
                 ensureViewAttached();
@@ -491,7 +493,8 @@ public class StatusBarVisualizerManager {
         NowPlaying np = NowPlaying.getInstance(context);
         np.refresh();
         boolean isRadio = np.isRadioSource();
-        visualizerView.setScreensaverState(true, isRadio || screensaverPaused);
+        boolean radioMicActive = isRadio && AudioSpectrumEngine.getInstance().isRadioMicVisualizerEnabled();
+        visualizerView.setScreensaverState(true, (isRadio && !radioMicActive) || screensaverPaused);
         visualizerView.setNowPlayingSource(np);
         np.setMetadataListener(visualizerView::postInvalidate);
 

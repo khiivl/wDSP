@@ -411,7 +411,7 @@ public final class NowPlaying {
      * naming the app adds nothing except a way to be wrong.
      */
     public boolean isRadioSource() {
-        if (AudioSpectrumEngine.getInstance().hasSignalNow()) return false;
+        if (AudioSpectrumEngine.getInstance().hasMediaSignalNow()) return false;
 
         if (CHANNEL_RADIO.equals(HardwareProfile.systemProperty(PROP_SOUND_CHANNEL))) return true;
         return isTrue(HardwareProfile.systemProperty(PROP_RADIO_STATUS));

@@ -226,6 +226,7 @@ public class AudioSpectrumEngine {
     /** Written by {@link LatencyProbe}; absent until a measurement has actually been run. */
     public static final String PREF_LATENCY_BASE = "spec_latency_base_ms";
     public static final String PREF_RANGE_DB = "spec_range_db";
+    public static final String PREF_RADIO_MIC_VISUALIZER = "pref_radio_mic_visualizer";
 
     private float nativeAttackMs = 25f;
     private float nativeReleaseMs = 260f;
@@ -239,6 +240,10 @@ public class AudioSpectrumEngine {
     private boolean barAgcEnabled = true;
     private float barAgcStrength = 1.0f;
     private float barAgcFloorDb = -50f;
+
+    private boolean radioMicVisualizerEnabled = true;
+    private final RadioMicCapture radioMicCapture = new RadioMicCapture();
+    private volatile long lastMicSignalTime = 0;
 
     /** User trim on top of the measured playback latency, +/- 250 ms. */
     private int latencyTrimMs = 0;
@@ -295,10 +300,19 @@ public class AudioSpectrumEngine {
         barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
         latencyTrimMs = prefs.getInt(PREF_LATENCY_TRIM, 0);
         nativeRangeDb = prefs.getInt(PREF_RANGE_DB, 60);
+        boolean oldRadioMic = radioMicVisualizerEnabled;
+        radioMicVisualizerEnabled = prefs.getBoolean(PREF_RADIO_MIC_VISUALIZER, true);
         int storedBase = prefs.getInt(PREF_LATENCY_BASE, -1);
         float base = storedBase >= 0 ? storedBase : declaredLatencyMs();
         nativeLatencyMs = Math.max(0f, base + latencyTrimMs);
         applyNativeSettings();
+        if (oldRadioMic != radioMicVisualizerEnabled) {
+            checkSourceState();
+        }
+    }
+
+    public boolean isRadioMicVisualizerEnabled() {
+        return radioMicVisualizerEnabled;
     }
 
     /**
@@ -553,6 +567,7 @@ public class AudioSpectrumEngine {
         StringBuilder sb = new StringBuilder();
         boolean attached = visualizer != null;
         sb.append("  effect attached  = ").append(attached).append('\n');
+        sb.append("  radio mic active = ").append(radioMicCapture.isRunning()).append('\n');
         sb.append("  session          = ").append(currentSessionId);
         if (attached && currentSessionId == 0) sb.append("  (session 0 - the output mix)");
         sb.append('\n');
@@ -574,21 +589,32 @@ public class AudioSpectrumEngine {
     }
 
     /**
-     * Whether the attached session has delivered something other than silence just now.
-     *
-     * <h2>What this is for</h2>
-     *
-     * It settles, with evidence, whether the sound in the cabin is coming from the analogue tuner.
-     * On this platform the tuner never reaches AudioFlinger at all - it is a wire from the tuner to
-     * the amplifier - so anything the spectrum engine can hear is, by definition, not it.
-     *
-     * <p>That matters because the alternative test is a list of package names, and a radio app
-     * playing an internet stream is the same package doing something completely different. Asked
-     * by name it answers "radio"; asked by ear it answers "there is audio here". The ear is right.
+     * Whether the spectrum engine has delivered signal just now, from either AudioFlinger
+     * media playback or the cabin microphone for analogue radio.
      */
     public boolean hasSignalNow() {
+        long now = System.currentTimeMillis();
+        return (lastSignalTime != 0 && now - lastSignalTime < SILENCE_TOLERANCE_MS)
+                || (lastMicSignalTime != 0 && now - lastMicSignalTime < SILENCE_TOLERANCE_MS);
+    }
+
+    /**
+     * Whether the AudioFlinger media session has delivered signal just now (excluding mic capture).
+     * Used by NowPlaying and McuService to distinguish software media from analogue tuner.
+     */
+    public boolean hasMediaSignalNow() {
         return lastSignalTime != 0
                 && System.currentTimeMillis() - lastSignalTime < SILENCE_TOLERANCE_MS;
+    }
+
+    private void noteMicSignal(byte[] waveform) {
+        if (waveform == null) return;
+        for (byte b : waveform) {
+            if (Math.abs((b & 0xFF) - 128) > SIGNAL_THRESHOLD) {
+                lastMicSignalTime = System.currentTimeMillis();
+                return;
+            }
+        }
     }
     /** Floor between two resolutions, so a genuinely quiet track cannot start a sweep loop. */
     private static final long RESOLVE_COOLDOWN_MS = 20000;
@@ -674,6 +700,7 @@ public class AudioSpectrumEngine {
         @Override
         public void run() {
             if (!listeners.isEmpty()) {
+                checkSourceState();
                 long now = System.currentTimeMillis();
                 long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
                 if (now - lastSignalTime > SILENCE_TOLERANCE_MS
@@ -941,6 +968,7 @@ public class AudioSpectrumEngine {
     /** Drops the Visualizer without touching listeners or the watchdog. */
     private synchronized void releaseCapture() {
         stopNativeCapture();
+        stopRadioMicCapture();
         if (visualizer == null) return;
         try {
             visualizer.release();
@@ -1064,11 +1092,114 @@ public class AudioSpectrumEngine {
         watchdogHandler.postDelayed(watchdog, WATCHDOG_PERIOD_MS);
     }
 
-    private void startInternal(int sessionId) {
-        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
-            visualizer = null;
+    private void startRadioMicPipeline() {
+        stopNativeCapture();
+        stopRadioMicCapture();
+        if (appContext == null) return;
+
+        final int captureSize = 1024;
+        final int sampleRate = 48000;
+        nativeAnalyzer = new NativeAnalyzer(sampleRate, captureSize);
+        if (!nativeAnalyzer.isValid()) {
+            Log.w(TAG, "Native analyser did not initialise for Radio MIC");
             return;
         }
+        applyNativeSettings();
+        capturePolling = true;
+        applyAnalysisProfile();
+
+        boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
+            if (!capturePolling) return;
+            noteMicSignal(buffer);
+            NativeAnalyzer analyzer = nativeAnalyzer;
+            if (analyzer != null) {
+                analyzer.push(buffer, len);
+            }
+            synchronized (waveformLock) {
+                System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(len, latestWaveform.length));
+                latestWaveformLen = Math.min(len, latestWaveform.length);
+            }
+        });
+
+        if (!started) {
+            Log.w(TAG, "RadioMicCapture failed to start");
+            stopNativeCapture();
+            return;
+        }
+
+        analysisThread = new Thread(() -> {
+            while (capturePolling) {
+                NativeAnalyzer analyzer = nativeAnalyzer;
+                if (analyzer == null) break;
+                try {
+                    analyzer.process(20);
+                } catch (Throwable t) {
+                    break;
+                }
+            }
+        }, "wDSP_Analysis");
+        analysisThread.start();
+
+        displayThread = new Thread(() -> {
+            while (capturePolling) {
+                try {
+                    dispatchNativeFrame();
+                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
+                            ? DISPLAY_PERIOD_MS : DISPLAY_PERIOD_IDLE_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "wDSP_Display");
+        displayThread.start();
+        Log.i(TAG, "Radio MIC analysis pipeline started at 48000 Hz UNPROCESSED");
+    }
+
+    private void stopRadioMicCapture() {
+        if (radioMicCapture.isRunning()) {
+            radioMicCapture.stop();
+        }
+    }
+
+    public synchronized void checkSourceState() {
+        if (listeners.isEmpty() || appContext == null) return;
+        boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
+        if (isRadio) {
+            if (visualizer != null || (!radioMicCapture.isRunning() && radioMicVisualizerEnabled)) {
+                Log.i(TAG, "Source is Radio - switching to mic capture pipeline");
+                startInternal(currentSessionId);
+            }
+        } else {
+            if (radioMicCapture.isRunning()) {
+                Log.i(TAG, "Source switched away from Radio - restoring AudioFlinger capture");
+                startInternal(currentSessionId);
+                requestResolve("source switched from radio");
+            }
+        }
+    }
+
+    private void startInternal(int sessionId) {
+        boolean isRadio = appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
+        if (isRadio) {
+            if (visualizer != null) {
+                try {
+                    visualizer.setEnabled(false);
+                    visualizer.release();
+                } catch (Throwable ignored) {}
+                visualizer = null;
+            }
+            if (radioMicVisualizerEnabled) {
+                startRadioMicPipeline();
+            } else {
+                stopRadioMicCapture();
+                stopNativeCapture();
+            }
+            return;
+        }
+
+        stopRadioMicCapture();
         try {
             Visualizer v = new Visualizer(sessionId);
 
@@ -1138,6 +1269,7 @@ public class AudioSpectrumEngine {
             watchdogHandler.removeCallbacks(watchdog);
         }
         stopNativeCapture();
+        stopRadioMicCapture();
         if (visualizer == null) return;
         try {
             visualizer.setEnabled(false);

@@ -219,6 +219,13 @@ public class SettingsActivity extends AppCompatActivity {
         updatePermissionButtons();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions, @androidx.annotation.NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionsWizard.refreshCurrent();
+        updatePermissionButtonsState();
+    }
+
     private void initLauncher() {
         wallpaperPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
@@ -1268,7 +1275,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
 
-    private TextView btnAgcMainToggle, btnAgcBarToggle;
+    private TextView btnAgcMainToggle, btnAgcBarToggle, btnRadioMicVisToggle;
     private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
@@ -1318,6 +1325,16 @@ public class SettingsActivity extends AppCompatActivity {
                 boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
                 saveAnalyzerPref(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, active);
                 styleOnOffButton(btnAgcBarToggle, active);
+            });
+        }
+        btnRadioMicVisToggle = findViewById(R.id.btn_radio_mic_vis_toggle);
+        if (btnRadioMicVisToggle != null) {
+            TouchGlow.attach(btnRadioMicVisToggle);
+            btnRadioMicVisToggle.setOnClickListener(v -> {
+                SharedPreferences p = ThemeManager.prefs(this);
+                boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true);
+                saveAnalyzerPref(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, active);
+                styleOnOffButton(btnRadioMicVisToggle, active);
             });
         }
 
@@ -2031,8 +2048,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnAgcMainToggle == null) return;
         boolean agcMain = p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
         boolean agcBar = p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
+        boolean radioMicVis = p.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true);
         styleOnOffButton(btnAgcMainToggle, agcMain);
         styleOnOffButton(btnAgcBarToggle, agcBar);
+        if (btnRadioMicVisToggle != null) {
+            styleOnOffButton(btnRadioMicVisToggle, radioMicVis);
+        }
 
         int mainStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60);
         int barStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100);
@@ -2728,6 +2749,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
         if (btnAgcBarToggle != null) {
             styleOnOffButton(btnAgcBarToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));
+        }
+        if (btnRadioMicVisToggle != null) {
+            styleOnOffButton(btnRadioMicVisToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true));
         }
         if (btnScreensaverToggle != null) {
             styleOnOffButton(btnScreensaverToggle, ss.isEnabled());
