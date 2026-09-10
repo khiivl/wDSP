@@ -1595,7 +1595,20 @@ public class SettingsActivity extends AppCompatActivity {
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
-        askForRootThenMeasure();
+        confirmRoomMeasurement();
+    }
+
+    private void confirmRoomMeasurement() {
+        ThemedDialog.builder(this)
+                .setTitle(R.string.room_measure_confirm_title)
+                .setMessage(R.string.room_measure_confirm_msg)
+                .setPositiveButton(R.string.room_measure_confirm_start, (d, w) -> {
+                    RoomMeasurement.pauseMedia(this);
+                    askForRootThenMeasure();
+                })
+                .setNegativeButton(R.string.room_measure_confirm_cancel, null)
+                .setCancelable(true)
+                .show();
     }
 
     /**

@@ -120,8 +120,9 @@ public final class RoomMeasurement {
     private static final float DEFAULT_AMPLITUDE = 0.25f;
     /** Recording continues past the last sweep so that the room's decay is captured too. */
     private static final float TAIL_SECONDS = 1.0f;
-    /** Silence before the first sweep, and inside every window, so nothing starts abruptly. */
-    private static final float LEAD_SECONDS = 0.5f;
+    /** Silence before the first sweep (ambient noise floor capture), and inside every window. */
+    private static final float LEAD_SECONDS = 1.0f;
+    public static final String PREF_MIC_COMPENSATION = "pref_mic_compensation";
     /**
      * Silence between sweeps.
      *
@@ -359,6 +360,60 @@ public final class RoomMeasurement {
         String leftRight = lr > 0.33f ? "right" : lr < -0.33f ? "left" : "centre";
         return String.format(Locale.US, "%s %s  (lr %+.2f, fr %+.2f)", frontRear, leftRight, lr, fr);
     }
+
+    /**
+     * Pauses any active media player using KEYCODE_MEDIA_PAUSE before the sweep.
+     */
+    public static void pauseMedia(Context context) {
+        if (context == null) return;
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                long now = android.os.SystemClock.uptimeMillis();
+                am.dispatchMediaKeyEvent(new android.view.KeyEvent(now, now,
+                        android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE, 0));
+                am.dispatchMediaKeyEvent(new android.view.KeyEvent(now, now,
+                        android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE, 0));
+                Log.i(TAG, "sent KEYCODE_MEDIA_PAUSE before acoustic sweep");
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not send media pause key", t);
+        }
+    }
+
+    /**
+     * Reads the calibrated 16-band microphone inverse compensation curve from SharedPreferences.
+     */
+    public static float[] getMicCompensationCurve(Context context) {
+        float[] curve = new float[NativeSweep.BAND_COUNT];
+        if (context == null) return curve;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String s = prefs.getString(PREF_MIC_COMPENSATION, null);
+        if (s == null || s.isEmpty()) return curve;
+        String[] parts = s.split(",");
+        for (int i = 0; i < Math.min(parts.length, curve.length); i++) {
+            try {
+                curve[i] = Float.parseFloat(parts[i].trim());
+            } catch (NumberFormatException ignored) {}
+        }
+        return curve;
+    }
+
+    /**
+     * Persists the calibrated 16-band microphone inverse compensation curve to SharedPreferences.
+     */
+    public static void setMicCompensationCurve(Context context, float[] curve) {
+        if (context == null || curve == null || curve.length < NativeSweep.BAND_COUNT) return;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < NativeSweep.BAND_COUNT; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(String.format(Locale.US, "%.2f", curve[i]));
+        }
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(PREF_MIC_COMPENSATION, sb.toString())
+                .apply();
+        Log.i(TAG, "saved mic compensation curve to preferences: " + sb);
+    }
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
@@ -482,6 +537,14 @@ public final class RoomMeasurement {
         public int polarity;
         /** Sixteen band levels in dB, on the hardware equaliser's grid. */
         public final float[] bandsDb = new float[NativeSweep.BAND_COUNT];
+        /** Clean response in dB (after ambient noise floor spectral subtraction). */
+        public final float[] cleanBandsDb = new float[NativeSweep.BAND_COUNT];
+        /** Signal-to-noise ratio in dB across the 16 bands. */
+        public final float[] snrDb = new float[NativeSweep.BAND_COUNT];
+        /** Fractional delay from reference channel using GCC-PHAT in milliseconds. */
+        public float gccPhatDelayMs;
+        /** Prominence of the GCC-PHAT peak. */
+        public float gccPhatProminence;
         /** Loudest sample in the recording, so a tester can see at once if it was too quiet. */
         public float recordedPeak;
         /** Level of the whole recording, which separates "quiet" from "one loud click". */
@@ -523,6 +586,10 @@ public final class RoomMeasurement {
         public final float[] suggestedDelayMs = new float[4];
         /** The same delays in slider steps; the hardware moves in half-millisecond increments. */
         public final int[] suggestedDelaySteps = new int[4];
+        /** Ambient noise floor spectrum (16 bands) in dB. */
+        public final float[] noiseFloorDb16 = new float[NativeSweep.BAND_COUNT];
+        /** 16-band microphone inverse compensation curve in dB. */
+        public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
         public String error;
         public String reportPath;
         /** What the microphone guard found and did, in one line for the report. */
@@ -636,10 +703,12 @@ public final class RoomMeasurement {
                     + " - delays are unaffected, the top of the response is not measured");
         }
 
-        // Only one thing of the user's is touched: which preset is selected. Everything else
-        // happens inside a copy.
-        String saved = "last_selected_preset=" + preset;
+        // Touch only: preset (switched to flat scratch preset) and volume (locked to 16).
+        int origVolume = VolumeHelper.getVolume();
+        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> 16");
+        String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
+        VolumeHelper.setVolume(16);
         buildScratchPreset(prefs, preset);
         Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
 
@@ -657,6 +726,8 @@ public final class RoomMeasurement {
             applySaved(editor, saved);
             editor.remove(PREF_RECOVERY);
             editor.apply();
+            Log.i(TAG, "restoring volume to " + origVolume);
+            VolumeHelper.setVolume(origVolume);
             Log.i(TAG, "switched back to " + preset);
         }
 
@@ -748,6 +819,9 @@ public final class RoomMeasurement {
             // that has to wait for the routing to take effect.
             applyRouting(prefs, preset, channels[0]);
             sleep(ROUTING_SETTLE_MS);
+
+            // Pause media player before sweep
+            pauseMedia(context);
 
             // Ask to be the player before making a sound.
             //
@@ -864,11 +938,20 @@ public final class RoomMeasurement {
                     + "usual cause, and the platform will not admit it.");
         }
 
+        // 1. Ambient noise floor measurement from lead silence
+        sweep.noiseFloor(asFloat, lead, result.noiseFloorDb16);
+        StringBuilder nfLog = new StringBuilder("ambient noise floor (16 bands):");
+        for (float v : result.noiseFloorDb16) {
+            nfLog.append(String.format(Locale.US, " %.1f", v));
+        }
+        Log.i(TAG, nfLog.toString());
+
         // Each sweep is cut out with a generous margin. The window is short enough that the next
         // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
         // that window was cut for.
         final int windowLen = lead + sweepLen + (int) (1.0f * SAMPLE_RATE);
         float[] analysis = new float[NativeSweep.RESULT_SIZE];
+        float[][] channelImpulses = new float[channels.length][];
 
         for (int k = 0; k < channels.length; k++) {
             ChannelResult cr = new ChannelResult();
@@ -912,6 +995,18 @@ public final class RoomMeasurement {
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
             cr.clarityDb = analysis[NativeSweep.CLARITY];
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
+
+            // Spectral subtraction: clean = max(sweep - noise, 1e-12), snr = sweep - noise
+            NativeSweep.subtractNoise(cr.bandsDb, result.noiseFloorDb16, cr.cleanBandsDb, cr.snrDb);
+
+            // Deconvolve impulse response for GCC-PHAT
+            float[] impBuf = new float[len];
+            int impLen = sweep.deconvolve(window, len, impBuf);
+            if (impLen > 0) {
+                channelImpulses[k] = new float[impLen];
+                System.arraycopy(impBuf, 0, channelImpulses[k], 0, impLen);
+            }
+
             // Clarity decides, not prominence. Prominence compares the loudest instant of the
             // impulse response with its average, and the average moves with whatever else landed
             // in the window - measured on a bench, the same speaker gave 2889 on one run and 65
@@ -955,6 +1050,56 @@ public final class RoomMeasurement {
                     20 * Math.log10(cr.recordedRms + 1e-9f),
                     cr.ok ? "" : "  <-- TOO WEAK TO TRUST"));
         }
+
+        // 2. GCC-PHAT high-precision delay estimation
+        int refIdx = 0;
+        int minArrival = Integer.MAX_VALUE;
+        for (int k = 0; k < channels.length; k++) {
+            ChannelResult cr = result.channels[k];
+            if (cr != null && cr.ok && cr.arrivalSamples < minArrival) {
+                minArrival = cr.arrivalSamples;
+                refIdx = k;
+            }
+        }
+        if (channelImpulses[refIdx] != null) {
+            float[] refImp = channelImpulses[refIdx];
+            for (int k = 0; k < channels.length; k++) {
+                ChannelResult cr = result.channels[k];
+                if (cr != null && channelImpulses[k] != null) {
+                    float[] prom = new float[1];
+                    float delaySamples = NativeSweep.gccPhatDelay(refImp, refImp.length,
+                            channelImpulses[k], channelImpulses[k].length, prom);
+                    cr.gccPhatDelayMs = delaySamples * 1000f / SAMPLE_RATE;
+                    cr.gccPhatProminence = prom[0];
+                    Log.i(TAG, String.format(Locale.US,
+                            "GCC-PHAT: %s vs %s: delay = %+.3f ms (%.1f us), prom = %.1f",
+                            cr.label, channels[refIdx].label, cr.gccPhatDelayMs,
+                            cr.gccPhatDelayMs * 1000f, cr.gccPhatProminence));
+                }
+            }
+        }
+
+        // 3. Blind microphone calibration (Cabin Gain Anchor + high frequency correction)
+        float[] avgClean16 = new float[NativeSweep.BAND_COUNT];
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            double sumP = 0.0;
+            int validCh = 0;
+            for (int k = 0; k < channels.length; k++) {
+                ChannelResult cr = result.channels[k];
+                if (cr != null && cr.heardAtAll && cr.cleanBandsDb != null) {
+                    sumP += Math.pow(10.0, cr.cleanBandsDb[b] * 0.1);
+                    validCh++;
+                }
+            }
+            avgClean16[b] = validCh > 0 ? (float) (10.0 * Math.log10(sumP / validCh)) : -120f;
+        }
+        NativeSweep.estimateMicCompensation(avgClean16, result.micCompensation16);
+        StringBuilder mcLog = new StringBuilder("estimated mic compensation (16 bands):");
+        for (float v : result.micCompensation16) {
+            mcLog.append(String.format(Locale.US, " %+.1f", v));
+        }
+        Log.i(TAG, mcLog.toString());
+        setMicCompensationCurve(context, result.micCompensation16);
     }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
@@ -1094,9 +1239,15 @@ public final class RoomMeasurement {
             if (eq <= 0) continue;
             String key = pair.substring(0, eq);
             String value = pair.substring(eq + 1);
-            // Only one key is ever recorded now - which preset was selected - and putting it back
-            // makes the service reload everything that belongs to it.
-            editor.putString(key, value);
+            if ("saved_volume".equals(key)) {
+                try {
+                    int vol = Integer.parseInt(value);
+                    Log.i(TAG, "restoring saved volume from recovery: " + vol);
+                    VolumeHelper.setVolume(vol);
+                } catch (Throwable ignored) {}
+            } else {
+                editor.putString(key, value);
+            }
         }
     }
 
@@ -1514,8 +1665,34 @@ public final class RoomMeasurement {
                 for (float band : c.bandsDb) {
                     sb.append(String.format(Locale.US, " %.1f", band));
                 }
-                sb.append("\n\n");
+                sb.append("\n");
+                sb.append("             clean dB:   ");
+                for (float band : c.cleanBandsDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n");
+                sb.append("             SNR dB:     ");
+                for (float band : c.snrDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n");
+                if (c.gccPhatProminence > 0f) {
+                    sb.append(String.format(Locale.US,
+                            "             GCC-PHAT:   %+.3f ms (%.1f us, prominence %.1f)\n",
+                            c.gccPhatDelayMs, c.gccPhatDelayMs * 1000f, c.gccPhatProminence));
+                }
+                sb.append("\n");
             }
+            sb.append("Ambient noise dB:     ");
+            for (float band : result.noiseFloorDb16) {
+                sb.append(String.format(Locale.US, " %.1f", band));
+            }
+            sb.append("\n");
+            sb.append("Mic compensation dB:  ");
+            for (float band : result.micCompensation16) {
+                sb.append(String.format(Locale.US, " %+.1f", band));
+            }
+            sb.append("\n\n");
             sb.append(wiringVerdict(result));
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
                     + "8000 12500 20000 Hz\n");

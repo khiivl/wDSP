@@ -904,8 +904,8 @@ public class AudioSpectrumEngine {
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
         if (radioActive) {
             // Cabin acoustic microphone capture already has hardware DSP EQ applied by BU32107.
-            // Setting a flat 0 dB curve prevents double-equalization.
-            analyzer.setDspCurve(new float[16]);
+            // Apply calibrated microphone inverse compensation curve to restore bass and treble roll-off.
+            analyzer.setDspCurve(RoomMeasurement.getMicCompensationCurve(appContext));
         } else {
             analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
         }
@@ -1125,8 +1125,8 @@ public class AudioSpectrumEngine {
         // Configure analyzer for acoustic capture:
         // 1. Acoustic mode: bypass cabin rumble noise floor subtraction so 50 Hz sub-bass dances
         nativeAnalyzer.setIsAcoustic(true);
-        // 2. Flat DSP curve: microphone already hears the acoustic cabin sound shaped by DSP
-        nativeAnalyzer.setDspCurve(new float[16]);
+        // 2. Compensated DSP curve: apply calibrated microphone inverse compensation curve
+        nativeAnalyzer.setDspCurve(RoomMeasurement.getMicCompensationCurve(appContext));
 
         boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
             if (!capturePolling) return;
