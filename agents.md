@@ -280,28 +280,37 @@ Fully localized in 30 languages with zero abbreviations in headers/labels:
 
 ---
 
-## 📻 Апаратна комутація динаміків через Fader/Balance MCU при Auto-EQ (🔬 / 📻 10.09.2026 18:00) *(✍️ Antigravity & Kostyamat)*
+## 📻 Апаратна комутація динаміків через Fader/Balance MCU при Auto-EQ (🔬 / 📻 10.09.2026 19:15) *(✍️ Antigravity & Kostyamat)*
 
-### Проблема:
-- Під час акустичного вимірювання (свипів) при тестуванні задніх динаміків одночасно звучали й передні динаміки.
+### 1. Тракт звуку та ідентифікація заліза
+- **Звуковий процесор**: ROHM **BU32107EFV-M** (24-біт цифровий I2S DSP).
+- **Datasheet**: TSZ02201-0C2C0E500500-1-2, Rev.001, 116 сторінок (07.Apr.2017).
+- **Регістри Fader Volume (`0A00`–`0A05`)**:
+  - `0A00` = FL (Front Left)
+  - `0A01` = FR (Front Right)
+  - `0A02` = RL (Rear Left)
+  - `0A03` = RR (Rear Right)
+  - `0A04` = SL (Sub/Surround Left)
+  - `0A05` = SR (Sub/Surround Right)
+  - Формула розрахунку: `Data = 0x20 (32 dec) - Fader_Volume_dB` ($0\text{ dB} = \text{0x20}$, $-79\text{ dB} = \text{0x6F}$, $- \infty\text{ dB} = \text{0x00}$).
+- **Апаратні обмеження Advanced Switch (стор. 25-30, 94 даташиту)**:
+  - Час плавного переходу гучності становить від 0.7 мс до 23.3 мс (`0003(hex)`, `0005(hex)`).
+  - Даташит суворо забороняє слати одночасні команди гучності/мікшування під час роботи Advanced Switch: *"Do not send Fader Volume Gain setting data (0A00(hex) to 0A05(hex)) during same channel Mixing/Mixing Fader Advanced Switch operation. Fader Volume may malfunction."*
 
-### 🔬 Дослідження та виміри на залізі (Provenience):
-- **Тракт звуку**: Android `AudioTrack` генерує звичайний 2-канальний стерео-потік (`L / R`). Розведенням стерео на 4 фізичні динаміки (FL, FR, RL, RR) та сабвуфер керує виключно апаратний DSP-чип (BU32107 / AK7604) за командами MCU.
-- **Маршрутизація каналів**: Для повної акустичної ізоляції динаміка під час заміру баланс та фейдер мають бути загнані в крайній відповідний кут:
-  - `REAR_LEFT`: `LR = 0, FR = 0`
-  - `REAR_RIGHT`: `LR = 24, FR = 0`
-  - `FRONT_LEFT`: `LR = 0, FR = 24`
-  - `FRONT_RIGHT`: `LR = 24, FR = 24`
-- **Корінь збою (виявлено по логах 10.09.2026 17:52:24)**:
-  - `McuService` у системі стартував лише з `MainActivity` або через `BootReceiver`.
-  - Після перевстановлення APK додаток відкривався прямо в `SettingsActivity`, де сервіс `McuService` не був запущений.
-  - `RoomMeasurement` записував значення в `SharedPreferences` (`wDSP Flat_f_lr`, `wDSP Flat_f_fr`), сподіваючись на асинхронний `OnSharedPreferenceChangeListener`. Оскільки сервіс спав, ніхто не відправляв команду `0x81` в MCU.
-  - Апаратний чип DSP залишався в дефолтному стані «все по центру» ($LR=12, FR=12$), тому стерео-свип лунав з усіх 4 динаміків одночасно.
+### 2. Чому виник збій при спробі «прямої» комутації (sendFaderDirect):
+- Впровадження `sendFaderDirect` в обхід SharedPreferences спричинило:
+  1. Гонку на шині UART між потоком UI / вимірювання та фоновим воркером `McuService.backgroundHandler`.
+  2. Відкладені виклики `prefListener` читали застарілі значення з SharedPreferences і перетирали щойно відправлені регістри назад у центр `(12, 12)`.
+  3. Порушення часу наростання/спаду Advanced Switch спричиняло десинхронізацію та непередбачуване звучання каналів.
 
-### 🧩 Інженерне вирішення:
-1. **Гарантований старт сервісу**: `McuService.ensureStarted(Context)` викликається в `SettingsActivity.onCreate()`, `RoomMeasurement.measure()`, та `RoomMeasurement.restoreIfInterrupted()`.
-2. **Пряма комутація через Binder (`McuService.sendFaderDirect(lr, fr)`)**:
-   - `RoomMeasurement.applyRouting` відправляє команду `0x81` безпосередньо у залізо (`RPC_SetEQData`) перед кожним свипом замість очікування асинхронних SharedPreferences.
-   - Метод `sendToHardware` у `McuService` синхронізовано (`synchronized`) для усунення гонок між потоками.
-   - У блоці `finally` вимірювання додано обов'язкове пряме повернення апаратного фейдера/балансу до початкових значень пресету користувача.
+### 3. Еталонна реалізація (Відновлено та закріплено):
+1. **Єдина черга відправки (`McuService.backgroundHandler`)**:
+   - Усі команди `0x81` (Fader/Balance/Loudness) проходять суворо через SharedPreferences (`currentPresetName + "_f_lr"`, `currentPresetName + "_f_fr"`).
+   - `MainActivity` слайдери викликають виключно `autoSaveCurrent()`.
+   - `RoomMeasurement.applyRouting()` пише в SharedPreferences тимчасового пресету `SCRATCH_PRESET`.
+2. **Гарантований старт сервісу**: `McuService.ensureStarted(Context)` викликається в `SettingsActivity.onCreate()`, `RoomMeasurement.measure()`, та `RoomMeasurement.restoreIfInterrupted()`.
+3. **Чистота тимчасового пресету**:
+   - У блоці `finally` методу `runOnePass` координати тимчасового пресету повертаються в центр `(12, 12)`, тому пресет ніколи не зависає в кутку.
+4. **Гарантоване скидання кешу та відновлення**:
+   - У `restoreIfInterrupted()` та `finally` методу `measurePass` відправляється широкомовне повідомлення `RESET_AUDIO_MCU` (`com.radiorubka.wdsp.RESET_AUDIO_MCU`), яке очищує `mcuCache` та виконує `syncPreset(false)` для синхронізації всього заліза з пресетом користувача.
 
