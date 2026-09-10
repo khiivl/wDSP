@@ -1626,6 +1626,12 @@ public class SettingsActivity extends AppCompatActivity {
         cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
         RadioGroup rgStage = view.findViewById(R.id.rg_soundstage_mode);
 
+        View cardTarget = view.findViewById(R.id.card_target_curve);
+        if (cardTarget != null) {
+            cardTarget.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        }
+        RadioGroup rgTarget = view.findViewById(R.id.rg_target_curve);
+
         TextView btnCancel = view.findViewById(R.id.btn_wizard_cancel);
         btnCancel.setTextColor(textSecondary);
         TouchGlow.attach(btnCancel);
@@ -1717,7 +1723,22 @@ public class SettingsActivity extends AppCompatActivity {
                 mode = RoomMeasurement.SoundstageMode.OFF;
             }
 
+            RoomMeasurement.TargetCurve targetCurve = RoomMeasurement.TargetCurve.HARMAN;
+            if (rgTarget != null) {
+                int targetId = rgTarget.getCheckedRadioButtonId();
+                if (targetId == R.id.rb_target_dolby) {
+                    targetCurve = RoomMeasurement.TargetCurve.DOLBY_ATMOS;
+                } else if (targetId == R.id.rb_target_bass) {
+                    targetCurve = RoomMeasurement.TargetCurve.BASS_HEAVY;
+                } else if (targetId == R.id.rb_target_vocal) {
+                    targetCurve = RoomMeasurement.TargetCurve.VOCAL_SPEECH;
+                } else if (targetId == R.id.rb_target_flat) {
+                    targetCurve = RoomMeasurement.TargetCurve.FLAT_STUDIO;
+                }
+            }
+
             final RoomMeasurement.SoundstageMode selectedMode = mode;
+            final RoomMeasurement.TargetCurve selectedTarget = targetCurve;
             RoomMeasurement.pauseMedia(this);
 
             if (!RootAccess.hasRoot(this)) {
@@ -1731,7 +1752,7 @@ public class SettingsActivity extends AppCompatActivity {
                                     runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                                             tvProgressStage, tvProgressDetail, progressBar, tvPercent,
                                             layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
-                                            btnApply, hasSub, selectedMode);
+                                            btnApply, hasSub, selectedMode, selectedTarget);
                                 } else {
                                     ThemedDialog.notice(this, getString(R.string.room_root_title),
                                             getString(R.string.room_root_blocked));
@@ -1749,7 +1770,7 @@ public class SettingsActivity extends AppCompatActivity {
             runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                     tvProgressStage, tvProgressDetail, progressBar, tvPercent,
                     layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
-                    btnApply, hasSub, selectedMode);
+                    btnApply, hasSub, selectedMode, selectedTarget);
         });
 
         dialog.show();
@@ -1807,7 +1828,8 @@ public class SettingsActivity extends AppCompatActivity {
                                         View layoutPolarity, TextView tvPolarityMsg,
                                         TextView tvHpf, TextView tvSub, TextView tvDelays, TextView tvAutoEq,
                                         TextView btnApply, boolean hasSub,
-                                        RoomMeasurement.SoundstageMode mode) {
+                                        RoomMeasurement.SoundstageMode mode,
+                                        RoomMeasurement.TargetCurve targetCurve) {
         layoutSetup.setVisibility(View.GONE);
         layoutProgress.setVisibility(View.VISIBLE);
         layoutReport.setVisibility(View.GONE);
@@ -1817,7 +1839,7 @@ public class SettingsActivity extends AppCompatActivity {
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
         tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
 
-        RoomMeasurement.measureAsync(this, hasSub, mode, new RoomMeasurement.Listener() {
+        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, new RoomMeasurement.Listener() {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
@@ -1873,6 +1895,11 @@ public class SettingsActivity extends AppCompatActivity {
                             result.suggestedDelayMs[1], result.suggestedDelaySteps[1]));
 
                     // 4. Auto-EQ 16 bands
+                    TextView tvAutoEqTitle = layoutReport.findViewById(R.id.tv_report_autoeq_title);
+                    if (tvAutoEqTitle != null) {
+                        tvAutoEqTitle.setText(getString(R.string.room_wizard_autoeq_title,
+                                result.targetCurve != null ? result.targetCurve.title : "Harman Reference"));
+                    }
                     final String[] freqLabels = {
                         "20", "31", "50", "80", "125", "200", "315", "500",
                         "800", "1.2k", "2k", "3.1k", "5k", "8k", "12k", "20k"
@@ -1887,8 +1914,9 @@ public class SettingsActivity extends AppCompatActivity {
 
                     // 5. Apply button
                     btnApply.setOnClickListener(v -> {
-                        RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, "AutoEQ Harman");
-                        Toast.makeText(SettingsActivity.this, R.string.room_wizard_applied_toast, Toast.LENGTH_LONG).show();
+                        final String presetName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+                        RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, presetName);
+                        Toast.makeText(SettingsActivity.this, getString(R.string.room_wizard_applied_toast, presetName), Toast.LENGTH_LONG).show();
                         refreshRoomMeasurementUi();
                         dialog.dismiss();
                     });
