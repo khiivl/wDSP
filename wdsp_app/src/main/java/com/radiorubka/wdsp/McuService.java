@@ -328,10 +328,19 @@ public class McuService extends Service implements LocationListener {
     }
 
     public static void sendFaderDirect(int leftRight, int frontRear) {
-        byte[] data = new byte[]{(byte) 0x81, (byte) (leftRight & 0xFF), (byte) (frontRear & 0xFF), 0};
         McuService s = instance;
+        boolean loud = false;
+        if (s != null && s.prefs != null && s.currentPresetName != null) {
+            try {
+                loud = s.prefs.getBoolean(s.currentPresetName + "_loud", false);
+            } catch (Throwable ignored) {}
+        }
+        byte[] data = new byte[]{(byte) 0x81, (byte) (leftRight & 0xFF), (byte) (frontRear & 0xFF), (byte) (loud ? 1 : 0)};
         if (s != null) {
-            s.sendToHardware(data);
+            synchronized (s) {
+                s.mcuCache.remove((byte) 0x81);
+                s.sendToHardware(data);
+            }
             return;
         }
         try {
@@ -344,8 +353,8 @@ public class McuService extends Service implements LocationListener {
                     Method setEqData = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
                     setEqData.invoke(mcuManager, (Object) data);
                     Log.i(TAG, String.format(java.util.Locale.US,
-                            "[DirectMcu] Fader/Balance sent (direct binder fallback): [81 %02X %02X 00]",
-                            leftRight & 0xFF, frontRear & 0xFF));
+                            "[DirectMcu] Fader/Balance sent (direct binder fallback): [81 %02X %02X %02X]",
+                            leftRight & 0xFF, frontRear & 0xFF, (loud ? 1 : 0)));
                 }
             }
         } catch (Throwable t) {
@@ -516,6 +525,11 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
                     adjustSubGain(-1);
+                }
+                else if ("com.radiorubka.wdsp.RESET_AUDIO_MCU".equals(action)) {
+                    Log.i(TAG, "RESET_AUDIO_MCU received: clearing cache and reapplying preset settings");
+                    mcuCache.clear();
+                    syncPreset(false);
                 }
                 else if ("com.radiorubka.wdsp.PROBE_SESSION".equals(action)) {
                     // Diagnostic only - see SessionProbe. sid >= 0 probes one session,
@@ -702,6 +716,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");
+        controlFilter.addAction("com.radiorubka.wdsp.RESET_AUDIO_MCU");
         controlFilter.addAction(ACTION_AUDIO_STATE_STABLE);
         return controlFilter;
     }

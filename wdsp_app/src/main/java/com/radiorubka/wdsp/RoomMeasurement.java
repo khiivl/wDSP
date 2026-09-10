@@ -784,6 +784,8 @@ public final class RoomMeasurement {
             Log.e(TAG, result.error);
             return result;
         }
+        final int initialLr = prefs.getInt(preset + "_f_lr", FADER_CENTRE);
+        final int initialFr = prefs.getInt(preset + "_f_fr", FADER_CENTRE);
         if (!NativeSweep.isAvailable()) {
             result.error = "the native library is not loaded";
             Log.e(TAG, result.error);
@@ -829,7 +831,7 @@ public final class RoomMeasurement {
                 result.error = "the sweep could not be built";
                 return result;
             }
-            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener, initialLr, initialFr);
 
             if (listener != null) {
                 listener.onProgress(3, 5, "Аналіз затримок", "Розрахунок часового вирівнювання (GCC-PHAT)...", 85);
@@ -854,10 +856,8 @@ public final class RoomMeasurement {
             editor.apply();
 
             // Restore hardware fader & balance to the original preset values
-            int origLr = prefs.getInt(preset + "_f_lr", FADER_CENTRE);
-            int origFr = prefs.getInt(preset + "_f_fr", FADER_CENTRE);
-            McuService.sendFaderDirect(origLr, origFr);
-            Log.i(TAG, "restored hardware fader/balance to " + preset + ": lr=" + origLr + ", fr=" + origFr);
+            McuService.sendFaderDirect(initialLr, initialFr);
+            Log.i(TAG, "restored hardware fader/balance to " + preset + ": lr=" + initialLr + ", fr=" + initialFr);
 
             Log.i(TAG, "restoring volume to " + origVolume);
             VolumeHelper.setVolume(origVolume);
@@ -894,7 +894,7 @@ public final class RoomMeasurement {
      */
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
                                    NativeSweep sweep, float amplitude, Result result,
-                                   Listener listener) {
+                                   Listener listener, int initialLr, int initialFr) {
         final Channel[] channels = Channel.values();
         final int sweepLen = sweep.length();
         final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
@@ -1051,6 +1051,10 @@ public final class RoomMeasurement {
             if (effects != null) effects.restore();
             closeQuietly(track);
             closeQuietly(record);
+            // Immediately restore hardware balance & fader to the original preset values before giving up audio focus!
+            McuService.sendFaderDirect(initialLr, initialFr);
+            Log.i(TAG, "restored hardware fader/balance immediately at sweep end: lr="
+                    + initialLr + ", fr=" + initialFr);
             abandonFocus(context);
         }
 
@@ -1303,14 +1307,8 @@ public final class RoomMeasurement {
         }
         Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
                 + " fader=" + channel.frontRear + " ---");
-        // 1. Direct synchronous hardware routing to MCU DSP chip
+        // Direct synchronous hardware routing to MCU DSP chip for the sweep
         McuService.sendFaderDirect(channel.leftRight, channel.frontRear);
-
-        // 2. Persist in SharedPreferences so state stays consistent
-        prefs.edit()
-                .putInt(preset + "_f_lr", channel.leftRight)
-                .putInt(preset + "_f_fr", channel.frontRear)
-                .apply();
     }
 
     /**
