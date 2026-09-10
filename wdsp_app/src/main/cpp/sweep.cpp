@@ -551,4 +551,133 @@ float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,
     return static_cast<float>(intDelay) + delta;
 }
 
+// 12 hardware frequencies for Bass Filter (HPF):
+// 20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
+constexpr int kBassFilterBands = 12;
+constexpr float kBassFilterFreqs[kBassFilterBands] = {
+    20.0f, 25.0f, 31.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
+};
+
+// 11 hardware frequencies for Subwoofer Filter (LPF):
+// 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
+constexpr int kSubBands = 11;
+constexpr float kSubFreqs[kSubBands] = {
+    25.0f, 32.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
+};
+
+int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
+    if (avgClean16 == nullptr) return 5; // Default 63 Hz (index 5)
+
+    // Midrange reference level: bands 5, 6, 7, 8 (200, 315, 500, 800 Hz)
+    const float refMid = 0.25f * (avgClean16[5] + avgClean16[6] + avgClean16[7] + avgClean16[8]);
+
+    // Check low-end response:
+    // Band 3 = 80 Hz, Band 2 = 50 Hz, Band 1 = 31.5 Hz
+    const float drop80 = refMid - avgClean16[3];
+    const float drop50 = refMid - avgClean16[2];
+
+    // If 50 Hz is within 3.5 dB of midrange, the speaker has strong deep bass -> 50 Hz HPF (index 4)
+    if (drop50 <= 3.5f) {
+        return 4; // 50 Hz
+    }
+    // If 80 Hz is solid (within 3 dB), but 50 Hz drops -> 63 Hz HPF
+    if (drop80 <= 3.0f) {
+        return 5; // 63 Hz
+    }
+    if (drop80 <= 6.0f) {
+        return 6; // 80 Hz
+    }
+    // If 80 Hz is already weak -> 100 Hz HPF (index 7)
+    return 7; // 100 Hz
+}
+
+void SweepMeasurement::synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
+                                           int hpfCutoffIdx, bool hasSub,
+                                           int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+    if (outGains16 == nullptr) return;
+
+    // Default Flat gains (index 6 = 0 dB)
+    for (int b = 0; b < kHwBands; b++) {
+        outGains16[b] = 6;
+    }
+    outSubLpfIdx = 5; // default 80 Hz
+    outSubGain = 8;   // default +4 dB
+
+    if (avgClean16 == nullptr) return;
+
+    const float cutoffHz = (hpfCutoffIdx >= 0 && hpfCutoffIdx < kBassFilterBands)
+            ? kBassFilterFreqs[hpfCutoffIdx] : 63.0f;
+
+    // Map HPF cutoff frequency to Subwoofer LPF index (kSubFreqs)
+    if (hasSub) {
+        int bestSubIdx = 5; // 80 Hz default
+        float minDiff = 1e6f;
+        for (int i = 0; i < kSubBands; i++) {
+            float diff = std::fabs(kSubFreqs[i] - cutoffHz);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestSubIdx = i;
+            }
+        }
+        outSubLpfIdx = bestSubIdx;
+        outSubGain = 8; // +4 dB shelf
+    }
+
+    // 1. Calculate compensated acoustic response M[b] = avgClean16[b] + micComp16[b]
+    std::vector<float> m(kHwBands, 0.0f);
+    for (int b = 0; b < kHwBands; b++) {
+        m[b] = avgClean16[b] + (micComp16 != nullptr ? micComp16[b] : 0.0f);
+    }
+
+    // Midrange reference (bands 5..8: 200..800 Hz)
+    const float refMid = 0.25f * (m[5] + m[6] + m[7] + m[8]);
+
+    // 2. Synthesize Harman In-Car target curve T[b] relative to refMid
+    for (int b = 0; b < kHwBands; b++) {
+        float target = 0.0f;
+        const float freq = kHwCenters[b];
+
+        if (freq >= 2500.0f) {
+            // High frequency tilt: -0.8 dB / octave above 2.5 kHz
+            target = -0.8f * std::log2(freq / 2500.0f);
+        } else if (freq < 160.0f) {
+            if (hasSub) {
+                // Sub-bass shelf +5 dB below 60 Hz, transitioning to 0 dB at 160 Hz
+                if (freq <= 60.0f) {
+                    target = +5.0f;
+                } else {
+                    target = 5.0f * (std::log10(160.0f / freq) / std::log10(160.0f / 60.0f));
+                }
+            } else {
+                // No sub: modest +2 dB warmth above cutoff, rolled off below cutoff
+                if (freq >= cutoffHz) {
+                    target = +2.0f * (std::log10(160.0f / freq) / std::log10(160.0f / cutoffHz));
+                } else {
+                    target = 0.0f; // No boost below midbass cutoff!
+                }
+            }
+        }
+
+        // Error delta
+        float deltaDb = target - (m[b] - refMid);
+
+        // Clamping rules:
+        // Rule 1: Never boost below midbass cutoff without a sub
+        if (!hasSub && freq < cutoffHz) {
+            deltaDb = std::min(deltaDb, 0.0f);
+        }
+        // Rule 2: Strict limit on boost to prevent clipping and null excitation (+3.0 dB)
+        deltaDb = std::min(deltaDb, +3.0f);
+        // Rule 3: Cuts up to -9.0 dB to tame cabin room modes
+        deltaDb = std::max(deltaDb, -9.0f);
+
+        // Quantize to BU32107 gain index (2 dB per step, 6 = 0 dB)
+        // deltaDb = (index - 6) * 2  =>  index = round(deltaDb / 2) + 6
+        int gainIdx = static_cast<int>(std::round(deltaDb / 2.0f)) + 6;
+        gainIdx = std::max(1, std::min(8, gainIdx)); // safe indices: 1 (-10 dB) .. 8 (+4 dB)
+        outGains16[b] = gainIdx;
+    }
+}
+
 } // namespace wdsp
+

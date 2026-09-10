@@ -133,6 +133,22 @@ public:
                               const float* hCh, int chLen,
                               float& peakProminence);
 
+    /**
+     * Estimates the natural acoustic roll-off frequency of midbass speakers
+     * by comparing the clean 16-band energy spectrum to the midrange reference (200..800 Hz).
+     * Returns the index into kBassFilterFreqs (0..11, matching BU32107 HPF frequencies).
+     */
+    static int detectMidbassRollOff(const float* avgClean16);
+
+    /**
+     * Synthesizes the 16-band Auto-EQ gains (indices 0..12, 6=0 dB, 2 dB/step) matching the Harman
+     * In-Car target curve, accounting for fixed Q=2.2 bandwidth and asymmetric boost/cut limits.
+     * Also outputs recommended subwoofer LPF index and gain (if hasSub is true).
+     */
+    static void synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
+                                     int hpfCutoffIdx, bool hasSub,
+                                     int* outGains16, int& outSubLpfIdx, int& outSubGain);
+
 private:
     int sampleRate_;
     float startHz_;
