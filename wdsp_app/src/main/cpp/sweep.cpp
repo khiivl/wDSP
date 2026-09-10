@@ -631,16 +631,18 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         }
         outSubLpfIdx = bestSubIdx;
         if (targetCurveType == TARGET_DOLBY_ATMOS) {
-            outSubGain = 9; // +6 dB cinema sub shelf
+            outSubGain = 8; // +4 dB cinema sub shelf
         } else if (targetCurveType == TARGET_BASS_HEAVY) {
-            outSubGain = 10; // +8 dB heavy bass shelf
+            outSubGain = 9; // +6 dB heavy bass shelf
         } else if (targetCurveType == TARGET_VOCAL_SPEECH) {
             outSubGain = 4; // -4 dB attenuated sub
         } else if (targetCurveType == TARGET_FLAT_STUDIO) {
             outSubGain = 6; // 0 dB flat sub
         } else {
-            outSubGain = 8; // +4 dB default Harman shelf
+            outSubGain = 7; // +2 dB natural Harman shelf
         }
+    } else {
+        outSubGain = 0; // Mute subwoofer when not present
     }
 
     // 1. Calculate compensated acoustic response M[b] = avgClean16[b] + micComp16[b]
@@ -753,14 +755,28 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         // Error delta
         float deltaDb = target - (m[b] - refMid);
 
-        // Clamping rules:
-        // Rule 1: Never boost below midbass cutoff without a sub
-        if (!hasSub && freq < cutoffHz) {
-            deltaDb = std::min(deltaDb, 0.0f);
+        // Subwoofer / Midbass Crossover Rule:
+        // In BU32107, the 16-band EQ sits in the stereo mix BEFORE the crossover filters!
+        // If we cut 20, 31.5, 50 Hz on the 16-band EQ, we cut those frequencies for the SUBWOOFER too.
+        // 1) When hasSub is true:
+        //    The subwoofer handles frequencies below cutoffHz (via Sub LPF 0707, 12 dB/oct).
+        //    The door speakers are protected by the Door HPF (0703, 12 dB/oct).
+        //    The 16-band EQ MUST NOT CUT sub-bass below cutoffHz! Keep it flat (0 dB, index 6),
+        //    so the subwoofer receives a full, unattenuated input signal.
+        if (hasSub && freq < cutoffHz) {
+            deltaDb = 0.0f; // 0 dB (Flat index 6)
         }
-        // Rule 2: Strict limit on boost to prevent clipping and null excitation (+3.0 dB)
+        // 2) When hasSub is false:
+        //    Door speakers play full-range (HPF = Through / 20 Hz).
+        //    Infrasound below 40 Hz cannot be reproduced by door speakers; keep at 0 dB (do not boost).
+        else if (!hasSub && freq < 40.0f) {
+            deltaDb = 0.0f;
+        }
+
+        // Clamping rules:
+        // Rule 1: Strict limit on boost to prevent clipping and null excitation (+3.0 dB)
         deltaDb = std::min(deltaDb, +3.0f);
-        // Rule 3: Cuts:
+        // Rule 2: Cuts:
         // - Bass/midrange (<= 1 kHz) can cut down to -6.0 dB to tame cabin room modes
         // - High frequencies (> 1 kHz) must NEVER be cut aggressively; limit cut to -3.0 dB
         //   to preserve natural treble, speech presence, and sparkle.

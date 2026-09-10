@@ -796,7 +796,7 @@ public final class RoomMeasurement {
         }
 
         if (listener != null) {
-            listener.onProgress(1, 5, "Калібрування мікрофона", "Вимір фонового шуму салону та фіксація гучності (16 од.)...", 5);
+            listener.onProgress(1, 5, "Замір фону тиші", "Вимір фонового шуму в тиші та фіксація гучності (16 од.)...", 5);
         }
 
         Log.i(TAG, "=== room measurement starting ===");
