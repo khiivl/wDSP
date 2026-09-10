@@ -275,6 +275,10 @@
     <string name="debug_section_title">Діагностика</string>
     <string name="room_measure_label">Вимір салону</string>
     <string name="room_measure_desc">По черзі програє свіп через кожен динамік і вимірює, коли прийшов звук і чи він у фазі. Триває близько півхвилини. Двигун вимкнений, двері зачинені, гучність звичайна.</string>
+    <string name="room_measure_confirm_title">Акустичне вимірювання салону</string>
+    <string name="room_measure_confirm_msg">Перед початком вимірювання свіпом:\n\n1. Відтворення музики буде призупинено.\n2. Гучність буде тимчасово встановлено на рівень 16 одиниць (~50%) для лінійного вимірювання. Буде гучно!\n3. DSP еквалайзер буде тимчасово скинуто в Flat.\n4. Протягом 1 секунди буде виміряно фоновий шум салону в тиші, після чого пролунає свіп через кожен динамік по черзі.\n5. Двигун має бути вимкнений, двері та вікна зачинені.\n\nПісля завершення початковий рівень гучності та ваш пресет DSP будуть автоматично відновлені.</string>
+    <string name="room_measure_confirm_start">Почати</string>
+    <string name="room_measure_confirm_cancel">Скасувати</string>
     <string name="room_measure_button">Виміряти</string>
     <string name="room_measure_running">Вимір: %1$s</string>
     <string name="room_measure_done">Готово — надіслати результат?</string>
