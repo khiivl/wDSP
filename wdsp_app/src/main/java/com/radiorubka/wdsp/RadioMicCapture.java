@@ -116,7 +116,10 @@ public class RadioMicCapture {
         // Never prompts on its own - permissions onboarding is handled exclusively by PermissionsWizard.
         if (RootAccess.hasRoot(context)) {
             try {
-                Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
+                java.lang.Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"});
+                if (!p.waitFor(1500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                    p.destroy();
+                }
             } catch (Throwable ignored) {}
         }
 

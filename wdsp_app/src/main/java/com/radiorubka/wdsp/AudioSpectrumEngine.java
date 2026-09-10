@@ -1241,10 +1241,12 @@ public class AudioSpectrumEngine {
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
         boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        boolean hasRoot = RootAccess.hasRoot(appContext);
         boolean hasMicCal = RoomMeasurement.hasMicCompensation(appContext);
+        boolean canRunMic = hasRoot && hasMicCal;
 
         if (isRadio) {
-            boolean shouldRunMic = (micMode || radioMicVisualizerEnabled) && hasMicCal;
+            boolean shouldRunMic = (micMode || radioMicVisualizerEnabled) && canRunMic;
             if (shouldRunMic) {
                 if (visualizer != null || !isRadioCaptureActive()) {
                     Log.i(TAG, "Source is Radio - switching to calibrated mic capture pipeline");
@@ -1252,7 +1254,7 @@ public class AudioSpectrumEngine {
                 }
             } else {
                 if (isRadioCaptureActive() || visualizer != null) {
-                    Log.i(TAG, "Source is Radio (mic uncalibrated or mode calc) - stopping active capture");
+                    Log.i(TAG, "Source is Radio (no root / mic uncalibrated / mode calc) - stopping active capture");
                     stopRadioMicCapture();
                     stopNativeCapture();
                     if (visualizer != null) {
@@ -1265,7 +1267,7 @@ public class AudioSpectrumEngine {
                 }
             }
         } else {
-            if (micMode && hasMicCal) {
+            if (micMode && canRunMic) {
                 if (!isRadioCaptureActive()) {
                     Log.i(TAG, "Spectrum mode is MIC - switching to mic capture pipeline");
                     startInternal(currentSessionId);
@@ -1283,7 +1285,9 @@ public class AudioSpectrumEngine {
     private void startInternal(int sessionId) {
         boolean isRadio = appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
         boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        boolean hasRoot = appContext != null && RootAccess.hasRoot(appContext);
         boolean hasMicCal = appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+        boolean canRunMic = hasRoot && hasMicCal;
 
         if (isRadio) {
             if (visualizer != null) {
@@ -1293,7 +1297,7 @@ public class AudioSpectrumEngine {
                 } catch (Throwable ignored) {}
                 visualizer = null;
             }
-            if ((micMode || radioMicVisualizerEnabled) && hasMicCal) {
+            if ((micMode || radioMicVisualizerEnabled) && canRunMic) {
                 startRadioMicPipeline();
             } else {
                 stopRadioMicCapture();
@@ -1302,7 +1306,7 @@ public class AudioSpectrumEngine {
             return;
         }
 
-        if (micMode && hasMicCal) {
+        if (micMode && canRunMic) {
             if (visualizer != null) {
                 try {
                     visualizer.setEnabled(false);

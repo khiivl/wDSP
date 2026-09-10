@@ -230,6 +230,11 @@ public class SettingsActivity extends AppCompatActivity {
         PermissionsWizard.refreshCurrent();
         NowPlaying.getInstance(this).refresh();
         updatePermissionButtonsState();
+        RootAccess.checkAsync(this, () -> {
+            if (settingsColumn != null) {
+                SettingsAccordion.refresh(settingsColumn);
+            }
+        });
     }
 
     @Override

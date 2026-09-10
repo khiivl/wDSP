@@ -61,38 +61,42 @@ public final class RootAccess {
     }
 
     /**
-     * Fast, non-blocking check whether root is already available.
-     * Returns true if verified in this process session or recorded in SharedPreferences.
+     * Fast, non-blocking check whether root is already verified and available.
+     * Returns true only if verified in this process session.
+     * If not yet verified but was previously recorded in preferences, initiates background verification.
      */
     public static boolean hasRoot(Context context) {
         if (sRootGranted != null) return sRootGranted;
         if (context != null) {
             boolean stored = ThemeManager.prefs(context).getBoolean(PREF_ROOT_GRANTED, false);
-            if (stored) {
-                sRootGranted = true;
-                return true;
+            if (!stored) {
+                sRootGranted = false;
+                return false;
             }
+            // Stored pref was true, but we haven't verified in this session yet.
+            // Start async check to verify it has not been revoked in Magisk.
+            checkAsync(context, null);
         }
         return false;
     }
 
     /**
-     * Checks in background if root is available and caches the result.
-     * If root is granted, sets sRootGranted = true, saves to prefs, and runs callback.
+     * Checks in background if root is available and updates cache and preferences.
+     * Always re-verifies via alreadyGranted() so that root revocation in Magisk is detected.
      */
-    public static void checkAsync(Context context, Runnable onGranted) {
-        if (sRootGranted != null && sRootGranted) {
-            if (onGranted != null) onGranted.run();
-            return;
-        }
+    public static void checkAsync(Context context, Runnable onFinished) {
         new Thread(() -> {
             boolean granted = alreadyGranted();
             sRootGranted = granted;
             if (context != null) {
                 ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
             }
-            if (granted && onGranted != null) {
-                onGranted.run();
+            if (onFinished != null) {
+                if (context instanceof android.app.Activity) {
+                    ((android.app.Activity) context).runOnUiThread(onFinished);
+                } else {
+                    onFinished.run();
+                }
             }
         }, "wDSP_RootCheckAsync").start();
     }
@@ -147,19 +151,15 @@ public final class RootAccess {
         }
         try {
             Outcome outcome = request();
-            if (outcome == Outcome.GRANTED) {
-                sRootGranted = true;
-                if (context != null) {
-                    ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, true).apply();
-                }
+            boolean granted = (outcome == Outcome.GRANTED);
+            sRootGranted = granted;
+            if (context != null) {
+                ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
+            }
+            if (granted) {
                 try {
                     Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
                 } catch (Throwable ignored) {}
-            } else if (outcome == Outcome.REFUSED || outcome == Outcome.DENIED_BY_POLICY) {
-                sRootGranted = false;
-                if (context != null) {
-                    ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, false).apply();
-                }
             }
             return outcome;
         } finally {
@@ -174,9 +174,8 @@ public final class RootAccess {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-            if (!p.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) {
-                // A prompt is up. It was not "already" granted, and the caller should ask properly
-                // rather than leave a dialog hanging behind whatever it does next.
+            if (!p.waitFor(1500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                // A prompt is up or ignored. It was not "already" granted!
                 p.destroy();
                 return false;
             }

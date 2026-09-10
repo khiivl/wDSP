@@ -57,18 +57,29 @@ public final class SettingsAccordion {
     private static boolean sNight = true;
 
     private static void setHeaderState(TextView title, View body, boolean open, int accent, int textPrimary) {
+        Context ctx = title.getContext();
+        boolean isRoom = (title.getId() == R.id.label_room_section);
+        boolean isLocked = isRoom && !PermissionsWizard.isRootGranted(ctx);
+
+        if (isLocked) {
+            open = false;
+        }
+
         if (body != null) {
             body.setVisibility(open ? View.VISIBLE : View.GONE);
         }
         CharSequence current = title.getText();
         if (current != null) {
             String s = current.toString().trim();
-            while (s.startsWith("▾") || s.startsWith("▸")) {
+            while (s.startsWith("▾") || s.startsWith("▸") || s.startsWith("🔒")) {
                 s = s.substring(1).trim();
             }
-            title.setText((open ? "▾ " : "▸ ") + s);
+            if (isLocked) {
+                title.setText("🔒 " + s);
+            } else {
+                title.setText((open ? "▾ " : "▸ ") + s);
+            }
         }
-        Context ctx = title.getContext();
         int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
         int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
         if (open) {
@@ -76,6 +87,9 @@ public final class SettingsAccordion {
             int openBorder = ColorUtils.setAlphaComponent(accent, sNight ? 75 : 60);
             title.setBackground(ThemeManager.roundedDrawable(ctx, 12f, openBg, openBorder, 1.0f));
             title.setTextColor(accent);
+        } else if (isLocked) {
+            title.setBackground(null);
+            title.setTextColor(ColorUtils.setAlphaComponent(textPrimary, 180));
         } else {
             title.setBackground(null);
             title.setTextColor(textPrimary);
@@ -84,6 +98,15 @@ public final class SettingsAccordion {
         title.setTypeface(null, Typeface.BOLD);
         title.getPaint().setFakeBoldText(true);
         title.setPadding(padH, padV, padH, padV);
+    }
+
+    public static void refresh(LinearLayout column) {
+        if (column == null) return;
+        Context ctx = column.getContext();
+        boolean night = ThemeManager.isNight(ctx);
+        int accent = sAccent != 0 ? sAccent : ThemeManager.accent(ctx, night);
+        int textPrimary = sTextPrimary != 0 ? sTextPrimary : ThemeManager.textPrimary(ctx, night);
+        repaint(column, textPrimary, accent, night);
     }
 
     public static void repaint(LinearLayout column, int accent) {
@@ -209,7 +232,7 @@ public final class SettingsAccordion {
                     if (!PermissionsWizard.isRootGranted(ctx)) {
                         com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
                         if (ctx instanceof android.app.Activity) {
-                            PermissionsWizard.show((android.app.Activity) ctx);
+                            PermissionsWizard.show((android.app.Activity) ctx, () -> refresh(column));
                         }
                         return;
                     }
@@ -258,7 +281,7 @@ public final class SettingsAccordion {
                 if (headerId == R.id.label_room_section && !PermissionsWizard.isRootGranted(ctx)) {
                     com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
                     if (ctx instanceof android.app.Activity) {
-                        PermissionsWizard.show((android.app.Activity) ctx);
+                        PermissionsWizard.show((android.app.Activity) ctx, () -> refresh(column));
                     }
                     return;
                 }
