@@ -442,3 +442,61 @@ direct message — by the owner's instruction, because lone testers' files get l
   - Дотримано всіх правил локалізації: незмінні власні назви, незмінний короткий заголовок `wDSP`, латинські назви платіжних систем, переклад лише слова «криптовалюта» для блокчейн-мереж, та виключно добровільна підтримка без згадок про ліцензії.
   - Усі 27 ресурсних файлів перевірено компіляцією через `:wdsp_app:assembleDebug` (BUILD SUCCESSFUL).
 
+---
+
+## 🚀 Cross-Agent Handoff: Акустичний прорив Auto-EQ, Ray Tracing, фазування сабвуфера та топологія BU32107 (10.09.2026 21:50)
+
+> ✍️ *Досліджено, реалізовано та верифіковано Antigravity & Kostyamat на гілці `gemini_ui_dev`*.  
+> Цей розділ адресовано Claude та наступним сесіям для швидкого входу в контекст без повторного аналізу.
+
+### 1. 🎛️ Топологія цифрового тракту ROHM BU32107 та захист сабвуфера
+- **Даташит**: ROHM BU32107EFV-M Rev.001 (`TSZ02201-0C2C0E500500-1-2`, 116 сторінок, 07.Apr.2017), сс. 25–30, 48–52, 94.
+- **Ланцюг обробки**:
+  $$\text{I2S Stereo In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0610..061F) \longrightarrow \text{P2Bass}\ (0705..0706) \longrightarrow \mathbf{Crossover}\ [\text{Door HPF}\ (0703/0704) + \text{Sub LPF}\ (0707)] \longrightarrow \text{DVol}\ (0900..090B) \longrightarrow \text{Fader Vol}\ (0A00..0A05) \longrightarrow \text{DAC}$$
+- **Залізний закон**: 16-смуговий еквалайзер стоїть **ДО** кросовера! Будь-яке зарізання басів (20, 31.5, 50, 80 Гц) у 16-смуговому еквалайзері нещадно душить вхідний сигнал сабвуфера.
+- **Вирішення**: при `hasSubwoofer == true` смуги нижче точки зрізу кросовера (20..80 Гц) утримуються строго на **0 дБ (Flat, індекс 6)**. Розподілом низьких частот займається виключно апаратний кросовер BU32107.
+
+### 2. 🔬 Порядок фільтрів кросовера та трансляція команд MCU
+- **Крутизна зрізу**: регістри `0703` (Front HPF), `0704` (Rear HPF) та `0707` (Sub LPF) біт 4 (`Order`) за замовчуванням = `0` (2-й порядок = **12 дБ/октаву**).
+- **MCU зсув частоти сабвуфера (`mcudecomplied.c:2756`)**:
+  ```c
+  *(char *)(iVar2 + 0x78) = *(char *)(iVar3 + 0x19) + '\x01';
+  ```
+  MCU додає `+1` до значення `_sub_f`. Спінер сабвуфера у wDSP при виборі 80 Гц (індекс 5) передає 5, MCU робить `5 + 1 = 6` і пише код 6 (80 Гц) у регістр `0707`. Дверний HPF індекс 6 також шле 6 (80 Гц). Обидва фільтри сходяться на 80 Гц у точці -3 дБ.
+- **Шкала гейну сабвуфера (`mcudecomplied.c:11095`)**:
+  `DAT_08008804[0x1a] = local_10e[0] & 0xf;`
+  Слайдер `seek_sub_gain` у wDSP має шкалу `0 .. 12` (+0 дБ .. +12 дБ), де нуль є чесним 0 дБ (без зсуву +6!). У пресетах Auto-EQ виставлено правильні калібровані рівні:
+  - Harman: **+2 дБ** (`outSubGain = 2`);
+  - Dolby Atmos: **+3 дБ** (`outSubGain = 3`);
+  - Bass Heavy: **+5 дБ** (`outSubGain = 5`);
+  - Flat / Vocal: **0 дБ** (`outSubGain = 0`).
+
+### 3. 📐 Променеве трасування (Ray Tracing) та фізична теорема фазування сабвуфера
+- **Проблема штучних нулів**: раніше в режимах `FRONT_CENTER` та `CABIN_CENTER` ставилися нулі (`0.0 ms`), що розривало просторову сцену.
+- **Фізика прильоту хвилі сабвуфера**:
+  Сабвуфер стоїть позаду (в багажнику), а мікрофон — на торпедо ($Y = 0$). Хвиля сабвуфера летить вперед: спершу проходить повз вуха слухача ($Y = D_{\text{listen}}$), і лише потім долітає до торпедо.
+  $$\mathbf{T_{\text{ears}} = T_{\text{mic}} - \frac{D_{\text{mic-to-ears}}}{c}}$$
+  У променевому трасуванні:
+  $$\Delta d = d_{\text{target}} - d_{\text{mic}} = 165 - (D_{\text{listen}} + 165) = -D_{\text{listen}}\text{ см}$$
+  $$t_{\text{sub\_ears}} = t_{\text{sub\_mic}} - \frac{D_{\text{listen}}}{34.3\text{ см/мс}}$$
+  Віднімання часу прольоту від мікрофона до вух ідеально синхронізує фазу сабвуфера з фронтальними динаміками (апаратно підтверджено Костянтином на живому залізі).
+- **Сцена `FRONT_CENTER`**:
+  - Фронт симетрично зведений по $\max(t_{FL}, t_{FR})$ і затриманий під прихід сабвуфера («передній бас»).
+  - Тил отримує об'ємний Haas Surround Rear Fill (+5.0 мс).
+
+### 4. 🎨 Прозорість інтерфейсу Room Wizard
+- Замість двозначного «Геометрія салону» блок названо **«Лінія прослуховування від мікрофона»**.
+- Пресети посадки:
+  - Близька посадка (Хетчбек / Компакт — 60 см)
+  - Середня посадка (Седан / SUV — 75 см, дефолт)
+  - Далека посадка (Мінівен / Бус — 90 см)
+- Степпер: `[-] [ 75 см ] [+]` з кроком 5 см (діапазон 40..120 см).
+
+### 5. 🌿 Ланцюжок коммітів у `gemini_ui_dev`
+- `5d9fab0`: `feat(ui): add cabin geometry presets and listening distance controls to Room Wizard`
+- `e5c39e7`: `feat(acoustics): implement cabin geometry ray tracing and eliminate hardcoded zero delays`
+- `dcaa897`: `docs(acoustics): document cabin geometry presets, ray tracing re-projection, and front center sub-phase alignment`
+- `474f646`: `feat(ui): clarify listening line from microphone and seating presets in Room Wizard`
+- `148e252`: `feat(acoustics): calibrate subwoofer gain scaling and document ray-tracing phase re-projection`
+- `b69ee05`: `docs(acoustics): document subwoofer phase theorem and gain calibration in Auto-EQ`
+
