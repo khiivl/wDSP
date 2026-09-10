@@ -70,6 +70,7 @@ public class McuService extends Service implements LocationListener {
     private static final long GALA_USER_GRACE_PERIOD_MS = 1200;
     private long lastGalaCommandTimeMs = 0;
     private int lastGalaCommandVol = -1;
+    private int galaUserTrim = 0;
     private String lastPlayerSource = null;
     private Method getPropMethod;
     private Object mcuManagerInstance;
@@ -1052,33 +1053,49 @@ public class McuService extends Service implements LocationListener {
                 && (now - lastSourceChangeMs > OFFSET_TRUST_DELAY_MS);
 
         if (isGalaActiveAtSpeed && baseStandstillVolume >= 0) {
-            if (live >= baseStandstillVolume) {
-                // User trimmed boost at speed: base preserved, boost adjusted directly
-                int newOffset = live - baseStandstillVolume;
-                currentAppliedOffset = newOffset;
-                pendingTargetOffset  = newOffset;
-                lastGalaTier         = rawOffset;
-                tierChangeTimestamp  = now;
-                lastReadHardwareVol  = live;
-                lastAppliedVolume    = live;
-                Log.i(TAG, "AUDIO_STATE_STABLE (at speed): live=" + live
-                        + " >= Base(" + baseStandstillVolume + ") -> New Boost Offset=" + newOffset);
-            } else {
-                // User forced volume below standstill base: explicitly lower the base, annul boost
+            int desiredBoost = live - baseStandstillVolume;
+            if (desiredBoost < 0) {
+                // User forced volume below standstill base: explicitly lower base, annul boost
                 baseStandstillVolume = live;
+                galaUserTrim = -rawOffset;
                 currentAppliedOffset = 0;
                 pendingTargetOffset  = 0;
-                lastGalaTier         = rawOffset;
+                lastGalaTier         = 0;
                 tierChangeTimestamp  = now;
                 lastReadHardwareVol  = live;
                 lastAppliedVolume    = live;
                 carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
                 Log.i(TAG, "AUDIO_STATE_STABLE (quiet override): live=" + live
                         + " < old Base -> New Base=" + baseStandstillVolume + ", offset=0");
+            } else if (desiredBoost <= rawOffset) {
+                // User trimmed boost at speed: base preserved, userTrim established
+                galaUserTrim = desiredBoost - rawOffset;
+                currentAppliedOffset = desiredBoost;
+                pendingTargetOffset  = desiredBoost;
+                lastGalaTier         = desiredBoost;
+                tierChangeTimestamp  = now;
+                lastReadHardwareVol  = live;
+                lastAppliedVolume    = live;
+                Log.i(TAG, "AUDIO_STATE_STABLE (at speed trim): live=" + live
+                        + " -> Base=" + baseStandstillVolume + ", Trim=" + galaUserTrim + ", Boost=" + desiredBoost);
+            } else {
+                // User cranked volume up above standard curve (louder track): base increases!
+                baseStandstillVolume = live - rawOffset;
+                galaUserTrim = 0;
+                currentAppliedOffset = rawOffset;
+                pendingTargetOffset  = rawOffset;
+                lastGalaTier         = rawOffset;
+                tierChangeTimestamp  = now;
+                lastReadHardwareVol  = live;
+                lastAppliedVolume    = live;
+                carryBaseToOtherSource(VolumeHelper.getActivePlayerType(), baseStandstillVolume);
+                Log.i(TAG, "AUDIO_STATE_STABLE (louder track): live=" + live
+                        + " -> New Base=" + baseStandstillVolume + ", Boost=" + rawOffset);
             }
         } else {
-            // At standstill / below threshold / GALA off
+            // At standstill / below threshold / GALA off: reset userTrim, set new baseline
             baseStandstillVolume = live;
+            galaUserTrim = 0;
             currentAppliedOffset = 0;
             pendingTargetOffset  = 0;
             lastGalaTier         = 0;
@@ -1375,36 +1392,55 @@ public class McuService extends Service implements LocationListener {
             boolean isGalaActiveAtSpeed = isGalaEnabled() && (speed >= minSpeed) && (rawOffset > 0);
 
             if (isGalaActiveAtSpeed && baseStandstillVolume >= 0) {
-                if (hardwareVol >= baseStandstillVolume) {
-                    // Sub-case A: User is adjusting within or above the standstill base.
-                    // The driver is trimming the BOOST, NOT the standstill base!
-                    // baseStandstillVolume remains unchanged.
-                    int newOffset = hardwareVol - baseStandstillVolume;
-                    currentAppliedOffset = newOffset;
-                    pendingTargetOffset  = newOffset;
-                    lastGalaTier         = rawOffset;
-                    tierChangeTimestamp  = now;
-                    Log.d(TAG, "Manual Adjust (at speed): Vol=" + hardwareVol
-                            + " >= Base(" + baseStandstillVolume + ") -> New Boost Offset=" + newOffset);
-                } else {
+                int desiredBoost = hardwareVol - baseStandstillVolume;
+                if (desiredBoost < 0) {
                     // Sub-case B: User turned volume below standstill base (wants it quiet).
-                    // This explicitly sets a new lower standstill base!
+                    // This explicitly sets a new lower standstill base, and annuls boost!
                     baseStandstillVolume = hardwareVol;
+                    galaUserTrim = -rawOffset;
                     currentAppliedOffset = 0;
                     pendingTargetOffset  = 0;
-                    lastGalaTier         = rawOffset;
+                    lastGalaTier         = 0;
                     tierChangeTimestamp  = now;
                     Log.d(TAG, "Manual Adjust (quiet override): Vol=" + hardwareVol
                             + " < old Base -> New Base=" + baseStandstillVolume + ", offset=0");
                     if (!sourceChangedThisPoll) {
                         carryBaseToOtherSource(galavoltype, baseStandstillVolume);
                     }
+                } else if (desiredBoost <= rawOffset) {
+                    // Sub-case A: User is trimming the boost down at speed.
+                    // Standstill base is preserved, userTrim established!
+                    galaUserTrim = desiredBoost - rawOffset;
+                    currentAppliedOffset = desiredBoost;
+                    pendingTargetOffset  = desiredBoost;
+                    lastGalaTier         = desiredBoost;
+                    tierChangeTimestamp  = now;
+                    Log.d(TAG, "Manual Adjust (at speed trim): Vol=" + hardwareVol
+                            + " -> Base=" + baseStandstillVolume + ", Trim=" + galaUserTrim + ", Boost=" + desiredBoost);
+                } else {
+                    // Sub-case C: User cranked volume up above standard curve (louder track).
+                    // Standstill base increases! Full curve maintained.
+                    baseStandstillVolume = hardwareVol - rawOffset;
+                    galaUserTrim = 0;
+                    currentAppliedOffset = rawOffset;
+                    pendingTargetOffset  = rawOffset;
+                    lastGalaTier         = rawOffset;
+                    tierChangeTimestamp  = now;
+                    Log.d(TAG, "Manual Adjust (louder track): Vol=" + hardwareVol
+                            + " -> New Base=" + baseStandstillVolume + ", Boost=" + rawOffset);
+                    if (!sourceChangedThisPoll) {
+                        carryBaseToOtherSource(galavoltype, baseStandstillVolume);
+                    }
                 }
             } else {
-                // Sub-case C: At standstill, or speed < minSpeed, or GALA disabled.
+                // Sub-case D: At standstill, or speed < minSpeed, or GALA disabled.
+                // Reset trim, normal baseline tracking.
                 baseStandstillVolume = hardwareVol;
+                galaUserTrim = 0;
                 currentAppliedOffset = 0;
                 pendingTargetOffset  = 0;
+                lastGalaTier         = 0;
+                tierChangeTimestamp  = now;
                 Log.d(TAG, "Manual Adjust (standstill/idle): New Base=" + baseStandstillVolume);
                 if (!sourceChangedThisPoll) {
                     carryBaseToOtherSource(galavoltype, baseStandstillVolume);
@@ -1416,9 +1452,11 @@ public class McuService extends Service implements LocationListener {
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
         if (isGalaEnabled()) {
+            int targetWithTrim = Math.max(0, rawOffset + galaUserTrim);
+
             // 6a. HOLD-TIMER: Has the tier changed?
-            if (rawOffset != lastGalaTier) {
-                lastGalaTier        = rawOffset;
+            if (targetWithTrim != lastGalaTier) {
+                lastGalaTier        = targetWithTrim;
                 tierChangeTimestamp = now;
             }
 
