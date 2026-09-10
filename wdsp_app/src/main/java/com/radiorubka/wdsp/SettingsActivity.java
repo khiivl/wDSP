@@ -1655,6 +1655,81 @@ public class SettingsActivity extends AppCompatActivity {
         }
         RadioGroup rgTarget = view.findViewById(R.id.rg_target_curve);
 
+        View cardGeometry = view.findViewById(R.id.card_cabin_geometry);
+        if (cardGeometry != null) {
+            cardGeometry.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        }
+        RadioGroup rgBodyType = view.findViewById(R.id.rg_cabin_body_type);
+        TextView tvDistLabel = view.findViewById(R.id.tv_distance_label);
+        TextView tvDistValue = view.findViewById(R.id.tv_distance_value);
+        TextView btnDistMinus = view.findViewById(R.id.btn_distance_minus);
+        TextView btnDistPlus = view.findViewById(R.id.btn_distance_plus);
+        if (tvDistLabel != null) tvDistLabel.setTextColor(textSecondary);
+        if (tvDistValue != null) tvDistValue.setTextColor(textPrimary);
+        if (btnDistMinus != null) {
+            btnDistMinus.setTextColor(accent);
+            TouchGlow.attach(btnDistMinus);
+        }
+        if (btnDistPlus != null) {
+            btnDistPlus.setTextColor(accent);
+            TouchGlow.attach(btnDistPlus);
+        }
+
+        RoomMeasurement.CarBodyType savedBody = RoomMeasurement.getBodyType(this);
+        int savedDist = RoomMeasurement.getListeningDistanceCm(this);
+        final int[] currentDist = new int[]{savedDist};
+
+        if (savedBody == RoomMeasurement.CarBodyType.HATCHBACK) {
+            RadioButton rb = view.findViewById(R.id.rb_body_hatchback);
+            if (rb != null) rb.setChecked(true);
+        } else if (savedBody == RoomMeasurement.CarBodyType.MINIVAN) {
+            RadioButton rb = view.findViewById(R.id.rb_body_minivan);
+            if (rb != null) rb.setChecked(true);
+        } else {
+            RadioButton rb = view.findViewById(R.id.rb_body_sedan);
+            if (rb != null) rb.setChecked(true);
+        }
+        if (tvDistValue != null) {
+            tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+        }
+
+        if (rgBodyType != null) {
+            rgBodyType.setOnCheckedChangeListener((group, checkedId) -> {
+                if (checkedId == R.id.rb_body_hatchback) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.HATCHBACK.defaultDistanceCm;
+                } else if (checkedId == R.id.rb_body_sedan) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.SEDAN.defaultDistanceCm;
+                } else if (checkedId == R.id.rb_body_minivan) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.MINIVAN.defaultDistanceCm;
+                }
+                if (tvDistValue != null) {
+                    tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                }
+            });
+        }
+
+        if (btnDistMinus != null) {
+            btnDistMinus.setOnClickListener(v -> {
+                if (currentDist[0] > 40) {
+                    currentDist[0] -= 5;
+                    if (tvDistValue != null) {
+                        tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                    }
+                }
+            });
+        }
+
+        if (btnDistPlus != null) {
+            btnDistPlus.setOnClickListener(v -> {
+                if (currentDist[0] < 120) {
+                    currentDist[0] += 5;
+                    if (tvDistValue != null) {
+                        tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                    }
+                }
+            });
+        }
+
         TextView btnCancel = view.findViewById(R.id.btn_wizard_cancel);
         btnCancel.setTextColor(textSecondary);
         TouchGlow.attach(btnCancel);
@@ -1760,8 +1835,23 @@ public class SettingsActivity extends AppCompatActivity {
                 }
             }
 
+            RoomMeasurement.CarBodyType bodyType = RoomMeasurement.CarBodyType.SEDAN;
+            if (rgBodyType != null) {
+                int bodyId = rgBodyType.getCheckedRadioButtonId();
+                if (bodyId == R.id.rb_body_hatchback) {
+                    bodyType = RoomMeasurement.CarBodyType.HATCHBACK;
+                } else if (bodyId == R.id.rb_body_minivan) {
+                    bodyType = RoomMeasurement.CarBodyType.MINIVAN;
+                }
+            }
+
             final RoomMeasurement.SoundstageMode selectedMode = mode;
             final RoomMeasurement.TargetCurve selectedTarget = targetCurve;
+            final RoomMeasurement.CarBodyType selectedBody = bodyType;
+            final int selectedDistance = currentDist[0];
+
+            RoomMeasurement.setBodyType(this, selectedBody);
+            RoomMeasurement.setListeningDistanceCm(this, selectedDistance);
             RoomMeasurement.pauseMedia(this);
 
             if (!RootAccess.hasRoot(this)) {
@@ -1775,7 +1865,7 @@ public class SettingsActivity extends AppCompatActivity {
                                     runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                                             tvProgressStage, tvProgressDetail, progressBar, tvPercent,
                                             layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
-                                            btnApply, hasSub, selectedMode, selectedTarget);
+                                            btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
                                 } else {
                                     ThemedDialog.notice(this, getString(R.string.room_root_title),
                                             getString(R.string.room_root_blocked));
@@ -1793,7 +1883,7 @@ public class SettingsActivity extends AppCompatActivity {
             runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                     tvProgressStage, tvProgressDetail, progressBar, tvPercent,
                     layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
-                    btnApply, hasSub, selectedMode, selectedTarget);
+                    btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
         });
 
         dialog.show();
@@ -1852,7 +1942,9 @@ public class SettingsActivity extends AppCompatActivity {
                                         TextView tvHpf, TextView tvSub, TextView tvDelays, TextView tvAutoEq,
                                         TextView btnApply, boolean hasSub,
                                         RoomMeasurement.SoundstageMode mode,
-                                        RoomMeasurement.TargetCurve targetCurve) {
+                                        RoomMeasurement.TargetCurve targetCurve,
+                                        RoomMeasurement.CarBodyType bodyType,
+                                        int listeningDistanceCm) {
         layoutSetup.setVisibility(View.GONE);
         layoutProgress.setVisibility(View.VISIBLE);
         layoutReport.setVisibility(View.GONE);
@@ -1862,7 +1954,7 @@ public class SettingsActivity extends AppCompatActivity {
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
         tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
 
-        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, new RoomMeasurement.Listener() {
+        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, listeningDistanceCm, new RoomMeasurement.Listener() {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
