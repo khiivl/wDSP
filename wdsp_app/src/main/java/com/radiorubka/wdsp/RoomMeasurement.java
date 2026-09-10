@@ -690,6 +690,10 @@ public final class RoomMeasurement {
                                     final float seconds, final Listener listener) {
         measureAsync(context, amplitude, seconds, false, SoundstageMode.DRIVER, listener);
     }
+    public static void measureAsync(final Context context, final boolean hasSubwoofer,
+                                    final SoundstageMode soundstageMode, final Listener listener) {
+        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, listener);
+    }
 
 
     /**

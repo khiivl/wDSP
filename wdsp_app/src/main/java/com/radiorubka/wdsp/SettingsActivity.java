@@ -1,6 +1,7 @@
 package com.radiorubka.wdsp;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,8 +24,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -1595,68 +1600,156 @@ public class SettingsActivity extends AppCompatActivity {
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
-        confirmRoomMeasurement();
+        showRoomMeasurementWizard();
     }
 
-    private void confirmRoomMeasurement() {
-        ThemedDialog.builder(this)
-                .setTitle(R.string.room_measure_confirm_title)
-                .setMessage(R.string.room_measure_confirm_msg)
-                .setPositiveButton(R.string.room_measure_confirm_start, (d, w) -> {
-                    RoomMeasurement.pauseMedia(this);
-                    askForRootThenMeasure();
-                })
-                .setNegativeButton(R.string.room_measure_confirm_cancel, null)
+    private void showRoomMeasurementWizard() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_room_wizard, null);
+
+        int cardBg = ThemeManager.cardBackground(this);
+        int border = ThemeManager.panelBorder(this);
+        int textPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg);
+        int textSecondary = ThemeManager.contrastText(ThemeManager.textSecondary(this), cardBg);
+        int accent = ThemeManager.accent(this);
+        int onAccent = ThemeManager.onAccent(this);
+
+        TextView tvTitle = view.findViewById(R.id.tv_wizard_title);
+        tvTitle.setTextColor(textPrimary);
+
+        // Step 1: Setup
+        View layoutSetup = view.findViewById(R.id.layout_wizard_setup);
+        View cardSub = view.findViewById(R.id.card_subwoofer);
+        cardSub.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        CheckBox cbSub = view.findViewById(R.id.cb_has_subwoofer);
+
+        View cardStage = view.findViewById(R.id.card_soundstage);
+        cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        RadioGroup rgStage = view.findViewById(R.id.rg_soundstage_mode);
+
+        TextView btnCancel = view.findViewById(R.id.btn_wizard_cancel);
+        btnCancel.setTextColor(textSecondary);
+        TouchGlow.attach(btnCancel);
+
+        TextView btnStart = view.findViewById(R.id.btn_wizard_start);
+        btnStart.setTextColor(onAccent);
+        btnStart.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+        TouchGlow.attach(btnStart);
+
+        // Step 2: Progress
+        View layoutProgress = view.findViewById(R.id.layout_wizard_progress);
+        TextView tvProgressStage = view.findViewById(R.id.tv_progress_stage);
+        tvProgressStage.setTextColor(textPrimary);
+        TextView tvProgressDetail = view.findViewById(R.id.tv_progress_detail);
+        tvProgressDetail.setTextColor(textSecondary);
+        ProgressBar progressBar = view.findViewById(R.id.progress_wizard_bar);
+        TextView tvPercent = view.findViewById(R.id.tv_progress_percent);
+        tvPercent.setTextColor(textPrimary);
+        TextView tvProgressWarning = view.findViewById(R.id.tv_progress_warning);
+        tvProgressWarning.setTextColor(textSecondary);
+
+        // Step 3: Report
+        View layoutReport = view.findViewById(R.id.layout_wizard_report);
+        View layoutPolarity = view.findViewById(R.id.layout_polarity_alert);
+        layoutPolarity.setBackground(ThemeManager.roundedDrawable(this, 12, 0x22E5352B, 0xFFE5352B, 1.5f));
+        TextView tvPolarityMsg = view.findViewById(R.id.tv_polarity_alert_msg);
+        tvPolarityMsg.setTextColor(textPrimary);
+
+        View cardCrossover = view.findViewById(R.id.card_report_crossover);
+        cardCrossover.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvHpf = view.findViewById(R.id.tv_report_crossover_hpf);
+        tvHpf.setTextColor(textSecondary);
+        TextView tvSub = view.findViewById(R.id.tv_report_crossover_sub);
+        tvSub.setTextColor(textSecondary);
+
+        View cardDelays = view.findViewById(R.id.card_report_delays);
+        cardDelays.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvDelays = view.findViewById(R.id.tv_report_delays);
+        tvDelays.setTextColor(textSecondary);
+
+        View cardAutoEq = view.findViewById(R.id.card_report_autoeq);
+        cardAutoEq.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvAutoEq = view.findViewById(R.id.tv_report_autoeq_gains);
+        tvAutoEq.setTextColor(textPrimary);
+
+        TextView btnSave = view.findViewById(R.id.btn_save_report);
+        btnSave.setTextColor(textSecondary);
+        TouchGlow.attach(btnSave);
+
+        TextView btnClose = view.findViewById(R.id.btn_close_report);
+        btnClose.setTextColor(textSecondary);
+        TouchGlow.attach(btnClose);
+
+        TextView btnApply = view.findViewById(R.id.btn_apply_autoeq);
+        btnApply.setTextColor(onAccent);
+        btnApply.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+        TouchGlow.attach(btnApply);
+
+        // Create Dialog
+        Dialog dialog = ThemedDialog.builder(this)
+                .setView(view)
                 .setCancelable(true)
-                .show();
-    }
+                .create();
 
-    /**
-     * Asks for root before the sweep, in words, and only ever once per launch.
-     *
-     * <h2>Why it is asked for out loud</h2>
-     *
-     * The measurement needs root for one thing: stopping the background process that holds the
-     * microphone open at 16 kHz. Without it half the sweep is never recorded, and nothing says so
-     * - the audio API reports 48000 either way, so the result simply comes back poorer with no
-     * explanation anybody could act on.
-     *
-     * <p>Until now the request was made silently from inside the measurement, and a refusal is
-     * silent too: where Magisk's policy for this app is already "deny", {@code su} returns in
-     * milliseconds with nothing on screen. Owners were left with a measurement that quietly
-     * underperformed and no idea that a switch existed. So: say what it is for, then ask, then say
-     * what happened - including the case where Magisk answered without asking anybody, which the
-     * owner can only fix in Magisk.
-     */
-    private void askForRootThenMeasure() {
-        if (RootAccess.hasRoot(this)) {
-            beginRoomMeasurement();
-            return;
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            int screenW = getResources().getDisplayMetrics().widthPixels;
+            int maxW = (int) ThemedDialog.dp(this, 620);
+            int dialogW = Math.min((int) (screenW * 0.92f), maxW);
+            window.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
-        // Only asked when we do not have root yet. Somebody who granted root
-        // should never see this dialog at all.
-        ThemedDialog.builder(this)
-                .setTitle(R.string.room_root_title)
-                .setMessage(R.string.room_root_message)
-                .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
-                    RootAccess.Outcome outcome = RootAccess.request(this);
-                    runOnUiThread(() -> {
-                        if (outcome == RootAccess.Outcome.GRANTED) {
-                            beginRoomMeasurement();
-                        } else {
-                            // They said it was on and it is not. Say where the switch is
-                            // rather than measure through a 16 kHz microphone and hand back a
-                            // poor result with no explanation.
-                            ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                    getString(R.string.room_root_blocked));
-                        }
-                    });
-                }, "root-request").start())
-                .setNegativeButton(R.string.room_root_no, (d, w) ->
-                        ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                getString(R.string.room_root_blocked)))
-                .setCancelable(false)
-                .show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnSave.setOnClickListener(v -> saveRoomMeasurement());
+
+        btnStart.setOnClickListener(v -> {
+            boolean hasSub = cbSub.isChecked();
+            RoomMeasurement.SoundstageMode mode = RoomMeasurement.SoundstageMode.DRIVER;
+            int selectedId = rgStage.getCheckedRadioButtonId();
+            if (selectedId == R.id.rb_stage_front_center) {
+                mode = RoomMeasurement.SoundstageMode.FRONT_CENTER;
+            } else if (selectedId == R.id.rb_stage_cabin_center) {
+                mode = RoomMeasurement.SoundstageMode.CABIN_CENTER;
+            } else if (selectedId == R.id.rb_stage_off) {
+                mode = RoomMeasurement.SoundstageMode.OFF;
+            }
+
+            final RoomMeasurement.SoundstageMode selectedMode = mode;
+            RoomMeasurement.pauseMedia(this);
+
+            if (!RootAccess.hasRoot(this)) {
+                ThemedDialog.builder(this)
+                        .setTitle(R.string.room_root_title)
+                        .setMessage(R.string.room_root_message)
+                        .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
+                            RootAccess.Outcome outcome = RootAccess.request(this);
+                            runOnUiThread(() -> {
+                                if (outcome == RootAccess.Outcome.GRANTED) {
+                                    runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
+                                            tvProgressStage, tvProgressDetail, progressBar, tvPercent,
+                                            layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
+                                            btnApply, hasSub, selectedMode);
+                                } else {
+                                    ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                            getString(R.string.room_root_blocked));
+                                }
+                            });
+                        }, "root-request").start())
+                        .setNegativeButton(R.string.room_root_no, (d, w) ->
+                                ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                        getString(R.string.room_root_blocked)))
+                        .setCancelable(false)
+                        .show();
+                return;
+            }
+
+            runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
+                    tvProgressStage, tvProgressDetail, progressBar, tvPercent,
+                    layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
+                    btnApply, hasSub, selectedMode);
+        });
+
+        dialog.show();
     }
 
     /**
@@ -1702,23 +1795,101 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void beginRoomMeasurement() {
-        if (RoomMeasurement.isRunning()) return;
-        // Taken here rather than in the measurement, because the system-bar insets can only be
-        // read from a window that exists - and the report is written from a background thread.
+        showRoomMeasurementWizard();
+    }
+
+    private void runMeasurementInWizard(Dialog dialog, View layoutSetup, View layoutProgress, View layoutReport,
+                                        TextView tvProgressStage, TextView tvProgressDetail,
+                                        ProgressBar progressBar, TextView tvPercent,
+                                        View layoutPolarity, TextView tvPolarityMsg,
+                                        TextView tvHpf, TextView tvSub, TextView tvDelays, TextView tvAutoEq,
+                                        TextView btnApply, boolean hasSub,
+                                        RoomMeasurement.SoundstageMode mode) {
+        layoutSetup.setVisibility(View.GONE);
+        layoutProgress.setVisibility(View.VISIBLE);
+        layoutReport.setVisibility(View.GONE);
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
         tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
-        RoomMeasurement.measureAsync(this, new RoomMeasurement.Listener() {
+
+        RoomMeasurement.measureAsync(this, hasSub, mode, new RoomMeasurement.Listener() {
             @Override
-            public void onProgress(String stage) {
-                runOnUiThread(() ->
-                        tvRoomStatus.setText(getString(R.string.room_measure_running, stage)));
+            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+                runOnUiThread(() -> {
+                    tvProgressStage.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s", step, totalSteps, stageTitle));
+                    tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
+                    progressBar.setProgress(percent);
+                    tvPercent.setText(percent + "%");
+                    tvRoomStatus.setText(getString(R.string.room_measure_running, stageTitle));
+                });
             }
 
             @Override
             public void onFinished(RoomMeasurement.Result result) {
-                runOnUiThread(() -> tvRoomStatus.setText(result != null && result.error == null
-                        ? getString(R.string.room_measure_done)
-                        : getString(R.string.room_measure_failed)));
+                runOnUiThread(() -> {
+                    dialog.setCancelable(true);
+                    dialog.setCanceledOnTouchOutside(true);
+                    layoutProgress.setVisibility(View.GONE);
+
+                    if (result == null || result.error != null) {
+                        tvRoomStatus.setText(getString(R.string.room_measure_failed));
+                        ThemedDialog.notice(SettingsActivity.this,
+                                getString(R.string.room_measure_failed),
+                                result != null && result.error != null ? result.error : "Unknown error");
+                        dialog.dismiss();
+                        return;
+                    }
+
+                    tvRoomStatus.setText(getString(R.string.room_measure_done));
+                    layoutReport.setVisibility(View.VISIBLE);
+
+                    // 1. Polarity check
+                    if (result.hasPolarityInversion && result.wiringWarning != null) {
+                        layoutPolarity.setVisibility(View.VISIBLE);
+                        tvPolarityMsg.setText(result.wiringWarning);
+                    } else {
+                        layoutPolarity.setVisibility(View.GONE);
+                    }
+
+                    // 2. Crossover
+                    tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
+                    if (result.hasSubwoofer) {
+                        tvSub.setText(getString(R.string.room_wizard_crossover_sub, result.subLpfFreqHz, result.subGain));
+                    } else {
+                        tvSub.setText(R.string.room_wizard_crossover_no_sub);
+                    }
+
+                    // 3. Delays
+                    tvDelays.setText(String.format(Locale.US,
+                            "ПЛ: %4.1f мс (%2d кр)  |  ПП: %4.1f мс (%2d кр)\nЗЛ: %4.1f мс (%2d кр)  |  ЗП: %4.1f мс (%2d кр)",
+                            result.suggestedDelayMs[2], result.suggestedDelaySteps[2],
+                            result.suggestedDelayMs[3], result.suggestedDelaySteps[3],
+                            result.suggestedDelayMs[0], result.suggestedDelaySteps[0],
+                            result.suggestedDelayMs[1], result.suggestedDelaySteps[1]));
+
+                    // 4. Auto-EQ 16 bands
+                    final String[] freqLabels = {
+                        "20", "31", "50", "80", "125", "200", "315", "500",
+                        "800", "1.2k", "2k", "3.1k", "5k", "8k", "12k", "20k"
+                    };
+                    StringBuilder sbEq = new StringBuilder();
+                    for (int b = 0; b < 16; b++) {
+                        if (b > 0 && b % 4 == 0) sbEq.append("\n");
+                        else if (b > 0) sbEq.append("  |  ");
+                        sbEq.append(String.format(Locale.US, "%-4s: %+2d dB", freqLabels[b], result.autoEqGains16[b]));
+                    }
+                    tvAutoEq.setText(sbEq.toString());
+
+                    // 5. Apply button
+                    btnApply.setOnClickListener(v -> {
+                        RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, "AutoEQ Harman");
+                        Toast.makeText(SettingsActivity.this, R.string.room_wizard_applied_toast, Toast.LENGTH_LONG).show();
+                        refreshRoomMeasurementUi();
+                        dialog.dismiss();
+                    });
+                });
             }
         });
     }
