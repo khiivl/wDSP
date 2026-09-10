@@ -184,87 +184,191 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Right Column: Soundstage mode card -->
+                <!-- Right Column: Soundstage mode & Cabin Geometry cards -->
                 <LinearLayout
-                    android:id="@+id/card_soundstage"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.1"
                     android:orientation="vertical"
-                    android:padding="6dp"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginStart="5dp">
 
-                    <TextView
+                    <!-- Soundstage mode card -->
+                    <LinearLayout
+                        android:id="@+id/card_soundstage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_wizard_soundstage_title"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="2dp" />
+                        android:orientation="vertical"
+                        android:padding="6dp"
+                        android:layout_marginBottom="4dp">
 
-                    <RadioGroup
-                        android:id="@+id/rg_soundstage_mode"
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/room_wizard_soundstage_title"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_soundstage_mode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rb_stage_driver"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_driver"
+                                android:textSize="11.5sp"
+                                android:checked="true" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_driver_desc"
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_stage_front_center"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_front_center"
+                                android:textSize="11.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_front_center_desc"
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_stage_cabin_center"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_cabin_center"
+                                android:textSize="11.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_cabin_center_desc"
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp"
+                                android:layout_marginBottom="1dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_stage_off"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_off"
+                                android:textSize="11.5sp" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_stage_off_desc"
+                                android:textSize="9.5sp"
+                                android:layout_marginStart="28dp" />
+                        </RadioGroup>
+                    </LinearLayout>
+
+                    <!-- Cabin Geometry & Listening Line card -->
+                    <LinearLayout
+                        android:id="@+id/card_cabin_geometry"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="6dp"
+                        android:layout_marginBottom="4dp">
 
-                        <RadioButton
-                            android:id="@+id/rb_stage_driver"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_driver"
-                            android:textSize="11.5sp"
-                            android:checked="true" />
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_driver_desc"
-                            android:textSize="9.5sp"
-                            android:layout_marginStart="28dp"
-                            android:layout_marginBottom="1dp" />
+                            android:text="@string/room_wizard_cabin_geometry_title"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
 
-                        <RadioButton
-                            android:id="@+id/rb_stage_front_center"
+                        <RadioGroup
+                            android:id="@+id/rg_cabin_body_type"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_front_center"
-                            android:textSize="11.5sp" />
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_front_center_desc"
-                            android:textSize="9.5sp"
-                            android:layout_marginStart="28dp"
-                            android:layout_marginBottom="1dp" />
+                            android:orientation="vertical">
 
-                        <RadioButton
-                            android:id="@+id/rb_stage_cabin_center"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_cabin_center"
-                            android:textSize="11.5sp" />
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_cabin_center_desc"
-                            android:textSize="9.5sp"
-                            android:layout_marginStart="28dp"
-                            android:layout_marginBottom="1dp" />
+                            <RadioButton
+                                android:id="@+id/rb_body_hatchback"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_body_hatchback"
+                                android:textSize="11.5sp" />
 
-                        <RadioButton
-                            android:id="@+id/rb_stage_off"
+                            <RadioButton
+                                android:id="@+id/rb_body_sedan"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_body_sedan"
+                                android:textSize="11.5sp"
+                                android:checked="true" />
+
+                            <RadioButton
+                                android:id="@+id/rb_body_minivan"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_wizard_body_minivan"
+                                android:textSize="11.5sp" />
+                        </RadioGroup>
+
+                        <!-- Listening distance stepper -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_off"
-                            android:textSize="11.5sp" />
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/room_wizard_stage_off_desc"
-                            android:textSize="9.5sp"
-                            android:layout_marginStart="28dp" />
-                    </RadioGroup>
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="3dp"
+                            android:paddingStart="4dp"
+                            android:paddingEnd="4dp">
+
+                            <TextView
+                                android:id="@+id/tv_distance_label"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/room_wizard_distance_label"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/btn_distance_minus"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:gravity="center"
+                                android:text="−"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                            <TextView
+                                android:id="@+id/tv_distance_value"
+                                android:layout_width="56dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="75 см"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_distance_plus"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:gravity="center"
+                                android:text="+"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:clickable="true"
+                                android:focusable="true" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
