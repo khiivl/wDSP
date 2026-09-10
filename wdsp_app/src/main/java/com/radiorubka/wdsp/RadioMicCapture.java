@@ -111,21 +111,12 @@ public class RadioMicCapture {
             return false;
         }
 
-        // Ensure Google Assistant hotword listener is not constraining the HAL stream to 16 kHz.
-        // Explicitly triggers Magisk prompt if root is available and cleanly frees the 48 kHz HAL.
-        if (RootAccess.alreadyGranted()) {
+        // If root is available, ensure Google Assistant hotword listener is unhooked from HAL.
+        // Never prompts on its own - permissions onboarding is handled exclusively by PermissionsWizard.
+        if (RootAccess.hasRoot(context)) {
             try {
                 Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
             } catch (Throwable ignored) {}
-        } else {
-            new Thread(() -> {
-                RootAccess.Outcome outcome = RootAccess.request();
-                if (outcome == RootAccess.Outcome.GRANTED) {
-                    try {
-                        Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
-                    } catch (Throwable ignored) {}
-                }
-            }, "wDSP_RootRequest").start();
         }
 
         running = true;

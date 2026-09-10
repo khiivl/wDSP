@@ -1673,37 +1673,34 @@ public class SettingsActivity extends AppCompatActivity {
      * owner can only fix in Magisk.
      */
     private void askForRootThenMeasure() {
-        new Thread(() -> {
-            if (RootAccess.alreadyGranted()) {
-                runOnUiThread(this::beginRoomMeasurement);
-                return;
-            }
-            // Only asked when we could not get it ourselves. Somebody who granted root long ago
-            // should never see this dialog at all - being asked about something already done is
-            // how a person learns to dismiss dialogs without reading them.
-            runOnUiThread(() -> ThemedDialog.builder(this)
-                    .setTitle(R.string.room_root_title)
-                    .setMessage(R.string.room_root_message)
-                    .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
-                        RootAccess.Outcome outcome = RootAccess.request();
-                        runOnUiThread(() -> {
-                            if (outcome == RootAccess.Outcome.GRANTED) {
-                                beginRoomMeasurement();
-                            } else {
-                                // They said it was on and it is not. Say where the switch is
-                                // rather than measure through a 16 kHz microphone and hand back a
-                                // poor result with no explanation.
-                                ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                        getString(R.string.room_root_blocked));
-                            }
-                        });
-                    }, "root-request").start())
-                    .setNegativeButton(R.string.room_root_no, (d, w) ->
+        if (RootAccess.hasRoot(this)) {
+            beginRoomMeasurement();
+            return;
+        }
+        // Only asked when we do not have root yet. Somebody who granted root
+        // should never see this dialog at all.
+        ThemedDialog.builder(this)
+                .setTitle(R.string.room_root_title)
+                .setMessage(R.string.room_root_message)
+                .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
+                    RootAccess.Outcome outcome = RootAccess.request(this);
+                    runOnUiThread(() -> {
+                        if (outcome == RootAccess.Outcome.GRANTED) {
+                            beginRoomMeasurement();
+                        } else {
+                            // They said it was on and it is not. Say where the switch is
+                            // rather than measure through a 16 kHz microphone and hand back a
+                            // poor result with no explanation.
                             ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                    getString(R.string.room_root_blocked)))
-                    .setCancelable(false)
-                    .show());
-        }, "root-check").start();
+                                    getString(R.string.room_root_blocked));
+                        }
+                    });
+                }, "root-request").start())
+                .setNegativeButton(R.string.room_root_no, (d, w) ->
+                        ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                getString(R.string.room_root_blocked)))
+                .setCancelable(false)
+                .show();
     }
 
     /**

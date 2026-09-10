@@ -1,6 +1,9 @@
 package com.radiorubka.wdsp;
 
+import android.content.Context;
 import android.util.Log;
+
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 /**
  * Asks Magisk for root out loud, instead of finding out in silence that it was never coming.
@@ -26,6 +29,7 @@ import android.util.Log;
 public final class RootAccess {
 
     private static final String TAG = "wDSP_RootAccess";
+    public static final String PREF_ROOT_GRANTED = "pref_root_granted";
 
     /**
      * Below this, nobody read anything. A Magisk prompt involves a human finding the dialog,
@@ -35,6 +39,10 @@ public final class RootAccess {
 
     /** Long enough for somebody to notice the dialog and answer it, not so long the app looks hung. */
     private static final long WAIT_SECONDS = 30;
+
+    private static volatile Boolean sRootGranted = null;
+    private static final Object sLock = new Object();
+    private static volatile boolean sRequestInProgress = false;
 
     public enum Outcome {
         /** Root is ours. */
@@ -50,6 +58,43 @@ public final class RootAccess {
     }
 
     private RootAccess() {
+    }
+
+    /**
+     * Fast, non-blocking check whether root is already available.
+     * Returns true if verified in this process session or recorded in SharedPreferences.
+     */
+    public static boolean hasRoot(Context context) {
+        if (sRootGranted != null) return sRootGranted;
+        if (context != null) {
+            boolean stored = ThemeManager.prefs(context).getBoolean(PREF_ROOT_GRANTED, false);
+            if (stored) {
+                sRootGranted = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks in background if root is available and caches the result.
+     * If root is granted, sets sRootGranted = true, saves to prefs, and runs callback.
+     */
+    public static void checkAsync(Context context, Runnable onGranted) {
+        if (sRootGranted != null && sRootGranted) {
+            if (onGranted != null) onGranted.run();
+            return;
+        }
+        new Thread(() -> {
+            boolean granted = alreadyGranted();
+            sRootGranted = granted;
+            if (context != null) {
+                ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
+            }
+            if (granted && onGranted != null) {
+                onGranted.run();
+            }
+        }, "wDSP_RootCheckAsync").start();
     }
 
     /**
@@ -88,6 +133,39 @@ public final class RootAccess {
             return Outcome.NOT_ROOTED;
         } finally {
             if (p != null) p.destroy();
+        }
+    }
+
+    /**
+     * Thread-safe single-flight root request with context update and background appops unhooking.
+     */
+    public static Outcome request(Context context) {
+        synchronized (sLock) {
+            if (sRootGranted != null && sRootGranted) return Outcome.GRANTED;
+            if (sRequestInProgress) return Outcome.TIMED_OUT;
+            sRequestInProgress = true;
+        }
+        try {
+            Outcome outcome = request();
+            if (outcome == Outcome.GRANTED) {
+                sRootGranted = true;
+                if (context != null) {
+                    ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, true).apply();
+                }
+                try {
+                    Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
+                } catch (Throwable ignored) {}
+            } else if (outcome == Outcome.REFUSED || outcome == Outcome.DENIED_BY_POLICY) {
+                sRootGranted = false;
+                if (context != null) {
+                    ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, false).apply();
+                }
+            }
+            return outcome;
+        } finally {
+            synchronized (sLock) {
+                sRequestInProgress = false;
+            }
         }
     }
 

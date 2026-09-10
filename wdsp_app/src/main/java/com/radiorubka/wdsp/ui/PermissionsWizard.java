@@ -50,23 +50,8 @@ public final class PermissionsWizard {
     private static final String PREF_LAST_WIZARD_VERSION = "pref_last_wizard_version_code";
     private static WeakReference<PermissionsWizard> sCurrentInstance;
 
-    private static volatile boolean sRootChecked = false;
-    private static volatile boolean sRootGranted = false;
-
     public static boolean isRootGranted(Context context) {
-        if (!sRootChecked) {
-            sRootChecked = true;
-            new Thread(() -> {
-                boolean granted = RootAccess.alreadyGranted();
-                sRootGranted = granted;
-                if (granted) {
-                    if (context instanceof Activity) {
-                        ((Activity) context).runOnUiThread(PermissionsWizard::refreshCurrent);
-                    }
-                }
-            }, "wDSP_RootCheck").start();
-        }
-        return sRootGranted;
+        return RootAccess.hasRoot(context);
     }
 
     private final Activity activity;
@@ -300,22 +285,11 @@ public final class PermissionsWizard {
                 6,
                 R.string.perm_wizard_item_root_title,
                 R.string.perm_wizard_item_root_desc,
-                PermissionsWizard::isRootGranted,
+                RootAccess::hasRoot,
                 act -> new Thread(() -> {
-                    RootAccess.Outcome outcome = RootAccess.request();
-                    if (outcome == RootAccess.Outcome.GRANTED) {
-                        sRootGranted = true;
-                        sRootChecked = true;
-                        try {
-                            Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
-                        } catch (Throwable ignored) {}
-                    } else if (outcome == RootAccess.Outcome.DENIED_BY_POLICY) {
-                        sRootGranted = false;
-                        sRootChecked = true;
+                    RootAccess.Outcome outcome = RootAccess.request(act);
+                    if (outcome == RootAccess.Outcome.DENIED_BY_POLICY) {
                         act.runOnUiThread(() -> Toaster.show(act, act.getString(R.string.room_root_blocked)));
-                    } else {
-                        sRootGranted = false;
-                        sRootChecked = true;
                     }
                     act.runOnUiThread(PermissionsWizard::refreshCurrent);
                 }, "wDSP_WizardRoot").start(),
