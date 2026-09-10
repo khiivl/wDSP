@@ -1159,8 +1159,8 @@ public final class RoomMeasurement {
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
             cr.clarityDb = analysis[NativeSweep.CLARITY];
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
-            // Use live measured cabin noise floor rather than artificial impulse sample 48
-            System.arraycopy(result.noiseFloorDb16, 0, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
+            // Deconvolved impulse response silence noise floor (sample 48), perfectly matching bandsDb domain
+            System.arraycopy(analysis, NativeSweep.NOISE_BANDS, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
 
             // Spectral subtraction: clean = max(sweep - noise, 1e-12), snr = sweep - noise
             NativeSweep.subtractNoise(cr.bandsDb, cr.noiseBandsDb, cr.cleanBandsDb, cr.snrDb);

@@ -422,7 +422,9 @@ void SweepMeasurement::spectrum16Db(const float* signal, int length, float* out1
             power += static_cast<double>(re[i]) * re[i] + static_cast<double>(im[i]) * im[i];
         }
         const int bins = last - first + 1;
-        const double mean = power / bins;
+        // Normalize FFT energy to time-domain power (dBFS)
+        const double norm = static_cast<double>(windowLen) * windowLen;
+        const double mean = (power / norm) / bins;
         out16[b] = 10.0f * std::log10(static_cast<float>(mean) + 1e-20f);
     }
 }
@@ -431,14 +433,22 @@ void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseD
                                      float* outCleanDb16, float* outSnrDb16) {
     if (sweepDb16 == nullptr || noiseDb16 == nullptr) return;
     for (int b = 0; b < kHwBands; b++) {
+        const float snr = sweepDb16[b] - noiseDb16[b];
+        if (outSnrDb16 != nullptr) {
+            outSnrDb16[b] = snr;
+        }
+
         const float pSweep = std::pow(10.0f, sweepDb16[b] * 0.1f);
         const float pNoise = std::pow(10.0f, noiseDb16[b] * 0.1f);
-        const float pClean = std::max(pSweep - pNoise, 1e-12f);
+        // Spectral floor (Berouti / Wiener):
+        // Noise subtraction never attenuates more than -12 dB below the measured sweep.
+        // If signal is buried in noise (pSweep <= pNoise), floor at -12 dB rather than -120 dB black hole!
+        const float floorPower = pSweep * 0.0631f; // -12 dB
+        const float pDiff = pSweep - pNoise;
+        const float pClean = std::max(pDiff, floorPower);
+
         if (outCleanDb16 != nullptr) {
-            outCleanDb16[b] = 10.0f * std::log10(pClean);
-        }
-        if (outSnrDb16 != nullptr) {
-            outSnrDb16[b] = sweepDb16[b] - noiseDb16[b];
+            outCleanDb16[b] = 10.0f * std::log10(std::max(pClean, 1e-12f));
         }
     }
 }
@@ -640,7 +650,15 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
     }
 
     // Midrange reference (bands 5..8: 200..800 Hz)
-    const float refMid = 0.25f * (m[5] + m[6] + m[7] + m[8]);
+    float refMidSum = 0.0f;
+    int refMidCount = 0;
+    for (int b = 5; b <= 8; b++) {
+        if (m[b] > -70.0f) { // protect against missing/corrupted bands
+            refMidSum += m[b];
+            refMidCount++;
+        }
+    }
+    const float refMid = (refMidCount > 0) ? (refMidSum / refMidCount) : -20.0f;
 
     // 2. Synthesize Target curve T[b] relative to refMid
     for (int b = 0; b < kHwBands; b++) {
@@ -742,12 +760,18 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         }
         // Rule 2: Strict limit on boost to prevent clipping and null excitation (+3.0 dB)
         deltaDb = std::min(deltaDb, +3.0f);
-        // Rule 3: Cuts up to -9.0 dB to tame cabin room modes
-        deltaDb = std::max(deltaDb, -9.0f);
+        // Rule 3: Cuts:
+        // - Bass/midrange (<= 1 kHz) can cut down to -6.0 dB to tame cabin room modes
+        // - High frequencies (> 1 kHz) must NEVER be cut aggressively; limit cut to -3.0 dB
+        //   to preserve natural treble, speech presence, and sparkle.
+        const float maxCutDb = (freq > 1000.0f) ? -3.0f : -6.0f;
+        deltaDb = std::max(deltaDb, maxCutDb);
 
         // Quantize to BU32107 gain index (2 dB per step, 6 = 0 dB)
         int gainIdx = static_cast<int>(std::round(deltaDb / 2.0f)) + 6;
-        gainIdx = std::max(1, std::min(8, gainIdx)); // safe indices: 1 (-10 dB) .. 8 (+4 dB)
+        // Safe indices: 3 (-6 dB) .. 8 (+4 dB) for bass/mids, 4 (-4 dB) .. 8 (+4 dB) for treble
+        const int minGainIdx = (freq > 1000.0f) ? 4 : 3;
+        gainIdx = std::max(minGainIdx, std::min(8, gainIdx));
         outGains16[b] = gainIdx;
     }
 }
