@@ -281,11 +281,13 @@ void Analyzer::processFrame(bool haveLong) {
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
     for (int i = 0; i < kBands; i++) {
         float power = bandPower_[i];
-        if (quiet && !isAcoustic_) {
+        if (quiet) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;
+        } else if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) {
+            noiseFloor_[i] = power;
         }
-        float signal = isAcoustic_ ? power : (power - noiseFloor_[i] * kNoiseFloorMargin);
+        float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
         if (signal < 0.0f) signal = 0.0f;
 
         float db = toDb(signal) + curve[i];

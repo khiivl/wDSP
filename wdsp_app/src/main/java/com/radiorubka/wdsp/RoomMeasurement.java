@@ -1456,27 +1456,14 @@ public final class RoomMeasurement {
             }
         }
 
-        // 3. Blind microphone calibration (Cabin Gain Anchor + high frequency correction)
-        float[] avgClean16 = new float[NativeSweep.BAND_COUNT];
-        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-            double sumP = 0.0;
-            int validCh = 0;
-            for (int k = 0; k < channels.length; k++) {
-                ChannelResult cr = result.channels[k];
-                if (cr != null && cr.ok && cr.confident && cr.cleanBandsDb != null) {
-                    sumP += Math.pow(10.0, cr.cleanBandsDb[b] * 0.1);
-                    validCh++;
-                }
-            }
-            avgClean16[b] = validCh > 0 ? (float) (10.0 * Math.log10(sumP / validCh)) : -120f;
-        }
-        NativeSweep.estimateMicCompensation(avgClean16, result.micCompensation16);
-        StringBuilder mcLog = new StringBuilder("estimated mic compensation (16 bands):");
+        // 3. Load calibrated microphone compensation curve (Hardware constant, kept intact!)
+        float[] savedMicComp = getMicCompensationCurve(context);
+        System.arraycopy(savedMicComp, 0, result.micCompensation16, 0, NativeSweep.BAND_COUNT);
+        StringBuilder mcLog = new StringBuilder("using calibrated mic compensation (16 bands):");
         for (float v : result.micCompensation16) {
             mcLog.append(String.format(Locale.US, " %+.1f", v));
         }
         Log.i(TAG, mcLog.toString());
-        setMicCompensationCurve(context, result.micCompensation16);
     }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
