@@ -358,7 +358,7 @@
     <string name="perm_wizard_item_location_title">Геолокация GPS (Скорость GALA)</string>
     <string name="perm_wizard_item_location_desc">Автоматическая регулировка громкости в зависимости от скорости движения</string>
     <string name="perm_wizard_item_audio_title">Микрофон (Запись звука)</string>
-    <string name="perm_wizard_item_audio_desc">Калибровка акустики салона свип-тоном и спектроанализатор</string>
+    <string name="perm_wizard_item_audio_desc">Калибровка акустики салона и спектроанализатор FM-радио</string>
     <string name="toast_restore_is_preset_hint">Этот файл является отдельным пресетом, а не полной резервной копией. Для его добавления нажмите кнопку «Импорт» возле списка пресетов на главном экране.</string>
     <string name="dialog_restore_title">Восстановление настроек</string>
     <string name="dialog_restore_presets_prompt">Хотите также восстановить пресеты эквалайзера и привязки плееров из этой резервной копии?</string>

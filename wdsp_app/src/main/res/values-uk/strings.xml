@@ -229,7 +229,7 @@
     <string name="perm_wizard_item_location_title">Геолокація / GPS (GALA)</string>
     <string name="perm_wizard_item_location_desc">Автоматична зміна гучності залежно від швидкості руху автомобіля</string>
     <string name="perm_wizard_item_audio_title">Мікрофон (Запис звуку)</string>
-    <string name="perm_wizard_item_audio_desc">Вимірювання акустики салону та робота спектроаналізатора</string>
+    <string name="perm_wizard_item_audio_desc">Вимірювання акустики салону та спектроаналізатор FM-радіо</string>
     <string name="settings_backup_btn">Резервна копія налаштувань</string>
     <string name="settings_restore_btn">Відновити налаштування</string>
     <string name="toast_backup_success">Резервну копію збережено</string>
