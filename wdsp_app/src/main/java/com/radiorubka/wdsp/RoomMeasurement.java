@@ -747,11 +747,20 @@ public final class RoomMeasurement {
         if (saved == null || saved.isEmpty()) return;
 
         VolumeHelper.init(context);
+        McuService.ensureStarted(context);
         Log.w(TAG, "a previous measurement did not finish; restoring what it changed: " + saved);
         SharedPreferences.Editor editor = prefs.edit();
         applySaved(editor, saved);
         editor.remove(PREF_RECOVERY);
         editor.apply();
+
+        String preset = prefs.getString("last_selected_preset", null);
+        if (preset != null) {
+            int origLr = prefs.getInt(preset + "_f_lr", FADER_CENTRE);
+            int origFr = prefs.getInt(preset + "_f_fr", FADER_CENTRE);
+            McuService.sendFaderDirect(origLr, origFr);
+            Log.i(TAG, "restored hardware fader/balance from recovery: lr=" + origLr + ", fr=" + origFr);
+        }
     }
 
     // ---------------------------------------------------------------------------------------
@@ -801,6 +810,7 @@ public final class RoomMeasurement {
         }
 
         // Touch only: preset (switched to flat scratch preset) and volume (locked to 16).
+        McuService.ensureStarted(app);
         VolumeHelper.init(app);
         int origVolume = VolumeHelper.getVolume();
         Log.i(TAG, "locking volume for measurement: " + origVolume + " -> 16");
@@ -842,6 +852,13 @@ public final class RoomMeasurement {
             applySaved(editor, saved);
             editor.remove(PREF_RECOVERY);
             editor.apply();
+
+            // Restore hardware fader & balance to the original preset values
+            int origLr = prefs.getInt(preset + "_f_lr", FADER_CENTRE);
+            int origFr = prefs.getInt(preset + "_f_fr", FADER_CENTRE);
+            McuService.sendFaderDirect(origLr, origFr);
+            Log.i(TAG, "restored hardware fader/balance to " + preset + ": lr=" + origLr + ", fr=" + origFr);
+
             Log.i(TAG, "restoring volume to " + origVolume);
             VolumeHelper.setVolume(origVolume);
             VolumeHelper.setVolumeForType("media_type", origVolume);
@@ -1286,6 +1303,10 @@ public final class RoomMeasurement {
         }
         Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
                 + " fader=" + channel.frontRear + " ---");
+        // 1. Direct synchronous hardware routing to MCU DSP chip
+        McuService.sendFaderDirect(channel.leftRight, channel.frontRear);
+
+        // 2. Persist in SharedPreferences so state stays consistent
         prefs.edit()
                 .putInt(preset + "_f_lr", channel.leftRight)
                 .putInt(preset + "_f_fr", channel.frontRear)

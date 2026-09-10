@@ -161,6 +161,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         VolumeHelper.init(getApplicationContext());
+        McuService.ensureStarted(getApplicationContext());
         setContentView(R.layout.activity_settings);
 
         rootSettings = findViewById(R.id.root_settings);

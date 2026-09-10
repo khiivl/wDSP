@@ -15,6 +15,7 @@ import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -306,6 +307,52 @@ public class McuService extends Service implements LocationListener {
     private Map<String, String> playerMap = new HashMap<>();
     private final Map<Byte, byte[]> mcuCache = new HashMap<>();
 
+    private static volatile McuService instance;
+
+    public static McuService getInstance() {
+        return instance;
+    }
+
+    public static void ensureStarted(Context context) {
+        if (context == null) return;
+        try {
+            Intent intent = new Intent(context, McuService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not start McuService: " + t.getMessage());
+        }
+    }
+
+    public static void sendFaderDirect(int leftRight, int frontRear) {
+        byte[] data = new byte[]{(byte) 0x81, (byte) (leftRight & 0xFF), (byte) (frontRear & 0xFF), 0};
+        McuService s = instance;
+        if (s != null) {
+            s.sendToHardware(data);
+            return;
+        }
+        try {
+            @SuppressLint("PrivateApi") Class<?> sm = Class.forName("android.os.ServiceManager");
+            IBinder binder = (IBinder) sm.getMethod("getService", String.class).invoke(null, "mcu_service");
+            if (binder != null) {
+                @SuppressLint("PrivateApi") Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
+                Object mcuManager = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
+                if (mcuManager != null) {
+                    Method setEqData = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
+                    setEqData.invoke(mcuManager, (Object) data);
+                    Log.i(TAG, String.format(java.util.Locale.US,
+                            "[DirectMcu] Fader/Balance sent (direct binder fallback): [81 %02X %02X 00]",
+                            leftRight & 0xFF, frontRear & 0xFF));
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Direct MCU fader/balance failed: " + t.getMessage());
+        }
+    }
+
     private final float[] fmOffsets = new float[16];
     private final byte[] eqData = new byte[12];
     private final byte[] subData = new byte[2];
@@ -578,6 +625,7 @@ public class McuService extends Service implements LocationListener {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         createNotificationChannel();
 
         AudioSpectrumEngine.getInstance().initContext(this);
@@ -1896,7 +1944,7 @@ public class McuService extends Service implements LocationListener {
         subUpdatePending = false;
     }
 
-    private void sendToHardware(byte[] data) {
+    synchronized private void sendToHardware(byte[] data) {
         if (data == null || data.length == 0) return;
         byte cmd = data[0];
 
@@ -2047,6 +2095,9 @@ public class McuService extends Service implements LocationListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (instance == this) {
+            instance = null;
+        }
         if (statusBarManager != null) {
             statusBarManager.removeOverlay();
         }
