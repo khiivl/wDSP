@@ -746,6 +746,7 @@ public final class RoomMeasurement {
         String saved = prefs.getString(PREF_RECOVERY, null);
         if (saved == null || saved.isEmpty()) return;
 
+        VolumeHelper.init(context);
         Log.w(TAG, "a previous measurement did not finish; restoring what it changed: " + saved);
         SharedPreferences.Editor editor = prefs.edit();
         applySaved(editor, saved);
@@ -800,11 +801,16 @@ public final class RoomMeasurement {
         }
 
         // Touch only: preset (switched to flat scratch preset) and volume (locked to 16).
+        VolumeHelper.init(app);
         int origVolume = VolumeHelper.getVolume();
         Log.i(TAG, "locking volume for measurement: " + origVolume + " -> 16");
         String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
         VolumeHelper.setVolume(16);
+        VolumeHelper.setVolumeForType("media_type", 16);
+        int readbackVol = VolumeHelper.getVolume();
+        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> 16 (readback=" + readbackVol
+                + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
         buildScratchPreset(prefs, preset);
         Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
 
@@ -838,6 +844,7 @@ public final class RoomMeasurement {
             editor.apply();
             Log.i(TAG, "restoring volume to " + origVolume);
             VolumeHelper.setVolume(origVolume);
+            VolumeHelper.setVolumeForType("media_type", origVolume);
             Log.i(TAG, "switched back to " + preset);
         }
 
@@ -1559,6 +1566,7 @@ public final class RoomMeasurement {
                     int vol = Integer.parseInt(value);
                     Log.i(TAG, "restoring saved volume from recovery: " + vol);
                     VolumeHelper.setVolume(vol);
+                    VolumeHelper.setVolumeForType("media_type", vol);
                 } catch (Throwable ignored) {}
             } else {
                 editor.putString(key, value);

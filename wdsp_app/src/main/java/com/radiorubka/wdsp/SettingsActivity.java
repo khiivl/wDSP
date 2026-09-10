@@ -2,6 +2,8 @@ package com.radiorubka.wdsp;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -158,6 +160,7 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         super.onCreate(savedInstanceState);
+        VolumeHelper.init(getApplicationContext());
         setContentView(R.layout.activity_settings);
 
         rootSettings = findViewById(R.id.root_settings);
@@ -171,6 +174,15 @@ public class SettingsActivity extends AppCompatActivity {
         loadSettings();
         applyTheme();
         handleIntent(getIntent());
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            getWindow().getDecorView().post(() ->
+                    HardwareProfile.sampleScreen(SettingsActivity.this, getWindow().getDecorView()));
+        }
     }
 
     @Override
@@ -198,6 +210,10 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            getWindow().getDecorView().post(() ->
+                    HardwareProfile.sampleScreen(SettingsActivity.this, getWindow().getDecorView()));
+        }
         if (ThemeManager.getThemeMode(this) == ThemeManager.THEME_MODE_AUTO) {
             editNight = ThemeManager.isNight(this);
         }
@@ -1583,6 +1599,12 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(reportButton);
         reportButton.setOnClickListener(v -> collectSystemReport());
 
+        TextView topologyButton = findViewById(R.id.btn_screen_topology);
+        if (topologyButton != null) {
+            TouchGlow.attach(topologyButton);
+            topologyButton.setOnClickListener(v -> showScreenTopologyDialog());
+        }
+
         styleActionButtons();
         // The address is a link as well as a label: a tester who has never sent anything to a
         // developer should not have to work out where it goes.
@@ -1957,6 +1979,65 @@ public class SettingsActivity extends AppCompatActivity {
         return false;
     }
 
+    private void showScreenTopologyDialog() {
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
+        final String topology = HardwareProfile.describeScreen(this, getWindow() != null ? getWindow().getDecorView() : null);
+
+        ScrollView scrollView = new ScrollView(this);
+        int pad = (int) ThemedDialog.dp(this, 14);
+        scrollView.setPadding(pad, pad, pad, pad);
+
+        TextView tv = new TextView(this);
+        tv.setText(topology);
+        tv.setTypeface(Typeface.MONOSPACE);
+        tv.setTextSize(10.5f);
+        tv.setTextIsSelectable(true);
+        tv.setTextColor(ThemeManager.textPrimary(this, editNight));
+        tv.setLineSpacing(ThemedDialog.dp(this, 2), 1f);
+
+        scrollView.addView(tv);
+
+        ThemedDialog.builder(this)
+                .setTitle(R.string.screen_topology_title)
+                .setView(scrollView)
+                .setMaxWidthDp(760)
+                .setPositiveButton(R.string.screen_topology_copy, (dialog, which) -> {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        cm.setPrimaryClip(ClipData.newPlainText("Screen Topology", topology));
+                        Toast.makeText(SettingsActivity.this, R.string.screen_topology_copied, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton(R.string.screen_topology_save, (dialog, which) -> {
+                    saveScreenTopologyToFile(topology);
+                })
+                .setNegativeButton(android.R.string.ok, null)
+                .setCancelable(true)
+                .show();
+    }
+
+    private void saveScreenTopologyToFile(String topology) {
+        String name = "wdsp_screen_topology_"
+                + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()) + ".txt";
+        Downloads.Pending pending = Downloads.create(this, name, "text/plain");
+        if (pending != null) {
+            try {
+                pending.stream.write(topology.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                pending.stream.close();
+                Downloads.finish(this, pending);
+                ThemedDialog.notice(this, getString(R.string.screen_topology_title),
+                        getString(R.string.system_report_saved, Downloads.pathFor(name)));
+            } catch (Throwable t) {
+                Log.e("wDSP_Settings", "could not write screen topology", t);
+                Downloads.discard(this, pending);
+                ThemedDialog.notice(this, getString(R.string.screen_topology_title),
+                        getString(R.string.system_report_failed));
+            }
+        }
+    }
+
     /**
      * Collects everything known about this unit's audio and writes it next to the measurements.
      *
@@ -1968,6 +2049,9 @@ public class SettingsActivity extends AppCompatActivity {
      * thing runs off the UI thread.
      */
     private void collectSystemReport() {
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
         final boolean withMicrophone = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         tvSystemReportStatus.setText(getString(R.string.system_report_working));
@@ -2050,6 +2134,9 @@ public class SettingsActivity extends AppCompatActivity {
         // SystemDiagnostics.report opens six audio sources when it has the microphone, so this
         // whole thing is off the UI thread now. It used to zip on the main thread and got away
         // with it only because the files were small.
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
         final boolean withMicrophone = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         Toaster.show(this, getString(R.string.system_report_working));
@@ -2940,6 +3027,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_room_measure));
         styleActionButton(findViewById(R.id.btn_room_send));
         styleActionButton(findViewById(R.id.btn_system_report));
+        styleActionButton(findViewById(R.id.btn_screen_topology));
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
     }

@@ -287,80 +287,187 @@ public final class HardwareProfile {
      */
     public static String describeScreen(android.content.Context context, android.view.View view) {
         StringBuilder sb = new StringBuilder();
+        android.view.WindowManager wm =
+                (android.view.WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
         android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        sb.append(String.format(Locale.US,
-                "screen=%dx%d px, density=%.2f (%d dpi), %dx%d dp",
-                dm.widthPixels, dm.heightPixels, dm.density, dm.densityDpi,
-                Math.round(dm.widthPixels / dm.density), Math.round(dm.heightPixels / dm.density)));
+        android.content.res.Configuration cfg = context.getResources().getConfiguration();
 
-        int resId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        int declared = resId > 0 ? context.getResources().getDimensionPixelSize(resId) : -1;
-        sb.append(String.format(Locale.US, ", status_bar_height=%d px", declared));
-
-        String rotation = systemProperty("persist.sys.qf.sf.hwrotation");
-        if (rotation != null) sb.append(", hwrotation=").append(rotation);
-
-        try {
-            android.view.WindowManager wm =
-                    (android.view.WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
-            if (wm != null) {
-                sb.append(", rotation=").append(wm.getDefaultDisplay().getRotation());
-            }
-        } catch (Throwable ignored) {
-        }
-
-        int insetTop = -1;
-        if (view != null && view.getRootWindowInsets() != null) {
-            android.view.WindowInsets insets = view.getRootWindowInsets();
-            // The deprecated accessors are used on purpose: this app targets API 29, where
-            // getInsets(Type.systemBars()) does not exist yet.
-            insetTop = insets.getSystemWindowInsetTop();
-            sb.append(String.format(Locale.US,
-                    ", system bars: top=%d bottom=%d left=%d right=%d px",
-                    insetTop, insets.getSystemWindowInsetBottom(),
-                    insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetRight()));
-            if (insets.getDisplayCutout() != null) {
-                sb.append(", cutout present");
+        // 1. Display Metrics & Real vs App size
+        android.graphics.Point realSize = new android.graphics.Point();
+        android.graphics.Point appSize = new android.graphics.Point();
+        int rotation = 0;
+        if (wm != null) {
+            try {
+                wm.getDefaultDisplay().getRealSize(realSize);
+                wm.getDefaultDisplay().getSize(appSize);
+                rotation = wm.getDefaultDisplay().getRotation();
+            } catch (Throwable ignored) {
+                realSize.set(dm.widthPixels, dm.heightPixels);
+                appSize.set(dm.widthPixels, dm.heightPixels);
             }
         } else {
-            sb.append(", system bars: not sampled");
+            realSize.set(dm.widthPixels, dm.heightPixels);
+            appSize.set(dm.widthPixels, dm.heightPixels);
         }
 
-        // What the overlay would actually be told, and what it is currently using.
+        String orientStr = cfg.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
+                ? "PORTRAIT" : (cfg.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                ? "LANDSCAPE" : "UNDEFINED (" + cfg.orientation + ")");
+
+        sb.append(String.format(Locale.US,
+                "SCREEN & WINDOW TOPOLOGY\n"
+                + "  physical display (real) = %d x %d px (rotation=%d, hwrotation=%s)\n"
+                + "  app viewport (display)  = %d x %d px\n"
+                + "  display metrics (dm)    = %d x %d px, density=%.2f (%d dpi), %d x %d dp\n"
+                + "  configuration           = %s (w=%ddp, h=%ddp, sw=%ddp)\n",
+                realSize.x, realSize.y, rotation, orUnknown(systemProperty("persist.sys.qf.sf.hwrotation")),
+                appSize.x, appSize.y,
+                dm.widthPixels, dm.heightPixels, dm.density, dm.densityDpi,
+                Math.round(dm.widthPixels / dm.density), Math.round(dm.heightPixels / dm.density),
+                orientStr, cfg.screenWidthDp, cfg.screenHeightDp, cfg.smallestScreenWidthDp));
+
+        // 2. System Resource Dimensions
+        int sbResId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        int declaredSb = sbResId > 0 ? context.getResources().getDimensionPixelSize(sbResId) : -1;
+        int nbResId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        int declaredNb = nbResId > 0 ? context.getResources().getDimensionPixelSize(nbResId) : -1;
+        int nbwResId = context.getResources().getIdentifier("navigation_bar_width", "dimen", "android");
+        int declaredNbw = nbwResId > 0 ? context.getResources().getDimensionPixelSize(nbwResId) : -1;
+
+        sb.append(String.format(Locale.US,
+                "  system dimensions (res) : status_bar=%d px, nav_bar_h=%d px, nav_bar_w=%d px\n",
+                declaredSb, declaredNb, declaredNbw));
+
+        // 3. View / Decor Bounds & Window Insets (if view attached)
+        int insetTop = -1, insetBottom = -1, insetLeft = -1, insetRight = -1;
         int visibleTop = -1;
         if (view != null) {
+            int[] loc = new int[2];
+            view.getLocationOnScreen(loc);
             android.graphics.Rect frame = new android.graphics.Rect();
             view.getWindowVisibleDisplayFrame(frame);
             visibleTop = frame.top;
-            sb.append(", visible frame top=").append(visibleTop);
+
+            sb.append(String.format(Locale.US,
+                    "  decor window on screen  : location=(%d, %d), size=%d x %d px\n"
+                    + "  visible display frame   : [%d, %d - %d, %d] (size=%d x %d px)\n",
+                    loc[0], loc[1], view.getWidth(), view.getHeight(),
+                    frame.left, frame.top, frame.right, frame.bottom, frame.width(), frame.height()));
+
+            if (view.getRootWindowInsets() != null) {
+                android.view.WindowInsets insets = view.getRootWindowInsets();
+                insetTop = insets.getSystemWindowInsetTop();
+                insetBottom = insets.getSystemWindowInsetBottom();
+                insetLeft = insets.getSystemWindowInsetLeft();
+                insetRight = insets.getSystemWindowInsetRight();
+                sb.append(String.format(Locale.US,
+                        "  window insets (system)  : top=%d, bottom=%d, left=%d, right=%d px\n"
+                        + "  window insets (stable)  : top=%d, bottom=%d, left=%d, right=%d px%s\n",
+                        insetTop, insetBottom, insetLeft, insetRight,
+                        insets.getStableInsetTop(), insets.getStableInsetBottom(),
+                        insets.getStableInsetLeft(), insets.getStableInsetRight(),
+                        insets.getDisplayCutout() != null ? " (cutout present)" : ""));
+            } else {
+                sb.append("  window insets (system)  : null (view not attached to window hierarchy)\n");
+            }
+        } else {
+            sb.append("  decor window / insets   : not sampled (no view provided)\n");
         }
+
+        // 4. Screensaver Overlay Geometry
         int stored = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
                 .getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_HEIGHT_PX, 0);
-        sb.append(", overlay height in use=").append(stored > 0 ? stored : declared);
+        int storedOffsetY = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                .getInt(StatusBarVisualizerManager.PREF_STATUS_BAR_OFFSET_Y, 0);
+        sb.append(String.format(Locale.US,
+                "  screensaver overlay cfg : bounds=%d x %d px, status_bar_used=%d px, offset_y=%d px\n",
+                realSize.x, realSize.y, stored > 0 ? stored : declaredSb, storedOffsetY));
 
-        // 🔴 The Tesla case, stated rather than left to be worked out from four numbers.
-        //
-        // The status-bar visualiser is placed from the height Android reserves at the top. That is
-        // right wherever Android really owns a bar there - including this platform's own heavily
-        // customised one, which reports 72 px and works. It is wrong where the strip along the top
-        // belongs to the launcher instead: Android then reserves nothing, the calibration in
-        // MainActivity does nothing because it only acts when the visible frame starts below zero,
-        // and the overlay falls back to a resource that describes a bar which is not there.
-        //
-        // Some of these units carry a vendor modification that gives Android a real bar again, and
-        // on those the app is fine - which is exactly why the fault looks random from outside.
-        if (visibleTop == 0 && insetTop == 0) {
-            sb.append("  <-- NO ANDROID STATUS BAR: the strip on screen belongs to the launcher, "
-                    + "so no automatic height can be right here");
-        } else if (visibleTop >= 0 && declared > 0 && Math.abs(visibleTop - declared) > 4) {
+        // 5. Detection verdict (Tesla / vertical analysis)
+        if (realSize.y > realSize.x) {
+            sb.append("  [VERDICT] VERTICAL (TESLA-STYLE) DISPLAY DETECTED:\n");
+            int totalBarH = realSize.y - appSize.y;
             sb.append(String.format(Locale.US,
-                    "  <-- MISMATCH: the resource says %d px and the window system says %d",
-                    declared, visibleTop));
+                    "    Total vertical bars height: %d px (Real %d - App %d).\n"
+                    + "    Top bar: %d px (visible frame top: %d px).\n"
+                    + "    Bottom panel (HVAC/dock): approx %d px.\n",
+                    totalBarH, realSize.y, appSize.y,
+                    declaredSb > 0 ? declaredSb : visibleTop, visibleTop,
+                    Math.max(0, totalBarH - (declaredSb > 0 ? declaredSb : visibleTop))));
+        } else if (visibleTop == 0 && insetTop == 0) {
+            sb.append("  [VERDICT] NO ANDROID STATUS BAR: the strip on screen belongs to the launcher.\n");
+        } else if (visibleTop >= 0 && declaredSb > 0 && Math.abs(visibleTop - declaredSb) > 4) {
+            sb.append(String.format(Locale.US,
+                    "  [VERDICT] MISMATCH: the resource says %d px and the window system says %d px.\n",
+                    declaredSb, visibleTop));
         }
 
         String launcher = launcherPackage(context);
-        if (launcher != null) sb.append(", launcher=").append(launcher);
+        if (launcher != null) sb.append("  launcher                : ").append(launcher).append('\n');
+
+        // 6. Shell dumpsys window info (if available)
+        appendShellWindowGeometry(context, sb);
+
         return sb.toString();
+    }
+
+    private static void appendShellWindowGeometry(android.content.Context context, StringBuilder sb) {
+        // 1. wm size
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"sh", "-c", "wm size"});
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(p.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append("  shell wm size           : ").append(line.trim()).append('\n');
+                }
+            }
+            p.waitFor();
+        } catch (Throwable ignored) {}
+
+        // 2. dumpsys window displays (filtered)
+        try {
+            boolean hasRoot = RootAccess.hasRoot(context);
+            String[] cmd = hasRoot
+                    ? new String[]{"su", "-c", "dumpsys window displays | grep -E 'DisplayFrames|mStable=|mDock=|mContent=|mContentFrame='"}
+                    : new String[]{"sh", "-c", "dumpsys window displays | grep -E 'DisplayFrames|mStable=|mDock=|mContent=|mContentFrame='"};
+            Process p = Runtime.getRuntime().exec(cmd);
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(p.getInputStream()))) {
+                String line;
+                boolean header = false;
+                while ((line = reader.readLine()) != null) {
+                    if (!header) {
+                        sb.append("  dumpsys window displays :\n");
+                        header = true;
+                    }
+                    sb.append("    ").append(line.trim()).append('\n');
+                }
+            }
+            p.waitFor();
+        } catch (Throwable ignored) {}
+
+        // 3. active system window frames (StatusBar, NavigationBar, Hvac, etc.)
+        try {
+            boolean hasRoot = RootAccess.hasRoot(context);
+            String[] cmd = hasRoot
+                    ? new String[]{"su", "-c", "dumpsys window windows | grep -E 'StatusBar|NavigationBar|Hvac|CarPanel|Climate|mFrame=' | head -n 25"}
+                    : new String[]{"sh", "-c", "dumpsys window windows | grep -E 'StatusBar|NavigationBar|Hvac|CarPanel|Climate|mFrame=' | head -n 25"};
+            Process p = Runtime.getRuntime().exec(cmd);
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(p.getInputStream()))) {
+                String line;
+                boolean header = false;
+                while ((line = reader.readLine()) != null) {
+                    if (!header) {
+                        sb.append("  dumpsys window frames   :\n");
+                        header = true;
+                    }
+                    sb.append("    ").append(line.trim()).append('\n');
+                }
+            }
+            p.waitFor();
+        } catch (Throwable ignored) {}
     }
 
     private static String sampledScreen;
