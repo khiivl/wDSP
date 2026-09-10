@@ -112,12 +112,17 @@ public final class PermissionsWizard {
     }
 
     /**
-     * Перевіряє чи всі обов'язкові дозволи надані.
+     * Перевіряє чи всі дозволи надані (включно з Root, якщо на пристрої є su).
      */
     public static boolean areAllGranted(Context context) {
         List<Item> items = getItems();
+        boolean hasSu = new java.io.File("/system/bin/su").exists() || new java.io.File("/system/xbin/su").exists();
         for (Item item : items) {
-            if (!item.optional && !item.checker.isGranted(context)) {
+            if (item.optional) {
+                if (hasSu && !item.checker.isGranted(context)) {
+                    return false;
+                }
+            } else if (!item.checker.isGranted(context)) {
                 return false;
             }
         }

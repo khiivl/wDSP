@@ -125,7 +125,6 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnStatusBarBands16, btnStatusBarBands32;
     private TextView btnVisPreviewScreensaver;
     private int editingEffect = StatusBarVisualizerView.STYLE_CLASSIC_BARS;
-    private TextView btnOverlayPerm;
     private boolean isUpdatingStyleUi = false;
 
     // EQ Visualizer
@@ -133,8 +132,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
-    private TextView btnPermissionsWizard;
-    private TextView btnBatteryOpt, btnNotificationPerm, btnAudioPerm, btnLocationPerm, btnAppDetails;
+    private TextView btnPermissionsWizard, btnAppDetails;
     private TextView btnBackupSettings, btnRestoreSettings;
 
     private ActivityResultLauncher<String[]> wallpaperPickerLauncher;
@@ -548,13 +546,8 @@ public class SettingsActivity extends AppCompatActivity {
             updateEqVisModeHighlights(1);
         });
 
-        // Permissions & Backup
+        // Permissions & Backup (4 buttons: 2x2 grid)
         btnPermissionsWizard = findViewById(R.id.btn_permissions_wizard);
-        btnBatteryOpt = findViewById(R.id.btn_battery_opt);
-        btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
-        btnNotificationPerm = findViewById(R.id.btn_notification_perm);
-        btnAudioPerm = findViewById(R.id.btn_audio_perm);
-        btnLocationPerm = findViewById(R.id.btn_location_perm);
         btnAppDetails = findViewById(R.id.btn_app_details);
         btnBackupSettings = findViewById(R.id.btn_backup_settings);
         btnRestoreSettings = findViewById(R.id.btn_restore_settings);
@@ -563,37 +556,16 @@ public class SettingsActivity extends AppCompatActivity {
             TouchGlow.attach(btnPermissionsWizard);
             btnPermissionsWizard.setOnClickListener(v -> PermissionsWizard.show(this));
         }
-        TouchGlow.attach(btnBatteryOpt);
-        TouchGlow.attach(btnOverlayPerm);
-        TouchGlow.attach(btnNotificationPerm);
-        TouchGlow.attach(btnAudioPerm);
-        TouchGlow.attach(btnLocationPerm);
-        TouchGlow.attach(btnAppDetails);
-        TouchGlow.attach(btnBackupSettings);
-        TouchGlow.attach(btnRestoreSettings);
-
-        btnBatteryOpt.setOnClickListener(v -> requestBatteryOptimization());
-        btnOverlayPerm.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
-        if (btnNotificationPerm != null) {
-            btnNotificationPerm.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-                } catch (Throwable t) {
-                    Toaster.show(this, getString(R.string.toast_cannot_open_notification_settings));
-                }
+        if (btnAppDetails != null) {
+            TouchGlow.attach(btnAppDetails);
+            btnAppDetails.setOnClickListener(v -> {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
             });
         }
-        btnAudioPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO));
-        btnLocationPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION));
-        btnAppDetails.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
+        TouchGlow.attach(btnBackupSettings);
+        TouchGlow.attach(btnRestoreSettings);
 
         btnBackupSettings.setOnClickListener(v -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US);
@@ -616,29 +588,6 @@ public class SettingsActivity extends AppCompatActivity {
         SettingsAccordion.build(settingsColumn, accent);
     }
 
-    private void requestBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent();
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                try {
-                    startActivity(intent);
-                } catch (Exception e) {
-                    intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                    try {
-                        startActivity(intent);
-                    } catch (Exception ignored) {}
-                }
-            } else {
-                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                try {
-                    startActivity(intent);
-                } catch (Exception ignored) {}
-            }
-        }
-    }
 
     private void setupColorWheel(HueWheelView wheel, SeekBar brightness, int slot) {
         brightness.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1074,39 +1023,33 @@ public class SettingsActivity extends AppCompatActivity {
         int accent = ThemeManager.accent(this, editNight);
         int border = ThemeManager.panelBorder(this, editNight);
 
-        // 1. Battery Optimization
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        boolean batteryGranted = (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
-        stylePermissionButton(btnBatteryOpt, batteryGranted, getString(R.string.perm_battery_opt), accent, border);
-
-        // 2. Overlay Permission
-        boolean overlayGranted = Settings.canDrawOverlays(this);
-        stylePermissionButton(btnOverlayPerm, overlayGranted, getString(R.string.settings_perm_overlay), accent, border);
-
-        // 3. Audio Record
-        boolean audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        stylePermissionButton(btnAudioPerm, audioGranted, getString(R.string.perm_audio_record), accent, border);
-
-        // 4. GPS Location
-        boolean locationGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        stylePermissionButton(btnLocationPerm, locationGranted, getString(R.string.perm_gps_location), accent, border);
-
-        // 5. Notification Access (Metadata)
-        boolean notifGranted = NowPlaying.getInstance(this).canReadSessions();
-        stylePermissionButton(btnNotificationPerm, notifGranted, getString(R.string.perm_notification_access), accent, border);
-
-        // 6. Permissions Wizard Button
         if (btnPermissionsWizard != null) {
-            boolean allGranted = batteryGranted && overlayGranted && audioGranted && locationGranted && notifGranted;
-            btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + (allGranted ? " ✓" : ""));
-            stylePill(btnPermissionsWizard, false, accent, border);
+            boolean allGranted = PermissionsWizard.areAllGranted(this);
+            if (allGranted) {
+                btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + " ✓");
+                btnPermissionsWizard.setBackground(ThemeManager.pillDrawable(this, true, editNight, 14f, accent, border));
+                int userFg = ThemeManager.onAccent(this, editNight);
+                btnPermissionsWizard.setTextColor(userFg);
+            } else {
+                btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + " !");
+                int redColor = 0xFFD32F2F;
+                int redBorder = 0xFFFF5252;
+                btnPermissionsWizard.setBackground(ThemeManager.pillDrawable(this, true, editNight, 14f, redColor, redBorder));
+                btnPermissionsWizard.setTextColor(0xFFFFFFFF);
+            }
+            btnPermissionsWizard.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnPermissionsWizard.getPaint().setFakeBoldText(true);
+            btnPermissionsWizard.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
         }
-    }
-
-    private void stylePermissionButton(TextView btn, boolean granted, String title, int accent, int border) {
-        if (btn == null) return;
-        btn.setText(granted ? "✓ " + title : title);
-        stylePill(btn, granted, accent, border);
+        if (btnAppDetails != null) {
+            stylePill(btnAppDetails, false, accent, border);
+        }
+        if (btnBackupSettings != null) {
+            stylePill(btnBackupSettings, false, accent, border);
+        }
+        if (btnRestoreSettings != null) {
+            stylePill(btnRestoreSettings, false, accent, border);
+        }
     }
 
     private void styleActionButton(View v) {
