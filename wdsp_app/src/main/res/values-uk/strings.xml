@@ -317,11 +317,11 @@
     <string name="room_wizard_stage_cabin_center_desc">Рівномірний звук, збалансований між переднім і заднім рядами.</string>
     <string name="room_wizard_stage_off">Без затримок</string>
     <string name="room_wizard_stage_off_desc">Апаратне вирівнювання затримок вимкнено.</string>
-    <string name="room_wizard_cabin_geometry_title">Геометрія салону та лінія слуху</string>
-    <string name="room_wizard_body_hatchback">Хетчбек / Компакт (60 см)</string>
-    <string name="room_wizard_body_sedan">Седан / Універсал / SUV (75 см)</string>
-    <string name="room_wizard_body_minivan">Мінівен / Бус (90 см)</string>
-    <string name="room_wizard_distance_label">Відстань від торпеди до вух:</string>
+    <string name="room_wizard_cabin_geometry_title">Лінія прослуховування від мікрофона</string>
+    <string name="room_wizard_body_hatchback">Близька посадка (Хетчбек / Компакт — 60 см)</string>
+    <string name="room_wizard_body_sedan">Середня посадка (Седан / SUV — 75 см)</string>
+    <string name="room_wizard_body_minivan">Далека посадка (Мінівен / Бус — 90 см)</string>
+    <string name="room_wizard_distance_label">Відстань від мікрофона до вух:</string>
     <string name="room_wizard_distance_value">%1$d см</string>
     <string name="room_wizard_start">Почати калібрування</string>
     <string name="room_wizard_cancel">Скасувати</string>

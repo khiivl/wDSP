@@ -341,11 +341,11 @@
     <string name="room_wizard_stage_cabin_center_desc">Symmetrical sound balanced between front and rear rows.</string>
     <string name="room_wizard_stage_off">No Delays</string>
     <string name="room_wizard_stage_off_desc">Hardware time alignment disabled.</string>
-    <string name="room_wizard_cabin_geometry_title">Cabin Geometry &amp; Listening Line</string>
-    <string name="room_wizard_body_hatchback">Hatchback / Compact (60 cm)</string>
-    <string name="room_wizard_body_sedan">Sedan / SUV (75 cm)</string>
-    <string name="room_wizard_body_minivan">Minivan / Bus (90 cm)</string>
-    <string name="room_wizard_distance_label">Distance from dash to ears:</string>
+    <string name="room_wizard_cabin_geometry_title">Listening Line from Microphone</string>
+    <string name="room_wizard_body_hatchback">Close Seating (Hatchback / Compact — 60 cm)</string>
+    <string name="room_wizard_body_sedan">Medium Seating (Sedan / SUV — 75 cm)</string>
+    <string name="room_wizard_body_minivan">Far Seating (Minivan / Bus — 90 cm)</string>
+    <string name="room_wizard_distance_label">Distance from mic to ears:</string>
     <string name="room_wizard_distance_value">%1$d cm</string>
     <string name="room_wizard_start">Start Calibration</string>
     <string name="room_wizard_cancel">Cancel</string>
