@@ -278,3 +278,30 @@ Fully localized in 30 languages with zero abbreviations in headers/labels:
 - **Етап 4**: UI-інтеграція у `SettingsActivity` та тестування на залізі UIS7862.
 - **Бонус**: Миттєве застосування кривої компенсації мікрофона в `Analyzer.cpp` (`setDspCurve`) для студійного спектру FM-радіо.
 
+---
+
+## 📻 Апаратна комутація динаміків через Fader/Balance MCU при Auto-EQ (🔬 / 📻 10.09.2026 18:00) *(✍️ Antigravity & Kostyamat)*
+
+### Проблема:
+- Під час акустичного вимірювання (свипів) при тестуванні задніх динаміків одночасно звучали й передні динаміки.
+
+### 🔬 Дослідження та виміри на залізі (Provenience):
+- **Тракт звуку**: Android `AudioTrack` генерує звичайний 2-канальний стерео-потік (`L / R`). Розведенням стерео на 4 фізичні динаміки (FL, FR, RL, RR) та сабвуфер керує виключно апаратний DSP-чип (BU32107 / AK7604) за командами MCU.
+- **Маршрутизація каналів**: Для повної акустичної ізоляції динаміка під час заміру баланс та фейдер мають бути загнані в крайній відповідний кут:
+  - `REAR_LEFT`: `LR = 0, FR = 0`
+  - `REAR_RIGHT`: `LR = 24, FR = 0`
+  - `FRONT_LEFT`: `LR = 0, FR = 24`
+  - `FRONT_RIGHT`: `LR = 24, FR = 24`
+- **Корінь збою (виявлено по логах 10.09.2026 17:52:24)**:
+  - `McuService` у системі стартував лише з `MainActivity` або через `BootReceiver`.
+  - Після перевстановлення APK додаток відкривався прямо в `SettingsActivity`, де сервіс `McuService` не був запущений.
+  - `RoomMeasurement` записував значення в `SharedPreferences` (`wDSP Flat_f_lr`, `wDSP Flat_f_fr`), сподіваючись на асинхронний `OnSharedPreferenceChangeListener`. Оскільки сервіс спав, ніхто не відправляв команду `0x81` в MCU.
+  - Апаратний чип DSP залишався в дефолтному стані «все по центру» ($LR=12, FR=12$), тому стерео-свип лунав з усіх 4 динаміків одночасно.
+
+### 🧩 Інженерне вирішення:
+1. **Гарантований старт сервісу**: `McuService.ensureStarted(Context)` викликається в `SettingsActivity.onCreate()`, `RoomMeasurement.measure()`, та `RoomMeasurement.restoreIfInterrupted()`.
+2. **Пряма комутація через Binder (`McuService.sendFaderDirect(lr, fr)`)**:
+   - `RoomMeasurement.applyRouting` відправляє команду `0x81` безпосередньо у залізо (`RPC_SetEQData`) перед кожним свипом замість очікування асинхронних SharedPreferences.
+   - Метод `sendToHardware` у `McuService` синхронізовано (`synchronized`) для усунення гонок між потоками.
+   - У блоці `finally` вимірювання додано обов'язкове пряме повернення апаратного фейдера/балансу до початкових значень пресету користувача.
+
