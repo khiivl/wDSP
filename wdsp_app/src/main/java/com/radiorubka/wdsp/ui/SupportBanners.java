@@ -165,7 +165,11 @@ public final class SupportBanners {
         // wallet address is recognised by; the whole of it is what gets copied.
         TextView value = new TextView(a);
         value.setText(it.value);
-        value.setTextColor(muted);
+        if (it.uri != null) {
+            ThemeManager.styleAsLink(value, night);
+        } else {
+            value.setTextColor(muted);
+        }
         value.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
         value.setSingleLine(true);
         value.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);

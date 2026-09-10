@@ -211,6 +211,31 @@ public final class ThemeManager {
         return textSecondary(ctx, night);
     }
 
+    /**
+     * Standard hyperlink blue color, contrast-tuned for day/night themes.
+     */
+    public static int linkBlue(boolean night) {
+        return night ? 0xFF4BA3E3 : 0xFF1976D2;
+    }
+
+    public static int linkBlue(Context ctx) {
+        return linkBlue(isNight(ctx));
+    }
+
+    /**
+     * Styles a TextView as a standard hyperlink (link blue + underline).
+     */
+    public static void styleAsLink(android.widget.TextView tv, boolean night) {
+        if (tv == null) return;
+        tv.setTextColor(linkBlue(night));
+        tv.setPaintFlags(tv.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+    }
+
+    public static void styleAsLink(android.widget.TextView tv) {
+        if (tv == null) return;
+        styleAsLink(tv, isNight(tv.getContext()));
+    }
+
     public static int background(Context ctx) {
         return background(isNight(ctx));
     }

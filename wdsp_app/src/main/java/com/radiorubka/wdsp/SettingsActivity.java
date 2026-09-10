@@ -1616,7 +1616,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         styleActionButtons();
-        findViewById(R.id.tv_room_telegram).setOnClickListener(v -> openTelegram());
+        TextView tvTelegram = findViewById(R.id.tv_room_telegram);
+        if (tvTelegram != null) {
+            ThemeManager.styleAsLink(tvTelegram, editNight);
+            TouchGlow.attach(tvTelegram);
+            tvTelegram.setOnClickListener(v -> openTelegram());
+        }
         showRoomStatus();
     }
 
@@ -2884,7 +2889,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
-            R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
+            R.id.tv_room_status, R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,
@@ -3158,6 +3163,11 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_screen_topology));
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
+        TextView tvTelegram = findViewById(R.id.tv_room_telegram);
+        if (tvTelegram != null) {
+            ThemeManager.styleAsLink(tvTelegram, editNight);
+            TouchGlow.attach(tvTelegram);
+        }
     }
 
     private void tintSlider(Slider s, int accent) {

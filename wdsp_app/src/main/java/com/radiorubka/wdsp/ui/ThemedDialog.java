@@ -339,6 +339,15 @@ public final class ThemedDialog {
                 tvMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
                 tvMsg.setLineSpacing(0f, 1.18f);
                 tvMsg.setPadding(0, 0, 0, (int) dp(context, 12));
+                tvMsg.setAutoLinkMask(android.text.util.Linkify.WEB_URLS | android.text.util.Linkify.EMAIL_ADDRESSES);
+                tvMsg.setLinkTextColor(ThemeManager.linkBlue(context));
+                tvMsg.setLinksClickable(true);
+                tvMsg.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+                try {
+                    java.util.regex.Pattern tgPattern = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]+(/[0-9]+)?");
+                    android.text.util.Linkify.addLinks(tvMsg, tgPattern, "https://t.me/", null,
+                            (matcher, url) -> url.startsWith("@") ? url.substring(1) : url);
+                } catch (Throwable ignored) {}
                 root.addView(tvMsg);
             }
 
