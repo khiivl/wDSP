@@ -285,9 +285,9 @@ public final class RoomMeasurement {
      }
 
      public enum CarBodyType {
-         HATCHBACK(0, "Хетчбек / Компакт", 60),
-         SEDAN(1, "Седан / SUV", 75),
-         MINIVAN(2, "Мінівен / Бус", 90),
+         HATCHBACK(0, "Близька посадка (Хетчбек — 60 см)", 60),
+         SEDAN(1, "Середня посадка (Седан / SUV — 75 см)", 75),
+         MINIVAN(2, "Далека посадка (Мінівен / Бус — 90 см)", 90),
          CUSTOM(3, "Користувацька", 75);
 
          public final int id;
@@ -717,7 +717,7 @@ public final class RoomMeasurement {
         public int midbassHpfFreqHz = 0;
         public int subLpfIdx = 4; // default 63 Hz
         public int subLpfFreqHz = 63;
-        public int subGain = 8; // default +4 dB
+        public int subGain = 2; // default +2 dB (slider 0..12, 0 is 0 dB)
         public int suggestedSubDelaySteps = 0;
         public float suggestedSubDelayMs = 0f;
         public final int[] autoEqGains16 = new int[NativeSweep.BAND_COUNT];
@@ -1593,6 +1593,13 @@ public final class RoomMeasurement {
             float deltaDistCm = (float) (dTarget - dMic);
             float deltaTMs = deltaDistCm / speedOfSoundCmMs;
 
+            // Acoustic Ray Tracing & Subwoofer Phase Alignment:
+            // For front speakers: sound travels rearward towards the listener, hitting mic at (0,0) first,
+            // then listener ears at (Xt, Yt), so dTarget > dMic (deltaDist > 0, deltaTMs > 0).
+            // For subwoofer in trunk: sound travels forward towards the front of the car,
+            // passing listener ears FIRST, then traveling another distListen cm to reach the dash mic!
+            // Therefore: deltaDist = dTarget - dMic ≈ -distListen cm, deltaTMs ≈ -(distListen / 34.3) ms.
+            // Arrival at listener ears = Arrival at mic - (Distance from mic to ears / speed of sound).
             projectedArrivalMs[i] = c.arrivalMs + deltaTMs;
             Log.i(TAG, String.format(Locale.US,
                     "Ray Tracing [%s]: measured=%.2f ms, dMic=%.1f cm, dTarget=%.1f cm, delta=%.1f cm (%+.2f ms) -> listener arrival=%.2f ms",

@@ -611,7 +611,7 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         outGains16[b] = 6;
     }
     outSubLpfIdx = 5; // default 80 Hz
-    outSubGain = 8;   // default +4 dB
+    outSubGain = 2;   // default +2 dB (wDSP slider is 0..12, 0 is 0 dB)
 
     if (avgClean16 == nullptr) return;
 
@@ -630,16 +630,18 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
             }
         }
         outSubLpfIdx = bestSubIdx;
+        // In wDSP seekSubGain has range 0..12 (+0 dB .. +12 dB).
+        // Since low bands on the 16-band EQ are kept Flat (0 dB), sub gain only needs modest lift.
         if (targetCurveType == TARGET_DOLBY_ATMOS) {
-            outSubGain = 8; // +4 dB cinema sub shelf
+            outSubGain = 3; // +3 dB cinema sub shelf
         } else if (targetCurveType == TARGET_BASS_HEAVY) {
-            outSubGain = 9; // +6 dB heavy bass shelf
+            outSubGain = 5; // +5 dB punchy heavy bass shelf
         } else if (targetCurveType == TARGET_VOCAL_SPEECH) {
-            outSubGain = 4; // -4 dB attenuated sub
+            outSubGain = 0; // 0 dB attenuated sub
         } else if (targetCurveType == TARGET_FLAT_STUDIO) {
-            outSubGain = 6; // 0 dB flat sub
+            outSubGain = 0; // 0 dB flat sub
         } else {
-            outSubGain = 7; // +2 dB natural Harman shelf
+            outSubGain = 2; // +2 dB natural Harman shelf
         }
     } else {
         outSubGain = 0; // Mute subwoofer when not present
