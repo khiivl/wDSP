@@ -135,6 +135,25 @@ public final class NativeSweep implements AutoCloseable {
         return isAvailable() ? nativeGccPhatDelay(hRef, refLen, hCh, chLen, outProminence1) : 0f;
     }
 
+    /**
+     * Detects midbass roll-off index (into kBassFilterFreqs: 0..11) from 16-band clean response.
+     */
+    public static int detectMidbassRollOff(float[] avgClean16) {
+        return isAvailable() && avgClean16 != null ? nativeDetectMidbassRollOff(avgClean16) : 5;
+    }
+
+    /**
+     * Synthesizes 16-band Harman Auto-EQ gains and subwoofer settings.
+     */
+    public static void synthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
+                                            int hpfCutoffIdx, boolean hasSub,
+                                            int[] outGains16, int[] outSubSettings2) {
+        if (isAvailable() && avgClean16 != null && outGains16 != null) {
+            nativeSynthesizeHarmanEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub,
+                    outGains16, outSubSettings2);
+        }
+    }
+
     @Override
     public void close() {
         if (handle != 0) {
@@ -171,4 +190,11 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native float nativeGccPhatDelay(float[] hRef, int refLen, float[] hCh,
                                                    int chLen, float[] outProminence1);
+
+    private static native int nativeDetectMidbassRollOff(float[] avgClean16);
+
+    private static native void nativeSynthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
+                                                         int hpfCutoffIdx, boolean hasSub,
+                                                         int[] outGains16, int[] outSubSettings2);
 }
+

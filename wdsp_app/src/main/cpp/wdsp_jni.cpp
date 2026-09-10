@@ -418,4 +418,54 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeGccPhatDelay(JNIEnv* env, jclass,
     return delay;
 }
 
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeDetectMidbassRollOff(JNIEnv* env, jclass,
+                                                               jfloatArray avgClean16) {
+    if (avgClean16 == nullptr || env->GetArrayLength(avgClean16) < wdsp::kHwBands) return 5;
+    jfloat* data = env->GetFloatArrayElements(avgClean16, nullptr);
+    if (data == nullptr) return 5;
+    int idx = wdsp::SweepMeasurement::detectMidbassRollOff(data);
+    env->ReleaseFloatArrayElements(avgClean16, data, JNI_ABORT);
+    return idx;
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeHarmanEq16(JNIEnv* env, jclass,
+                                                               jfloatArray avgClean16,
+                                                               jfloatArray micComp16,
+                                                               jint hpfCutoffIdx,
+                                                               jboolean hasSub,
+                                                               jintArray outGains16,
+                                                               jintArray outSubSettings2) {
+    if (avgClean16 == nullptr || outGains16 == nullptr) return;
+    if (env->GetArrayLength(avgClean16) < wdsp::kHwBands ||
+        env->GetArrayLength(outGains16) < wdsp::kHwBands) return;
+
+    jfloat* cleanData = env->GetFloatArrayElements(avgClean16, nullptr);
+    jfloat* compData = (micComp16 != nullptr && env->GetArrayLength(micComp16) >= wdsp::kHwBands)
+            ? env->GetFloatArrayElements(micComp16, nullptr) : nullptr;
+    if (cleanData == nullptr) {
+        if (compData != nullptr) env->ReleaseFloatArrayElements(micComp16, compData, JNI_ABORT);
+        return;
+    }
+
+    int gains[wdsp::kHwBands];
+    int subLpfIdx = 5;
+    int subGain = 8;
+    wdsp::SweepMeasurement::synthesizeHarmanEq16(cleanData, compData,
+                                                 hpfCutoffIdx, hasSub,
+                                                 gains, subLpfIdx, subGain);
+
+    env->ReleaseFloatArrayElements(avgClean16, cleanData, JNI_ABORT);
+    if (compData != nullptr) env->ReleaseFloatArrayElements(micComp16, compData, JNI_ABORT);
+
+    env->SetIntArrayRegion(outGains16, 0, wdsp::kHwBands, gains);
+
+    if (outSubSettings2 != nullptr && env->GetArrayLength(outSubSettings2) >= 2) {
+        int sub[2] = { subLpfIdx, subGain };
+        env->SetIntArrayRegion(outSubSettings2, 0, 2, sub);
+    }
+}
+
 } // extern "C"
+
