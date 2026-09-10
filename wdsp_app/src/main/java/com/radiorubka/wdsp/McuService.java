@@ -552,6 +552,7 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {
                     Log.i(TAG, "SETTINGS_RESTORED received, reloading all prefs and syncing DSP");
+                    PresetsDatabaseValidator.validateAndMigrate(getApplicationContext());
                     prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
                     loadPlayerMap();
                     galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
@@ -626,6 +627,7 @@ public class McuService extends Service implements LocationListener {
         backgroundHandler.post(() -> {
             VolumeHelper.init(this);
             initReflection();
+            PresetsDatabaseValidator.validateAndMigrate(getApplicationContext());
             prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             // Both flags before syncPreset, because applying a preset consults isGalaEnabled().
             galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);

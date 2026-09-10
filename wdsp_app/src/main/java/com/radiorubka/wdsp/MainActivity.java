@@ -57,6 +57,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.radiorubka.wdsp.ui.PermissionsWizard;
+import com.radiorubka.wdsp.ui.ThemedDialog;
 import com.radiorubka.wdsp.ui.views.SegmentedPillNavView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -958,6 +959,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateSpectrumModeUi() {
+        View toggleLayout = findViewById(R.id.layout_spectrum_mode_toggle);
+        boolean hasRoot = PermissionsWizard.isRootGranted(this);
+        boolean hasMic = RoomMeasurement.hasMicCompensation(this);
+        boolean isAvailable = hasRoot && hasMic;
+
+        if (toggleLayout != null) {
+            toggleLayout.setVisibility(isAvailable ? View.VISIBLE : View.GONE);
+        }
+
+        if (!isAvailable) {
+            if (AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(AudioSpectrumEngine.getInstance().getSpectrumMode())) {
+                AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            }
+        }
+
         if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
         boolean isNight = ThemeManager.isNight(this);
         int accent = ThemeManager.accent(this, isNight);
@@ -979,7 +995,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showMicCalibrationInviteDialog() {
-        new AlertDialog.Builder(this)
+        ThemedDialog.builder(this)
                 .setTitle(R.string.spectrum_mic_uncalibrated_title)
                 .setMessage(R.string.spectrum_mic_uncalibrated_msg)
                 .setPositiveButton(R.string.spectrum_calibrate_now, (dialog, which) -> {
@@ -993,7 +1009,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkRadioMicCalibrationInvite() {
         if (sPromptedMicCalibration) return;
-        if (!RoomMeasurement.hasMicCompensation(this)) {
+        if (PermissionsWizard.isRootGranted(this) && !RoomMeasurement.hasMicCompensation(this)) {
             if (NowPlaying.getInstance(this).isRadioSource()) {
                 sPromptedMicCalibration = true;
                 showMicCalibrationInviteDialog();
@@ -1732,6 +1748,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPresets() {
+        PresetsDatabaseValidator.validateAndMigrate(this);
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Set<String> names = p.getStringSet(PREF_PRESET_NAMES, null);
         String last = p.getString(PREF_LAST_SELECTED, null);
@@ -2655,6 +2672,9 @@ public class MainActivity extends AppCompatActivity {
 
         Map<String, Object> filteredData = new HashMap<>();
         filteredData.put("is_single_preset", true);
+        filteredData.put("app", "wDSP");
+        filteredData.put("versionCode", PresetsDatabaseValidator.getAppVersionCode(this));
+        filteredData.put("versionName", PresetsDatabaseValidator.getAppVersionName(this));
         filteredData.put("preset_name_label", currentPreset);
 
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
@@ -2745,6 +2765,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
             }
 
+            PresetsDatabaseValidator.sanitizePreset(editor, prefs, newPresetName);
             editor.putString(PREF_LAST_SELECTED, newPresetName);
             editor.apply();
 

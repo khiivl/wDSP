@@ -557,11 +557,18 @@ public class AudioSpectrumEngine {
      *   hardware DSP curve from getDspCurve().
      */
     public float[] getEffectiveSpectrumCurve() {
-        if (isRadioCaptureActive()) {
+        if (isRadioCaptureActive() || SPECTRUM_MODE_MIC.equals(spectrumMode)) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
         } else {
             return getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
         }
+    }
+
+    public void onMicCompensationUpdated() {
+        if (nativeAnalyzer != null) {
+            nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
+        }
+        checkSourceState();
     }
 
     public void setFmOffsets(float[] newFmOffsets) {

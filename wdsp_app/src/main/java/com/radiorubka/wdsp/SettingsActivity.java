@@ -1243,6 +1243,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
         wireMicPlace();
         showRoomStatus();
+        showMicCalStatus();
     }
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
@@ -1251,7 +1252,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
-    private TextView tvRoomStatus, tvDebugRoomStatus;
+    private TextView tvRoomStatus, tvRoomMicCalStatus;
     private TextView btnScreensaverToggle;
     private Slider seekScreensaverDelay, seekScreensaverBgDay, seekScreensaverBgNight;
     private Slider seekScreensaverWidth, seekScreensaverHeight;
@@ -1572,23 +1573,18 @@ public class SettingsActivity extends AppCompatActivity {
      * button exists and why the recordings are kept rather than thrown away after analysis.
      */
     private void initDiagnostics() {
-        tvRoomStatus = findViewById(R.id.tv_room_status);
         TextView measureButton = findViewById(R.id.btn_room_measure);
         if (measureButton != null) {
             TouchGlow.attach(measureButton);
             measureButton.setOnClickListener(v -> startRoomMeasurement());
         }
 
-        tvDebugRoomStatus = findViewById(R.id.tv_debug_room_status);
-        TextView debugMeasureButton = findViewById(R.id.btn_debug_room_measure);
-        if (debugMeasureButton != null) {
-            TouchGlow.attach(debugMeasureButton);
-            debugMeasureButton.setOnClickListener(v -> startDiagnosticSweep());
+        tvRoomMicCalStatus = findViewById(R.id.tv_room_mic_cal_status);
+        TextView micCalButton = findViewById(R.id.btn_room_mic_calibrate);
+        if (micCalButton != null) {
+            TouchGlow.attach(micCalButton);
+            micCalButton.setOnClickListener(v -> startMicCalibration());
         }
-
-        TextView sendButton = findViewById(R.id.btn_room_send);
-        TouchGlow.attach(sendButton);
-        sendButton.setOnClickListener(v -> saveRoomMeasurement());
 
         // Where the microphone is, pointed at rather than typed.
         BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
@@ -1616,14 +1612,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         styleActionButtons();
-        TextView tvTelegram = findViewById(R.id.tv_room_telegram);
-        if (tvTelegram != null) {
-            ThemeManager.styleAsLink(tvTelegram, editNight);
-            TouchGlow.attach(tvTelegram);
-            tvTelegram.setOnClickListener(v -> openTelegram());
-        }
         showRoomStatus();
-        showDebugRoomStatus();
+        showMicCalStatus();
     }
 
     private void showRoomStatus() {
@@ -1636,12 +1626,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void showDebugRoomStatus() {
-        if (tvDebugRoomStatus == null) return;
-        if (RoomMeasurement.hasResult(this)) {
-            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_done));
+    private void showMicCalStatus() {
+        if (tvRoomMicCalStatus == null) return;
+        if (RoomMeasurement.hasMicCompensation(this)) {
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_done));
         } else {
-            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_nothing));
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_none));
         }
     }
 
@@ -1837,6 +1827,14 @@ public class SettingsActivity extends AppCompatActivity {
         cardAutoEq.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
         TextView tvAutoEq = view.findViewById(R.id.tv_report_autoeq_gains);
         tvAutoEq.setTextColor(textPrimary);
+
+        TextView btnSave = view.findViewById(R.id.btn_save_report);
+        if (btnSave != null) {
+            btnSave.setTextColor(textPrimary);
+            btnSave.setBackground(ThemeManager.roundedDrawable(this, 10, cardBg, border, 1f));
+            TouchGlow.attach(btnSave);
+            btnSave.setOnClickListener(v -> saveRoomMeasurement());
+        }
 
         TextView btnClose = view.findViewById(R.id.btn_close_report);
         btnClose.setTextColor(textSecondary);
@@ -2115,60 +2113,34 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
-    private void startDiagnosticSweep() {
+    private void startMicCalibration() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
 
         ThemedDialog.builder(this)
-                .setTitle(R.string.debug_sweep_button)
-                .setMessage(R.string.room_measure_confirm_msg)
+                .setTitle(R.string.room_mic_cal_confirm_title)
+                .setMessage(R.string.room_mic_cal_confirm_msg)
                 .setPositiveButton(R.string.room_measure_confirm_start, (dialog, which) -> {
                     RoomMeasurement.pauseMedia(this);
-                    if (!RootAccess.hasRoot(this)) {
-                        ThemedDialog.builder(this)
-                                .setTitle(R.string.room_root_title)
-                                .setMessage(R.string.room_root_message)
-                                .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
-                                    RootAccess.Outcome outcome = RootAccess.request(this);
-                                    runOnUiThread(() -> {
-                                        if (outcome == RootAccess.Outcome.GRANTED) {
-                                            runDiagnosticSweep();
-                                        } else {
-                                            ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                                    getString(R.string.room_root_blocked));
-                                        }
-                                    });
-                                }, "root-request").start())
-                                .setNegativeButton(R.string.room_root_no, (d, w) ->
-                                        ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                                getString(R.string.room_root_blocked)))
-                                .setCancelable(false)
-                                .show();
-                        return;
-                    }
-                    runDiagnosticSweep();
+                    runMicCalibration();
                 })
                 .setNegativeButton(R.string.room_measure_confirm_cancel, null)
                 .show();
     }
 
-    private void runDiagnosticSweep() {
-        if (tvDebugRoomStatus != null) {
-            tvDebugRoomStatus.setText(getString(R.string.debug_sweep_running, ""));
+    private void runMicCalibration() {
+        if (tvRoomMicCalStatus != null) {
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, ""));
         }
-
-        boolean hasSub = RoomMeasurement.hasSubwoofer(this);
-        RoomMeasurement.SoundstageMode mode = RoomMeasurement.getSoundstageMode(this);
-        RoomMeasurement.TargetCurve targetCurve = RoomMeasurement.getTargetCurve(this);
-        RoomMeasurement.CarBodyType bodyType = RoomMeasurement.getBodyType(this);
-        int distance = RoomMeasurement.getListeningDistanceCm(this);
 
         final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setMax(100);
         progressBar.setIndeterminate(false);
+        int accent = ThemeManager.accent(this, editNight);
+        progressBar.setProgressTintList(ColorStateList.valueOf(accent));
 
         final TextView tvMsg = new TextView(this);
-        tvMsg.setText(getString(R.string.debug_sweep_running, ""));
+        tvMsg.setText(getString(R.string.room_mic_cal_running, ""));
         tvMsg.setTextColor(ThemeManager.textPrimary(this, editNight));
         tvMsg.setPadding(0, (int) ThemedDialog.dp(this, 8), 0, (int) ThemedDialog.dp(this, 8));
 
@@ -2180,7 +2152,7 @@ public class SettingsActivity extends AppCompatActivity {
         container.addView(progressBar);
 
         final Dialog progressDialog = ThemedDialog.builder(this)
-                .setTitle(R.string.debug_sweep_button)
+                .setTitle(R.string.room_mic_cal_confirm_title)
                 .setView(container)
                 .setCancelable(false)
                 .create();
@@ -2188,15 +2160,15 @@ public class SettingsActivity extends AppCompatActivity {
 
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
 
-        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, distance, new RoomMeasurement.Listener() {
+        RoomMeasurement.calibrateMicAsync(this, new RoomMeasurement.Listener() {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
                     progressBar.setProgress(percent);
                     tvMsg.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s\n%s (%d%%)",
                             step, totalSteps, stageTitle, stageDetail != null ? stageDetail : "", percent));
-                    if (tvDebugRoomStatus != null) {
-                        tvDebugRoomStatus.setText(getString(R.string.debug_sweep_running, stageTitle));
+                    if (tvRoomMicCalStatus != null) {
+                        tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, stageTitle));
                     }
                 });
             }
@@ -2206,21 +2178,18 @@ public class SettingsActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     if (result == null || result.error != null) {
-                        if (tvDebugRoomStatus != null) {
-                            tvDebugRoomStatus.setText(getString(R.string.room_measure_failed));
+                        if (tvRoomMicCalStatus != null) {
+                            tvRoomMicCalStatus.setText(getString(R.string.room_measure_failed));
                         }
                         ThemedDialog.notice(SettingsActivity.this,
                                 getString(R.string.room_measure_failed),
                                 result != null && result.error != null ? result.error : "Unknown error");
                         return;
                     }
-                    showDebugRoomStatus();
-                    ThemedDialog.builder(SettingsActivity.this)
-                            .setTitle(R.string.debug_sweep_button)
-                            .setMessage(getString(R.string.debug_sweep_done))
-                            .setPositiveButton(R.string.room_measure_send, (d, w) -> saveRoomMeasurement())
-                            .setNegativeButton(android.R.string.ok, null)
-                            .show();
+                    showMicCalStatus();
+                    ThemedDialog.notice(SettingsActivity.this,
+                            getString(R.string.room_mic_cal_confirm_title),
+                            getString(R.string.room_mic_cal_done));
                 });
             }
         });
@@ -2710,6 +2679,8 @@ public class SettingsActivity extends AppCompatActivity {
         JsonObject backupRoot = new JsonObject();
         backupRoot.addProperty("version", 2);
         backupRoot.addProperty("app", "wDSP");
+        backupRoot.addProperty("versionCode", PresetsDatabaseValidator.getAppVersionCode(this));
+        backupRoot.addProperty("versionName", PresetsDatabaseValidator.getAppVersionName(this));
         backupRoot.addProperty("timestamp", System.currentTimeMillis());
 
         // 1. Default preferences (Theme, wallpaper, statusbar, eq vis)
@@ -2847,6 +2818,7 @@ public class SettingsActivity extends AppCompatActivity {
                 eqEditor.clear();
                 restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
                 eqEditor.apply();
+                PresetsDatabaseValidator.validateAndMigrate(this);
             }
 
             // 3. Legacy Migration: status bar / screensaver fallback
@@ -3052,7 +3024,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
-            R.id.tv_room_status, R.id.tv_system_report_status,
+            R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,
@@ -3320,17 +3292,11 @@ public class SettingsActivity extends AppCompatActivity {
     private void styleActionButtons() {
         styleActionButton(findViewById(R.id.btn_sync_measure));
         styleActionButton(findViewById(R.id.btn_room_measure));
-        styleActionButton(findViewById(R.id.btn_debug_room_measure));
-        styleActionButton(findViewById(R.id.btn_room_send));
+        styleActionButton(findViewById(R.id.btn_room_mic_calibrate));
         styleActionButton(findViewById(R.id.btn_system_report));
         styleActionButton(findViewById(R.id.btn_screen_topology));
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
-        TextView tvTelegram = findViewById(R.id.tv_room_telegram);
-        if (tvTelegram != null) {
-            ThemeManager.styleAsLink(tvTelegram, editNight);
-            TouchGlow.attach(tvTelegram);
-        }
     }
 
     private void tintSlider(Slider s, int accent) {

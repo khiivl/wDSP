@@ -864,7 +864,7 @@ public final class RoomMeasurement {
             running = true;
             Result result;
             try {
-                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType, listeningDistanceCm, listener);
+                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType, listeningDistanceCm, listener, false);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -874,6 +874,29 @@ public final class RoomMeasurement {
             }
             if (listener != null) listener.onFinished(result);
         }, "wDSP_RoomMeasure").start();
+    }
+
+    public static void calibrateMicAsync(final Context context, final Listener listener) {
+        if (running) {
+            Log.w(TAG, "a measurement is already running, ignoring mic calibration request");
+            return;
+        }
+        new Thread(() -> {
+            running = true;
+            Result result;
+            try {
+                result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, false,
+                        SoundstageMode.DRIVER, TargetCurve.HARMAN,
+                        getBodyType(context), getListeningDistanceCm(context), listener, true);
+            } catch (Throwable t) {
+                result = new Result();
+                result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+                Log.e(TAG, "mic calibration failed", t);
+            } finally {
+                running = false;
+            }
+            if (listener != null) listener.onFinished(result);
+        }, "wDSP_MicCalibration").start();
     }
 
     public static void measureAsync(final Context context, final float amplitude,
@@ -942,7 +965,7 @@ public final class RoomMeasurement {
                                   boolean hasSubwoofer, SoundstageMode soundstageMode,
                                   TargetCurve targetCurve,
                                   CarBodyType bodyType, int listeningDistanceCm,
-                                  Listener listener) {
+                                  Listener listener, boolean isMicCalibrationOnly) {
         Result result = new Result();
         result.hasSubwoofer = hasSubwoofer;
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
@@ -1008,23 +1031,32 @@ public final class RoomMeasurement {
                 result.error = "the sweep could not be built";
                 return result;
             }
-            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener);
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener, isMicCalibrationOnly);
 
-            if (listener != null) {
-                listener.onProgress(3, 5, "Аналіз затримок", "Розрахунок часового вирівнювання (GCC-PHAT)...", 85);
-            }
-            computeDelays(result, result.soundstageMode);
+            if (!isMicCalibrationOnly) {
+                if (listener != null) {
+                    listener.onProgress(3, 5, "Аналіз затримок", "Розрахунок часового вирівнювання (GCC-PHAT)...", 85);
+                }
+                computeDelays(result, result.soundstageMode);
 
-            if (listener != null) {
-                listener.onProgress(4, 5, "Синтез Auto-EQ", "Аналіз спаду мідбасів, сабвуфера та 16 смуг...", 92);
-            }
-            analyzeAcousticsAndSynthesize(result);
+                if (listener != null) {
+                    listener.onProgress(4, 5, "Синтез Auto-EQ", "Аналіз спаду мідбасів, сабвуфера та 16 смуг...", 92);
+                }
+                analyzeAcousticsAndSynthesize(result);
 
-            result.sweepTopHz = topHz;
-            result.reportPath = writeReport(app, result, preset, amplitude, seconds);
+                result.sweepTopHz = topHz;
+                result.reportPath = writeReport(app, result, preset, amplitude, seconds);
 
-            if (listener != null) {
-                listener.onProgress(5, 5, "Готово", "Калібрування завершено успішно", 100);
+                if (listener != null) {
+                    listener.onProgress(5, 5, "Готово", "Калібрування завершено успішно", 100);
+                }
+            } else {
+                result.sweepTopHz = topHz;
+                result.reportPath = writeReport(app, result, preset, amplitude, seconds);
+
+                if (listener != null) {
+                    listener.onProgress(5, 5, "Готово", "Калібрування мікрофона успішно завершено", 100);
+                }
             }
         } finally {
             SharedPreferences.Editor editor = prefs.edit();
@@ -1071,7 +1103,7 @@ public final class RoomMeasurement {
      */
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
                                    NativeSweep sweep, float amplitude, Result result,
-                                   Listener listener) {
+                                   Listener listener, boolean isMicCalibrationOnly) {
         final Channel[] channels = result.hasSubwoofer ? Channel.values() : new Channel[]{
                 Channel.REAR_LEFT, Channel.REAR_RIGHT, Channel.FRONT_LEFT, Channel.FRONT_RIGHT
         };
@@ -1456,14 +1488,39 @@ public final class RoomMeasurement {
             }
         }
 
-        // 3. Load calibrated microphone compensation curve (Hardware constant, kept intact!)
-        float[] savedMicComp = getMicCompensationCurve(context);
-        System.arraycopy(savedMicComp, 0, result.micCompensation16, 0, NativeSweep.BAND_COUNT);
-        StringBuilder mcLog = new StringBuilder("using calibrated mic compensation (16 bands):");
-        for (float v : result.micCompensation16) {
-            mcLog.append(String.format(Locale.US, " %+.1f", v));
+        if (isMicCalibrationOnly) {
+            // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
+            float[] avgClean16 = new float[NativeSweep.BAND_COUNT];
+            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                double sumP = 0.0;
+                int validCh = 0;
+                for (int k = 0; k < channels.length; k++) {
+                    ChannelResult cr = result.channels[k];
+                    if (cr != null && cr.ok && cr.confident && cr.cleanBandsDb != null) {
+                        sumP += Math.pow(10.0, cr.cleanBandsDb[b] * 0.1);
+                        validCh++;
+                    }
+                }
+                avgClean16[b] = validCh > 0 ? (float) (10.0 * Math.log10(sumP / validCh)) : -120f;
+            }
+            NativeSweep.estimateMicCompensation(avgClean16, result.micCompensation16);
+            setMicCompensationCurve(context, result.micCompensation16);
+            StringBuilder mcLog = new StringBuilder("estimated & saved mic compensation (16 bands):");
+            for (float v : result.micCompensation16) {
+                mcLog.append(String.format(Locale.US, " %+.1f", v));
+            }
+            Log.i(TAG, mcLog.toString());
+            AudioSpectrumEngine.getInstance().onMicCompensationUpdated();
+        } else {
+            // Standard cabin Auto-EQ pass: load calibrated microphone compensation curve (Hardware constant, kept intact!)
+            float[] savedMicComp = getMicCompensationCurve(context);
+            System.arraycopy(savedMicComp, 0, result.micCompensation16, 0, NativeSweep.BAND_COUNT);
+            StringBuilder mcLog = new StringBuilder("using calibrated mic compensation (16 bands):");
+            for (float v : result.micCompensation16) {
+                mcLog.append(String.format(Locale.US, " %+.1f", v));
+            }
+            Log.i(TAG, mcLog.toString());
         }
-        Log.i(TAG, mcLog.toString());
     }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
