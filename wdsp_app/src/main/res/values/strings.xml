@@ -321,7 +321,7 @@
     <string name="room_measure_telegram">Telegram: @kostyamat_dev/92</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">No Auto-EQ presets created yet</string>
-    <string name="room_section_title">Cabin Acoustic Calibration (experimental, root)</string>
+    <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
     <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>

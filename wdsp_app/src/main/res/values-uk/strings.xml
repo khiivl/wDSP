@@ -297,7 +297,7 @@
     <string name="room_measure_telegram">Telegram: @kostyamat_dev/92</string>
     <string name="telegram_link_copied">Посилання скопійовано: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">Немає створених Auto-EQ пресетів</string>
-    <string name="room_section_title">Акустичне калібрування салону (експериментальна, root)</string>
+    <string name="room_section_title">Акустичне калібрування салону та авто-пресети</string>
     <string name="room_root_required_toast">Для акустичного калібрування необхідні Root-права</string>
     <string name="debug_sweep_button">Діагностичний свіп</string>
     <string name="debug_sweep_done">Діагностичний замір виконано. Готово до збереження архіву.</string>

@@ -2786,14 +2786,6 @@
                         android:padding="10dp"
                         android:text="@string/room_measure_button"
                         android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_room_status"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:textSize="11sp" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -2819,37 +2811,6 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/btn_room_send"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:text="@string/room_measure_send"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_room_telegram"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:lineSpacingExtra="3dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:textColor="@color/link_blue"
-                        android:text="@string/room_measure_telegram"
-                        android:textSize="@dimen/settings_note_text" />
-                </LinearLayout>
 
                 <TextView
                     android:id="@+id/label_system_report"
