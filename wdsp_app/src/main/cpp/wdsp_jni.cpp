@@ -277,4 +277,129 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
     return JNI_TRUE;
 }
 
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeNoiseFloor(JNIEnv* env, jclass, jlong handle,
+                                                      jfloatArray signal, jint length,
+                                                      jfloatArray out16) {
+    auto* sweep = asSweep(handle);
+    if (sweep == nullptr || signal == nullptr || out16 == nullptr) return;
+    if (env->GetArrayLength(out16) < wdsp::kHwBands) return;
+    if (length > env->GetArrayLength(signal)) length = env->GetArrayLength(signal);
+
+    jfloat* data = env->GetFloatArrayElements(signal, nullptr);
+    if (data == nullptr) return;
+
+    float bands[wdsp::kHwBands];
+    sweep->spectrum16Db(data, length, bands);
+    env->ReleaseFloatArrayElements(signal, data, JNI_ABORT);
+
+    env->SetFloatArrayRegion(out16, 0, wdsp::kHwBands, bands);
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeSubtractNoise(JNIEnv* env, jclass,
+                                                         jfloatArray sweepDb16,
+                                                         jfloatArray noiseDb16,
+                                                         jfloatArray outCleanDb16,
+                                                         jfloatArray outSnrDb16) {
+    if (sweepDb16 == nullptr || noiseDb16 == nullptr) return;
+    if (env->GetArrayLength(sweepDb16) < wdsp::kHwBands ||
+        env->GetArrayLength(noiseDb16) < wdsp::kHwBands) return;
+
+    jfloat* sweepData = env->GetFloatArrayElements(sweepDb16, nullptr);
+    jfloat* noiseData = env->GetFloatArrayElements(noiseDb16, nullptr);
+    if (sweepData == nullptr || noiseData == nullptr) {
+        if (sweepData != nullptr) env->ReleaseFloatArrayElements(sweepDb16, sweepData, JNI_ABORT);
+        if (noiseData != nullptr) env->ReleaseFloatArrayElements(noiseDb16, noiseData, JNI_ABORT);
+        return;
+    }
+
+    float clean[wdsp::kHwBands];
+    float snr[wdsp::kHwBands];
+    wdsp::SweepMeasurement::subtractNoise(sweepData, noiseData, clean, snr);
+
+    env->ReleaseFloatArrayElements(sweepDb16, sweepData, JNI_ABORT);
+    env->ReleaseFloatArrayElements(noiseDb16, noiseData, JNI_ABORT);
+
+    if (outCleanDb16 != nullptr && env->GetArrayLength(outCleanDb16) >= wdsp::kHwBands) {
+        env->SetFloatArrayRegion(outCleanDb16, 0, wdsp::kHwBands, clean);
+    }
+    if (outSnrDb16 != nullptr && env->GetArrayLength(outSnrDb16) >= wdsp::kHwBands) {
+        env->SetFloatArrayRegion(outSnrDb16, 0, wdsp::kHwBands, snr);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, jclass,
+                                                                   jfloatArray avgClean16,
+                                                                   jfloatArray outCompensation16) {
+    if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
+    if (env->GetArrayLength(avgClean16) < wdsp::kHwBands ||
+        env->GetArrayLength(outCompensation16) < wdsp::kHwBands) return;
+
+    jfloat* avgData = env->GetFloatArrayElements(avgClean16, nullptr);
+    if (avgData == nullptr) return;
+
+    float comp[wdsp::kHwBands];
+    wdsp::SweepMeasurement::estimateMicCompensation(avgData, comp);
+    env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
+
+    env->SetFloatArrayRegion(outCompensation16, 0, wdsp::kHwBands, comp);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeDeconvolve(JNIEnv* env, jclass, jlong handle,
+                                                      jfloatArray recorded, jint length,
+                                                      jfloatArray outImpulse) {
+    auto* sweep = asSweep(handle);
+    if (sweep == nullptr || recorded == nullptr) return 0;
+    if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
+
+    jfloat* input = env->GetFloatArrayElements(recorded, nullptr);
+    if (input == nullptr) return 0;
+
+    std::vector<float> impulse;
+    const bool ok = sweep->deconvolve(input, length, impulse);
+    env->ReleaseFloatArrayElements(recorded, input, JNI_ABORT);
+    if (!ok || impulse.empty()) return 0;
+
+    const jsize impLen = static_cast<jsize>(impulse.size());
+    if (outImpulse != nullptr) {
+        const jsize copyLen = std::min(impLen, env->GetArrayLength(outImpulse));
+        if (copyLen > 0) {
+            env->SetFloatArrayRegion(outImpulse, 0, copyLen, impulse.data());
+        }
+    }
+    return impLen;
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeGccPhatDelay(JNIEnv* env, jclass,
+                                                        jfloatArray hRef, jint refLen,
+                                                        jfloatArray hCh, jint chLen,
+                                                        jfloatArray outProminence1) {
+    if (hRef == nullptr || hCh == nullptr) return 0.0f;
+    if (refLen > env->GetArrayLength(hRef)) refLen = env->GetArrayLength(hRef);
+    if (chLen > env->GetArrayLength(hCh)) chLen = env->GetArrayLength(hCh);
+
+    jfloat* refData = env->GetFloatArrayElements(hRef, nullptr);
+    jfloat* chData = env->GetFloatArrayElements(hCh, nullptr);
+    if (refData == nullptr || chData == nullptr) {
+        if (refData != nullptr) env->ReleaseFloatArrayElements(hRef, refData, JNI_ABORT);
+        if (chData != nullptr) env->ReleaseFloatArrayElements(hCh, chData, JNI_ABORT);
+        return 0.0f;
+    }
+
+    float prominence = 0.0f;
+    float delay = wdsp::SweepMeasurement::gccPhatDelay(refData, refLen, chData, chLen, prominence);
+
+    env->ReleaseFloatArrayElements(hRef, refData, JNI_ABORT);
+    env->ReleaseFloatArrayElements(hCh, chData, JNI_ABORT);
+
+    if (outProminence1 != nullptr && env->GetArrayLength(outProminence1) > 0) {
+        env->SetFloatArrayRegion(outProminence1, 0, 1, &prominence);
+    }
+    return delay;
+}
+
 } // extern "C"
