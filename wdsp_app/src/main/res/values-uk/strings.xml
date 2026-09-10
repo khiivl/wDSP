@@ -279,6 +279,12 @@
     <string name="room_measure_confirm_msg">Перед початком вимірювання свіпом:\n\n1. Відтворення музики буде призупинено.\n2. Гучність буде тимчасово встановлено на рівень 16 одиниць (~50%) для лінійного вимірювання. Буде гучно!\n3. DSP еквалайзер буде тимчасово скинуто в Flat.\n4. Протягом 1 секунди буде виміряно фоновий шум салону в тиші, після чого пролунає свіп через кожен динамік по черзі.\n5. Двигун має бути вимкнений, двері та вікна зачинені.\n\nПісля завершення початковий рівень гучності та ваш пресет DSP будуть автоматично відновлені.</string>
     <string name="room_measure_confirm_start">Почати</string>
     <string name="room_measure_confirm_cancel">Скасувати</string>
+    <string name="room_mic_calibrate_button">Калібрувати мікрофон</string>
+    <string name="room_mic_cal_running">Калібрування мікрофона: %1$s</string>
+    <string name="room_mic_cal_done">Мікрофон відкалібровано</string>
+    <string name="room_mic_cal_none">Мікрофон не відкалібровано</string>
+    <string name="room_mic_cal_confirm_title">Калібрування мікрофона</string>
+    <string name="room_mic_cal_confirm_msg">Пролунає калібрувальний свіп через динаміки для визначення апаратної АЧХ капсуля мікрофона та фонового шуму салону.\n\nЗберігайте тишу в салоні, вікна та двері мають бути зачинені.\n\nРозпочати калібрування мікрофона?</string>
     <string name="room_measure_button">Калібрувати салон та створити пресет</string>
     <string name="room_measure_running">Калібрування: %1$s</string>
     <string name="room_measure_done">Пресет «%1$s» успішно створено та застосовано!</string>

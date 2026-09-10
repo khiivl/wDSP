@@ -303,6 +303,12 @@
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
     <string name="room_measure_confirm_cancel">Cancel</string>
+    <string name="room_mic_calibrate_button">Calibrate Microphone</string>
+    <string name="room_mic_cal_running">Calibrating microphone: %1$s</string>
+    <string name="room_mic_cal_done">Microphone calibrated</string>
+    <string name="room_mic_cal_none">Microphone not calibrated</string>
+    <string name="room_mic_cal_confirm_title">Microphone Calibration</string>
+    <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="room_measure_button">Calibrate Cabin &amp; Create Preset</string>
     <string name="room_measure_running">Calibrating: %1$s</string>
     <string name="room_measure_done">Preset \"%1$s\" created and activated!</string>

@@ -2752,6 +2752,32 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/btn_room_mic_calibrate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_mic_calibrate_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_mic_cal_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
                         android:id="@+id/btn_room_measure"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
