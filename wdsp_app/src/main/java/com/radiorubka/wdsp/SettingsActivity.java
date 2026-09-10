@@ -1688,15 +1688,18 @@ public class SettingsActivity extends AppCompatActivity {
         Dialog dialog = ThemedDialog.builder(this)
                 .setView(view)
                 .setCancelable(true)
+                .setMaxWidthDp(780)
                 .create();
 
-        android.view.Window window = dialog.getWindow();
-        if (window != null) {
-            int screenW = getResources().getDisplayMetrics().widthPixels;
-            int maxW = (int) ThemedDialog.dp(this, 620);
-            int dialogW = Math.min((int) (screenW * 0.92f), maxW);
-            window.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
-        }
+        dialog.setOnShowListener(d -> {
+            android.view.Window win = dialog.getWindow();
+            if (win != null) {
+                int screenW = getResources().getDisplayMetrics().widthPixels;
+                int maxW = (int) ThemedDialog.dp(this, 780);
+                int dialogW = Math.min((int) (screenW * 0.92f), maxW);
+                win.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+        });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnClose.setOnClickListener(v -> dialog.dismiss());

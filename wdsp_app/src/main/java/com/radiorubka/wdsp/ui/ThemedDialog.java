@@ -183,6 +183,7 @@ public final class ThemedDialog {
         private CharSequence[] multiChoiceItems;
         private boolean[] checkedItems;
         private DialogInterface.OnMultiChoiceClickListener multiChoiceListener;
+        private int maxWidthDp = 500;
 
         public Builder(@NonNull Context context) {
             this.context = context;
@@ -280,6 +281,11 @@ public final class ThemedDialog {
             return this;
         }
 
+        public Builder setMaxWidthDp(int dp) {
+            this.maxWidthDp = dp;
+            return this;
+        }
+
         public Dialog create() {
             Dialog dialog = new Dialog(context);
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -293,8 +299,8 @@ public final class ThemedDialog {
             if (window != null) {
                 window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 int screenW = context.getResources().getDisplayMetrics().widthPixels;
-                int maxW = (int) dp(context, 500);
-                int dialogW = Math.min((int) (screenW * 0.88f), maxW);
+                int maxW = (int) dp(context, maxWidthDp);
+                int dialogW = Math.min((int) (screenW * 0.92f), maxW);
                 window.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
             }
 
