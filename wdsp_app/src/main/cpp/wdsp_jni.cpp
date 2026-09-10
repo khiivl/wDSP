@@ -50,6 +50,22 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativePush(JNIEnv* env, jclass, jlong ha
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativePushPcm16(JNIEnv* env, jclass, jlong handle,
+                                                       jshortArray samples, jint count, jfloat gain) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || samples == nullptr || count <= 0) return;
+
+    jshort* data = env->GetShortArrayElements(samples, nullptr);
+    if (data == nullptr) return;
+    jsize available = env->GetArrayLength(samples);
+    if (count > available) count = available;
+
+    analyzer->pushPcm16(reinterpret_cast<const int16_t*>(data), count, 1, gain);
+
+    env->ReleaseShortArrayElements(samples, data, JNI_ABORT);
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeProcess(JNIEnv*, jclass, jlong handle,
                                                       jint timeoutMs) {
     auto* analyzer = asAnalyzer(handle);

@@ -98,7 +98,7 @@ public:
      * which is the only honest way to suggest slider positions for a flat response. Microphone
      * input needs no stitching - it arrives as a continuous stream already.
      */
-    void pushPcm16(const int16_t* samples, int count, int channels);
+    void pushPcm16(const int16_t* samples, int count, int channels, float gain = 1.0f);
 
     /** Fills 32 and 16 band levels, normalised to 0..1 for the given consumer. */
     void getLevels(int consumer, float* out32, float* out16);

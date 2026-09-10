@@ -38,29 +38,21 @@ import androidx.core.content.ContextCompat;
 public class RadioMicCapture {
     private static final String TAG = "RadioMicCapture";
 
-    public interface Callback {
-        void onWaveform(byte[] buffer, int length);
+    public interface PcmCallback {
+        void onPcmChunk(short[] buffer, int count);
     }
 
     private static final int SAMPLE_RATE = 48000;
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
     private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    public static final int HOP_SIZE = 512;
-    public static final int WINDOW_SIZE = 1024;
-
-    // AGC parameters
-    private static final float TARGET_PEAK = 24000.0f; // ~ -2.7 dBFS
-    private static final float MIN_GAIN = 0.5f;        // -6 dB attenuation
-    private static final float MAX_GAIN = 16.0f;       // +24 dB boost
-    private static final int NOISE_GATE_THRESHOLD = 200; // 16-bit silence floor
+    public static final int CHUNK_SIZE = 512;
 
     private AudioRecord audioRecord;
     private MicProbe.Suspension suspension;
     private Thread captureThread;
     private volatile boolean running = false;
-    private float currentGain = 1.0f;
 
-    public synchronized boolean start(Context context, Callback callback) {
+    public synchronized boolean start(Context context, PcmCallback callback) {
         if (running) return true;
         if (context == null || callback == null) return false;
 
@@ -71,7 +63,7 @@ public class RadioMicCapture {
         }
 
         int minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
-        int bufferSize = Math.max(minBuf, WINDOW_SIZE * 4);
+        int bufferSize = Math.max(minBuf, CHUNK_SIZE * 4);
 
         try {
             audioRecord = new AudioRecord(
@@ -113,13 +105,10 @@ public class RadioMicCapture {
         }
 
         running = true;
-        currentGain = 1.0f;
 
         captureThread = new Thread(() -> {
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-            short[] shortChunk = new short[HOP_SIZE];
-            byte[] rollingWindow = new byte[WINDOW_SIZE];
-            java.util.Arrays.fill(rollingWindow, (byte) 128);
+            short[] shortChunk = new short[CHUNK_SIZE];
 
             while (running) {
                 AudioRecord rec = audioRecord;
@@ -127,85 +116,32 @@ public class RadioMicCapture {
                     break;
                 }
 
-                int offset = 0;
-                while (running && offset < HOP_SIZE) {
-                    int read = rec.read(shortChunk, offset, HOP_SIZE - offset);
-                    if (read <= 0) {
-                        if (read == AudioRecord.ERROR_INVALID_OPERATION || read == AudioRecord.ERROR_BAD_VALUE) {
-                            Log.w(TAG, "AudioRecord read error: " + read);
-                            offset = -1;
-                            break;
-                        }
-                        try {
-                            Thread.sleep(2);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            offset = -1;
-                            break;
-                        }
-                        continue;
+                int read = rec.read(shortChunk, 0, CHUNK_SIZE);
+                if (read <= 0) {
+                    if (read == AudioRecord.ERROR_INVALID_OPERATION || read == AudioRecord.ERROR_BAD_VALUE) {
+                        Log.w(TAG, "AudioRecord read error: " + read);
+                        break;
                     }
-                    offset += read;
-                }
-
-                if (offset != HOP_SIZE) {
+                    try {
+                        Thread.sleep(2);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                     continue;
                 }
 
-                // Measure peak amplitude of this chunk
-                int peak = 0;
-                for (int i = 0; i < HOP_SIZE; i++) {
-                    int abs = Math.abs(shortChunk[i]);
-                    if (abs > peak) peak = abs;
-                }
-
-                float startGain = currentGain;
-                if (peak > NOISE_GATE_THRESHOLD) {
-                    float desiredGain = TARGET_PEAK / peak;
-                    if (desiredGain > MAX_GAIN) desiredGain = MAX_GAIN;
-                    if (desiredGain < MIN_GAIN) desiredGain = MIN_GAIN;
-
-                    if (desiredGain < currentGain) {
-                        // Fast attack (~20 ms) to prevent distortion
-                        currentGain += (desiredGain - currentGain) * 0.40f;
-                    } else {
-                        // Smooth release (~200 ms) for musical dynamics
-                        currentGain += (desiredGain - currentGain) * 0.05f;
-                    }
-                } else {
-                    // Silence / noise floor: gracefully decay gain to 1.0f
-                    currentGain += (1.0f - currentGain) * 0.10f;
-                }
-
-                // Shift older half of rolling window to the left (512 samples)
-                System.arraycopy(rollingWindow, HOP_SIZE, rollingWindow, 0, HOP_SIZE);
-
-                // Convert 16-bit signed PCM to 8-bit unsigned PCM with smooth gain interpolation
-                float gainStep = (currentGain - startGain) / HOP_SIZE;
-                for (int i = 0; i < HOP_SIZE; i++) {
-                    float g = startGain + gainStep * i;
-                    int boosted = Math.round(shortChunk[i] * g);
-                    if (boosted > 32767) boosted = 32767;
-                    else if (boosted < -32768) boosted = -32768;
-
-                    int val = (boosted >> 8) + 128;
-                    if (val < 0) val = 0;
-                    else if (val > 255) val = 255;
-
-                    rollingWindow[HOP_SIZE + i] = (byte) val;
-                }
-
                 try {
-                    callback.onWaveform(rollingWindow, WINDOW_SIZE);
+                    callback.onPcmChunk(shortChunk, read);
                 } catch (Throwable t) {
-                    Log.w(TAG, "Waveform callback exception: " + t);
+                    Log.w(TAG, "PCM callback exception: " + t);
                 }
             }
         }, "wDSP_RadioMic");
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
         captureThread.start();
-        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (Adaptive AGC enabled)");
+        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (native direct streaming)");
         return true;
     }
 

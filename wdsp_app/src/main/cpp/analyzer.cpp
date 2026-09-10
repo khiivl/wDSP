@@ -161,19 +161,23 @@ void Analyzer::waitAndProcess(int timeoutMs) {
     }
 }
 
-void Analyzer::pushPcm16(const int16_t* samples, int count, int channels) {
+void Analyzer::pushPcm16(const int16_t* samples, int count, int channels, float gain) {
     if (samples == nullptr || count <= 0) return;
     std::lock_guard<std::mutex> lock(ringMutex_);
 
     if (channels < 1) channels = 1;
     int frames = count / channels;
     std::vector<float> mono(static_cast<size_t>(frames));
+    float scale = (gain > 0.0f ? gain : 1.0f) / (channels * 32768.0f);
     for (int i = 0; i < frames; i++) {
         float sum = 0.0f;
         for (int c = 0; c < channels; c++) {
             sum += static_cast<float>(samples[i * channels + c]);
         }
-        mono[static_cast<size_t>(i)] = sum / (channels * 32768.0f);
+        float val = sum * scale;
+        if (val > 1.0f) val = 1.0f;
+        else if (val < -1.0f) val = -1.0f;
+        mono[static_cast<size_t>(i)] = val;
     }
 
     // Straight into the ring: a microphone stream is already continuous, so unlike the polled

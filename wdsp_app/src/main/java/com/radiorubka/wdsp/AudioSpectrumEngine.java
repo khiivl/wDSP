@@ -607,10 +607,10 @@ public class AudioSpectrumEngine {
                 && System.currentTimeMillis() - lastSignalTime < SILENCE_TOLERANCE_MS;
     }
 
-    private void noteMicSignal(byte[] waveform) {
-        if (waveform == null) return;
-        for (byte b : waveform) {
-            if (Math.abs((b & 0xFF) - 128) > SIGNAL_THRESHOLD) {
+    private void noteMicSignal(short[] buffer, int len) {
+        if (buffer == null || len <= 0) return;
+        for (int i = 0; i < len; i++) {
+            if (Math.abs(buffer[i]) > 300) {
                 lastMicSignalTime = System.currentTimeMillis();
                 return;
             }
@@ -891,7 +891,8 @@ public class AudioSpectrumEngine {
     public void applyNativeSettings() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        analyzer.setConfig(nativeAttackMs, nativeReleaseMs, nativeLatencyMs,
+        float latency = (radioMicCapture != null && radioMicCapture.isRunning()) ? 0f : nativeLatencyMs;
+        analyzer.setConfig(nativeAttackMs, nativeReleaseMs, latency,
                 nativeRefMaxDb, nativeRangeDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
@@ -902,7 +903,11 @@ public class AudioSpectrumEngine {
     private void applyAnalysisProfile() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
+        if (radioMicCapture != null && radioMicCapture.isRunning()) {
+            analyzer.setHop(HOP_ACTIVE);
+        } else {
+            analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
+        }
     }
 
     private boolean hasListenerFor(int consumer) {
@@ -1110,14 +1115,18 @@ public class AudioSpectrumEngine {
 
         boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
             if (!capturePolling) return;
-            noteMicSignal(buffer);
+            noteMicSignal(buffer, len);
             NativeAnalyzer analyzer = nativeAnalyzer;
             if (analyzer != null) {
-                analyzer.push(buffer, len);
+                analyzer.pushPcm16(buffer, len, 3.0f);
             }
             synchronized (waveformLock) {
-                System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(len, latestWaveform.length));
-                latestWaveformLen = Math.min(len, latestWaveform.length);
+                int copyLen = Math.min(len, latestWaveform.length);
+                for (int i = 0; i < copyLen; i++) {
+                    int val = (buffer[i] >> 8) + 128;
+                    latestWaveform[i] = (byte) Math.max(0, Math.min(255, val));
+                }
+                latestWaveformLen = copyLen;
             }
         });
 
@@ -1144,8 +1153,7 @@ public class AudioSpectrumEngine {
             while (capturePolling) {
                 try {
                     dispatchNativeFrame();
-                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
-                            ? DISPLAY_PERIOD_MS : DISPLAY_PERIOD_IDLE_MS);
+                    Thread.sleep(DISPLAY_PERIOD_MS);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     break;
@@ -1154,7 +1162,7 @@ public class AudioSpectrumEngine {
             }
         }, "wDSP_Display");
         displayThread.start();
-        Log.i(TAG, "Radio MIC analysis pipeline started at 48000 Hz UNPROCESSED");
+        Log.i(TAG, "Radio MIC analysis pipeline started at 48000 Hz UNPROCESSED (native PCM16)");
     }
 
     private void stopRadioMicCapture() {

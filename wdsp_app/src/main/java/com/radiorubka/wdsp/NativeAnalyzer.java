@@ -64,6 +64,13 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativePush(handle, waveform, length);
     }
 
+    /** Feeds continuous 16-bit PCM samples directly into the analyser ring buffer, skipping the stitcher. */
+    public void pushPcm16(short[] samples, int count, float gain) {
+        if (handle != 0 && samples != null && count > 0) {
+            nativePushPcm16(handle, samples, count, gain);
+        }
+    }
+
     /**
      * Runs analysis for whatever has been captured, blocking until there is enough or the timeout
      * expires. Call from a thread of its own: keeping it off the capture thread means a transform
@@ -121,6 +128,8 @@ public final class NativeAnalyzer {
     private static native void nativeDestroy(long handle);
 
     private static native int nativePush(long handle, byte[] block, int len);
+
+    private static native void nativePushPcm16(long handle, short[] samples, int count, float gain);
 
     private static native void nativeProcess(long handle, int timeoutMs);
 
