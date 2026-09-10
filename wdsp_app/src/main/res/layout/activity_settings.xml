@@ -2819,31 +2819,6 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <!-- Fast Sweep & Auto-Preset Button in Diagnostics as well -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/btn_debug_room_measure"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:text="@string/debug_sweep_button"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_debug_room_status"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:textSize="11sp" />
-                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

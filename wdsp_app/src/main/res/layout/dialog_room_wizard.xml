@@ -616,6 +616,18 @@
                 android:layout_marginTop="4dp">
 
                 <TextView
+                    android:id="@+id/btn_save_report"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_wizard_btn_save"
+                    android:textSize="13sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
                     android:id="@+id/btn_close_report"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
