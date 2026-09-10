@@ -457,8 +457,8 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
         const float expected = ref80 + 12.0f * octaves;
         const float deficit = expected - avgClean16[b];
         if (deficit > 0.0f) {
-            // Cap maximum low-frequency boost to +15 dB
-            outCompensation16[b] = std::min(deficit, 15.0f);
+            // Cap maximum low-frequency boost to +6 dB (preventing cabin noise explosion on visualizer)
+            outCompensation16[b] = std::min(deficit, 6.0f);
         }
     }
 
@@ -468,7 +468,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
     for (int b = 14; b < kHwBands; b++) {
         const float drop = ref5k - avgClean16[b];
         if (drop > 2.0f) {
-            outCompensation16[b] = std::min(drop - 2.0f, 8.0f);
+            outCompensation16[b] = std::min(drop - 2.0f, 6.0f);
         }
     }
 }

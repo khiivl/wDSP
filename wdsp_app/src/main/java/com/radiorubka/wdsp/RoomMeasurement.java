@@ -329,6 +329,9 @@ public final class RoomMeasurement {
             R.string.room_mic_place_dome,
             R.string.room_mic_place_wheel,
             R.string.room_mic_place_dash,
+            R.string.room_mic_place_headunit,
+            R.string.room_mic_place_headrest,
+            R.string.room_mic_place_armrest,
     };
 
     private static final String PREF_MIC_PLACE = "room_mic_place";
@@ -369,6 +372,9 @@ public final class RoomMeasurement {
             case 5: return "dome light";
             case 6: return "steering wheel";
             case 7: return "dashboard";
+            case 8: return "built-in head unit mic";
+            case 9: return "driver headrest (ear level)";
+            case 10: return "center armrest / console";
             default: return "not stated";
         }
     }
@@ -661,6 +667,11 @@ public final class RoomMeasurement {
         public boolean hasPolarityInversion = false;
         public String wiringWarning = null;
 
+        // Microphone placement & cavity awareness
+        public float micSpotLr = -0.5f;
+        public float micSpotFr = 0.5f;
+        public int micPlace = -1;
+
         public boolean isUsable() {
             if (channels == null || channels.length == 0) return false;
             for (ChannelResult c : channels) {
@@ -767,6 +778,10 @@ public final class RoomMeasurement {
         result.channels = new ChannelResult[hasSubwoofer ? 5 : 4];
 
         Context app = context.getApplicationContext();
+        result.micSpotLr = micSpotLeftRight(app);
+        result.micSpotFr = micSpotFrontRear(app);
+        result.micPlace = micPlace(app);
+
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String preset = prefs.getString("last_selected_preset", null);
         if (preset == null) {
@@ -781,7 +796,7 @@ public final class RoomMeasurement {
         }
 
         if (listener != null) {
-            listener.onProgress(1, 5, "Підготовка", "Пауза медіа та фіксація гучності (16 од.)...", 5);
+            listener.onProgress(1, 5, "Калібрування мікрофона", "Вимір фонового шуму салону та фіксація гучності (16 од.)...", 5);
         }
 
         Log.i(TAG, "=== room measurement starting ===");
@@ -1077,8 +1092,26 @@ public final class RoomMeasurement {
                     + "usual cause, and the platform will not admit it.");
         }
 
-        // Ambient noise floor is computed in the deconvolved domain per-channel from pre-sweep silence
-
+        // Live ambient noise floor measured directly from the physical cabin silence (first lead-in seconds)
+        if (got >= lead) {
+            sweep.noiseFloor(asFloat, lead, result.noiseFloorDb16);
+            float noisePeak = 0f;
+            double noiseSumSq = 0;
+            for (int i = 0; i < lead; i++) {
+                float a = Math.abs(asFloat[i]);
+                if (a > noisePeak) noisePeak = a;
+                noiseSumSq += (double) a * a;
+            }
+            float noiseRms = (float) Math.sqrt(noiseSumSq / lead);
+            int noisePeakInt = Math.round(noisePeak * 32768f);
+            Log.i(TAG, String.format(Locale.US,
+                    "live ambient cabin noise measured: peak=%d (%.1f dBFS), rms=%.1f dBFS",
+                    noisePeakInt, 20 * Math.log10(noisePeak + 1e-9), 20 * Math.log10(noiseRms + 1e-9)));
+            prefs.edit()
+                    .putInt("room_calibrated_noise_peak", noisePeakInt)
+                    .putFloat("room_calibrated_noise_rms_db", (float) (20 * Math.log10(noiseRms + 1e-9)))
+                    .apply();
+        }
 
         // Each sweep is cut out with a generous margin. The window is short enough that the next
         // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
@@ -1126,7 +1159,8 @@ public final class RoomMeasurement {
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
             cr.clarityDb = analysis[NativeSweep.CLARITY];
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
-            System.arraycopy(analysis, NativeSweep.NOISE_BANDS, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
+            // Use live measured cabin noise floor rather than artificial impulse sample 48
+            System.arraycopy(result.noiseFloorDb16, 0, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
 
             // Spectral subtraction: clean = max(sweep - noise, 1e-12), snr = sweep - noise
             NativeSweep.subtractNoise(cr.bandsDb, cr.noiseBandsDb, cr.cleanBandsDb, cr.snrDb);
@@ -1562,6 +1596,32 @@ public final class RoomMeasurement {
             result.subLpfFreqHz = 63;
         }
         result.subGain = subSettings[1];
+
+        // 5. Account for microphone physical placement and cavity acoustics
+        if (result.micPlace == 8) { // Built-in head unit mic (front panel 1.5-2 mm aperture)
+            // Compensate Helmholtz cavity resonance: front panel pinhole boosts 2.8-3.2 kHz by +4..+6 dB.
+            // Restore speech presence cut in bands 11 & 12 (2.5 kHz & 4.0 kHz)
+            for (int b : new int[]{11, 12}) {
+                if (result.autoEqGains16[b] < 6) {
+                    result.autoEqGains16[b] = Math.min(6, result.autoEqGains16[b] + 2);
+                }
+            }
+            // Pinhole acoustic low-frequency roll-off: cap sub-bass boost below 100 Hz to prevent speaker distortion
+            for (int b = 0; b < 4; b++) {
+                if (result.autoEqGains16[b] > 8) {
+                    result.autoEqGains16[b] = 8; // cap to +3 dB boost
+                }
+            }
+            Log.i(TAG, "Applied Helmholtz cavity compensation for built-in head unit mic");
+        } else if (result.micPlace == 0) { // Windscreen
+            // Glass boundary reflection creates comb nulls above 2 kHz; do not over-boost
+            for (int b = 10; b < NativeSweep.BAND_COUNT; b++) {
+                if (result.autoEqGains16[b] > 7) {
+                    result.autoEqGains16[b] = 7; // cap to +1.5 dB
+                }
+            }
+            Log.i(TAG, "Applied boundary reflection limiting for windscreen-mounted mic");
+        }
 
         Log.i(TAG, String.format(Locale.US,
                 "Auto-EQ (%s) synthesized: HPF cutoff %d Hz (idx %d), Sub LPF %d Hz (idx %d, gain %d), hasSub=%b",
