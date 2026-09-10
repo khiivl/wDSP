@@ -178,6 +178,8 @@
     <!-- Status Bar Visualizer -->
     <string name="status_bar_visualizer_title">Status Bar Visualizer</string>
     <string name="status_bar_visualizer_enable">Status Bar Visualizer</string>
+    <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
+    <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="status_bar_visualizer_width">Width</string>
     <string name="status_bar_visualizer_offset_x">Position</string>
     <string name="status_bar_visualizer_theme">Theme</string>

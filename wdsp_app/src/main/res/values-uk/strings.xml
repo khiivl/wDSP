@@ -167,6 +167,8 @@
     <!-- Status Bar Visualizer -->
     <string name="status_bar_visualizer_title">Візуалізатор статус-бара</string>
     <string name="status_bar_visualizer_enable">Візуалізатор статус-бара</string>
+    <string name="pref_radio_mic_visualizer_title">Спектроаналізатор FM-радіо (тест)</string>
+    <string name="pref_radio_mic_visualizer_desc">Акустичний аналіз звуку динаміків через салонний мікрофон для аналогового радіо</string>
     <string name="status_bar_visualizer_width">Ширина</string>
     <string name="status_bar_visualizer_offset_x">Положення</string>
     <string name="status_bar_visualizer_theme">Тема</string>
