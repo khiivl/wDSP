@@ -28,7 +28,9 @@ public final class NativeSweep implements AutoCloseable {
      /** Sixteen band levels in dB start here, on the hardware equaliser's grid. */
      public static final int BANDS = 4;
     public static final int BAND_COUNT = 16;
-    public static final int RESULT_SIZE = BANDS + BAND_COUNT;
+    /** Sixteen band levels of deconvolved noise floor in dB start here. */
+    public static final int NOISE_BANDS = BANDS + BAND_COUNT;
+    public static final int RESULT_SIZE = NOISE_BANDS + BAND_COUNT;
 
     private static boolean available;
 

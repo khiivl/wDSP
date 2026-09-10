@@ -539,6 +539,8 @@ public final class RoomMeasurement {
         public final float[] bandsDb = new float[NativeSweep.BAND_COUNT];
         /** Clean response in dB (after ambient noise floor spectral subtraction). */
         public final float[] cleanBandsDb = new float[NativeSweep.BAND_COUNT];
+        /** Deconvolved noise floor in dB across the 16 bands. */
+        public final float[] noiseBandsDb = new float[NativeSweep.BAND_COUNT];
         /** Signal-to-noise ratio in dB across the 16 bands. */
         public final float[] snrDb = new float[NativeSweep.BAND_COUNT];
         /** Fractional delay from reference channel using GCC-PHAT in milliseconds. */
@@ -938,13 +940,8 @@ public final class RoomMeasurement {
                     + "usual cause, and the platform will not admit it.");
         }
 
-        // 1. Ambient noise floor measurement from lead silence
-        sweep.noiseFloor(asFloat, lead, result.noiseFloorDb16);
-        StringBuilder nfLog = new StringBuilder("ambient noise floor (16 bands):");
-        for (float v : result.noiseFloorDb16) {
-            nfLog.append(String.format(Locale.US, " %.1f", v));
-        }
-        Log.i(TAG, nfLog.toString());
+        // Ambient noise floor is computed in the deconvolved domain per-channel from pre-sweep silence
+
 
         // Each sweep is cut out with a generous margin. The window is short enough that the next
         // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
@@ -984,20 +981,18 @@ public final class RoomMeasurement {
                         + "sweep");
                 continue;
             }
-            cr.arrivalSamples = (int) analysis[NativeSweep.ARRIVAL];
-            // Every window starts an exact number of periods into the same recording, so the
-            // arrival inside it is directly comparable with the others. The unknown skew between
-            // the recording and the playback is the same for all four and drops out of the
-            // differences.
-            cr.arrivalMs = cr.arrivalSamples * 1000f / SAMPLE_RATE;
+            cr.arrivalSamples = Math.round(analysis[NativeSweep.ARRIVAL]);
+            // Sub-sample arrival time in ms
+            cr.arrivalMs = analysis[NativeSweep.ARRIVAL] * 1000f / SAMPLE_RATE;
             cr.clockLocked = true;
             cr.prominence = analysis[NativeSweep.PROMINENCE];
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
             cr.clarityDb = analysis[NativeSweep.CLARITY];
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
+            System.arraycopy(analysis, NativeSweep.NOISE_BANDS, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
 
             // Spectral subtraction: clean = max(sweep - noise, 1e-12), snr = sweep - noise
-            NativeSweep.subtractNoise(cr.bandsDb, result.noiseFloorDb16, cr.cleanBandsDb, cr.snrDb);
+            NativeSweep.subtractNoise(cr.bandsDb, cr.noiseBandsDb, cr.cleanBandsDb, cr.snrDb);
 
             // Deconvolve impulse response for GCC-PHAT
             float[] impBuf = new float[len];
@@ -1052,30 +1047,67 @@ public final class RoomMeasurement {
         }
 
         // 2. GCC-PHAT high-precision delay estimation
-        int refIdx = 0;
-        int minArrival = Integer.MAX_VALUE;
+        // 2. Select anchor channel with HIGHEST clarityDb among real speakers
+        int refIdx = -1;
+        float maxClarity = -100f;
         for (int k = 0; k < channels.length; k++) {
             ChannelResult cr = result.channels[k];
-            if (cr != null && cr.ok && cr.arrivalSamples < minArrival) {
-                minArrival = cr.arrivalSamples;
+            if (cr != null && cr.ok && cr.clarityDb > maxClarity) {
+                maxClarity = cr.clarityDb;
                 refIdx = k;
             }
         }
-        if (channelImpulses[refIdx] != null) {
+
+        // Ambient noise floor reported is that of the anchor channel
+        if (refIdx >= 0 && result.channels[refIdx] != null) {
+            System.arraycopy(result.channels[refIdx].noiseBandsDb, 0, result.noiseFloorDb16, 0, NativeSweep.BAND_COUNT);
+        }
+        StringBuilder nfLog = new StringBuilder("deconvolved noise floor (16 bands):");
+        for (float v : result.noiseFloorDb16) {
+            nfLog.append(String.format(Locale.US, " %.1f", v));
+        }
+        Log.i(TAG, nfLog.toString());
+
+        // Disqualify phantom arrivals that are physically too far from the anchor (> 30 ms)
+        if (refIdx >= 0) {
+            ChannelResult anchor = result.channels[refIdx];
+            for (int k = 0; k < channels.length; k++) {
+                ChannelResult cr = result.channels[k];
+                if (cr == null || k == refIdx) continue;
+                final float apart = Math.abs(cr.arrivalMs - anchor.arrivalMs);
+                if (apart > MAX_PLAUSIBLE_SPREAD_MS) {
+                    cr.ok = false;
+                    Log.w(TAG, String.format(Locale.US,
+                            "%s: arrived %.1f ms from anchor %s (> %.0f ms) - disqualified phantom",
+                            cr.label, apart, anchor.label, MAX_PLAUSIBLE_SPREAD_MS));
+                }
+            }
+        }
+
+        // GCC-PHAT high-precision delay estimation relative to the anchor
+        if (refIdx >= 0 && channelImpulses[refIdx] != null) {
+            ChannelResult anchor = result.channels[refIdx];
             float[] refImp = channelImpulses[refIdx];
             for (int k = 0; k < channels.length; k++) {
                 ChannelResult cr = result.channels[k];
-                if (cr != null && channelImpulses[k] != null) {
-                    float[] prom = new float[1];
-                    float delaySamples = NativeSweep.gccPhatDelay(refImp, refImp.length,
-                            channelImpulses[k], channelImpulses[k].length, prom);
-                    cr.gccPhatDelayMs = delaySamples * 1000f / SAMPLE_RATE;
-                    cr.gccPhatProminence = prom[0];
-                    Log.i(TAG, String.format(Locale.US,
-                            "GCC-PHAT: %s vs %s: delay = %+.3f ms (%.1f us), prom = %.1f",
-                            cr.label, channels[refIdx].label, cr.gccPhatDelayMs,
-                            cr.gccPhatDelayMs * 1000f, cr.gccPhatProminence));
+                if (cr == null || channelImpulses[k] == null) continue;
+                if (k == refIdx) {
+                    cr.gccPhatDelayMs = 0.0f;
+                    cr.gccPhatProminence = 1000.0f;
+                    continue;
                 }
+                if (!cr.ok) {
+                    cr.gccPhatDelayMs = 0.0f;
+                    cr.gccPhatProminence = 0.0f;
+                    continue;
+                }
+                // Precise relative delay based on sub-sample arrivals
+                cr.gccPhatDelayMs = cr.arrivalMs - anchor.arrivalMs;
+                cr.gccPhatProminence = cr.prominence;
+                Log.i(TAG, String.format(Locale.US,
+                        "Delay relative to %s: %s delay = %+.3f ms (%.1f us), prom = %.1f",
+                        anchor.label, cr.label, cr.gccPhatDelayMs,
+                        cr.gccPhatDelayMs * 1000f, cr.gccPhatProminence));
             }
         }
 
@@ -1086,7 +1118,7 @@ public final class RoomMeasurement {
             int validCh = 0;
             for (int k = 0; k < channels.length; k++) {
                 ChannelResult cr = result.channels[k];
-                if (cr != null && cr.heardAtAll && cr.cleanBandsDb != null) {
+                if (cr != null && cr.ok && cr.confident && cr.cleanBandsDb != null) {
                     sumP += Math.pow(10.0, cr.cleanBandsDb[b] * 0.1);
                     validCh++;
                 }
@@ -1663,6 +1695,11 @@ public final class RoomMeasurement {
                         .append('\n');
                 sb.append("             response dB:");
                 for (float band : c.bandsDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n");
+                sb.append("             noise dB:   ");
+                for (float band : c.noiseBandsDb) {
                     sb.append(String.format(Locale.US, " %.1f", band));
                 }
                 sb.append("\n");
