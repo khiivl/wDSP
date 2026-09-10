@@ -498,6 +498,17 @@ public final class RoomMeasurement {
                 curve[i] = Float.parseFloat(parts[i].trim());
             } catch (NumberFormatException ignored) {}
         }
+        // Upgrade legacy curve saved with old 6 dB clamp bug (6.00, 6.00, 6.00, 0.00, 0.00...)
+        if (curve[0] > 0.0f && curve[0] <= 6.01f && curve[1] <= 6.01f && curve[2] <= 6.01f
+                && curve[3] == 0.0f && curve[4] == 0.0f) {
+            curve[0] = 16.0f; // 20 Hz
+            curve[1] = 16.0f; // 31.5 Hz
+            curve[2] = 16.0f; // 50 Hz
+            curve[3] = 13.0f; // 80 Hz
+            curve[4] = 8.0f;  // 125 Hz
+            setMicCompensationCurve(context, curve);
+            Log.i(TAG, "Upgraded legacy 6 dB-clamped mic compensation curve to full acoustic profile");
+        }
         return curve;
     }
 

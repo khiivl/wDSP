@@ -542,6 +542,28 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /**
+     * Single Source of Truth for spectrum analyzer curve (DSP EQ vs Mic Compensation).
+     *
+     * - In Microphone capture mode (isRadioCaptureActive()):
+     *   Sound in the cabin has already passed through the hardware DSP (BU32107), power amp,
+     *   and cabin speakers. The analyzer must NOT apply DSP EQ again.
+     *   Instead, it applies the calibrated microphone inverse compensation curve from
+     *   RoomMeasurement.getMicCompensationCurve(appContext) to restore hardware mic roll-off
+     *   in the sub-bass (20–125 Hz) and upper treble.
+     *
+     * - In Calculated capture mode (!isRadioCaptureActive()):
+     *   Audio is captured from pre-DSP AudioFlinger. The analyzer applies the simulated
+     *   hardware DSP curve from getDspCurve().
+     */
+    public float[] getEffectiveSpectrumCurve() {
+        if (isRadioCaptureActive()) {
+            return RoomMeasurement.getMicCompensationCurve(appContext);
+        } else {
+            return getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
+        }
+    }
+
     public void setFmOffsets(float[] newFmOffsets) {
         synchronized (fmOffsets) {
             if (newFmOffsets == null) {
@@ -723,7 +745,8 @@ public class AudioSpectrumEngine {
                 checkSourceState();
                 long now = System.currentTimeMillis();
                 long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
-                if (now - lastSignalTime > SILENCE_TOLERANCE_MS
+                boolean micActive = SPECTRUM_MODE_MIC.equals(spectrumMode) || isRadioCaptureActive();
+                if (!micActive && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && now - lastResolveTime > wait
                         && isMediaPlaybackActive()) {
                     requestResolve("attached session silent while media plays");
@@ -743,7 +766,8 @@ public class AudioSpectrumEngine {
      */
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
-        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
+        if (appContext != null && (NowPlaying.getInstance(appContext).isRadioSource()
+                || SPECTRUM_MODE_MIC.equals(spectrumMode) || isRadioCaptureActive())) {
             return;
         }
         lastResolveTime = System.currentTimeMillis();
@@ -921,13 +945,7 @@ public class AudioSpectrumEngine {
                 nativeRefMaxDb, nativeRangeDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
-        if (radioActive) {
-            // Cabin acoustic microphone capture already has hardware DSP EQ applied by BU32107.
-            // Apply calibrated microphone inverse compensation curve to restore bass and treble roll-off.
-            analyzer.setDspCurve(RoomMeasurement.getMicCompensationCurve(appContext));
-        } else {
-            analyzer.setDspCurve(getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f));
-        }
+        analyzer.setDspCurve(getEffectiveSpectrumCurve());
     }
 
     /** Picks the frame rate from who is actually watching. */
@@ -1144,8 +1162,8 @@ public class AudioSpectrumEngine {
         // Configure analyzer for acoustic capture:
         // 1. Acoustic mode: bypass cabin rumble noise floor subtraction so 50 Hz sub-bass dances
         nativeAnalyzer.setIsAcoustic(true);
-        // 2. Compensated DSP curve: apply calibrated microphone inverse compensation curve
-        nativeAnalyzer.setDspCurve(RoomMeasurement.getMicCompensationCurve(appContext));
+        // 2. Microphone inverse compensation curve: restores hardware capsule sub-bass and treble roll-off
+        nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
 
         boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
             if (!capturePolling) return;

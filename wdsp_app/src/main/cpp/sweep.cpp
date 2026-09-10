@@ -459,16 +459,31 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
         outCompensation16[b] = 0.0f;
     }
 
-    // 1. Low-frequency cabin gain anchor (+12 dB/octave below 80 Hz)
-    // kHwCenters[3] = 80 Hz
-    const float ref80 = avgClean16[3];
-    for (int b = 0; b < 3; b++) {
-        const float octaves = std::log2(80.0f / kHwCenters[b]);
-        const float expected = ref80 + 12.0f * octaves;
-        const float deficit = expected - avgClean16[b];
+    // Mid-frequency cabin reference anchor (200 - 500 Hz: bands 5, 6, 7)
+    // In vehicle acoustics, speech and midband are uncorrupted by cabin gain or mic port high-pass filters.
+    float sumMid = 0.0f;
+    int countMid = 0;
+    for (int b = 5; b <= 7; b++) {
+        if (avgClean16[b] > -100.0f) {
+            sumMid += avgClean16[b];
+            countMid++;
+        }
+    }
+    const float refMid = countMid > 0 ? (sumMid / countMid) : avgClean16[3];
+
+    // 1. Low-frequency roll-off & cabin gain compensation below 160 Hz (bands 0..4: 20, 31.5, 50, 80, 125 Hz)
+    // Head unit mic hardware (pinhole cavity and input AC coupling capacitors) rolls off steeply below 150 Hz.
+    // In a sealed passenger cabin, acoustic energy is maintained or boosted by cabin gain (+12 dB/oct below 80 Hz).
+    for (int b = 0; b < 5; b++) {
+        float expected = refMid;
+        if (kHwCenters[b] < 80.0f) {
+            float octaves = std::log2(80.0f / kHwCenters[b]);
+            expected += 6.0f * octaves; // gentle cabin gain expectation
+        }
+        float deficit = expected - avgClean16[b];
         if (deficit > 0.0f) {
-            // Cap maximum low-frequency boost to +6 dB (preventing cabin noise explosion on visualizer)
-            outCompensation16[b] = std::min(deficit, 6.0f);
+            // Cap maximum low-frequency boost to +16 dB matching real capsule attenuation
+            outCompensation16[b] = std::min(deficit, 16.0f);
         }
     }
 
@@ -478,7 +493,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
     for (int b = 14; b < kHwBands; b++) {
         const float drop = ref5k - avgClean16[b];
         if (drop > 2.0f) {
-            outCompensation16[b] = std::min(drop - 2.0f, 6.0f);
+            outCompensation16[b] = std::min(drop - 2.0f, 8.0f);
         }
     }
 }

@@ -120,12 +120,6 @@ public class RadioMicCapture {
             } catch (Throwable ignored) {}
         }
 
-        SharedPreferences prefs = context.getSharedPreferences("wdsp_presets", Context.MODE_PRIVATE);
-        int calibratedNoisePeak = prefs.getInt("room_calibrated_noise_peak", 0);
-        final int noiseGateThreshold = Math.max(NOISE_GATE_THRESHOLD, Math.round(calibratedNoisePeak * 1.35f));
-        Log.i(TAG, "RadioMicCapture noise gate threshold: " + noiseGateThreshold
-                + " (calibrated=" + calibratedNoisePeak + ")");
-
         running = true;
         currentGain = 1.0f;
 
@@ -133,7 +127,6 @@ public class RadioMicCapture {
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
             short[] shortChunk = new short[CHUNK_SIZE];
             short[] agcChunk = new short[CHUNK_SIZE];
-            float gateGain = 0.0f;
 
             while (running) {
                 AudioRecord rec = audioRecord;
@@ -164,9 +157,8 @@ public class RadioMicCapture {
                 }
 
                 float startGain = currentGain;
-                float startGate = gateGain;
 
-                if (peak > noiseGateThreshold) {
+                if (peak > NOISE_GATE_THRESHOLD) {
                     float desiredGain = TARGET_PEAK / peak;
                     if (desiredGain > MAX_GAIN) desiredGain = MAX_GAIN;
                     if (desiredGain < MIN_GAIN) desiredGain = MIN_GAIN;
@@ -178,22 +170,15 @@ public class RadioMicCapture {
                         // Smooth release (~200 ms) for musical breathing
                         currentGain += (desiredGain - currentGain) * 0.05f;
                     }
-                    // Fast gate opening (~30 ms attack)
-                    gateGain += (1.0f - gateGain) * 0.40f;
-                    if (gateGain > 0.99f) gateGain = 1.0f;
                 } else {
                     // Decay towards 1.0 during silence so cabin rumble isn't amplified
                     currentGain += (1.0f - currentGain) * 0.10f;
-                    // Smooth gate closing (~150 ms release)
-                    gateGain += (0.0f - gateGain) * 0.15f;
-                    if (gateGain < 0.005f) gateGain = 0.0f;
                 }
 
                 // Smooth linear interpolation across the chunk to prevent clicks
                 float gainStep = (currentGain - startGain) / read;
-                float gateStep = (gateGain - startGate) / read;
                 for (int i = 0; i < read; i++) {
-                    float g = (startGain + gainStep * i) * (startGate + gateStep * i);
+                    float g = startGain + gainStep * i;
                     int boosted = Math.round(shortChunk[i] * g);
                     if (boosted > 32767) boosted = 32767;
                     else if (boosted < -32768) boosted = -32768;
