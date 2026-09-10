@@ -247,7 +247,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
                                                    jfloatArray result) {
     auto* sweep = asSweep(handle);
     if (sweep == nullptr || recorded == nullptr || result == nullptr) return JNI_FALSE;
-    if (env->GetArrayLength(result) < 4 + wdsp::kHwBands) return JNI_FALSE;
+    if (env->GetArrayLength(result) < 4 + wdsp::kHwBands * 2) return JNI_FALSE;
     if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
 
     jfloat* input = env->GetFloatArrayElements(recorded, nullptr);
@@ -265,13 +265,29 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
     const int polarity = wdsp::SweepMeasurement::polarityAt(impulse.data(),
                                                              (int) impulse.size(), arrival);
 
-    std::vector<float> out(4 + wdsp::kHwBands, 0.0f);
-    out[0] = static_cast<float>(arrival);
+    // Parabolic sub-sample refinement of arrival peak
+    float delta = 0.0f;
+    if (arrival > 0 && arrival + 1 < (int) impulse.size()) {
+        const float y0 = std::fabs(impulse[arrival - 1]);
+        const float y1 = std::fabs(impulse[arrival]);
+        const float y2 = std::fabs(impulse[arrival + 1]);
+        const float denom = 2.0f * (y0 - 2.0f * y1 + y2);
+        if (std::fabs(denom) > 1e-12f) {
+            delta = (y0 - y2) / denom;
+            if (delta < -1.0f || delta > 1.0f) delta = 0.0f;
+        }
+    }
+
+    std::vector<float> out(4 + wdsp::kHwBands * 2, 0.0f);
+    out[0] = static_cast<float>(arrival) + delta;
     out[1] = prominence;
     out[2] = static_cast<float>(polarity);
     out[3] = wdsp::SweepMeasurement::clarityDb(impulse.data(), (int) impulse.size(), arrival,
                                                sweep->sampleRate());
+    // 1. Signal 16-band response around direct arrival
     sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), arrival, out.data() + 4);
+    // 2. Ambient noise floor 16 bands from pre-sweep lead silence (sample 48 -> samples 0..16384 of deconvolved silence)
+    sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), 48, out.data() + 4 + wdsp::kHwBands);
 
     env->SetFloatArrayRegion(result, 0, (jsize) out.size(), out.data());
     return JNI_TRUE;
