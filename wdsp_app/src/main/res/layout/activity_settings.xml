@@ -2807,7 +2807,7 @@
                         android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:text="@string/debug_measure_preset_button"
+                        android:text="@string/debug_sweep_button"
                         android:textSize="12sp" />
 
                     <TextView
