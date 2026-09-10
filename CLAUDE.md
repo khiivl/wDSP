@@ -133,6 +133,10 @@ Hidden-API access is entirely reflective, no root:
 | `0x89` | 6 | Surround / Haas + RSSE | `138 + (rsse-10)`, then FL, FR, RL, RR; all-zero payload when `_d1_en` is off |
 | msg `24` | 2 | Power-amp pre-volume | sub-ID `2` + value, sent through `RPC_SendMcuMsgData`, **not** `RPC_SetEQData` |
 
+> ⚠️ **Hardware constraint (0x8C vs 0x89)**: The physical DSP chip (ROHM BU32107 / AKM AK7604) has only
+> **one** register bank (`0400`..`0408`) for delays. In MCU firmware (`FUN_08005154`), surround (`0x89`) and
+> positional delays (`0x8C`) overwrite the exact same registers. They are mutually exclusive by hardware design.
+
 `sendToHardware()` de-duplicates per command byte via `mcuCache`, and EQ (`0x80`) and sub (`0x8B`)
 additionally go through a 500 ms throttle (`THROTTLE_MS`) with a trailing write, because dragging a
 slider would otherwise flood the MCU.
@@ -162,6 +166,7 @@ manifest receiver class, so `-n .../.SubGainUpReceiver` will not work):
 
 ```bash
 adb shell am broadcast -a com.radiorubka.wdsp.SUB_GAIN_UP
+adb shell am broadcast -a com.radiorubka.wdsp.RESET_AUDIO_MCU
 ```
 
 Backup/restore can also be driven headlessly by starting `SettingsActivity` with
