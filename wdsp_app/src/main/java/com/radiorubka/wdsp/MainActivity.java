@@ -1342,10 +1342,7 @@ public class MainActivity extends AppCompatActivity {
         if (newValue == slider.getValue()) return;
         slider.setValue(newValue);
         updateFaderLabels();
-        if (!isUpdatingUi) {
-            autoSaveCurrent();
-            McuService.sendFaderDirect(getIntSlider(seekFaderLr), getIntSlider(seekFaderFr));
-        }
+        if (!isUpdatingUi) autoSaveCurrent();
     }
 
     private void setupSubControls() {
@@ -1428,14 +1425,12 @@ public class MainActivity extends AppCompatActivity {
             updateFaderLabels();
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
-                McuService.sendFaderDirect((int) value, getIntSlider(seekFaderFr));
             }
         });
         seekFaderFr.addOnChangeListener((slider, value, fromUser) -> {
             updateFaderLabels();
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
-                McuService.sendFaderDirect(getIntSlider(seekFaderLr), (int) value);
             }
         });
 
@@ -1446,10 +1441,7 @@ public class MainActivity extends AppCompatActivity {
                 int fr = Math.max(0, Math.min(24, Math.round(12 + frNorm * 12)));
                 seekFaderLr.setValue(lr);
                 seekFaderFr.setValue(fr);
-                if (!isUpdatingUi) {
-                    autoSaveCurrent();
-                    McuService.sendFaderDirect(lr, fr);
-                }
+                if (!isUpdatingUi) autoSaveCurrent();
             });
         }
     }

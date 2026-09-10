@@ -327,40 +327,6 @@ public class McuService extends Service implements LocationListener {
         }
     }
 
-    public static void sendFaderDirect(int leftRight, int frontRear) {
-        McuService s = instance;
-        boolean loud = false;
-        if (s != null && s.prefs != null && s.currentPresetName != null) {
-            try {
-                loud = s.prefs.getBoolean(s.currentPresetName + "_loud", false);
-            } catch (Throwable ignored) {}
-        }
-        byte[] data = new byte[]{(byte) 0x81, (byte) (leftRight & 0xFF), (byte) (frontRear & 0xFF), (byte) (loud ? 1 : 0)};
-        if (s != null) {
-            synchronized (s) {
-                s.mcuCache.remove((byte) 0x81);
-                s.sendToHardware(data);
-            }
-            return;
-        }
-        try {
-            @SuppressLint("PrivateApi") Class<?> sm = Class.forName("android.os.ServiceManager");
-            IBinder binder = (IBinder) sm.getMethod("getService", String.class).invoke(null, "mcu_service");
-            if (binder != null) {
-                @SuppressLint("PrivateApi") Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
-                Object mcuManager = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
-                if (mcuManager != null) {
-                    Method setEqData = mcuManager.getClass().getMethod("RPC_SetEQData", byte[].class);
-                    setEqData.invoke(mcuManager, (Object) data);
-                    Log.i(TAG, String.format(java.util.Locale.US,
-                            "[DirectMcu] Fader/Balance sent (direct binder fallback): [81 %02X %02X %02X]",
-                            leftRight & 0xFF, frontRear & 0xFF, (loud ? 1 : 0)));
-                }
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "Direct MCU fader/balance failed: " + t.getMessage());
-        }
-    }
 
     private final float[] fmOffsets = new float[16];
     private final byte[] eqData = new byte[12];
