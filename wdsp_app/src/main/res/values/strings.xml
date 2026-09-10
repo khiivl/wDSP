@@ -317,7 +317,7 @@
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ &amp; Acoustic Calibration</string>
-    <string name="room_wizard_setup_desc">The wizard plays calibrated sweeps through each speaker to measure arrival times, reflections, and midbass roll-off, then synthesizes an optimal 16-band Auto-EQ curve matching your preferred sound profile.</string>
+    <string name="room_wizard_setup_desc">Calibrated sweeps through each speaker to calculate delays, crossover, and 16-band Auto-EQ.\n⚠️ Media playback will be paused, and volume will be temporarily locked to 16 units (~50%). Keep doors and windows closed.</string>
     <string name="room_wizard_subwoofer_title">Subwoofer Configuration</string>
     <string name="room_wizard_subwoofer_check">Audio system includes a Subwoofer</string>
     <string name="room_wizard_subwoofer_desc">With a subwoofer, door midbasses are protected by HPF cutoff at their acoustic roll-off point, and sub-bass is routed to the subwoofer. Without a subwoofer, midbasses play full-range with infrasonic protection.</string>
@@ -367,6 +367,11 @@
     <string name="system_report_title">System report</string>
     <string name="system_report_saved">Saved to:\n\n%1$s\n\nTo also catch the volume bug: make one short phone call over Bluetooth, hang up, and collect the report a second time. The second file will contain what changed during the call.</string>
     <string name="system_report_failed">The report could not be written.</string>
+    <string name="screen_topology_button">Screen Topology</string>
+    <string name="screen_topology_title">Screen &amp; Window Topology</string>
+    <string name="screen_topology_copy">Copy</string>
+    <string name="screen_topology_copied">Screen topology copied to clipboard</string>
+    <string name="screen_topology_save">Save</string>
     <string name="screensaver_section_title">Screensaver</string>
     <string name="screensaver_enable">Screensaver</string>
     <string name="screensaver_enable_desc">A full-screen visualiser after the head unit has been left alone. Any touch puts it away.</string>

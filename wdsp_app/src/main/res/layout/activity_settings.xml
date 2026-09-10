@@ -2855,6 +2855,17 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/btn_screen_topology"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/screen_topology_button"
+                        android:textSize="12sp" />
+
+                    <TextView
                         android:id="@+id/tv_system_report_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

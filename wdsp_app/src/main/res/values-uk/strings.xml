@@ -293,7 +293,7 @@
 
     <!-- Room Acoustic Auto-EQ Wizard -->
     <string name="room_wizard_title">Auto-EQ та калібрування акустики</string>
-    <string name="room_wizard_setup_desc">Майстер відтворить калібровані свіпи через кожен динамік, визначить час прибуття звуку, спад віддачі мідбасів, відбиття салону та синтезує оптимальну 16-смугову криву Auto-EQ під обраний профіль звучання.</string>
+    <string name="room_wizard_setup_desc">Калібровані свіпи через кожен динамік для розрахунку затримок, кросовера та 16 смуг Auto-EQ.\n⚠️ Музика буде призупинена, а гучність зафіксована на 16 од. (~50%). Двері та вікна мають бути зачинені.</string>
     <string name="room_wizard_subwoofer_title">Конфігурація сабвуфера</string>
     <string name="room_wizard_subwoofer_check">В аудіосистемі встановлено сабвуфер</string>
     <string name="room_wizard_subwoofer_desc">З сабвуфером дверні мідбаси захищаються зрізом HPF на частоті спаду їхньої віддачі, а бас нижче передається на сабвуфер. Без сабвуфера мідбаси грають максимально низько із захистом від інфразвуку.</string>
@@ -348,6 +348,11 @@
     <string name="system_report_title">Системний звіт</string>
     <string name="system_report_saved">Збережено в:\n\n%1$s\n\nЩоб також зловити баг із гучністю: зробіть один короткий дзвінок по Bluetooth, покладіть слухавку і зберіть звіт ще раз. Другий файл міститиме те, що змінилося під час дзвінка.</string>
     <string name="system_report_failed">Не вдалося записати звіт.</string>
+    <string name="screen_topology_button">Топологія екрана</string>
+    <string name="screen_topology_title">Топологія екрана та вікон</string>
+    <string name="screen_topology_copy">Копіювати</string>
+    <string name="screen_topology_copied">Топологію екрана скопійовано в буфер обміну</string>
+    <string name="screen_topology_save">Зберегти</string>
     <string name="mic_denied_title">Немає мікрофона</string>
     <string name="mic_denied">Android більше не запитує доступ до мікрофона, оскільки раніше було відмовлено. Без нього нічого виміряти неможливо.\n\nВідкрийте Налаштування → Додатки → wDSP → Дозволи та дозвольте мікрофон, після чого спробуйте знову.</string>
     <string name="screensaver_section_title">Заставка</string>
