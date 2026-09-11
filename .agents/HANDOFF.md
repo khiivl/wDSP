@@ -32,6 +32,26 @@ agreed **between** the two applications.
 🔴 **The selection rule for everything below: it is here because it would not survive us.** What
 lives in the code is not repeated here; what lived only in a conversation is written down or lost.
 
+### 🗺️ Where everything is kept — verified on this machine, 11.09.2026
+
+The other machine will have different paths. What matters is **what each place is for**; the paths
+below are this machine's, given as the example to look for the equivalent of. Everything listed was
+checked to exist, not remembered.
+
+| what | where on this machine | note |
+|---|---|---|
+| **Platform knowledge, global** | `C:\Users\kosty\.claude\skills\qf-platform\` — `SKILL.md` plus `references\` | The one that matters most. Reachable from **any** project on the machine, which is why MCU and register findings go here rather than into a repository. `references\` is a byte-identical mirror of `wDSP\.agents\platform\`: edit the repository copy, then copy across, never the reverse |
+| **The board skill** | `C:\Users\kosty\.claude\skills\agent-bridge\` | How to talk to the other sessions, and the P0 discipline |
+| **The board itself** | `C:\repos\agent-bridge\` — `agent_bridge.db` (SQLite), `docs\`, `watch_board.py`, `AGENT_BRIDGE_PROTOCOL.md` | Also holds `WATCHMAN_BLIND_SPOT_2026-09-07.md`, the write-up of why the watchman needs `--session` |
+| **Agreements between applications** | `C:\APPS_Contacts\` | Canon. `README.md` carries the folder's own rules, including the distribution rule; `wDSP--QFRadio\` holds the two contracts, the ledger and the test scenario. The copies under `.agents\` are mirrors |
+| **Memory of this project** | `C:\Users\kosty\.claude\projects\C--Users-kosty-AndroidStudioProjects-wDSP\memory\` | `MEMORY.md` is the index loaded each session; one file per fact beside it. Currently two, both about how to report to the owner |
+| **Session transcripts** | the same `projects\…\` folder, `*.jsonl` | Where a lost detail can still be dug out of. ⚠️ The owner's standing instruction is **not to delete source data** |
+| **Hooks and settings** | `C:\Users\kosty\.claude\settings.json` | Carries the `SessionStart` hook that prints the board state before the first thought |
+| **The Antigravity/Gemini side** | `C:\Users\kosty\.gemini\config\` | Its own skills and MCP configuration. Its global rules live here, not in this repository, and it writes them in English |
+| **Repositories** | `C:\Users\kosty\AndroidStudioProjects\wDSP` (this) · `…\kostyamat_fmradio` (the radio, its half of the handover) · `D:\gemini\wdsp_test` (the interface session's worktree of **this** repository, branch `gemini_ui_dev`) | The sandbox is a git worktree, not a clone: merging from it is a fast-forward |
+| **Release packs** | `C:\Users\kosty\Downloads\wDSP-kostyamat-mod-*` | One folder and one zip per version. A pack existing here is not evidence it was distributed — see the distribution ledger |
+| **Tools that must be called by full path** | `C:\Program Files\Python312\python.exe` · `…\AppData\Local\Android\Sdk\platform-tools\adb.exe` | 🪤 `python3` resolves to a Windows Store stub that exits 127 silently. This killed the board watchman twice |
+
 ### The numbers that will mislead you first
 
 | | wDSP | QF Radio |
