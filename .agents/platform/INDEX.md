@@ -55,7 +55,7 @@ files, mark what you add.
 
 | file | read it when |
 |---|---|
-| [01-SYSTEM.md](01-SYSTEM.md) | anything about the Android side: hardware, screens, properties, hidden API, release builds, sleep |
+| [01-SYSTEM.md](01-SYSTEM.md) | anything about the Android side: hardware, screens, properties, hidden API, release builds, sleep, and special permissions that read "granted" but do not work (§7) |
 | [02-MCU.md](02-MCU.md) | talking to the microcontroller: framing, the command map, send discipline, volume |
 | [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) | equaliser, delays, crossovers (12 dB/oct), subwoofer handover, fader/balance (0A00-0A05), DVol, Advanced Switch — the ROHM BU32107 register map, MCU translation and signal path topology |
 | [04-FIRMWARE-PATCHING.md](04-FIRMWARE-PATCHING.md) | inside the MCU image: memory map, the dispatcher, the settings structure, and what changing it would take |
@@ -70,7 +70,7 @@ files, mark what you add.
 | [14-LAUNCHER-ICONPACKS-AND-THEMING.md](14-LAUNCHER-ICONPACKS-AND-THEMING.md) | ✍️ *Gemini* — QF launcher icon packs (`/data/QF/.icons`, mode 0777 — writable without root), the `icons.config` mapping, and how to give an app a full-bleed icon instead of the shrunken framed one |
 | [15-BU32107-REGISTERS.md](15-BU32107-REGISTERS.md) | ✍️ *Gemini* & *Kostyamat* — complete ROHM BU32107EFV-M register map, MCU translation (`FUN_08004a58`, shadow buffer `0x200000E2`, flusher table `0x0800CFD7`), crossover slopes (12 dB/oct), delay RAM limits, and EQ topology |
 | [06-TUNER.md](06-TUNER.md) | the radio side — mostly relevant to other projects, but several MCU facts live here |
-| [07-PRACTICE.md](07-PRACTICE.md) | how to work here without wasting runs: adb traps, testing discipline, what a reboot really resets |
+| [07-PRACTICE.md](07-PRACTICE.md) | how to work here without wasting runs: adb traps, testing discipline, what a reboot really resets, and why a permission is never granted from adb (§11) |
 
 Application-specific design lives outside this folder — for wDSP that is
 [../ROOM_CALIBRATION.md](../ROOM_CALIBRATION.md).

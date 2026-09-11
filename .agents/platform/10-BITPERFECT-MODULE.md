@@ -102,6 +102,25 @@ If more sensitivity is ever needed, the sweep amplitude has to come down with it
 
 ---
 
+### 🔴 The MMAP capture port the module declares is wired to nothing
+
+🔬 *(11.09.2026)* The factory `primary_audio_policy_configuration.xml` has no MMAP ports at all —
+neither the copy in `D:\Release\update(2)` nor the Unisoc ums512 reference in `D:\UIS_android`. The
+module adds `mmap_no_irq_in` (48 kHz only, `AUDIO_INPUT_FLAG_MMAP_NOIRQ`) but never gives it a route
+from a microphone: it appears only as an extra *source* of the `primary input` route — a mixPort
+listed where devices belong — and there is no `<route sink="mmap_no_irq_in">`. It has been like this
+since the module's first commit (`f64bb9b`).
+
+📻 On the owner's unit, where the policy is byte-for-byte the module's (md5 `df20e85b…`),
+`dumpsys media.audio_policy` shows `mmap_no_irq_in` with an empty device list, while
+`aaudio.mmap_policy=2` — AAudio would take an MMAP input if one were reachable, and none is.
+
+Why it matters: the microphone has one input stream per mixPort (`maxOpenCount 1`), the first client
+sets its rate, and an assistant hotword opens it at 16 kHz from boot
+([05-AUDIO-PATH.md](05-AUDIO-PATH.md) §2). A working MMAP input would be a second, independent
+48 kHz stream beside it. ❓ Whether the HAL implements MMAP capture at all is not known — the route is
+the precondition, not the proof.
+
 ## 3. What the module changes in the AGDSP parameters
 
 All seven files differ from factory. The factory also ships `codec.xml`, which the module does
@@ -250,6 +269,17 @@ Read it. Do not re-derive it. The decode table for every position is in
 out loud. On a BU32107 the correct profile is copied over it at install.
 
 ---
+
+### 🐢 The volume keeper boots a Java VM every 3.4 seconds, forever
+
+🔬 `service.sh` 126–168: for 25 s after boot it reads `media volume --stream 3 --get` in a loop with
+`sleep 0.3`, then forever with `sleep 3`. `media` is not a binary but a script that starts
+`app_process` with the whole framework, so every read is a VM boot. 📻 11.09.2026, owner's unit,
+logcat: `AndroidRuntime START … uid 0 … Calling main entry com.android.commands.media.Media …
+Shutting down VM` every ~3.4 s, each about 0.23 s from start to shutdown — around the clock, to read
+one number. The 25-second boot phase does it back to back, at the very moment the audioserver race
+lives. ❓ A read that does not start a VM (a property, `settings`, a binder call) — not checked yet
+whether any of them tracks the live index here; decide before changing.
 
 ## 5. Reading the factory copy of any of these files
 

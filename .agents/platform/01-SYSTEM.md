@@ -38,12 +38,34 @@ The factory panel table lists 132 models. What matters:
 - **split-screen is stock Android 10 here and gives 640dp to any unit.** A narrow width is not an
   exotic panel, it is a mode every machine has.
 
+🔴 *(owner, 11.09.2026)* **There are no real vertical screens on this platform.** Even the Tesla-style
+units are pseudo-vertical: Android is given the strip between the top icon bar and the climate panel,
+which is landscape (≈600×440dp). The one place a portrait-shaped *window* appears is split screen
+(640×648dp). So a layout chosen by **orientation** (`layout-port`) is the wrong axis: it fires for
+split screen and square emulation, never for a real portrait panel. Build from the **window size
+WindowManager gives the app** (`screenWidthDp` / `screenHeightDp`, width/height qualifiers), not from
+the panel's resolution props and not from orientation. 📻 wDSP's `layout-port` copy had drifted 37
+ids behind the landscape one and showed four tabs empty in split screen (uiautomator audit,
+11.09.2026).
+
 ➡️ **Write `values/` and `layout/` for the tightest case and add the luxuries in qualifiers.** Then
 an unknown panel gets a layout that fits rather than one that falls apart. Android merges resource
 sets per key, so the axes stay independent.
 
 Emulation is allowed and is the only honest way to check: `wm size 1600x480` / `wm density 160`,
 then `wm size reset` and `wm density reset` — always both, always after every run.
+
+📻 *(11.09.2026)* On the 1280×720 panel `wm size 1024x600` renders the UI at 1024×600 and the
+compositor scales it up with black bars at the sides — `screencap` returns **1228×720**, not 1024×600.
+The layout is the emulated one; just do not read pixel sizes off the screenshot as dp.
+⚠️ That is the only case `screencap` gets right. With a **different height** (`1280x480`) it
+returns 1280×480 taken from the top of the panel buffer, where the UI sits ~120 px lower — the
+bottom of the screen, navigation included, is cut off. With a size **larger than the panel**
+(`1920x1200` @320, `1200x1200` @320) the picture is cropped. Same height (`640x720`) is honest.
+For the rest, capture from inside the app or emulate the same dp at density 160
+(`960x600`, `600x440`) — the radio session's method is being asked for (11.09.2026). Run the whole
+emulation as one script **on the unit**, detached (`nohup sh … &`), with the reset in a `trap … EXIT`:
+if the session on the PC dies mid-run, the owner's screen still comes back.
 
 ## 3. Properties: `sys.*` is now, `persist.*` is settings
 
@@ -154,3 +176,60 @@ The chain is visible on the wire: MCU frame `0x24 01` → `ACC_OFF`, `0x24 00` �
 Android side `QFSleepWakeup.start()` plus a broadcast.
 
 Related: [07-PRACTICE.md](07-PRACTICE.md) for how to work with all of this without wasting runs.
+
+## 7. A special permission can read "granted" and not work
+
+📻 *(owner, field, 11.09.2026)* **The platform withdraws permissions on its own, without any
+notice**, and they have to be confirmed again — notification access is the named example, and "any
+permission" in the owner's words. Nothing tells the app or the person that it happened.
+
+📻 *(owner, field, 11.09.2026)* The overlay permission — `SYSTEM_ALERT_WINDOW`, "display over other
+apps" — also **goes stale** without being withdrawn: Settings shows it switched on, and overlays still
+do not appear. Switching it off and on again in Settings brings it back. Seen on more than one unit;
+not a one-off.
+
+🔴 Rule that follows *(owner, 11.09.2026)*: a permission screen must read the **real** state every
+time it is shown, never a remembered one, and must lead the person to the switch **even for an item
+it believes is granted** — the only remedy for a stale grant is the off/on toggle, and a green card
+that refuses to be tapped hides it.
+
+🧩 Consequence for any permission screen: an item painted green from the API is not proof that the
+thing works. `Settings.canDrawOverlays()` reads the recorded grant, so a stale grant is expected to
+come back `true` (❓ not measured in the stale state yet). The only honest check for an overlay is
+the attempt itself — add the window, catch the failure — and the honest remedy to offer the person
+is the toggle, not "grant it".
+
+📻 *(11.09.2026, owner's unit)* **The platform grants the overlay to every app at install.** Of 15
+third-party packages that request `SYSTEM_ALERT_WINDOW` — Telegram, Waze, MX Player, Poweramp and the
+rest, none of them ever touched by an agent — every one has `SYSTEM_ALERT_WINDOW: granted=true` under
+*install permissions*, with the app-op left at `default`. 🧩 `canDrawOverlays()` is true when the
+app-op is `allow`, or when it is `default` and the permission is granted — so on QF it is true for
+everybody out of the box, and a permission screen's overlay item is green before the person has done
+anything. What can take it away is the Settings toggle, which writes the app-op (❓ whether that is
+what the "stale" state above is). In stock AOSP 10 an ordinary app does not get this permission (it is
+`development`-level there — 🧩 from the source, ❓ not re-read), so this is a QF modification.
+
+📻 *(11.09.2026 18:29, owner's unit)* **Runtime permissions are granted at install, with no dialog.**
+wDSP (targetSdk 29) was uninstalled, its leftovers removed, and installed with plain `pm install` —
+no `-g`. Straight after: `ACCESS_FINE_LOCATION`, `RECORD_AUDIO` and `ACCESS_BACKGROUND_LOCATION` all
+`granted=true`, app-ops "No operations", nobody had touched the screen. On stock Android 10 a
+dangerous permission is never granted by an install without `-g`. ❓ Whether the same happens
+through the ordinary package installer a tester uses, and which component does it — not checked.
+Consequence: on this platform an app's runtime-permission request may never show a dialog at all,
+and "the person granted it" cannot be assumed from `granted=true`.
+
+📻 *(same run)* **Uninstalling does not take everything with it.** After `adb uninstall`, the app's
+entry was still in `enabled_notification_listeners`, and Magisk still held `policy=2` (allow) for its
+old uid. Here the reinstall got a new uid (10404 → 10405), but a reused uid would have inherited root
+silently, and a listener entry naming the same component inherits notification access. For a clean
+test both have to be removed by hand (`cmd notification disallow_listener …`,
+`magisk --sqlite "DELETE FROM policies WHERE uid=…"`) — removing, never granting.
+
+⚠️ Two wrong readings of this were made here within one hour, and corrected — worth knowing so nobody
+repeats them: a `rejectTime` in `cmd appops get` is **not** a refusal (it is logged for any mode other
+than `allow`, even when the window is then admitted through the permission), and `default` +
+`granted=true` is **not** an adb fingerprint — it is the platform's normal state.
+
+❓ Not established: which other special grants behave the same (notification listener, battery
+optimisation, `su` policies), and what makes one stale — reinstall over another signature, a
+restore, a firmware update, or time.

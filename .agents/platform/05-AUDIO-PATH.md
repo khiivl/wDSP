@@ -74,6 +74,7 @@ magnitude apart, so the threshold does not need to be precise.
 | `AudioManager.getActiveRecordingConfigurations()` to find the culprit | the package name behind a recording is hidden from ordinary apps |
 | `ActivityManager.killBackgroundProcesses()` | 🔴 **no effect** — the Google app is a system app here and is not a "background process" |
 | `su -c "am force-stop <pkg>"` | 🟢 works, and needs a Magisk grant for the app |
+| `su -c "cmd appops set <pkg> RECORD_AUDIO ignore"`, left in place | 🔴 **the assistant goes deaf — it does not "share".** 📻 11.09.2026, owner's unit, the Google app at `ignore` for a day and a half: no active recording at all, and the audio event log since morning holds only wDSP's own sessions — on 20.08 the same unit had Google on `MIC 16000Hz` from boot. 🧩 AOSP's `startRecording` refuses a client whose op is not `allow`. The mode survives reboot and our own uninstall, and nothing in the app ever restores it. Put in by 0.4.9.x (`8afeecb`, `cf3a53f`, 10.09) on the claim that it was harmless. ❓ a voice query from the button not tried |
 | choosing a different `AudioSource` | no effect, see below |
 
 `killBackgroundProcesses` needs only a normal permission and is worth trying first, because on a
@@ -84,12 +85,53 @@ was written for.
 foreground cannot be stopped by either route, and that will look like the method failing when it
 is the test that is wrong.
 
+🪤 📻 *(11.09.2026, owner's unit, fresh install)* The opposite case is just as real: here Magisk's
+default for a new app is **prompt**, with a countdown and "Forever" pre-selected. So `su -c id` is
+**not** a silent check — from an app Magisk has no answer for, it raises the root dialog. wDSP did
+it from `MainActivity.onResume` on the very first start, over its own permissions wizard. A test
+script's Back key lands on that dialog and answers "deny"; with "Forever" selected that deny can
+stick. Only re-verify a grant the app has already seen; let the first ask come from a tap.
+
 🪤 A `su` request from an app is refused **silently** until it is granted. Magisk stores a policy
 per uid, and the default on some units is deny rather than prompt:
 
 ```bash
 adb shell su -c 'magisk --sqlite "SELECT uid,policy FROM policies"'   # 1 = deny, 2 = allow
 ```
+
+### 🟢 Open first, and the assistant rides along — measured 11.09.2026
+
+📻 "The first client sets the rate" works in both directions. On the owner's unit, read from
+`dumpsys audio` (RecordActivityMonitor) and from the probes' own recordings:
+
+```
+17:51:16  Google alone         dev=1ch 16000Hz               our probe above 9 kHz: -76.1 dB  (16k)
+17:51:22  force-stop Google;   wDSP opens UNPROCESSED 48 kHz  dev=1ch 48000Hz
+17:51:26  Google back in 2 s   same patch:719, dev 48000Hz, client 16000Hz, silenced:false (both)
+          our probe on the shared input                     above 9 kHz: -18.8 dB  (48k)
+```
+
+A 48 kHz stream that is already open when the assistant arrives is **shared, not taken**: the
+assistant gets its 16 kHz by resampling and keeps listening, and we keep the full band. The price is
+one stop of the assistant at the moment we open while it holds 16 kHz; it came back on its own in two
+seconds.
+
+📻 The whole 300-second hold stayed full-band — above 9 kHz between −0.1 and −31 dB, against −76 with
+the assistant first. And when our client left at 17:56, the assistant **stayed on the same 48 kHz
+input** (`patch:719`, client still 16 kHz): an input keeps the rate it was opened at until it is
+closed. So the stop is needed only when the stream is at 16 kHz — after boot, or after the assistant
+itself restarts — not on every open of ours.
+
+⚠️ The assistant brings its pre-processing with it: once it attached, our client line showed
+`dev='Noise Suppression'` — an effect on the shared input. ❓ Whether it alters our samples is not
+measured yet (music was playing, so the noise floor moved with the track); for a sweep it would
+matter, since a noise suppressor removes exactly the steady signal a test tone is. Measure in a
+silent cabin. 📻 **"Ok Google" answered** while attached to our 48 kHz stream — the owner's own test,
+11.09.2026 ~17:58. So "shared, not taken" holds for the assistant's actual job, not only on paper.
+
+🔴 Consequence for the app: the order is the whole trick. Whatever holds the microphone must be ours
+**before** the assistant reopens, and it came back in two seconds here — so stop it and open
+immediately, with no measuring or sleeping in between.
 
 ### When the microphone cannot be freed, sweep only where it hears
 

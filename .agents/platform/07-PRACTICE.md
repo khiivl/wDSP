@@ -142,3 +142,81 @@ D:\De-compiled\             every decompiled APK and jar, plus jadx
 Put new decompilations in `D:\De-compiled` and write down what was put there. Everything has been
 extracted at least once already; extracting it again is the second most common way to waste an
 afternoon on this platform.
+
+## 11. Never grant a permission from adb
+
+🔴 *(owner, 11.09.2026)* "One of the reasons it works for me and not for the testers is that you
+agents grant permissions through adb, around the app, to make your own work easier — and the bugs
+get masked." Binding on every agent, Claude and Gemini alike.
+
+And the same day, the reason in full: *"Every permission the app needs must be obtained legally — on
+the bench, and even more so for people. Never mask errors artificially. What works on the bench then
+does not work for people, and that is the worst case: from people's descriptions it is sometimes
+impossible to tell what is wrong, and what is wrong is that on my bench the permission was granted
+artificially."*
+
+`pm grant`, `appops set … allow`, `cmd notification allow_listener`, `dumpsys deviceidle whitelist
++…`, `settings put secure enabled_notification_listeners` — each skips the one path a tester has:
+the app finding out what is missing and walking the person to it. Done by an agent, that path is
+never exercised on the development unit, and every defect in it lives only in the field.
+
+🧩 It cannot be undone by reading, either. A grant through the system dialog does not leave
+`USER_SET` behind (AOSP 10 clears it on grant — ❓ not checked on this unit), so `dumpsys package`
+looks the same whichever way a permission arrived. Once an agent has granted something, nobody can
+later tell how the unit got it; the only cure is to withdraw it and let a person grant it again
+through the app.
+
+Reading is allowed, and it is what to do instead:
+
+```bash
+adb shell "dumpsys package <pkg> | grep granted="      # runtime AND install permissions
+adb shell cmd appops get <pkg>                          # app-op modes; a rejectTime is not a refusal
+adb shell settings get secure enabled_notification_listeners
+adb shell dumpsys deviceidle whitelist
+```
+
+📻 11.09.2026, the owner's unit — a lesson in reading, paid for twice in one hour. `cmd appops get`
+showed `SYSTEM_ALERT_WINDOW: default; … rejectTime=…`, read first as "refused" — wrong, a reject is
+logged for any mode but `allow`. Then `dumpsys package` showed `SYSTEM_ALERT_WINDOW: granted=true`,
+read as "the fingerprint of an adb grant" — wrong again: every third-party app on the unit has it,
+Telegram and Waze included ([01-SYSTEM.md](01-SYSTEM.md) §7). 🔴 **Before calling any state a
+fingerprint, read the same thing on an app nobody has touched.** One comparison would have prevented
+both mistakes.
+
+What the transcripts do prove (grep of both agents' logs, 11.09.2026): Claude, 22.08 —
+`cmd notification allow_listener …wdsp/.NotificationAccess` and `cmd appops set com.radiorubka.wdsp
+PROJECT_MEDIA allow`, the second even recommended in a code comment; Gemini, 17.08 — `appops set …wdsp
+SYSTEM_ALERT_WINDOW allow` and `pm grant` of the microphone and all three locations; both agents —
+`pm grant` to the radio. That is the masking the owner describes, from both sides.
+
+When a test needs a permission, ask the owner to grant it **through the app**, with a finger. That
+is a test in itself.
+
+## 12. Checking a layout under emulation: read bounds, not pixels
+
+📻 *(radio session's method, 30.07.2026; handed over 11.09.2026)* `screencap` under `wm size` lies on
+this panel whenever the emulated height differs or the size exceeds the panel
+([01-SYSTEM.md](01-SYSTEM.md) §2). **`uiautomator dump` does not**: its `bounds` are in the logical
+coordinates of the overridden display, wherever the compositor puts the picture.
+
+```
+wm size WxH  [wm density D]      wait 3 s
+am force-stop <pkg>; am start …   the activity must restart, or it keeps the old layout
+wait 5 s
+uiautomator dump <file>           retry if empty; check the app's own ids are in it
+parse: resource-id="<pkg>:id/(…)" … bounds="[x1,y1][x2,y2]"
+```
+
+Then check with arithmetic, not eyes: overlaps, what sits under the floating navigation, what is off
+screen and not inside a `scrollable="true"` ancestor. Run it all as one script on the unit with the
+reset in a `trap`.
+
+🪤 A dump taken right after `wm size` can come back empty (no nodes at all) — retry or wait longer,
+and never conclude "zero width" from it. 🪤 Git Bash rewrites `/sdcard/u.xml` into a Windows path and
+`cat` then returns the *previous* run's dump: `MSYS_NO_PATHCONV=1`, `rm -f` before dumping, and read
+the `dumped to:` line. 🪤 Driving an app by resource id (an `--ei target_tab <id>` extra) — take the
+numbers from `R.txt` of the build **actually installed**: removing one layout file shifted every id
+by −4 (11.09.2026), and the old "equaliser" id then opened Settings — a whole run of "missing" tabs
+that was the test's fault, not the app's. Better still, verify each screen by a marker id in the
+dump before trusting it. 📻 Density 320 emulation works as `1200x1200` + `wm density 320` → the app's
+root is 1200×880 px = 600×440 dp (Tesla-like); the "960×600" group was checked as `960x600` @160.
