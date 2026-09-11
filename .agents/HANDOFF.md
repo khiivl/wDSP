@@ -380,6 +380,40 @@ new write or a new condition placed over working logic.
    ⚠️ Treat this as the first substantial work of the next cycle, ahead of the two items below.
    They concern a build nobody has yet; this concerns the one that is public.
 
+   ━━━ 📻 **Confirming the radio contract is the priority inside this task** ━━━
+
+   The owner, 11.09.2026: confirm the contract with QF Radio above all else, because faults have
+   already been found in the shipped build and there may be more.
+
+   🔴 **Known and confirmed in the field, not a hypothesis: the screensaver pauses the radio and
+   cannot start it again.** Pressing play/pause on the screensaver stops the radio; pressing it
+   again does not bring it back.
+
+   Where to start looking, and what is already known so the next session does not re-derive it:
+   `NowPlaying.playPause()` deliberately has **no** radio branch — it goes through the
+   `MediaController` transport for everything, which is correct and was chosen over the
+   alternatives on measured grounds (`keyevent 126/85` never reaches this radio; `media dispatch`
+   does). So pause arriving and play not arriving points at one of: `isPlaying()` answering wrongly
+   once the radio has released the audio tract, the radio's session not honouring `onPlay` from a
+   paused-and-released state, or the controller being lost between the two presses. ⚠️ Decide which
+   by measuring, and record the answer — the last time this area was reasoned about instead of
+   measured, an action was invented that closed the radio instead of pausing it.
+
+   📌 Also reported by the owner and not yet diagnosed: **switching between the microphone and the
+   computed spectrum takes a long time.** Live display, not the cabin measurement.
+
+   ━━━ 🧠 **And a debt of a different kind: ask the interface session what it knows** ━━━
+
+   The owner's assessment, and it is worth carrying: that session did a great deal of work,
+   **including reverse-engineering the BU32107 and MCU registers**, and clarified many things that
+   never reached a file. Its written section here is what it chose to write down; it is not
+   everything it found.
+
+   ⇒ When you need the hardware detail, **ask it directly rather than assuming the documents are
+   complete**. The owner said explicitly that the next session should interrogate it itself. That
+   is a standing invitation, not a formality — and a register map established by somebody else and
+   then lost is the most expensive kind of loss on this platform.
+
 0. 📮 **Handed to the next session by the owner, 09.09.2026 — deliberately not done here.** The
    measurement and the guard both belong to whoever picks this up on the other machine; this
    session was told to leave it rather than squeeze it in after a release. Treat the item as
