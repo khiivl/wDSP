@@ -350,6 +350,36 @@ new write or a new condition placed over working logic.
 
 ## Open, in rough order of value
 
+0. 🔴🔴 **FIRST TASK, set by the owner 11.09.2026: a full code review of the interface
+   session's work — of a version that is already in people's hands.**
+
+   0.4.8 went out **without a code review of that half**. The owner checked it himself and it
+   behaved, and he is the one who says so; but his own words on handing this over were that
+   something may be hidden and critical, and a build that behaves on one unit is not a build that
+   has been read. This session reviewed the volume and contract code and the second merge in
+   detail; the interface work as a whole was not read line by line.
+
+   What the review has to cover, in this order:
+
+   1. **Read the interface session's own section above first.** It lists what it decided
+      deliberately, what it tried and rejected, and what it left crooked on purpose. Reviewing
+      without it produces "fixes" that undo intent — this project has done that twice.
+   2. **Everything it touched, not only the UI.** The changes reach into `McuService`, the volume
+      paths and GALA, which is why the contract with QF Radio may be partly broken. See the section
+      on that above; the one test able to fail has never been run against 0.4.8.
+   3. **Fix what the review finds**, and say plainly in the commit which finding each fix answers.
+
+   🔢 **And the part that is not a review but a piece of thinking: the microphone-noise
+   mathematics.** The interface session names two debts of its own — the cabin's stationary HVAC
+   noise is measured before a sweep and stored, but the native engine never subtracts it, so a
+   driver sees a shelf of fan noise at 40–160 Hz; and subwoofer phasing is done without a
+   microphone at the driver's ear. Neither is a bug to be patched: both need the arithmetic decided
+   first, and the second may not be honestly solvable with the hardware available. Decide what the
+   measurement can and cannot claim **before** changing what it computes.
+
+   ⚠️ Treat this as the first substantial work of the next cycle, ahead of the two items below.
+   They concern a build nobody has yet; this concerns the one that is public.
+
 0. 📮 **Handed to the next session by the owner, 09.09.2026 — deliberately not done here.** The
    measurement and the guard both belong to whoever picks this up on the other machine; this
    session was told to leave it rather than squeeze it in after a release. Treat the item as
