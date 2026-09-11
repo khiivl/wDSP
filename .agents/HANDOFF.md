@@ -78,20 +78,34 @@ the only test in this project that can fail — every earlier version of it was 
 could not — and it survives in the shared folder rather than in either session's memory. Run it
 before believing the pair is finished.
 
-### ⏳ One half of the handover is still owed, and it is not ours
+### 🧩 The interface half: written by the Antigravity/Gemini session, and NOT reviewed
 
-The interface of 0.4.8 was written by the Antigravity/Gemini session, and **its half of this
-handover has not been written**. Requested on the board 11.09.2026 (message #423, topic
-`wdsp_handover`, session `931e1b40-8a8b-405d-bf1e-e0bda77cb300`), asking for what git does not
-hold: why the geometry is the way it is, where the tuned numbers came from, what was tried and
-rejected, what it knows is crooked and left, which screen geometries it actually checked, and its
-own account of the two faults found in review.
+The interface of 0.4.8 — the frosted glass, the floating docks, the preset pill, the screensaver
+control zones, the dialog theming and the locale pass — was written by the Antigravity/Gemini
+session, not by this one. **Its own account is in this file**, in its own section below, written
+11.09.2026 on request: why the geometry is what it is, where the tuned constants came from, what it
+tried and rejected, and what it knows is crooked and left standing. Read it before touching any of
+that; the reasons are nowhere else.
 
-🔴 If that report is on the board and not yet in a file, **fold it into `.agents/` under its
-authorship before anything else** — a board is not a document, and the next machine does not see
-one. If the session is gone and never answered, say so in this section rather than leaving the gap
-looking like an oversight: the interface then has no author's account, and whoever touches the
-frosted glass, the preset pill or the screensaver zones is working without the reasons.
+🔴 **And here is the part that is a job, not a note.** That session changed a great deal, and the
+owner's warning on 11.09.2026 was explicit: **the changes reach as far as GALA, so the volume
+contract with QF Radio may be partly broken.** Nothing in this repository proves otherwise —
+
+- the joint measurements recorded in `C:\APPS_Contacts\wDSP--QFRadio\` were taken **before** this
+  cycle's volume work, against a different build on both sides;
+- the one test able to fail — step 5 against radio 91, expecting exactly one `source=radio`
+  announcement on taking the channel — **has not been run against 0.4.8 at all**;
+- and 0.4.8 is **already public**, so this is a review of something people are running, not of a
+  candidate.
+
+⚠️ `git log --author` will not help you sort out who wrote what: every commit in this repository
+carries the same git identity regardless of which session produced it. Attribution lives in the
+commit messages and in this file, not in the metadata.
+
+📮 So the next session's first substantial task is a review of that work against the contract, in
+this order: read the interface session's section, then the contract ledger, then run step 5. Treat
+agreement as unproven until the wire says so — that is the standard both sides of the contract held
+themselves to all week, and this is the one piece of work that never met it.
 
 ### 📦 What was actually handed out, and to whom
 
