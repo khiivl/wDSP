@@ -87,7 +87,7 @@ hold: why the geometry is the way it is, where the tuned numbers came from, what
 rejected, what it knows is crooked and left, which screen geometries it actually checked, and its
 own account of the two faults found in review.
 
-🔴 If that report is on the board and not yet in a file, **fold it into  under its
+🔴 If that report is on the board and not yet in a file, **fold it into `.agents/` under its
 authorship before anything else** — a board is not a document, and the next machine does not see
 one. If the session is gone and never answered, say so in this section rather than leaving the gap
 looking like an oversight: the interface then has no author's account, and whoever touches the
