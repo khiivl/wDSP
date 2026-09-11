@@ -55,7 +55,7 @@ public final class MicrophoneGuard {
      * Measured: −15 dB with the microphone free, −71 dB and below when it is being shared with a
      * 16 kHz client. The gap is enormous, so the threshold does not need to be precise.
      */
-    private static final float BANDWIDTH_OK_DB = -30f;
+    static final float BANDWIDTH_OK_DB = -30f;
 
     /**
      * Known hotword listeners, most likely first.
@@ -232,6 +232,90 @@ public final class MicrophoneGuard {
             Log.i(TAG, "no root available for stopping " + pkg + " (" + t.getClass().getSimpleName()
                     + ")");
             return false;
+        } finally {
+            if (p != null) p.destroy();
+        }
+    }
+
+    /**
+     * Stops every known hotword listener through root - without the polite attempt first and
+     * without waiting afterwards. For the live capture only: the caller reopens its own stream the
+     * moment this returns, because the assistant comes back within two seconds and whoever opens
+     * the input first sets its rate for everybody (measured 11.09.2026).
+     *
+     * @return how many packages were stopped
+     */
+    static int stopAssistantsAsRoot(Context context) {
+        PackageManager pm = context.getPackageManager();
+        int stopped = 0;
+        for (String pkg : HOTWORD_PACKAGES) {
+            if (isInstalled(pm, pkg) && forceStopAsRoot(pkg)) stopped++;
+        }
+        return stopped;
+    }
+
+    /** Preferences that describe this unit rather than the owner's settings - backups leave them out. */
+    private static final String DEVICE_STATE_PREFS = "wdsp_device_state";
+    private static final String PREF_ASSISTANT_MIC_REPAIRED = "assistant_mic_repaired";
+    private static final String ASSISTANT = "com.google.android.googlequicksearchbox";
+
+    /**
+     * Gives the assistant its microphone back, once, on units where 0.4.9.x took it away.
+     *
+     * <p>Versions 0.4.9 to 0.4.9.6 set this app-op to {@code ignore} through root, on the claim
+     * that the assistant would then share the microphone. It does not share - it goes deaf.
+     * Measured 11.09.2026 on the owner's unit: with the op at {@code ignore} the assistant recorded
+     * nothing at all for a day and a half, and "Ok Google" answered again once it was back at
+     * {@code allow}. The mode survives reboots and even the uninstall of the app that set it, so
+     * the app has to put it back itself. The owner's order, and not optional.
+     *
+     * <p>Only {@code ignore} is undone - any other mode is somebody's own choice. Runs on a
+     * background thread, uses root the app already holds, never asks for it, and is marked done
+     * only once {@code allow} has been read back.
+     */
+    static void repairAssistantMicOnce(Context context) {
+        if (context == null) return;
+        android.content.SharedPreferences state =
+                context.getSharedPreferences(DEVICE_STATE_PREFS, Context.MODE_PRIVATE);
+        if (state.getBoolean(PREF_ASSISTANT_MIC_REPAIRED, false)) return;
+        if (!isInstalled(context.getPackageManager(), ASSISTANT)) {
+            state.edit().putBoolean(PREF_ASSISTANT_MIC_REPAIRED, true).apply();
+            return;
+        }
+        String mode = runAsRoot("cmd appops get " + ASSISTANT + " RECORD_AUDIO");
+        if (mode == null) return;   // no answer - try again next time
+        if (mode.contains("ignore")) {
+            String after = runAsRoot("cmd appops set " + ASSISTANT + " RECORD_AUDIO allow; "
+                    + "cmd appops get " + ASSISTANT + " RECORD_AUDIO");
+            if (after == null || !after.contains("allow")) {
+                Log.w(TAG, "could not give the assistant its microphone back: " + after);
+                return;             // not marked - try again next time
+            }
+            Log.w(TAG, "the assistant's microphone had been left at 'ignore' by 0.4.9.x - set back to allow");
+        } else {
+            Log.i(TAG, "the assistant's microphone is not ours to touch (" + mode.trim() + ")");
+        }
+        state.edit().putBoolean(PREF_ASSISTANT_MIC_REPAIRED, true).apply();
+    }
+
+    /** One root command and its output, or null when there was no answer within five seconds. */
+    private static String runAsRoot(String command) {
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(new String[]{"su", "-c", command});
+            // Wait first: the answer is one line, so it fits the pipe, and a read would block
+            // forever on a prompt nobody is going to tap.
+            if (!p.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) return null;
+            if (p.exitValue() != 0) return null;
+            StringBuilder out = new StringBuilder();
+            try (java.io.BufferedReader r = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(p.getInputStream()))) {
+                String line;
+                while ((line = r.readLine()) != null) out.append(line).append('\n');
+            }
+            return out.toString();
+        } catch (Throwable t) {
+            return null;
         } finally {
             if (p != null) p.destroy();
         }

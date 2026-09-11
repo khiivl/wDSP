@@ -41,6 +41,14 @@ public final class RootAccess {
     private static final long WAIT_SECONDS = 30;
 
     private static volatile Boolean sRootGranted = null;
+    /** When root was last confirmed in this process; see {@link #checkAsync}. */
+    private static volatile long sVerifiedAt = 0L;
+    /**
+     * How long a confirmed grant is taken on trust before "su" is asked again. Every "su" makes
+     * Magisk toast "granted", and the main screen re-checked on every resume - the owner saw the
+     * toast on each return (11.09.2026). A revocation is still noticed within this time.
+     */
+    private static final long REVERIFY_MS = 10 * 60 * 1000L;
     private static final Object sLock = new Object();
     private static volatile boolean sRequestInProgress = false;
 
@@ -85,11 +93,44 @@ public final class RootAccess {
      * Always re-verifies via alreadyGranted() so that root revocation in Magisk is detected.
      */
     public static void checkAsync(Context context, Runnable onFinished) {
+        // "su" from an app Magisk has no answer for raises Magisk's prompt - on a fresh install
+        // that was a root dialog on the very first start, over the permissions wizard (measured
+        // 11.09.2026; MainActivity.onResume called this unconditionally). So only a grant this
+        // app has seen before is re-verified here; the first ask belongs to the wizard's root card,
+        // which a person taps.
+        boolean known = context != null
+                && ThemeManager.prefs(context).getBoolean(PREF_ROOT_GRANTED, false);
+        if (!known) {
+            sRootGranted = false;
+            if (onFinished != null) {
+                if (context instanceof android.app.Activity) {
+                    ((android.app.Activity) context).runOnUiThread(onFinished);
+                } else {
+                    onFinished.run();
+                }
+            }
+            return;
+        }
+        if (Boolean.TRUE.equals(sRootGranted)
+                && System.currentTimeMillis() - sVerifiedAt < REVERIFY_MS) {
+            if (onFinished != null) {
+                if (context instanceof android.app.Activity) {
+                    ((android.app.Activity) context).runOnUiThread(onFinished);
+                } else {
+                    onFinished.run();
+                }
+            }
+            return;
+        }
         new Thread(() -> {
             boolean granted = alreadyGranted();
             sRootGranted = granted;
+            if (granted) sVerifiedAt = System.currentTimeMillis();
             if (context != null) {
                 ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
+                if (granted) {
+                    MicrophoneGuard.repairAssistantMicOnce(context.getApplicationContext());
+                }
             }
             if (onFinished != null) {
                 if (context instanceof android.app.Activity) {
@@ -156,10 +197,8 @@ public final class RootAccess {
             if (context != null) {
                 ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
             }
-            if (granted) {
-                try {
-                    Runtime.getRuntime().exec(new String[]{"su", "-c", "cmd appops set com.google.android.googlequicksearchbox RECORD_AUDIO ignore"}).waitFor();
-                } catch (Throwable ignored) {}
+            if (granted && context != null) {
+                MicrophoneGuard.repairAssistantMicOnce(context.getApplicationContext());
             }
             return outcome;
         } finally {

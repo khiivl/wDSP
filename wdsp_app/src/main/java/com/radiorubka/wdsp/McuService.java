@@ -613,6 +613,16 @@ public class McuService extends Service implements LocationListener {
         statusBarManager = StatusBarVisualizerManager.getInstance(this);
         statusBarManager.evaluateVisibility();
 
+        // Starts the background root check when root was granted before - and with it the one-time
+        // repair of the assistant's microphone that 0.4.9.x broke. Here rather than only in the UI,
+        // because an owner who updates and never opens the app must still get "Ok Google" back.
+        // Never prompts: without a stored grant this returns false and runs nothing.
+        RootAccess.hasRoot(getApplicationContext());
+
+        // The service is the process's usual first entry (boot, restart after a crash); from here
+        // a crash anywhere in the process leaves its stack for the screen report.
+        CrashLog.install(this);
+
         volumeChangedIntent.setPackage(getPackageName());
         presetChangedIntent.setPackage(getPackageName());
         galaUpdateIntent.setPackage(getPackageName());
