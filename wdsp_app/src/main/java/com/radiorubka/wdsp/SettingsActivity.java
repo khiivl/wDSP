@@ -1,6 +1,9 @@
 package com.radiorubka.wdsp;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,8 +26,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -125,7 +132,6 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnStatusBarBands16, btnStatusBarBands32;
     private TextView btnVisPreviewScreensaver;
     private int editingEffect = StatusBarVisualizerView.STYLE_CLASSIC_BARS;
-    private TextView btnOverlayPerm;
     private boolean isUpdatingStyleUi = false;
 
     // EQ Visualizer
@@ -133,8 +139,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
-    private TextView btnPermissionsWizard;
-    private TextView btnBatteryOpt, btnNotificationPerm, btnAudioPerm, btnLocationPerm, btnAppDetails;
+    private TextView btnPermissionsWizard, btnAppDetails;
     private TextView btnBackupSettings, btnRestoreSettings;
 
     private ActivityResultLauncher<String[]> wallpaperPickerLauncher;
@@ -155,6 +160,8 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         super.onCreate(savedInstanceState);
+        VolumeHelper.init(getApplicationContext());
+        McuService.ensureStarted(getApplicationContext());
         setContentView(R.layout.activity_settings);
 
         rootSettings = findViewById(R.id.root_settings);
@@ -171,13 +178,22 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            getWindow().getDecorView().post(() ->
+                    HardwareProfile.sampleScreen(SettingsActivity.this, getWindow().getDecorView()));
+        }
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleIntent(intent);
     }
 
     private void handleIntent(Intent intent) {
-        if (intent == null || intent.getAction() == null) return;
+        if (intent == null) return;
         String action = intent.getAction();
         if ("com.radiorubka.wdsp.ACTION_BACKUP".equals(action)) {
             String path = intent.getStringExtra("path");
@@ -190,11 +206,22 @@ public class SettingsActivity extends AppCompatActivity {
                 restoreFromFile(new File(path));
             }
         }
+        int openSectionId = intent.getIntExtra("open_section_id", 0);
+        if (openSectionId != 0 && settingsColumn != null) {
+            settingsColumn.post(() -> {
+                ScrollView scroll = findViewById(R.id.scroll_settings);
+                SettingsAccordion.expandAndScroll(scroll, settingsColumn, openSectionId);
+            });
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            getWindow().getDecorView().post(() ->
+                    HardwareProfile.sampleScreen(SettingsActivity.this, getWindow().getDecorView()));
+        }
         if (ThemeManager.getThemeMode(this) == ThemeManager.THEME_MODE_AUTO) {
             editNight = ThemeManager.isNight(this);
         }
@@ -203,6 +230,11 @@ public class SettingsActivity extends AppCompatActivity {
         PermissionsWizard.refreshCurrent();
         NowPlaying.getInstance(this).refresh();
         updatePermissionButtonsState();
+        RootAccess.checkAsync(this, () -> {
+            if (settingsColumn != null) {
+                SettingsAccordion.refresh(settingsColumn);
+            }
+        });
     }
 
     @Override
@@ -217,6 +249,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void updatePermissionButtonsState() {
         updatePermissionButtons();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions, @androidx.annotation.NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionsWizard.refreshCurrent();
+        updatePermissionButtonsState();
     }
 
     private void initLauncher() {
@@ -541,13 +580,8 @@ public class SettingsActivity extends AppCompatActivity {
             updateEqVisModeHighlights(1);
         });
 
-        // Permissions & Backup
+        // Permissions & Backup (4 buttons: 2x2 grid)
         btnPermissionsWizard = findViewById(R.id.btn_permissions_wizard);
-        btnBatteryOpt = findViewById(R.id.btn_battery_opt);
-        btnOverlayPerm = findViewById(R.id.btn_overlay_perm);
-        btnNotificationPerm = findViewById(R.id.btn_notification_perm);
-        btnAudioPerm = findViewById(R.id.btn_audio_perm);
-        btnLocationPerm = findViewById(R.id.btn_location_perm);
         btnAppDetails = findViewById(R.id.btn_app_details);
         btnBackupSettings = findViewById(R.id.btn_backup_settings);
         btnRestoreSettings = findViewById(R.id.btn_restore_settings);
@@ -556,37 +590,16 @@ public class SettingsActivity extends AppCompatActivity {
             TouchGlow.attach(btnPermissionsWizard);
             btnPermissionsWizard.setOnClickListener(v -> PermissionsWizard.show(this));
         }
-        TouchGlow.attach(btnBatteryOpt);
-        TouchGlow.attach(btnOverlayPerm);
-        TouchGlow.attach(btnNotificationPerm);
-        TouchGlow.attach(btnAudioPerm);
-        TouchGlow.attach(btnLocationPerm);
-        TouchGlow.attach(btnAppDetails);
-        TouchGlow.attach(btnBackupSettings);
-        TouchGlow.attach(btnRestoreSettings);
-
-        btnBatteryOpt.setOnClickListener(v -> requestBatteryOptimization());
-        btnOverlayPerm.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
-        if (btnNotificationPerm != null) {
-            btnNotificationPerm.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-                } catch (Throwable t) {
-                    Toaster.show(this, getString(R.string.toast_cannot_open_notification_settings));
-                }
+        if (btnAppDetails != null) {
+            TouchGlow.attach(btnAppDetails);
+            btnAppDetails.setOnClickListener(v -> {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
             });
         }
-        btnAudioPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO));
-        btnLocationPerm.setOnClickListener(v -> requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION));
-        btnAppDetails.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
+        TouchGlow.attach(btnBackupSettings);
+        TouchGlow.attach(btnRestoreSettings);
 
         btnBackupSettings.setOnClickListener(v -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US);
@@ -609,29 +622,6 @@ public class SettingsActivity extends AppCompatActivity {
         SettingsAccordion.build(settingsColumn, accent);
     }
 
-    private void requestBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent();
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                try {
-                    startActivity(intent);
-                } catch (Exception e) {
-                    intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                    try {
-                        startActivity(intent);
-                    } catch (Exception ignored) {}
-                }
-            } else {
-                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                try {
-                    startActivity(intent);
-                } catch (Exception ignored) {}
-            }
-        }
-    }
 
     private void setupColorWheel(HueWheelView wheel, SeekBar brightness, int slot) {
         brightness.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1067,39 +1057,33 @@ public class SettingsActivity extends AppCompatActivity {
         int accent = ThemeManager.accent(this, editNight);
         int border = ThemeManager.panelBorder(this, editNight);
 
-        // 1. Battery Optimization
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        boolean batteryGranted = (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
-        stylePermissionButton(btnBatteryOpt, batteryGranted, getString(R.string.perm_battery_opt), accent, border);
-
-        // 2. Overlay Permission
-        boolean overlayGranted = Settings.canDrawOverlays(this);
-        stylePermissionButton(btnOverlayPerm, overlayGranted, getString(R.string.settings_perm_overlay), accent, border);
-
-        // 3. Audio Record
-        boolean audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        stylePermissionButton(btnAudioPerm, audioGranted, getString(R.string.perm_audio_record), accent, border);
-
-        // 4. GPS Location
-        boolean locationGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        stylePermissionButton(btnLocationPerm, locationGranted, getString(R.string.perm_gps_location), accent, border);
-
-        // 5. Notification Access (Metadata)
-        boolean notifGranted = NowPlaying.getInstance(this).canReadSessions();
-        stylePermissionButton(btnNotificationPerm, notifGranted, getString(R.string.perm_notification_access), accent, border);
-
-        // 6. Permissions Wizard Button
         if (btnPermissionsWizard != null) {
-            boolean allGranted = batteryGranted && overlayGranted && audioGranted && locationGranted && notifGranted;
-            btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + (allGranted ? " ✓" : ""));
-            stylePill(btnPermissionsWizard, false, accent, border);
+            boolean allGranted = PermissionsWizard.areAllGranted(this);
+            if (allGranted) {
+                btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + " ✓");
+                btnPermissionsWizard.setBackground(ThemeManager.pillDrawable(this, true, editNight, 14f, accent, border));
+                int userFg = ThemeManager.onAccent(this, editNight);
+                btnPermissionsWizard.setTextColor(userFg);
+            } else {
+                btnPermissionsWizard.setText(getString(R.string.perm_wizard_btn_open) + " !");
+                int redColor = 0xFFD32F2F;
+                int redBorder = 0xFFFF5252;
+                btnPermissionsWizard.setBackground(ThemeManager.pillDrawable(this, true, editNight, 14f, redColor, redBorder));
+                btnPermissionsWizard.setTextColor(0xFFFFFFFF);
+            }
+            btnPermissionsWizard.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnPermissionsWizard.getPaint().setFakeBoldText(true);
+            btnPermissionsWizard.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f);
         }
-    }
-
-    private void stylePermissionButton(TextView btn, boolean granted, String title, int accent, int border) {
-        if (btn == null) return;
-        btn.setText(granted ? "✓ " + title : title);
-        stylePill(btn, granted, accent, border);
+        if (btnAppDetails != null) {
+            stylePill(btnAppDetails, false, accent, border);
+        }
+        if (btnBackupSettings != null) {
+            stylePill(btnBackupSettings, false, accent, border);
+        }
+        if (btnRestoreSettings != null) {
+            stylePill(btnRestoreSettings, false, accent, border);
+        }
     }
 
     private void styleActionButton(View v) {
@@ -1264,15 +1248,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
         wireMicPlace();
         showRoomStatus();
+        showMicCalStatus();
     }
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
 
-    private TextView btnAgcMainToggle, btnAgcBarToggle;
+    private TextView btnAgcMainToggle, btnAgcBarToggle, btnRadioMicVisToggle;
     private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
     private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
-    private TextView tvRoomStatus;
+    private TextView tvRoomStatus, tvRoomMicCalStatus;
     private TextView btnScreensaverToggle;
     private Slider seekScreensaverDelay, seekScreensaverBgDay, seekScreensaverBgNight;
     private Slider seekScreensaverWidth, seekScreensaverHeight;
@@ -1318,6 +1303,16 @@ public class SettingsActivity extends AppCompatActivity {
                 boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
                 saveAnalyzerPref(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, active);
                 styleOnOffButton(btnAgcBarToggle, active);
+            });
+        }
+        btnRadioMicVisToggle = findViewById(R.id.btn_radio_mic_vis_toggle);
+        if (btnRadioMicVisToggle != null) {
+            TouchGlow.attach(btnRadioMicVisToggle);
+            btnRadioMicVisToggle.setOnClickListener(v -> {
+                SharedPreferences p = ThemeManager.prefs(this);
+                boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true);
+                saveAnalyzerPref(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, active);
+                styleOnOffButton(btnRadioMicVisToggle, active);
             });
         }
 
@@ -1583,29 +1578,26 @@ public class SettingsActivity extends AppCompatActivity {
      * button exists and why the recordings are kept rather than thrown away after analysis.
      */
     private void initDiagnostics() {
-        tvRoomStatus = findViewById(R.id.tv_room_status);
         TextView measureButton = findViewById(R.id.btn_room_measure);
-        TextView sendButton = findViewById(R.id.btn_room_send);
-        TouchGlow.attach(measureButton);
-        TouchGlow.attach(sendButton);
-        measureButton.setOnClickListener(v -> startRoomMeasurement());
-        sendButton.setOnClickListener(v -> saveRoomMeasurement());
+        if (measureButton != null) {
+            TouchGlow.attach(measureButton);
+            measureButton.setOnClickListener(v -> startRoomMeasurement());
+        }
+
+        tvRoomMicCalStatus = findViewById(R.id.tv_room_mic_cal_status);
+        TextView micCalButton = findViewById(R.id.btn_room_mic_calibrate);
+        if (micCalButton != null) {
+            TouchGlow.attach(micCalButton);
+            micCalButton.setOnClickListener(v -> startMicCalibration());
+        }
 
         // Where the microphone is, pointed at rather than typed.
-        //
-        // Four measurements arrived before this existed. The two whose owner said nothing were the
-        // two that failed, both with the microphone sitting on top of one speaker - which from
-        // here is indistinguishable from three dead speakers until the arrival times are compared
-        // by hand. The same car picture the balance control uses, so there is nothing new to learn.
         BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
         if (micSpot != null) {
             micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
                     RoomMeasurement.micSpotFrontRear(this));
             micSpot.setOnBalanceChangeListener((lr, fr) -> RoomMeasurement.setMicSpot(this, lr, fr));
 
-            // Arrows as well as the drag, the way the balance control has them. A finger on a
-            // 190dp car is worth about a tenth of the cabin; somebody who knows the microphone is
-            // just left of centre cannot say that by dragging, and should not have to.
             wireMicPlace();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
@@ -1618,75 +1610,347 @@ public class SettingsActivity extends AppCompatActivity {
         TouchGlow.attach(reportButton);
         reportButton.setOnClickListener(v -> collectSystemReport());
 
+        TextView topologyButton = findViewById(R.id.btn_screen_topology);
+        if (topologyButton != null) {
+            TouchGlow.attach(topologyButton);
+            topologyButton.setOnClickListener(v -> showScreenTopologyDialog());
+        }
+
         styleActionButtons();
-        // The address is a link as well as a label: a tester who has never sent anything to a
-        // developer should not have to work out where it goes.
-        findViewById(R.id.tv_room_telegram).setOnClickListener(v -> openTelegram());
         showRoomStatus();
+        showMicCalStatus();
     }
 
     private void showRoomStatus() {
         if (tvRoomStatus == null) return;
-        tvRoomStatus.setText(RoomMeasurement.hasResult(this)
-                ? getString(R.string.room_measure_done)
-                : getString(R.string.room_measure_nothing));
+        String lastPreset = RoomMeasurement.getLastAutoEqPreset(this);
+        if (lastPreset != null && !lastPreset.trim().isEmpty()) {
+            tvRoomStatus.setText(getString(R.string.room_measure_done, lastPreset));
+        } else {
+            tvRoomStatus.setText(getString(R.string.room_measure_nothing));
+        }
+    }
+
+    private void showMicCalStatus() {
+        if (tvRoomMicCalStatus == null) return;
+        if (RoomMeasurement.hasMicCompensation(this)) {
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_done));
+        } else {
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_none));
+        }
     }
 
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
-        askForRootThenMeasure();
+        showRoomMeasurementWizard();
     }
 
-    /**
-     * Asks for root before the sweep, in words, and only ever once per launch.
-     *
-     * <h2>Why it is asked for out loud</h2>
-     *
-     * The measurement needs root for one thing: stopping the background process that holds the
-     * microphone open at 16 kHz. Without it half the sweep is never recorded, and nothing says so
-     * - the audio API reports 48000 either way, so the result simply comes back poorer with no
-     * explanation anybody could act on.
-     *
-     * <p>Until now the request was made silently from inside the measurement, and a refusal is
-     * silent too: where Magisk's policy for this app is already "deny", {@code su} returns in
-     * milliseconds with nothing on screen. Owners were left with a measurement that quietly
-     * underperformed and no idea that a switch existed. So: say what it is for, then ask, then say
-     * what happened - including the case where Magisk answered without asking anybody, which the
-     * owner can only fix in Magisk.
-     */
-    private void askForRootThenMeasure() {
-        new Thread(() -> {
-            if (RootAccess.alreadyGranted()) {
-                runOnUiThread(this::beginRoomMeasurement);
+    private void showRoomMeasurementWizard() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_room_wizard, null);
+
+        int cardBg = ThemeManager.cardBackground(this);
+        int border = ThemeManager.panelBorder(this);
+        int textPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg);
+        int textSecondary = ThemeManager.contrastText(ThemeManager.textSecondary(this), cardBg);
+        int accent = ThemeManager.accent(this);
+        int onAccent = ThemeManager.onAccent(this);
+
+        TextView tvTitle = view.findViewById(R.id.tv_wizard_title);
+        tvTitle.setTextColor(textPrimary);
+
+        // Step 1: Setup
+        View layoutSetup = view.findViewById(R.id.layout_wizard_setup);
+        View cardSub = view.findViewById(R.id.card_subwoofer);
+        cardSub.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        CheckBox cbSub = view.findViewById(R.id.cb_has_subwoofer);
+        if (cbSub != null) {
+            cbSub.setChecked(RoomMeasurement.hasSubwoofer(this));
+        }
+
+        View cardStage = view.findViewById(R.id.card_soundstage);
+        cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        RadioGroup rgStage = view.findViewById(R.id.rg_soundstage_mode);
+        if (rgStage != null) {
+            RoomMeasurement.SoundstageMode savedStage = RoomMeasurement.getSoundstageMode(this);
+            if (savedStage == RoomMeasurement.SoundstageMode.FRONT_CENTER) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_front_center);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedStage == RoomMeasurement.SoundstageMode.CABIN_CENTER) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_cabin_center);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedStage == RoomMeasurement.SoundstageMode.OFF) {
+                RadioButton rb = view.findViewById(R.id.rb_stage_off);
+                if (rb != null) rb.setChecked(true);
+            } else {
+                RadioButton rb = view.findViewById(R.id.rb_stage_driver);
+                if (rb != null) rb.setChecked(true);
+            }
+        }
+
+        View cardTarget = view.findViewById(R.id.card_target_curve);
+        if (cardTarget != null) {
+            cardTarget.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        }
+        RadioGroup rgTarget = view.findViewById(R.id.rg_target_curve);
+        if (rgTarget != null) {
+            RoomMeasurement.TargetCurve savedCurve = RoomMeasurement.getTargetCurve(this);
+            if (savedCurve == RoomMeasurement.TargetCurve.DOLBY_ATMOS) {
+                RadioButton rb = view.findViewById(R.id.rb_target_dolby);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.BASS_HEAVY) {
+                RadioButton rb = view.findViewById(R.id.rb_target_bass);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.VOCAL_SPEECH) {
+                RadioButton rb = view.findViewById(R.id.rb_target_vocal);
+                if (rb != null) rb.setChecked(true);
+            } else if (savedCurve == RoomMeasurement.TargetCurve.FLAT_STUDIO) {
+                RadioButton rb = view.findViewById(R.id.rb_target_flat);
+                if (rb != null) rb.setChecked(true);
+            } else {
+                RadioButton rb = view.findViewById(R.id.rb_target_harman);
+                if (rb != null) rb.setChecked(true);
+            }
+        }
+
+        View cardGeometry = view.findViewById(R.id.card_cabin_geometry);
+        if (cardGeometry != null) {
+            cardGeometry.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        }
+        RadioGroup rgBodyType = view.findViewById(R.id.rg_cabin_body_type);
+        TextView tvDistLabel = view.findViewById(R.id.tv_distance_label);
+        TextView tvDistValue = view.findViewById(R.id.tv_distance_value);
+        TextView btnDistMinus = view.findViewById(R.id.btn_distance_minus);
+        TextView btnDistPlus = view.findViewById(R.id.btn_distance_plus);
+        if (tvDistLabel != null) tvDistLabel.setTextColor(textSecondary);
+        if (tvDistValue != null) tvDistValue.setTextColor(textPrimary);
+        if (btnDistMinus != null) {
+            btnDistMinus.setTextColor(accent);
+            TouchGlow.attach(btnDistMinus);
+        }
+        if (btnDistPlus != null) {
+            btnDistPlus.setTextColor(accent);
+            TouchGlow.attach(btnDistPlus);
+        }
+
+        RoomMeasurement.CarBodyType savedBody = RoomMeasurement.getBodyType(this);
+        int savedDist = RoomMeasurement.getListeningDistanceCm(this);
+        final int[] currentDist = new int[]{savedDist};
+
+        if (savedBody == RoomMeasurement.CarBodyType.HATCHBACK) {
+            RadioButton rb = view.findViewById(R.id.rb_body_hatchback);
+            if (rb != null) rb.setChecked(true);
+        } else if (savedBody == RoomMeasurement.CarBodyType.MINIVAN) {
+            RadioButton rb = view.findViewById(R.id.rb_body_minivan);
+            if (rb != null) rb.setChecked(true);
+        } else {
+            RadioButton rb = view.findViewById(R.id.rb_body_sedan);
+            if (rb != null) rb.setChecked(true);
+        }
+        if (tvDistValue != null) {
+            tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+        }
+
+        if (rgBodyType != null) {
+            rgBodyType.setOnCheckedChangeListener((group, checkedId) -> {
+                if (checkedId == R.id.rb_body_hatchback) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.HATCHBACK.defaultDistanceCm;
+                } else if (checkedId == R.id.rb_body_sedan) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.SEDAN.defaultDistanceCm;
+                } else if (checkedId == R.id.rb_body_minivan) {
+                    currentDist[0] = RoomMeasurement.CarBodyType.MINIVAN.defaultDistanceCm;
+                }
+                if (tvDistValue != null) {
+                    tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                }
+            });
+        }
+
+        if (btnDistMinus != null) {
+            btnDistMinus.setOnClickListener(v -> {
+                if (currentDist[0] > 40) {
+                    currentDist[0] -= 5;
+                    if (tvDistValue != null) {
+                        tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                    }
+                }
+            });
+        }
+
+        if (btnDistPlus != null) {
+            btnDistPlus.setOnClickListener(v -> {
+                if (currentDist[0] < 120) {
+                    currentDist[0] += 5;
+                    if (tvDistValue != null) {
+                        tvDistValue.setText(getString(R.string.room_wizard_distance_value, currentDist[0]));
+                    }
+                }
+            });
+        }
+
+        TextView btnCancel = view.findViewById(R.id.btn_wizard_cancel);
+        btnCancel.setTextColor(textSecondary);
+        TouchGlow.attach(btnCancel);
+
+        TextView btnStart = view.findViewById(R.id.btn_wizard_start);
+        btnStart.setTextColor(onAccent);
+        btnStart.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+        TouchGlow.attach(btnStart);
+
+        // Step 2: Progress
+        View layoutProgress = view.findViewById(R.id.layout_wizard_progress);
+        TextView tvProgressStage = view.findViewById(R.id.tv_progress_stage);
+        tvProgressStage.setTextColor(textPrimary);
+        TextView tvProgressDetail = view.findViewById(R.id.tv_progress_detail);
+        tvProgressDetail.setTextColor(textSecondary);
+        ProgressBar progressBar = view.findViewById(R.id.progress_wizard_bar);
+        TextView tvPercent = view.findViewById(R.id.tv_progress_percent);
+        tvPercent.setTextColor(textPrimary);
+        TextView tvProgressWarning = view.findViewById(R.id.tv_progress_warning);
+        tvProgressWarning.setTextColor(textSecondary);
+
+        // Step 3: Report
+        View layoutReport = view.findViewById(R.id.layout_wizard_report);
+        View layoutPolarity = view.findViewById(R.id.layout_polarity_alert);
+        layoutPolarity.setBackground(ThemeManager.roundedDrawable(this, 12, 0x22E5352B, 0xFFE5352B, 1.5f));
+        TextView tvPolarityMsg = view.findViewById(R.id.tv_polarity_alert_msg);
+        tvPolarityMsg.setTextColor(textPrimary);
+
+        View cardCrossover = view.findViewById(R.id.card_report_crossover);
+        cardCrossover.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvHpf = view.findViewById(R.id.tv_report_crossover_hpf);
+        tvHpf.setTextColor(textSecondary);
+        TextView tvSub = view.findViewById(R.id.tv_report_crossover_sub);
+        tvSub.setTextColor(textSecondary);
+
+        View cardDelays = view.findViewById(R.id.card_report_delays);
+        cardDelays.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvDelays = view.findViewById(R.id.tv_report_delays);
+        tvDelays.setTextColor(textSecondary);
+
+        View cardAutoEq = view.findViewById(R.id.card_report_autoeq);
+        cardAutoEq.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        TextView tvAutoEq = view.findViewById(R.id.tv_report_autoeq_gains);
+        tvAutoEq.setTextColor(textPrimary);
+
+        TextView btnSave = view.findViewById(R.id.btn_save_report);
+        if (btnSave != null) {
+            btnSave.setTextColor(textPrimary);
+            btnSave.setBackground(ThemeManager.roundedDrawable(this, 10, cardBg, border, 1f));
+            TouchGlow.attach(btnSave);
+            btnSave.setOnClickListener(v -> saveRoomMeasurement());
+        }
+
+        TextView btnClose = view.findViewById(R.id.btn_close_report);
+        btnClose.setTextColor(textSecondary);
+        TouchGlow.attach(btnClose);
+
+        TextView btnApply = view.findViewById(R.id.btn_apply_autoeq);
+        btnApply.setTextColor(onAccent);
+        btnApply.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+        TouchGlow.attach(btnApply);
+
+        // Create Dialog
+        Dialog dialog = ThemedDialog.builder(this)
+                .setView(view)
+                .setCancelable(true)
+                .setMaxWidthDp(840)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            android.view.Window win = dialog.getWindow();
+            if (win != null) {
+                int screenW = getResources().getDisplayMetrics().widthPixels;
+                int maxW = (int) ThemedDialog.dp(this, 840);
+                int dialogW = Math.min((int) (screenW * 0.92f), maxW);
+                win.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        btnStart.setOnClickListener(v -> {
+            boolean hasSub = cbSub.isChecked();
+            RoomMeasurement.SoundstageMode mode = RoomMeasurement.SoundstageMode.DRIVER;
+            int selectedId = rgStage.getCheckedRadioButtonId();
+            if (selectedId == R.id.rb_stage_front_center) {
+                mode = RoomMeasurement.SoundstageMode.FRONT_CENTER;
+            } else if (selectedId == R.id.rb_stage_cabin_center) {
+                mode = RoomMeasurement.SoundstageMode.CABIN_CENTER;
+            } else if (selectedId == R.id.rb_stage_off) {
+                mode = RoomMeasurement.SoundstageMode.OFF;
+            }
+
+            RoomMeasurement.TargetCurve targetCurve = RoomMeasurement.TargetCurve.HARMAN;
+            if (rgTarget != null) {
+                int targetId = rgTarget.getCheckedRadioButtonId();
+                if (targetId == R.id.rb_target_dolby) {
+                    targetCurve = RoomMeasurement.TargetCurve.DOLBY_ATMOS;
+                } else if (targetId == R.id.rb_target_bass) {
+                    targetCurve = RoomMeasurement.TargetCurve.BASS_HEAVY;
+                } else if (targetId == R.id.rb_target_vocal) {
+                    targetCurve = RoomMeasurement.TargetCurve.VOCAL_SPEECH;
+                } else if (targetId == R.id.rb_target_flat) {
+                    targetCurve = RoomMeasurement.TargetCurve.FLAT_STUDIO;
+                }
+            }
+
+            RoomMeasurement.CarBodyType bodyType = RoomMeasurement.CarBodyType.SEDAN;
+            if (rgBodyType != null) {
+                int bodyId = rgBodyType.getCheckedRadioButtonId();
+                if (bodyId == R.id.rb_body_hatchback) {
+                    bodyType = RoomMeasurement.CarBodyType.HATCHBACK;
+                } else if (bodyId == R.id.rb_body_minivan) {
+                    bodyType = RoomMeasurement.CarBodyType.MINIVAN;
+                }
+            }
+
+            final RoomMeasurement.SoundstageMode selectedMode = mode;
+            final RoomMeasurement.TargetCurve selectedTarget = targetCurve;
+            final RoomMeasurement.CarBodyType selectedBody = bodyType;
+            final int selectedDistance = currentDist[0];
+
+            RoomMeasurement.setHasSubwoofer(this, hasSub);
+            RoomMeasurement.setSoundstageMode(this, selectedMode);
+            RoomMeasurement.setTargetCurve(this, selectedTarget);
+            RoomMeasurement.setBodyType(this, selectedBody);
+            RoomMeasurement.setListeningDistanceCm(this, selectedDistance);
+            RoomMeasurement.pauseMedia(this);
+
+            if (!RootAccess.hasRoot(this)) {
+                ThemedDialog.builder(this)
+                        .setTitle(R.string.room_root_title)
+                        .setMessage(R.string.room_root_message)
+                        .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
+                            RootAccess.Outcome outcome = RootAccess.request(this);
+                            runOnUiThread(() -> {
+                                if (outcome == RootAccess.Outcome.GRANTED) {
+                                    runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
+                                            tvProgressStage, tvProgressDetail, progressBar, tvPercent,
+                                            layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
+                                            btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
+                                } else {
+                                    ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                            getString(R.string.room_root_blocked));
+                                }
+                            });
+                        }, "root-request").start())
+                        .setNegativeButton(R.string.room_root_no, (d, w) ->
+                                ThemedDialog.notice(this, getString(R.string.room_root_title),
+                                        getString(R.string.room_root_blocked)))
+                        .setCancelable(false)
+                        .show();
                 return;
             }
-            // Only asked when we could not get it ourselves. Somebody who granted root long ago
-            // should never see this dialog at all - being asked about something already done is
-            // how a person learns to dismiss dialogs without reading them.
-            runOnUiThread(() -> ThemedDialog.builder(this)
-                    .setTitle(R.string.room_root_title)
-                    .setMessage(R.string.room_root_message)
-                    .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
-                        RootAccess.Outcome outcome = RootAccess.request();
-                        runOnUiThread(() -> {
-                            if (outcome == RootAccess.Outcome.GRANTED) {
-                                beginRoomMeasurement();
-                            } else {
-                                // They said it was on and it is not. Say where the switch is
-                                // rather than measure through a 16 kHz microphone and hand back a
-                                // poor result with no explanation.
-                                ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                        getString(R.string.room_root_blocked));
-                            }
-                        });
-                    }, "root-request").start())
-                    .setNegativeButton(R.string.room_root_no, (d, w) ->
-                            ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                    getString(R.string.room_root_blocked)))
-                    .setCancelable(false)
-                    .show());
-        }, "root-check").start();
+
+            runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
+                    tvProgressStage, tvProgressDetail, progressBar, tvPercent,
+                    layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
+                    btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
+        });
+
+        dialog.show();
     }
 
     /**
@@ -1732,23 +1996,206 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void beginRoomMeasurement() {
-        if (RoomMeasurement.isRunning()) return;
-        // Taken here rather than in the measurement, because the system-bar insets can only be
-        // read from a window that exists - and the report is written from a background thread.
+        showRoomMeasurementWizard();
+    }
+
+    private void runMeasurementInWizard(Dialog dialog, View layoutSetup, View layoutProgress, View layoutReport,
+                                        TextView tvProgressStage, TextView tvProgressDetail,
+                                        ProgressBar progressBar, TextView tvPercent,
+                                        View layoutPolarity, TextView tvPolarityMsg,
+                                        TextView tvHpf, TextView tvSub, TextView tvDelays, TextView tvAutoEq,
+                                        TextView btnApply, boolean hasSub,
+                                        RoomMeasurement.SoundstageMode mode,
+                                        RoomMeasurement.TargetCurve targetCurve,
+                                        RoomMeasurement.CarBodyType bodyType,
+                                        int listeningDistanceCm) {
+        layoutSetup.setVisibility(View.GONE);
+        layoutProgress.setVisibility(View.VISIBLE);
+        layoutReport.setVisibility(View.GONE);
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+
         HardwareProfile.sampleScreen(this, getWindow().getDecorView());
-        tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
-        RoomMeasurement.measureAsync(this, new RoomMeasurement.Listener() {
+        if (tvRoomStatus != null) {
+            tvRoomStatus.setText(getString(R.string.room_measure_running, ""));
+        }
+
+        RoomMeasurement.measureAsync(this, hasSub, mode, targetCurve, bodyType, listeningDistanceCm, new RoomMeasurement.Listener() {
             @Override
-            public void onProgress(String stage) {
-                runOnUiThread(() ->
-                        tvRoomStatus.setText(getString(R.string.room_measure_running, stage)));
+            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+                runOnUiThread(() -> {
+                    tvProgressStage.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s", step, totalSteps, stageTitle));
+                    tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
+                    progressBar.setProgress(percent);
+                    tvPercent.setText(percent + "%");
+                    if (tvRoomStatus != null) {
+                        tvRoomStatus.setText(getString(R.string.room_measure_running, stageTitle));
+                    }
+                });
             }
 
             @Override
             public void onFinished(RoomMeasurement.Result result) {
-                runOnUiThread(() -> tvRoomStatus.setText(result != null && result.error == null
-                        ? getString(R.string.room_measure_done)
-                        : getString(R.string.room_measure_failed)));
+                runOnUiThread(() -> {
+                    dialog.setCancelable(true);
+                    dialog.setCanceledOnTouchOutside(true);
+                    layoutProgress.setVisibility(View.GONE);
+
+                    if (result == null || result.error != null) {
+                        if (tvRoomStatus != null) {
+                            tvRoomStatus.setText(getString(R.string.room_measure_failed));
+                        }
+                        ThemedDialog.notice(SettingsActivity.this,
+                                getString(R.string.room_measure_failed),
+                                result != null && result.error != null ? result.error : "Unknown error");
+                        dialog.dismiss();
+                        return;
+                    }
+
+                    showRoomStatus();
+                    layoutReport.setVisibility(View.VISIBLE);
+
+                    // 1. Polarity check
+                    if (result.hasPolarityInversion && result.wiringWarning != null) {
+                        layoutPolarity.setVisibility(View.VISIBLE);
+                        tvPolarityMsg.setText(result.wiringWarning);
+                    } else {
+                        layoutPolarity.setVisibility(View.GONE);
+                    }
+
+                    // 2. Crossover
+                    if (result.hasSubwoofer) {
+                        tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
+                        tvSub.setText(getString(R.string.room_wizard_crossover_sub, result.subLpfFreqHz, result.subGain));
+                    } else {
+                        tvHpf.setText(R.string.room_wizard_crossover_hpf_through);
+                        tvSub.setText(R.string.room_wizard_crossover_no_sub);
+                    }
+
+                    // 3. Delays
+                    String delaysStr = String.format(Locale.US,
+                            "ПЛ: %4.1f мс (%2d кр)  |  ПП: %4.1f мс (%2d кр)\nЗЛ: %4.1f мс (%2d кр)  |  ЗП: %4.1f мс (%2d кр)",
+                            result.suggestedDelayMs[2], result.suggestedDelaySteps[2],
+                            result.suggestedDelayMs[3], result.suggestedDelaySteps[3],
+                            result.suggestedDelayMs[0], result.suggestedDelaySteps[0],
+                            result.suggestedDelayMs[1], result.suggestedDelaySteps[1]);
+                    if (result.hasSubwoofer) {
+                        delaysStr += String.format(Locale.US, "\nСабвуфер: %4.1f мс (%2d кр)",
+                                result.suggestedSubDelayMs, result.suggestedSubDelaySteps);
+                    }
+                    tvDelays.setText(delaysStr);
+
+                    // 4. Auto-EQ 16 bands
+                    TextView tvAutoEqTitle = layoutReport.findViewById(R.id.tv_report_autoeq_title);
+                    if (tvAutoEqTitle != null) {
+                        tvAutoEqTitle.setText(getString(R.string.room_wizard_autoeq_title,
+                                result.targetCurve != null ? result.targetCurve.title : "Harman Reference"));
+                    }
+                    final String[] freqLabels = {
+                        "20", "31", "50", "80", "125", "200", "315", "500",
+                        "800", "1.2k", "2k", "3.1k", "5k", "8k", "12k", "20k"
+                    };
+                    StringBuilder sbEq = new StringBuilder();
+                    for (int b = 0; b < 16; b++) {
+                        if (b > 0 && b % 4 == 0) sbEq.append("\n");
+                        else if (b > 0) sbEq.append("  |  ");
+                        sbEq.append(String.format(Locale.US, "%-4s: %+2d dB", freqLabels[b], result.autoEqGains16[b]));
+                    }
+                    tvAutoEq.setText(sbEq.toString());
+
+                    // 5. Apply button
+                    btnApply.setOnClickListener(v -> {
+                        final String baseName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
+                        final String stageTag = result.soundstageMode != null ? result.soundstageMode.getTag() : "(Водій)";
+                        final String presetName = baseName + " " + stageTag;
+                        RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, presetName);
+                        Toast.makeText(SettingsActivity.this, getString(R.string.room_wizard_applied_toast, presetName), Toast.LENGTH_LONG).show();
+                        showRoomStatus();
+                        dialog.dismiss();
+                    });
+                });
+            }
+        });
+    }
+
+    private void startMicCalibration() {
+        if (RoomMeasurement.isRunning()) return;
+        if (!ensureMicrophone()) return;
+
+        ThemedDialog.builder(this)
+                .setTitle(R.string.room_mic_cal_confirm_title)
+                .setMessage(R.string.room_mic_cal_confirm_msg)
+                .setPositiveButton(R.string.room_measure_confirm_start, (dialog, which) -> {
+                    RoomMeasurement.pauseMedia(this);
+                    runMicCalibration();
+                })
+                .setNegativeButton(R.string.room_measure_confirm_cancel, null)
+                .show();
+    }
+
+    private void runMicCalibration() {
+        if (tvRoomMicCalStatus != null) {
+            tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, ""));
+        }
+
+        final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setMax(100);
+        progressBar.setIndeterminate(false);
+        int accent = ThemeManager.accent(this, editNight);
+        progressBar.setProgressTintList(ColorStateList.valueOf(accent));
+
+        final TextView tvMsg = new TextView(this);
+        tvMsg.setText(getString(R.string.room_mic_cal_running, ""));
+        tvMsg.setTextColor(ThemeManager.textPrimary(this, editNight));
+        tvMsg.setPadding(0, (int) ThemedDialog.dp(this, 8), 0, (int) ThemedDialog.dp(this, 8));
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) ThemedDialog.dp(this, 16);
+        container.setPadding(pad, pad, pad, pad);
+        container.addView(tvMsg);
+        container.addView(progressBar);
+
+        final Dialog progressDialog = ThemedDialog.builder(this)
+                .setTitle(R.string.room_mic_cal_confirm_title)
+                .setView(container)
+                .setCancelable(false)
+                .create();
+        progressDialog.show();
+
+        HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+
+        RoomMeasurement.calibrateMicAsync(this, new RoomMeasurement.Listener() {
+            @Override
+            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+                runOnUiThread(() -> {
+                    progressBar.setProgress(percent);
+                    tvMsg.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s\n%s (%d%%)",
+                            step, totalSteps, stageTitle, stageDetail != null ? stageDetail : "", percent));
+                    if (tvRoomMicCalStatus != null) {
+                        tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, stageTitle));
+                    }
+                });
+            }
+
+            @Override
+            public void onFinished(RoomMeasurement.Result result) {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    if (result == null || result.error != null) {
+                        if (tvRoomMicCalStatus != null) {
+                            tvRoomMicCalStatus.setText(getString(R.string.room_measure_failed));
+                        }
+                        ThemedDialog.notice(SettingsActivity.this,
+                                getString(R.string.room_measure_failed),
+                                result != null && result.error != null ? result.error : "Unknown error");
+                        return;
+                    }
+                    showMicCalStatus();
+                    ThemedDialog.notice(SettingsActivity.this,
+                            getString(R.string.room_mic_cal_confirm_title),
+                            getString(R.string.room_mic_cal_done));
+                });
             }
         });
     }
@@ -1785,6 +2232,65 @@ public class SettingsActivity extends AppCompatActivity {
         return false;
     }
 
+    private void showScreenTopologyDialog() {
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
+        final String topology = HardwareProfile.describeScreen(this, getWindow() != null ? getWindow().getDecorView() : null);
+
+        ScrollView scrollView = new ScrollView(this);
+        int pad = (int) ThemedDialog.dp(this, 14);
+        scrollView.setPadding(pad, pad, pad, pad);
+
+        TextView tv = new TextView(this);
+        tv.setText(topology);
+        tv.setTypeface(Typeface.MONOSPACE);
+        tv.setTextSize(10.5f);
+        tv.setTextIsSelectable(true);
+        tv.setTextColor(ThemeManager.textPrimary(this, editNight));
+        tv.setLineSpacing(ThemedDialog.dp(this, 2), 1f);
+
+        scrollView.addView(tv);
+
+        ThemedDialog.builder(this)
+                .setTitle(R.string.screen_topology_title)
+                .setView(scrollView)
+                .setMaxWidthDp(760)
+                .setPositiveButton(R.string.screen_topology_copy, (dialog, which) -> {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        cm.setPrimaryClip(ClipData.newPlainText("Screen Topology", topology));
+                        Toast.makeText(SettingsActivity.this, R.string.screen_topology_copied, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton(R.string.screen_topology_save, (dialog, which) -> {
+                    saveScreenTopologyToFile(topology);
+                })
+                .setNegativeButton(android.R.string.ok, null)
+                .setCancelable(true)
+                .show();
+    }
+
+    private void saveScreenTopologyToFile(String topology) {
+        String name = "wdsp_screen_topology_"
+                + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()) + ".txt";
+        Downloads.Pending pending = Downloads.create(this, name, "text/plain");
+        if (pending != null) {
+            try {
+                pending.stream.write(topology.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                pending.stream.close();
+                Downloads.finish(this, pending);
+                ThemedDialog.notice(this, getString(R.string.screen_topology_title),
+                        getString(R.string.system_report_saved, Downloads.pathFor(name)));
+            } catch (Throwable t) {
+                Log.e("wDSP_Settings", "could not write screen topology", t);
+                Downloads.discard(this, pending);
+                ThemedDialog.notice(this, getString(R.string.screen_topology_title),
+                        getString(R.string.system_report_failed));
+            }
+        }
+    }
+
     /**
      * Collects everything known about this unit's audio and writes it next to the measurements.
      *
@@ -1796,6 +2302,9 @@ public class SettingsActivity extends AppCompatActivity {
      * thing runs off the UI thread.
      */
     private void collectSystemReport() {
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
         final boolean withMicrophone = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         tvSystemReportStatus.setText(getString(R.string.system_report_working));
@@ -1856,11 +2365,16 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
         java.io.File dir = RoomMeasurement.outputDir(this);
-        // A timestamp, because a tester measures more than once and the second archive must not
-        // quietly replace the first - the interesting one is often the earlier attempt.
-        String name = "wdsp_room_measurement_"
-                + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
-                        .format(new java.util.Date()) + ".zip";
+        String versionName = "unknown";
+        int versionCode = 0;
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (pi.versionName != null) versionName = pi.versionName;
+            versionCode = pi.versionCode;
+        } catch (Exception ignored) {}
+        String name = String.format(Locale.US, "wdsp_room_measurement_v%s_vc%d_%s.zip",
+                versionName, versionCode,
+                new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()));
 
         Downloads.Pending pending = Downloads.create(this, name, "application/zip");
         if (pending == null) {
@@ -1878,6 +2392,9 @@ public class SettingsActivity extends AppCompatActivity {
         // SystemDiagnostics.report opens six audio sources when it has the microphone, so this
         // whole thing is off the UI thread now. It used to zip on the main thread and got away
         // with it only because the files were small.
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            HardwareProfile.sampleScreen(this, getWindow().getDecorView());
+        }
         final boolean withMicrophone = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         Toaster.show(this, getString(R.string.system_report_working));
@@ -1943,8 +2460,18 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void openTelegram() {
         try {
+            android.content.ClipboardManager clipboard =
+                    (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard != null) {
+                android.content.ClipData clip = android.content.ClipData.newPlainText(
+                        "Telegram Link", "https://t.me/kostyamat_dev/92");
+                clipboard.setPrimaryClip(clip);
+            }
+            Toaster.show(this, getString(R.string.telegram_link_copied));
+        } catch (Throwable ignored) {}
+        try {
             startActivity(new Intent(Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://t.me/kostyamat")));
+                    android.net.Uri.parse("https://t.me/kostyamat_dev/92")));
         } catch (Exception e) {
             Toaster.show(this, getString(R.string.room_measure_telegram));
         }
@@ -2031,8 +2558,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnAgcMainToggle == null) return;
         boolean agcMain = p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
         boolean agcBar = p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
+        boolean radioMicVis = p.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true);
         styleOnOffButton(btnAgcMainToggle, agcMain);
         styleOnOffButton(btnAgcBarToggle, agcBar);
+        if (btnRadioMicVisToggle != null) {
+            styleOnOffButton(btnRadioMicVisToggle, radioMicVis);
+        }
 
         int mainStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60);
         int barStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100);
@@ -2153,6 +2684,8 @@ public class SettingsActivity extends AppCompatActivity {
         JsonObject backupRoot = new JsonObject();
         backupRoot.addProperty("version", 2);
         backupRoot.addProperty("app", "wDSP");
+        backupRoot.addProperty("versionCode", PresetsDatabaseValidator.getAppVersionCode(this));
+        backupRoot.addProperty("versionName", PresetsDatabaseValidator.getAppVersionName(this));
         backupRoot.addProperty("timestamp", System.currentTimeMillis());
 
         // 1. Default preferences (Theme, wallpaper, statusbar, eq vis)
@@ -2290,6 +2823,7 @@ public class SettingsActivity extends AppCompatActivity {
                 eqEditor.clear();
                 restoreJsonToPrefs(root.getAsJsonObject("eq_preferences"), eqEditor);
                 eqEditor.apply();
+                PresetsDatabaseValidator.validateAndMigrate(this);
             }
 
             // 3. Legacy Migration: status bar / screensaver fallback
@@ -2495,7 +3029,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
-            R.id.tv_room_status, R.id.tv_room_telegram, R.id.tv_system_report_status,
+            R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,
@@ -2647,6 +3181,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.card_settings_analyzer,
             R.id.card_settings_permissions,
             R.id.card_settings_screensaver,
+            R.id.card_settings_room,
             R.id.card_settings_debug
         };
         for (int id : settingsCards) {
@@ -2729,6 +3264,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnAgcBarToggle != null) {
             styleOnOffButton(btnAgcBarToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));
         }
+        if (btnRadioMicVisToggle != null) {
+            styleOnOffButton(btnRadioMicVisToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true));
+        }
         if (btnScreensaverToggle != null) {
             styleOnOffButton(btnScreensaverToggle, ss.isEnabled());
         }
@@ -2759,8 +3297,9 @@ public class SettingsActivity extends AppCompatActivity {
     private void styleActionButtons() {
         styleActionButton(findViewById(R.id.btn_sync_measure));
         styleActionButton(findViewById(R.id.btn_room_measure));
-        styleActionButton(findViewById(R.id.btn_room_send));
+        styleActionButton(findViewById(R.id.btn_room_mic_calibrate));
         styleActionButton(findViewById(R.id.btn_system_report));
+        styleActionButton(findViewById(R.id.btn_screen_topology));
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
     }

@@ -30,7 +30,7 @@ files, mark what you add.
 |---|---|
 | [01-SYSTEM.md](01-SYSTEM.md) | anything about the Android side: hardware, screens, properties, hidden API, release builds, sleep |
 | [02-MCU.md](02-MCU.md) | talking to the microcontroller: framing, the command map, send discipline, volume |
-| [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) | equaliser, delays, crossovers, subwoofer — the ROHM BU32107 register map and what each command becomes |
+| [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) | equaliser, delays, crossovers (12 dB/oct), subwoofer handover, fader/balance (0A00-0A05), DVol, Advanced Switch — the ROHM BU32107 register map, MCU translation and signal path topology |
 | [04-FIRMWARE-PATCHING.md](04-FIRMWARE-PATCHING.md) | inside the MCU image: memory map, the dispatcher, the settings structure, and what changing it would take |
 | [05-AUDIO-PATH.md](05-AUDIO-PATH.md) | recording, playback, latency, the microphone, audio policies, the player role |
 | [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) | anything that changes how loud something is: the per-source volume model, source switching, the optional second DSP, and the vendor Bluetooth app breaking the radio |

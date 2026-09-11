@@ -56,11 +56,18 @@ public:
     };
 
     Analyzer(int sampleRate, int captureSize);
+    ~Analyzer();
 
     void setConfig(const Config& config);
     void setAgcConfig(int consumer, const AgcConfig& config);
     /** Response the hardware DSP will add, in dB, on the 16 hardware bands. */
     void setDspCurve(const float* curve16);
+
+    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
+    void setIsAcoustic(bool acoustic);
+
+    /** Reads the newest samples as 8-bit unsigned waveform (0..255, centered 128). */
+    int getWaveform(uint8_t* out, int maxLen);
 
     /**
      * Feeds one polled Visualizer block. Returns the number of genuinely new samples.
@@ -98,7 +105,7 @@ public:
      * which is the only honest way to suggest slider positions for a flat response. Microphone
      * input needs no stitching - it arrives as a continuous stream already.
      */
-    void pushPcm16(const int16_t* samples, int count, int channels);
+    void pushPcm16(const int16_t* samples, int count, int channels, float gain = 1.0f);
 
     /** Fills 32 and 16 band levels, normalised to 0..1 for the given consumer. */
     void getLevels(int consumer, float* out32, float* out16);
@@ -170,6 +177,7 @@ private:
     mutable std::mutex mutex_;       // published frames, configuration, gain state
     std::condition_variable ringSignal_;
     bool running_;
+    bool isAcoustic_;
 };
 
 } // namespace wdsp

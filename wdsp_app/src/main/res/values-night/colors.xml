@@ -20,6 +20,7 @@
     <color name="track_color_inactive">#2A343D</color>
     <color name="panel_border_theme_aware">#40FFFFFF</color>
     <color name="card_bg_theme_aware">#80101419</color>
+    <color name="link_blue">#4BA3E3</color>
     <color name="halo_color">#00000000</color>
 
     <color name="visualizer_container_bg">#40000000</color>

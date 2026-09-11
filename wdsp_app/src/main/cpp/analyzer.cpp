@@ -47,7 +47,8 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
           lastProcessedSample_(0),
           longFftDueAt_(0),
           frameMaxPower_(0.0f),
-          running_(true) {
+          running_(true),
+          isAcoustic_(false) {
     (void) captureSize;
     for (int i = 0; i < kBands; i++) {
         bandPower_[i] = 0.0f;
@@ -58,6 +59,26 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
     frameRing_.resize(kFrameRingSize);
     for (auto& frame : frameRing_) frame.assign(kBands, -120.0f);
     buildBandPlan();
+}
+
+Analyzer::~Analyzer() = default;
+
+void Analyzer::setIsAcoustic(bool acoustic) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    isAcoustic_ = acoustic;
+}
+
+int Analyzer::getWaveform(uint8_t* out, int maxLen) {
+    if (out == nullptr || maxLen <= 0) return 0;
+    std::lock_guard<std::mutex> lock(ringMutex_);
+    int count = std::min(maxLen, 1024);
+    std::vector<float> tmp(static_cast<size_t>(count));
+    if (!stitcher_.readNewest(tmp.data(), count)) return 0;
+    for (int i = 0; i < count; i++) {
+        int val = static_cast<int>(tmp[static_cast<size_t>(i)] * 128.0f) + 128;
+        out[i] = static_cast<uint8_t>(std::max(0, std::min(255, val)));
+    }
+    return count;
 }
 
 void Analyzer::buildBandPlan() {
@@ -161,19 +182,23 @@ void Analyzer::waitAndProcess(int timeoutMs) {
     }
 }
 
-void Analyzer::pushPcm16(const int16_t* samples, int count, int channels) {
+void Analyzer::pushPcm16(const int16_t* samples, int count, int channels, float gain) {
     if (samples == nullptr || count <= 0) return;
     std::lock_guard<std::mutex> lock(ringMutex_);
 
     if (channels < 1) channels = 1;
     int frames = count / channels;
     std::vector<float> mono(static_cast<size_t>(frames));
+    float scale = (gain > 0.0f ? gain : 1.0f) / (channels * 32768.0f);
     for (int i = 0; i < frames; i++) {
         float sum = 0.0f;
         for (int c = 0; c < channels; c++) {
             sum += static_cast<float>(samples[i * channels + c]);
         }
-        mono[static_cast<size_t>(i)] = sum / (channels * 32768.0f);
+        float val = sum * scale;
+        if (val > 1.0f) val = 1.0f;
+        else if (val < -1.0f) val = -1.0f;
+        mono[static_cast<size_t>(i)] = val;
     }
 
     // Straight into the ring: a microphone stream is already continuous, so unlike the polled
@@ -259,6 +284,8 @@ void Analyzer::processFrame(bool haveLong) {
         if (quiet) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;
+        } else if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) {
+            noiseFloor_[i] = power;
         }
         float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
         if (signal < 0.0f) signal = 0.0f;

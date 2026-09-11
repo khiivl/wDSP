@@ -102,6 +102,70 @@ public:
      */
     void bandLevelsDb(const float* impulse, int length, int arrival, float* out16) const;
 
+    /**
+     * 16-band energy spectrum (in dB) of an arbitrary signal slice (such as ambient noise floor).
+     * Uses the hardware center frequencies (kHwCenters) and mean power per bin scaling.
+     */
+    void spectrum16Db(const float* signal, int length, float* out16) const;
+
+    /**
+     * Performs spectral subtraction band-by-band:
+     *   clean_power = max(sweep_power - noise_power, 1e-12)
+     *   snr_db = sweep_db - noise_db
+     */
+    static void subtractNoise(const float* sweepDb16, const float* noiseDb16,
+                              float* outCleanDb16, float* outSnrDb16);
+
+    /**
+     * Estimates the 16-band microphone inverse compensation curve from the 4-channel average
+     * clean response using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency
+     * acoustic port roll-off correction.
+     */
+    static void estimateMicCompensation(const float* avgClean16, float* outCompensation16);
+
+    /**
+     * Time difference of arrival (TDOA) in fractional samples between a channel impulse response
+     * and a reference channel impulse response using Generalized Cross-Correlation with Phase
+     * Transform (GCC-PHAT) and sub-sample parabolic interpolation.
+     * Returns fractional sample delay (positive means ch arrives after ref).
+     */
+    static float gccPhatDelay(const float* hRef, int refLen,
+                              const float* hCh, int chLen,
+                              float& peakProminence);
+
+    /**
+     * Estimates the natural acoustic roll-off frequency of midbass speakers
+     * by comparing the clean 16-band energy spectrum to the midrange reference (200..800 Hz).
+     * Returns the index into kBassFilterFreqs (0..11, matching BU32107 HPF frequencies).
+     */
+    static int detectMidbassRollOff(const float* avgClean16);
+
+    enum TargetCurve {
+        TARGET_HARMAN = 0,
+        TARGET_DOLBY_ATMOS = 1,
+        TARGET_BASS_HEAVY = 2,
+        TARGET_VOCAL_SPEECH = 3,
+        TARGET_FLAT_STUDIO = 4
+    };
+
+    /**
+     * Synthesizes the 16-band Auto-EQ gains (indices 0..12, 6=0 dB, 2 dB/step) matching the chosen
+     * TargetCurve profile (Harman, Dolby Atmos, Bass Heavy, Vocal, Flat), accounting for fixed Q=2.2
+     * bandwidth and asymmetric boost/cut limits.
+     * Also outputs recommended subwoofer LPF index and gain (if hasSub is true).
+     */
+    static void synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                   int hpfCutoffIdx, bool hasSub, int targetCurveType,
+                                   int* outGains16, int& outSubLpfIdx, int& outSubGain);
+
+    /** Backward-compatibility wrapper defaulting to TARGET_HARMAN. */
+    static void synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
+                                     int hpfCutoffIdx, bool hasSub,
+                                     int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+        synthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
+                           outGains16, outSubLpfIdx, outSubGain);
+    }
+
 private:
     int sampleRate_;
     float startHz_;

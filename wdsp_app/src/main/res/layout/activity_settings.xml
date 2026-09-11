@@ -1926,6 +1926,45 @@
                     android:valueTo="80"
                     android:stepSize="1"
                     android:value="60" />
+
+                <!-- 5. Спектроаналізатор FM-радіо через салонний мікрофон -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_radio_mic_vis"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pref_radio_mic_visualizer_title"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_radio_mic_vis_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_on"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_radio_mic_vis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/pref_radio_mic_visualizer_desc"
+                    android:textSize="@dimen/settings_note_text" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
@@ -1949,92 +1988,20 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <TextView
-                    android:id="@+id/btn_permissions_wizard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:gravity="center"
-                    android:padding="12dp"
-                    android:background="@null"
-                    android:text="@string/perm_wizard_btn_open"
-                    android:textStyle="bold"
-                    android:textSize="13sp" />
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_battery_opt"
+                        android:id="@+id/btn_permissions_wizard"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:padding="10dp"
                         android:background="@null"
-                        android:text="@string/battery_dialog_title"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/btn_overlay_perm"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:background="@null"
-                        android:text="@string/settings_perm_overlay"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/btn_audio_perm"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:background="@null"
-                        android:text="@string/perm_audio_record"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/btn_location_perm"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:background="@null"
-                        android:text="@string/perm_gps_location"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/btn_notification_perm"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:background="@null"
-                        android:text="@string/perm_notification_access"
+                        android:text="@string/perm_wizard_btn_open"
                         android:textSize="12sp" />
 
                     <TextView
@@ -2595,20 +2562,19 @@
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
-                 СЕКЦІЯ 5: 🔬 Діагностика
-                 Вимір акустики салону і надсилання результату розробнику.
+                 СЕКЦІЯ: 🎙️ Акустичне калібрування салону (експериментальна, root)
                  ════════════════════════════════════════════════════════════ -->
             <TextView
-                android:id="@+id/label_debug_section"
+                android:id="@+id/label_room_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/debug_section_title"
+                android:text="@string/room_section_title"
                 android:textSize="@dimen/settings_row_text"
                 android:textStyle="bold" />
 
             <LinearLayout
-                android:id="@+id/card_settings_debug"
+                android:id="@+id/card_settings_room"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -2632,14 +2598,6 @@
                     android:text="@string/room_measure_desc"
                     android:textSize="@dimen/settings_note_text" />
 
-                <!--
-                     Where the microphone is, pointed at rather than described.
-
-                     Four measurements came back before this existed and the two whose owner said
-                     nothing were the two that failed - both with the microphone sitting on one
-                     speaker, which is only visible afterwards by comparing arrival times. The same
-                     car picture the balance uses, so nobody has to learn a second one.
-                -->
                 <TextView
                     android:id="@+id/label_room_mic_spot"
                     android:layout_width="match_parent"
@@ -2657,14 +2615,6 @@
                     android:text="@string/room_mic_spot_desc"
                     android:textSize="@dimen/settings_note_text" />
 
-                <!-- What the microphone is fitted to, by name.
-                     The dot on the car gives the spot on the floor plan, which is enough for the
-                     delays - they are geometry in the horizontal plane. It says nothing about
-                     height or about what is a couple of centimetres away, and that is what
-                     decides whether the first arrival is the speaker or a reflection off glass.
-                     A visor and a dome light can sit at almost the same x,y and behave nothing
-                     alike. Three of the first four reports came back reflection-dominated, so
-                     this is the half that was missing. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_room_mic_place"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -2694,11 +2644,6 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Built the way the fader is: a container of its own with the car filling it
-                     by ratio and the arrows pinned to the container's edges, the gap between them
-                     coming from the same two dimensions. Sizing the car itself instead - which is
-                     what this did at first - left it about a third of the size, because whatever
-                     height was left over after the arrows drove the width down through the ratio. -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/room_mic_car_height"
@@ -2807,17 +2752,17 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_room_measure"
+                        android:id="@+id/btn_room_mic_calibrate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:text="@string/room_measure_button"
+                        android:text="@string/room_mic_calibrate_button"
                         android:textSize="12sp" />
 
                     <TextView
-                        android:id="@+id/tv_room_status"
+                        android:id="@+id/tv_room_mic_cal_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
@@ -2833,25 +2778,39 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/btn_room_send"
+                        android:id="@+id/btn_room_measure"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@null"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:text="@string/room_measure_send"
+                        android:text="@string/room_measure_button"
                         android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_room_telegram"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:lineSpacingExtra="3dp"
-                        android:text="@string/room_measure_telegram"
-                        android:textSize="@dimen/settings_note_text" />
                 </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ: 🔬 Діагностика
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_debug_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/debug_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_debug"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
 
                 <TextView
                     android:id="@+id/label_system_report"
@@ -2885,6 +2844,17 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/system_report_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_screen_topology"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/screen_topology_button"
                         android:textSize="12sp" />
 
                     <TextView

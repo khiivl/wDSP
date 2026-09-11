@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <!--
         Lets the app stop a background hotword listener that is holding the microphone.
         A normal permission, granted at install. Nothing is uninstalled or disabled: the

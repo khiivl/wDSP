@@ -28,7 +28,9 @@ public final class NativeSweep implements AutoCloseable {
      /** Sixteen band levels in dB start here, on the hardware equaliser's grid. */
      public static final int BANDS = 4;
     public static final int BAND_COUNT = 16;
-    public static final int RESULT_SIZE = BANDS + BAND_COUNT;
+    /** Sixteen band levels of deconvolved noise floor in dB start here. */
+    public static final int NOISE_BANDS = BANDS + BAND_COUNT;
+    public static final int RESULT_SIZE = NOISE_BANDS + BAND_COUNT;
 
     private static boolean available;
 
@@ -85,6 +87,89 @@ public final class NativeSweep implements AutoCloseable {
         return isAvailable() ? nativeBandwidth(recorded, length, sampleRate) : 0f;
     }
 
+    /**
+     * Calculates the 16-band energy spectrum (in dB) of an ambient noise signal slice.
+     */
+    public void noiseFloor(float[] signal, int length, float[] out16) {
+        if (handle != 0 && out16 != null && out16.length >= BAND_COUNT) {
+            nativeNoiseFloor(handle, signal, length, out16);
+        }
+    }
+
+    /**
+     * Performs spectral subtraction band-by-band:
+     *   clean_power = max(sweep_power - noise_power, 1e-12)
+     *   snr_db = sweep_db - noise_db
+     */
+    public static void subtractNoise(float[] sweepDb16, float[] noiseDb16,
+                                     float[] outCleanDb16, float[] outSnrDb16) {
+        if (isAvailable() && sweepDb16 != null && noiseDb16 != null) {
+            nativeSubtractNoise(sweepDb16, noiseDb16, outCleanDb16, outSnrDb16);
+        }
+    }
+
+    /**
+     * Estimates the 16-band microphone inverse compensation curve from 4-channel average clean response
+     * using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency acoustic port roll-off correction.
+     */
+    public static void estimateMicCompensation(float[] avgClean16, float[] outCompensation16) {
+        if (isAvailable() && avgClean16 != null && outCompensation16 != null) {
+            nativeEstimateMicCompensation(avgClean16, outCompensation16);
+        }
+    }
+
+    /**
+     * Deconvolves one recording into its impulse response.
+     * Returns the impulse response length. If outImpulse is non-null, copies into outImpulse.
+     */
+    public int deconvolve(float[] recorded, int length, float[] outImpulse) {
+        return handle != 0 ? nativeDeconvolve(handle, recorded, length, outImpulse) : 0;
+    }
+
+    /**
+     * Estimates the time difference of arrival (TDOA) in fractional samples between a channel
+     * impulse response and a reference channel impulse response using GCC-PHAT.
+     */
+    public static float gccPhatDelay(float[] hRef, int refLen, float[] hCh, int chLen,
+                                     float[] outProminence1) {
+        return isAvailable() ? nativeGccPhatDelay(hRef, refLen, hCh, chLen, outProminence1) : 0f;
+    }
+
+    /**
+     * Detects midbass roll-off index (into kBassFilterFreqs: 0..11) from 16-band clean response.
+     */
+    public static int detectMidbassRollOff(float[] avgClean16) {
+        return isAvailable() && avgClean16 != null ? nativeDetectMidbassRollOff(avgClean16) : 5;
+    }
+
+    public static final int TARGET_HARMAN = 0;
+    public static final int TARGET_DOLBY_ATMOS = 1;
+    public static final int TARGET_BASS_HEAVY = 2;
+    public static final int TARGET_VOCAL_SPEECH = 3;
+    public static final int TARGET_FLAT_STUDIO = 4;
+
+    /**
+     * Synthesizes 16-band Auto-EQ gains and subwoofer settings matching the chosen TargetCurve.
+     */
+    public static void synthesizeAutoEq16(float[] avgClean16, float[] micComp16,
+                                          int hpfCutoffIdx, boolean hasSub, int targetCurveType,
+                                          int[] outGains16, int[] outSubSettings2) {
+        if (isAvailable() && avgClean16 != null && outGains16 != null) {
+            nativeSynthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, targetCurveType,
+                    outGains16, outSubSettings2);
+        }
+    }
+
+    /**
+     * Synthesizes 16-band Harman Auto-EQ gains and subwoofer settings.
+     */
+    public static void synthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
+                                            int hpfCutoffIdx, boolean hasSub,
+                                            int[] outGains16, int[] outSubSettings2) {
+        synthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
+                outGains16, outSubSettings2);
+    }
+
     @Override
     public void close() {
         if (handle != 0) {
@@ -106,4 +191,30 @@ public final class NativeSweep implements AutoCloseable {
                                                 float[] result);
 
     private static native float nativeBandwidth(float[] recorded, int length, int sampleRate);
+
+    private static native void nativeNoiseFloor(long handle, float[] signal, int length,
+                                                float[] out16);
+
+    private static native void nativeSubtractNoise(float[] sweepDb16, float[] noiseDb16,
+                                                   float[] outCleanDb16, float[] outSnrDb16);
+
+    private static native void nativeEstimateMicCompensation(float[] avgClean16,
+                                                            float[] outCompensation16);
+
+    private static native int nativeDeconvolve(long handle, float[] recorded, int length,
+                                               float[] outImpulse);
+
+    private static native float nativeGccPhatDelay(float[] hRef, int refLen, float[] hCh,
+                                                   int chLen, float[] outProminence1);
+
+    private static native int nativeDetectMidbassRollOff(float[] avgClean16);
+
+    private static native void nativeSynthesizeAutoEq16(float[] avgClean16, float[] micComp16,
+                                                        int hpfCutoffIdx, boolean hasSub, int targetCurveType,
+                                                        int[] outGains16, int[] outSubSettings2);
+
+    private static native void nativeSynthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
+                                                          int hpfCutoffIdx, boolean hasSub,
+                                                          int[] outGains16, int[] outSubSettings2);
 }
+

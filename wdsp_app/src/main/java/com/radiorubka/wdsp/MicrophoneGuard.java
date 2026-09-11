@@ -149,7 +149,7 @@ public final class MicrophoneGuard {
         //
         // Still nothing to restore: force-stop does not disable or uninstall anything, and the
         // assistant comes back the next time the system starts it.
-        if (!outcome.freed && !outcome.stopped.isEmpty()) {
+        if (!outcome.freed && !outcome.stopped.isEmpty() && RootAccess.hasRoot(context)) {
             for (String pkg : HOTWORD_PACKAGES) {
                 if (!isInstalled(pm, pkg)) continue;
                 if (forceStopAsRoot(pkg)) outcome.usedRoot = true;

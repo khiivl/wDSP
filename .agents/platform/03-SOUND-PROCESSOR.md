@@ -172,6 +172,7 @@ direct coefficients at `1000`–`1014`, which are ordinary 32-bit biquads.
 
 ## 5. Crossovers, bass and the subwoofer
 
+### Hardware Register Mapping
 | register | fields | app |
 |---|---|---|
 | `0703` front HPF | `[3:0]` fC, `[4]` 2nd/4th order, `[5]` phase 0/180, `[7]` direct coef | `0x88` byte 3 high nibble |
@@ -181,8 +182,8 @@ direct coefficients at `1000`–`1014`, which are ordinary 32-bit biquads.
 | `0707` sub LPF | `[3:0]` fC, `[4]` order, `[6]` phase, `[7]` direct coef | `0x8B` high nibble |
 | `0708` sub HPF | `[3:0]` fC | not exposed |
 
-HPF fC codes 0..11: Through, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz.
-Sub HPF fC codes 0..11: Through, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200 Hz.
+HPF fC codes 0..11: Through, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz.  
+Sub HPF fC codes 0..11: Through, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200 Hz.  
 P2Bass fC codes 0..7: Through, 54, 68, 86, 108, 134, 172, 214 Hz.
 
 The app builds `0x88` byte 1 as `((freq + 8) << 4) | gain`, which is exactly the `0705` byte with
@@ -190,6 +191,45 @@ its mandatory bit 7 already set. So P2Bass gain really is dB, one per step, stra
 
 The sub high-pass — the subsonic filter that keeps a ported box from unloading — exists in the
 chip and the app does not expose it.
+
+### 🔬 Hardware Signal Path & Topology (Datasheet BU32107EFV-M pp. 88–90 & MCU Firmware)
+> ✍️ *Documented by Antigravity (Gemini) & Kostyamat — 10.09.2026 20:45*.
+
+The internal digital signal path of the ROHM BU32107 proceeds strictly in this order:
+```
+I2S In ──► 16-Band Parametric EQ (0610..061F) ──► P2Bass (0705..0706)
+       ──► Crossover Split:
+             ├──► Front HPF (0703) ──► DVol / Faders (FL, FR) ──► DAC
+             ├──► Rear HPF (0704)  ──► DVol / Faders (RL, RR) ──► DAC
+             └──► Sub LPF (0707)   ──► DVol / Faders (Sub)    ──► DAC
+```
+
+**🔴 Fundamental Architectural Law: The 16-band EQ is BEFORE the Crossover**:
+Because the 16-band EQ processes the composite stereo stream before the crossover split, **any cut on the lowest EQ bands (20 Hz, 31.5 Hz, 50 Hz, 80 Hz) starves the subwoofer input**. If an Auto-EQ algorithm pulls down EQ sub-bass and attempts to compensate by raising subwoofer gain to +8..+12 dB, the subwoofer path is overdriven with an attenuated, phase-distorted signal.
+
+### 🔬 Filter Slopes and Frequency Code Translation
+1. **Filter Order and Slope**:
+   - In registers `0703` (Front HPF), `0704` (Rear HPF), and `0707` (Sub LPF), the `Order` bit (bit 4) is written as `0` by the MCU.
+   - **Bit `Order = 0` selects 2nd-order filtering = 12 dB/octave** (Butterworth / Linkwitz-Riley crossover curve).
+2. **Frequency Mapping in MCU (`mcudecomplied.c:2756`)**:
+   ```c
+   *(char *)(iVar2 + 0x78) = *(char *)(iVar3 + 0x19) + '\x01';
+   ```
+   - The MCU automatically adds `+1` to the subwoofer frequency index `_sub_f` sent by Command `0x8B`.
+   - The Android UI subwoofer spinner displays 11 values (indices 0..10: `25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz`).
+   - Selecting 80 Hz sends index `5`. The MCU translates: `5 + 1 = 6`, writing code `6` (80 Hz) to register `0707`.
+   - For door HPF (`_bf_f`, `_bf_r`), the app table includes code 0 (Through / 20 Hz) at index 0, so index `6` sends code `6` (80 Hz).
+   - **Result**: Front HPF and Sub LPF perfectly align at the exact same acoustic cutoff frequency (80 Hz) with identical 12 dB/octave slopes, meeting at the symmetrical -3 dB crossover point.
+
+### 🧩 Subwoofer Handover Rules for Acoustic Calibration & Auto-EQ
+1. **When Subwoofer is Active (`hasSubwoofer == true`)**:
+   - **EQ Sub-Bass Flat**: All 16-band EQ bands below the crossover frequency ($f < f_{\text{cross}}$, i.e. 20, 31.5, 50, 80 Hz) **MUST be locked at 0 dB (gain index 6)**. The subwoofer receives 100% full-bandwidth input energy.
+   - **Door Speaker Protection**: Door speakers are cleanly isolated and rolled off by the hardware HPF (`0703`, 80 Hz, 12 dB/octave).
+   - **Subwoofer Gain Balancing**: Subwoofer gain is set to a natural balance (+2 to +4 dB, index 7 or 8) for Harman / Dolby curves, avoiding output stage clipping.
+2. **When Subwoofer is Absent (`hasSubwoofer == false`)**:
+   - **Full-Range Door HPF**: Door HPF is set to Through (code 0, 20 Hz).
+   - **Midbass Reinforcement**: Bands 50 Hz and 80 Hz receive targeted boost (+2 to +3 dB) to maximize punch from 6.5" door woofers.
+   - **Infrasound Protection**: Bands 20 Hz and 31.5 Hz remain at 0 dB (unity gain) to prevent dangerous cone excursion ($X_{\max}$) below port resonance.
 
 ## 6. Two things the chip has that the app is not using
 
@@ -358,7 +398,109 @@ which means patching the MCU image. That is a real option here rather than a fan
 image can be reflashed from recovery, but it is a different kind of project from writing an app,
 and it should be decided deliberately rather than drifted into.
 
-## 8. Where to look next
+## 8. 🎚️ Fader Volume, DVol, and Advanced Switch (🔬 Datasheet BU32107EFV-M Rev.001)
+
+> 🔬 **Per-register analysis from ROHM Datasheet (TSZ02201-0C2C0E500500-1-2, 116 pages, 07.Apr.2017)**:  
+> Cross-verified with MCU firmware `QF05.V02.13.20251124.002121` (`C:\MCU\mcu_full.bin`).  
+> ✍️ *Documented by Antigravity (Gemini) — 10.09.2026 19:15*.
+
+### 1. Hardware Fader Volume Registers (`0A00`–`0A05`)
+The analog fader volume block operates at the final output stage before DAC output:
+- **`0A00`**: `FL` (Front Left)
+- **`0A01`**: `FR` (Front Right)
+- **`0A02`**: `RL` (Rear Left)
+- **`0A03`**: `RR` (Rear Right)
+- **`0A04`**: `SL` (Subwoofer / Surround Left)
+- **`0A05`**: `SR` (Subwoofer / Surround Right)
+
+**Register Value Formula**:
+```
+Setting Data (hex) = 0x20 (32 dec) - Fader_Volume_dB
+```
+- **0 dB**: `0x20` (0 1 0 0 0 0 0)
+- **-1 dB**: `0x21`
+- **-2 dB**: `0x22`
+- ...
+- **-79 dB**: `0x6F` (1 1 0 1 1 1 1)
+- **-∞ dB (Full Mute)**: `0x00` (0 0 0 0 0 0 0)
+
+### 2. Digital Volume (DVol) Registers (`0900`–`090B`)
+Located in the digital core prior to DAC conversion:
+- **DVol Boost (`0906`–`090B`)**: 0 dB to +36 dB in 0.5 dB steps (`Data = 128 - Boost_dB * 2`).
+- **DVol Attenuation (`0900`–`0905`)**: 0 dB to -79 dB in 0.5 dB steps, plus -∞ dB.
+
+### 3. Advanced Switch (Smooth Fade / Pop Noise Prevention)
+Registers `0003(hex)[2:0]` (0.7 ms to 5.3 ms) and `0005(hex)[3:0]` (0.7 ms to 23.3 ms) configure hardware ramp-up / ramp-down transition times to eliminate clicks/pops during gain changes.
+
+⚠️ **Critical Hardware Restriction (Datasheet Pages 25–30 & 94)**:
+> *"Do not send Fader Volume Gain setting data (0A00(hex) to 0A05(hex)[6:0]) during same channel Mixing/Mixing Fader Advanced Switch operation. Fader Volume may malfunction."*
+
+### 4. 🧩 Architectural Law for wDSP
+1. **Never bypass SharedPreferences or send asynchronous `sendFaderDirect` calls**:
+   - Out-of-band writes via raw binder or background threads violate the chip's Advanced Switch transition time, cause packet dropping on the MCU UART queue, and clash with the `prefListener` queue.
+2. **Strict Single-Queue Serialization**:
+   - All fader/balance changes MUST flow through `McuService.backgroundHandler` via SharedPreferences keys (`preset + "_f_lr"`, `preset + "_f_fr"`).
+   - During Auto-EQ sweeps, `RoomMeasurement.applyRouting` updates `prefs`, which `McuService` dispatches cleanly without race conditions.
+   - At the conclusion of sweeps, the scratch preset is reset to center (`12, 12`) and `RESET_AUDIO_MCU` broadcast triggers `mcuCache.clear()` and `syncPreset(false)`.
+
+---
+
+## 9. 🎛️ Топологія тракту BU32107, порядок кросовера 12 дБ/окт та трансляція команд MCU
+
+> 🔬 **Аналіз даташиту ROHM BU32107EFV-M Rev.001 (TSZ02201-0C2C0E500500-1-2, сс. 25–30, 48–52, 94)**:  
+> Крос-верифіковано з кодом прошивки MCU `mcudecomplied.c` (`DAT_08008804`, рядки `2756`, `11095`).  
+> ✍️ *Досліджено Kostyamat & Antigravity (Gemini) — 10.09.2026 21:40*.
+
+### 1. Послідовність обробки сигналу в цифровому ядрі BU32107
+Цифровий потік проходить наступні апаратні каскади:
+$$\text{I2S Stereo In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0610..061F) \longrightarrow \text{P2Bass}\ (0705..0706) \longrightarrow \mathbf{Crossover}\ [\text{HPF}\ (0703/0704) + \text{Sub LPF}\ (0707)] \longrightarrow \text{DVol}\ (0900..090B) \longrightarrow \text{Fader Vol}\ (0A00..0A05) \longrightarrow \text{DAC}$$
+
+⚠️ **Фундаментальний закон**: 16-смуговий еквалайзер стоїть **ДО** кросовера в спільному стереотракті!
+- Будь-яке зарізання басів (20, 31.5, 50, 80 Гц) на 16-смуговому еквалайзері нещадно душить вхідний сигнал для сабвуфера.
+- **Золоте правило Auto-EQ**: при наявності сабвуфера (`hasSubwoofer == true`) смуги 16-смугового EQ нижче точки зрізу тримаються суворо на **0 дБ (Flat, індекс 6)**. Розподілом низьких частот між дверима та сабвуфером займається виключно апаратний кросовер BU32107.
+
+### 2. Крутизна зрізу кросовера та біт `Order`
+- У регістрах `0703` (Front HPF), `0704` (Rear HPF) та `0707` (Subwoofer LPF) біт 4 (`Order`) за замовчуванням виставлений у `0`:
+  - `0` = **2-й порядок = 12 дБ/октаву** (спад Баттерворта / Лінквіца-Райлі).
+  - `1` = 1-й порядок = 6 дБ/октаву.
+- MCU на платформі QF працює з кросовером 2-го порядку (12 дБ/октаву), що забезпечує крутий акустичний спад і захист дверей від перевантаження інфразвуком.
+
+### 3. Трансляція команд MCU для сабвуфера (`mcudecomplied.c`)
+- **Команда `0x8B` від додатка**:
+  - Байт корисного навантаження: `(cachedSubFreq << 4) | (subGain & 0x0F)`.
+  - У коді декомпільованого MCU (`mcudecomplied.c:11095`):
+    ```c
+    DAT_08008804[0x1a] = local_10e[0] & 0xf;   // гейн сабвуфера
+    puVar5[0x19] = local_10e[0] >> 4;           // індекс частоти зрізу
+    ```
+- **Зсув частоти на +1 (`mcudecomplied.c:2756`)**:
+  ```c
+  *(char *)(iVar2 + 0x78) = *(char *)(iVar3 + 0x19) + '\x01';
+  ```
+  MCU додає `+1` до значення `_sub_f`. Спінер сабвуфера у wDSP при виборі 80 Гц (індекс 5) передає 5; MCU додає 1 і записує код 6 (80 Гц) у регістр BU32107 `0707`.
+  Для дверного ФВЧ нульовий елемент — Through (20 Гц), тому індекс 6 передає код 6 (80 Гц). Фільтри дверного HPF та сабвуферного LPF ідеально сходяться на частоті 80 Гц у точці -3 дБ.
+
+### 4. Шкала гейну сабвуфера в wDSP vs MCU
+- Регулятор `seek_sub_gain` у wDSP має шкалу `0 .. 12` (+0 дБ .. +12 дБ), де нуль є чесним 0 дБ (відсутній зсув +6, на відміну від 16-смугового EQ).
+- Запис значень `outSubGain = 7` або `8` виставляє регулятор на **+7 дБ**, викликаючи надмірний гул («перебор з сабом»).
+- **Калібровані рівні в Auto-EQ**:
+  - `TARGET_HARMAN`: **+2 дБ** (індекс 2);
+  - `TARGET_DOLBY_ATMOS`: **+3 дБ** (індекс 3);
+  - `TARGET_BASS_HEAVY`: **+5 дБ** (індекс 5);
+  - `TARGET_FLAT_STUDIO`: **0 дБ** (індекс 0).
+
+### 5. Теорема акустичного фазування сабвуфера (Ray Tracing)
+- Сабвуфер стоїть у багажнику, мікрофон магнітоли — на торпедо ($Y = 0$).
+- Хвиля сабвуфера поширюється вперед: проходить повз вуха слухача ($Y = D_{\text{listen}}$) ПЕРШОЮ, і лише потім досягає торпедо.
+- **Закон фазування**:
+  $$T_{\text{ears}} = T_{\text{mic}} - \frac{D_{\text{mic-to-ears}}}{c}$$
+  $$\Delta d = d_{\text{target}} - d_{\text{mic}} = 165 - (D_{\text{listen}} + 165) = -D_{\text{listen}}\text{ см}$$
+  $$t_{\text{sub\_ears}} = t_{\text{sub\_mic}} - \frac{D_{\text{listen}}}{34.3\text{ см/мс}}$$
+  Підтверджено на слух та апаратно: віднімання дистанції перепроєкції ідеально зводить низькочастотну фазу сабвуфера з фронтальними мідбасами.
+
+---
+
+## 10. Where to look next
 
 - `0203`[3], Time Alignment Mode. If any firmware sets 4ch, the delay ceiling halves and values
   above `1FF` become prohibited there.

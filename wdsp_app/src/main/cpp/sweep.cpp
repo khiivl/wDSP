@@ -383,4 +383,431 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     }
 }
 
+void SweepMeasurement::spectrum16Db(const float* signal, int length, float* out16) const {
+    for (int b = 0; b < kHwBands; b++) out16[b] = -120.0f;
+    if (signal == nullptr || length < 256) return;
+
+    const int windowLen = std::min(kAnalysisWindow, length);
+    const int n = nextPowerOfTwo(windowLen);
+    std::vector<float> re(n, 0.0f);
+    std::vector<float> im(n, 0.0f);
+
+    // Full Hann window for stationary noise / ambient signal
+    for (int i = 0; i < windowLen; i++) {
+        const float w = 0.5f - 0.5f * std::cos(2.0f * kPi * static_cast<float>(i)
+                                               / static_cast<float>(windowLen - 1));
+        re[i] = signal[i] * w;
+    }
+
+    fft(re, im, false);
+
+    const float binHz = static_cast<float>(sampleRate_) / static_cast<float>(n);
+    const float third = std::pow(2.0f, 1.0f / 3.0f);
+
+    for (int b = 0; b < kHwBands; b++) {
+        const float low = kHwCenters[b] / third;
+        const float high = std::min(kHwCenters[b] * third,
+                                    static_cast<float>(sampleRate_) * 0.5f);
+        int first = static_cast<int>(std::ceil(low / binHz));
+        int last = static_cast<int>(std::floor(high / binHz));
+        first = std::max(first, 1);
+        last = std::min(last, n / 2);
+        if (last < first) {
+            first = last = std::max(1, std::min(n / 2,
+                                                static_cast<int>(kHwCenters[b] / binHz + 0.5f)));
+        }
+
+        double power = 0.0;
+        for (int i = first; i <= last; i++) {
+            power += static_cast<double>(re[i]) * re[i] + static_cast<double>(im[i]) * im[i];
+        }
+        const int bins = last - first + 1;
+        // Normalize FFT energy to time-domain power (dBFS)
+        const double norm = static_cast<double>(windowLen) * windowLen;
+        const double mean = (power / norm) / bins;
+        out16[b] = 10.0f * std::log10(static_cast<float>(mean) + 1e-20f);
+    }
+}
+
+void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseDb16,
+                                     float* outCleanDb16, float* outSnrDb16) {
+    if (sweepDb16 == nullptr || noiseDb16 == nullptr) return;
+    for (int b = 0; b < kHwBands; b++) {
+        const float snr = sweepDb16[b] - noiseDb16[b];
+        if (outSnrDb16 != nullptr) {
+            outSnrDb16[b] = snr;
+        }
+
+        const float pSweep = std::pow(10.0f, sweepDb16[b] * 0.1f);
+        const float pNoise = std::pow(10.0f, noiseDb16[b] * 0.1f);
+        // Spectral floor (Berouti / Wiener):
+        // Noise subtraction never attenuates more than -12 dB below the measured sweep.
+        // If signal is buried in noise (pSweep <= pNoise), floor at -12 dB rather than -120 dB black hole!
+        const float floorPower = pSweep * 0.0631f; // -12 dB
+        const float pDiff = pSweep - pNoise;
+        const float pClean = std::max(pDiff, floorPower);
+
+        if (outCleanDb16 != nullptr) {
+            outCleanDb16[b] = 10.0f * std::log10(std::max(pClean, 1e-12f));
+        }
+    }
+}
+
+void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* outCompensation16) {
+    if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
+    for (int b = 0; b < kHwBands; b++) {
+        outCompensation16[b] = 0.0f;
+    }
+
+    // Mid-frequency cabin reference anchor (200 - 500 Hz: bands 5, 6, 7)
+    // In vehicle acoustics, speech and midband are uncorrupted by cabin gain or mic port high-pass filters.
+    float sumMid = 0.0f;
+    int countMid = 0;
+    for (int b = 5; b <= 7; b++) {
+        if (avgClean16[b] > -100.0f) {
+            sumMid += avgClean16[b];
+            countMid++;
+        }
+    }
+    const float refMid = countMid > 0 ? (sumMid / countMid) : avgClean16[3];
+
+    // 1. Low-frequency roll-off & cabin gain compensation below 160 Hz (bands 0..4: 20, 31.5, 50, 80, 125 Hz)
+    // Head unit mic hardware (pinhole cavity and input AC coupling capacitors) rolls off steeply below 150 Hz.
+    // In a sealed passenger cabin, acoustic energy is maintained or boosted by cabin gain (+12 dB/oct below 80 Hz).
+    for (int b = 0; b < 5; b++) {
+        float expected = refMid;
+        if (kHwCenters[b] < 80.0f) {
+            float octaves = std::log2(80.0f / kHwCenters[b]);
+            expected += 6.0f * octaves; // gentle cabin gain expectation
+        }
+        float deficit = expected - avgClean16[b];
+        if (deficit > 0.0f) {
+            // Cap maximum low-frequency boost to +16 dB matching real capsule attenuation
+            outCompensation16[b] = std::min(deficit, 16.0f);
+        }
+    }
+
+    // 2. High-frequency acoustic port roll-off correction (12.5 kHz and 20 kHz)
+    // kHwCenters[12] = 5000 Hz
+    const float ref5k = avgClean16[12];
+    for (int b = 14; b < kHwBands; b++) {
+        const float drop = ref5k - avgClean16[b];
+        if (drop > 2.0f) {
+            outCompensation16[b] = std::min(drop - 2.0f, 8.0f);
+        }
+    }
+}
+
+float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,
+                                     const float* hCh, int chLen,
+                                     float& peakProminence) {
+    peakProminence = 0.0f;
+    if (hRef == nullptr || hCh == nullptr || refLen < 16 || chLen < 16) return 0.0f;
+
+    const int maxLen = std::max(refLen, chLen);
+    const int n = nextPowerOfTwo(maxLen * 2);
+    if (n < 64) return 0.0f;
+
+    std::vector<float> reRef(n, 0.0f);
+    std::vector<float> imRef(n, 0.0f);
+    std::vector<float> reCh(n, 0.0f);
+    std::vector<float> imCh(n, 0.0f);
+
+    for (int i = 0; i < refLen; i++) reRef[i] = hRef[i];
+    for (int i = 0; i < chLen; i++) reCh[i] = hCh[i];
+
+    fft(reRef, imRef, false);
+    fft(reCh, imCh, false);
+
+    // Cross spectrum: G = Ch * conj(Ref)
+    std::vector<float> gRe(n, 0.0f);
+    std::vector<float> gIm(n, 0.0f);
+    float maxMag = 0.0f;
+
+    for (int i = 0; i < n; i++) {
+        const float r = reCh[i] * reRef[i] + imCh[i] * imRef[i];
+        const float im = imCh[i] * reRef[i] - reCh[i] * imRef[i];
+        gRe[i] = r;
+        gIm[i] = im;
+        const float mag = std::sqrt(r * r + im * im);
+        if (mag > maxMag) maxMag = mag;
+    }
+
+    const float eps = maxMag * 1e-6f + 1e-12f;
+    for (int i = 0; i < n; i++) {
+        const float mag = std::sqrt(gRe[i] * gRe[i] + gIm[i] * gIm[i]) + eps;
+        gRe[i] /= mag;
+        gIm[i] /= mag;
+    }
+
+    fft(gRe, gIm, true);
+
+    int bestIdx = 0;
+    float bestVal = -1.0f;
+    double sumVal = 0.0;
+
+    for (int i = 0; i < n; i++) {
+        const float v = std::fabs(gRe[i]);
+        sumVal += v;
+        if (v > bestVal) {
+            bestVal = v;
+            bestIdx = i;
+        }
+    }
+
+    const float avgVal = static_cast<float>(sumVal / n);
+    peakProminence = avgVal > 1e-12f ? (bestVal / avgVal) : 0.0f;
+
+    int intDelay = bestIdx < n / 2 ? bestIdx : (bestIdx - n);
+
+    int prevIdx = (bestIdx - 1 + n) % n;
+    int nextIdx = (bestIdx + 1) % n;
+    float y0 = std::fabs(gRe[prevIdx]);
+    float y1 = std::fabs(gRe[bestIdx]);
+    float y2 = std::fabs(gRe[nextIdx]);
+
+    float delta = 0.0f;
+    float denom = 2.0f * (y0 - 2.0f * y1 + y2);
+    if (std::fabs(denom) > 1e-12f) {
+        delta = (y0 - y2) / denom;
+        if (delta < -1.0f || delta > 1.0f) delta = 0.0f;
+    }
+
+    return static_cast<float>(intDelay) + delta;
+}
+
+// 12 hardware frequencies for Bass Filter (HPF):
+// 20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
+constexpr int kBassFilterBands = 12;
+constexpr float kBassFilterFreqs[kBassFilterBands] = {
+    20.0f, 25.0f, 31.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
+};
+
+// 11 hardware frequencies for Subwoofer Filter (LPF):
+// 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
+constexpr int kSubBands = 11;
+constexpr float kSubFreqs[kSubBands] = {
+    25.0f, 32.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
+};
+
+int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
+    if (avgClean16 == nullptr) return 5; // Default 63 Hz (index 5)
+
+    // Midrange reference level: bands 5, 6, 7, 8 (200, 315, 500, 800 Hz)
+    const float refMid = 0.25f * (avgClean16[5] + avgClean16[6] + avgClean16[7] + avgClean16[8]);
+
+    // Check low-end response:
+    // Band 3 = 80 Hz, Band 2 = 50 Hz, Band 1 = 31.5 Hz
+    const float drop80 = refMid - avgClean16[3];
+    const float drop50 = refMid - avgClean16[2];
+
+    // If 50 Hz is within 3.5 dB of midrange, the speaker has strong deep bass -> 50 Hz HPF (index 4)
+    if (drop50 <= 3.5f) {
+        return 4; // 50 Hz
+    }
+    // If 80 Hz is solid (within 3 dB), but 50 Hz drops -> 63 Hz HPF
+    if (drop80 <= 3.0f) {
+        return 5; // 63 Hz
+    }
+    if (drop80 <= 6.0f) {
+        return 6; // 80 Hz
+    }
+    // If 80 Hz is already weak -> 100 Hz HPF (index 7)
+    return 7; // 100 Hz
+}
+
+void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                         int hpfCutoffIdx, bool hasSub, int targetCurveType,
+                                         int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+    if (outGains16 == nullptr) return;
+
+    // Default Flat gains (index 6 = 0 dB)
+    for (int b = 0; b < kHwBands; b++) {
+        outGains16[b] = 6;
+    }
+    outSubLpfIdx = 5; // default 80 Hz
+    outSubGain = 2;   // default +2 dB (wDSP slider is 0..12, 0 is 0 dB)
+
+    if (avgClean16 == nullptr) return;
+
+    const float cutoffHz = (hpfCutoffIdx >= 0 && hpfCutoffIdx < kBassFilterBands)
+            ? kBassFilterFreqs[hpfCutoffIdx] : 63.0f;
+
+    // Map HPF cutoff frequency to Subwoofer LPF index (kSubFreqs)
+    if (hasSub) {
+        int bestSubIdx = 5; // 80 Hz default
+        float minDiff = 1e6f;
+        for (int i = 0; i < kSubBands; i++) {
+            float diff = std::fabs(kSubFreqs[i] - cutoffHz);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestSubIdx = i;
+            }
+        }
+        outSubLpfIdx = bestSubIdx;
+        // In wDSP seekSubGain has range 0..12 (+0 dB .. +12 dB).
+        // Since low bands on the 16-band EQ are kept Flat (0 dB), sub gain only needs modest lift.
+        if (targetCurveType == TARGET_DOLBY_ATMOS) {
+            outSubGain = 3; // +3 dB cinema sub shelf
+        } else if (targetCurveType == TARGET_BASS_HEAVY) {
+            outSubGain = 5; // +5 dB punchy heavy bass shelf
+        } else if (targetCurveType == TARGET_VOCAL_SPEECH) {
+            outSubGain = 0; // 0 dB attenuated sub
+        } else if (targetCurveType == TARGET_FLAT_STUDIO) {
+            outSubGain = 0; // 0 dB flat sub
+        } else {
+            outSubGain = 2; // +2 dB natural Harman shelf
+        }
+    } else {
+        outSubGain = 0; // Mute subwoofer when not present
+    }
+
+    // 1. Calculate compensated acoustic response M[b] = avgClean16[b] + micComp16[b]
+    std::vector<float> m(kHwBands, 0.0f);
+    for (int b = 0; b < kHwBands; b++) {
+        m[b] = avgClean16[b] + (micComp16 != nullptr ? micComp16[b] : 0.0f);
+    }
+
+    // Midrange reference (bands 5..8: 200..800 Hz)
+    float refMidSum = 0.0f;
+    int refMidCount = 0;
+    for (int b = 5; b <= 8; b++) {
+        if (m[b] > -70.0f) { // protect against missing/corrupted bands
+            refMidSum += m[b];
+            refMidCount++;
+        }
+    }
+    const float refMid = (refMidCount > 0) ? (refMidSum / refMidCount) : -20.0f;
+
+    // 2. Synthesize Target curve T[b] relative to refMid
+    for (int b = 0; b < kHwBands; b++) {
+        float target = 0.0f;
+        const float freq = kHwCenters[b];
+
+        switch (targetCurveType) {
+            case TARGET_DOLBY_ATMOS:
+                // 1) Cinematic sub-bass shelf below 60 Hz (+6 dB with sub, +3.5 dB without sub down to 45 Hz)
+                if (freq <= 50.0f) {
+                    target += hasSub ? +6.0f : (freq >= 45.0f ? +3.5f : 0.0f);
+                } else if (freq < 160.0f) {
+                    float factor = std::log10(160.0f / freq) / std::log10(160.0f / 50.0f);
+                    target += hasSub ? (6.0f * factor) : (3.5f * factor);
+                }
+                // 2) Dialogue clarity & speech presence bump (1.25 kHz .. 3.15 kHz)
+                if (freq >= 1200.0f && freq <= 3200.0f) {
+                    target += +2.5f;
+                }
+                // 3) Air & spatial ambiance extension (>10 kHz)
+                if (freq >= 12000.0f) {
+                    target += +2.5f;
+                } else if (freq > 3200.0f && freq < 12000.0f) {
+                    target += -0.5f * std::log2(freq / 3200.0f);
+                }
+                break;
+
+            case TARGET_BASS_HEAVY:
+                // Deep massive punch shelf below 80 Hz (+7 dB with sub, +4 dB without sub down to 45 Hz)
+                if (freq <= 80.0f) {
+                    target += hasSub ? +7.0f : (freq >= 45.0f ? +4.0f : 0.0f);
+                } else if (freq < 200.0f) {
+                    float factor = std::log10(200.0f / freq) / std::log10(200.0f / 80.0f);
+                    target += hasSub ? (7.0f * factor) : (4.0f * factor);
+                }
+                // Mild midrange depression around 500 Hz to prevent boominess/mud
+                if (freq >= 315.0f && freq <= 800.0f) {
+                    target += -1.5f;
+                }
+                // Smooth high roll-off above 4 kHz
+                if (freq >= 4000.0f) {
+                    target += -1.0f * std::log2(freq / 4000.0f);
+                }
+                break;
+
+            case TARGET_VOCAL_SPEECH:
+                // Low-cut rumble filter below 100 Hz
+                if (freq < 100.0f) {
+                    target += -3.5f;
+                } else if (freq < 200.0f) {
+                    target += -1.5f;
+                }
+                // Speech presence peak (315 Hz .. 3.15 kHz)
+                if (freq >= 300.0f && freq <= 3200.0f) {
+                    target += +3.5f;
+                }
+                // Gentle sibilance attenuation
+                if (freq >= 6000.0f) {
+                    target += -1.5f;
+                }
+                break;
+
+            case TARGET_FLAT_STUDIO:
+                // Flat target: 0 dB across all bands
+                target = 0.0f;
+                break;
+
+            case TARGET_HARMAN:
+            default:
+                // Standard Harman In-Car target curve
+                if (freq >= 2500.0f) {
+                    target = -0.8f * std::log2(freq / 2500.0f);
+                } else if (freq < 160.0f) {
+                    if (hasSub) {
+                        if (freq <= 60.0f) {
+                            target = +5.0f;
+                        } else {
+                            target = 5.0f * (std::log10(160.0f / freq) / std::log10(160.0f / 60.0f));
+                        }
+                    } else {
+                        // Maximize door bass response down to 45 Hz when no subwoofer is installed
+                        if (freq >= 45.0f) {
+                            target = +3.5f * (std::log10(160.0f / freq) / std::log10(160.0f / 45.0f));
+                        } else {
+                            target = 0.0f; // natural roll-off below 45 Hz
+                        }
+                    }
+                }
+                break;
+        }
+
+        // Error delta
+        float deltaDb = target - (m[b] - refMid);
+
+        // Subwoofer / Midbass Crossover Rule:
+        // In BU32107, the 16-band EQ sits in the stereo mix BEFORE the crossover filters!
+        // If we cut 20, 31.5, 50 Hz on the 16-band EQ, we cut those frequencies for the SUBWOOFER too.
+        // 1) When hasSub is true:
+        //    The subwoofer handles frequencies below cutoffHz (via Sub LPF 0707, 12 dB/oct).
+        //    The door speakers are protected by the Door HPF (0703, 12 dB/oct).
+        //    The 16-band EQ MUST NOT CUT sub-bass below cutoffHz! Keep it flat (0 dB, index 6),
+        //    so the subwoofer receives a full, unattenuated input signal.
+        if (hasSub && freq < cutoffHz) {
+            deltaDb = 0.0f; // 0 dB (Flat index 6)
+        }
+        // 2) When hasSub is false:
+        //    Door speakers play full-range (HPF = Through / 20 Hz).
+        //    Infrasound below 40 Hz cannot be reproduced by door speakers; keep at 0 dB (do not boost).
+        else if (!hasSub && freq < 40.0f) {
+            deltaDb = 0.0f;
+        }
+
+        // Clamping rules:
+        // Rule 1: Strict limit on boost to prevent clipping and null excitation (+3.0 dB)
+        deltaDb = std::min(deltaDb, +3.0f);
+        // Rule 2: Cuts:
+        // - Bass/midrange (<= 1 kHz) can cut down to -6.0 dB to tame cabin room modes
+        // - High frequencies (> 1 kHz) must NEVER be cut aggressively; limit cut to -3.0 dB
+        //   to preserve natural treble, speech presence, and sparkle.
+        const float maxCutDb = (freq > 1000.0f) ? -3.0f : -6.0f;
+        deltaDb = std::max(deltaDb, maxCutDb);
+
+        // Quantize to BU32107 gain index (2 dB per step, 6 = 0 dB)
+        int gainIdx = static_cast<int>(std::round(deltaDb / 2.0f)) + 6;
+        // Safe indices: 3 (-6 dB) .. 8 (+4 dB) for bass/mids, 4 (-4 dB) .. 8 (+4 dB) for treble
+        const int minGainIdx = (freq > 1000.0f) ? 4 : 3;
+        gainIdx = std::max(minGainIdx, std::min(8, gainIdx));
+        outGains16[b] = gainIdx;
+    }
+}
+
 } // namespace wdsp
+

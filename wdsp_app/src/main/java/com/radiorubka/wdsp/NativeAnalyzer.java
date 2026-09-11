@@ -64,6 +64,13 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativePush(handle, waveform, length);
     }
 
+    /** Feeds continuous 16-bit PCM samples directly into the analyser ring buffer, skipping the stitcher. */
+    public void pushPcm16(short[] samples, int count, float gain) {
+        if (handle != 0 && samples != null && count > 0) {
+            nativePushPcm16(handle, samples, count, gain);
+        }
+    }
+
     /**
      * Runs analysis for whatever has been captured, blocking until there is enough or the timeout
      * expires. Call from a thread of its own: keeping it off the capture thread means a transform
@@ -116,11 +123,27 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativeFrames(handle);
     }
 
+    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
+    public void setIsAcoustic(boolean acoustic) {
+        if (handle != 0) nativeSetIsAcoustic(handle, acoustic);
+    }
+
+    /** Reads latest samples into byte array as 8-bit unsigned waveform centered at 128. */
+    public int getWaveform(byte[] outBuffer) {
+        return handle != 0 && outBuffer != null ? nativeGetWaveform(handle, outBuffer) : 0;
+    }
+
     private static native long nativeCreate(int sampleRate, int captureSize);
 
     private static native void nativeDestroy(long handle);
 
     private static native int nativePush(long handle, byte[] block, int len);
+
+    private static native void nativePushPcm16(long handle, short[] samples, int count, float gain);
+
+    private static native void nativeSetIsAcoustic(long handle, boolean acoustic);
+
+    private static native int nativeGetWaveform(long handle, byte[] outBuffer);
 
     private static native void nativeProcess(long handle, int timeoutMs);
 

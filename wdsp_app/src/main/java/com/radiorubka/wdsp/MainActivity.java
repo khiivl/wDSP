@@ -57,6 +57,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.radiorubka.wdsp.ui.PermissionsWizard;
+import com.radiorubka.wdsp.ui.ThemedDialog;
 import com.radiorubka.wdsp.ui.views.SegmentedPillNavView;
 import com.google.android.material.slider.LabelFormatter;
 import com.google.gson.Gson;
@@ -107,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
+    private TextView btnSpectrumCalc, btnSpectrumMic;
+    private static boolean sPromptedMicCalibration = false;
 
     private Slider seekSubGain;
     private AutoCompleteTextView spinnerSubFreq;
@@ -470,6 +473,9 @@ public class MainActivity extends AppCompatActivity {
         updateVisualizer();
         applyAppTheme();
         checkAndStartSpectrumAnalyzer();
+        RootAccess.checkAsync(this, this::updateSpectrumModeUi);
+        updateSpectrumModeUi();
+        checkRadioMicCalibrationInvite();
     }
 
     @Override
@@ -748,6 +754,13 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
 
+            // Spectrum Mode toggle
+            updateSpectrumModeUi();
+            TextView lblSpec = findViewById(R.id.lbl_spectrum_mode);
+            if (lblSpec != null) {
+                lblSpec.setTextColor(secondaryText);
+            }
+
             // Spinners
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_presets), spinnerPresets, accent, secondaryText, primaryText);
             ThemeManager.tintTextInputLayout(findViewById(R.id.layout_spinner_sub_freq), spinnerSubFreq, accent, secondaryText, primaryText);
@@ -921,6 +934,91 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setupSpectrumModeToggle() {
+        btnSpectrumCalc = findViewById(R.id.btn_spectrum_calc);
+        btnSpectrumMic = findViewById(R.id.btn_spectrum_mic);
+        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumCalc);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumMic);
+
+        btnSpectrumCalc.setOnClickListener(v -> {
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            updateSpectrumModeUi();
+        });
+
+        btnSpectrumMic.setOnClickListener(v -> {
+            if (!RoomMeasurement.hasMicCompensation(this)) {
+                showMicCalibrationInviteDialog();
+                return;
+            }
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
+            updateSpectrumModeUi();
+        });
+
+        RootAccess.checkAsync(this, this::updateSpectrumModeUi);
+        updateSpectrumModeUi();
+    }
+
+    private void updateSpectrumModeUi() {
+        View toggleLayout = findViewById(R.id.layout_spectrum_mode_toggle);
+        boolean hasRoot = PermissionsWizard.isRootGranted(this);
+        boolean hasMic = RoomMeasurement.hasMicCompensation(this);
+        boolean isAvailable = hasRoot && hasMic;
+
+        if (toggleLayout != null) {
+            toggleLayout.setVisibility(isAvailable ? View.VISIBLE : View.GONE);
+        }
+
+        if (!isAvailable) {
+            if (AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(AudioSpectrumEngine.getInstance().getSpectrumMode())) {
+                AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            }
+        }
+
+        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        boolean isNight = ThemeManager.isNight(this);
+        int accent = ThemeManager.accent(this, isNight);
+        int border = ThemeManager.panelBorder(this, isNight);
+        int textPrimary = ThemeManager.textPrimary(this, isNight);
+        int onAccentColor = ThemeManager.onAccent(this, isNight);
+        int substrate = ThemeManager.dockSubstrateColor(this, isNight);
+
+        String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
+        boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode);
+
+        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, !isMic, isNight, 10f, accent, border));
+        int fgCalc = !isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
+        btnSpectrumCalc.setTextColor(fgCalc);
+
+        btnSpectrumMic.setBackground(ThemeManager.pillDrawable(this, isMic, isNight, 10f, accent, border));
+        int fgMic = isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
+        btnSpectrumMic.setTextColor(fgMic);
+    }
+
+    private void showMicCalibrationInviteDialog() {
+        ThemedDialog.builder(this)
+                .setTitle(R.string.spectrum_mic_uncalibrated_title)
+                .setMessage(R.string.spectrum_mic_uncalibrated_msg)
+                .setPositiveButton(R.string.spectrum_calibrate_now, (dialog, which) -> {
+                    Intent intent = new Intent(this, SettingsActivity.class);
+                    intent.putExtra("open_section_id", R.id.label_room_section);
+                    startActivity(intent);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void checkRadioMicCalibrationInvite() {
+        if (sPromptedMicCalibration) return;
+        if (PermissionsWizard.isRootGranted(this) && !RoomMeasurement.hasMicCompensation(this)) {
+            if (NowPlaying.getInstance(this).isRadioSource()) {
+                sPromptedMicCalibration = true;
+                showMicCalibrationInviteDialog();
+            }
+        }
+    }
+
     private void SelectTab() {
         SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
@@ -970,6 +1068,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);
         tvPowerDb = findViewById(R.id.tv_pwr_db);
+        setupSpectrumModeToggle();
         setupNavigation();
     }
 
@@ -1425,14 +1524,12 @@ public class MainActivity extends AppCompatActivity {
             updateFaderLabels();
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
-//                updateFaderMcu();
             }
         });
         seekFaderFr.addOnChangeListener((slider, value, fromUser) -> {
             updateFaderLabels();
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
-//                updateFaderMcu();
             }
         });
 
@@ -1463,7 +1560,12 @@ public class MainActivity extends AppCompatActivity {
         switchPreciseEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
-                if (checked) switchLegacyEnable.setChecked(false);
+                if (checked && switchLegacyEnable != null && switchLegacyEnable.isChecked()) {
+                    isUpdatingUi = true;
+                    switchLegacyEnable.setChecked(false);
+                    updateToggleStyle(switchLegacyEnable);
+                    isUpdatingUi = false;
+                }
                 autoSaveCurrent();
             }
         });
@@ -1511,7 +1613,12 @@ public class MainActivity extends AppCompatActivity {
         switchLegacyEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
-                if (checked) switchPreciseEnable.setChecked(false);
+                if (checked && switchPreciseEnable != null && switchPreciseEnable.isChecked()) {
+                    isUpdatingUi = true;
+                    switchPreciseEnable.setChecked(false);
+                    updateToggleStyle(switchPreciseEnable);
+                    isUpdatingUi = false;
+                }
                 autoSaveCurrent();
             }
         });
@@ -1643,6 +1750,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPresets() {
+        PresetsDatabaseValidator.validateAndMigrate(this);
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         Set<String> names = p.getStringSet(PREF_PRESET_NAMES, null);
         String last = p.getString(PREF_LAST_SELECTED, null);
@@ -1938,13 +2046,18 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_d_rl", getIntSlider(seekDelayRl));
             e.putInt(name + "_d_rr", getIntSlider(seekDelayRr));
             e.putInt(name + "_d_sub", getIntSlider(seekDelaySub));
-            e.putBoolean(name + "_d_en", switchPreciseEnable.isChecked());
+            boolean dEn = switchPreciseEnable.isChecked();
+            boolean d1En = switchLegacyEnable.isChecked();
+            if (dEn && d1En) {
+                d1En = false;
+            }
+            e.putBoolean(name + "_d_en", dEn);
             e.putInt(name + "_d1_fl", getIntSlider(seekDelay1Fl));
             e.putInt(name + "_d1_fr", getIntSlider(seekDelay1Fr));
             e.putInt(name + "_d1_rl", getIntSlider(seekDelay1Rl));
             e.putInt(name + "_d1_rr", getIntSlider(seekDelay1Rr));
             e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE));
-            e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
+            e.putBoolean(name + "_d1_en", d1En);
             
             // GALA
             if (galaGlobalMode) {
@@ -2021,13 +2134,22 @@ public class MainActivity extends AppCompatActivity {
             seekDelayRl.setValue((float) p.getInt(name + "_d_rl", 0));
             seekDelayRr.setValue((float) p.getInt(name + "_d_rr", 0));
             seekDelaySub.setValue((float) p.getInt(name + "_d_sub", 0));
-            switchPreciseEnable.setChecked(p.getBoolean(name + "_d_en", false));
+            boolean dEn = p.getBoolean(name + "_d_en", false);
+            boolean d1En = p.getBoolean(name + "_d1_en", false);
+            if (dEn && d1En) {
+                if (p.getInt(name + "_rsse_val", 10) > 10) {
+                    dEn = false;
+                } else {
+                    d1En = false;
+                }
+            }
+            switchPreciseEnable.setChecked(dEn);
             seekDelay1Fl.setValue((float) p.getInt(name + "_d1_fl", 0));
             seekDelay1Fr.setValue((float) p.getInt(name + "_d1_fr", 0));
             seekDelay1Rl.setValue((float) p.getInt(name + "_d1_rl", 0));
             seekDelay1Rr.setValue((float) p.getInt(name + "_d1_rr", 0));
             seekDelay1RSSE.setValue((float) p.getInt(name + "_rsse_val", 10));
-            switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
+            switchLegacyEnable.setChecked(d1En);
             
             // GALA
             switchGalaEnable.setChecked(galaGlobalMode
@@ -2552,6 +2674,9 @@ public class MainActivity extends AppCompatActivity {
 
         Map<String, Object> filteredData = new HashMap<>();
         filteredData.put("is_single_preset", true);
+        filteredData.put("app", "wDSP");
+        filteredData.put("versionCode", PresetsDatabaseValidator.getAppVersionCode(this));
+        filteredData.put("versionName", PresetsDatabaseValidator.getAppVersionName(this));
         filteredData.put("preset_name_label", currentPreset);
 
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
@@ -2642,6 +2767,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames));
             }
 
+            PresetsDatabaseValidator.sanitizePreset(editor, prefs, newPresetName);
             editor.putString(PREF_LAST_SELECTED, newPresetName);
             editor.apply();
 

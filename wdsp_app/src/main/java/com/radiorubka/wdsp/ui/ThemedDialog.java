@@ -183,6 +183,7 @@ public final class ThemedDialog {
         private CharSequence[] multiChoiceItems;
         private boolean[] checkedItems;
         private DialogInterface.OnMultiChoiceClickListener multiChoiceListener;
+        private int maxWidthDp = 500;
 
         public Builder(@NonNull Context context) {
             this.context = context;
@@ -280,6 +281,11 @@ public final class ThemedDialog {
             return this;
         }
 
+        public Builder setMaxWidthDp(int dp) {
+            this.maxWidthDp = dp;
+            return this;
+        }
+
         public Dialog create() {
             Dialog dialog = new Dialog(context);
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -293,8 +299,8 @@ public final class ThemedDialog {
             if (window != null) {
                 window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 int screenW = context.getResources().getDisplayMetrics().widthPixels;
-                int maxW = (int) dp(context, 500);
-                int dialogW = Math.min((int) (screenW * 0.88f), maxW);
+                int maxW = (int) dp(context, maxWidthDp);
+                int dialogW = Math.min((int) (screenW * 0.92f), maxW);
                 window.setLayout(dialogW, ViewGroup.LayoutParams.WRAP_CONTENT);
             }
 
@@ -333,6 +339,15 @@ public final class ThemedDialog {
                 tvMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
                 tvMsg.setLineSpacing(0f, 1.18f);
                 tvMsg.setPadding(0, 0, 0, (int) dp(context, 12));
+                tvMsg.setAutoLinkMask(android.text.util.Linkify.WEB_URLS | android.text.util.Linkify.EMAIL_ADDRESSES);
+                tvMsg.setLinkTextColor(ThemeManager.linkBlue(context));
+                tvMsg.setLinksClickable(true);
+                tvMsg.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+                try {
+                    java.util.regex.Pattern tgPattern = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]+(/[0-9]+)?");
+                    android.text.util.Linkify.addLinks(tvMsg, tgPattern, "https://t.me/", null,
+                            (matcher, url) -> url.startsWith("@") ? url.substring(1) : url);
+                } catch (Throwable ignored) {}
                 root.addView(tvMsg);
             }
 
