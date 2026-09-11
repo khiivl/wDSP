@@ -419,9 +419,11 @@ public class StatusBarVisualizerManager {
             try {
                 windowManager.addView(visualizerView, layoutParams);
                 isViewAttached = true;
+                OverlayHealth.recordOk(context, "status bar strip");
                 Log.i(TAG, "StatusBarVisualizer attached to WindowManager.");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to add StatusBarVisualizer view", t);
+                OverlayHealth.recordRefused(context, "status bar strip", t);
                 isViewAttached = false;
             }
         } else {
@@ -436,7 +438,13 @@ public class StatusBarVisualizerManager {
             fillGeometry();
             try {
                 windowManager.updateViewLayout(visualizerView, layoutParams);
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                // Was swallowed without a word: when the screensaver borrows this window and the
+                // resize is refused, the screensaver believes it is showing and nothing appears.
+                Log.w(TAG, "could not resize the strip window", t);
+                CrashLog.recordCaught(context, "strip window geometry"
+                        + (screensaverBounds != null ? " (lent to the screensaver)" : ""), t);
+            }
         }
     }
 

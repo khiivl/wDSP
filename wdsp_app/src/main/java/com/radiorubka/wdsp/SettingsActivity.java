@@ -2236,7 +2236,8 @@ public class SettingsActivity extends AppCompatActivity {
         if (getWindow() != null && getWindow().getDecorView() != null) {
             HardwareProfile.sampleScreen(this, getWindow().getDecorView());
         }
-        final String topology = HardwareProfile.describeScreen(this, getWindow() != null ? getWindow().getDecorView() : null);
+        final String topology = HardwareProfile.describeScreen(this, getWindow() != null ? getWindow().getDecorView() : null)
+                + "\n" + OverlayHealth.describe(this) + "\n\n" + CrashLog.describe(this);
 
         ScrollView scrollView = new ScrollView(this);
         int pad = (int) ThemedDialog.dp(this, 14);

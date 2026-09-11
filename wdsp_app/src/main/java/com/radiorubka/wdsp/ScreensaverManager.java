@@ -591,6 +591,9 @@ public final class ScreensaverManager {
             boolean night = ThemeManager.isNight(context);
             applyBackdrop();
             applyStyleToScreensaver(style(night));
+            // Sizes are fractions of the screen taken when the screensaver appears; if the screen
+            // itself changes under it (split screen, a resized display), take them again.
+            applyGeometry();
         });
     }
 
@@ -1261,8 +1264,11 @@ public final class ScreensaverManager {
         if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) return false;
         String pkg = packageOf(foreground);
         if (pkg.isEmpty()) return false;
-        // Never over our own settings screen: somebody is in there adjusting this very thing.
-        if (pkg.equals(context.getPackageName()) && foreground.contains("SettingsActivity")) {
+        // Never over our own screens: somebody in there is adjusting the sound or this very
+        // screensaver, and a curtain dropping over the equaliser mid-adjustment helps nobody.
+        // Only Settings was excluded before; the main screen was not (owner, 11.09.2026). In code
+        // rather than in the owner's list, which can be edited and travels with backups.
+        if (pkg.equals(context.getPackageName())) {
             return false;
         }
         return !blockedPackages().contains(pkg);
@@ -1297,7 +1303,15 @@ public final class ScreensaverManager {
                             backdropColor(), brightness(), infoBarPx(), !previewMode && believedStopped(), gestures(), this::hide);
                 } else {
                     buildOverlay();
-                    windowManager.addView(overlayRoot, overlayParams());
+                    try {
+                        windowManager.addView(overlayRoot, overlayParams());
+                        OverlayHealth.recordOk(context, "screensaver");
+                    } catch (Throwable t) {
+                        // Still caught below - no crash - but no longer silent: the wizard's
+                        // overlay card and the screen report both read this.
+                        OverlayHealth.recordRefused(context, "screensaver", t);
+                        throw t;
+                    }
                     lendStripOrBuildOwn();
                 }
                 attached = true;
@@ -1305,6 +1319,7 @@ public final class ScreensaverManager {
                 Log.i(TAG, "screensaver shown over " + lastForeground);
             } catch (Throwable t) {
                 Log.w(TAG, "could not show the screensaver", t);
+                CrashLog.recordCaught(context, "screensaver show", t);
                 attached = false;
             }
         });

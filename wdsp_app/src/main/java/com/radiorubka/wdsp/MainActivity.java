@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         super.onCreate(savedInstanceState);
+        CrashLog.install(this);
         setContentView(R.layout.activity_main);
 
         // The service arms this too, and normally gets there first. This is the second anchor:
