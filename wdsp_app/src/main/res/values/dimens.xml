@@ -29,6 +29,15 @@
     <dimen name="fader_arrow_gap_v">24dp</dimen>
     <dimen name="fader_arrow_icon_size">36dp</dimen>
     <dimen name="fader_arrow_label_size">28dp</dimen>
+    <!-- The car with its arrows and numbers is laid out once, at the size it has on the 1280x720
+         reference (the right half of 1280x648dp of content), and scaled whole to fit whatever
+         room a panel leaves - see ScaleToFitLayout. -->
+    <dimen name="fader_group_width">640dp</dimen>
+    <dimen name="fader_group_height">648dp</dimen>
+    <!-- Room kept free under content for the floating navigation pill. Measured by uiautomator on
+         every geometry, 11.09.2026: the pill and its margin take 82dp from the bottom (74 + 8), so
+         the 76dp used before left the rear fader arrow 2dp under it. 82 plus a small gap. -->
+    <dimen name="bottom_nav_clearance">88dp</dimen>
 
     <!-- Button Sizes -->
     <dimen name="button_radius">10dp</dimen>

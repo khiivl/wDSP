@@ -601,7 +601,7 @@
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 android:clipToPadding="false"
-                android:paddingBottom="76dp">
+                android:paddingBottom="@dimen/bottom_nav_clearance">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -609,21 +609,33 @@
                     android:padding="@dimen/padding_standard">
 
                     <!-- Header Row: Title + Status Pill Badge -->
+                    <!-- Title above, status badge under it. They used to share one row: the badge
+                         never shrinks (nine texts on one line), so on a panel narrower than about
+                         1000dp it took the whole row, the title got 0-80px and broke letter by
+                         letter into a column taller than the screen - the tab looked empty at
+                         640dp and the calibration card sat below the fold at 800x480 (uiautomator
+                         audit, 11.09.2026). The badge scrolls sideways when even its own row is
+                         too narrow. -->
                     <LinearLayout
                         android:id="@+id/layout_fm_header"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         app:layout_constraintTop_toTopOf="parent">
 
                         <TextView
                             android:id="@+id/tv_fm_title"
                             style="@style/TextTitle"
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:text="@string/fm_title" />
+
+                        <HorizontalScrollView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:scrollbars="none"
+                            android:overScrollMode="never">
 
                         <!-- Status Pill Badge -->
                         <LinearLayout
@@ -703,6 +715,7 @@
                                 android:textSize="@dimen/eq_small_text"
                                 android:textColor="@color/cyan_custom" />
                         </LinearLayout>
+                        </HorizontalScrollView>
                     </LinearLayout>
 
                     <!-- Top Action Buttons Row -->
@@ -1000,7 +1013,7 @@
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 android:clipToPadding="false"
-                android:paddingBottom="76dp"
+                android:paddingBottom="@dimen/bottom_nav_clearance"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
 
@@ -1597,7 +1610,7 @@
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 android:clipToPadding="false"
-                android:paddingBottom="76dp"
+                android:paddingBottom="@dimen/bottom_nav_clearance"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintStart_toStartOf="parent"
@@ -1911,14 +1924,22 @@
 
             </ScrollView>
 
-            <!-- Fader Controls (Right Side) -->
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <!-- Fader Controls (Right Side). The car and every arrow and number around it are one
+                 picture: ScaleToFitLayout holds the group at its designed size and scales it whole
+                 to fit what is left above the navigation pill. On a 7-inch panel it used to run
+                 under the pill, neither scaled nor scrolled. -->
+            <com.radiorubka.wdsp.ui.views.ScaleToFitLayout
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:paddingBottom="@dimen/bottom_nav_clearance"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="@dimen/fader_group_width"
+                android:layout_height="@dimen/fader_group_height">
 
                 <!-- No permanent center labels. Each arrow is a plain borderless icon
                      (ic_arrow, rotated per direction) with its own step-count number
@@ -2151,6 +2172,7 @@
                     app:layout_constraintBottom_toBottomOf="@id/imageView" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.radiorubka.wdsp.ui.views.ScaleToFitLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- GALA Tab Content -->
@@ -2167,7 +2189,7 @@
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 android:clipToPadding="false"
-                android:paddingBottom="76dp">
+                android:paddingBottom="@dimen/bottom_nav_clearance">
 
                 <LinearLayout
                     android:id="@+id/card_gala_container"
