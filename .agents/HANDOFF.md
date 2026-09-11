@@ -78,6 +78,21 @@ the only test in this project that can fail — every earlier version of it was 
 could not — and it survives in the shared folder rather than in either session's memory. Run it
 before believing the pair is finished.
 
+### ⏳ One half of the handover is still owed, and it is not ours
+
+The interface of 0.4.8 was written by the Antigravity/Gemini session, and **its half of this
+handover has not been written**. Requested on the board 11.09.2026 (message #423, topic
+`wdsp_handover`, session `931e1b40-8a8b-405d-bf1e-e0bda77cb300`), asking for what git does not
+hold: why the geometry is the way it is, where the tuned numbers came from, what was tried and
+rejected, what it knows is crooked and left, which screen geometries it actually checked, and its
+own account of the two faults found in review.
+
+🔴 If that report is on the board and not yet in a file, **fold it into  under its
+authorship before anything else** — a board is not a document, and the next machine does not see
+one. If the session is gone and never answered, say so in this section rather than leaving the gap
+looking like an oversight: the interface then has no author's account, and whoever touches the
+frosted glass, the preset pill or the screensaver zones is working without the reasons.
+
 ### 📦 What was actually handed out, and to whom
 
 🔴 **The owner's standing rule, 09.09.2026: record which versions were distributed, and to which
