@@ -17,15 +17,11 @@ import android.util.Log;
  * theme, gone before it can be seen.
  *
  * <p>Whether the owner is shown a dialog is not decided here. The {@code PROJECT_MEDIA} app op
- * decides, and its default is to ask. Setting it to {@code allow} once over adb makes the request
- * return immediately with no dialog at all, which is what turns this from a thing that interrupts
- * driving into a thing nobody sees:
- *
- * <pre>adb shell cmd appops set com.radiorubka.wdsp PROJECT_MEDIA allow</pre>
- *
- * <p>That the app op is settable at all is the difference between the recorder being usable in a
- * car and not, so it is worth saying plainly: without it, every recording costs a full-screen
- * system dialog.
+ * decides, and its default is to ask - so every recording costs a full-screen system dialog. That
+ * is the honest price and it stays. An earlier version of this comment recommended setting the op
+ * to {@code allow} over adb so the dialog would never appear; done on a bench, that hides from the
+ * developer exactly what every tester sees. The owner's rule since 11.09.2026: every permission the
+ * app needs is obtained through the app, on the bench as everywhere else.
  */
 public class CaptureConsentActivity extends Activity {
 
