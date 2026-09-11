@@ -24,6 +24,29 @@ public class VolumeHelper {
     private static Method mGetVolumeType;
     private static Method mGetMuteState;
 
+    /**
+     * Reaches a source that is <b>not</b> the current one — the whole basis of carrying a volume
+     * across sources.
+     *
+     * <p>Read out of the decompiled framework rather than guessed:
+     * {@code VolumeManager.findVolumeStateByType(String)} hands back any of the four states, and
+     * {@code VolumeState.setVolumeVal(int)} then does this:
+     *
+     * <pre>
+     *   if (i &lt; 0 || i &gt; 32) return;
+     *   SystemProperties.set(this.propSave, String.valueOf(i));   // always
+     *   if (this.volType.equals(sys.current.vol.type)) { ...RPC_SetVolume, mute... }
+     * </pre>
+     *
+     * <p>🔑 So writing a source that is not live <b>stores the level and makes no sound</b>: no
+     * command to the amplifier, no mute change. That is exactly what carrying a level across
+     * sources needs, and it is why this can be done without disturbing anybody.
+     *
+     * <p>Null when the framework is older or obfuscated differently — see {@link #canReachOtherSources()},
+     * which must be consulted before promising anyone that this unit can do it.
+     */
+    private static Method mFindStateByType;
+
     public static void init(Context context) {
         if (audioManager == null) {
             audioManager = (AudioManager) context.getApplicationContext()
@@ -38,6 +61,14 @@ public class VolumeHelper {
             vmClass.getMethod("initVolumeManager", Context.class).invoke(mVolumeManager, context.getApplicationContext());
 
             mGetCurrentState = vmClass.getMethod("getCurrentVolumeState");
+
+            // Optional: a unit whose framework lacks it simply cannot carry a level across
+            // sources, and must not claim it can.
+            try {
+                mFindStateByType = vmClass.getMethod("findVolumeStateByType", String.class);
+            } catch (NoSuchMethodException e) {
+                Log.i(TAG, "findVolumeStateByType is absent - this unit cannot carry a level between sources");
+            }
 
             // Obfuscated: "android.qf.os.VolumeState"
             String vsName = new String(Base64.decode("YW5kcm9pZC5xZi5vcy5Wb2x1bWVTdGF0ZQ==", Base64.DEFAULT));
@@ -96,6 +127,13 @@ public class VolumeHelper {
         if (activeState != null && mSetVolumeVal != null) {
             try {
                 mSetVolumeVal.invoke(activeState, val);
+                // 🔴 This was never assigned, so the Android fallback below ran on every single
+                // call - including every step GALA takes - even when the hardware path had just
+                // succeeded. On a unit with persist.sys.double_bt the platform mirrors the
+                // hardware volume onto STREAM_MUSIC itself (i * 15 / 32), so writing that stream
+                // directly is fighting the platform, and the platform wins at the next source
+                // change. The fallback is still there for units where the reflection is absent.
+                success = true;
                 Log.d(TAG, "[VolumeSender2000] Volume has been set to " + val);
             } catch (Exception ignored) {}
         }
@@ -118,6 +156,61 @@ public class VolumeHelper {
             }
         }
         return null;
+    }
+
+    /**
+     * Whether this unit can store a level for a source that is not the live one.
+     *
+     * <p>Must be checked before telling the radio that wDSP owns the synchronisation: a unit whose
+     * framework has no {@code findVolumeStateByType} cannot do it, and claiming otherwise would
+     * leave the radio deferring to somebody who cannot act — the failure being total silence on
+     * that unit's volume synchronisation, with nothing to say why.
+     */
+    public static boolean canReachOtherSources() {
+        return mVolumeManager != null && mFindStateByType != null
+                && mSetVolumeVal != null && mGetVolumeVal != null;
+    }
+
+    /** The stored level of any source, live or not. -1 when it cannot be read. */
+    public static int getVolumeForType(String volumeType) {
+        Object state = stateForType(volumeType);
+        if (state != null && mGetVolumeVal != null) {
+            try {
+                Object result = mGetVolumeVal.invoke(state);
+                if (result instanceof Integer) return (Integer) result;
+            } catch (Exception e) {
+                Log.w(TAG, "could not read the volume of " + volumeType, e);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Stores a level for a source. Silent unless that source happens to be the live one.
+     *
+     * @return true when the platform accepted it.
+     */
+    public static boolean setVolumeForType(String volumeType, int val) {
+        if (val < 0 || val > 32) return false;   // the framework rejects it anyway, quietly
+        Object state = stateForType(volumeType);
+        if (state != null && mSetVolumeVal != null) {
+            try {
+                mSetVolumeVal.invoke(state, val);
+                return true;
+            } catch (Exception e) {
+                Log.w(TAG, "could not set the volume of " + volumeType, e);
+            }
+        }
+        return false;
+    }
+
+    private static Object stateForType(String volumeType) {
+        if (mVolumeManager == null || mFindStateByType == null) return null;
+        try {
+            return mFindStateByType.invoke(mVolumeManager, volumeType);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static String getActivePlayerType() {

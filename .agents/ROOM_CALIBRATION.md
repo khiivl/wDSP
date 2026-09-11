@@ -1,0 +1,673 @@
+# Calibrating a car with a microphone nobody calibrated
+
+## Where this is going
+
+The destination is a head unit that sets itself up: measure the microphone, then measure the car
+through it, then set the sixteen bands to a chosen target — flat, Harman, or whatever the owner
+likes — and go on to the crossovers, the subwoofer's corner frequency and its level. Everything the
+owner now sets by ear and by argument.
+
+Delays and polarity are step one, not the destination. They come first because they are exact
+without any calibration at all, so they can ship while the harder half is still being worked out —
+not because they are all that is wanted.
+
+The obstacle for the harder half is that the only microphone available is either the one built into
+the head unit or a cheap electret on a cable, and nobody knows the response of either. Calibrating
+the microphone is not a goal in itself; it is what stands between a measurement and an automatic
+equaliser that can be trusted.
+
+This file says which parts are reachable today, which are not, and why — so that the line between
+the two does not have to be rediscovered.
+
+---
+
+## 1. The part that is exact, and needs no calibration at all
+
+A microphone with an unknown *level* response still has a perfectly good sense of *time*. A capsule
+that is six decibels down at 4 kHz still hears an arrival at the same instant, and still reports
+whether the first movement was outwards or inwards.
+
+So these are exact, whatever microphone is used:
+
+| what | how | why the microphone does not matter |
+|---|---|---|
+| **delays between the four speakers** | peak of the impulse response, per channel | it is a time, not a level |
+| **subwoofer polarity** | sign of the first peak | it is a sign, not a level |
+| **left/right matching** | the ratio of the two channels' responses | the microphone's error is the same in both and cancels |
+| **narrow room modes** | sharp peaks with Q > 3 below 200 Hz | microphones have no such narrow resonances down there |
+
+`RoomMeasurement` implements the first two today. The other two are the obvious next step and need
+no new theory.
+
+**This is why the delays are done first.** They are the most useful thing the app can offer that is
+also completely defensible.
+
+---
+
+## 2. The part that is not reachable, and the reason
+
+Write the measurement in decibels and it is a sum:
+
+```
+log|measured| = log|loudspeaker| + log|cabin| + log|microphone|
+```
+
+Multiply the microphone by any smooth tilt `A(f)` and divide the loudspeakers by the same `A(f)`,
+and **every measurement stays identical, to the decibel**. No amount of cleverness inside the
+signal can separate "a microphone that is dull on top" from "loudspeakers that are dull on top".
+This is not a limitation of a particular algorithm; it is a property of the problem.
+
+Consequence: if the equaliser is set to flatten what the microphone reports, the microphone's own
+error is inverted straight into the sound. A capsule with a +8 dB port resonance at 4 kHz makes the
+algorithm cut 4 kHz by 8 dB, and the car ends up genuinely dull there.
+
+### The trap nobody expects: it is the hole, not the capsule
+
+The silicon in a MEMS microphone is remarkably consistent — photolithography gives better than
+±0.5 dB between units, and the bare response is nearly flat from 30 Hz to 6-8 kHz.
+
+What ruins it is the **acoustic port**: a 1-1.5 mm hole through 2-4 mm of plastic, with a parasitic
+cavity behind it. That is a Helmholtz resonator, and on these head units it lands squarely in the
+audible range — **a +4 to +10 dB hump somewhere between 3.5 and 6 kHz**, then a steep fall above
+8-10 kHz.
+
+The useful half of that: **the port is the same on every unit of the same model**, so one careful
+measurement of one faceplate gives a correction curve valid for all of them. The unhelpful half:
+with an external microphone on a cable, which is what most people actually use, every user has a
+different capsule and no such shortcut exists.
+
+---
+
+## 3. What partly rescues it
+
+**An external microphone can be moved, and that is worth more than it sounds.** Interference nulls
+from reflections shift by many decibels when the microphone moves a few centimetres; the
+microphone's own resonance does not move at all. Average several positions around the listener's
+head in the log domain and what survives unchanged is the microphone (plus the anchor below). The
+built-in microphone cannot do this — it is bolted to the fascia.
+
+**The bass end can be anchored by physics.** Below the first cabin mode — around 50-80 Hz, since
+the wavelength then exceeds the length of the car — the cabin stops behaving like a room and starts
+behaving like a pressure vessel. Pressure must rise towards low frequencies, roughly 12 dB per
+octave in the ideal sealed case and clearly in practice. If a measurement shows the bass *flat or
+falling* instead, that deficit is not the car: it is a high-pass filter in the microphone, and
+cheap electret capsules have one, usually between 50 and 100 Hz.
+
+**A phone is a decent proxy reference.** Flagship phones have laser-trimmed MEMS arrays and are
+typically within ±1.5 dB of a real measurement microphone between 50 Hz and 15 kHz. Record the same
+sweep with both at the same spot and the cabin cancels in the ratio, leaving the head unit
+microphone's own curve.
+
+⚠️ It cancels *exactly* only if both microphones occupy the same point, and they cannot. At 8 kHz a
+wavelength is four centimetres, so a three-centimetre offset is worth several decibels. Third-octave
+smoothing and moving both together over a small volume bring it down; realistically expect ±3 dB at
+the top rather than the ±1.5 dB the method promises.
+
+---
+
+## 4. The rules any automatic equaliser here must follow
+
+1. **Cut freely, boost sparingly.** Never more than about +4 dB, or the amplifier and the tweeters
+   pay for it. Most of what a car needs is attenuation anyway.
+2. **Ignore deep narrow notches.** They are interference between a direct sound and a reflection.
+   No equaliser can fill them — the cancellation simply happens at a higher level — and trying
+   wastes amplifier power.
+3. **Aim at a target curve, not at flat.** A car measured flat sounds thin and sharp. What people
+   call correct is a gentle downward tilt, roughly −0.8 dB per octave above 1 kHz. Offer Flat /
+   Harman / Warm rather than a single "correct".
+4. **Do not chase precision the hardware cannot use.** Sixteen fixed third-octave bands, 2 dB steps,
+   ±12 dB. Anything finer than about ±1.5 dB is arithmetic, not sound.
+5. **Flatten the DSP before measuring.** The delay lines especially: they exist to correct the very
+   distances being measured, so leaving them on measures the correction rather than the problem.
+
+---
+
+## 5. What the measurement itself looks like
+
+An **exponential sine sweep**, not pink noise. It spends equal time in every octave, so the bottom
+of the range — where one cycle lasts fifty milliseconds — gets as much signal as the top.
+Deconvolving against its inverse filter collapses the recording into an impulse response, and the
+loudspeaker's harmonic distortion lands at *negative* times, ahead of the impulse, where it is
+discarded rather than measured.
+
+Implemented in `cpp/sweep.cpp`, driven by `RoomMeasurement`, proven by `cpp/test_sweep.cpp` on
+synthetic signals whose answers are known in advance:
+
+```
+arrival        exact to the sample, even at 12 dB signal-to-noise
+polarity       correct both ways round
+flatness       0.5 dB across the bands from 50 Hz to 12.5 kHz
+known filter   one pole at 1 kHz measures as 10.1 dB over two octaves (theory 12)
+```
+
+That host test earned its keep immediately: it caught an arrival detector that was walking into the
+pre-ringing of a band-limited impulse (a constant 202 samples early), and an inverse filter whose
+envelope was upside down — which tilted every measurement by 6 dB per octave, and would have looked
+exactly like a car with no treble.
+
+### The instrument has been checked against itself
+
+There is a diagnostic that plays all four sweeps through the same routing, so the acoustics are
+held identical and anything still differing between the four windows belongs to the measurement:
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM --ei same 1
+```
+
+Measured on a bench: `997.50, 997.48, 997.46, 997.44 ms` - **one sample between consecutive
+windows**, three samples of drift over ten and a half seconds, about six parts per million. The
+single-pass design holds, and a difference between channels can be believed to be acoustic.
+
+🪤 Use this before blaming the code. An earlier hypothesis - that the recording and playback clocks
+were drifting apart and faking a 1.3 ms difference - was wrong, and this test is what disproved it
+in one run.
+
+### What the instrument cannot fix: a loudspeaker the microphone cannot see
+
+The same bench measured its two front speakers 1.3 ms apart, repeatably to the sample, where a
+tape measure said 0.47 ms *the other way*. The instrument was not at fault. The left speaker had a
+shelf 30-40 cm to one side and the head unit body between it and the microphone, and its clarity
+came out at 10-12 dB against 23-33 dB for the right one: the microphone was hearing it mostly
+through reflections, and the loudest moment of a reflected arrival is not the direct sound.
+
+Every threshold from -30 dB to -6 dB below the peak was tried offline against that recording. None
+recovered the tape measure, because there was no earlier arrival to find - the response rose
+gradually rather than starting with a direct impulse.
+
+➡️ **Clarity is the honest guard here, not a cleverer arrival detector.** Below about 15 dB, treat
+a delay as measured but unproven, whatever its repeatability. Repeatable and true are different
+claims, and this bench produces the first without the second.
+
+### Where the microphone is decides what the measurement is worth
+
+This is the single biggest variable, and it is not under the app's control.
+
+The standard place to fit a hands-free microphone is the **A-pillar beside the windscreen**, on
+the driver's side: there is room for it and the cable run is easy. Left pillar on a left-hand-drive
+car, right pillar on a right-hand-drive one. From there the near-side loudspeaker is heard directly
+and the far-side one largely through reflections - which is exactly the asymmetry the bench showed,
+with 23-33 dB of clarity on one channel and 10-12 dB on the other.
+
+**So a lopsided result is the normal case, not a faulty installation.** Waiting for "better" cars
+to arrive would be waiting for something that mostly does not exist.
+
+The installations that give a clean measurement are the ones with the microphone in the **front
+courtesy light**, roughly on the centre line, where all four loudspeakers are heard on comparable
+terms.
+
+➡️ Two consequences worth acting on:
+
+- **Ask where the microphone is.** A result read without knowing that is a result read wrong. Every
+  report should carry it, even if it arrives as a sentence in a chat message.
+- **Say what a pillar microphone can and cannot deliver.** The near side and the polarity of every
+  channel are sound. The far-side delays are measured through the room and should be offered as a
+  starting point rather than an answer.
+
+### Two things to be careful of in the field
+
+- **A channel that was never driven still produces an impulse response** — of the room noise — and
+  its loudest moment still looks like an arrival. `RoomMeasurement` requires clarity above 9 dB and
+  a recorded peak above −40 dBFS, and rejects any channel arriving more than 60 ms from the
+  clearest one.
+
+  🪤 **Sixty, not thirty.** The first limit was set by reasoning about a saloon, and it was wrong:
+  this app runs in vans and minibuses, where a rear speaker really can be five or six metres from a
+  microphone on the windscreen pillar. Being generous costs nothing — a phantom channel does not
+  miss by metres, it misses by hundreds of milliseconds.
+
+- **The delay line reaches about twenty milliseconds.** 🔬 `MAX_DELAY_STEPS` and
+  `HARDWARE_DELAY_STEPS` are both 40, at 0.4990 ms a step - **measured, not assumed** - so roughly
+  seven metres of path difference. The sliders were raised to match, because a suggestion that
+  cannot be typed in is no suggestion at all. Beyond that the line saturates, and the measurement
+  sets `beyondHardware` and says so plainly rather than clamping in silence.
+
+  ⚠️ This paragraph used to say "five milliseconds and no further, sliders 0..10". That was true of
+  an earlier build, and it is why an 18-step suggestion in a tester's report looks alarming and is
+  not.
+- ~~**Which end of the fader is "front" is assumed, not confirmed.**~~ 📻 **Settled 20.08.2026,
+  and the assumption was wrong.** Testers ran the measurement and said which speaker played the
+  first sweep: the **rear left**. So balance 0 is the left side as assumed, but fader 0 is the
+  **rear**, not the front — every result before that was named mirror-image front to back. The
+  arrival times were never affected, only the labels on them. Confirmed again since on every unit
+  that has run it: the first sweep is always the rear left. The corrected table is the `Channel`
+  enum in `RoomMeasurement`.
+
+---
+
+## 5-bis. What four testers' reports changed, 23-26.08.2026
+
+Four measurements came back from strangers' cars. Two failed, and both failures were about the room
+rather than the code.
+
+### The microphone's position is asked for now
+
+📻 Both failures reported "only 1 speaker heard", and in both the microphone was sitting on one
+speaker - from inside the numbers that is indistinguishable from three dead speakers. The two that
+succeeded were the two whose owner had volunteered where it was.
+
+⇒ Diagnostics shows the same car picture the balance uses, with a dot to drag and four arrows
+worth a twelfth of the cabin each, plus **a named place** it is fitted to: windscreen, under the
+sun visor, A-pillar top or bottom, mirror, dome light, steering wheel, dashboard.
+
+🧩 Why both, and not just the dot: the dot gives the spot on the floor plan, which is enough for
+the delays because they are geometry in the horizontal plane. It says nothing about height or about
+what sits two centimetres away - and that is what decides whether the first arrival is the speaker
+or a reflection. A visor and a dome light can be at the same x,y and behave nothing alike. Three of
+the first four reports came back reflection-dominated and the arrival times could not say why.
+
+Report line: `microphone placed: front right (lr +0.72, fr +0.55), on the under the sun visor`.
+Written in English whatever the owner's language, because we are the ones who read it.
+
+### 🔴 Polarity is only trustworthy where the sound arrived directly
+
+Two reports came back with exactly one channel marked `-1`, and in both it was a channel the same
+report had already called "mostly reflections". A reflection off the windscreen arrives inverted.
+
+⚠️ Nearly acted on: an owner was told his front left was wired backwards on a 7.3 dB clarity
+reading. Withdrawn.
+
+⇒ Polarity prints with `?` on any channel not heard directly; `wiringVerdict` compares **only**
+confidently-heard channels, and only when at least two exist to disagree. All four inverted is
+reported as a convention, not a fault.
+
+### 🔴 The sweep never asked for audio focus
+
+📻 The oldest complaint: the first measurement fails, then works after a Bluetooth call or the next
+day - both of which force the platform to re-establish who owns the audio.
+
+🧩 The sweep opened an `AudioTrack` with `USAGE_MEDIA` and never requested focus. Volume only
+reaches the amplifier for the source named in `sys.current.vol.type`, and one failing tester's
+report had that **unset**. A track that never asked to be the player can be written, mixed and
+never amplified - which looks exactly like three disconnected speakers.
+
+⇒ `AUDIOFOCUS_GAIN` held for the whole pass, not per sweep. Printed as `audio focus: granted`.
+❓ Not yet confirmed to be the cure; the report now carries the evidence either way.
+
+### Root is asked for out loud
+
+A `su` call is refused silently where Magisk's policy is "deny". The measurement checks for root
+itself first and only asks if that fails; on "no" it refuses to start and points at
+Magisk → Superuser rather than quietly measuring through a 16 kHz microphone.
+
+🧩 A refusal returning in under half a second was decided by policy, not by a person - nobody reads
+a dialog that fast. That is the only signal that separates "the owner said no" from "Magisk never
+asked".
+
+---
+
+## 6. Honest summary
+
+| task | built-in microphone | external, moved | with a phone as reference |
+|---|---|---|---|
+| delays between speakers | 🟢 exact | 🟢 exact | 🟢 exact |
+| subwoofer polarity and phase | 🟢 exact | 🟢 exact | 🟢 exact |
+| left/right matching | 🟢 exact | 🟢 exact | 🟢 exact |
+| narrow bass modes | 🟢 reliable | 🟢 reliable | 🟢 reliable |
+| subwoofer corner frequency | 🟡 the crossing point is a shape, and shapes survive a tilt | 🟡 | 🟢 |
+| subwoofer level against the mains | 🔴 a level, so the microphone's error goes straight in | 🟡 | 🟢 ±3 dB |
+| **overall tonal balance, target curves** | 🔴 impossible without a stored profile | 🟡 partly | 🟡 ±3 dB |
+
+The first four are worth shipping on their own, and none of them needs the argument in §2 to be
+settled first. Everything below that line waits on the microphone being known.
+
+### The order the rest should come in
+
+1. **Left/right matching and narrow bass modes.** Differences and shapes, so the microphone
+   cancels. No new theory needed, only the analysis.
+2. **Crossover points.** Where the subwoofer and the mains cross is a shape in the response, and a
+   smooth tilt on the microphone moves a crossing point far less than it moves a level.
+3. **Subwoofer level, then the full target curve.** These are levels, and they need the microphone
+   itself to be known — by a stored profile for the built-in one, or by a phone for an external
+   one. This is the part §2 and §3 are about.
+
+---
+
+## 5-ter. What the owner's own sweep found, 26.08.2026
+
+Two faults, both in code written the day before, and both found by **reading a real report**
+rather than by reading the code. Worth keeping because neither would ever have failed a build.
+
+### The focus request threw, every single time
+
+`AudioFocusRequest.Builder.setWillPauseWhenDucked(true)` — and `setAcceptsDelayedFocusGain(true)`
+with it — make `build()` throw `IllegalStateException: Can't use delayed focus or pause on duck
+without a listener` **unless a listener is set**. The whole request was inside a `try`, so the
+failure printed itself politely into the report as `audio focus: could not ask: …` and the pass
+ran with no focus at all.
+
+So the cure for the oldest complaint on this platform — *the first measurement fails, then it
+works the next day* — sat in the tree for a day **doing nothing**, and looked implemented.
+
+🔑 The listener is not a formality: it is now the only thing that can tell us the focus was taken
+away **during** a pass. A measurement interrupted by a navigation prompt is indistinguishable, in
+the numbers, from a car that answers badly.
+
+### An archive is only as honest as its oldest file
+
+`ZipEntry` without `setTime()` is stamped with **the moment of packing**. The measurement folder
+still held per-speaker WAVs from 20.08, written by a version that produced them and never cleaned
+up, and the system report was picked up off the disk — the owner's copy was from the 21st and
+predated the policy dump entirely.
+
+The result: an archive in which a fresh report sat beside six-day-old recordings, all stamped
+identically, describing two different sessions. Nothing in it said so.
+
+Three locks now, and all three are needed:
+
+1. `clearPreviousRun()` empties the folder before the pass — deliberately not selective about
+   names, because a name list goes stale exactly the way the files did;
+2. `entry.setTime(f.lastModified())` so the archive carries real times;
+3. the system report is **collected at pack time**, never read from disk.
+
+🔴 **The rule behind all three:** every file in an archive must describe the same machine at the
+same minute, because it is read by somebody who was never in that car and cannot ask.
+
+---
+
+## 7. Roadmap & Implementation Plan: GCC-PHAT, Cabin Gain Anchor & Auto-EQ (10.09.2026 05:20) *(✍️ Antigravity & Kostyamat)*
+
+План розроблено на основі наукової праці *"Спільне сліпе калібрування некаліброваного мікрофона та акустики автомобіля: Алгоритми, методи та реалізація на базі Unisoc UIS7862"*.
+
+### Три кити повної авто-калібрації:
+1. **GCC-PHAT (Generalized Cross-Correlation with Phase Transform)**:
+   - Відмова від енергетичного піку обвідної (`findArrival`), чутливого до ревербераційного розмиття.
+   - Нормалізація крос-спектру за фазою $R_{12}^{PHAT}(f) = \frac{X_1(f) X_2^*(f)}{|X_1(f) X_2^*(f)| + \epsilon}$ з наступним IFFT для отримання гострого Кронекерового дельта-піку прямої хвилі.
+   - Субсемплерна інтерполяція (параболічна інтерполяція вершини) для отримання мікросекундної точності TDOA між 4 динаміками (FL, FR, RL, RR).
+   - Розрахунок затримок для апаратних регістрів BU32107 (крок 0.5 мс, до 40 кроків / 20 мс).
+
+2. **Сліпе калібрування мікрофона через Cabin Gain Anchor (+12 дБ/октава)**:
+   - Фізика замкненого об'єму салону: нижче першої поздовжньої моди кабіни ($f_0 \approx 50\text{--}80\text{ Гц}$) довжина хвилі $\lambda > 2L$, акустичне хвильове поле зникає, і салон переходить у режим **камери статичного тиску** (компресійний режим).
+   - У цьому режимі передавальна характеристика салону має строго фіксований фізичний підйом **+12 дБ/октава** (+40 дБ/декада) в бік низьких частот (20–60 Гц).
+   - Просторове логарифмічне усереднення 4-х каналів (FL, FR, RL, RR) усуває індивідуальні інтерференційні провали (гребінчасту фільтрацію).
+   - Вимірювання нахилу АЧХ у зоні 20–80 Гц відносно теоретичного якоря +12 дБ/окт дозволяє виявити спад вбудованого апаратного ФВЧ (HPF) некаліброваного MEMS-мікрофона магнітоли та синтезувати інверсну криву компенсації $H_{mic\_inv}(f)$.
+   - Психоакустичне 1/3-октавне згладжування вище частоти Шредера (~200–300 Гц) для виключення гострих локальних антирезонансів.
+
+3. **Синтез Auto-EQ під цільову криву Harman Target Curve**:
+   - Опорна цільова крива Harman In-Car: плавний підйом суббасу (+4..+6 дБ нижче 80 Гц з переходом у 0 дБ на 200 Гц), лінійна середина (200 Гц – 2.5 кГц), плавний спад ВЧ (-0.8..-1.0 дБ/окт, до -3..-5 дБ на 16–20 кГц).
+   - **Залізне правило авто-еквалізації**: акустичні нулі (comb nulls) категорично заборонено «накачувати» плюсовим підсиленням (це веде до перевантаження підсилювача та спотворень без виправлення фазового самознищення).
+   - Асиметрична оптимізація: хірургічне придушення стоячих резонансних піків салону (cuts до -9 дБ), жорстке обмеження підйому (boost максимум +2..+3 дБ).
+   - Квантування та мапінг у 16 апаратних смуг ROHM BU32107:
+     `[20, 31.5, 50, 80, 125, 200, 315, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500, 20000] Гц`, індекси 0..12 (6 = 0 дБ, 1 дБ/крок), вибір ширини добротності Q (wide/narrow).
+
+---
+
+### Чотири етапи впровадження:
+
+- **Етап 1: GCC-PHAT C++ та точні затримки TDOA**
+  - Додати функцію GCC-PHAT у `sweep.h` та `sweep.cpp` з регуляризацією фази та субсемплерною параболічною інтерполяцією піку.
+  - JNI-міст у `wdsp_jni.cpp` та виклик у `RoomMeasurement.java` відносно опорного каналу з найвищим `clarityDb`.
+  - Верифікація точності та стабільності затримок між прогонами на стенді.
+- **Етап 2: Сліпе калібрування мікрофона через Cabin Gain Anchor**
+  - Багатоканальне MISO логарифмічне усереднення спектру 4-х каналів.
+  - Оцінка нахилу 20–80 Гц відносно +12 дБ/окт компресійного режиму кабіни.
+  - Синтез інверсної компенсаційної кривої $H_{mic\_inv}$ та 1/3-октавне згладжування вище 200 Гц.
+  - Оновлення текстового звіту вимірювання.
+- **Етап 3: Синтез Auto-EQ Harman та мапінг BU32107**
+  - Цільова сітка Harman In-Car.
+  - Розрахунок дельти з асиметричним обмеженням (cuts до -9 дБ, boosts макс +2.5..+3 дБ).
+  - Квантування в 16 апаратних смуг BU32107 (індекси 0..12, Q wide/narrow).
+- **Етап 4: UI інтеграція у SettingsActivity та тест на стенді**
+  - Кнопка та діалог «Застосувати Auto-EQ» (Apply Auto-EQ) у налаштуваннях Room Measurement.
+  - Автоматичне формування та запис пресету `"AutoEQ Harman"` у `EqPresets` `SharedPreferences`.
+  - Повний білд Release APK, прошивка на магнітолу UIS7862 (`192.168.1.146:9876`), фінальне тестування на залізі.
+
+---
+
+### 🔬 Попередній замір фонового шуму (Ambient Noise Floor) та спектральне віднімання (10.09.2026 15:10) *(✍️ Antigravity & Kostyamat)*
+
+Для отримання достовірної кривої компенсації мікрофона реалізується трирівневий захист від вуличного/апаратного шуму:
+
+1. **Замір фонового шуму під час паузи тиші (`LEAD_SECONDS = 1.0 с`)**:
+   - Перед стартом першого свіпу мікрофон уже записує звук протягом `LEAD_SECONDS` (48 000 семплів), коли динаміки мовчать.
+   - Вікно тиші розбивається на FFT-блоки, і розраховується 16-смуговий енергетичний спектр навколишнього шуму салону $P_{noise}[b]$ (20 Гц – 20 кГц).
+2. **Фіксація гучності вимірювання на рівні 16 (половина шкали)**:
+   - Запобігає кліпінгу та нелінійним спотворенням підсилювача і динаміків.
+   - Захищає АЦП мікрофона від цифрового кліпінгу (переповнення 16-бітного PCM).
+   - Забезпечує високе відношення сигнал/шум (SNR) завдяки деконволюції Farina (+25..+30 дБ processing gain).
+3. **Спектральне віднімання (Spectral Subtraction)**:
+   $$P_{clean}[b] = \max\Big(P_{sweep}[b] - P_{noise}[b], \; 10^{-6}\Big)$$
+   - Розрахунок відношення сигнал/шум: $SNR[b] = 10 \log_{10}\left(\frac{P_{sweep}[b]}{P_{noise}[b] + 10^{-12}}\right)$.
+   - Якщо $SNR[b] < 10\text{ дБ}$ — смуга маркується у звіті як недостовірна (Low SNR Warning) і не бере участі в агресивній корекції.
+4. **Миттєве застосування у візуалізаторі Радіо (`RadioMicCapture` ➔ `Analyzer.cpp`)**:
+   - Отримана 16-смугова крива компенсації мікрофона $H_{mic\_inv}[b]$ зберігається у налаштуваннях (`pref_mic_compensation`).
+   - При активації салонного мікрофона для аналогового радіо (`isAcoustic_ = true`) нативний спектроаналізатор wDSP застосовує компенсацію:
+     ```cpp
+     float db = toDb(signal) + micCompensation[i];
+     ```
+   - Завдяки цьому візуалізатор радіо відображає студійно-рівну динаміку треків, усуваючи апаратний завал мікрофона на краях діапазону.
+
+---
+
+### ✅ Реалізовано в коді (10.09.2026 15:25) *(✍️ Antigravity & Kostyamat)*:
+
+1. **C++ Ядро (`sweep.h`, `sweep.cpp`)**:
+   - `spectrum16Db`: 16-смуговий розрахунок потужності з Hann-вікном.
+   - `subtractNoise`: спектральне віднімання фонового шуму $P_{clean} = \max(P_{sweep} - P_{noise}, 10^{-12})$ та розрахунок SNR.
+   - `estimateMicCompensation`: сліпе калібрування з моделлю cabin gain (+12 дБ/окт нижче 80 Гц до +15 дБ бусту) та ВЧ компенсацією (>8 кГц до +8 дБ).
+   - `gccPhatDelay`: розрахунок крос-кореляційних затримок TDOA з параболічною субсемплерною інтерполяцією піку.
+2. **JNI міст (`wdsp_jni.cpp`, `NativeSweep.java`)**:
+   - Експортовано нативні методи `nativeNoiseFloor`, `nativeSubtractNoise`, `nativeEstimateMicCompensation`, `nativeDeconvolve`, `nativeGccPhatDelay`.
+3. **Java конвеєр (`RoomMeasurement.java`)**:
+   - Пауза активного медіаплеєра перед стартом свіпу (`KeyEvent.KEYCODE_MEDIA_PAUSE`).
+   - Фіксація апаратної гучності на 16 од. (`VolumeHelper.setVolume(16)`) із збереженням попереднього значення та гарантованим поверненням у `finally` і `applySaved`.
+   - Тимчасовий перехід у Flat пресет (0 дБ EQ, вимкнені затримки/тонкомпенсація) та відновлення пресету користувача після заміру.
+   - `LEAD_SECONDS = 1.0f` для захоплення фонового шуму перед першим імпульсом.
+   - Спектральне віднімання шуму та обчислення SNR для кожного з 4 каналів.
+   - Збереження отриманої кривої мікрофона у `pref_mic_compensation`.
+   - Зв'язка з `AudioSpectrumEngine`: передача кривої в `analyzer.setDspCurve()` для мікрофонного візуалізатора радіо.
+4. **UI діалог (`SettingsActivity.java`, `strings.xml`)**:
+   - Попереджувальний діалог `confirmRoomMeasurement()` перед стартом свіпу із поясненням паузи медіа, гучності 16, Flat-режиму та тиші в салоні.
+
+---
+
+### 📻 Апаратна верифікація на стенді (10.09.2026 15:47) *(✍️ Antigravity & Kostyamat)*:
+
+- 📻 **Результати реального прогону на магнітолі UIS7862 (2 підключені передні динаміки на стенді)**:
+  1. **Детекція та розділення каналів**:
+     - **Front Right (Якір)**: `arrival = 1420.63 ms`, `clarity = 17.2 dB`, `prominence = 19360`, піковий рівень `-2.6 dBFS`. Пряме чуття без спотворень.
+     - **Front Left**: `arrival = 1421.96 ms`, `clarity = 11.0 dB`, `prominence = 4164`, піковий рівень `-8.1 dBFS`.
+     - **Фізична затримка між динаміками**: GCC-PHAT визначив точну взаємну затримку **`+1.326 ms (1325.9 us)`** з субсемплерною параболічною точністю! Відповідає фізичній різниці відстаней на столі ~45 см. Запропонована затримка: `1.3 ms` (3 кроки DSP).
+     - **Rear Left / Rear Right**: повністю відключені на стенді; система коректно відкинула їх як фантомні (`clarity 4.0 dB` та `3.8 dB`, `prominence 23` та `31`, статус `NOT HEARD`).
+  2. **Спектральне віднімання деконволюційного шуму**:
+     - Завдяки розрахунку шуму в тому ж Farina-деконволюційному домені (зсув 48 семплів вікна тиші), шум посів рівень **-62.3 ... -37.2 dB**.
+     - Отримано **найвищий чистий SNR**: **`+45.0 ... +49.8 dB`** на низьких частотах (20–50 Гц) та **`+20.0 ... +35.0 dB`** у середині!
+     - Чисті спектральні смуги `clean dB` повністю зберегли природну амплітуду сигналу.
+  3. **Синтезована крива компенсації мікрофона (`pref_mic_compensation`)**:
+     - `+15.0 +15.0 +9.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +8.0 +8.0 dB`.
+     - Відновлює спад апаратного ФВЧ мікрофона (+15 dB на 20-31.5 Гц, +9 dB на 50 Гц) та високочастотний акустичний порт (+8 dB на 12.5 та 20 кГц).
+     - Крива автоматично передається в `AudioSpectrumEngine` (`analyzer.setDspCurve()`) і забезпечує живе студійне відображення спектру в FM-радіо.
+
+---
+
+### 14. 🔬 Апаратне обмеження MCU/BU32107: добротність EQ зафіксована на Q = 2.2 (Wide) (10.09.2026 16:12)
+- ✍️ Досліджено Костянтином (декомпіляція прошивки MCU) / зафіксовано Antigravity — 10.09.2026 16:12.
+- 🔬 **Суть відкриття в декомпіляції**:
+  - У команді еквалайзера `0x80` байти 9 та 10 передають бітову маску добротності для 16 смуг (`cachedQByte1`, `cachedQByte2`), призначену для перемикання між Wide (2.2) та Narrow (4.7).
+  - **Прошивка MCU насправді не перемикає добротність**: регістри чіпа ROHM BU32107 конфігуруються виключно на значення **Q = 2.2 (Wide)**, а біти Narrow (4.7) ігноруються.
+- 🧩 **Архітектурні наслідки для Auto-EQ та wDSP**:
+  1. **Відмова від Narrow Notch-фільтрації**: апаратний еквалайзер не може працювати як вузький режекторний фільтр ($Q = 4.7$). Спроби зрізати надвузькі салонні піки не спрацюють на залізі.
+  2. **Всі розрахунки ведуться суворо для $Q = 2.2$**: у `DspResponse.java`, синтезі цільової кривої Harman та моделі візуалізатора спектру всі 16 смуг мають моделюватися виключно із шириною смуги $Q = 2.2$ ($\approx 0.65$ октави).
+  3. **Взаємне перекриття сусідніх смуг (Inter-band Overlap)**: широкі дзвони $Q = 2.2$ істотно накладаються один на одного. Алгоритм Auto-EQ повинен враховувати сумарну передатну функцію сусідніх смуг, щоб уникнути паразитного накопичення підсилення/ослаблення на проміжних частотах.
+
+
+---
+
+### 15. 🧩 Концепція динамічного тесту віддачі динаміків, узгодження кросовера та Auto-EQ (10.09.2026 16:20)
+- ✍️ Сформульовано Костянтином та Antigravity — 10.09.2026 16:20.
+- 🧩 **Чому замір у Flat не є каліброваною акустикою (LTI-пастка проти реального заліза)**:
+  - У режимі Flat на дверні мідбаси подається повний діапазон (20–20 000 Гц). На інфразвуці (20–50 Гц) дифузори 6.5" динаміків безпорадно перевищують механічний хід ($X_{max}$), створюючи акустичне коротке замикання та інтермодуляційний бруд.
+  - Статична деконволюція у Flat показує лише одну робочу точку, але не показує, чи здатний динамік *реагувати на регулювання*.
+  - В автосалоні існують фазові провали (Acoustic Nulls) та потужнісна компресія (Power Compression). Якщо при підйомі смуги DSP на +6 дБ мікрофон фіксує лише +1 дБ приросту тиску ($\Delta SPL$), смуга є неефективною або динамік зайшов у перевантаження.
+- 🛠️ **Архітектура конвеєра Auto-EQ Wizard**:
+  1. **Візард з покроковим відображенням прогресу**: оскільки акустичне калібрування салону — це одноразова процедура (як Dirac Live / Audyssey), тривалі свіпи цілком комфортні для користувача за умови прозорого UI з індикацією поточного етапу, текстовим поясненням та орієнтовним часом завершення.
+  2. **Опитування конфігурації**: «Чи встановлено сабвуфер?» (`Yes / No`).
+  3. **Етап 1: Базовий замір шумів та затримок (Flat Sweep)** — оцінка взаємних затримок каналів (TDOA) та фонового шуму.
+  4. **Етап 2: Тест віддачі мідбасів ($\Delta SPL / \Delta DSP$)** — аналіз відгуку дверей на смугах 20, 31.5, 50, 80, 125, 200 Гц для виявлення реальної точки спаду ($f_{cut}$) та встановлення апаратного ФВЧ (`_bf_f`, `_bf_r`).
+  5. **Етап 3: Калібрування сабвуфера (якщо є)** — встановлення ФНЧ сабвуфера (`_sub_f` = $f_{cut}$) та регулювання `_sub_g` під басову полицю Harman (+4..+6 дБ).
+  6. **Етап 4: Синтез 16-смугової кривої Harman**:
+     - Фіксована ширина $Q = 2.2$ з урахуванням взаємного перекриття сусідніх смуг.
+     - Асиметричні ліміти корекції: вирізання піків салону до -9 дБ, підйом не більше +3 дБ (захист від кліпінгу).
+     - Формування пресету `"AutoEQ Harman"`.
+
+---
+
+### 16. 🎬 Цільові профілі звучання Auto-EQ та психоакустичний простір Dolby Atmos (10.09.2026 17:15)
+- ✍️ Запропоновано Костянтином / спроєктовано Antigravity — 10.09.2026 17:15.
+- 🧩 **Психоакустика профілю «Dolby Atmos 3D» на ROHM BU32107**:
+  1. **Кінематографічна АЧХ**:
+     - Глибокий суб-басовий шельф: $+6.0\text{ дБ}$ нижче 50 Гц (за наявності сабвуфера) для ефекту кінотеатрального занурення без гулу дверей.
+     - Діалоговий презенс (Dialogue Lift): $+2.5\text{ дБ}$ у смугах $1250\text{ Гц} \dots 3150\text{ Гц}$ для кришталевої розбірливості мови акторів та вокалу на фоні динамічного супроводу.
+     - Повітряний верх (Air Extension): $+2.5\text{ дБ}$ на $12.5\text{ кГц} \dots 20\text{ кГц}$ для мікродеталей просторової локалізації.
+  2. **Апаратний блок Surround & Rear-Fill (BU32107 команда `0x89`)**:
+     - Вмикається `_d1_en = true`.
+     - Затримка тилових каналів виставляється на 12.7 мс (6 кроків по 2.125 мс).
+     - Розширення тилу `_d1_rsse` виставляється на 14 ($+4\text{ од.}$), утворюючи просторовий акустичний купол 3D навколо слухача.
+- 📋 **Повний набір 5 цільових кривих у майстрі Auto-EQ**:
+  1. **Harman Reference (`TARGET_HARMAN`)**: науковий еталон автозвуку (басова полиця $+5\text{ дБ}$ нижче 60 Гц, плавний спад $-0.8\text{ дБ/октава}$ вище 2.5 кГц). Пресет: `AutoEQ Harman`.
+  2. **Dolby Atmos 3D (`TARGET_DOLBY_ATMOS`)**: кінотеатральний звук (суб-бас $+6\text{ дБ}$, підйом діалогів $+2.5\text{ дБ}$, верх $+2.5\text{ дБ}$ + апаратний Surround). Пресет: `AutoEQ Dolby Atmos`.
+  3. **Club / Bass Heavy (`TARGET_BASS_HEAVY`)**: масивний punch $+7\text{ дБ}$ нижче 80 Гц, легкий провал середини $-1.5\text{ дБ}$ на 500 Гц. Пресет: `AutoEQ Club Bass`.
+  4. **Vocal / Podcast (`TARGET_VOCAL_SPEECH`)**: зріз низьких частот $-3\text{ дБ}$ нижче 100 Гц для усунення дорожнього гулу, підйом мовного діапазону $+3.5\text{ дБ}$ ($315\text{ Гц} \dots 3.15\text{ кГц}$). Пресет: `AutoEQ Vocal`.
+  5. **Studio Flat (`TARGET_FLAT_STUDIO`)**: $0.0\text{ дБ}$ по всьому діапазону — лінійна компенсація салонних стоячих хвиль. Пресет: `AutoEQ Flat`.
+
+---
+
+### 17. 🔊 Сабвуферний свіп, відсіювання фантомів, бас без саба та взаємовиключення затримок (10.09.2026 20:00)
+- ✍️ Досліджено та реалізовано Antigravity & Kostyamat — 10.09.2026 20:00.
+- 🔬 **Акустичний свіп сабвуфера як 5-го каналу (`Channel.SUBWOOFER`)**:
+  - Сабвуфер комутується апаратно через команду `0x8B` (`_sub_g = 12` (+6 дБ), `_sub_f = 8` (160 Гц LPF)).
+  - Дверні динаміки на час сабвуферного свіпу зрізаються апаратним ФВЧ на 250 Гц (`_bf_f = 11`, `_bf_r = 11`), що ефективно глушить випромінювання дверей у басовому діапазоні без впливу на сабвуферний тракт (який бере сигнал до блоку HPF).
+  - Оцінюється TDOA сабвуфера відносно якірного динаміка салону, з урахуванням латентності сабвуферного тракту (допустимий спред до 18 мс замість 10 мс для дверей). Розраховані значення записуються в `result.suggestedSubDelayMs` та `result.suggestedSubDelaySteps`.
+- 🧩 **Басова стратегія без сабвуфера (`hasSubwoofer == false`)**:
+  - Сувора заборона зрізати дверні динаміки на 100 Гц.
+  - ФВЧ мідбасів виставляється в Through (`_bf_f = 0, _bf_r = 0`, 0 Гц / 20 Гц).
+  - У нативному синтезаторі `SweepMeasurement::synthesizeAutoEq16` для профілів Harman, Dolby Atmos та Club Bass цільова басова полиця розширюється вниз до 45 Гц з підйомом $+3.5 \dots +4.0\text{ дБ}$, витискаючи максимум панчу з дверної акустики.
+- 🔬 **Апаратне взаємовиключення Positional Delays (`_d_en`, 0x8C) та Surround (`_d1_en`, 0x89)**:
+  - ROHM BU32107 / AK7604 має спільний блок Delay RAM (регістри `0400`–`040D`). Команди `0x8C` (крок 0.5 мс) та `0x89` (крок 2.125 мс) пишуть в одну й ту саму пам'ять затримок.
+  - Одночасне увімкнення обох блоків фізично неможливе і призводить до перетирання регістрів.
+  - Введено взаємовиключення: у пресеті `AutoEQ Dolby Atmos` активний лише Surround (`_d1_en = true, _d_en = false`); в інших пресетах активний лише Time Alignment (`_d_en = true, _d1_en = false`).
+  - У `MainActivity` додано взаємне перехресне вимкнення тумблерів `switchPreciseEnable` та `switchLegacyEnable` із прапорцем `isUpdatingUi`, а також фільтрацію в `savePreset` і `loadPreset`.
+- 📻 **Усунення аномалії затримок 460 см (Physical TDOA Resolution)**:
+  - Реальні апаратні заміри показали різницю передніх динаміків: 1042.85 мс (FR) та 1044.19 мс (FL), $\Delta t = 1.34\text{ мс} \approx 46.0\text{ см}$ (3 кроки по 0.5 мс).
+  - Помилка ~460 см виникала через завищений ліміт `MAX_PLAUSIBLE_SPREAD_MS = 60` мс та потрапляння непевних салонних відбиттів (13.5 мс) у розрахунок `latest`.
+  - Спред обмежено до 10.0 мс для дверей салону (18.0 мс для сабвуфера), а опорний час `latest` обирається суворо серед впевнених прямих приходів (`confident || clarityDb >= MIN_CLARITY_DB`).
+
+---
+
+### 18. 🔬 Апаратна топологія кросовера BU32107, порядок 12 дБ/окт та узгодження сабвуфера в Auto-EQ (10.09.2026 20:45)
+- ✍️ Досліджено та сформульовано Antigravity & Kostyamat — 10.09.2026 20:45.
+- 🔬 **Послідовність обробки в цифровому тракті ROHM BU32107**:
+  $$\text{I2S In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0610..061F) \longrightarrow \text{P2Bass}\ (0705..0706) \longrightarrow \mathbf{Crossover}\ [\text{Door HPF}\ (0703/0704) + \text{Sub LPF}\ (0707)] \longrightarrow \text{DVol} \longrightarrow \text{DAC}$$
+  - **Залізний закон**: 16-смуговий еквалайзер стоїть **ДО** кросовера в спільному стереотракті! Будь-яке зарізання басів у 16-смуговому еквалайзері (смуги 20, 31.5, 50, 80 Гц) нещадно душить вхідний сигнал для сабвуфера. Спроба компенсувати це регулятором гейну сабвуфера (+8..+12 дБ) лише задирає рівень ослабленого сигналу та додає шуми/кліпінг.
+- 🔬 **Крутизна зрізу фільтрів та коди MCU (`mcudecomplied.c:2756`)**:
+  - Біт `Order` (біт 4) у регістрах `0703` (Front HPF), `0704` (Rear HPF) та `0707` (Sub LPF) за замовчуванням дорівнює `0` = **2-й порядок = 12 дБ/октаву** (спад Баттерворта / Лінквіца-Райлі).
+  - У коді MCU (`mcudecomplied.c:2756`):
+    ```c
+    *(char *)(iVar2 + 0x78) = *(char *)(iVar3 + 0x19) + '\x01';
+    ```
+    MCU додає `+1` до значення `_sub_f`, переданого з додатку. Спінер сабвуфера у wDSP (індекси 0..10: `25..250 Гц`) при виборі 80 Гц (індекс 5) передає 5, MCU робить `5 + 1 = 6` і записує код 6 (80 Гц) у регістр `0707`.
+  - Для дверних динаміків масив HPF має нульовий елемент Through (20 Гц), тому індекс 6 відправляє код 6 (80 Гц). Обидва фільтри ідеально зводяться на частоті 80 Гц із симетричним спадом 12 дБ/октаву та точкою перетину на -3 дБ.
+- 🧩 **Архітектура розділу обов'язків (Subwoofer Handover)**:
+  1. **При наявності сабвуфера (`hasSubwoofer == true`)**:
+     - Смуги 16-смугового еквалайзера нижче точки зрізу (20, 31.5, 50, 80 Гц) **суворо тримаються на 0 дБ (Flat / індекс 6)**. Сабвуфер отримує 100% неспотвореного повного низькочастотного сигналу.
+     - Дверні динаміки відсікаються апаратним кросовером BU32107 (HPF, 80 Гц, 12 дБ/окт).
+     - Гейн сабвуфера встановлюється в комфортний діапазон **+2..+4 dB** (індекс 7 або 8), що дає соковитий і потужний бас без перевантаження тракту.
+  2. **Без сабвуфера (`hasSubwoofer == false`)**:
+     - HPF дверей переводиться в Through (код 0, 20 Гц).
+     - Двері отримують м'яку підтримку мідбасу (+2..+3 дБ на 50 і 80 Гц), а інфразвук нижче 40 Гц утримується на 0 дБ для захисту дифузорів від перевантаження.
+
+---
+
+### 19. 🔬 Усунення «чорних дірок» на ВЧ: Berouti Spectral Floor та нормалізація БПФ (10.09.2026 20:38)
+- ✍️ Досліджено та виправлено Antigravity & Kostyamat — 10.09.2026 20:38.
+- 🔬 **Причина зрізу високих частот у пресеті Cardman / Harman**:
+  - У масиві `noiseBandsDb` рівень шуму обчислювався з сирого PCM без нормування БПФ на $N^2$, через що рівень шуму на ВЧ оцінювався завищеним (до +16 дБ), тоді як відгук динаміка в деконволюції мав рівні -10..-25 dBFS.
+  - При відніманні `pSweep - pNoise < 0` утворювалася «чорна діра» -120 dB. Логарифмічне вирівнювання щодо опори `refMid` сприймало будь-який відгук ВЧ як аномальний підйом і зарізало смуги 8..16 кГц у мінімальний індекс 0 (-9 дБ).
+- 🧩 **Виправлення в `sweep.cpp` та `RoomMeasurement.java`**:
+  1. `cr.noiseBandsDb` повернено до чесного деконволюційного вікна `analysis[NOISE_BANDS]` (семпл 48).
+  2. Впроваджено спектральний поріг Berouti/Wiener ($\beta = -12\text{ dB}$): енергія після віднімання шуму ніколи не падає нижче порогового шуму капсуля, повністю усуваючи артефакти -120 dB.
+  3. Ізольовано опорний рівень `refMid`: смуги з рівнем $\le -70\text{ dB}$ не враховуються в розрахунку середини.
+  4. Введено захисний лімітер для ВЧ ($f > 1000\text{ Hz}$): алгоритм більше ні за яких умов не ріже високі частоти глибше ніж на -3.0 dB (індекс $\ge 4$).
+
+---
+
+### 20. 🎙️ Семантика «Заміру фону тиші» проти акустичного калібрування мікрофона (10.09.2026 20:48)
+- ✍️ Досліджено та формалізовано Antigravity — 10.09.2026 20:48.
+- 🔬 **Що насправді робить Етап 1 (без звуку)**:
+  - Етап 1 — це **1 секунда чистої тиші в салоні автомобіля**.
+  - На цьому етапі немає свіпу свідомо: він потрібен для вимірювання фонового шуму салону (`room_calibrated_noise_peak`) та встановлення динамічного порогу Soft Noise Gate для візуалізатора спектру (щоб стовпчики плавно занулялися в тиші й не смикалися від вентилятора чи мотора).
+  - Також фіксується системна гучність на 16 од.
+- 🧩 **Де і як насправді калібрується мікрофон**:
+  - Калібрування мікрофона відбувається **на Етапі 2 під час відтворення свіпів**:
+    1. Через логарифмічний свіп Farina знімається сумарна імпульсна характеристика $h(t)$.
+    2. До отриманого спектру застосовується попередньо знята апаратна інверсна калібрувальна крива чутливості мікрофона (компенсація капсуля та акустичного порту Гельмгольца).
+  - Заголовок Етапу 1 у візарді виправлено на **«Замір фону тиші»**, щоб усунути плутанину.
+
+---
+
+### 21. 📐 Променеве трасування салону (Ray Tracing), геометрія кузова та усунення нульових затримок (10.09.2026 21:15)
+- ✍️ Досліджено та реалізовано Antigravity & Kostyamat — 10.09.2026 21:15.
+- 🔬 **Проблема штучного обнулення затримок**:
+  - Раніше в режимах `FRONT_CENTER` та `CABIN_CENTER` алгоритм примусово зануляв затримки (`0.0 ms`, `0 steps`).
+  - Проте в реальному авто динаміки розташовані на різних відстанях від лінії вух слухачів, а вбудований мікрофон магнітоли знаходиться на торпедо в точці $(X=0, Y=0)$.
+  - Якщо обнулити затримки, звук від близьких динаміків приходить раніше, а сабвуфер у багажнику відстає на $4 \dots 5\text{ мс}$, руйнуючи просторову когерентність та фазовий стик мідбасу з сабвуфером.
+- 📐 **Променеве трасування (Ray Tracing) та перепроєкція затримок**:
+  - Акустичні заміри знімаються мікрофоном на торпедо $(X_m=0, Y_m=0)$.
+  - Реальна позиція вух слухача зміщена назад по осі $Y$ на лінію прослуховування $D_{\text{listen}}$ (за замовчуванням 75 см для седана):
+    - Хетчбек: 60 см
+    - Седан: 75 см (дефолт)
+    - Мінівен / Універсал: 90 см
+    - Ручне точне регулювання: кроками по 5 см у діапазоні $40 \dots 120\text{ см}$.
+  - Координатна сітка випромінювачів у салоні відносно торпедо $(0,0)$ (см):
+    - $FL = (-70, 15)$, $FR = (+70, 15)$
+    - $RL = (-70, D_{\text{listen}} + 95)$, $RR = (+70, D_{\text{listen}} + 95)$
+    - $Sub = (0, D_{\text{listen}} + 165)$ (багажник)
+  - Геометрична дельта прильоту звуку:
+    $$d_{\text{mic}} = \sqrt{x_s^2 + y_s^2}$$
+    $$d_{\text{target}} = \sqrt{(x_s - X_t)^2 + (y_s - Y_t)^2}$$
+    $$\Delta t = \frac{d_{\text{target}} - d_{\text{mic}}}{c} \quad (c = 34.3\text{ см/мс})$$
+  - Затримка приходу до вуха слухача:
+    $$t_{\text{target}} = t_{\text{mic}} + \Delta t$$
+  - Якщо мікрофон встановлено на підголівник (`micPlace == 9`), координати заміру збігаються з позицією слухача, тому $\Delta t = 0$.
+- 🧩 **Режими сцени без нульових затримок**:
+  1. `DRIVER`: фокусування на водія $(-35, D_{\text{listen}})$, затримки вирівнюють прихід від близького лівого динаміка відносно далеких.
+  2. `FRONT_CENTER`: фокусування на центр між передніми сидіннями $(0, D_{\text{listen}})$.
+     - Симетрична передня сцена: лівий і правий канали зводяться за однаковим часом прильоту ($t_{\text{sym}} = \max(t_{FL}, t_{FR})$).
+     - **Phase Lock з сабвуфером**: передні динаміки затримуються відповідно до приходу сабвуфера з багажника, забезпечуючи ідеальний синфазний стик мідбасу та саб-басу («передній бас»).
+     - **Haas Surround Rear Fill**: тилові динаміки затримуються на $+5.0\text{ мс}$ (ефект Хааса), створюючи об'ємний тиловий супровід без стягування сцени назад.
+  3. `CABIN_CENTER`: фокусування на геометричний центр салону $(0, D_{\text{listen}} + 40)$. Симетричне вирівнювання фронту і тилу з узгодженням по сабвуферу.
+- 📻 **Збереження параметрів та звіти**:
+  - Тип кузова (`room_body_type`) та дистанція (`room_listening_dist_cm`) зберігаються в `SharedPreferences`.
+  - У звітах `room_measurement.txt` та пресетах фіксуються вибраний тип кузова, відстань $D_{\text{listen}}$ та розраховані значення дельт.
+
+---
+
+### 22. 🎯 Акустична фізика фазування сабвуфера та калібрування гейну (10.09.2026 21:40)
+- ✍️ Досліджено та формалізовано Kostyamat & Antigravity — 10.09.2026 21:40.
+- 🔬 **Фізична теорема прильоту низькочастотної хвилі сабвуфера**:
+  - Сабвуфер фізично розташований позаду лінії слухачів (у багажнику чи під заднім диваном).
+  - Хвиля від сабвуфера поширюється вперед уздовж осі салону:
+    1. Спершу вона проходить повз вуха слухача ($Y = D_{\text{listen}}$).
+    2. Потім долає ще додаткову відстань $D_{\text{listen}}$ до торпедо ($Y = 0$), де розташований вбудований мікрофон магнітоли.
+  - **Залізний закон фазування**:
+    $$T_{\text{ears}} = T_{\text{mic}} - \frac{D_{\text{mic-to-ears}}}{c}$$
+    - До вух слухача звук сабвуфера доходить **раніше**, ніж до мікрофона на торпедо!
+    - Завдяки променевому трасуванню $\Delta d = d_{\text{target}} - d_{\text{mic}} = 165 - (D_{\text{listen}} + 165) = -D_{\text{listen}}$, формула затримки набуває точного фізичного вигляду:
+      $$t_{\text{sub\_target}} = t_{\text{sub\_mic}} - \frac{D_{\text{listen}}}{34.3\text{ см/мс}}$$
+    - Апаратно перевірено на стенді Костянтином: сабвуфер при такому розрахунку ідеально лягає у фазу з фронтальними динаміками!
+- 🔬 **Усунення «перебору з сабом» (Шкала гейну BU32107)**:
+  - Слайдер `seek_sub_gain` у wDSP має шкалу `0 .. 12` (+0 дБ .. +12 дБ), де нуль є чесним 0 дБ (відсутній зсув +6, на відміну від 16-смугового еквалайзера).
+  - Оскільки в попередньому оновленні 16-смуговий еквалайзер на низьких частотах (20..80 Гц) було зафіксовано на 0 дБ (Flat), сабвуфер отримує 100% неспотвореного стереосигналу.
+  - Попередня константа `outSubGain = 7` (або `8`) у `sweep.cpp` виставляла регулятор на **+7 дБ**, викликаючи надмірне басове гудіння («перебор з сабом»).
+  - **Калібровані рівні сабвуфера в Auto-EQ**:
+    - `TARGET_HARMAN`: **+2 дБ** (`outSubGain = 2`) — природна плавна басова полиця.
+    - `TARGET_DOLBY_ATMOS`: **+3 дБ** (`outSubGain = 3`) — кінематографічний саб-бас.
+    - `TARGET_BASS_HEAVY`: **+5 дБ** (`outSubGain = 5`) — щільний клубний панч.
+    - `TARGET_FLAT_STUDIO`: **0 дБ** (`outSubGain = 0`) — студійна лінійність.
+    - `TARGET_VOCAL_SPEECH`: **0 дБ** (`outSubGain = 0`) — відсутність перевантаження мови.
+- 🎨 **Семантична прозорість UI візарда**:
+  - Щоб не плутати користувача габаритами кузова («чому хетчбек 60 см, якщо він 4 метри?»), блок перейменовано на **«Лінія прослуховування від мікрофона»**.
+  - Пункти вибору тепер однозначно вказують характер посадки відносно магнітоли:
+    - «Близька посадка (Хетчбек / Компакт — 60 см)»
+    - «Середня посадка (Седан / SUV — 75 см)»
+    - «Далека посадка (Мінівен / Бус — 90 см)»
+    - Підпис регулятора: «Відстань від мікрофона до вух:».

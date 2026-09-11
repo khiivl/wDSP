@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_bg_color">#d2d6dc</color>
+    <color name="btn_normal_center_color">#40989692</color>
+    <color name="btn_normal_color">#989692</color>
+    <color name="btn_normal_start_color">#b3808080</color>
+    <color name="btn_press_center_color">#bf1985ff</color>
+    <color name="btn_press_color">#1985ff</color>
+    <color name="btn_press_start_color">#4c1985ff</color>
+    <color name="dark_gray">#5f5f5f</color>
+    <color name="light_gray">#202020</color>
+    <color name="op_btn_normal_center_color">#40989692</color>
+    <color name="op_btn_normal_color">#989692</color>
+    <color name="op_btn_normal_start_color">#b3808080</color>
+    <color name="op_btn_press_center_color">#66232426</color>
+    <color name="op_btn_press_color">#232426</color>
+    <color name="op_btn_press_start_color">#80808080</color>
+    <color name="preset_item_index_bg_color">#80f9f6f4</color>
+    <color name="rds_btn_bg_color">#50000000</color>
+    <color name="red">#ff0000</color>
+    <color name="slider_scale_line_color">#242424</color>
+    <color name="theme_primary_color">#607d8b</color>
+    <color name="theme_primarydark_color">#455a64</color>
+    <color name="theme_title_color">#deffffff</color>
+    <color name="theme_windowBackground">#607d8b</color>
+    <color name="translucent">#00000000</color>
+    <color name="white_color">#ffffff</color>
+</resources>

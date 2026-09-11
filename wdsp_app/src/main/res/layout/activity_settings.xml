@@ -1,0 +1,2900 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_settings"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:fitsSystemWindows="true">
+
+    <ScrollView
+        android:id="@+id/scroll_settings"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="76dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:id="@+id/settings_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/settings_pad">
+
+            <!-- Два банери: спершу оригінальний автор, потім цей мод.
+                 Порядок — рішення власника, не переставляти. Вміст будується кодом,
+                 див. ui/SupportBanners.java -->
+            <LinearLayout
+                android:id="@+id/banners_support"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Головний заголовок -->
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_title"
+                android:textColor="@color/text_theme_aware"
+                android:textSize="@dimen/settings_section_text"
+                android:textStyle="bold" />
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 1: 🎨 Оформлення та Теми
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_theme_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/settings_appearance"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <!-- Перемикач День / Ніч / Авто -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btn_theme_day"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@null"
+                    android:text="@string/settings_theme_day"
+                    android:textSize="@dimen/settings_btn_text" />
+
+                <TextView
+                    android:id="@+id/btn_theme_night"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@null"
+                    android:text="@string/settings_theme_night"
+                    android:textSize="@dimen/settings_btn_text" />
+
+                <TextView
+                    android:id="@+id/btn_theme_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@null"
+                    android:text="@string/settings_theme_auto"
+                    android:textSize="@dimen/settings_btn_text" />
+            </LinearLayout>
+
+            <!-- 4 HSV-диски палітри -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:weightSum="4">
+
+                <!-- 1. Акцентний колір -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_accent_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="90" />
+                </LinearLayout>
+
+                <!-- 2. Основний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_primary_text_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_primary_text_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_primary_text_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_primary_text_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="100" />
+                </LinearLayout>
+
+                <!-- 3. Другорядний текст -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_label_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_label_color_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_label_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_label_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="60" />
+                </LinearLayout>
+
+                <!-- 4. Текст на акценті -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_on_accent_wheel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/settings_on_accent_title"
+                        android:textSize="@dimen/wheel_label_text" />
+
+                    <com.radiorubka.wdsp.ui.views.HueWheelView
+                        android:id="@+id/picker_on_accent_wheel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp" />
+
+                    <SeekBar
+                        android:id="@+id/picker_on_accent_brightness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="10" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btn_reset_palette"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/settings_reset_palette"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Блок Шпалер -->
+            <LinearLayout
+                android:id="@+id/card_settings_wallpaper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_wallpaper_title"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/wallpaper_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_wallpaper_none"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_pick"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_wallpaper_load"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_wallpaper_reset"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_wallpaper_default"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_solid_wallpaper"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_wallpaper_solid_switch"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Повзунки солід-кольору: 2 колонки (50%/50%) за стандартом решти застосунку -->
+                <LinearLayout
+                    android:id="@+id/layout_solid_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false"
+                    android:visibility="gone">
+
+                    <!-- Колонка 1: HUE / Колір -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_solid_hue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_solid_hue"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_solid_hue_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="200°"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/frame_solid_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="4dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false">
+
+                            <View
+                                android:id="@+id/bg_solid_hue"
+                                android:layout_width="match_parent"
+                                android:layout_height="12dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:layout_marginEnd="12dp" />
+
+                            <SeekBar
+                                android:id="@+id/seek_solid_hue"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="center_vertical"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:thumbOffset="0dp"
+                                android:splitTrack="false"
+                                android:max="360"
+                                android:progress="200" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <!-- Колонка 2: Яскравість фону -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_solid_val"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_solid_val"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_solid_val_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="20%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/frame_solid_val"
+                            android:layout_width="match_parent"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="4dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false">
+
+                            <View
+                                android:id="@+id/bg_solid_val"
+                                android:layout_width="match_parent"
+                                android:layout_height="12dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:layout_marginEnd="12dp" />
+
+                            <SeekBar
+                                android:id="@+id/seek_solid_val"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="center_vertical"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:thumbOffset="0dp"
+                                android:splitTrack="false"
+                                android:max="100"
+                                android:progress="20" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 2: 🪟 Візуалізатор у статус-барі
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_statusbar_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/status_bar_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_statusbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_visualizer_enable"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_status_bar_vis_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_on"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Параметри розміру та положення (2 адаптивні колонки 50/50 як в GALA/AGC) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Ліва колонка: Ширина та Положення X -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <!-- Ширина -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_width"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_visualizer_width"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_width"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="40%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_width"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="40" />
+
+                        <!-- Положення X -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_pos"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_visualizer_offset_x"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_pos"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="50%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_pos"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="50" />
+                    </LinearLayout>
+
+                    <!-- Права колонка: Висота смуги та Відступ Y -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <!-- Висота смуги -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_height"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_height_manual"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_height"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/settings_theme_auto"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_height"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="200"
+                            android:stepSize="1"
+                            android:value="0" />
+
+                        <!-- Відступ Y -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_offset_y"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_offset_y"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_offset_y"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/val_px_zero"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_offset_y"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="200"
+                            android:stepSize="1"
+                            android:value="0" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Другий рядок: Непрозорість (ліворуч) та Ефект віджета (праворуч) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Ліворуч: Непрозорість -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_status_bar_alpha"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/status_bar_alpha"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_status_bar_alpha"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="100%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_status_bar_alpha"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Праворуч: Ефект віджета Dropdown -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_status_bar_style_select"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/status_bar_style_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_spinner_status_bar_style"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="170dp"
+                            android:layout_height="wrap_content"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxBackgroundColor="@color/card_bg_theme_aware"
+                            app:boxStrokeWidth="1.2dp"
+                            app:boxStrokeColor="@color/panel_border_theme_aware"
+                            app:hintTextColor="@color/text_theme_aware_2"
+                            app:endIconTint="@color/text_theme_aware_2">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinner_status_bar_style"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:paddingVertical="7dp"
+                                android:paddingHorizontal="12dp"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:textColor="@color/text_theme_aware"
+                                android:textStyle="bold"
+                                android:textSize="@dimen/eq_value_text" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_status_bar_placement_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/status_bar_placement_hint"
+                    android:textSize="@dimen/settings_note_text" />
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 3: 🎨 Ефекти візуалізації
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_vis_effects_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/vis_effects_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_effects"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/label_vis_effects_select_style"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vis_effects_select_style"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <!-- Рядок 1: Класика, Outrun Піки, Градієнт -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_style_classic"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_classic"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_style_outrun"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_outrun"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_style_gradient"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_gradient"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Рядок 2: Центрований, VU-метр, Осцилограф -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_style_center"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_center"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_style_vu"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_vu"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/btn_style_oscillo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/status_bar_style_oscillo"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- 1. Динамічний контейнер: Плаваючі пікові мітки (Floating Peak Caps) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_peaks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_peaks"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/status_bar_peaks_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_sb_vis_peaks_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/desc_sb_vis_peaks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/status_bar_peaks_desc"
+                        android:textSize="@dimen/settings_note_text" />
+                </LinearLayout>
+
+                <!-- 2. Динамічний контейнер: Симетричний спектр (Mirror / Center Bass) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_mirror"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_mirror"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/status_bar_mirror_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_sb_vis_mirror_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/desc_sb_vis_mirror"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/status_bar_mirror_desc"
+                        android:textSize="@dimen/settings_note_text" />
+                </LinearLayout>
+
+                <!-- 3. Динамічний контейнер: Кількість смуг візуалізатора (16 / 32) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_bands"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_bands"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_bar_bands_count"
+                        android:textColor="@color/text_theme_aware"
+                        android:textSize="@dimen/settings_subtitle_text"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_16"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="16"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_status_bar_bands_32"
+                            android:layout_width="56dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="32"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 3a. Динамічний контейнер: Післясвітіння люмінофору (Phosphor Afterglow / Persistence) для осцилографа -->
+                <LinearLayout
+                    android:id="@+id/container_vis_oscillo_persistence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/label_vis_oscillo_persistence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/vis_oscillo_persistence_label"
+                                android:textSize="@dimen/settings_subtitle_text"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/desc_vis_oscillo_persistence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:lineSpacingExtra="3dp"
+                                android:text="@string/vis_oscillo_persistence_desc"
+                                android:textSize="@dimen/settings_note_text" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_vis_oscillo_persistence"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="48dp"
+                            android:gravity="end"
+                            android:text="60%"
+                            android:textSize="@dimen/text_size_value" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_vis_oscillo_persistence"
+                        style="@style/CustomSliderStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:valueFrom="0"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="60" />
+                </LinearLayout>
+
+                <!-- 4. Динамічний контейнер: Теми та FastLED палітри -->
+                <LinearLayout
+                    android:id="@+id/container_vis_palettes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_status_bar_theme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/status_bar_visualizer_theme"
+                        android:textSize="@dimen/settings_subtitle_text"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_spectrum"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_spectrum"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_solid_hue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_solid_hue"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_auto_day_night"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_auto_day_night"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_eq_groups"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_eq_groups"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_white"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_monochrome_white"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_black"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_monochrome_black"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_fire"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_fire"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_neon"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_neon"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Рядок 1: Synthwave (purple_gp), Sherbet (rainbowsherbet_gp), Warm VU (redyellow_gp) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_purple"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_purple"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_rainbow_sherbet"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_rainbow_sherbet"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_warm_vu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_warm_vu"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Рядок 2: Colorfull (Colorfull_gp), Ocean Breeze (es_ocean_breeze), Sunset Real (Sunset_Real_gp) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_theme_colorfull"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_colorfull"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_ocean_breeze"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_ocean_breeze"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btn_theme_sunset_real"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="@null"
+                            android:text="@string/status_bar_theme_sunset_real"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 5. Динамічний контейнер: Зсув HUE для візуалізатора -->
+                <LinearLayout
+                    android:id="@+id/container_vis_hue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_status_bar_hue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/status_bar_visualizer_hue"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_status_bar_hue"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="48dp"
+                            android:gravity="end"
+                            android:text="0°"
+                            android:textSize="@dimen/text_size_value" />
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:layout_marginTop="4dp"
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
+
+                        <View
+                            android:id="@+id/bg_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp" />
+
+                        <SeekBar
+                            android:id="@+id/seek_status_bar_hue"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:thumbOffset="0dp"
+                            android:max="360"
+                            android:progress="0"
+                            android:splitTrack="false" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- 6. Динамічний контейнер: Динамічна нормалізація (AGC) -->
+                <LinearLayout
+                    android:id="@+id/container_vis_normalization"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_sb_vis_normalization"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/vis_normalization_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_sb_vis_normalization_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/desc_sb_vis_normalization"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/vis_normalization_desc"
+                        android:textSize="@dimen/settings_note_text" />
+                </LinearLayout>
+
+                <!-- Кнопка "Показати на скрінсейвері" -->
+                <TextView
+                    android:id="@+id/btn_vis_preview_screensaver"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:background="@null"
+                    android:text="@string/btn_vis_preview_screensaver"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 3: 🎛️ Візуалізатор еквалайзера
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_eq_vis_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/eq_visualizer_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_eq"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_eq_vis_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/eq_vis_enable_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_off"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_eq_vis_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/eq_vis_color_mode_label"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_spectrum"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/eq_vis_mode_spectrum"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_eq_vis_monochrome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/eq_vis_mode_monochrome"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Динамічна нормалізація для еквалайзера -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/label_vis_normalization"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/vis_normalization_label"
+                            android:textSize="@dimen/text_size_label"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_vis_normalization_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="18dp"
+                            android:paddingRight="18dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="@string/state_off"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/desc_vis_normalization"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/vis_normalization_desc"
+                        android:textSize="@dimen/settings_note_text" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- СЕКЦІЯ 3.5: точність аналізатора та синхронізація -->
+            <TextView
+                android:id="@+id/label_analyzer_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/analyzer_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_analyzer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <!-- 1. Автоматичний рівень посилення (AGC): 2 колонки (50/50) з пігулками -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <!-- Головний аналізатор -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_main"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_main_label"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_agc_main_toggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="18dp"
+                                android:paddingRight="18dp"
+                                android:paddingTop="8dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/state_off"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/desc_agc_main"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:minLines="2"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/agc_main_desc"
+                            android:textSize="@dimen/settings_note_text" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_main_strength"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_strength_label"
+                                android:textSize="@dimen/text_size_label" />
+
+                            <TextView
+                                android:id="@+id/tv_agc_main_strength"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="60%"
+                                android:textSize="@dimen/text_size_value"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_agc_main_strength"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="60" />
+                    </LinearLayout>
+
+                    <!-- Віджет статус-бара -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_bar"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_bar_label"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_agc_bar_toggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="18dp"
+                                android:paddingRight="18dp"
+                                android:paddingTop="8dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/state_on"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/desc_agc_bar"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:minLines="2"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/agc_bar_desc"
+                            android:textSize="@dimen/settings_note_text" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_agc_bar_strength"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/agc_strength_label"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_agc_bar_strength"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="100%"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_agc_bar_strength"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 2. Синхронізація картинки і звуку (Latency Trim) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_latency_trim"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/latency_trim_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_latency_trim"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="56dp"
+                        android:gravity="end"
+                        android:text="+0 ms"
+                        android:textSize="@dimen/text_size_value"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_latency_trim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/latency_trim_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_latency_trim"
+                    style="@style/CustomSliderStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="-250"
+                    android:valueTo="250"
+                    android:stepSize="5"
+                    android:value="0" />
+
+                <!-- 3. Вимірювання синхронізації зі звуком -->
+                <TextView
+                    android:id="@+id/label_sync_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/sync_measure_label"
+                    android:textSize="@dimen/text_size_label"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_sync_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/sync_measure_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_sync_measure"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        app:cornerRadius="10dp"
+                        app:strokeWidth="1.2dp"
+                        app:strokeColor="@color/panel_border_theme_aware"
+                        android:backgroundTint="@color/card_bg_theme_aware"
+                        android:text="@string/sync_measure_button"
+                        android:textAllCaps="false"
+                        android:textSize="@dimen/text_size_button"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_sync_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:textSize="@dimen/settings_note_text" />
+                </LinearLayout>
+
+                <!-- 4. Діапазон шкали спектра (Range dB) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_range_db"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/range_db_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_range_db"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="48dp"
+                        android:gravity="end"
+                        android:text="60 dB"
+                        android:textSize="@dimen/text_size_value" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_range_db"
+                    style="@style/CustomSliderStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="20"
+                    android:valueTo="80"
+                    android:stepSize="1"
+                    android:value="60" />
+
+                <!-- 5. Спектроаналізатор FM-радіо через салонний мікрофон -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_radio_mic_vis"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pref_radio_mic_visualizer_title"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_radio_mic_vis_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_on"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_radio_mic_vis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/pref_radio_mic_visualizer_desc"
+                    android:textSize="@dimen/settings_note_text" />
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 4: 🔐 Дозволи та Система
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_permissions_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/settings_permissions"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_permissions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_permissions_wizard"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/perm_wizard_btn_open"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_app_details"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_app_details"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_backup_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_backup_btn"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_restore_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:background="@null"
+                        android:text="@string/settings_restore_btn"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ 5: 🌙 Заставка
+                 Повноекранний візуалізатор, коли магнітолу лишили саму.
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_screensaver_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/screensaver_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_screensaver"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_enable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_enable"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_screensaver_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_off"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_screensaver_enable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/screensaver_enable_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_delay"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_delay"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_delay"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="48dp"
+                        android:gravity="end"
+                        android:textSize="@dimen/text_size_value" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_delay"
+                    style="@style/CustomSliderStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="5"
+                    android:valueTo="600"
+                    android:stepSize="5"
+                    android:value="60" />
+
+                <!-- Рядок: Прозорість фону Вдень (ліворуч) та Вночі (праворуч) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Прозорість фону: День -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bg_day"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bg_alpha_day"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bg_day"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bg_day"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="85" />
+                    </LinearLayout>
+
+                    <!-- Прозорість фону: Ніч -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bg_night"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bg_alpha_night"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bg_night"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bg_night"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="95" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Вибір активного ефекту для скрінсейвера -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_style"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_style_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_spinner_screensaver_style"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="220dp"
+                        android:layout_height="wrap_content"
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxBackgroundColor="@color/card_bg_theme_aware"
+                        app:boxStrokeWidth="1.2dp"
+                        app:boxStrokeColor="@color/panel_border_theme_aware"
+                        app:hintTextColor="@color/text_theme_aware_2"
+                        app:endIconTint="@color/text_theme_aware_2">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinner_screensaver_style"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:paddingVertical="7dp"
+                            android:paddingHorizontal="12dp"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:textColor="@color/text_theme_aware"
+                            android:textStyle="bold"
+                            android:textSize="@dimen/eq_value_text" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <!-- Рядок: Розміри скрінсейвера: Ширина (ліворуч) та Висота (праворуч) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Ширина смуги -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_width"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_width"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_width"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_width"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Висота смуги -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_height"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_height"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_height"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_height"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="3"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="25" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Рядок: Яскравість візуалізатора: Вдень (ліворуч) та Вночі (праворуч) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Яскравість: День -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bright_day"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bright_day"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bright_day"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bright_day"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="100" />
+                    </LinearLayout>
+
+                    <!-- Яскравість: Ніч -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/label_screensaver_bright_night"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/screensaver_bright_night"
+                                android:textSize="@dimen/text_size_label"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_screensaver_bright_night"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:textSize="@dimen/text_size_value" />
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_screensaver_bright_night"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="10"
+                            android:valueTo="100"
+                            android:stepSize="1"
+                            android:value="70" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Рядок: Висота інфо-панелі треку -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_screensaver_info_h"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/screensaver_info_h"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_info_h"
+                        style="@style/TextValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="48dp"
+                        android:gravity="end"
+                        android:textSize="@dimen/text_size_value" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/seek_screensaver_info_h"
+                    style="@style/CustomSliderStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="8"
+                    android:valueTo="25"
+                    android:stepSize="1"
+                    android:value="14" />
+
+                <TextView
+                    android:id="@+id/label_screensaver_apps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/screensaver_apps"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_screensaver_apps"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/screensaver_apps_pick"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_screensaver_apps"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_screensaver_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/screensaver_note"
+                    android:textSize="@dimen/settings_note_text" />
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ: 🎙️ Акустичне калібрування салону (експериментальна, root)
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_room_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/room_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_room"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/label_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/room_measure_label"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_measure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/room_measure_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <TextView
+                    android:id="@+id/label_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/room_mic_spot_label"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_mic_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/room_mic_spot_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_room_mic_place"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/room_mic_place_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:boxStrokeWidth="1.2dp"
+                    app:endIconTint="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_room_mic_place"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:paddingVertical="8dp"
+                        android:textColor="@color/cyan_custom" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/room_mic_car_height"
+                    android:layout_marginTop="6dp">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/img_room_mic_car"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="@dimen/fader_arrow_gap_h"
+                        android:layout_marginTop="@dimen/fader_arrow_gap_v"
+                        android:layout_marginEnd="@dimen/fader_arrow_gap_h"
+                        android:layout_marginBottom="@dimen/fader_arrow_gap_v"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:layerType="hardware"
+                        android:scaleType="fitCenter"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="W,300:520"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_car_cabriolet" />
+
+                    <com.radiorubka.wdsp.BalancePointerView
+                        android:id="@+id/room_mic_pointer"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_front"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="0"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_rear"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="180"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintTop_toBottomOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_left"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="270"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintEnd_toStartOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                    <ImageView
+                        android:id="@+id/btn_room_mic_right"
+                        android:layout_width="@dimen/toggle_height"
+                        android:layout_height="@dimen/toggle_height"
+                        android:background="@drawable/bg_icon_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/room_mic_spot_label"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:rotation="90"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_arrow"
+                        app:layout_constraintStart_toEndOf="@id/img_room_mic_car"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_mic_calibrate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_mic_calibrate_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_room_mic_cal_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_measure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/room_measure_button"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 СЕКЦІЯ: 🔬 Діагностика
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:id="@+id/label_debug_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/debug_section_title"
+                android:textSize="@dimen/settings_row_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/card_settings_debug"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+
+                <TextView
+                    android:id="@+id/label_system_report"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/system_report_label"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_system_report"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/system_report_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_system_report"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/system_report_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/btn_screen_topology"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/screen_topology_button"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_system_report_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottom_navigation_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@android:color/transparent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="6dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.radiorubka.wdsp.ui.views.SegmentedPillNavView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:menu="@menu/bottom_nav_menu" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

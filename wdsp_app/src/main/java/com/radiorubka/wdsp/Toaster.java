@@ -2,59 +2,70 @@ package com.radiorubka.wdsp;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Handler;  // <--- Correct one
+import android.os.Handler;
 import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.core.content.ContextCompat;
+
+import androidx.core.graphics.ColorUtils;
+
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 public class Toaster {
-    // One static handler for the whole app - very low resource usage
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static Toast toast;
-    public static void show(Context context, String message) {
 
+    public static void show(Context context, int resId) {
+        if (context != null) {
+            show(context, context.getString(resId));
+        }
+    }
+
+    public static void show(Context context, String message) {
+        if (context == null || message == null) return;
         final Context appContext = context.getApplicationContext();
 
         mainHandler.post(() -> {
-            // 1. Cancel the previous toast if it's still showing
+            // 1. Cancel previous toast
             if (toast != null) {
                 toast.cancel();
             }
 
-            // 2. Create the background
+            // 2. Compute theme-aware colors
+            int bg = ThemeManager.cardBackground(appContext);
+            int border = ThemeManager.panelBorder(appContext);
+            int textColor = ThemeManager.contrastText(ThemeManager.textPrimary(appContext), bg);
+
+            float density = appContext.getResources().getDisplayMetrics().density;
             GradientDrawable shape = new GradientDrawable();
             shape.setShape(GradientDrawable.RECTANGLE);
+            shape.setColor(ColorUtils.setAlphaComponent(bg, 0xF2));
+            shape.setCornerRadius(14f * density);
+            shape.setStroke(Math.max(1, (int) (1.2f * density)), border);
 
-            int color = androidx.core.content.ContextCompat.getColor(appContext, R.color.toast_bg);
-            int stroke = androidx.core.content.ContextCompat.getColor(appContext, R.color.toast_stroke);
-
-            shape.setColor(color);
-            shape.setCornerRadius(appContext.getResources().getDimension(R.dimen.button_radius));
-            shape.setStroke(appContext.getResources().getDimensionPixelSize(R.dimen.stroke_width), stroke);
-
-            // 3. Create the TextView
+            // 3. Create TextView
             TextView tv = new TextView(appContext);
             tv.setText(message);
+            tv.setTextColor(textColor);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+            tv.setTypeface(null, Typeface.BOLD);
 
-            int text_color = androidx.core.content.ContextCompat.getColor(appContext, R.color.text_theme_aware);
-            tv.setTextColor(text_color);
-            tv.setTextSize(appContext.getResources().getDimension(R.dimen.text_size_button));
-
-            int pad = appContext.getResources().getDimensionPixelSize(R.dimen.padding_small);
-            int pad2 = appContext.getResources().getDimensionPixelSize(R.dimen.padding_standard);
-            tv.setPadding(pad, pad, pad, pad);
+            int hPad = (int) (20 * density);
+            int vPad = (int) (12 * density);
+            tv.setPadding(hPad, vPad, hPad, vPad);
             tv.setGravity(Gravity.CENTER);
             tv.setBackground(shape);
 
-            // 4. Create and show the Toast
+            // 4. Create and show Toast
             toast = new Toast(appContext);
             toast.setDuration(Toast.LENGTH_SHORT);
             toast.setView(tv);
-            toast.setGravity(Gravity.BOTTOM | Gravity.END, pad2, pad2);
+            int yOffset = (int) (48 * density);
+            toast.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, yOffset);
             toast.show();
         });
     }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The two sizes the drawables still reference. They came over with the QFRadio resource set,
+    where a whole grid of dp_wN / dp_hN values existed; the rest of that grid was unused and has
+    been dropped. These two are corner radii inside shape drawables, not layout sizes, so they do
+    not belong in the screen-size sets.
+-->
+<resources>
+    <dimen name="dp_h5">5dp</dimen>
+    <dimen name="dp_h10">10dp</dimen>
+</resources>
