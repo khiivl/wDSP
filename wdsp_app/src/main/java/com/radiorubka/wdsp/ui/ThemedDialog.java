@@ -291,9 +291,10 @@ public final class ThemedDialog {
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
             dialog.setCancelable(cancelable);
             dialog.setCanceledOnTouchOutside(canceledOnTouchOutside);
-            if (dismissListener != null) {
-                dialog.setOnDismissListener(dismissListener);
-            }
+            // The caller's dismiss listener is attached at the end, together with the theme
+            // registry's own cleanup: a Dialog holds one listener, and setting it here was silently
+            // overwritten by registerActiveDialog below - the permissions wizard never learned it
+            // had been closed unless its button was pressed, and opened again on every start.
 
             Window window = dialog.getWindow();
             if (window != null) {
@@ -348,16 +349,36 @@ public final class ThemedDialog {
                     android.text.util.Linkify.addLinks(tvMsg, tgPattern, "https://t.me/", null,
                             (matcher, url) -> url.startsWith("@") ? url.substring(1) : url);
                 } catch (Throwable ignored) {}
-                root.addView(tvMsg);
+                // Not added yet: where it goes depends on whether the custom view scrolls itself.
             }
 
-            // Custom View
-            if (customView != null) {
-                if (customView.getParent() instanceof ViewGroup) {
-                    ((ViewGroup) customView.getParent()).removeView(customView);
-                }
+            // Body: message and custom view. On a short panel (1024x600 leaves 528dp) a tall body
+            // pushed the buttons below the screen and nothing scrolled - a tester could not reach
+            // "Continue" in the permissions wizard. The body now takes what is left between the
+            // title and the buttons and scrolls inside it; the buttons are always on screen.
+            if (customView != null && customView.getParent() instanceof ViewGroup) {
+                ((ViewGroup) customView.getParent()).removeView(customView);
+            }
+            boolean customScrolls = customView instanceof ScrollView
+                    || customView instanceof android.widget.AbsListView
+                    || customView instanceof androidx.core.widget.NestedScrollView;
+            if (customScrolls) {
+                if (tvMsg != null) root.addView(tvMsg);
                 root.addView(customView, new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            } else if (tvMsg != null || customView != null) {
+                LinearLayout body = new LinearLayout(context);
+                body.setOrientation(LinearLayout.VERTICAL);
+                if (tvMsg != null) body.addView(tvMsg);
+                if (customView != null) {
+                    body.addView(customView, new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                }
+                ScrollView bodyScroll = new ScrollView(context);
+                bodyScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+                bodyScroll.addView(body);
+                root.addView(bodyScroll, new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
             }
 
             // Multi-choice list
@@ -413,8 +434,10 @@ public final class ThemedDialog {
                 }
 
                 sv.addView(list);
+                // Takes what the screen leaves and scrolls inside it, like the body above: a fixed
+                // 260dp list plus title and buttons did not fit a 528dp panel.
                 LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, (int) dp(context, 260));
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
                 sp.bottomMargin = (int) dp(context, 12);
                 root.addView(sv, sp);
             }
@@ -521,6 +544,16 @@ public final class ThemedDialog {
                     finalBtnPositive.setTextColor(posText);
                     finalBtnPositive.setBackground(ThemeManager.roundedDrawable(c, 10, posBg, posBg, 0));
                 }
+            });
+
+            // Set after registerActiveDialog, so this is the listener that stays. It clears the
+            // theme registry, which needs it to let the dialog go, and then tells the caller.
+            final DialogInterface.OnDismissListener callerListener = dismissListener;
+            dialog.setOnDismissListener(d -> {
+                synchronized (ThemedDialog.class) {
+                    sActiveDialogs.remove(d);
+                }
+                if (callerListener != null) callerListener.onDismiss(d);
             });
 
             dialog.setContentView(root);

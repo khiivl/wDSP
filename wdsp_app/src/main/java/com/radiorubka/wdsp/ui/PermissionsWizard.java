@@ -137,21 +137,48 @@ public final class PermissionsWizard {
         }
     }
 
+    /** Describes this unit, not the owner's settings - backups do not carry it. */
+    private static final String DEVICE_STATE_PREFS = "wdsp_device_state";
+    private static final String PREF_LAST_WIZARD_MISSING = "wizard_last_missing";
+
     /**
-     * Автоматична перевірка при запуску: якщо версія оновилася або це перший старт,
-     * і не всі дозволи надані — показує візард.
+     * Opens the wizard on its own only when it has something to say.
+     *
+     * <p>Once per new version if a required permission is really missing, and again whenever the
+     * set of missing ones changes - which is how a grant the platform withdrew without notice gets
+     * noticed. Never merely because the version moved while everything is in place: that is what
+     * showed the wizard on every start to a tester whose every card was green.
+     *
+     * <p>What was shown is recorded when it is shown, not when the dialog closes. A dialog can be
+     * closed in ways that never call back - a tap outside, Back, the activity going away - and the
+     * version that waited for the callback opened again on every start.
      */
     public static boolean checkAndShowIfNeeded(Activity activity) {
         if (activity == null || activity.isFinishing()) return false;
-        SharedPreferences prefs = ThemeManager.prefs(activity);
-        int lastVer = prefs.getInt(PREF_LAST_WIZARD_VERSION, -1);
+        SharedPreferences state = activity.getSharedPreferences(DEVICE_STATE_PREFS, Context.MODE_PRIVATE);
+        int lastVer = state.getInt(PREF_LAST_WIZARD_VERSION, -1);
         int currentVer = getAppVersionCode(activity);
+        String missing = missingRequired(activity);
+        String lastMissing = state.getString(PREF_LAST_WIZARD_MISSING, "");
 
-        if (lastVer < currentVer) {
-            show(activity, () -> prefs.edit().putInt(PREF_LAST_WIZARD_VERSION, currentVer).apply());
-            return true;
+        boolean needed = !missing.isEmpty() && (lastVer < currentVer || !missing.equals(lastMissing));
+        state.edit()
+                .putInt(PREF_LAST_WIZARD_VERSION, currentVer)
+                .putString(PREF_LAST_WIZARD_MISSING, missing)
+                .apply();
+        if (needed) show(activity);
+        return needed;
+    }
+
+    /** Ids of the required items not in place right now, such as "1,4"; empty when none. */
+    private static String missingRequired(Context context) {
+        StringBuilder sb = new StringBuilder();
+        for (Item item : getItems()) {
+            if (item.optional || item.checker.isGranted(context)) continue;
+            if (sb.length() > 0) sb.append(',');
+            sb.append(item.id);
         }
-        return false;
+        return sb.toString();
     }
 
     /**
@@ -168,7 +195,74 @@ public final class PermissionsWizard {
         PermissionsWizard wizard = new PermissionsWizard(activity, onDismiss);
         wizard.buildAndShow();
         sCurrentInstance = new WeakReference<>(wizard);
+        // The root card starts from the last known answer; ask again and repaint when it comes.
+        // Only where root was granted before - asking an ungranted app raises Magisk's prompt.
+        if (ThemeManager.prefs(activity).getBoolean(RootAccess.PREF_ROOT_GRANTED, false)) {
+            RootAccess.checkAsync(activity, PermissionsWizard::refreshCurrent);
+        }
         return wizard;
+    }
+
+    /**
+     * Reads the notification grant the way the platform enforces it, not the way it records it:
+     * asks for the active media sessions under our listener. This platform withdraws grants
+     * without notice (owner, 11.09.2026), and a setting that still names us proves nothing.
+     */
+    private static boolean sessionsReallyReadable(Context ctx) {
+        try {
+            android.media.session.MediaSessionManager sessions =
+                    (android.media.session.MediaSessionManager) ctx.getSystemService(Context.MEDIA_SESSION_SERVICE);
+            if (sessions == null) return false;
+            sessions.getActiveSessions(new android.content.ComponentName(ctx,
+                    com.radiorubka.wdsp.NotificationAccess.class));
+            return true;
+        } catch (SecurityException e) {
+            return false;
+        } catch (Throwable t) {
+            return true;   // an unrelated failure is not a withdrawn grant - do not paint it red
+        }
+    }
+
+    /** A runtime permission can be granted while its app-op says otherwise; both have to agree. */
+    private static boolean opAllowed(Context ctx, String op) {
+        try {
+            android.app.AppOpsManager ops =
+                    (android.app.AppOpsManager) ctx.getSystemService(Context.APP_OPS_SERVICE);
+            if (ops == null) return true;
+            int mode = ops.checkOpNoThrow(op, android.os.Process.myUid(), ctx.getPackageName());
+            return mode != android.app.AppOpsManager.MODE_IGNORED
+                    && mode != android.app.AppOpsManager.MODE_ERRORED;
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
+    /**
+     * Where a green card leads. The platform withdraws grants and lets them go stale without
+     * notice, and the only cure for a stale one is switching it off and on in Settings - so a card
+     * that reads as granted still opens its switch instead of doing nothing (owner's rule,
+     * 11.09.2026).
+     */
+    private static void openSwitch(Item item, Activity act) {
+        try {
+            switch (item.id) {
+                case 1:
+                case 2:
+                    item.action.execute(act);   // both already open their own switch
+                    return;
+                case 3:
+                    act.startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+                    return;
+                case 6:
+                    RootAccess.checkAsync(act, PermissionsWizard::refreshCurrent);   // root lives in Magisk
+                    return;
+                default:
+                    act.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:" + act.getPackageName())));
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("wDSP_Wizard", "could not open the switch for item " + item.id + ": " + t);
+        }
     }
 
     /**
@@ -204,7 +298,7 @@ public final class PermissionsWizard {
                 1,
                 R.string.perm_wizard_item_notif_title,
                 R.string.perm_wizard_item_notif_desc,
-                ctx -> NowPlaying.getInstance(ctx).canReadSessions(),
+                ctx -> NowPlaying.getInstance(ctx).canReadSessions() && sessionsReallyReadable(ctx),
                 act -> {
                     try {
                         act.startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
@@ -221,7 +315,10 @@ public final class PermissionsWizard {
                 R.string.perm_wizard_item_overlay_desc,
                 ctx -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        return Settings.canDrawOverlays(ctx);
+                        // The API reads the recorded grant; the last real attempt says whether
+                        // a window was actually let through (see OverlayHealth).
+                        return Settings.canDrawOverlays(ctx)
+                                && !com.radiorubka.wdsp.OverlayHealth.lastAttemptRefused(ctx);
                     }
                     return true;
                 },
@@ -267,7 +364,8 @@ public final class PermissionsWizard {
                 4,
                 R.string.perm_wizard_item_location_title,
                 R.string.perm_wizard_item_location_desc,
-                ctx -> ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED,
+                ctx -> ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        && opAllowed(ctx, android.app.AppOpsManager.OPSTR_FINE_LOCATION),
                 act -> ActivityCompat.requestPermissions(act, new String[]{
                         Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION
@@ -279,7 +377,8 @@ public final class PermissionsWizard {
                 5,
                 R.string.perm_wizard_item_audio_title,
                 R.string.perm_wizard_item_audio_desc,
-                ctx -> ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
+                ctx -> ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                        && opAllowed(ctx, android.app.AppOpsManager.OPSTR_RECORD_AUDIO),
                 act -> ActivityCompat.requestPermissions(act, new String[]{
                         Manifest.permission.RECORD_AUDIO
                 }, REQ_AUDIO)
@@ -371,6 +470,8 @@ public final class PermissionsWizard {
             card.setOnClickListener(v -> {
                 if (!item.checker.isGranted(activity)) {
                     item.action.execute(activity);
+                } else {
+                    openSwitch(item, activity);
                 }
             });
 
