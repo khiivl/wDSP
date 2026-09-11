@@ -41,6 +41,7 @@ files, mark what you add.
 | [11-AUDIO-TRACT-AND-TUNER-CHIPS.md](11-AUDIO-TRACT-AND-TUNER-CHIPS.md) | ✍️ *Gemini* — the MCU switching matrix (channels 1–5: AUX, FM, NAVI, MPU, BT_CALL), the two-level volume architecture, and why a TDA7708 at 0.5–0.7 V and an NXP TEF6686 at 1.0–1.2 V make navigation behave differently |
 | [12-BLUETOOTH-AUTOCONNECT-AND-FOCUS.md](12-BLUETOOTH-AUTOCONNECT-AND-FOCUS.md) | ✍️ *Gemini* — the 40-second Bluetooth autoconnect poll, and how the vendor's Bluetooth service arbitrates audio focus through `sys.qf.last_audio_src` |
 | [14-LAUNCHER-ICONPACKS-AND-THEMING.md](14-LAUNCHER-ICONPACKS-AND-THEMING.md) | ✍️ *Gemini* — QF launcher icon packs (`/data/QF/.icons`, mode 0777 — writable without root), the `icons.config` mapping, and how to give an app a full-bleed icon instead of the shrunken framed one |
+| [15-BU32107-REGISTERS.md](15-BU32107-REGISTERS.md) | ✍️ *Gemini* & *Kostyamat* — complete ROHM BU32107EFV-M register map, MCU translation (`FUN_08004a58`, shadow buffer `0x200000E2`, flusher table `0x0800CFD7`), crossover slopes (12 dB/oct), delay RAM limits, and EQ topology |
 | [06-TUNER.md](06-TUNER.md) | the radio side — mostly relevant to other projects, but several MCU facts live here |
 | [07-PRACTICE.md](07-PRACTICE.md) | how to work here without wasting runs: adb traps, testing discipline, what a reboot really resets |
 
