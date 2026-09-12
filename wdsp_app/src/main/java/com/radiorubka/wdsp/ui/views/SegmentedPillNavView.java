@@ -93,7 +93,14 @@ public class SegmentedPillNavView extends HorizontalScrollView {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        lp.gravity = Gravity.CENTER;
+        // CENTER_VERTICAL, not CENTER. A horizontally centred child of a scroll view puts part of
+        // itself to the left of scroll position zero, where no scrolling can reach it: on the Tesla
+        // square the row (six tabs, 840dp) was cut by 128dp on EACH side, so the equaliser and the
+        // settings tab showed 2dp slivers and could not be brought into view at all. Measured on
+        // the unit 12.09.2026; the arithmetic matched at 800x480 (102dp) and in split screen (22dp).
+        // The pill still looks centred on a wide panel, because the bar that holds it is centred and
+        // wraps its content.
+        lp.gravity = Gravity.CENTER_VERTICAL;
         addView(mContentContainer, lp);
 
         int menuResId = 0;
@@ -397,5 +404,38 @@ public class SegmentedPillNavView extends HorizontalScrollView {
             return mTextColorList.getColorForState(new int[]{}, mTextColorList.getDefaultColor());
         }
         return ThemeManager.textSecondary(getContext());
+    }
+
+    /**
+     * Narrow the tabs before resorting to a swipe.
+     *
+     * <p>Six tabs at their designed 130dp, plus five 12dp gaps and the container padding, need
+     * 852dp. No panel in the matrix except the reference 1280 has that much, so on every other one
+     * the row was wider than the screen and the two end tabs were only reachable by swiping - which
+     * nothing on screen suggests. Here the width each tab asks for is recomputed from the room
+     * actually given, down to a floor: 84dp still holds a 24dp icon and a two-word caption, and
+     * six of those fit a 600dp panel. Below the floor the row stays scrollable, as before.
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int mode = MeasureSpec.getMode(widthMeasureSpec);
+        int n = mHolders.size();
+        if (n > 0 && mode != MeasureSpec.UNSPECIFIED) {
+            float density = getResources().getDisplayMetrics().density;
+            int designed = (int) (130 * density);
+            int floor = (int) (84 * density);
+            int gaps = (int) (12 * density) * Math.max(0, n - 1);
+            int room = MeasureSpec.getSize(widthMeasureSpec)
+                    - getPaddingLeft() - getPaddingRight()
+                    - mContentContainer.getPaddingLeft() - mContentContainer.getPaddingRight()
+                    - gaps;
+            int per = Math.max(floor, Math.min(designed, room / n));
+            for (NavItemViewHolder h : mHolders) {
+                if (h.itemView.getMinimumWidth() != per) {
+                    h.itemView.setMinimumWidth(per);
+                }
+            }
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 }

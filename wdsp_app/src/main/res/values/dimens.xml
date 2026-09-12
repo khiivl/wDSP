@@ -11,6 +11,26 @@
     <dimen name="text_size_log">12sp</dimen>
     <dimen name="text_size_button">16sp</dimen>
 
+    <!-- DENSE TIER: dialogs that put many rows on one screen - the room measurement wizard above
+         all. It exists so that "small" is still a named decision with a floor, instead of a number
+         somebody typed into a layout. Before 12.09.2026 that wizard carried 9.5sp descriptions and
+         11.5sp option titles written straight into the layout, unreadable in a moving car and
+         invisible to any global change of scale.
+
+         The floor is 13sp. Nothing in this application may be smaller in a dialog: the panel sits
+         at arm's length in daylight, and the owner has asked three times for readable type. -->
+    <!-- The smallest a control may be and still be hit with a thumb in a moving car. Android's own
+         guidance says 48dp; this panel cannot afford that in the equaliser strip, so 28dp is the
+         floor we hold everywhere, and the audit script on the unit fails anything under 24dp.
+         Weight beats a minimum in LinearLayout, so a control that must not shrink is given this
+         width outright rather than 0dp plus a weight - which is exactly how the amplifier volume
+         buttons ended up 22dp wide on 800x480 and 15dp in split screen. -->
+    <dimen name="tap_target_min">28dp</dimen>
+
+    <dimen name="text_size_dense_title">15sp</dimen>
+    <dimen name="text_size_dense_label">14sp</dimen>
+    <dimen name="text_size_dense_desc">13sp</dimen>
+
     <!-- Paddings and Margins -->
     <dimen name="padding_standard">16dp</dimen>
     <dimen name="padding_small">8dp</dimen>
@@ -32,7 +52,13 @@
     <!-- The car with its arrows and numbers is laid out once, at the size it has on the 1280x720
          reference (the right half of 1280x648dp of content), and scaled whole to fit whatever
          room a panel leaves - see ScaleToFitLayout. -->
-    <dimen name="fader_group_width">640dp</dimen>
+    <!-- Design width of the fader group (the car with its arrows and numbers). This is the BASE, so
+         the narrowest case: half of a 600dp Tesla panel is 300dp, and a 640dp group there had to be
+         scaled to 0.47, which left the arrows 17dp and the numbers about 8sp - measured on the unit
+         12.09.2026. At 400dp the same pane gives 0.75, so the arrows stay near 27dp and the group
+         scrolls vertically instead of shrinking further. The full 640dp lives in
+         values-w1000dp/dimens_fader.xml, where there is room for it. -->
+    <dimen name="fader_group_width">400dp</dimen>
     <dimen name="fader_group_height">648dp</dimen>
     <!-- Room kept free under content for the floating navigation pill. Measured by uiautomator on
          every geometry, 11.09.2026: the pill and its margin take 82dp from the bottom (74 + 8), so

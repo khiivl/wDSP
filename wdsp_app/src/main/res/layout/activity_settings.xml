@@ -250,7 +250,7 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:text="@string/settings_reset_palette"
-                android:textSize="15sp"
+                android:textSize="@dimen/text_size_dense_title"
                 android:textStyle="bold" />
 
             <!-- Блок Шпалер -->
@@ -275,7 +275,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/settings_wallpaper_title"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold" />
 
                     <TextView
@@ -283,7 +283,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/settings_wallpaper_none"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_dense_title" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -301,7 +301,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_wallpaper_load"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_dense_title" />
 
                     <TextView
                         android:id="@+id/btn_wallpaper_reset"
@@ -313,7 +313,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_wallpaper_default"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_dense_title" />
 
                     <TextView
                         android:id="@+id/btn_solid_wallpaper"
@@ -325,7 +325,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_wallpaper_solid_switch"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_size_dense_title" />
                 </LinearLayout>
 
                 <!-- Повзунки солід-кольору: 2 колонки (50%/50%) за стандартом решти застосунку -->
@@ -513,7 +513,7 @@
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp"
                         android:text="@string/state_on"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -851,7 +851,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_classic"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                     <TextView
                         android:id="@+id/btn_style_outrun"
@@ -863,7 +866,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_outrun"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                     <TextView
                         android:id="@+id/btn_style_gradient"
@@ -875,7 +881,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_gradient"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                 </LinearLayout>
 
                 <!-- Рядок 2: Центрований, VU-метр, Осцилограф -->
@@ -894,7 +903,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_center"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                     <TextView
                         android:id="@+id/btn_style_vu"
@@ -906,7 +918,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_vu"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                     <TextView
                         android:id="@+id/btn_style_oscillo"
@@ -918,7 +933,10 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/status_bar_style_oscillo"
-                        android:textSize="11sp" />
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                 </LinearLayout>
 
                 <!-- 1. Динамічний контейнер: Плаваючі пікові мітки (Floating Peak Caps) -->
@@ -953,7 +971,7 @@
                             android:paddingTop="8dp"
                             android:paddingBottom="8dp"
                             android:text="@string/state_off"
-                            android:textSize="15sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -999,7 +1017,7 @@
                             android:paddingTop="8dp"
                             android:paddingBottom="8dp"
                             android:text="@string/state_off"
-                            android:textSize="15sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1045,7 +1063,7 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="16"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1057,7 +1075,7 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="32"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -1152,7 +1170,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_spectrum"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_solid_hue"
@@ -1164,7 +1185,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_solid_hue"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_auto_day_night"
@@ -1176,7 +1200,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_auto_day_night"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_eq_groups"
@@ -1188,7 +1215,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_eq_groups"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1206,7 +1236,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_monochrome_white"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_black"
@@ -1218,7 +1251,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_monochrome_black"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_fire"
@@ -1230,7 +1266,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_fire"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_neon"
@@ -1242,7 +1281,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_neon"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                     </LinearLayout>
 
                     <!-- Рядок 1: Synthwave (purple_gp), Sherbet (rainbowsherbet_gp), Warm VU (redyellow_gp) -->
@@ -1261,7 +1303,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_purple"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_rainbow_sherbet"
@@ -1273,7 +1318,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_rainbow_sherbet"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_warm_vu"
@@ -1285,7 +1333,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_warm_vu"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                     </LinearLayout>
 
                     <!-- Рядок 2: Colorfull (Colorfull_gp), Ocean Breeze (es_ocean_breeze), Sunset Real (Sunset_Real_gp) -->
@@ -1304,7 +1355,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_colorfull"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_ocean_breeze"
@@ -1316,7 +1370,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_ocean_breeze"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
 
                         <TextView
                             android:id="@+id/btn_theme_sunset_real"
@@ -1328,7 +1385,10 @@
                             android:padding="8dp"
                             android:background="@null"
                             android:text="@string/status_bar_theme_sunset_real"
-                            android:textSize="11sp" />
+                            android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="11sp"
+                        app:autoSizeMaxTextSize="15sp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -1427,7 +1487,7 @@
                             android:paddingTop="8dp"
                             android:paddingBottom="8dp"
                             android:text="@string/state_off"
-                            android:textSize="15sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1451,7 +1511,7 @@
                     android:padding="12dp"
                     android:background="@null"
                     android:text="@string/btn_vis_preview_screensaver"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_dense_title"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -1501,7 +1561,7 @@
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp"
                         android:text="@string/state_off"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -1529,7 +1589,7 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/eq_vis_mode_spectrum"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/btn_eq_vis_monochrome"
@@ -1541,7 +1601,7 @@
                         android:padding="8dp"
                         android:background="@null"
                         android:text="@string/eq_vis_mode_monochrome"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
                 </LinearLayout>
 
                 <!-- Динамічна нормалізація для еквалайзера -->
@@ -1575,7 +1635,7 @@
                             android:paddingTop="8dp"
                             android:paddingBottom="8dp"
                             android:text="@string/state_off"
-                            android:textSize="15sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1647,7 +1707,7 @@
                                 android:paddingTop="8dp"
                                 android:paddingBottom="8dp"
                                 android:text="@string/state_off"
-                                android:textSize="15sp"
+                                android:textSize="@dimen/text_size_dense_title"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
@@ -1731,7 +1791,7 @@
                                 android:paddingTop="8dp"
                                 android:paddingBottom="8dp"
                                 android:text="@string/state_on"
-                                android:textSize="15sp"
+                                android:textSize="@dimen/text_size_dense_title"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
@@ -1953,7 +2013,7 @@
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp"
                         android:text="@string/state_on"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -2002,7 +2062,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/perm_wizard_btn_open"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/btn_app_details"
@@ -2014,7 +2074,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_app_details"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -2032,7 +2092,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_backup_btn"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/btn_restore_settings"
@@ -2044,7 +2104,7 @@
                         android:padding="10dp"
                         android:background="@null"
                         android:text="@string/settings_restore_btn"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -2094,7 +2154,7 @@
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp"
                         android:text="@string/state_off"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -2540,7 +2600,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/screensaver_apps_pick"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/tv_screensaver_apps"
@@ -2548,7 +2608,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_size_dense_desc" />
                 </LinearLayout>
 
                 <TextView
@@ -2759,7 +2819,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/room_mic_calibrate_button"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/tv_room_mic_cal_status"
@@ -2767,7 +2827,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_size_dense_desc" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -2785,7 +2845,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/room_measure_button"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -2844,7 +2904,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/system_report_button"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/btn_screen_topology"
@@ -2855,7 +2915,7 @@
                         android:gravity="center"
                         android:padding="10dp"
                         android:text="@string/screen_topology_button"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_size_dense_label" />
 
                     <TextView
                         android:id="@+id/tv_system_report_status"
@@ -2863,7 +2923,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_size_dense_desc" />
                 </LinearLayout>
             </LinearLayout>
 

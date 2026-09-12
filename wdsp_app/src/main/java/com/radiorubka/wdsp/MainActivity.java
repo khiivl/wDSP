@@ -1260,6 +1260,17 @@ public class MainActivity extends AppCompatActivity {
         int cQ = ContextCompat.getColor(this, R.color.q_switch_text);
         //int cL = ContextCompat.getColor(this, R.color.band_label);
         float smallTextSize = getResources().getDimension(R.dimen.text_size_small);
+        // The band strip used to divide its height by percentages (7% the Q switch, 7% the value,
+        // 8% the caption, 78% the slider). On a 480-tall panel that made the Q switch 14dp high -
+        // half the 24dp a finger needs, measured on the unit at four geometries on 12.09.2026.
+        // Now the three small parts get a fixed height with a floor, and the slider takes what is
+        // left: the strip degrades by shortening the slider, which stays usable, instead of by
+        // shrinking the controls until they cannot be hit.
+        final float dens = getResources().getDisplayMetrics().density;
+        final int qHeight = (int) (28 * dens);
+        final int valueHeight = (int) (22 * dens);
+        final int captionHeight = (int) (20 * dens);
+        final float denseText = getResources().getDimension(R.dimen.text_size_dense_desc);
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             final int idx = i;
@@ -1281,9 +1292,11 @@ public class MainActivity extends AppCompatActivity {
             q.setChecked(false);
             q.setTextColor(ContextCompat.getColor(this, R.color.text_theme_aware_2));
             q.setBackgroundColor(Color.TRANSPARENT);
-            q.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
-            q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
-            q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.07f));
+            q.setTextSize(TypedValue.COMPLEX_UNIT_PX, denseText);
+            q.setPadding(0, 0, 0, 0);
+            q.setMinimumHeight(qHeight);
+            q.setMinimumWidth(0);
+            q.setLayoutParams(new LinearLayout.LayoutParams(-1, qHeight));
             updateToggleStyle(q);
             q.setOnCheckedChangeListener((bv, checked) -> {
                 updateToggleStyle(bv);
@@ -1295,17 +1308,17 @@ public class MainActivity extends AppCompatActivity {
 
             db.setText("0");
             db.setTextColor(com.radiorubka.wdsp.ui.theme.ThemeManager.textPrimary(this));
-            db.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+            db.setTextSize(TypedValue.COMPLEX_UNIT_PX, denseText);
             db.setTypeface(null, Typeface.BOLD);
             db.setGravity(Gravity.CENTER);
-            db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.07f));
+            db.setLayoutParams(new LinearLayout.LayoutParams(-1, valueHeight));
 
             TextView label = new TextView(this);
             label.setText(AudioConfig.BAND_LABELS[i]);
             label.setTextColor(com.radiorubka.wdsp.ui.theme.ThemeManager.textSecondary(this));
-            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_PX, denseText);
             label.setGravity(Gravity.CENTER);
-            label.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            label.setLayoutParams(new LinearLayout.LayoutParams(-1, captionHeight));
             freqLabels.add(label);
 
             s.setValueFrom(0f);
@@ -1326,7 +1339,7 @@ public class MainActivity extends AppCompatActivity {
             s.setLabelBehavior(LabelFormatter.LABEL_GONE);
 
             FrameLayout seekBox = new FrameLayout(this);
-            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.78f));
+            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(1000, -2);
             lp.gravity = Gravity.CENTER; s.setLayoutParams(lp);
 

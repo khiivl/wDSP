@@ -222,6 +222,16 @@ resolves to a Windows Store stub that exits 127 and dies silently:
 Monitor({command: "\"C:/Program Files/Python312/python.exe\" C:/repos/agent-bridge/watch_board.py --session wdsp-kostyfmat_mod --agent Claude", persistent: true})
 ```
 
+Sign every bridge call with the same label, `wdsp-kostyfmat_mod`, and pass `canonicalId` (from
+`get_session({session_id:"self"})`), `client`, `cwd` and `title` once. The label belongs to the
+**work line**, not to a window: the owner switches Claude Desktop between two accounts, so this line
+is continued by windows under either account, and on the board they are linked as «Claude wDSP»
+(`wdsp-kostyfmat_mod`, `bb5f79d5-…`). A fresh label — a transcript uuid, a date — falls out of that
+link, because the bridge resolves aliases in a single pass. The `SessionStart` hook suggests the
+transcript uuid; for this project the stable label wins. Start by
+`load_session_context({agent:"Claude", sessionId:"bb5f79d5-f985-45d0-8d78-2ff950bf2df7"})` — the
+last snapshot of this line.
+
 ⚠️ A dead watchman looks exactly like nobody writing. That has already cost this project two
 invalid conclusions in a single day, so treat "the board is quiet" as a claim that needs evidence.
 
@@ -229,20 +239,22 @@ invalid conclusions in a single day, so treat "the board is quiet" as a claim th
 
 ## The state of the tree
 
-Version **0.4.8**, `versionCode 15`, branch `kostyfmat_mod`. The number was chosen 09.09.2026 by the
-owner's instruction: the interface work of the Antigravity session had already announced itself as
-0.4.8 in its release notes while the build file still said 0.4.7.7, and two different builds sharing
-one version is a thing this project has already paid for once. `versionCode` moves with it, because
-0.4.7.7 is on the test unit and in the release pack.
+Version **0.4.9.6**, `versionCode 23`, branch `kostyfmat_mod` (12.09.2026). The tree moved to 0.4.9.x
+when the Antigravity session's work was merged after 0.4.8; **0.4.9.x is with testers and complaints
+about it are what this cycle is answering**. The paragraph below used to describe 0.4.8/`15` — that
+was true until the merge and is kept here only as a warning about how fast this section goes stale.
 
 ⚠️ Do not read the sentence above as "and it is pushed". Run `git log origin/kostyfmat_mod..HEAD`
 before assuming the remote has what you are reading about — that is the only honest way to know,
-and any claim written here goes stale the moment somebody commits.
+and any claim written here goes stale the moment somebody commits. As this was written: **7 commits
+ahead of `origin/kostyfmat_mod`, none pushed**, plus the uncommitted interface work of 12.09.
 
-The working tree carries two `.idea/` files and three untracked helpers from the localisation pass
-— `translations.json`, `translate_instructions.txt`, `apply_and_sync.ps1`. They are the source data
-for that pass — 27 locales × 16 keys, the 26 translated ones plus the hand-written `ru-rUA` — and
-they are kept deliberately. They are not stray edits.
+The working tree carries two `.idea/` files that are not ours and the current interface changes.
+The three untracked localisation helpers that used to live in the root — `translations.json`,
+`translate_instructions.txt`, `apply_and_sync.ps1` — were **deleted 11.09.2026** after the
+Antigravity session confirmed they were its own intermediate files, already applied to the resources
+and to the APK; a copy is kept outside the repository in the session scratchpad
+(`gemini_leftovers_26-08/`). Nothing in the build depends on them.
 
 ✅ **What is built now matches what is committed**, which was not true for the whole of the previous
 cycle. The signed release of 0.4.7.5 is packed at `~/Downloads/wDSP-kostyamat-mod-0.4.7.5/` (APK,
@@ -399,6 +411,159 @@ new write or a new condition placed over working logic.
 
    ⚠️ Treat this as the first substantial work of the next cycle, ahead of the two items below.
    They concern a build nobody has yet; this concerns the one that is public.
+
+   ━━━ ✅ **The interface half of this review is done (12.09.2026). What it found, measured** ━━━
+
+   Method: `uiautomator dump` under `wm size`/`wm density`, bounds compared in dp against the
+   reference 1280x720 — see [platform/07-PRACTICE.md](platform/07-PRACTICE.md) §12, including the two
+   traps that cost a wrong diagnosis here. Tools and every dump are in the session scratchpad:
+   `audit2.py` (drives the unit), `analyze8.py` (judges), `audit_settings.py` (scrolls the settings
+   screen). Geometries: 1280x720, 1024x600, 1280x480, 800x480, 960x600, Tesla 1200x1200@320, split 640.
+
+   | what was wrong | measured before | now |
+   |---|---|---|
+   | Q switches on the equaliser divided their height by percent | 14dp tall on 480-tall panels | 28dp, fixed, slider takes the remainder |
+   | amplifier volume buttons: `0dp` + weight, and weight beats a minimum | 22dp at 800x480, 15dp in split | 28dp (`@dimen/tap_target_min`) everywhere |
+   | subwoofer frequency dropdown: the arrow ate the column | "100 Hz" on three lines, row 80dp | one line, 108–151dp wide |
+   | navigation pill: content centred inside a scroll | equaliser and settings tabs 2dp wide on Tesla | tabs narrow to 84dp, all six fit |
+   | fader group scaled on both axes | arrows 17dp, numbers ~8sp on short panels | floor on the height + vertical scroll; arrows 36dp (reference, 800x480), 27dp Tesla, 28dp split |
+   | `showConfirmation` / `showCustom` never scrolled | long text pushed the buttons off screen | body scrolls, buttons always visible |
+   | loudness and GALA headers shared a row with badges | title broke into 4 lines at Tesla | title above, badges scroll sideways |
+   | 111 text sizes written into layouts, down to 9.5sp | wizard descriptions unreadable | named scale, floor 13sp; 20 segmented buttons auto-size 11–15sp |
+   | dialog text colour measured against the window | could go black-on-black with a custom palette | measured against the card |
+
+   Final pass: **no touch target under 24dp on any of the four geometries**, settings screen included.
+
+   Accepted deliberately, not defects: the GALA card title takes two lines on the Tesla square, and
+   `screencap`-style "slivers" in a dump are clipping, not squeezing.
+
+   Still open from this pass: the **cabin measurement wizard** was only checked in the layout — driving
+   it on the unit means the microphone and a sweep, i.e. sound, so it waits for the owner's word;
+   backup/restore still carries device state (root flag, wizard version, microphone compensation).
+
+   ━━━ 🔴 **Before you touch `platform/` or its mirror: the index in the tree is the POOR copy** ━━━
+
+   *(measured 12.09.2026, awaiting the owner's decision — do not "sync" it on your own)*
+
+   `platform/INDEX.md` was replaced in **both** trees (wDSP and the radio project, byte-identical
+   copies, 12.09 06:03) together with three new documents (`15-UNISOC…`, `16-ROHM-BD37534…`,
+   `17-TSC4745…`, also byte-identical in both). The replacement **removed knowledge**:
+
+   * `## The eleven things most likely to waste a day` became `## The seven` — items 8–11 are gone:
+     volume is per source and an unset `sys.radio.vol` reads back as `persist.sys.radio_volume` (that
+     *is* the "volume reset itself" report, there is no reset code); the MCU firmware is compiled per
+     chipset, not adaptive; half the fleet has a second DSP and the MCU code's second character
+     decides (`2` → AK7738, `3` → AK7604); `input keyevent 24/25` cannot test volume here at all;
+   * the owner's rule of 11.09 about recording platform findings immediately, with its table of what
+     goes where, and the requirement of a provenance mark on every line (🔬 firmware · 📻 wire ·
+     🧩 reasoning · ❓ unverified);
+   * the detailed descriptions of documents 01, 03, 07–15 and the `GEMINI_HANDOFF` row.
+   * Three of its rows point at files that exist nowhere: `12-MICROPHONE-PATH…`,
+     `13-LAUNCHER-ICONPACKS…`, `14-SCREEN-MATRIX…`. The tree also has two files numbered `15-`.
+
+   ✏️ **Correction, measured an hour later — the three "dead" rows are not dead.** They point at
+   documents that exist in a **fourth** store nobody had counted:
+   `~/.gemini/config/skills/qf-platform-architecture/references/` (20 files). That is where the
+   replaced index comes from, and where the morning pack was copied from — `15-UNISOC`, `16-ROHM`,
+   `17-TSC4745` and the two disputed `10-`/`11-` files are byte-identical to it. So the index is not
+   lying; it is **true for Gemini's store and wrong for ours**, because it describes its numbering and
+   its file list.
+
+   Neither store is a superset:
+
+   | | ours (skill + both trees) | Gemini's store |
+   |---|---|---|
+   | fresher here | `01-SYSTEM` 14 635 vs 9 164 · `05-AUDIO-PATH` 35 662 vs 20 918 · `07-PRACTICE` 15 483 vs 6 844 · `08-VOLUME` 39 241 vs 28 260 | `02-MCU` 14 278 vs 11 077 · `ROOM_CALIBRATION` 42 566 vs 20 717 |
+   | only here | `10-BITPERFECT`, `13-MCU-FIRMWARE-VARIANTS`, `15-BU32107`, `GEMINI_HANDOFF`, plus three documents we renumbered (11, 12, 14) | `12-MICROPHONE-PATH-HAL-AND-HARDWARE-CONTROLS` (18 509, 10.09) |
+
+   Our `11-AUDIO-TRACT` and `12-BLUETOOTH` **are** its `10-` and `11-`, renumbered to avoid the clash
+   with `10-BITPERFECT-MODULE` (said so in our copy's own header) and since edited — ours are larger.
+   So the numbering is not a conflict of documents, it is one family under two schemes, and ours is
+   the deliberate one.
+
+   Overlap checked before asking for anything: the microphone/HAL document is **genuinely new
+   material** (SC2730 ten mentions against one in our `05-AUDIO-PATH`, PGA nine against one), while
+   the screen-matrix document is **already covered** on our side (132 panels, `hwrotation`, Tesla and
+   1280x480 are all in our `01-SYSTEM`, and the radio project has its own `SCREEN_MATRIX.md`).
+
+   `02-MCU` was compared by structure, not by size: Gemini's copy carries four sections ours has not
+   — the full character-by-character hardware-code decoding table, rules for Magisk modules and apps,
+   the hardware audio-mixing command with navigation ducking, and the boot broadcast timeline
+   (15 headings against our 11). So it is richer knowledge, not a fatter text.
+
+   ⇒ **What is worth taking from Gemini's store** — corrected twice, after the radio session checked
+   it section by section and I verified every point myself:
+
+   * `12-MICROPHONE-PATH-HAL-AND-HARDWARE-CONTROLS` — **§5 only**, not the document. The rest of it
+     has been with us since 04.09 as `references/from-gemini/MICROPHONE-PATH.md` (12 608 B, 166 lines,
+     §1–§4 identical heading for heading). New is `## 5. True Unprocessed MIC on UIS7862 / SC2730`
+     (from its line 170, written 10.09): the myth of the "crippled microphone" disproven, the wire
+     measurements, and the architectural conclusions for wDSP. That is our subject — the RTA and the
+     radio spectrum taken from the microphone.
+
+     🪤 **Why both of us first measured this wrong, and the repair item it produces.** The phrase
+     "SC2730 ten mentions against one of ours" was measured against `05-AUDIO-PATH`, because that is
+     where the index points for the microphone. `from-gemini/` is mentioned **nowhere** — not in the
+     skill's `INDEX.md`, not in `SKILL.md`, not in this tree's index: 68 818 bytes in eight files
+     (`MICROPHONE-PATH`, `MCU-UART-PROTOCOL`, `ZYGISK-MODULE`, `LICENSING-STANDARD`,
+     `PACKAGE-HARDCODING`, `APK-DECOMPILATION`, `ANDROID-SYSTEM-HACKS`, `README`) that no index
+     admits exist. ⇒ **The index must list `from-gemini/`**, or the next session concludes "we are
+     missing it" for the third time. The owner's own rule — a document created is a document linked
+     immediately — was broken here, and it cost this loop.
+   * the fresh `ROOM_CALIBRATION` (42 566 vs 20 717) — take whole.
+   * `02-MCU` — **not** whole. Take §9 only (the boot broadcast timeline: `boot_progress`,
+     `QFInitServer`, `DefaultMcuStateListener`, `framework_locked_boot_completed`,
+     `CheckDevelopmentRunnable`, `update_battery_power` — all of them appear in **zero** files of our
+     canon) plus its ❓ question about the native parser.
+     🔴 Do **not** take its §1: it states `Testing ${HW_CODE:4:2} == "21"` checks `exDeviceType == 2
+     (BU32107)`, which our own `13-MCU-FIRMWARE-VARIANTS` §1 has **disproven** — `[4]` is the control
+     panel, identical across the fleet, so that test is always true, and that is precisely how a
+     BD37534 unit was handed a 24-bit I2S profile. Our `13-` is the stronger document (four firmware
+     images as witnesses); Gemini has no equivalent.
+
+     ⚠️ And for `13-` the canonical copy is **this tree**, not the skill: 9 593 B against 8 075 B, and
+     the section *"Three details that decide whether a parser of this code is right"* exists only
+     here — hex continuation applies to `[1]`, `[2]`, `[4]` alone; `[5]` is masked on the **parsed
+     number**, because masking the character reads ASCII (`'1'` = `0x31`) and yields a plausible
+     falsehood; `[0]` has three values `{ST, MM, BYD}`, which is why `startsWith("00")` is wrong —
+     wDSP's own detector required it until 11.09. So this one mirrors **tree → skill**; the reverse
+     direction would delete it. (Its author is Gemini, 07.09, checked and corrected on our side — the
+     ~80 % rule working as intended.)
+     §8 (`0x86` audio mixing) is a duplicate of what we hold in three places, **except** for the
+     address: Gemini says `0x0800896c–0x08008998` marked 🔬 (decompiled), we say `0x0800C16C` marked
+     🧩 (reasoning). Treat it as a reason to verify on the image, not as something to merge.
+
+   🔴 **`06-TUNER` §7 exists in exactly one copy on this machine, and the canon is the side that is
+   missing knowledge — so the useful direction here is the reverse one.**
+   `## 7. RDS Decoder Flaw in MCU: Missing CRC Error Bit Handling 🔬📻 (25.08.2026)` lives only in the
+   radio tree (9 219 B). All three of our copies — skill, Gemini's store and the wDSP tree — are the
+   same 7 172 B file with **zero** mentions of `CRC` and **zero** of `TDA7708`: our own tuner is not
+   described in them at all.
+
+   ✏️ Correction to what this paragraph said an hour earlier: mirroring over it would **not** destroy
+   the section. It is tracked and committed (`7b261ab`, RC2.1) and the radio working copy is identical
+   to `HEAD`, so one `git show HEAD:.agents/platform/06-TUNER.md` brings it back. The radio session
+   found and corrected that overstatement itself, and I had repeated it. ⇒ The action is (1) lift §7
+   **into** the skill, because the canon has no knowledge of the lost CRC error bit, and (2) never
+   overwrite that file with the skill's copy without carrying §7 across. A copy of the section is
+   parked in the session scratchpad (`06-TUNER_sec7_CRC_error_bit_RADIO_TREE_ONLY.md`) for convenience,
+   not as a rescue.
+
+   Two more things the radio session measured about its own tree: it is not built on our numbering at
+   all — six of its files are byte-identical to Gemini's, so it is an **old mirror of Gemini**, and a
+   repair there is the whole set rather than three files; and its `04-FIRMWARE-PATCHING` is a **doubled
+   draft** (485 lines against 294 in both other copies, eight repeated headings, the two halves
+   contradicting each other about the checksum question) — that one needs cleaning, not mirroring.
+
+   Import under the usual rule for Gemini's material: ~80 % trust, nothing becomes code until it is
+   checked on the wire — the provenance marks exist because mixing "read in the firmware" with
+   "seems" once sent a 24-bit I2S profile to units carrying a BD37534.
+
+   ⇒ **The complete index is the one in the skill** (`~/.claude/skills/qf-platform/references/INDEX.md`).
+   The usual direction "tree → mirror" would destroy all of the above. The repair, once the owner
+   decides: take the skill's index as the base, add rows for 15/16/17, fix the three dead rows, then
+   mirror **the whole set at once** — the index cannot be mirrored apart from the file list, since it
+   is the index that diverged.
 
    ━━━ 📻 **Confirming the radio contract is the priority inside this task** ━━━
 

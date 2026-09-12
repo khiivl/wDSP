@@ -8,7 +8,7 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="10dp"
     android:textColor="@color/text_theme_aware"
-    android:textSize="15sp"
+    android:textSize="@dimen/text_size_label"
     android:textStyle="bold"
     android:background="?android:attr/selectableItemBackground"
     android:ellipsize="end"

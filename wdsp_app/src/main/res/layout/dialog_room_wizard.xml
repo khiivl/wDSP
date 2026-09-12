@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/room_wizard_title"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_dense_title"
             android:textStyle="bold"
             android:layout_marginBottom="2dp" />
 
@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/room_wizard_setup_desc"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_size_dense_desc"
                 android:lineSpacingExtra="1dp"
                 android:layout_marginBottom="4dp" />
 
@@ -67,7 +67,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_title"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold"
                             android:layout_marginBottom="1dp" />
 
@@ -76,14 +76,14 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_check"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:checked="false" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_subwoofer_desc"
-                            android:textSize="9.5sp"
+                            android:textSize="@dimen/text_size_dense_desc"
                             android:lineSpacingExtra="1dp"
                             android:layout_marginStart="30dp" />
                     </LinearLayout>
@@ -101,7 +101,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_target_title"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold"
                             android:layout_marginBottom="2dp" />
 
@@ -116,13 +116,13 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_harman"
-                                android:textSize="11.5sp"
+                                android:textSize="@dimen/text_size_dense_title"
                                 android:checked="true" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_harman_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -131,12 +131,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_dolby"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_dolby_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -145,12 +145,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_bass"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_bass_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -159,12 +159,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_vocal"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_vocal_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -173,12 +173,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_flat"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_target_flat_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp" />
                         </RadioGroup>
                     </LinearLayout>
@@ -205,7 +205,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_soundstage_title"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold"
                             android:layout_marginBottom="2dp" />
 
@@ -220,13 +220,13 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_driver"
-                                android:textSize="11.5sp"
+                                android:textSize="@dimen/text_size_dense_title"
                                 android:checked="true" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_driver_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -235,12 +235,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_front_center"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_front_center_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -249,12 +249,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_cabin_center"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_cabin_center_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp"
                                 android:layout_marginBottom="1dp" />
 
@@ -263,12 +263,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_off"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_stage_off_desc"
-                                android:textSize="9.5sp"
+                                android:textSize="@dimen/text_size_dense_desc"
                                 android:layout_marginStart="28dp" />
                         </RadioGroup>
                     </LinearLayout>
@@ -286,7 +286,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_cabin_geometry_title"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/text_size_dense_label"
                             android:textStyle="bold"
                             android:layout_marginBottom="2dp" />
 
@@ -301,14 +301,14 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_body_hatchback"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
 
                             <RadioButton
                                 android:id="@+id/rb_body_sedan"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_body_sedan"
-                                android:textSize="11.5sp"
+                                android:textSize="@dimen/text_size_dense_title"
                                 android:checked="true" />
 
                             <RadioButton
@@ -316,7 +316,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/room_wizard_body_minivan"
-                                android:textSize="11.5sp" />
+                                android:textSize="@dimen/text_size_dense_title" />
                         </RadioGroup>
 
                         <!-- Listening distance stepper -->
@@ -335,7 +335,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/room_wizard_distance_label"
-                                android:textSize="11sp" />
+                                android:textSize="@dimen/text_size_dense_desc" />
 
                             <TextView
                                 android:id="@+id/btn_distance_minus"
@@ -343,7 +343,7 @@
                                 android:layout_height="32dp"
                                 android:gravity="center"
                                 android:text="−"
-                                android:textSize="18sp"
+                                android:textSize="@dimen/text_size_subtitle"
                                 android:textStyle="bold"
                                 android:clickable="true"
                                 android:focusable="true" />
@@ -354,7 +354,7 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:text="75 см"
-                                android:textSize="12sp"
+                                android:textSize="@dimen/text_size_dense_label"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -363,7 +363,7 @@
                                 android:layout_height="32dp"
                                 android:gravity="center"
                                 android:text="+"
-                                android:textSize="18sp"
+                                android:textSize="@dimen/text_size_subtitle"
                                 android:textStyle="bold"
                                 android:clickable="true"
                                 android:focusable="true" />
@@ -385,7 +385,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_cancel"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_dense_title"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:paddingTop="6dp"
@@ -397,7 +397,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_start"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_dense_title"
                     android:textStyle="bold"
                     android:paddingStart="18dp"
                     android:paddingEnd="18dp"
@@ -423,7 +423,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/room_wizard_progress_title"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_label"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
 
@@ -431,7 +431,7 @@
                 android:id="@+id/tv_progress_detail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_dense_title"
                 android:layout_marginBottom="12dp" />
 
             <ProgressBar
@@ -454,7 +454,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0%"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_small"
                     android:textStyle="bold" />
 
                 <TextView
@@ -463,7 +463,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/room_wizard_progress_warning"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_dense_desc"
                     android:gravity="end" />
             </LinearLayout>
         </LinearLayout>
@@ -493,7 +493,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_polarity_warning_title"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_small"
                     android:textStyle="bold"
                     android:textColor="#E5352B"
                     android:layout_marginBottom="4dp" />
@@ -502,7 +502,7 @@
                     android:id="@+id/tv_polarity_alert_msg"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_dense_label"
                     android:lineSpacingExtra="1.5dp" />
             </LinearLayout>
 
@@ -535,7 +535,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_crossover_title"
-                            android:textSize="13sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold"
                             android:layout_marginBottom="2dp" />
 
@@ -543,14 +543,14 @@
                             android:id="@+id/tv_report_crossover_hpf"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="11.5sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:layout_marginBottom="2dp" />
 
                         <TextView
                             android:id="@+id/tv_report_crossover_sub"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="11.5sp" />
+                            android:textSize="@dimen/text_size_dense_title" />
                     </LinearLayout>
 
                     <!-- Delays Card -->
@@ -565,7 +565,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/room_wizard_delays_title"
-                            android:textSize="13sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:textStyle="bold"
                             android:layout_marginBottom="2dp" />
 
@@ -573,7 +573,7 @@
                             android:id="@+id/tv_report_delays"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="11.5sp"
+                            android:textSize="@dimen/text_size_dense_title"
                             android:lineSpacingExtra="1.5dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -593,7 +593,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/room_wizard_autoeq_title"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_dense_title"
                         android:textStyle="bold"
                         android:layout_marginBottom="3dp" />
 
@@ -601,7 +601,7 @@
                         android:id="@+id/tv_report_autoeq_gains"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="10.5sp"
+                        android:textSize="@dimen/text_size_dense_desc"
                         android:fontFamily="monospace"
                         android:lineSpacingExtra="1.5dp" />
                 </LinearLayout>
@@ -620,7 +620,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_btn_save"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_dense_title"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
                     android:paddingTop="10dp"
@@ -632,7 +632,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_btn_close"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_dense_title"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:paddingTop="10dp"
@@ -644,7 +644,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/room_wizard_btn_apply"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_small"
                     android:textStyle="bold"
                     android:paddingStart="18dp"
                     android:paddingEnd="18dp"

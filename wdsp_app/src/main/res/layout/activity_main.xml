@@ -72,6 +72,17 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
+                <!-- fillViewport stays: it stretches the row to the full width when there is room,
+                     which is what keeps the spectrum-mode switch against the right edge on a wide
+                     panel, and it does not prevent scrolling when the content is wider.
+
+                     ⚠️ Do not "fix" this row by reading uiautomator bounds: a dump reports bounds
+                     CLIPPED to the visible box, so a row that scrolls looks exactly like a row that
+                     was squeezed - the tail element shows as a sliver and whatever scrolled out is
+                     missing from the dump entirely. On 12.09.2026 that cost a wrong diagnosis and
+                     two reverted commits; the proof is arithmetic: children summed to 632dp inside
+                     a 650dp box at 800x480, and to 443dp inside 449dp on the Tesla square, with the
+                     last child flush against the right edge. -->
                 <HorizontalScrollView
                     android:id="@+id/scroll_presets"
                     android:layout_width="match_parent"
@@ -82,9 +93,18 @@
                     android:overScrollMode="never"
                     android:background="@android:color/transparent">
 
+                    <!-- wrap_content, not match_parent: this is what makes the scroll real. Tied
+                         to the viewport the row could never be wider than the screen, so instead
+                         of scrolling it squeezed whatever was measured last - on the Tesla square
+                         "Microphone" came out 12dp wide, and all six action buttons were outside
+                         the layout on 640dp and on Tesla, with the third one cut in half at
+                         800x480 (uiautomator audit, 11.09.2026). With wrap_content the row keeps
+                         its natural width and scrolls; fillViewport above still stretches it to
+                         the full width when there is room, so the weighted spacer keeps the mode
+                         switch on the right on wide panels. -->
                     <LinearLayout
                         android:id="@+id/layout_presets_content"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:baselineAligned="false"
@@ -117,6 +137,8 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center_vertical"
                                 android:inputType="none"
+                                android:maxLines="1"
+                                android:ellipsize="end"
                                 android:paddingVertical="7dp"
                                 android:paddingHorizontal="12dp"
                                 android:focusable="false"
@@ -146,6 +168,7 @@
                                 android:id="@+id/lbl_spectrum_mode"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:maxLines="1"
                                 android:layout_marginEnd="6dp"
                                 android:text="@string/spectrum_mode_label"
                                 android:textColor="@color/text_theme_aware_2"
@@ -156,6 +179,7 @@
                                 android:id="@+id/btn_spectrum_calc"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:maxLines="1"
                                 android:background="@drawable/bg_icon_button"
                                 android:clickable="true"
                                 android:focusable="true"
@@ -170,6 +194,7 @@
                                 android:id="@+id/btn_spectrum_mic"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:maxLines="1"
                                 android:layout_marginStart="4dp"
                                 android:background="@drawable/bg_icon_button"
                                 android:clickable="true"
@@ -339,15 +364,22 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.2"
+                    android:layout_weight="2.0"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
+                    <!-- The caption gives way first: it takes a share of the row and ends in an
+                         ellipsis. With wrap_content it took all it wanted, and on a 640dp window
+                         and on the Tesla square it pushed both volume buttons out of the layout
+                         entirely - they were not in the dump at all. -->
                     <TextView
                         android:id="@+id/lbl_pwr"
                         style="@style/TextLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="2.4"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:text="@string/lbl_pwr"
                         android:textSize="@dimen/eq_value_text"
                         android:textStyle="bold"
@@ -362,19 +394,18 @@
                         android:minWidth="24dp"
                         android:gravity="center"
                         android:text="@string/value_default"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_dense_label"
                         android:textStyle="bold"
                         android:textColor="@color/cyan_custom" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_pwr_vol_minus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/tap_target_min"
                         android:layout_height="@dimen/toggle_height"
-                        android:layout_weight="1"
                         android:layout_marginStart="8dp"
                         android:textColor="@color/cyan_custom"
-                        android:minWidth="0dp"
+                        android:minWidth="26dp"
                         android:minHeight="0dp"
                         android:padding="0dp"
                         android:insetTop="0dp"
@@ -392,12 +423,11 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_pwr_vol_plus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/tap_target_min"
                         android:layout_height="@dimen/toggle_height"
-                        android:layout_weight="1"
                         android:layout_marginStart="6dp"
                         android:textColor="@color/cyan_custom"
-                        android:minWidth="0dp"
+                        android:minWidth="26dp"
                         android:minHeight="0dp"
                         android:padding="0dp"
                         android:insetTop="0dp"
@@ -421,15 +451,18 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3.6"
+                    android:layout_weight="3.3"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
                     <TextView
                         android:id="@+id/lbl_sub"
                         style="@style/TextLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:text="@string/lbl_sub"
                         android:textSize="@dimen/eq_value_text"
                         android:textStyle="bold"
@@ -439,7 +472,7 @@
                         android:id="@+id/seek_sub_gain"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_weight="3"
                         android:layout_marginHorizontal="6dp"
                         android:valueFrom="0"
                         android:valueTo="12"
@@ -465,7 +498,7 @@
                         android:gravity="center"
                         android:minWidth="28dp"
                         android:text="@string/value_default"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_dense_label"
                         android:textStyle="bold"
                         android:textColor="@color/cyan_custom" />
                 </LinearLayout>
@@ -474,13 +507,18 @@
                     android:layout_width="16dp"
                     android:layout_height="1dp" />
 
-                <!-- 3. SUBWOOFER FREQUENCY DROPDOWN -->
+                <!-- 3. SUBWOOFER FREQUENCY DROPDOWN
+
+                     The dropdown arrow alone is 48dp, so at the old 1.6 share this column was
+                     88dp on a 640dp window and "100 Hz" broke across three lines, stretching the
+                     whole row to 80dp against its neighbours' 25dp. 2.1 leaves about 117dp -
+                     enough for the value, the arrow and the box padding. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_sub_freq"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.6"
+                    android:layout_weight="2.1"
                     app:boxCornerRadiusTopStart="10dp"
                     app:boxCornerRadiusTopEnd="10dp"
                     app:boxCornerRadiusBottomStart="10dp"
@@ -498,6 +536,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:paddingVertical="8dp"
                         android:textColor="@color/cyan_custom"
                         android:focusable="false"
@@ -513,7 +553,7 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.6"
+                    android:layout_weight="2.5"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
@@ -1768,6 +1808,8 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:inputType="none"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
                                     android:paddingVertical="10dp"
                                     android:textColor="@color/cyan_custom"
                                     android:focusable="false"
@@ -1909,6 +1951,8 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:inputType="none"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
                                     android:paddingVertical="10dp"
                                     android:textColor="@color/cyan_custom"
                                     android:focusable="false"
@@ -1927,15 +1971,27 @@
             <!-- Fader Controls (Right Side). The car and every arrow and number around it are one
                  picture: ScaleToFitLayout holds the group at its designed size and scales it whole
                  to fit what is left above the navigation pill. On a 7-inch panel it used to run
-                 under the pill, neither scaled nor scrolled. -->
-            <com.radiorubka.wdsp.ui.views.ScaleToFitLayout
+                 under the pill, neither scaled nor scrolled.
+
+                 Scaling alone was not enough. On the Tesla square the group had to go down to 0.47,
+                 which left the arrows 17dp and the numbers about 8sp - measured on the unit
+                 12.09.2026. So it now shrinks only to the floor in ScaleToFitLayout and then
+                 scrolls, exactly like the bass card on the left half of this tab. -->
+            <ScrollView
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:clipToPadding="false"
                 android:paddingBottom="@dimen/bottom_nav_clearance"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/guideline_right"
                 app:layout_constraintTop_toTopOf="parent">
+
+            <com.radiorubka.wdsp.ui.views.ScaleToFitLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="@dimen/fader_group_width"
@@ -2053,8 +2109,8 @@
 
                 <ImageView
                     android:id="@+id/btn_fader_fr_plus"
-                    android:layout_width="@dimen/toggle_height"
-                    android:layout_height="@dimen/toggle_height"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
                     android:padding="8dp"
                     android:background="@drawable/bg_icon_button"
                     android:clickable="true"
@@ -2071,8 +2127,8 @@
                 <!-- BOTTOM: arrow below the car (rear), number below the arrow. -->
                 <ImageView
                     android:id="@+id/btn_fader_fr_minus"
-                    android:layout_width="@dimen/toggle_height"
-                    android:layout_height="@dimen/toggle_height"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
                     android:padding="8dp"
                     android:background="@drawable/bg_icon_button"
                     android:clickable="true"
@@ -2120,8 +2176,8 @@
 
                 <ImageView
                     android:id="@+id/btn_fader_lr_minus"
-                    android:layout_width="@dimen/toggle_height"
-                    android:layout_height="@dimen/toggle_height"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
                     android:padding="8dp"
                     android:background="@drawable/bg_icon_button"
                     android:clickable="true"
@@ -2139,8 +2195,8 @@
                 <!-- RIGHT: the car, then arrow, then number. -->
                 <ImageView
                     android:id="@+id/btn_fader_lr_plus"
-                    android:layout_width="@dimen/toggle_height"
-                    android:layout_height="@dimen/toggle_height"
+                    android:layout_width="@dimen/fader_arrow_icon_size"
+                    android:layout_height="@dimen/fader_arrow_icon_size"
                     android:padding="8dp"
                     android:background="@drawable/bg_icon_button"
                     android:clickable="true"
@@ -2173,6 +2229,8 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
             </com.radiorubka.wdsp.ui.views.ScaleToFitLayout>
+
+            </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- GALA Tab Content -->
@@ -2199,20 +2257,30 @@
                     android:background="@android:color/transparent"
                     android:orientation="vertical">
 
-                    <!-- Title & Header Bar -->
+                    <!-- Title & Header Bar. Title above, live badges under it - the same repair the
+                         loudness tab needed. Side by side, the badge never shrinks (four texts and
+                         a divider on one line), so on a narrow panel it took the row and the title
+                         broke into four lines: 'GALA (Adaptive volume)' was 202px tall against a
+                         49px row on the Tesla square (uiautomator audit, 11.09.2026). The badge
+                         scrolls sideways when even its own row is too narrow. -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical">
 
                         <TextView
                             style="@style/TextTitle"
                             android:id="@+id/tv_gala_title"
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:text="@string/gala_title" />
+
+                        <HorizontalScrollView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:scrollbars="none"
+                            android:overScrollMode="never">
 
                         <!-- Live Metrics Badges -->
                         <LinearLayout
@@ -2230,7 +2298,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/current_gps_speed"
-                                android:textSize="12.5sp" />
+                                android:textSize="@dimen/text_size_dense_desc" />
 
                             <TextView
                                 style="@style/TextValue"
@@ -2239,7 +2307,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
                                 android:layout_marginStart="6dp"
-                                android:textSize="12.5sp" />
+                                android:textSize="@dimen/text_size_dense_desc" />
 
                             <View
                                 android:layout_width="1dp"
@@ -2252,7 +2320,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/applied_vol_offset"
-                                android:textSize="12.5sp" />
+                                android:textSize="@dimen/text_size_dense_desc" />
 
                             <TextView
                                 style="@style/TextValue"
@@ -2261,8 +2329,10 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/value_default"
                                 android:layout_marginStart="6dp"
-                                android:textSize="12.5sp" />
+                                android:textSize="@dimen/text_size_dense_desc" />
                         </LinearLayout>
+
+                        </HorizontalScrollView>
                     </LinearLayout>
 
                     <!-- Toggles Bar -->

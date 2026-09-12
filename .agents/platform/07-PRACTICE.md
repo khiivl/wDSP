@@ -211,6 +211,66 @@ Then check with arithmetic, not eyes: overlaps, what sits under the floating nav
 screen and not inside a `scrollable="true"` ancestor. Run it all as one script on the unit with the
 reset in a `trap`.
 
+### 🪤 The bounds are CLIPPED to what is visible — a scrolling row reads as a crushed one
+
+📻 *(12.09.2026, measured on the unit; cost a wrong diagnosis and two reverted edits)*
+
+A dump reports each node's **visible** rectangle. An element that has partly scrolled out appears as
+a sliver at the edge of its container, and one that has scrolled out completely **is not in the dump
+at all**. So a row that scrolls correctly looks exactly like a row whose last children were squeezed
+to nothing.
+
+Tell them apart by arithmetic, never by the shape of the numbers:
+
+| | it scrolls | it is being squeezed |
+|---|---|---|
+| children's widths summed | ≈ the container's width (the end ones are clipped) | **less** than the container |
+| the last child | flush against the container's edge | has a gap after it |
+| number of children | fewer than the layout declares | all present |
+| the check that settles it | compute the width the layout NEEDS and compare | measure the same element on the reference geometry |
+
+Worked example: the navigation pill declares six tabs at 130dp plus five 12dp gaps = 840dp. The
+viewport on the Tesla square is 584dp, so 256dp is cut — 128dp from each side, because the content
+was centred — and the end tabs show as 2dp. The same arithmetic predicted 102dp at 800x480 and 22dp
+in split screen, and both matched. **Three agreeing predictions are the proof; one screenshot is
+not.**
+
+⚠️ Clipped symmetrically on both sides means the content is **centred inside a scroll view**. That
+is a defect of its own: a horizontally centred child places part of itself left of scroll position
+zero, where no scrolling can reach it. `Gravity.CENTER_VERTICAL`, never `CENTER`.
+
+### 🪤 Gestures land wrong as soon as the override is TALLER than the panel
+
+📻 *(12.09.2026, four measured geometries)* `input swipe` with coordinates taken straight from the
+dump scrolls correctly under some overrides and does nothing under others. The dividing line is not
+width and not the Tesla square: it is whether the override fits inside the physical panel
+(**1280x720** here, physically portrait with `hwrotation=90`).
+
+| override | swipe from dump coordinates | settings pass |
+|---|---|---|
+| `800x480` @160 | works | 5 screenfuls, whole screen seen |
+| `640x480` @160 | works | 5 screenfuls, whole screen seen |
+| `600x900` @160 | does nothing | 1 screenful, the rest never measured |
+| `1200x1200` @320 (Tesla) | does nothing | 1 screenful |
+
+Under a taller-than-panel override the window sits as a strip inside the buffer (`scroll_settings`
+reported at y=320..1200 px on the square), and what `input` addresses is not the space the dump
+describes.
+
+⇒ Anything that needs scrolling or tapping must be emulated **within the panel**: to cover a narrow
+panel take `640x480` rather than `600x900`. Keep the out-of-panel overrides for measurements that
+need only `am start` and a dump. A pass that swipes under such an override and reports "clean" has
+measured one screenful and nothing else — this is exactly how the settings screen was almost
+signed off unseen.
+
+### 🪤 Compare an element with ITSELF on the reference geometry, not with its neighbours
+
+A detector that flags "taller than the median row" cries wolf: a Material outlined box is legitimately
+taller than a caption next to it. Normalise to dp (divide by density/160 — the Tesla profile runs at
+320) and compare the same `resource-id` against the reference 1280x720@160. And filter by package:
+the launcher's own top bar (`com.android.launcher.dreamMountain:btn_apps`, `tv_week`, …) lands in the
+dump of any activity that does not cover it, and it is not ours to fix.
+
 🪤 A dump taken right after `wm size` can come back empty (no nodes at all) — retry or wait longer,
 and never conclude "zero width" from it. 🪤 Git Bash rewrites `/sdcard/u.xml` into a Windows path and
 `cat` then returns the *previous* run's dump: `MSYS_NO_PATHCONV=1`, `rm -f` before dumping, and read
