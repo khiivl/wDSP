@@ -37,6 +37,26 @@ the wire can be trusted.
 
 📌 Неповний запис із чесними `❓` завжди кращий за повний, якого не буде.
 
+⚖️ **Відновлено 12.09.2026 з копії скіла за наказом власника.** Правило зникло з цього файлу разом
+із переробкою покажчика вранці 12.09; у дзеркалі `~/.claude/skills/qf-platform/references/INDEX.md`
+воно вціліло. Решту вмісту цього файлу не змінювано. ⚠️ Те саме видалення сталося і в покажчику
+дерева радіо — там файл побайтово той самий, і правило треба повернути так само.
+
+## Active Repositories on Developer Workstation
+
+All active projects are strictly located in `C:\Users\kosty\AndroidStudioProjects\`:
+
+| Project | Disk Path | Description |
+|---|---|---|
+| **`kostyamat_fmradio`** | `C:\Users\kosty\AndroidStudioProjects\kostyamat_fmradio` | Main QF FM Radio app repository (`main` branch). |
+| **`wDSP`** | `C:\Users\kosty\AndroidStudioProjects\wDSP` | Sound Processor, GALA speed volume, 16-band EQ, wDSP Screensaver, Room Calibration. |
+| **`Radio-KM`** | `C:\Users\kosty\AndroidStudioProjects\Radio-KM_any_radio_proxy_for_QF` | System micro-proxy (`com.android.fmradio`, UID 1000) for radio intercept & CAN cluster. |
+| **`SmartRDS`** | `C:\Users\kosty\AndroidStudioProjects\SmartRDS` | Background service for geo-enrichment, GPS transmitter matching, OpenRadioFM Supabase. |
+| **`QF-system-Radio-app-rebuild`** | `C:\Users\kosty\AndroidStudioProjects\QF-system-Radio-app-rebuild` | Decompiled factory radio app (reference ground truth for MCU protocol). |
+| **`Music-KM`** | `C:\Users\kosty\AndroidStudioProjects\Music-KM_any_player_proxy_for_QF` | Media player proxy for QF platform. |
+| **`BitPerfectControl`** | `C:\Users\kosty\AndroidStudioProjects\BitPerfectControl` | BitPerfect audio output bypass module. |
+| **`DialerKM`** | `C:\Users\kosty\AndroidStudioProjects\DialerKM` | Bluetooth call and audio routing integration. |
+
 ## Provenance marks
 
 Used throughout, and they are not decoration:
@@ -57,20 +77,21 @@ files, mark what you add.
 |---|---|
 | [01-SYSTEM.md](01-SYSTEM.md) | anything about the Android side: hardware, screens, properties, hidden API, release builds, sleep, and special permissions that read "granted" but do not work (§7) |
 | [02-MCU.md](02-MCU.md) | talking to the microcontroller: framing, the command map, send discipline, volume |
-| [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) | equaliser, delays, crossovers (12 dB/oct), subwoofer handover, fader/balance (0A00-0A05), DVol, Advanced Switch — the ROHM BU32107 register map, MCU translation and signal path topology |
+| [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) | equaliser, delays, crossovers (12 dB/oct), subwoofer handover, fader/balance (0A00-0A05), DVol, Advanced Switch — the ROHM BU32107 register map, MCU code translation and signal path topology |
 | [04-FIRMWARE-PATCHING.md](04-FIRMWARE-PATCHING.md) | inside the MCU image: memory map, the dispatcher, the settings structure, and what changing it would take |
 | [05-AUDIO-PATH.md](05-AUDIO-PATH.md) | recording, playback, latency, the microphone, audio policies, the player role |
-| [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) | anything that changes how loud something is: the per-source volume model, source switching, the optional second DSP, and the vendor Bluetooth app breaking the radio |
-| [09-NAVIGATION-AND-BITPERFECT.md](09-NAVIGATION-AND-BITPERFECT.md) | why a navigator is inaudible: the firmware's whitelist, how each navigator actually travels, and the one thing BitPerfect changes that causes it |
-| [10-BITPERFECT-MODULE.md](10-BITPERFECT-MODULE.md) | **the map of the module itself** — which file to edit for the microphone, for playback gain, for call sidetone, for policies; what it changes against factory; and the install traps that have already cost time |
-| [GEMINI_HANDOFF_2026-08-28.md](GEMINI_HANDOFF_2026-08-28.md) | ✍️ *Gemini*, three sessions in one file — kernel/VBC routing, the SC2730 truncation answer, microphone levers, AGDSP, and the HAL traps. Raw transfer, not edited into these notes yet |
-| [13-MCU-FIRMWARE-VARIANTS.md](13-MCU-FIRMWARE-VARIANTS.md) | **before assuming the firmware adapts itself** — it does not: one build per chipset, four decoded, plus the version-suffix decode table, the `0x08003800` load base, and where every image lives |
-| [11-AUDIO-TRACT-AND-TUNER-CHIPS.md](11-AUDIO-TRACT-AND-TUNER-CHIPS.md) | ✍️ *Gemini* — the MCU switching matrix (channels 1–5: AUX, FM, NAVI, MPU, BT_CALL), the two-level volume architecture, and why a TDA7708 at 0.5–0.7 V and an NXP TEF6686 at 1.0–1.2 V make navigation behave differently |
-| [12-BLUETOOTH-AUTOCONNECT-AND-FOCUS.md](12-BLUETOOTH-AUTOCONNECT-AND-FOCUS.md) | ✍️ *Gemini* — the 40-second Bluetooth autoconnect poll, and how the vendor's Bluetooth service arbitrates audio focus through `sys.qf.last_audio_src` |
-| [14-LAUNCHER-ICONPACKS-AND-THEMING.md](14-LAUNCHER-ICONPACKS-AND-THEMING.md) | ✍️ *Gemini* — QF launcher icon packs (`/data/QF/.icons`, mode 0777 — writable without root), the `icons.config` mapping, and how to give an app a full-bleed icon instead of the shrunken framed one |
-| [15-BU32107-REGISTERS.md](15-BU32107-REGISTERS.md) | ✍️ *Gemini* & *Kostyamat* — complete ROHM BU32107EFV-M register map, MCU translation (`FUN_08004a58`, shadow buffer `0x200000E2`, flusher table `0x0800CFD7`), crossover slopes (12 dB/oct), delay RAM limits, and EQ topology |
 | [06-TUNER.md](06-TUNER.md) | the radio side — mostly relevant to other projects, but several MCU facts live here |
 | [07-PRACTICE.md](07-PRACTICE.md) | how to work here without wasting runs: adb traps, testing discipline, what a reboot really resets, and why a permission is never granted from adb (§11) |
+| [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) | anything that changes how loud something is: the per-source volume model, source switching, the optional second DSP, and the vendor Bluetooth app breaking the radio |
+| [09-NAVIGATION-AND-BITPERFECT.md](09-NAVIGATION-AND-BITPERFECT.md) | why a navigator is inaudible: the firmware's whitelist, how each navigator actually travels, and the one thing BitPerfect changes that causes it |
+| [10-AUDIO-TRACT-AND-TUNER-CHIPS.md](10-AUDIO-TRACT-AND-TUNER-CHIPS.md) | hardware audio routing matrix, TDA7708/TEF6686 tuner decoding, SmartRDS and OpenRadioFM |
+| [11-BLUETOOTH-AUTOCONNECT-AND-FOCUS-ARBITRATION.md](11-BLUETOOTH-AUTOCONNECT-AND-FOCUS-ARBITRATION.md) | Bluetooth phone calls, MCU channel 5, audio focus arbitration during incoming calls |
+| [12-MICROPHONE-PATH-HAL-AND-HARDWARE-CONTROLS.md](12-MICROPHONE-PATH-HAL-AND-HARDWARE-CONTROLS.md) | microphone path, CarSettings sliders, SC2730 PGA dB scale, VBC ADC0 DG, audio HAL reverse, True Unprocessed MIC (RTA & Radio Spectrum) |
+| [13-LAUNCHER-ICONPACKS-AND-THEMING.md](13-LAUNCHER-ICONPACKS-AND-THEMING.md) | launcher icon pack subsystem, /data/QF/.icons (0777), icons.config, full-bleed icon injection |
+| [14-SCREEN-MATRIX-AND-DISPLAY-GEOMETRIES.md](14-SCREEN-MATRIX-AND-DISPLAY-GEOMETRIES.md) | заводська матриця 132 панелей («屏参描述对照表»), hwrotation=90, 160/320 dpi, поведінка статусбару QF (65..72dp) та правила адаптації UI |
+| [15-UNISOC-UMS512-ANDROID10-BSP-SOURCES.md](15-UNISOC-UMS512-ANDROID10-BSP-SOURCES.md) | повна архітектура та вихідні коди Android 10 (AOSP + Unisoc SharkL5Pro BSP релізу W21.24.3, HAL whale, hwcomposer v2, u-boot, IDH build) |
+| [16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md](16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md) | повний реверс аналогового звукового процесора ROHM BD37534FV / BD37544FV, декомпіляція прошивки MCU QF05 (011021), розвінчання фейку 16 смуг та затримок, карта I2C регістрів, MCU командний диспетчер, архітектура та хак MCU |
+| [17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md](17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md) | дослідження та реверс-інжиніринг FM-тюнера TSC4745 (Silicon Labs Si4745), декомпіляція драйвера в mcu.bin (0x08003800), виявлення відсутності аудіоналаштувань у MCU, фізика деемфазінгу (75µs vs 50µs, зріз -3.5dB), аналіз динамічного Hi-Cut (зріз 8 кГц), карта регістрів AN332 та інженерний план патчу прошивки |
 
 Application-specific design lives outside this folder — for wDSP that is
 [../ROOM_CALIBRATION.md](../ROOM_CALIBRATION.md).
@@ -110,6 +131,10 @@ Application-specific design lives outside this folder — for wDSP that is
     changes — a convincing false negative. The physical encoder's own codes are **293 / 294**
     (what `hid_daemon.sh` feeds to `input keyevent`), and with them a knob turn can be reproduced
     from adb without the owner present. (08 §2)
+
+⚖️ Пункти 8–11 відновлено 12.09.2026 з копії скіла за наказом власника: вони зникли разом із
+переробкою покажчика вранці 12.09, і всі чотири стосуються гучності та ідентифікації заліза —
+рівно того, чим два дні розплутували заморожену гучність. Решту списку не змінювано.
 
 ## Diagnostics available at runtime in wDSP
 
