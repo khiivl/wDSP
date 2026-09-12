@@ -244,7 +244,7 @@
     <string name="room_measure_desc">По очереди проигрывает свип через каждый динамик и измеряет, когда пришёл звук и в фазе ли он. Занимает около полуминуты. Двигатель выключен, двери закрыты, громкость обычная.</string>
     <string name="room_measure_button">Измерить</string>
     <string name="room_measure_running">Измерение: %1$s</string>
-    <string name="room_measure_done">Готово — отправить результат?</string>
+    <string name="room_measure_done">Пресет «%1$s» успешно создан и применён!</string>
     <string name="room_measure_failed">Измерить не удалось</string>
     <string name="room_measure_saved_title">Замер сохранён</string>
     <string name="room_measure_saved">Архив из %2$d файлов записан сюда:\n\n%1$s\n\nОткройте его файловым менеджером или скопируйте на флешку либо по USB.</string>
@@ -405,7 +405,7 @@
     <string name="room_measure_confirm_start">Начать</string>
     <string name="room_measure_confirm_cancel">Отмена</string>
     <string name="room_mic_calibrate_button">Калибровать микрофон</string>
-    <string name="room_mic_cal_running">Идет калибровка микрофона…</string>
+    <string name="room_mic_cal_running">Калибровка микрофона: %1$s</string>
     <string name="room_mic_cal_done">Микрофон откалиброван</string>
     <string name="room_mic_cal_none">Микрофон не откалиброван</string>
     <string name="room_mic_cal_confirm_title">Калибровка микрофона</string>
