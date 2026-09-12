@@ -4,11 +4,9 @@
     <selectionStates>
       <SelectionState runConfigName="wdsp_proxy">
         <option name="selectionMode" value="DROPDOWN" />
-        <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="wdsp_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DialogSelection />
       </SelectionState>
     </selectionStates>
   </component>

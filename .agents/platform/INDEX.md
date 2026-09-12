@@ -91,9 +91,6 @@ files, mark what you add.
 | [13-MCU-FIRMWARE-VARIANTS.md](13-MCU-FIRMWARE-VARIANTS.md) | **before assuming the firmware adapts itself** — it does not: one build per chipset, four decoded, plus the version-suffix decode table, the `0x08003800` load base, and where every image lives |
 | [14-LAUNCHER-ICONPACKS-AND-THEMING.md](14-LAUNCHER-ICONPACKS-AND-THEMING.md) | ✍️ *Gemini* — QF launcher icon packs (`/data/QF/.icons`, mode 0777 — writable without root), the `icons.config` mapping, and how to give an app a full-bleed icon instead of the shrunken framed one |
 | [15-BU32107-REGISTERS.md](15-BU32107-REGISTERS.md) | ✍️ *Gemini* & *Kostyamat* — complete ROHM BU32107EFV-M register map, MCU translation (`FUN_08004a58`, shadow buffer `0x200000E2`, flusher table `0x0800CFD7`), crossover slopes (12 dB/oct), delay RAM limits, and EQ topology |
-| [15-UNISOC-UMS512-ANDROID10-BSP-SOURCES.md](15-UNISOC-UMS512-ANDROID10-BSP-SOURCES.md) | повна архітектура та вихідні коди Android 10 (AOSP + Unisoc SharkL5Pro BSP релізу W21.24.3, HAL whale, hwcomposer v2, u-boot, IDH build) |
-| [16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md](16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md) | повний реверс аналогового звукового процесора ROHM BD37534FV / BD37544FV, декомпіляція прошивки MCU QF05 (011021), розвінчання фейку 16 смуг та затримок, карта I2C регістрів, MCU командний диспетчер, архітектура та хак MCU |
-| [17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md](17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md) | дослідження та реверс-інжиніринг FM-тюнера TSC4745 (Silicon Labs Si4745), декомпіляція драйвера в mcu.bin (0x08003800), виявлення відсутності аудіоналаштувань у MCU, фізика деемфазінгу (75µs vs 50µs, зріз -3.5dB), аналіз динамічного Hi-Cut (зріз 8 кГц), карта регістрів AN332 та інженерний план патчу прошивки |
 
 Application-specific design lives outside this folder — for wDSP that is
 [../ROOM_CALIBRATION.md](../ROOM_CALIBRATION.md).

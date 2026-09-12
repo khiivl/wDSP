@@ -23,6 +23,33 @@ a whole set of design decisions once got built on an invented premise of "Cortex
 Two processors, not one. **The MCU is a separate ARM Cortex-M with its own power** — see
 [02-MCU.md](02-MCU.md). Android is only its conversational partner over a serial line.
 
+### Where the sources for all of this actually are
+
+✍️ *Gemini, 11.09.2026.* Four layers sit under the screen — Linux 4.14 + u-boot, AOSP 10
+(`android-10.0.0_r41`), the Unisoc IDH BSP, and QF's own car layer — and the middle two are public.
+
+🔬 The Unisoc IDH BSP release **`W21.24.3`** (Android 10 Q, SDK 29) for SharkL5Pro is on GitHub as
+**[jingpad-bsp](https://github.com/jingpad-bsp)**, 421 repositories, JingPad A1 being the same
+UMS512. The ones worth knowing by name:
+
+| what | repository |
+|---|---|
+| device tree (`ums512_1h10`, `_2h10`, `_20c10`) | `device_sprd_sharkl5pro`, `bsp_device_sharkl5pro` |
+| **Whale audio HAL** — `audio_hw.c`, `fm.c`, `audio_offload.c`, `agdsp.c` | `vendor_sprd_modules_audio` |
+| display: DPU and HWComposer v1/v2 | `vendor_sprd_modules_dpu`, `vendor_sprd_modules_hwcomposer` |
+| broadcast radio HIDL 2.0, RIL | `vendor_sprd_interfaces_broadcastradio`, `vendor_sprd_modules_radiointeractor` |
+| bootloader | `bsp_bootloader_u-boot15`, `iscle/ums512_chipram` |
+| PAC packaging (`build_pac.sh`, `mkpac.pl`) | `vendor_sprd_release_IDH_Script` |
+
+A monolithic tarball of the lot exists as a torrent in `qwqlemon2333/source_code_for_jingpad`;
+community trees live under `sprd-oss-devs`, and the kernel at `iscle/android_kernel_unisoc_ums512`.
+Local copies on this machine: `D:\UIS_android\` (kernel, hardware trees, and the decompiled
+`qf_platform_framework` — `McuManagerService`, `BackCarService`, `QF_Framework.apk`).
+
+🧩 Why it matters: the audio HAL that decides where a stream goes, and the `fm.c` that carries the
+tuner's analogue path, are both readable C rather than something to be inferred from behaviour. When
+a question is "what does the platform do with this stream", there is a file that answers it.
+
 ## 2. Screens: 132 panels, and the base layout must be the tightest one
 
 The factory panel table lists 132 models. What matters:

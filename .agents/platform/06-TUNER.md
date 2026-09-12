@@ -131,3 +131,41 @@ the RadioText, and why only a power cycle clears it.
 strict enough that any block error resets the state, which reads as "RDS disappears at the
 slightest provocation". That matches what a tester on that firmware reports — RadioText almost
 never arrives.
+
+## 7. Why a TSC4745 unit sounds muffled — the MCU never configures the tuner's audio
+
+✍️ *Gemini, 12.09.2026*, 🔬 from the same `011021` image and Silicon Labs **AN332 Rev 1.0**
+(*Si47xx Programming Guide*). ❓ **Not re-verified here.**
+
+🔴 **Scope: `radioType = 1` (TSC4745, a licensed clone of the Silicon Labs Si4745).** Not the
+TDA7708 (`2`) and not the TEF6686 (`4`). This is the same rule as §2 above — `0x88`/`0x8B` are
+chip-specific — seen from the other side.
+
+**The finding is an absence.** The tuner is driven over a bit-banged I2C at address `0x22`, and
+`SET_PROPERTY` (`FUN_08009740`) is called in the entire firmware **exactly three times**, all three
+for RDS: `0x1500`, `0x1501`, `0x1502`. Nothing else is ever set. After `POWER_UP` the tuner
+therefore runs on Silicon Labs' factory silicon defaults for the whole of its audio behaviour:
+
+| property | factory default | what it does in a car |
+|---|---|---|
+| `0x1100` `FM_DEEMPHASIS` | `0x0002` = **75 µs (US)** | Europe transmits with 50 µs. Listening to a 50 µs signal through a 75 µs curve costs about **−3.25 dB at 10 kHz and −3.5 dB at 15 kHz** — the "muffled, as if through a pillow" complaint, present on every station, always |
+| `0x1A00` / `0x1A01` `FM_HICUT_SNR_*` | 24 dB / 15 dB | Below 24 dB of SNR the tuner starts rolling the top off and reaches full cut at 15 dB. City driving sits at 18–25 dB, so the band is **clamped to ~8 kHz most of the time** |
+| `0x1A04` `FM_HICUT_MULTIPATH_TRIGGER` | 20 % | Reflections above a fifth trigger the same cut. In a street of buildings, constantly |
+| `0x1800` / `0x1804` `FM_BLEND_*` | 49 dBµV / 27 dB | Stereo collapses to mono while the signal is still perfectly good, taking the width with it |
+| `0x1302` `FM_SOFT_MUTE_MAX_ATTENUATION` | 16 dB | Aggressive ducking on noise |
+
+🧩 So the tuner is not weak and the aerial is not necessarily at fault: the chip is running someone
+else's country's settings with an adaptive treble cut left switched on. Every one of these is a
+single `SET_PROPERTY` away from being right — but **Android cannot send them**: the MCU exposes no
+command that reaches `FUN_08009740`.
+
+✍️ Gemini's patch plan closes that: 184 free bytes at `0x0800BCF4`–`0x0800BDAC` hold a
+`radio_auto_init` trampoline (76 B) that sets de-emphasis from the region byte at `0x20000224+8`,
+disables the SNR and multipath Hi-Cut and widens the stereo blend; and 26 bytes of dead code at
+`0x0800ac6a` become an in-place bridge so command `0x88` carries `[PROP_HI, PROP_LO, VAL_HI, VAL_LO]`
+straight into `SET_PROPERTY`. ❓ **Designed, never flashed** — no byte has been written to any MCU,
+and the owner's own unit is a TDA7708 anyway, so this cannot be tested on it.
+
+⚠️ For the radio application this is the more interesting half of the two: de-emphasis is a fixed
+−3.5 dB that no equaliser setting can honestly undo, and it is wrong on every TSC4745 unit in
+Europe.

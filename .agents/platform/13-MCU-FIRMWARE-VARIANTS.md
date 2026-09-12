@@ -115,6 +115,40 @@ Four real firmware images, all four decoded and consistent:
 🧩 Tuner and audio chip are **independent axes**: the same 4745 appears with BU32107 and with
 BD37534. A detector that infers one from the other will be wrong on some part of the fleet.
 
+## 1-ter. What the **BD37534** build actually does — and why it is not this unit
+
+✍️ *Gemini, 12.09.2026*, 🔬 from `mcu.bin` of `QF05.V02.06.20240502.011021` (34 224 B, MD5
+`406bc08c47b0b196fd1ed2bf8d0861f5`, base `0x08003800`, 329 functions via Ghidra) and the ROHM
+BD37534FV datasheet (Rev.001, 16.12.2015). ❓ **Not re-verified here** — the addresses below are his
+reading of that image, not something measured on our wire.
+
+🔴 **Scope, and the whole reason this section exists in *this* file: `dspType = 1` only.** The owner's
+unit is `002121` — `dspType = 0`, a BU32107. Everything below is true of *other* units in the fleet
+and false of ours, and the two must never be merged: mixing the axes is exactly how a BD unit once
+got handed a 24-bit I2S profile (§1 above).
+
+| what the screen offers | what the BD37534 build does with it |
+|---|---|
+| 16-band equaliser | **3 bands.** `FUN_08004aec` sums sliders 0..4 → Bass, 5..9 → Middle, 10..14 → Treble, and writes only `shadow[0x10..0x12]`. Moving slider 0 and slider 4 adds into one 60 Hz band |
+| Q and centre frequency | **Frozen.** `0x41=0x00`, `0x44=0x10`, `0x47=0x30` are written once at init and never again → Bass 60 Hz Q 0.5, Middle 1 kHz Q 0.75, Treble 15 kHz Q 0.75. The silicon supports four choices each; the firmware exposes none |
+| time alignment / delays (`0x8C`) | **Dropped on the floor.** The chip has no delay RAM, and in `FUN_0800a6a0` every command ≥ `0x8C` falls through to `0x0800a6e4` unhandled. The sliders and the car diagram are placebo on this build |
+| subwoofer frequency, 11 steps | **4 real cutoffs**: 55, 85, 120, 160 Hz plus OFF. Table `0x0800bade` maps our eleven onto those four |
+| bass boost / HPF (`0x88`), surround (`0x89`) | present in the dispatcher, **stubbed** — no effect |
+
+⚠️ **This contradicts [03-SOUND-PROCESSOR.md](03-SOUND-PROCESSOR.md) §"positional delays" on purpose.**
+That file describes `0x8C` as a working five-byte command, which is correct — **for the BU32107**.
+Neither statement is wrong; each is about a different build, and a reader who takes one for the
+other will chase a bug that cannot exist.
+
+🧩 Two things that follow for any application:
+- A unit answering `dspType = 1` should not be offered sixteen bands, delay sliders or eleven
+  subwoofer frequencies. Three bands, four cutoffs, and no time alignment is the honest screen.
+- The MCU keeps a 20-byte shadow buffer at `0x200000e4` and a diff loop (`FUN_080049f4`) that
+  transmits any byte that changed, looking the register up in the table at `0x0800ba16`. So reaching
+  the frozen registers needs no I2C code at all — only a way to write that buffer. ✍️ Gemini's patch
+  plan hooks the unused `0x8C` into the free flash at `0x0800BCF4` to do exactly that; ❓ designed,
+  **not flashed** — nothing has been written to any MCU.
+
 ## 2. What the flags are actually used for
 
 📻 Every consumer of `persist.sys.qf.radio.ext` in the system was located:
