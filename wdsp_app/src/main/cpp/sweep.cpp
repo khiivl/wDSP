@@ -659,7 +659,11 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
             outSubGain = 2; // +2 dB natural Harman shelf
         }
     } else {
-        outSubGain = 0; // Mute subwoofer when not present
+        // 0 dB, not silence. This slider is 0..12 meaning +0..+12 dB - an honest zero, with none of
+        // the +6 offset the 16-band EQ carries (see .agents/platform/03-SOUND-PROCESSOR.md). The
+        // comment here used to say "mute", which it never did; it is harmless only because there is
+        // no subwoofer connected in this branch at all.
+        outSubGain = 0;
     }
 
     // 1. Calculate compensated acoustic response M[b] = avgClean16[b] + micComp16[b]

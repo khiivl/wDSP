@@ -181,6 +181,54 @@ public final class PresetsDatabaseValidator {
                 if (res.fixedMutualExclusion) totalConflicts++;
             }
 
+            // GALA's shared set, sanitised once rather than per preset, because it belongs to no
+            // preset: while "Global" is on, the screen and McuService read GALA from these keys
+            // instead of the preset's own (see MainActivity.savePreset). They get the same ranges as
+            // the per-preset copies below - an out-of-range value here would throw out of
+            // Slider.setValue() exactly as it did there, and take the main screen down with it.
+            SanitizeResult galaRes = new SanitizeResult();
+            ensureBoolean(editor, prefs, "gala_global_mode", false, galaRes);
+            ensureBoolean(editor, prefs, "gala_global_enabled", false, galaRes);
+
+            // Units already running with "Global" on come from the release where only the on/off
+            // state was shared and these five keys did not exist. Seeding them with the factory
+            // defaults would quietly change GALA for a driver who has been using an increment of 5
+            // and a standstill threshold of 65 km/h - the very complaint this change is meant to
+            // end. So the first values come from the preset that is selected right now, because
+            // that is what the car is actually doing at this moment; they are still range-checked.
+            final boolean galaGlobalOn = getBooleanValue(prefs, "gala_global_mode", false);
+            final String galaSrc = prefs.getString(PREF_LAST_SELECTED, null);
+            final boolean seedFromPreset = galaGlobalOn
+                    && prefs.getAll().get("gala_global_increment") == null
+                    && galaSrc != null && !galaSrc.trim().isEmpty();
+            final int seedInc = seedFromPreset
+                    ? getIntValue(prefs, galaSrc + "_gala_increment", GALA_INC_DEFAULT) : GALA_INC_DEFAULT;
+            final int seedMinSpeed = seedFromPreset
+                    ? getIntValue(prefs, galaSrc + "_gala_min_speed", GALA_MIN_SPEED_DEFAULT) : GALA_MIN_SPEED_DEFAULT;
+            final int seedMaxAdj = seedFromPreset
+                    ? getIntValue(prefs, galaSrc + "_gala_max_adj", GALA_MAX_ADJ_DEFAULT) : GALA_MAX_ADJ_DEFAULT;
+            final int seedFadeMs = seedFromPreset
+                    ? getIntValue(prefs, galaSrc + "_gala_fade_ms", GALA_FADE_MS_DEFAULT) : GALA_FADE_MS_DEFAULT;
+            final int seedHoldMs = seedFromPreset
+                    ? getIntValue(prefs, galaSrc + "_gala_hold_ms", GALA_HOLD_MS_DEFAULT) : GALA_HOLD_MS_DEFAULT;
+            if (seedFromPreset) {
+                Log.i(TAG, "GALA global parameters seeded from the selected preset \"" + galaSrc
+                        + "\": increment=" + seedInc + " standstill=" + seedMinSpeed
+                        + " ceiling=" + seedMaxAdj + " fade=" + seedFadeMs + " hold=" + seedHoldMs);
+            }
+
+            clampInt(editor, prefs, "gala_global_increment",
+                    GALA_INC_MIN, GALA_INC_MAX, seedInc, galaRes);
+            clampInt(editor, prefs, "gala_global_min_speed",
+                    GALA_MIN_SPEED_MIN, GALA_MIN_SPEED_MAX, seedMinSpeed, galaRes);
+            clampInt(editor, prefs, "gala_global_max_adj",
+                    GALA_MAX_ADJ_MIN, GALA_MAX_ADJ_MAX, seedMaxAdj, galaRes);
+            clampInt(editor, prefs, "gala_global_fade_ms",
+                    GALA_FADE_MS_MIN, GALA_FADE_MS_MAX, seedFadeMs, galaRes);
+            clampInt(editor, prefs, "gala_global_hold_ms",
+                    GALA_HOLD_MS_MIN, GALA_HOLD_MS_MAX, seedHoldMs, galaRes);
+            totalClamped += galaRes.clampedFields;
+
             // Ensure preset list is saved and sorted
             List<String> sortedNames = new ArrayList<>(allPresetNames);
             Collections.sort(sortedNames);

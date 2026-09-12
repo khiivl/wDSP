@@ -27,6 +27,46 @@
          buttons ended up 22dp wide on 800x480 and 15dp in split screen. -->
     <dimen name="tap_target_min">28dp</dimen>
 
+    <!-- Every square button in the equaliser control row - the two amplifier volume buttons and the
+         three quick actions (-, +, 0). One dimension for all five, because the owner asked for
+         buttons of the same size with the same gaps, and because a weight gave each of the three a
+         different width from the other two on every panel.
+
+         🔴 Equal at the LARGEST the row can afford, never at the smallest. The first attempt made
+         all five 36dp - uniform, and unhittable in a moving car, which the owner said at once. The
+         room for a big target is there: it comes from the subwoofer frequency dropdown, which needs
+         only "100 Hz" and an arrow and was taking a fifth of the row.
+
+         48dp is Android's own minimum target and the BASE, so the narrowest case: on a 640dp split
+         window the row also carries a caption, a value, a slider and that dropdown. The panel this
+         car actually has is 1280dp wide, and there the size is 68dp - see
+         values-w1000dp/dimens_eq.xml. -->
+    <dimen name="eq_action_button">48dp</dimen>
+
+    <!-- The subwoofer frequency dropdown in the same row. It only ever shows a value like "100 Hz"
+         plus the Material end icon, so it is sized to that and NOT given a weight: with a weight it
+         grew with the panel and took a fifth of a 1280dp row, which is the space the buttons beside
+         it need. 124dp = the widest value, the 48dp arrow and the outlined box's own padding. -->
+    <dimen name="eq_freq_dropdown">124dp</dimen>
+
+    <!-- The subwoofer gain slider in that same row, sized to be used while driving rather than to
+         look neat. A 7dp thumb radius is 14dp of finger target - the owner could not catch it on
+         the move, and no amount of track length fixes that. 11dp of radius is 22dp across, with a
+         6dp track so the thumb has something to sit on. -->
+    <dimen name="eq_slider_thumb">11dp</dimen>
+    <dimen name="eq_slider_track">6dp</dimen>
+
+    <!-- Ceiling for the two captions of that row ("Підсилення:", "Субвуфер:"). They are sized by
+         their own text, NOT by a weight: a weight stretched "Підсилення:" to 195dp and left a wide
+         empty gap before the value, which reads as a crooked margin; trimming the weight instead
+         cut "Субвуфер:" down to "Субвуф…". Natural width for both, and the gaps between everything
+         in the row become the same 6dp on their own.
+
+         The cap is what makes that safe on a narrow panel, where wrap_content once pushed the
+         amplifier buttons clean out of the layout. 96dp is the base (the caption ellipsizes there);
+         the wide-panel value in values-w1000dp/dimens_eq.xml fits both words whole. -->
+    <dimen name="eq_caption_max">96dp</dimen>
+
     <dimen name="text_size_dense_title">15sp</dimen>
     <dimen name="text_size_dense_label">14sp</dimen>
     <dimen name="text_size_dense_desc">13sp</dimen>

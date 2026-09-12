@@ -131,14 +131,24 @@
                             app:boxStrokeColor="@color/panel_border_theme_aware"
                             app:endIconTint="@color/text_theme_aware_2">
 
+                            <!-- Automatic preset names carry their marks and do not fit 230dp, and
+                                 an ellipsis hid exactly the part that tells two of them apart. The
+                                 name scrolls instead, and wrapping is not allowed, so singleLine
+                                 stays.
+                                 🔴 No android:ellipsize="marquee" here, ever: the dropdown of an
+                                 exposed menu is an EditText, and EditText.setEllipsize() throws
+                                 IllegalArgumentException for MARQUEE while the view is still being
+                                 constructed. Measured 12.09.2026 - it took the whole application
+                                 down on start, on inflation, before a single line of our own code
+                                 ran. The movement is done in code instead: TextScroller.attach(). -->
                             <AutoCompleteTextView
                                 android:id="@+id/spinner_presets"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center_vertical"
                                 android:inputType="none"
-                                android:maxLines="1"
-                                android:ellipsize="end"
+                                android:singleLine="true"
+                                android:scrollHorizontally="true"
                                 android:paddingVertical="7dp"
                                 android:paddingHorizontal="12dp"
                                 android:focusable="false"
@@ -360,11 +370,14 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
 
-                <!-- 1. POWER VOLUME BLOCK -->
+                <!-- 1. POWER VOLUME BLOCK
+                     Widest share of the row: it carries a caption, a number and two buttons, and
+                     the caption is the one thing here that may be cut. The extra weight came from
+                     the frequency dropdown and from the quick actions, which no longer stretch. -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.0"
+                    android:layout_weight="2.2"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
@@ -375,9 +388,9 @@
                     <TextView
                         android:id="@+id/lbl_pwr"
                         style="@style/TextLabel"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="2.4"
+                        android:maxWidth="@dimen/eq_caption_max"
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:text="@string/lbl_pwr"
@@ -401,7 +414,7 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_pwr_vol_minus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="@dimen/tap_target_min"
+                        android:layout_width="@dimen/eq_action_button"
                         android:layout_height="@dimen/toggle_height"
                         android:layout_marginStart="8dp"
                         android:textColor="@color/cyan_custom"
@@ -423,7 +436,7 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_pwr_vol_plus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="@dimen/tap_target_min"
+                        android:layout_width="@dimen/eq_action_button"
                         android:layout_height="@dimen/toggle_height"
                         android:layout_marginStart="6dp"
                         android:textColor="@color/cyan_custom"
@@ -451,16 +464,16 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3.3"
+                    android:layout_weight="3.7"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
                     <TextView
                         android:id="@+id/lbl_sub"
                         style="@style/TextLabel"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="2"
+                        android:maxWidth="@dimen/eq_caption_max"
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:text="@string/lbl_sub"
@@ -472,20 +485,20 @@
                         android:id="@+id/seek_sub_gain"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="3"
+                        android:layout_weight="5"
                         android:layout_marginHorizontal="6dp"
                         android:valueFrom="0"
                         android:valueTo="12"
                         android:stepSize="1"
                         android:value="0"
-                        app:thumbRadius="7dp"
+                        app:thumbRadius="@dimen/eq_slider_thumb"
                         app:haloRadius="0dp"
                         app:haloColor="@color/transparent"
                         app:thumbColor="@color/cyan_custom"
                         app:trackColorActive="@color/track_color_active"
                         app:trackColorInactive="@color/track_color_inactive"
                         android:theme="@style/Widget.Material3.Slider"
-                        app:trackHeight="4dp"
+                        app:trackHeight="@dimen/eq_slider_track"
                         app:labelBehavior="gone"
                         app:tickColorActive="@color/transparent"
                         app:tickColorInactive="@color/transparent" />
@@ -509,16 +522,18 @@
 
                 <!-- 3. SUBWOOFER FREQUENCY DROPDOWN
 
-                     The dropdown arrow alone is 48dp, so at the old 1.6 share this column was
-                     88dp on a 640dp window and "100 Hz" broke across three lines, stretching the
-                     whole row to 80dp against its neighbours' 25dp. 2.1 leaves about 117dp -
-                     enough for the value, the arrow and the box padding. -->
+                     Fixed width, no weight. It shows one value - "100 Hz" - and an arrow, and with
+                     a weight it grew with the panel: on the 1280dp fascia it held a fifth of the
+                     row while the buttons next to it were squeezed, which is exactly what the owner
+                     objected to. The old comment here defended a weight of 1.6 because "100 Hz"
+                     once broke across three lines; it cannot any more - the field below is
+                     maxLines="1" with an ellipsis, and 124dp fits the value, the 48dp arrow and the
+                     box padding outright. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_spinner_sub_freq"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="0dp"
+                    android:layout_width="@dimen/eq_freq_dropdown"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.1"
                     app:boxCornerRadiusTopStart="10dp"
                     app:boxCornerRadiusTopEnd="10dp"
                     app:boxCornerRadiusBottomStart="10dp"
@@ -549,20 +564,21 @@
                     android:layout_width="16dp"
                     android:layout_height="1dp" />
 
-                <!-- 4. EQ QUICK ACTIONS (-, +, 0) -->
+                <!-- 4. EQ QUICK ACTIONS (-, +, 0)
+                     Sized by its three buttons instead of a weight. With a weight each of them grew
+                     to a different width from the amplifier pair beside it, and the whole block ate
+                     a quarter of the row; what it gives up goes to the amplifier block. -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.5"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_minus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/eq_action_button"
                         android:layout_height="@dimen/toggle_height"
-                        android:layout_weight="1"
                         android:textColor="@color/cyan_custom"
                         android:minWidth="0dp"
                         android:minHeight="0dp"
@@ -582,9 +598,8 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_plus"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/eq_action_button"
                         android:layout_height="@dimen/toggle_height"
-                        android:layout_weight="1"
                         android:layout_marginStart="6dp"
                         android:textColor="@color/cyan_custom"
                         android:minWidth="0dp"
@@ -605,9 +620,8 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_center"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/eq_action_button"
                         android:layout_height="@dimen/toggle_height"
-                        android:layout_weight="1"
                         android:layout_marginStart="6dp"
                         android:textColor="@color/cyan_custom"
                         android:minWidth="0dp"

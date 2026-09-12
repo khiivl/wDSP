@@ -58,6 +58,13 @@ public final class MicrophoneGuard {
     static final float BANDWIDTH_OK_DB = -30f;
 
     /**
+     * Below this the probe heard silence, and silence says nothing about a stream's rate: the ratio
+     * of two bands of noise is noise. Same value as {@code RadioMicCapture.PROBE_MIN_RMS}, for the
+     * same reason.
+     */
+    private static final double PROBE_MIN_RMS = 1e-4;
+
+    /**
      * Known hotword listeners, most likely first.
      *
      * A list is not elegant, but the alternative is not available: the package name behind an
@@ -85,9 +92,22 @@ public final class MicrophoneGuard {
         public boolean freed;
         /** True when the polite request failed and root was needed to finish the job. */
         public boolean usedRoot;
+        /**
+         * True when the microphone could not be listened to at all, so nothing is known about it.
+         *
+         * This is not the same as "it is ours", and the difference used to be invisible: every
+         * failure returned 0 dB, which sails past a threshold of -30 dB and was reported as a free
+         * microphone. A sweep then ran to 20 kHz through a microphone nobody had checked, and the
+         * report a tester sent back said the microphone was fine.
+         */
+        public boolean unknown;
 
         @Override
         public String toString() {
+            if (unknown) {
+                return "microphone could not be checked - the probe did not record anything usable; "
+                        + "nothing was stopped and nothing is claimed about it";
+            }
             if (!wasHeld) {
                 return String.format(Locale.US, "microphone was already ours (%.1f dB above 8 kHz)",
                         before);
@@ -109,6 +129,15 @@ public final class MicrophoneGuard {
         Outcome outcome = new Outcome();
         outcome.before = measureBandwidth();
         outcome.after = outcome.before;
+
+        // "Did not measure" is not "measured and fine". Killing somebody else's process on a
+        // failed probe would be worse than doing nothing, so an unknown answer stops here - and
+        // says so, instead of letting a caller read silence as a healthy microphone.
+        if (Float.isNaN(outcome.before)) {
+            outcome.unknown = true;
+            Log.w(TAG, outcome.toString());
+            return outcome;
+        }
 
         if (outcome.before >= BANDWIDTH_OK_DB) {
             Log.i(TAG, outcome.toString());
@@ -152,7 +181,7 @@ public final class MicrophoneGuard {
         if (!outcome.freed && !outcome.stopped.isEmpty() && RootAccess.hasRoot(context)) {
             for (String pkg : HOTWORD_PACKAGES) {
                 if (!isInstalled(pm, pkg)) continue;
-                if (forceStopAsRoot(pkg)) outcome.usedRoot = true;
+                if (forceStopAsRoot(pkg, ROOT_WAIT_DELIBERATE_S)) outcome.usedRoot = true;
             }
             if (outcome.usedRoot) {
                 sleep(900);
@@ -169,17 +198,30 @@ public final class MicrophoneGuard {
         return outcome;
     }
 
-    /** Records briefly and reports how much of it lives above 8 kHz. */
+    /**
+     * Records briefly and reports how much of it lives above 8 kHz.
+     *
+     * @return {@code Float.NaN} whenever the answer is not known - no native analyser, no input,
+     *         too little recorded, or silence, because silence says nothing about a stream's rate.
+     *         Never 0 dB for a failure: 0 passes every threshold this class compares against, and
+     *         that is how an unchecked microphone came to be reported as a free one.
+     *         {@code RadioMicCapture.bandwidthDb} has always done it this way; this method was the
+     *         odd one out.
+     */
     private static float measureBandwidth() {
+        if (!NativeSweep.isAvailable()) {
+            Log.w(TAG, "no native analyser - the microphone cannot be checked");
+            return Float.NaN;
+        }
         int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
-        if (minBytes <= 0) return 0f;
+        if (minBytes <= 0) return Float.NaN;
 
         AudioRecord record = null;
         try {
             record = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE,
                     AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 4);
-            if (record.getState() != AudioRecord.STATE_INITIALIZED) return 0f;
+            if (record.getState() != AudioRecord.STATE_INITIALIZED) return Float.NaN;
 
             final int wanted = SAMPLE_RATE * PROBE_MS / 1000;
             short[] buffer = new short[minBytes];
@@ -193,11 +235,21 @@ public final class MicrophoneGuard {
                 got += read;
             }
             record.stop();
-            if (got < SAMPLE_RATE / 8) return 0f;
+            if (got < SAMPLE_RATE / 8) return Float.NaN;
+
+            // Silence carries no evidence either way: a quiet cabin has nothing above 8 kHz and
+            // nothing below it, and the ratio of the two is noise divided by noise. The same floor
+            // as RadioMicCapture uses for its own probe.
+            double sum = 0;
+            for (int i = 0; i < got; i++) sum += all[i] * all[i];
+            if (Math.sqrt(sum / got) < PROBE_MIN_RMS) {
+                Log.w(TAG, "the probe recorded silence - nothing can be said about the microphone");
+                return Float.NaN;
+            }
             return NativeSweep.bandwidthRatioDb(all, got, SAMPLE_RATE);
         } catch (Throwable t) {
             Log.w(TAG, "could not listen to the microphone: " + t);
-            return 0f;
+            return Float.NaN;
         } finally {
             if (record != null) {
                 try {
@@ -209,20 +261,37 @@ public final class MicrophoneGuard {
     }
 
     /**
+     * How long a deliberate, user-initiated attempt waits: long enough for somebody to tap a root
+     * prompt that has appeared on screen.
+     */
+    private static final long ROOT_WAIT_DELIBERATE_S = 20;
+    /**
+     * How long the live capture waits. Short on purpose: the assistant is back within two seconds,
+     * so a slow force-stop has already lost the race and waiting only keeps the spectrum frozen.
+     * With four packages in the list, the old twenty seconds each could hold the capture thread for
+     * over a minute - and there is nobody at the screen to tap a prompt while music is playing.
+     */
+    private static final long ROOT_WAIT_LIVE_S = 2;
+
+    /**
      * Force-stops a package through root, if root is there.
      *
-     * Deliberately narrow: one command, one package, a short timeout, and no shell left open. If
-     * there is no root the call fails immediately and the measurement carries on with whatever
+     * Deliberately narrow: one command, one package, a bounded wait, and no shell left open. If
+     * there is no root the call fails immediately and the caller carries on with whatever
      * microphone it has.
+     *
+     * @param timeoutSeconds how long to wait for the command - see the two constants above; the
+     *                       right value depends on whether a person is standing at the screen
      */
-    private static boolean forceStopAsRoot(String pkg) {
+    private static boolean forceStopAsRoot(String pkg, long timeoutSeconds) {
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(new String[]{"su", "-c", "am force-stop " + pkg});
-            boolean done = p.waitFor(20, java.util.concurrent.TimeUnit.SECONDS);
+            boolean done = p.waitFor(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS);
             if (!done) {
                 p.destroy();
-                Log.w(TAG, "root force-stop of " + pkg + " did not finish in time - a root prompt may be waiting for somebody to tap it");
+                Log.w(TAG, "root force-stop of " + pkg + " did not finish in " + timeoutSeconds
+                        + "s - a root prompt may be waiting for somebody to tap it");
                 return false;
             }
             final boolean ok = p.exitValue() == 0;
@@ -249,7 +318,7 @@ public final class MicrophoneGuard {
         PackageManager pm = context.getPackageManager();
         int stopped = 0;
         for (String pkg : HOTWORD_PACKAGES) {
-            if (isInstalled(pm, pkg) && forceStopAsRoot(pkg)) stopped++;
+            if (isInstalled(pm, pkg) && forceStopAsRoot(pkg, ROOT_WAIT_LIVE_S)) stopped++;
         }
         return stopped;
     }

@@ -1009,6 +1009,14 @@ public final class RoomMeasurement {
             Log.w(TAG, "the microphone is limited to 16 kHz and could not be freed, so the sweep "
                     + "stops at " + (int) topHz + " Hz instead of " + (int) SWEEP_END_HZ
                     + " - delays are unaffected, the top of the response is not measured");
+        } else if (mic.unknown) {
+            // The full sweep still runs: a probe that failed is not evidence of a narrow
+            // microphone, and cutting a good measurement short on a guess would be worse. But it
+            // is said out loud, here and in result.microphone, because until now this case was
+            // indistinguishable from a microphone that had been checked and found free.
+            Log.w(TAG, "the microphone could not be checked, so the sweep runs to the full "
+                    + (int) SWEEP_END_HZ + " Hz on trust - if the top of the response looks empty, "
+                    + "that is the first thing to suspect");
         }
 
         // Touch only: preset (switched to flat scratch preset) and volume (locked to 16).

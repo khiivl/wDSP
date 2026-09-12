@@ -98,6 +98,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
     private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
+    // GALA's five parameters, shared across presets while PREF_GALA_GLOBAL_MODE is on. They exist
+    // because "Global" arrived after GALA was already being written into every preset: the switch
+    // moved only the on/off state, so selecting another preset still replaced the increment, the
+    // standstill speed, the ceiling and both timings - GALA changed when the sound did.
+    private static final String PREF_GALA_GLOBAL_INC = "gala_global_increment";
+    private static final String PREF_GALA_GLOBAL_MIN_SPEED = "gala_global_min_speed";
+    private static final String PREF_GALA_GLOBAL_MAX_ADJ = "gala_global_max_adj";
+    private static final String PREF_GALA_GLOBAL_FADE_MS = "gala_global_fade_ms";
+    private static final String PREF_GALA_GLOBAL_HOLD_MS = "gala_global_hold_ms";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -1063,6 +1072,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initPrimaryViews() {
         spinnerPresets = findViewById(R.id.spinner_presets);
+        // Long automatic preset names scroll instead of losing their marks to an ellipsis. Not with
+        // android:ellipsize="marquee": this field is an EditText underneath, and EditText refuses
+        // MARQUEE by throwing from its constructor, so the layout attribute crashed the activity
+        // during inflation rather than being ignored. See TextScroller.
+        com.radiorubka.wdsp.ui.views.TextScroller.attach(spinnerPresets);
         eqVisualizer = findViewById(R.id.eq_visualizer);
         spectrumAnalyzer = findViewById(R.id.spectrum_analyzer);
         seekSubGain = findViewById(R.id.seek_sub_gain);
@@ -1640,18 +1654,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupFmControls() {
         updateToggleStyle(switchFmEnable);
+        // The curve and the built-in loudness are not rivals and never were: the curve is our own
+        // equaliser offsets, sent as gain indices in 0x80 and 0x8B, while the built-in one is a
+        // single bit inside the MCU's 0x81 fader frame and is computed by the sound processor
+        // itself. They touch different registers, so both may run at once - people asked for
+        // exactly that, and forcing one off also produced the complaint that "the correction is
+        // shown but the curve does nothing": the partner's listener had already saved and redrawn
+        // by the time this one ran, so the screen showed offsets the preset no longer held.
         switchFmEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
-                if (checked && switchLoud != null && switchLoud.isChecked()) {
-                    // 🔴 Guarded, or the partner's own listener saves and redraws first and this
-                    // one does it again: one press of a button, two full saves and two visualiser
-                    // rebuilds. Harmless only because mcuCache swallows the repeat - and relying on
-                    // that is how a second writer gets in unnoticed.
-                    isUpdatingUi = true;
-                    switchLoud.setChecked(false);
-                    isUpdatingUi = false;
-                }
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -1660,11 +1672,6 @@ public class MainActivity extends AppCompatActivity {
         switchLoud.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
-                if (checked && switchFmEnable != null && switchFmEnable.isChecked()) {
-                    isUpdatingUi = true;
-                    switchFmEnable.setChecked(false);
-                    isUpdatingUi = false;
-                }
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -2073,18 +2080,24 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE));
             e.putBoolean(name + "_d1_en", d1En);
             
-            // GALA
+            // GALA. With "Global" on, GALA belongs to the car and not to the preset: the on/off
+            // state AND all five parameters live in the shared keys, so changing preset no longer
+            // changes how GALA behaves. With it off, everything goes into the preset as before.
             if (galaGlobalMode) {
-                // Shared across all presets - not part of this preset's own data.
                 e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+                e.putInt(PREF_GALA_GLOBAL_INC, getIntSlider(seekGalaInc));
+                e.putInt(PREF_GALA_GLOBAL_MIN_SPEED, getIntSlider(seekGalaMinSpeed));
+                e.putInt(PREF_GALA_GLOBAL_MAX_ADJ, getIntSlider(seekGalaMaxAdj));
+                e.putInt(PREF_GALA_GLOBAL_FADE_MS, getIntSlider(seekGalaFadeMs));
+                e.putInt(PREF_GALA_GLOBAL_HOLD_MS, getIntSlider(seekGalaHoldMs));
             } else {
                 e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
+                e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
+                e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
+                e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
+                e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
+                e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
             }
-            e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
-            e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
-            e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
-            e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
-            e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
         }
         e.apply();
     }
@@ -2165,24 +2178,32 @@ public class MainActivity extends AppCompatActivity {
             seekDelay1RSSE.setValue((float) p.getInt(name + "_rsse_val", 10));
             switchLegacyEnable.setChecked(d1En);
             
-            // GALA
-            switchGalaEnable.setChecked(galaGlobalMode
+            // GALA. Read from wherever savePreset writes - the shared keys under "Global", the
+            // preset's own otherwise. Reading the parameters from the preset while the switch was
+            // on is what made GALA jump every time another preset was selected.
+            final boolean gg = galaGlobalMode;
+            final String gKeyInc = gg ? PREF_GALA_GLOBAL_INC : name + "_gala_increment";
+            final String gKeyMinSpeed = gg ? PREF_GALA_GLOBAL_MIN_SPEED : name + "_gala_min_speed";
+            final String gKeyMaxAdj = gg ? PREF_GALA_GLOBAL_MAX_ADJ : name + "_gala_max_adj";
+            final String gKeyFadeMs = gg ? PREF_GALA_GLOBAL_FADE_MS : name + "_gala_fade_ms";
+            final String gKeyHoldMs = gg ? PREF_GALA_GLOBAL_HOLD_MS : name + "_gala_hold_ms";
+            switchGalaEnable.setChecked(gg
                     ? p.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
                     : p.getBoolean(name + "_gala_enabled", false));
-            seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
+            seekGalaInc.setValue((float) p.getInt(gKeyInc, 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
             // Clamped, because the range used to reach 300 km/h and now stops at 200. A
             // preset saved under the old range would otherwise throw out of setValue and
             // take the screen down with it. Nothing audible is lost: a car that reaches
             // 200 downhill still never crosses a threshold set above it.
             seekGalaMinSpeed.setValue(Math.min(40f,
-                    p.getInt(name + "_gala_min_speed", 0)));
+                    p.getInt(gKeyMinSpeed, 0)));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
-            seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
+            seekGalaMaxAdj.setValue((float) p.getInt(gKeyMaxAdj, 12));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
-            seekGalaFadeMs.setValue((float) p.getInt(name + "_gala_fade_ms", 100));
+            seekGalaFadeMs.setValue((float) p.getInt(gKeyFadeMs, 100));
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
-            seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));
+            seekGalaHoldMs.setValue((float) p.getInt(gKeyHoldMs, 1000));
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
         }
         isUpdatingUi = false;
@@ -2573,14 +2594,13 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(bv);
             if (isUpdatingUi) return;
             galaGlobalMode = checked;
-            SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                    .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
-            if (checked) {
-                // Seed the global value from whatever's on screen right now, so flipping
-                // this on doesn't silently reset GALA to off.
-                ed.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
-            }
-            ed.apply();
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                    .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked).apply();
+            // Whichever way the switch went, write what is on screen into the place that is now
+            // authoritative. Turning it on seeds the shared keys instead of silently resetting GALA
+            // to off; turning it off puts the same values into the current preset, so the sound the
+            // driver is hearing does not change under them at the moment of the flip.
+            autoSaveCurrent();
         });
 
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {

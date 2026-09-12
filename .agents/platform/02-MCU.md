@@ -29,7 +29,7 @@ row below is a line of framework code, not an inference:
 |---|---|---|
 | **1** (second character) | **AK hub**: `2` → AK7738, `3` → AK7604, anything else → none | `AK7738VolumeManager.getDspType()` |
 | **2** (third character) | **external tuner**: `!= 0` → present. `2` = TDA7708, `4` = NXP6686 | `McuManagerService.initRadioExtChip()` |
-| **4** (fifth character) | **I2S**: `"0"` → no, anything else → yes; this is what separates a BU32107 from a BD37544 | `McuManagerService.onVersionInfoChanged()` |
+| **3** (fourth character) | **I2S / mpuMode**: `"0"` → no, anything else → yes; this is what separates a BU32107 from a BD37534 | `McuManagerService.onVersionInfoChanged()` |
 
 `002121` → hub **none**, tuner **TDA7708 present**, I2S **yes**.
 
@@ -41,8 +41,7 @@ said "third character from the end", which is wrong and does not fit either work
 - `getDspType()` accepts **hex**: a non-digit is decoded as `c + 10 - 97`, so `a` → 10. Parsing only
   digits will misread a future code.
 - The platform **publishes the I2S answer itself** as `persist.sys.qf.arm.use.i2s`. Read that rather
-  than re-deriving it — a module that tested `last two characters == "21"` disagreed with the
-  platform on any code shaped `00xx31`, and would have applied the wrong audio profile.
+  than re-deriving it — the old bitperfect installer that tested `${HW_CODE:4:2} == "21"` was actually reading `exDeviceType` and power bitmask, not the sound processor, which applied the wrong audio profile on BD37534 units.
 - 🔬 **The platform restarts audioserver by itself** — `SystemProperties.set("ctl.restart",
   "audioserver")` in `onVersionInfoChanged`, but **only when the version string differs from the
   stored one**. So it happens after a firmware change and never again, which is why "no sound after
@@ -207,3 +206,4 @@ reported" in separate variables.** wDSP's speed-dependent volume died exactly he
 held its own command, the mismatch read as a person turning the knob, the base was re-learned, and
 the algorithm set the volume that was already there. A fixed point — it never moved again, and only
 under music, because only then was the mismatch permanent.
+

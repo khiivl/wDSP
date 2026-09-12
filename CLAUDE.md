@@ -13,6 +13,8 @@ Start at [.agents/INDEX.md](.agents/INDEX.md), and for anything that changes how
 radio — [.agents/platform/08-VOLUME-AND-SOURCES.md](.agents/platform/08-VOLUME-AND-SOURCES.md)
 first: two units on the same firmware genuinely behave differently there, and the file says how to
 tell which one you have.
+For sound processor hardware details on BD37534/44 (debunking fake 16 bands & fake delays, shadow buffer `0x200000e4`, true parametric EQ) see [.agents/platform/16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md](.agents/platform/16-ROHM-BD37534-BD37544-REVERSE-ENGINEERING.md) and for FM tuner TSC4745 see [.agents/platform/17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md](.agents/platform/17-TSC4745-SI4745-TUNER-REVERSE-ENGINEERING.md).
+Complete decompiled MCU code (`mcu_bd37534_decompiled.c`), binary `mcu.bin`, and official datasheets (ROHM BD37534FV, Silicon Labs AN332) live at `C:\MCU\MCU QF05 2.5.2024-BD37534,TSC4745\`.
 
 ## Agreements with other applications live outside this repository
 

@@ -58,6 +58,15 @@ public class McuService extends Service implements LocationListener {
 
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
     private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
+    // The five parameters shared across presets while global mode is on - see
+    // MainActivity.savePreset. Every one of these keys starts with GALA_GLOBAL_PREFIX, which is how
+    // prefListener recognises them: they belong to no preset, so they match no preset's name.
+    private static final String GALA_GLOBAL_PREFIX = "gala_global_";
+    private static final String PREF_GALA_GLOBAL_INC = "gala_global_increment";
+    private static final String PREF_GALA_GLOBAL_MIN_SPEED = "gala_global_min_speed";
+    private static final String PREF_GALA_GLOBAL_MAX_ADJ = "gala_global_max_adj";
+    private static final String PREF_GALA_GLOBAL_FADE_MS = "gala_global_fade_ms";
+    private static final String PREF_GALA_GLOBAL_HOLD_MS = "gala_global_hold_ms";
     
     private SharedPreferences prefs;
     private HandlerThread workerThread;
@@ -397,11 +406,14 @@ public class McuService extends Service implements LocationListener {
             else if (key.equals(PREF_LAST_SELECTED)) {
                 syncPreset(false);
             }
-            else if (key.equals(PREF_GALA_GLOBAL_MODE)) {
+            else if (key.startsWith(GALA_GLOBAL_PREFIX)) {
+                // One branch for the whole shared set, the mode and the on/off state included.
+                // Two of these keys used to be handled here and the other five did not exist, so a
+                // flip of the mode left the cached GALA values as the previous preset had them -
+                // and nothing reloaded them until some other preference happened to change.
                 galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
-            }
-            else if (key.equals(PREF_GALA_GLOBAL_ENABLED)) {
                 galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+                if (currentPresetName != null) loadPresetData(currentPresetName);
             }
             else if (currentPresetName != null && key.startsWith(currentPresetName)) {
 
@@ -746,9 +758,19 @@ public class McuService extends Service implements LocationListener {
         cachedFmCal = prefs.getInt(preset + "_fm_cal", 25);
         cachedFmStr = prefs.getInt(preset + "_fm_str", 100);
 
-        // GALA
-        cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
-        cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
+        // GALA. Global mode takes the whole set out of the preset, so read it from the same place
+        // the screen writes it - otherwise the service goes on computing with the preset's numbers
+        // while the screen shows the shared ones, and GALA behaves like neither.
+        final boolean gg = galaGlobalMode;
+        final String gKeyInc = gg ? PREF_GALA_GLOBAL_INC : preset + "_gala_increment";
+        final String gKeyMinSpeed = gg ? PREF_GALA_GLOBAL_MIN_SPEED : preset + "_gala_min_speed";
+        final String gKeyMaxAdj = gg ? PREF_GALA_GLOBAL_MAX_ADJ : preset + "_gala_max_adj";
+        final String gKeyFadeMs = gg ? PREF_GALA_GLOBAL_FADE_MS : preset + "_gala_fade_ms";
+        final String gKeyHoldMs = gg ? PREF_GALA_GLOBAL_HOLD_MS : preset + "_gala_hold_ms";
+        cachedGalaEn = gg
+                ? prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
+                : prefs.getBoolean(preset + "_gala_enabled", false);
+        cachedGalaInc = prefs.getInt(gKeyInc, 15);
         // Clamped exactly as MainActivity.loadPreset clamps it, and for the same reason: the
         // standstill slider used to reach 300 km/h and now stops at 200.
         //
@@ -758,11 +780,11 @@ public class McuService extends Service implements LocationListener {
         // the log, which reported the offset as 0 with settings that appeared to ask for one. The
         // owner then opened the main screen, touched anything, autosave wrote the clamped value
         // back, and GALA came alive - which reads as "it only works when I go to the main screen".
-        cachedGalaMinV = Math.min(GALA_MIN_SPEED_CEILING, prefs.getInt(preset + "_gala_min_speed", 0));
+        cachedGalaMinV = Math.min(GALA_MIN_SPEED_CEILING, prefs.getInt(gKeyMinSpeed, 0));
 //        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
-        cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
-        cachedGalaFadeDelayMs = prefs.getInt(preset + "_gala_fade_ms", 100);
-        cachedGalaHoldMs = prefs.getInt(preset + "_gala_hold_ms", 1000);
+        cachedGalaMaxAdj = prefs.getInt(gKeyMaxAdj, 12);
+        cachedGalaFadeDelayMs = prefs.getInt(gKeyFadeMs, 100);
+        cachedGalaHoldMs = prefs.getInt(gKeyHoldMs, 1000);
     }
 
     @Override

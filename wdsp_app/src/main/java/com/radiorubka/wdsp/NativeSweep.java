@@ -82,6 +82,11 @@ public final class NativeSweep implements AutoCloseable {
      *
      * The one reliable way to catch a microphone that is really running at 16 kHz: the platform
      * reports the rate that was requested regardless, so only the content itself tells the truth.
+     *
+     * ⚠️ Call {@link #isAvailable()} first, and do not record if it says no. Without the native
+     * library this returns 0 dB - a number that sails past every threshold the callers compare
+     * against, so "there is no analyser" would read as "the microphone is fine". Both callers check
+     * first for exactly that reason; a third one must too.
      */
     public static float bandwidthRatioDb(float[] recorded, int length, int sampleRate) {
         return isAvailable() ? nativeBandwidth(recorded, length, sampleRate) : 0f;
