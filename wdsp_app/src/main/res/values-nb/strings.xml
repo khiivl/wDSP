@@ -483,4 +483,13 @@ Global standard: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Monteringstype</string>
+    <string name="room_mic_body_open">Åpen kapsel, frittstående</string>
+    <string name="room_mic_body_pinhole">Bak et lite hull i panelet</string>
+    <string name="room_mic_body_housing">Innfelt i deksel eller taklampe</string>
+    <string name="room_mic_body_lavalier">Myggmikrofon med skumhette</string>
+    <string name="room_sub_place_hint">Plassering av subwoofer</string>
+    <string name="room_sub_place_boot">I bagasjerommet</string>
+    <string name="room_sub_place_shelf">På hattehyllen</string>
+    <string name="room_sub_place_underseat">Under setet</string>
 </resources>

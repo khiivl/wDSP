@@ -392,6 +392,164 @@ public final class RoomMeasurement {
                 .putInt(PREF_MIC_PLACE, index).apply();
     }
 
+    // =====================================================================================
+    // Height, and what the microphone is built into - two axes the dot cannot carry
+    // =====================================================================================
+
+    /**
+     * How high each place sits, in centimetres, **with zero on the listener's ear line**.
+     *
+     * <p>The scene is built for a head, not for a microphone, so the ear line is the natural
+     * origin: the one number that matters most is exact by construction and everything else is a
+     * deviation from it. A dome light is nearly half a metre above the ears and an armrest a
+     * quarter of a metre below them; treating both as the same point - which is what a flat plan
+     * does - throws away a real difference in path length and in what the first arrival even is.
+     *
+     * <p>🧩 **Reasoned, not measured.** Nobody is asked for centimetres and nobody should be: these
+     * are the ordinary heights of those fittings in an ordinary car, good to a few centimetres,
+     * which is the accuracy the rest of this model works at anyway. The index is
+     * {@link #MIC_PLACES}, and that array's order is frozen - see its own note.
+     */
+    private static final float[] MIC_PLACE_HEIGHT_CM = {
+            +25f,   //  0 windscreen        - high on the glass, above the eye line
+            +30f,   //  1 under the visor   - at the roof edge
+            +25f,   //  2 A-pillar, top
+            -10f,   //  3 A-pillar, bottom  - down by the dash corner
+            +30f,   //  4 rear-view mirror
+            +45f,   //  5 dome light        - the roof itself
+            -15f,   //  6 steering wheel    - below the ears, behind the rim
+            +5f,    //  7 dashboard
+            +5f,    //  8 built-in head unit mic
+            0f,     //  9 driver headrest   - ear level, by definition: the string says so
+            -25f,   // 10 centre armrest
+    };
+
+    /** Ear line is the origin, so this is what it is worth when nobody has said where the mic is. */
+    private static final float MIC_HEIGHT_UNKNOWN_CM = +5f;
+
+    /**
+     * Half the cabin width used to turn the dragged dot into centimetres: the door card is about
+     * this far from the centre line, and the dot's ±1 means "against the door".
+     */
+    private static final float CABIN_HALF_WIDTH_CM = 80f;
+
+    /** Loudspeaker heights, same ear-line origin. 🧩 Door cards sit well below the ears. */
+    private static final float SPEAKER_Z_DOOR_CM = -25f;
+    private static final float SPEAKER_Z_SUB_CM = -35f;
+
+    /**
+     * What the microphone is built into - a different question from where it is.
+     *
+     * <p>The owner's words: open in the middle of the fascia and open inside a dome fitting are not
+     * the same thing. Neither is a capsule behind a 1.5 mm pinhole, which is a Helmholtz cavity
+     * with a resonance of its own. Place decides path length; construction decides the transfer
+     * function of the housing, and the two are independent - a pinhole exists on a dashboard and in
+     * a headrest alike.
+     *
+     * <p>Index-stable exactly like {@link #MIC_PLACES}: add at the end, never reorder.
+     */
+    private static final int[] MIC_BODIES = {
+            R.string.room_mic_body_open,
+            R.string.room_mic_body_pinhole,
+            R.string.room_mic_body_housing,
+            R.string.room_mic_body_lavalier,
+    };
+
+    public static final int MIC_BODY_OPEN = 0;
+    public static final int MIC_BODY_PINHOLE = 1;
+    public static final int MIC_BODY_HOUSING = 2;
+    public static final int MIC_BODY_LAVALIER = 3;
+
+    private static final String PREF_MIC_BODY = "room_mic_body";
+
+    public static String[] micBodyNames(Context context) {
+        String[] out = new String[MIC_BODIES.length];
+        for (int i = 0; i < MIC_BODIES.length; i++) out[i] = context.getString(MIC_BODIES[i]);
+        return out;
+    }
+
+    /** {@code -1} when nobody has said, which is not the same as "open". */
+    public static int micBody(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(PREF_MIC_BODY, -1);
+    }
+
+    public static void setMicBody(Context context, int index) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(PREF_MIC_BODY, index).apply();
+    }
+
+    /**
+     * The construction to work with, falling back on what the place implies when it was not asked.
+     *
+     * <p>Only one place implies its own construction beyond doubt: the head unit's own microphone
+     * is always behind a pinhole in the fascia. That inference keeps every measurement already made
+     * on this unit behaving as it did, instead of silently losing its cavity correction the day a
+     * second question appeared on the screen.
+     */
+    public static int effectiveMicBody(int micBody, int micPlace) {
+        if (micBody >= 0 && micBody < MIC_BODIES.length) return micBody;
+        if (micPlace == 8) return MIC_BODY_PINHOLE;
+        return -1;
+    }
+
+    /**
+     * Where the subwoofer is, which is a question about path length rather than about tone.
+     *
+     * <p>🧩 The owner's own reading, and it is right: at these frequencies the cabin is smaller
+     * than the wavelength, so the response barely cares where the box stands - the air in the car
+     * moves as one. What does care is **when** the sound arrives, and the delay line is one of the
+     * three things we can actually set without patching the MCU. A boot and an under-seat enclosure
+     * are more than a metre apart, which is three milliseconds - six steps of the delay slider.
+     *
+     * <p>Index-stable, like the other two lists: add at the end, never reorder.
+     */
+    private static final int[] SUB_PLACES = {
+            R.string.room_sub_place_boot,
+            R.string.room_sub_place_shelf,
+            R.string.room_sub_place_underseat,
+    };
+
+    public static final int SUB_PLACE_BOOT = 0;
+    public static final int SUB_PLACE_SHELF = 1;
+    public static final int SUB_PLACE_UNDER_SEAT = 2;
+
+    private static final String PREF_SUB_PLACE = "room_sub_place";
+
+    public static String[] subPlaceNames(Context context) {
+        String[] out = new String[SUB_PLACES.length];
+        for (int i = 0; i < SUB_PLACES.length; i++) out[i] = context.getString(SUB_PLACES[i]);
+        return out;
+    }
+
+    /** {@code -1} when nobody has said; the boot is then assumed, as it always was. */
+    public static int subPlace(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(PREF_SUB_PLACE, -1);
+    }
+
+    public static void setSubPlace(Context context, int index) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(PREF_SUB_PLACE, index).apply();
+    }
+
+    private static String englishSubPlace(int i) {
+        switch (i) {
+            case SUB_PLACE_BOOT: return "boot";
+            case SUB_PLACE_SHELF: return "rear parcel shelf";
+            case SUB_PLACE_UNDER_SEAT: return "under a seat";
+            default: return "not stated (assumed boot)";
+        }
+    }
+
+    /** Height of the microphone above the ear line, in centimetres. */
+    private static float micHeightCm(int micPlace) {
+        if (micPlace >= 0 && micPlace < MIC_PLACE_HEIGHT_CM.length) {
+            return MIC_PLACE_HEIGHT_CM[micPlace];
+        }
+        return MIC_HEIGHT_UNKNOWN_CM;
+    }
+
     private static String micPlaceDescription(Context context) {
         int i = micPlace(context);
         if (i < 0 || i >= MIC_PLACES.length) return "not stated";
@@ -432,6 +590,31 @@ public final class RoomMeasurement {
                 .putFloat(PREF_MIC_LR, leftRight)
                 .putFloat(PREF_MIC_FR, frontRear)
                 .apply();
+    }
+
+    /**
+     * What the microphone is built into, in words, for the report.
+     *
+     * <p>Reports the **effective** answer, and says when it was inferred rather than stated: a
+     * reader three weeks from now needs to know the difference between "the owner told us" and
+     * "we assumed, because it is the head unit's own microphone".
+     */
+    private static String micBodyDescription(Context context) {
+        int stated = micBody(context);
+        int eff = effectiveMicBody(stated, micPlace(context));
+        if (eff < 0) return "not stated";
+        String name = englishBody(eff);
+        return stated >= 0 ? name : name + " (assumed from the place)";
+    }
+
+    private static String englishBody(int i) {
+        switch (i) {
+            case MIC_BODY_OPEN: return "open capsule";
+            case MIC_BODY_PINHOLE: return "behind a hole in a panel";
+            case MIC_BODY_HOUSING: return "recessed in a housing";
+            case MIC_BODY_LAVALIER: return "clip-on with foam";
+            default: return "not stated";
+        }
     }
 
     /** The spot in words, for the report - "front right", "centre", and so on. */
@@ -673,9 +856,20 @@ public final class RoomMeasurement {
         return delayTest == 2 ? SURROUND_TEST_STEPS : DELAY_TEST_STEPS;
     }
 
-    /** What the interface claims a step is worth, for the line under test. */
+    /**
+     * What a step is worth on the line under test.
+     *
+     * <p>This used to return 1.0 for the surround line, because 1.0 was what the interface printed
+     * and the whole point of {@code delaytest 2} was to find out whether that was true. It was not:
+     * the MCU multiplies the slider by 102 and the chip counts samples at 48 kHz, and three runs
+     * measured 2.1181, 2.1146 and 2.1167 ms per step against 102/48 = 2.125. The interface was
+     * corrected then ({@code MainActivity.SURROUND_DELAY_STEP_MS}); this label was left behind, so
+     * a re-run would now compare against a number we know is wrong.
+     */
+    private static final float SURROUND_STEP_MS = 102f / 48f;
+
     private static float delayTestLabelMs() {
-        return delayTest == 2 ? 1.0f : DELAY_STEP_MS;
+        return delayTest == 2 ? SURROUND_STEP_MS : DELAY_STEP_MS;
     }
 
     private RoomMeasurement() {
@@ -789,8 +983,29 @@ public final class RoomMeasurement {
         public final float[] suggestedDelayMs = new float[4];
         /** The same delays in slider steps; the hardware moves in half-millisecond increments. */
         public final int[] suggestedDelaySteps = new int[4];
-        /** Ambient noise floor spectrum (16 bands) in dB. */
+        /**
+         * Deconvolved noise floor of the anchor channel (16 bands) in dB.
+         *
+         * <p>Named "noise floor" and reported as "ambient" for a long time, and it is neither: it
+         * comes out of the impulse response, not out of the cabin. The real cabin silence is
+         * {@link #ambientNoiseDb16}, which this array used to overwrite.
+         */
         public final float[] noiseFloorDb16 = new float[NativeSweep.BAND_COUNT];
+        /**
+         * The cabin's own silence, measured from the lead-in second before the first sweep tone.
+         *
+         * <p>🔴 Until 12.09.2026 this was measured into {@code noiseFloorDb16} and then overwritten
+         * a few hundred lines later by the deconvolved figure, so the one quantity that describes
+         * the car the driver is sitting in was taken and thrown away in the same run. Nothing
+         * consumed it, and the report printed the other number under its name.
+         *
+         * <p>It is kept separate now. It is still not subtracted from anything - the spectral
+         * subtraction at the channel level uses the deconvolved floor, deliberately, because that
+         * is the one that shares the sweep's own domain. What this is for is the live analyser and
+         * the noise question the owner raised: the floor drifts while driving and wants
+         * re-measuring, and none of that can start from a number that does not survive the run.
+         */
+        public final float[] ambientNoiseDb16 = new float[NativeSweep.BAND_COUNT];
         /** 16-band microphone inverse compensation curve in dB. */
         public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
         public String error;
@@ -826,6 +1041,10 @@ public final class RoomMeasurement {
         public float micSpotLr = -0.5f;
         public float micSpotFr = 0.5f;
         public int micPlace = -1;
+        /** What the capsule is built into - independent of where it is. -1 = nobody has said. */
+        public int micBody = -1;
+        /** Where the subwoofer stands. -1 = nobody has said, and the boot is assumed. */
+        public int subPlace = -1;
 
         public boolean isUsable() {
             if (channels == null || channels.length == 0) return false;
@@ -978,6 +1197,8 @@ public final class RoomMeasurement {
         result.micSpotLr = micSpotLeftRight(app);
         result.micSpotFr = micSpotFrontRear(app);
         result.micPlace = micPlace(app);
+        result.micBody = micBody(app);
+        result.subPlace = subPlace(app);
 
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String preset = prefs.getString("last_selected_preset", null);
@@ -1306,9 +1527,11 @@ public final class RoomMeasurement {
                     + "usual cause, and the platform will not admit it.");
         }
 
-        // Live ambient noise floor measured directly from the physical cabin silence (first lead-in seconds)
+        // Live ambient noise floor measured directly from the physical cabin silence (first lead-in
+        // seconds). Into its own array: this used to be written into noiseFloorDb16, which the
+        // anchor channel's deconvolved floor overwrites later in the same run.
         if (got >= lead) {
-            sweep.noiseFloor(asFloat, lead, result.noiseFloorDb16);
+            sweep.noiseFloor(asFloat, lead, result.ambientNoiseDb16);
             float noisePeak = 0f;
             double noiseSumSq = 0;
             for (int i = 0; i < lead; i++) {
@@ -1443,7 +1666,9 @@ public final class RoomMeasurement {
             }
         }
 
-        // Ambient noise floor reported is that of the anchor channel
+        // The deconvolved floor reported is that of the anchor channel. This no longer destroys the
+        // measured cabin silence: that lives in result.ambientNoiseDb16 and the two are different
+        // quantities - one comes from the impulse response, the other from the car.
         if (refIdx >= 0 && result.channels[refIdx] != null) {
             System.arraycopy(result.channels[refIdx].noiseBandsDb, 0, result.noiseFloorDb16, 0, NativeSweep.BAND_COUNT);
         }
@@ -1593,6 +1818,27 @@ public final class RoomMeasurement {
         }
     }
 
+    /**
+     * Loudspeaker height above the listener's ear line, in centimetres.
+     *
+     * 🧩 Door cards put a woofer well below the ears in every ordinary car, and a boot subwoofer
+     * lower still. The values are approximate on purpose: they change a path length by a few
+     * centimetres, which is a few hundredths of a millisecond - small, but it is the difference
+     * between a model that knows the speaker is under the window and one that thinks it is in it.
+     */
+    private static float getSpeakerZ(Channel ch) {
+        switch (ch) {
+            case SUBWOOFER:
+                return SPEAKER_Z_SUB_CM;
+            case FRONT_LEFT:
+            case FRONT_RIGHT:
+            case REAR_LEFT:
+            case REAR_RIGHT:
+            default:
+                return SPEAKER_Z_DOOR_CM;
+        }
+    }
+
     private static float getSpeakerY(Channel ch, float distListen) {
         switch (ch) {
             case FRONT_LEFT:
@@ -1696,17 +1942,30 @@ public final class RoomMeasurement {
         final float distListen = result.listeningDistanceCm > 0 ? (float) result.listeningDistanceCm : (float) DEFAULT_LISTENING_DIST_CM;
         final float speedOfSoundCmMs = 34.3f; // 343 m/s = 34.3 cm/ms
 
-        // 1. Determine physical microphone position in cabin coordinates (origin (0,0) is dash head unit)
+        // 1. Physical microphone position in cabin coordinates. Origin (0,0) is the head unit on
+        //    the dash for the plan, and the listener's EAR LINE for height - the scene is built for
+        //    a head, not for a microphone, so the number that matters most is zero by construction.
+        //
+        //    Until 12.09.2026 this threw the owner's answer away: every place except the headrest
+        //    collapsed to (0,0), so the dot dragged across the car picture changed the report and
+        //    nothing else. It is read properly now - see micSpotLr/micSpotFr and MIC_PLACE_HEIGHT_CM.
         final float micX;
         final float micY;
+        final float micZ;
         if (result.micPlace == 9) {
-            // Driver headrest: microphone was placed right at the driver's ears
+            // Driver headrest: the microphone was put where the ears are, which is the one case
+            // where no re-projection is needed at all.
             micX = (result.micSpotLr > 0.2f) ? 35f : -35f;
             micY = distListen;
+            micZ = 0f;
         } else {
-            // Built-in head unit mic (or dashboard / center binnacle)
-            micX = 0f;
-            micY = 0f;
+            // The dot, in centimetres: +1 is against the door, +1 front is the dash, -1 front is
+            // the back seat. Clamped, because a saved value from an older build may be anything.
+            float lr = Math.max(-1f, Math.min(1f, result.micSpotLr));
+            float fr = Math.max(-1f, Math.min(1f, result.micSpotFr));
+            micX = lr * CABIN_HALF_WIDTH_CM;
+            micY = (1f - fr) * 0.5f * (distListen + 95f);
+            micZ = micHeightCm(result.micPlace);
         }
 
         // 2. Determine target listener listening position (Xt, Yt)
@@ -1737,9 +1996,15 @@ public final class RoomMeasurement {
             Channel ch = allChannels[i];
             float sx = getSpeakerX(ch);
             float sy = getSpeakerY(ch, distListen);
+            float sz = getSpeakerZ(ch);
 
-            double dMic = Math.sqrt((sx - micX) * (sx - micX) + (sy - micY) * (sy - micY));
-            double dTarget = Math.sqrt((sx - targetX) * (sx - targetX) + (sy - targetY) * (sy - targetY));
+            // Three dimensions, not two. A dome-light microphone is 45 cm above the ears and a door
+            // woofer 25 cm below them: in plan those are the same point and the height is the whole
+            // of the difference. The ear line is z = 0, so the listener's own z is zero as well.
+            double dMic = Math.sqrt((sx - micX) * (sx - micX) + (sy - micY) * (sy - micY)
+                    + (sz - micZ) * (sz - micZ));
+            double dTarget = Math.sqrt((sx - targetX) * (sx - targetX) + (sy - targetY) * (sy - targetY)
+                    + sz * sz);
             float deltaDistCm = (float) (dTarget - dMic);
             float deltaTMs = deltaDistCm / speedOfSoundCmMs;
 
@@ -1950,30 +2215,60 @@ public final class RoomMeasurement {
         }
         result.subGain = subSettings[1];
 
-        // 5. Account for microphone physical placement and cavity acoustics
-        if (result.micPlace == 8) { // Built-in head unit mic (front panel 1.5-2 mm aperture)
-            // Compensate Helmholtz cavity resonance: front panel pinhole boosts 2.8-3.2 kHz by +4..+6 dB.
-            // Restore speech presence cut in bands 11 & 12 (2.5 kHz & 4.0 kHz)
+        // 5. Two corrections, from two different questions.
+        //
+        //    Construction first: what surrounds the capsule has a response of its own, and it is
+        //    the same response wherever that capsule is fitted. Until 12.09.2026 this was keyed on
+        //    the PLACE being "head unit", which meant an identical pinhole anywhere else got
+        //    nothing, and an open capsule sitting on the dash got a cavity correction it has no
+        //    cavity for. effectiveMicBody() still answers "pinhole" for the head unit's own
+        //    microphone, so nothing changes for a measurement already made on this unit.
+        final int micBodyEff = effectiveMicBody(result.micBody, result.micPlace);
+        if (micBodyEff == MIC_BODY_PINHOLE) {
+            // 🧩 A 1.5-2 mm hole in front of the capsule is a Helmholtz cavity: it lifts roughly
+            // 2.8-3.2 kHz by +4..+6 dB, so the synthesis reads that lift as the room and cuts it.
+            // Give the speech presence back in bands 11 and 12 (2.5 and 4 kHz).
             for (int b : new int[]{11, 12}) {
                 if (result.autoEqGains16[b] < 6) {
                     result.autoEqGains16[b] = Math.min(6, result.autoEqGains16[b] + 2);
                 }
             }
-            // Pinhole acoustic low-frequency roll-off: cap sub-bass boost below 100 Hz to prevent speaker distortion
+            // And the same hole rolls the bottom off, which reads as a room that needs bass.
             for (int b = 0; b < 4; b++) {
                 if (result.autoEqGains16[b] > 8) {
                     result.autoEqGains16[b] = 8; // cap to +3 dB boost
                 }
             }
-            Log.i(TAG, "Applied Helmholtz cavity compensation for built-in head unit mic");
-        } else if (result.micPlace == 0) { // Windscreen
-            // Glass boundary reflection creates comb nulls above 2 kHz; do not over-boost
+            Log.i(TAG, "Mic construction: pinhole - cavity lift returned to bands 11-12, sub-bass boost capped");
+        } else if (micBodyEff == MIC_BODY_HOUSING) {
+            // 🧩 A capsule recessed in a fitting - a dome light, a mirror pod - is shadowed rather
+            // than resonant: a broad loss at the top instead of a peak in the middle. Cap the
+            // treble boost so the synthesis does not try to correct the housing with the speakers.
+            for (int b = 13; b < NativeSweep.BAND_COUNT; b++) {
+                if (result.autoEqGains16[b] > 7) {
+                    result.autoEqGains16[b] = 7;
+                }
+            }
+            Log.i(TAG, "Mic construction: recessed in a housing - treble boost capped above 8 kHz");
+        } else if (micBodyEff == MIC_BODY_LAVALIER) {
+            // 🧩 Foam costs a little air and nothing else.
+            for (int b = 14; b < NativeSweep.BAND_COUNT; b++) {
+                if (result.autoEqGains16[b] > 7) {
+                    result.autoEqGains16[b] = 7;
+                }
+            }
+            Log.i(TAG, "Mic construction: foam-covered clip-on - top boost capped");
+        }
+
+        //    Placement second, and it is a different matter: glass beside the capsule is a boundary,
+        //    not a housing. This one stays keyed on the place, because that is what it is about.
+        if (result.micPlace == 0) { // Windscreen
             for (int b = 10; b < NativeSweep.BAND_COUNT; b++) {
                 if (result.autoEqGains16[b] > 7) {
                     result.autoEqGains16[b] = 7; // cap to +1.5 dB
                 }
             }
-            Log.i(TAG, "Applied boundary reflection limiting for windscreen-mounted mic");
+            Log.i(TAG, "Mic placement: windscreen - boundary reflection limiting applied");
         }
 
         Log.i(TAG, String.format(Locale.US,
@@ -2454,7 +2749,8 @@ public final class RoomMeasurement {
             sb.append(HardwareProfile.screenDescription(context)).append('\n');
             if (result.microphone != null) sb.append(result.microphone).append('\n');
             sb.append("microphone placed: ").append(micSpotDescription(context))
-                    .append(", on the ").append(micPlaceDescription(context)).append('\n');
+                    .append(", on the ").append(micPlaceDescription(context))
+                    .append(", built in: ").append(micBodyDescription(context)).append('\n');
             if (result.focus != null) {
                 sb.append("audio focus: ").append(result.focus);
                 String lost = focusLostDuringPass;
@@ -2530,7 +2826,12 @@ public final class RoomMeasurement {
                 }
                 sb.append("\n");
             }
-            sb.append("Ambient noise dB:     ");
+            sb.append("Cabin silence dB:     ");
+            for (float band : result.ambientNoiseDb16) {
+                sb.append(String.format(Locale.US, " %.1f", band));
+            }
+            sb.append("\n");
+            sb.append("Deconv. noise dB:     ");
             for (float band : result.noiseFloorDb16) {
                 sb.append(String.format(Locale.US, " %.1f", band));
             }

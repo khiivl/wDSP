@@ -1903,6 +1903,20 @@ public class McuService extends Service implements LocationListener {
         setPowerAmpVol();
     }
 
+    /**
+     * Packs the eight per-band Q switches into one byte of the {@code 0x80} frame.
+     *
+     * <p>🔴 **The MCU ignores this byte today, and the switches are kept on purpose.** In
+     * {@code FUN_080050d4} the firmware ORs bit 5 into every equaliser write unconditionally, so
+     * every band is Q = 2.2 whatever the screen says - see
+     * {@code .agents/platform/03-SOUND-PROCESSOR.md} §7 and {@code 15-BU32107-REGISTERS.md} §4.3.
+     * Bit 6 is nailed high in the same place, which is why front and rear are mirrored.
+     *
+     * <p>The owner's decision, 12.09.2026: leave the control standing. One byte at
+     * {@code 0x08005112} frees Q, and firmware patching is on the road - see
+     * {@code 04-FIRMWARE-PATCHING.md}. Deleting a control that will work again is more expensive
+     * than an inert one, and this note exists so that nobody removes it as dead interface.
+     */
     private byte calculateQByte(String preset, int offset) {
         int r = 0;
         for (int i = 0; i < 8; i++) {

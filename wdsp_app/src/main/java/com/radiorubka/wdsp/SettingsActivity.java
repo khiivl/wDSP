@@ -1599,6 +1599,8 @@ public class SettingsActivity extends AppCompatActivity {
             micSpot.setOnBalanceChangeListener((lr, fr) -> RoomMeasurement.setMicSpot(this, lr, fr));
 
             wireMicPlace();
+            wireMicBody();
+            wireSubPlace();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_left, -MIC_NUDGE, 0f);
@@ -1977,6 +1979,41 @@ public class SettingsActivity extends AppCompatActivity {
         if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
         spinner.setOnItemClickListener((parent, view, position, id) ->
                 RoomMeasurement.setMicPlace(this, position));
+    }
+
+    /**
+     * What the microphone is built into - asked separately from where it is, because the two are
+     * independent: a capsule behind a pinhole behaves the same on a dashboard and in a headrest,
+     * and an open capsule in the middle of a fascia is nothing like one recessed in a dome fitting.
+     *
+     * <p>Left empty until somebody chooses, for the same reason as the place above.
+     */
+    private void wireMicBody() {
+        android.widget.AutoCompleteTextView spinner = findViewById(R.id.spinner_room_mic_body);
+        if (spinner == null) return;
+        String[] names = RoomMeasurement.micBodyNames(this);
+        spinner.setAdapter(new ThemeManager.ThemedDropdownAdapter<>(this, names));
+        int chosen = RoomMeasurement.micBody(this);
+        if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
+        spinner.setOnItemClickListener((parent, view, position, id) ->
+                RoomMeasurement.setMicBody(this, position));
+    }
+
+    /**
+     * Where the subwoofer stands. Asked because it moves the box by a metre or more, and a metre is
+     * three milliseconds - six steps of the delay slider, which is one of the few things that can
+     * be set on this hardware without patching the MCU. It is not asked in order to change the
+     * tone: at those frequencies the cabin is smaller than the wave and the air moves as one.
+     */
+    private void wireSubPlace() {
+        android.widget.AutoCompleteTextView spinner = findViewById(R.id.spinner_room_sub_place);
+        if (spinner == null) return;
+        String[] names = RoomMeasurement.subPlaceNames(this);
+        spinner.setAdapter(new ThemeManager.ThemedDropdownAdapter<>(this, names));
+        int chosen = RoomMeasurement.subPlace(this);
+        if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
+        spinner.setOnItemClickListener((parent, view, position, id) ->
+                RoomMeasurement.setSubPlace(this, position));
     }
 
     private void wireMicNudge(BalancePointerView pointer, int buttonId, float dLr, float dFr) {

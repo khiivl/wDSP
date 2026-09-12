@@ -483,4 +483,13 @@ Implicit global: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Tipul de montare</string>
+    <string name="room_mic_body_open">Capsulă deschisă, fără obstacole</string>
+    <string name="room_mic_body_pinhole">În spatele unui orificiu mic din panou</string>
+    <string name="room_mic_body_housing">Încastrat în carcasă sau plafonieră</string>
+    <string name="room_mic_body_lavalier">Tip lavalieră, cu burete de protecție</string>
+    <string name="room_sub_place_hint">Amplasarea subwooferului</string>
+    <string name="room_sub_place_boot">În portbagaj</string>
+    <string name="room_sub_place_shelf">Pe polița din spate</string>
+    <string name="room_sub_place_underseat">Sub scaun</string>
 </resources>

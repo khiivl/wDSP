@@ -483,5 +483,14 @@ Globális alapértelmezett: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+    <string name="room_mic_body_hint">Beépítés jellege</string>
+    <string name="room_mic_body_open">Nyitott kapszula, szabadon</string>
+    <string name="room_mic_body_pinhole">Előlap kis furata mögött</string>
+    <string name="room_mic_body_housing">Házba vagy mennyezeti lámpába süllyesztve</string>
+    <string name="room_mic_body_lavalier">Csíptetős, szivacsos védővel</string>
+    <string name="room_sub_place_hint">Subwoofer helye</string>
+    <string name="room_sub_place_boot">Csomagtartóban</string>
+    <string name="room_sub_place_shelf">Kalaptartón</string>
+    <string name="room_sub_place_underseat">Ülés alatt</string>
 </resources>
 

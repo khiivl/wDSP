@@ -2704,6 +2704,72 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- A second question, and deliberately not part of the first: where the microphone
+                     is decides path length, what it is built into decides the response of whatever
+                     surrounds the capsule. Open in the middle of a fascia and open inside a dome
+                     fitting are different things, and either can be at any of the places above. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_room_mic_body"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/room_mic_body_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:boxStrokeWidth="1.2dp"
+                    app:endIconTint="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_room_mic_body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:paddingVertical="8dp"
+                        android:textColor="@color/cyan_custom" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- The subwoofer's own place. At these frequencies the cabin is smaller than the
+                     wavelength, so this barely changes the tone - but it changes the path length,
+                     and the delay line is one of the few things reachable without patching the MCU.
+                     A boot and an under-seat box are more than a metre apart: six slider steps. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_room_sub_place"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/room_sub_place_hint"
+                    android:textColorHint="@color/text_theme_aware_2"
+                    app:boxBackgroundColor="@color/card_bg_theme_aware"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxStrokeColor="@color/cyan_custom"
+                    app:boxStrokeWidth="1.2dp"
+                    app:endIconTint="@color/cyan_custom"
+                    app:hintTextColor="@color/cyan_custom">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_room_sub_place"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:paddingVertical="8dp"
+                        android:textColor="@color/cyan_custom" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/room_mic_car_height"

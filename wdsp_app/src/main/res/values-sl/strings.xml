@@ -483,4 +483,13 @@ Globalno privzeto: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Način vgradnje</string>
+    <string name="room_mic_body_open">Odprta kapsula, prosto nameščena</string>
+    <string name="room_mic_body_pinhole">Za majhno luknjico v plošči</string>
+    <string name="room_mic_body_housing">Vdrt v ohišje ali stropno lučko</string>
+    <string name="room_mic_body_lavalier">Pripeti mikrofon s penasto kapico</string>
+    <string name="room_sub_place_hint">Mesto nizkotonskega zvočnika</string>
+    <string name="room_sub_place_boot">V prtljažniku</string>
+    <string name="room_sub_place_shelf">Na zadnji polici</string>
+    <string name="room_sub_place_underseat">Pod sedežem</string>
 </resources>

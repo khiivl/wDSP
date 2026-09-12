@@ -483,4 +483,13 @@ Globale standaard: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Type inbouw</string>
+    <string name="room_mic_body_open">Open capsule, vrijstaand</string>
+    <string name="room_mic_body_pinhole">Achter een klein gaatje in het paneel</string>
+    <string name="room_mic_body_housing">Verzonken in behuizing of plafondunit</string>
+    <string name="room_mic_body_lavalier">Dasspeld, met schuimkapje</string>
+    <string name="room_sub_place_hint">Plaats van de subwoofer</string>
+    <string name="room_sub_place_boot">In de kofferbak</string>
+    <string name="room_sub_place_shelf">Op de hoedenplank</string>
+    <string name="room_sub_place_underseat">Onder de stoel</string>
 </resources>

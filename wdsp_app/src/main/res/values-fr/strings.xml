@@ -483,4 +483,13 @@ Par défaut global : %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Type d\'intégration</string>
+    <string name="room_mic_body_open">Capsule ouverte, aucun obstacle</string>
+    <string name="room_mic_body_pinhole">Derrière un petit trou dans le panneau</string>
+    <string name="room_mic_body_housing">Encastré dans un boîtier ou plafonnier</string>
+    <string name="room_mic_body_lavalier">Cravate, avec bonnette en mousse</string>
+    <string name="room_sub_place_hint">Emplacement du caisson de basses</string>
+    <string name="room_sub_place_boot">Dans le coffre</string>
+    <string name="room_sub_place_shelf">Sur la plage arrière</string>
+    <string name="room_sub_place_underseat">Sous le siège</string>
 </resources>

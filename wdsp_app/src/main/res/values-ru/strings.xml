@@ -416,7 +416,7 @@
     <string name="debug_sweep_button">Диагностический свип</string>
     <string name="debug_sweep_done">Диагностический замер выполнен. Готово к сохранению архива.</string>
     <string name="debug_sweep_nothing">Диагностических замеров еще нет</string>
-    <string name="debug_sweep_running">Диагностический свип: %1</string>
+    <string name="debug_sweep_running">Диагностический свип: %1$s</string>
     <string name="room_config_change_warning">Изменение конфигурации авто (кузов/сабвуфер) требует нового акустического замера. Промежуточные данные калибровки будут обновлены во время следующего свипа. (Ваши сохраненные пресеты НЕ удаляются).</string>
     <string name="spectrum_mode_label">Спектр:</string>
     <string name="spectrum_mode_calc">Расчетный</string>
@@ -454,7 +454,7 @@
     <string name="room_wizard_body_sedan">Средняя посадка (Седан / SUV — 75 см)</string>
     <string name="room_wizard_body_minivan">Далекая посадка (Минивэн / Бус — 90 см)</string>
     <string name="room_wizard_distance_label">Расстояние от микрофона до ушей:</string>
-    <string name="room_wizard_distance_value">%1 см</string>
+    <string name="room_wizard_distance_value">%1$d см</string>
     <string name="room_wizard_start">Начать калибровку</string>
     <string name="room_wizard_cancel">Отмена</string>
     <string name="room_wizard_progress_title">Выполняется калибровка акустики</string>
@@ -462,17 +462,17 @@
     <string name="room_wizard_report_title">Результаты калибровки и Auto-EQ</string>
     <string name="room_wizard_polarity_warning_title">⚠️ ВНИМАНИЕ: ПОЛЯРНОСТЬ ДИНАМИКОВ!</string>
     <string name="room_wizard_crossover_title">Акустический кроссовер</string>
-    <string name="room_wizard_crossover_hpf">Срез мидбасов HPF: %1 Гц (защита от перегрузки)</string>
+    <string name="room_wizard_crossover_hpf">Срез мидбасов HPF: %1$d Гц (защита от перегрузки)</string>
     <string name="room_wizard_crossover_hpf_through">Срез мидбасов HPF: Без среза (Through / полный диапазон)</string>
-    <string name="room_wizard_crossover_sub">Сабвуфер LPF: %1 Гц | Уровень: %2$+d дБ</string>
+    <string name="room_wizard_crossover_sub">Сабвуфер LPF: %1$d Гц | Уровень: %2$+d дБ</string>
     <string name="room_wizard_crossover_no_sub">Сабвуфер: Не установлен (полный диапазон / защита инфразвука)</string>
     <string name="room_wizard_delays_title">Временные задержки каналов</string>
-    <string name="room_wizard_delays_format">ПЛ: %1$.1f мс (%2) | ПП: %3$.1f мс (%4)\nЗЛ: %5$.1f мс (%6) | ЗП: %7$.1f мс (%8)</string>
-    <string name="room_wizard_autoeq_title">Синтезированная кривая Auto-EQ (%1, 16 полос)</string>
+    <string name="room_wizard_delays_format">ПЛ: %1$.1f мс (%2$d) | ПП: %3$.1f мс (%4$d)\nЗЛ: %5$.1f мс (%6$d) | ЗП: %7$.1f мс (%8$d)</string>
+    <string name="room_wizard_autoeq_title">Синтезированная кривая Auto-EQ (%1$s, 16 полос)</string>
     <string name="room_wizard_btn_apply">Применить Auto-EQ</string>
     <string name="room_wizard_btn_save">Сохранить архив (.zip)</string>
     <string name="room_wizard_btn_close">Закрыть</string>
-    <string name="room_wizard_applied_toast">Пресет \"%1\" успешно применен и активирован!</string>
+    <string name="room_wizard_applied_toast">Пресет \"%1$s\" успешно применен и активирован!</string>
     <string name="screen_topology_button">Топология экрана</string>
     <string name="screen_topology_title">Топология экрана и окон</string>
     <string name="screen_topology_copy">Копировать</string>
@@ -481,4 +481,13 @@
     <string name="room_mic_place_headunit">Встроенный микрофон магнитолы (отверстие на панели)</string>
     <string name="room_mic_place_headrest">Подголовник водителя (уровень ушей)</string>
     <string name="room_mic_place_armrest">Центральный подлокотник / консоль</string>
+    <string name="room_mic_body_hint">Как встроен</string>
+    <string name="room_mic_body_open">Открытый капсюль, ничего вокруг</string>
+    <string name="room_mic_body_pinhole">За маленьким отверстием в панели</string>
+    <string name="room_mic_body_housing">Утоплен в корпусе или плафоне</string>
+    <string name="room_mic_body_lavalier">Петличный, с поролоновым колпачком</string>
+    <string name="room_sub_place_hint">Где стоит сабвуфер</string>
+    <string name="room_sub_place_boot">В багажнике</string>
+    <string name="room_sub_place_shelf">На задней полке</string>
+    <string name="room_sub_place_underseat">Под сиденьем</string>
 </resources>

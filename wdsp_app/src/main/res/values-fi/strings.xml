@@ -483,4 +483,13 @@ Yleinen oletus: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Asennustapa</string>
+    <string name="room_mic_body_open">Avoin kapseli, esteetön</string>
+    <string name="room_mic_body_pinhole">Paneelin pienen reiän takana</string>
+    <string name="room_mic_body_housing">Upotettu koteloon tai sisävaloon</string>
+    <string name="room_mic_body_lavalier">Solmiomikrofoni, vaahtomuovisuojus</string>
+    <string name="room_sub_place_hint">Subwooferin sijainti</string>
+    <string name="room_sub_place_boot">Tavaratilassa</string>
+    <string name="room_sub_place_shelf">Hattuhyllyllä</string>
+    <string name="room_sub_place_underseat">Istuimen alla</string>
 </resources>

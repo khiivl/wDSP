@@ -416,6 +416,15 @@
     <string name="room_mic_place_headunit">Вбудований мікрофон магнітоли (отвір на панелі)</string>
     <string name="room_mic_place_headrest">Підголівник водія (рівень вух)</string>
     <string name="room_mic_place_armrest">Центральний підлокітник / консоль</string>
+    <string name="room_mic_body_hint">Як вбудований</string>
+    <string name="room_mic_body_open">Відкритий капсуль, нічого навколо</string>
+    <string name="room_mic_body_pinhole">За малим отвором у панелі</string>
+    <string name="room_mic_body_housing">Утоплений у корпусі чи плафоні</string>
+    <string name="room_mic_body_lavalier">Петличний, із поролоновим ковпачком</string>
+    <string name="room_sub_place_hint">Де стоїть сабвуфер</string>
+    <string name="room_sub_place_boot">У багажнику</string>
+    <string name="room_sub_place_shelf">На задній полиці</string>
+    <string name="room_sub_place_underseat">Під сидінням</string>
     <!-- Стилі візуалізатора статусного рядка та палітри FireLamp EffectVU -->
     <string name="status_bar_visualizer_style">Стиль візуалізації</string>
     <string name="status_bar_style_classic">Класика</string>

@@ -483,4 +483,13 @@ Bendras numatytasis: %1$s</string>
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Montavimo būdas</string>
+    <string name="room_mic_body_open">Atvira kapsulė, neuždengta</string>
+    <string name="room_mic_body_pinhole">Už nedidelės angos skydelyje</string>
+    <string name="room_mic_body_housing">Įgilintas korpuse ar lubų šviestuve</string>
+    <string name="room_mic_body_lavalier">Prisegamas, su porolono apsauga</string>
+    <string name="room_sub_place_hint">Žemų dažnių garsiakalbio vieta</string>
+    <string name="room_sub_place_boot">Bagažinėje</string>
+    <string name="room_sub_place_shelf">Ant galinės palangės</string>
+    <string name="room_sub_place_underseat">Po sėdyne</string>
 </resources>

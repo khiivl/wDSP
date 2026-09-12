@@ -483,5 +483,14 @@ Globalno zadano: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
+    <string name="room_mic_body_hint">Način ugradnje</string>
+    <string name="room_mic_body_open">Otvorena kapsula, bez zapreka</string>
+    <string name="room_mic_body_pinhole">Iza malog otvora na ploči</string>
+    <string name="room_mic_body_housing">Uvučen u kućište ili krovno svjetlo</string>
+    <string name="room_mic_body_lavalier">Bubica / kravatni, sa spužvicom</string>
+    <string name="room_sub_place_hint">Položaj subwoofera</string>
+    <string name="room_sub_place_boot">U prtljažniku</string>
+    <string name="room_sub_place_shelf">Na stražnjoj polici</string>
+    <string name="room_sub_place_underseat">Ispod sjedala</string>
 </resources>
 

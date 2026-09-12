@@ -480,4 +480,13 @@
     <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
     <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_body_hint">Tipo de montaje</string>
+    <string name="room_mic_body_open">Cápsula abierta, sin obstáculos</string>
+    <string name="room_mic_body_pinhole">Tras un pequeño orificio en el panel</string>
+    <string name="room_mic_body_housing">Empotrado en carcasa o plafón</string>
+    <string name="room_mic_body_lavalier">De solapa, con capuchón de espuma</string>
+    <string name="room_sub_place_hint">Ubicación del subwoofer</string>
+    <string name="room_sub_place_boot">En el maletero</string>
+    <string name="room_sub_place_shelf">En la bandeja trasera</string>
+    <string name="room_sub_place_underseat">Bajo el asiento</string>
 </resources>
