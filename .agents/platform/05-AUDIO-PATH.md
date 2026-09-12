@@ -238,6 +238,10 @@ regardless of source.
 ⚠️ This contradicts the Android CDD and most advice on the internet, which state that
 `VOICE_RECOGNITION` and `UNPROCESSED` bypass processing. On this platform they do not.
 
+📌 What `/vendor/etc/audio_effects.xml` does and does not promise is measured further down, in
+*"Suspending it from the app does not work, and measuring proves it does not matter"* — including why
+`UNPROCESSED` escapes the chain in a bare capture and stops escaping it the moment something plays.
+
 The remaining route is `mmap_noirq` on `device=1`, reachable only through AAudio with
 `EXCLUSIVE` sharing from native code. Not tried yet.
 
@@ -588,6 +592,18 @@ UNPROCESSED   −30.6 −30.2 −29.1 −29.2 −31.1 −14.6 −7.9  −8.9  �
 bass" theory — without it the bass reads slightly **lower**. Arrival 1.6 vs 1.7 ms, clarity 26.6 vs
 27.5 dB, peak −6.8 vs −6.7. All within what two consecutive sweeps of the same cabin differ by
 anyway.
+
+⚖️ **The same config, read alone, has produced the opposite conclusion elsewhere — do not let it back
+in.** Gemini's own knowledge tree carries a section (`12-MICROPHONE-PATH-HAL` §5, 10.09.2026) built
+on this very file: `unprocessed` is absent from `<preprocess>`, therefore — it argues — the source is
+a clean full-range channel needing no root. The evidence is right (verified on the unit 12.09.2026:
+`grep -c unprocessed /vendor/etc/audio_effects.xml` → 0) and the conclusion is wrong here, because
+the policy attaches the chain when an input and an output are live together, and because every source
+lands on `FE_ST_CAPTURE_DSP` anyway. What actually wins the microphone is **being first on the
+stream** — open at 48 kHz before the assistant and it attaches to ours (see *"Open first, and the
+assistant rides along"*, 11.09.2026); root buys exactly one action, stopping the assistant when the
+stream is already held at 16 kHz. That is why importing that section as a second document was
+dropped on the owner's decision, 12.09.2026: one subject, one place.
 
 🧩 The low-end roll-off is the microphone on the dashboard and the absent subwoofer, not the
 suppressor. `UNPROCESSED` is kept in `RoomMeasurement` because it costs nothing, falls back
