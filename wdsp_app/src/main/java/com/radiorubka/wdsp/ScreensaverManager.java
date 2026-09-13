@@ -1166,6 +1166,18 @@ public final class ScreensaverManager {
 
     private void tick() {
         updatePlaybackBelief();
+        // A call takes the screen, whatever else is true (owner, 14.09.2026: "подзвонили -
+        // скрінсейвер зняти"). Removed even in preview, because the call's own screen is what the
+        // person needs to see; and the idle clock is held at zero for the length of the call so
+        // the curtain does not drop the moment it ends.
+        if (CallState.isActive()) {
+            if (attached) {
+                Log.i(TAG, "Screensaver removed: a call is in progress");
+                hide();
+            }
+            resetIdleClock();
+            return;
+        }
         String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
         long idleMs = System.currentTimeMillis() - foregroundSince;
         Log.d(TAG, "TICK attached=" + attached + ", fg=" + foreground + ", lastFg=" + lastForeground
@@ -1259,6 +1271,7 @@ public final class ScreensaverManager {
      */
     private boolean mayShowOver(String foreground) {
         if (!isEnabled() || !screenOn || !canDrawOverlays()) return false;
+        if (CallState.isActive()) return false;
         if (isTrue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))) return false;
         if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))) return false;
         if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) return false;

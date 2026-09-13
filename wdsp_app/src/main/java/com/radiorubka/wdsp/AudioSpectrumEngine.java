@@ -890,7 +890,7 @@ public class AudioSpectrumEngine {
                 Visualizer v = visualizer;
                 if (v == null) break;
                 try {
-                    if (v.getWaveForm(buffer) == Visualizer.SUCCESS) {
+                    if (!pausedForCall && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
                         noteSignal(buffer);
                         nativeAnalyzer.push(buffer, size);
                         synchronized (waveformLock) {
@@ -922,6 +922,10 @@ public class AudioSpectrumEngine {
                 NativeAnalyzer analyzer = nativeAnalyzer;
                 if (analyzer == null) break;
                 try {
+                    if (pausedForCall) {
+                        Thread.sleep(50);   // interruption on stop lands in the catch below
+                        continue;
+                    }
                     analyzer.process(20);
                 } catch (Throwable t) {
                     break;
@@ -1037,6 +1041,7 @@ public class AudioSpectrumEngine {
     }
 
     private void dispatchNativeFrame() {
+        if (pausedForCall) return;
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid() || listeners.isEmpty()) return;
 
@@ -1206,6 +1211,37 @@ public class AudioSpectrumEngine {
      * head units with custom audio policies) and immediately asks the resolver whether this really
      * is where the audio is. The watchdog keeps asking later if it turns out to be silent.
      */
+    /**
+     * The analyser is paused for the length of a phone call and resumed after it (owner,
+     * 14.09.2026: "подзвонили - аналізатор на паузу").
+     *
+     * <p>🔴 Paused, NOT stopped: the capture stays open and the microphone stays ours. The owner,
+     * the same night: "не треба віддавати мікрофон, дріт доказав". Measured on 13.09.2026 over four
+     * Bluetooth calls - our 48 kHz capture and the call's own recorder ran side by side, each with
+     * its own session and effects, with no echo or noise at the far end. Letting go would only
+     * invite whoever grabs the input next to set its rate for everybody, which is the one thing
+     * that does hurt. So during a call the samples are read and discarded: nothing is fed to the
+     * analyser, nothing is analysed, nothing is drawn.
+     *
+     * <p>The source-state check is frozen too, because its radio branch is able to switch the
+     * pipeline - and switching releases the microphone. Whatever pipeline was running when the call
+     * began is the one running when it ends.
+     *
+     * <p>Set from McuService's poll; read by the capture, analysis and display threads.
+     */
+    private volatile boolean pausedForCall;
+
+    public synchronized void setCallActive(boolean active) {
+        if (active == pausedForCall) return;
+        pausedForCall = active;
+        if (active) {
+            Log.i(TAG, "call in progress: analyser paused, capture and microphone kept");
+        } else {
+            Log.i(TAG, "call ended: analyser resumed");
+            if (!listeners.isEmpty() && visualizer == null && !isRadioCaptureActive()) start();
+        }
+    }
+
     public synchronized void start() {
         if (visualizer != null) return;
         // A resolution is in flight and has deliberately released the capture; its callback will
@@ -1250,6 +1286,7 @@ public class AudioSpectrumEngine {
 
         boolean started = radioMicCapture.start(appContext, (boosted, raw, len, captureGain) -> {
             if (!capturePolling) return;
+            if (pausedForCall) return;   // the stream stays open; the samples go nowhere
             noteMicSignal(boosted, len);
             NativeAnalyzer analyzer = nativeAnalyzer;
             if (analyzer != null) {
@@ -1289,6 +1326,10 @@ public class AudioSpectrumEngine {
                 NativeAnalyzer analyzer = nativeAnalyzer;
                 if (analyzer == null) break;
                 try {
+                    if (pausedForCall) {
+                        Thread.sleep(50);   // interruption on stop lands in the catch below
+                        continue;
+                    }
                     analyzer.process(20);
                 } catch (Throwable t) {
                     break;
@@ -1320,6 +1361,7 @@ public class AudioSpectrumEngine {
     }
 
     public synchronized void checkSourceState() {
+        if (pausedForCall) return;
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
         boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
@@ -1427,6 +1469,7 @@ public class AudioSpectrumEngine {
                 v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
                     @Override
                     public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
+                        if (pausedForCall) return;
                         noteSignal(waveform);
                         processWaveform(waveform, samplingRate);
                         if (waveform != null) {
@@ -1440,6 +1483,7 @@ public class AudioSpectrumEngine {
 
                     @Override
                     public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+                        if (pausedForCall) return;
                         processFft(fft, samplingRate);
                     }
                 }, rate, true, true);

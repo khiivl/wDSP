@@ -787,19 +787,29 @@ public class McuService extends Service implements LocationListener {
         }
     }
 
+    /**
+     * Every read of a preset's DSP values goes through here, so that the service preset for calls
+     * comes from its array in {@link CallPreset} rather than from whatever {@code Call_*} keys may or
+     * may not be on disk. Built over {@code prefs} on each call instead of kept as a second field:
+     * {@code prefs} is assigned in two places, and a mirror of it would be a third that can drift.
+     */
+    private SharedPreferences presetPrefs() {
+        return CallPreset.readView(prefs);
+    }
+
     private void loadPresetData(String preset) {
         for (int i = 0; i < 16; i++) {
-            cachedGains[i] = prefs.getInt(preset + "_g" + i, 6);
+            cachedGains[i] = presetPrefs().getInt(preset + "_g" + i, 6);
         }
         cachedQByte1 = calculateQByte(preset, 0);
         cachedQByte2 = calculateQByte(preset, 8);
-        cachedSubFreq = prefs.getInt(preset + "_sub_f", 5);
-        cachedSubGain = prefs.getInt(preset + "_sub_g", 0);
-        cachedSubComp = prefs.getBoolean(preset + "_sub_comp", false);
-        cachedFmEn = prefs.getBoolean(preset + "_fm_en", false);
-        cachedFatEn = prefs.getBoolean(preset + "_fat_en", false);
-        cachedFmCal = prefs.getInt(preset + "_fm_cal", 25);
-        cachedFmStr = prefs.getInt(preset + "_fm_str", 100);
+        cachedSubFreq = presetPrefs().getInt(preset + "_sub_f", 5);
+        cachedSubGain = presetPrefs().getInt(preset + "_sub_g", 0);
+        cachedSubComp = presetPrefs().getBoolean(preset + "_sub_comp", false);
+        cachedFmEn = presetPrefs().getBoolean(preset + "_fm_en", false);
+        cachedFatEn = presetPrefs().getBoolean(preset + "_fat_en", false);
+        cachedFmCal = presetPrefs().getInt(preset + "_fm_cal", 25);
+        cachedFmStr = presetPrefs().getInt(preset + "_fm_str", 100);
 
         // GALA. Global mode takes the whole set out of the preset, so read it from the same place
         // the screen writes it - otherwise the service goes on computing with the preset's numbers
@@ -812,7 +822,7 @@ public class McuService extends Service implements LocationListener {
         final String gKeyHoldMs = gg ? PREF_GALA_GLOBAL_HOLD_MS : preset + "_gala_hold_ms";
         cachedGalaEn = gg
                 ? prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
-                : prefs.getBoolean(preset + "_gala_enabled", false);
+                : presetPrefs().getBoolean(preset + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(gKeyInc, 15);
         // Clamped exactly as MainActivity.loadPreset clamps it, and for the same reason: the
         // standstill slider used to reach 300 km/h and now stops at 200.
@@ -824,7 +834,7 @@ public class McuService extends Service implements LocationListener {
         // owner then opened the main screen, touched anything, autosave wrote the clamped value
         // back, and GALA came alive - which reads as "it only works when I go to the main screen".
         cachedGalaMinV = Math.min(GALA_MIN_SPEED_CEILING, prefs.getInt(gKeyMinSpeed, 0));
-//        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
+//        cachedGalaMaxV = presetPrefs().getInt(preset + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(gKeyMaxAdj, 12);
         cachedGalaFadeDelayMs = prefs.getInt(gKeyFadeMs, 100);
         cachedGalaHoldMs = prefs.getInt(gKeyHoldMs, 1000);
@@ -1699,6 +1709,10 @@ public class McuService extends Service implements LocationListener {
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);
         }
+        // One reading of "is there a call" for this whole poll: the preset switch below and the
+        // analyser pause here must never disagree about it.
+        boolean inCall = CallState.isCallType(activeType);
+        AudioSpectrumEngine.getInstance().setCallActive(inCall);
         AudioSpectrumEngine.getInstance().checkSourceState();
 
         // Process the naming convention for the "unknown" preset.
@@ -1710,7 +1724,7 @@ public class McuService extends Service implements LocationListener {
             currentPlayer = "Default";
         }
         // If btcall_type, set the Player to be "Call".
-        if (activeType.equals("btcall_type")) {
+        if (inCall) {
             lastPlayerSource = "Call";
             processPlayerSwitch("Call");
         }
@@ -1730,6 +1744,14 @@ public class McuService extends Service implements LocationListener {
     private void processPlayerSwitch(String currentPlayer) {
         String presetToLoad = playerMap.get(currentPlayer);
         String defaultPreset = playerMap.get("Default");
+
+        // The service preset for calls is bound to the Call player and to nothing else, in either
+        // direction (owner, 14.09.2026: "не підшивається до чогось, не ставиться за замовчуванням").
+        // A map written by an older build, a restored backup or a hand-edited file may still say
+        // otherwise, so the map is not trusted on this point: Call as another player's preset, or
+        // as the default, is read as no mapping at all.
+        if (!"Call".equals(currentPlayer) && CallPreset.is(presetToLoad)) presetToLoad = null;
+        if (CallPreset.is(defaultPreset)) defaultPreset = null;
 
         // Process Call switch; If Call is the Player and the current Preset is not Call, queue to Call preset,
         // save last applied preset
@@ -1757,7 +1779,8 @@ public class McuService extends Service implements LocationListener {
         // ping-ponged; this project added the chain to fix presets not switching for unmapped
         // players, and did not exclude a player whose preset is already the right one.
         if (currentPlayer.equals("Call")) {
-            String callPreset = presetToLoad != null ? presetToLoad : "Call";
+            // Always the service preset: the Call player cannot be pointed at another one.
+            String callPreset = CallPreset.NAME;
             if (callPreset.equals(currentPresetName)) return;   // already there; nothing to decide
             presetBeforeCall = currentPresetName;
             presetToLoad = callPreset;
@@ -1794,6 +1817,7 @@ public class McuService extends Service implements LocationListener {
         }
         if (presetToLoad == null) {
             presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
+            if (CallPreset.is(presetToLoad)) presetToLoad = null;   // never the default, see above
         }
 
         // Process the switch if the current preset doesn't already match the Player.
@@ -1880,26 +1904,26 @@ public class McuService extends Service implements LocationListener {
 
     private void applyBassBoost() {
         sendToHardware(new byte[]{(byte) 0x88,
-                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
-                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
-                (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+                (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
+                (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
+                (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
     }
 
     private void applyFaderLoud() {
         sendToHardware(new byte[]{(byte) 0x81,
-                (byte) (prefs.getInt(currentPresetName + "_f_lr", 12) & 0xFF),
-                (byte) (prefs.getInt(currentPresetName + "_f_fr", 12) & 0xFF),
-                (byte) (prefs.getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
+                (byte) (presetPrefs().getInt(currentPresetName + "_f_lr", 12) & 0xFF),
+                (byte) (presetPrefs().getInt(currentPresetName + "_f_fr", 12) & 0xFF),
+                (byte) (presetPrefs().getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
     }
 
     private void applySpatialDelays() {
-        if (prefs.getBoolean(currentPresetName + "_d_en", false)) {
+        if (presetPrefs().getBoolean(currentPresetName + "_d_en", false)) {
             byte[] d8c = new byte[6]; d8c[0] = (byte) 0x8C;
-            d8c[1] = (byte) ((prefs.getInt(currentPresetName + "_d_fl", 0) * 5) & 0xFF);
-            d8c[2] = (byte) ((prefs.getInt(currentPresetName + "_d_fr", 0) * 5) & 0xFF);
-            d8c[3] = (byte) ((prefs.getInt(currentPresetName + "_d_rl", 0) * 5) & 0xFF);
-            d8c[4] = (byte) ((prefs.getInt(currentPresetName + "_d_rr", 0) * 5) & 0xFF);
-            d8c[5] = (byte) ((prefs.getInt(currentPresetName + "_d_sub", 0) * 5) & 0xFF);
+            d8c[1] = (byte) ((presetPrefs().getInt(currentPresetName + "_d_fl", 0) * 5) & 0xFF);
+            d8c[2] = (byte) ((presetPrefs().getInt(currentPresetName + "_d_fr", 0) * 5) & 0xFF);
+            d8c[3] = (byte) ((presetPrefs().getInt(currentPresetName + "_d_rl", 0) * 5) & 0xFF);
+            d8c[4] = (byte) ((presetPrefs().getInt(currentPresetName + "_d_rr", 0) * 5) & 0xFF);
+            d8c[5] = (byte) ((presetPrefs().getInt(currentPresetName + "_d_sub", 0) * 5) & 0xFF);
             sendToHardware(d8c);
         }
         else {
@@ -1909,13 +1933,13 @@ public class McuService extends Service implements LocationListener {
     }
 
     private void applySurroundDelays() {
-        if (prefs.getBoolean(currentPresetName + "_d1_en", false)) {
+        if (presetPrefs().getBoolean(currentPresetName + "_d1_en", false)) {
             byte[] d89 = new byte[6]; d89[0] = (byte) 0x89;
-            d89[1] = (byte) (138 + (prefs.getInt(currentPresetName + "_rsse_val", 10) - 10));
-            d89[2] = (byte) (prefs.getInt(currentPresetName + "_d1_fl", 0) & 0xFF);
-            d89[3] = (byte) (prefs.getInt(currentPresetName + "_d1_fr", 0) & 0xFF);
-            d89[4] = (byte) (prefs.getInt(currentPresetName + "_d1_rl", 0) & 0xFF);
-            d89[5] = (byte) (prefs.getInt(currentPresetName + "_d1_rr", 0) & 0xFF);
+            d89[1] = (byte) (138 + (presetPrefs().getInt(currentPresetName + "_rsse_val", 10) - 10));
+            d89[2] = (byte) (presetPrefs().getInt(currentPresetName + "_d1_fl", 0) & 0xFF);
+            d89[3] = (byte) (presetPrefs().getInt(currentPresetName + "_d1_fr", 0) & 0xFF);
+            d89[4] = (byte) (presetPrefs().getInt(currentPresetName + "_d1_rl", 0) & 0xFF);
+            d89[5] = (byte) (presetPrefs().getInt(currentPresetName + "_d1_rr", 0) & 0xFF);
             sendToHardware(d89);
         }
         else {
@@ -1955,7 +1979,7 @@ public class McuService extends Service implements LocationListener {
     private byte calculateQByte(String preset, int offset) {
         int r = 0;
         for (int i = 0; i < 8; i++) {
-            if (prefs.getBoolean(preset + "_q" + (offset + i), false)) r |= (1 << i);
+            if (presetPrefs().getBoolean(preset + "_q" + (offset + i), false)) r |= (1 << i);
         }
         return (byte) r;
     }
@@ -2079,7 +2103,7 @@ public class McuService extends Service implements LocationListener {
 
     public void setPowerAmpVol() {
 
-        int val = prefs.getInt(currentPresetName + "_power_vol", 0);
+        int val = presetPrefs().getInt(currentPresetName + "_power_vol", 0);
 
         backgroundHandler.post(() -> {
             byte[] bArr = {2, (byte) val}; // Sub-ID 2, followed by value

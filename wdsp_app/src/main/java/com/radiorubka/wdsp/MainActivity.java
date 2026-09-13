@@ -2183,6 +2183,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void savePreset(String name) {
         if (name == null || name.trim().isEmpty()) return;
+        // The service preset for calls is an array in CallPreset and is not edited (owner,
+        // 14.09.2026). Nothing of its own is stored - and McuService reads Call_* from the array
+        // anyway, so a write here would be both forbidden and ignored. The one thing still saved is
+        // GALA in global mode, because then it belongs to the car and not to any preset.
+        if (CallPreset.is(name)) {
+            if (isFullyInitialized && galaGlobalMode) {
+                SharedPreferences.Editor g = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+                putGalaGlobal(g);
+                g.apply();
+            }
+            return;
+        }
         SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i)));
@@ -2244,12 +2256,7 @@ public class MainActivity extends AppCompatActivity {
             // state AND all five parameters live in the shared keys, so changing preset no longer
             // changes how GALA behaves. With it off, everything goes into the preset as before.
             if (galaGlobalMode) {
-                e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
-                e.putInt(PREF_GALA_GLOBAL_INC, getIntSlider(seekGalaInc));
-                e.putInt(PREF_GALA_GLOBAL_MIN_SPEED, getIntSlider(seekGalaMinSpeed));
-                e.putInt(PREF_GALA_GLOBAL_MAX_ADJ, getIntSlider(seekGalaMaxAdj));
-                e.putInt(PREF_GALA_GLOBAL_FADE_MS, getIntSlider(seekGalaFadeMs));
-                e.putInt(PREF_GALA_GLOBAL_HOLD_MS, getIntSlider(seekGalaHoldMs));
+                putGalaGlobal(e);
             } else {
                 e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
                 e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
@@ -2262,9 +2269,23 @@ public class MainActivity extends AppCompatActivity {
         e.apply();
     }
 
+    /** The car-wide GALA keys. One place, used by the ordinary save and by the service preset. */
+    private void putGalaGlobal(SharedPreferences.Editor e) {
+        e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+        e.putInt(PREF_GALA_GLOBAL_INC, getIntSlider(seekGalaInc));
+        e.putInt(PREF_GALA_GLOBAL_MIN_SPEED, getIntSlider(seekGalaMinSpeed));
+        e.putInt(PREF_GALA_GLOBAL_MAX_ADJ, getIntSlider(seekGalaMaxAdj));
+        e.putInt(PREF_GALA_GLOBAL_FADE_MS, getIntSlider(seekGalaFadeMs));
+        e.putInt(PREF_GALA_GLOBAL_HOLD_MS, getIntSlider(seekGalaHoldMs));
+    }
+
     private void loadPreset(String name) {
         isUpdatingUi = true;
-        SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        // Through the CallPreset view, so the service preset shows what the chip actually gets -
+        // fader to the front, subwoofer down, flat - rather than every reader's own default. Until
+        // 14.09.2026 this screen showed the fader at centre for Call because it read defaults, and
+        // that was true only because the service was reading the same wrong defaults.
+        SharedPreferences p = CallPreset.readView(getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             int g = p.getInt(name + "_g" + i, 6);
             gainSliders.get(i).setValue((float) g);
@@ -2367,8 +2388,68 @@ public class MainActivity extends AppCompatActivity {
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
         }
         isUpdatingUi = false;
+        applyServicePresetLock(name);
         updateVisualizer();
         updateFmVisualizer();
+    }
+
+    /** Enabled state and alpha of each control as it was before the service preset locked it. */
+    private final Map<View, float[]> stateBeforeServiceLock = new HashMap<>();
+    private boolean serviceLockApplied;
+
+    /**
+     * Makes the service preset for calls read-only on screen (owner, 14.09.2026: not edited -
+     * no delays, subwoofer, surround or loudness, the fader not the user's to move, and the
+     * equaliser locked as well). savePreset already refuses to store anything for it; this stops
+     * the screen showing a slider that moves and then silently comes back.
+     *
+     * <p>Each control's own enabled state and alpha are remembered and restored exactly, because
+     * several of them are also driven by other logic - the two delay modes exclude each other, the
+     * loudness fix button comes and goes - and unlocking must not overwrite that.
+     *
+     * <p>GALA stays editable in global mode: then it belongs to the car, not to this preset.
+     */
+    private void applyServicePresetLock(String presetName) {
+        boolean lock = CallPreset.is(presetName);
+        if (lock == serviceLockApplied) return;
+        serviceLockApplied = lock;
+
+        if (!lock) {
+            for (Map.Entry<View, float[]> en : stateBeforeServiceLock.entrySet()) {
+                en.getKey().setEnabled(en.getValue()[0] != 0f);
+                en.getKey().setAlpha(en.getValue()[1]);
+            }
+            stateBeforeServiceLock.clear();
+            return;
+        }
+
+        List<View> controls = new ArrayList<>(gainSliders);
+        controls.addAll(qSwitches);
+        Collections.addAll(controls,
+                seekSubGain, spinnerSubFreq,
+                seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear,
+                spinnerBassFreqFront, spinnerBassFreqRear,
+                seekFaderLr, seekFaderFr,
+                switchLoud, switchFmEnable, switchFatigueEnable, switchFmSubComp,
+                seekFmCalVol, seekFmStrength, btnLoudFix,
+                switchPreciseEnable, seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub,
+                switchLegacyEnable, seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE);
+        for (int id : new int[]{R.id.btn_minus, R.id.btn_plus, R.id.btn_center,
+                R.id.btn_pwr_vol_minus, R.id.btn_pwr_vol_plus,
+                R.id.btn_fader_lr_minus, R.id.btn_fader_lr_plus,
+                R.id.btn_fader_fr_minus, R.id.btn_fader_fr_plus}) {
+            controls.add(findViewById(id));
+        }
+        if (!galaGlobalMode) {
+            Collections.addAll(controls, switchGalaEnable, seekGalaInc, seekGalaMinSpeed,
+                    seekGalaMaxAdj, seekGalaFadeMs, seekGalaHoldMs);
+        }
+        for (View v : controls) {
+            if (v == null || stateBeforeServiceLock.containsKey(v)) continue;
+            stateBeforeServiceLock.put(v, new float[]{v.isEnabled() ? 1f : 0f, v.getAlpha()});
+            v.setEnabled(false);
+            v.setAlpha(0.45f);
+        }
     }
 
     private void setupNavigation() {
@@ -2708,6 +2789,14 @@ public class MainActivity extends AppCompatActivity {
         };
 
         btnAssign.setOnClickListener(v -> {
+            // The service preset is bound to the Call player and nothing else, both ways: Call
+            // cannot be given to a player, and the Call player cannot be given another preset.
+            // McuService ignores such a mapping anyway; refusing here keeps the list from showing
+            // a binding that will never act.
+            if (CallPreset.is(cur) || "Call".equals(p)) {
+                Toaster.show(MainActivity.this, getString(R.string.error));
+                return;
+            }
             map.put(p, cur);
             prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
             refreshList.run();
@@ -2715,6 +2804,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnSetDefault.setOnClickListener(v -> {
+            if (CallPreset.is(cur)) {   // never the default
+                Toaster.show(MainActivity.this, getString(R.string.error));
+                return;
+            }
             map.put("Default", cur);
             prefs.edit().putString(PREF_PLAYER_MAP, new Gson().toJson(map)).apply();
             refreshList.run();
