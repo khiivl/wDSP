@@ -181,7 +181,29 @@ public final class RoomMeasurement {
      * Below this, the recording has no top end and the sweep is being measured through half a
      * microphone. Normal is around -15 dB; a stream that is really 16 kHz gives -70 or worse.
      */
-    private static final float BANDWIDTH_WARN_DB = -30f;
+    /**
+     * Below this much energy above 8 kHz, the sweep recording did not contain the top of the sweep.
+     *
+     * 🔴 Was -30 dB, which is the same number {@link MicrophoneGuard#BANDWIDTH_OK_DB} uses - and
+     * that was the mistake, because the two are asked of completely different signals. The guard
+     * measures half a second of whatever the room happens to be making; this is asked of a six
+     * second sweep that climbs to 20 kHz, whose energy is spread across the whole span. The two
+     * cannot share a threshold.
+     *
+     * <p>Measured on this unit, 13.09.2026, four passes healthy and two with the microphone stuck
+     * at 16 kHz by the assistant hotword:
+     *
+     * <pre>
+     *   healthy: -36.3  -36.3  -36.1     (the normal reading for a full sweep)
+     *   broken:  -96.8  -97.2            (the band is not there at all)
+     * </pre>
+     *
+     * So -30 sat ABOVE the healthy reading and the warning fired on every good measurement, which
+     * is worse than having no warning: it taught the reader to ignore it, and it is why I could not
+     * tell from the logs whether a genuinely broken pass had warned or not. -70 dB leaves better
+     * than thirty decibels of margin on each side of a gap that is sixty decibels wide.
+     */
+    private static final float BANDWIDTH_WARN_DB = -70f;
     /** The fader and balance sliders run 0..24 with 12 in the middle. */
     private static final int FADER_MIN = 0;
     private static final int FADER_CENTRE = 12;
@@ -1980,9 +2002,11 @@ public final class RoomMeasurement {
                     + "by anything else here.", result.passPeakDbfs, -HEADROOM_WARN_DBFS));
         }
         if (passBandwidth < BANDWIDTH_WARN_DB) {
-            Log.w(TAG, "the recording has nothing above 8 kHz. The microphone is running at "
-                    + "16 kHz because something else has it open - an assistant hotword is the "
-                    + "usual cause, and the platform will not admit it.");
+            Log.w(TAG, String.format(Locale.US,
+                    "the recording has nothing above 8 kHz (%.1f dB, healthy is about -36). The "
+                    + "microphone is running at 16 kHz because something else has it open - an "
+                    + "assistant hotword is the usual cause, and the platform will not admit it.",
+                    passBandwidth));
         }
 
         // Live ambient noise floor measured directly from the physical cabin silence (first lead-in
