@@ -21,7 +21,7 @@
     <string name="fm_title">Curva de Compensação Loudness</string>
     <string name="enable_loudness">Ativar Loudness</string>
     <string name="trim_highs">Atenuar Agudos</string>
-    <string name="sub_tweaking">Ajuste do Subwoofer</string>
+    <string name="sub_tweaking">Compensação do subwoofer</string>
     <string name="fm_visualizer_label">Pré-visualização da Compensação em Tempo Real</string>
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Deslocamento do Sub:</string>

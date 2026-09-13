@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness kompensatsioonikõver</string>
     <string name="enable_loudness">Luba Loudness</string>
     <string name="trim_highs">Kõrgete helide kärpimine</string>
-    <string name="sub_tweaking">Bassikõlari peenhäälestus</string>
+    <string name="sub_tweaking">Bassikõlari kompensatsioon</string>
     <string name="fm_visualizer_label">Kompensatsiooni reaalajas eelvaade</string>
     <string name="lbl_volume">Helitugevus:</string>
     <string name="lbl_sub_offset">Bassikõlari nihe:</string>

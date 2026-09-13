@@ -21,7 +21,7 @@
     <string name="fm_title">Крива тонкомпензације (Loudness)</string>
     <string name="enable_loudness">Омогући Loudness</string>
     <string name="trim_highs">Подрезивање високих</string>
-    <string name="sub_tweaking">Подешавање субвуфера</string>
+    <string name="sub_tweaking">Компензација субвуфера</string>
     <string name="fm_visualizer_label">Преглед компензације у реалном времену</string>
     <string name="lbl_volume">Јачина звука:</string>
     <string name="lbl_sub_offset">Помак субвуфера:</string>

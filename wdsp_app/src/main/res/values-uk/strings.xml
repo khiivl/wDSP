@@ -24,7 +24,7 @@
     <string name="fm_title">Тонкомпенсація (Крива Флетчера-Менсона)</string>
     <string name="enable_loudness">Увімкнути Loudness</string>
     <string name="trim_highs">Послабити ВЧ</string>
-    <string name="sub_tweaking">Налаштування сабвуфера</string>
+    <string name="sub_tweaking">Компенсація саба</string>
     <string name="fm_visualizer_label">Попередній перегляд корекції</string>
     <string name="lbl_volume">Гучність:</string>
     <string name="lbl_sub_offset">Зміщення сабвуфера:</string>

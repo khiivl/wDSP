@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness-kompensaatiokäyrä</string>
     <string name="enable_loudness">Ota Loudness käyttöön</string>
     <string name="trim_highs">Diskantin vaimennus</string>
-    <string name="sub_tweaking">Subwooferin hienosäätö</string>
+    <string name="sub_tweaking">Subwooferin kompensointi</string>
     <string name="fm_visualizer_label">Rereaaliaikainen kompensaation esikatselu</string>
     <string name="lbl_volume">Äänenvoimakkuus:</string>
     <string name="lbl_sub_offset">Sub-siirtymä:</string>

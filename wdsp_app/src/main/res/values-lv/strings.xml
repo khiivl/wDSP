@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness kompensācijas līkne</string>
     <string name="enable_loudness">Iespējot Loudness</string>
     <string name="trim_highs">Augsto frekvenču apgriešana</string>
-    <string name="sub_tweaking">Zemfrekvences skaļruņa pielāgošana</string>
+    <string name="sub_tweaking">Zemfrekvences kompensācija</string>
     <string name="fm_visualizer_label">Kompensācijas priekšskatījums reāllaikā</string>
     <string name="lbl_volume">Skaļums:</string>
     <string name="lbl_sub_offset">Zemfrekvences nobīde:</string>

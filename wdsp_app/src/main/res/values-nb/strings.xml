@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness Kompensasjonskurve</string>
     <string name="enable_loudness">Aktiver Loudness</string>
     <string name="trim_highs">Demp diskant</string>
-    <string name="sub_tweaking">Subwoofer finjustering</string>
+    <string name="sub_tweaking">Sub-kompensasjon</string>
     <string name="fm_visualizer_label">Kompensasjonsvisning i sanntid</string>
     <string name="lbl_volume">Volum:</string>
     <string name="lbl_sub_offset">Sub-forskyvning:</string>

@@ -21,7 +21,7 @@
     <string name="fm_title">Curbă de compensare Loudness</string>
     <string name="enable_loudness">Activare Loudness</string>
     <string name="trim_highs">Atenuare Înalte</string>
-    <string name="sub_tweaking">Ajustare Subwoofer</string>
+    <string name="sub_tweaking">Compensare subwoofer</string>
     <string name="fm_visualizer_label">Previzualizare compensare în timp real</string>
     <string name="lbl_volume">Volum:</string>
     <string name="lbl_sub_offset">Decalaj Sub:</string>

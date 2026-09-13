@@ -18,7 +18,7 @@
     <string name="fm_title">Loud Тонкомпенсация</string>
     <string name="enable_loudness">Тонкомпенс.</string>
     <string name="trim_highs">Уменьш. ВЧ</string>
-    <string name="sub_tweaking">Автом. Саб</string>
+    <string name="sub_tweaking">Компенсация саба</string>
     <string name="fm_visualizer_label">Предпросмотр компенсации</string>
     <string name="lbl_volume">Громкость:</string>
     <string name="lbl_sub_offset">Смещение Sub:</string>

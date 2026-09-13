@@ -18,7 +18,7 @@
     <string name="fm_title">Gehörrichtige Lautstärkekorrektur</string>
     <string name="enable_loudness">Loudness aktivieren</string>
     <string name="trim_highs">Höhen reduzieren</string>
-    <string name="sub_tweaking">Subwoofer-Feineinstellung</string>
+    <string name="sub_tweaking">Subwoofer-Kompensation</string>
     <string name="fm_visualizer_label">Echtzeit-Korrekturvorschau</string>
     <string name="lbl_volume">Lautstärke:</string>
     <string name="lbl_sub_offset">Sub-Offset:</string>

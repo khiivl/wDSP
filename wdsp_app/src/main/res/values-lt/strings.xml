@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness kompensavimo kreivė</string>
     <string name="enable_loudness">Įjungti Loudness</string>
     <string name="trim_highs">Aukštų dažnių apkarpymas</string>
-    <string name="sub_tweaking">Žemų dažnių garsiakalbio derinimas</string>
+    <string name="sub_tweaking">Žemų dažnių kompensavimas</string>
     <string name="fm_visualizer_label">Kompensavimo peržiūra realiuoju laiku</string>
     <string name="lbl_volume">Garsumas:</string>
     <string name="lbl_sub_offset">Žemų dažnių poslinkis:</string>

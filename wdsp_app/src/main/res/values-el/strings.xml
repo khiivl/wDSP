@@ -21,7 +21,7 @@
     <string name="fm_title">Καμπύλη αντιστάθμισης Loudness</string>
     <string name="enable_loudness">Ενεργοποίηση Loudness</string>
     <string name="trim_highs">Περικοπή πρίμων</string>
-    <string name="sub_tweaking">Ρύθμιση Subwoofer</string>
+    <string name="sub_tweaking">Αντιστάθμιση subwoofer</string>
     <string name="fm_visualizer_label">Προεπισκόπηση αντιστάθμισης σε πραγματικό χρόνο</string>
     <string name="lbl_volume">Ένταση:</string>
     <string name="lbl_sub_offset">Μετατόπιση Sub:</string>

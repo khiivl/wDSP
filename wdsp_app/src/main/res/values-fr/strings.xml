@@ -21,7 +21,7 @@
     <string name="fm_title">Courbe de compensation physiologique (Loudness)</string>
     <string name="enable_loudness">Activer le Loudness</string>
     <string name="trim_highs">Atténuation des aigus</string>
-    <string name="sub_tweaking">Ajustement du caisson</string>
+    <string name="sub_tweaking">Compensation du caisson</string>
     <string name="fm_visualizer_label">Aperçu de la compensation en temps réel</string>
     <string name="lbl_volume">Volume :</string>
     <string name="lbl_sub_offset">Décalage du caisson :</string>

@@ -19,7 +19,7 @@
     <string name="fm_title">Korekcja fizjologiczna (Krzywa F-M)</string>
     <string name="enable_loudness">Włącz Loudness</string>
     <string name="trim_highs">Ogranicz wysokie tony</string>
-    <string name="sub_tweaking">Dostrajanie subwoofera</string>
+    <string name="sub_tweaking">Kompensacja subwoofera</string>
     <string name="fm_visualizer_label">Podgląd korekcji w czasie rzeczywistym</string>
     <string name="lbl_volume">Głośność:</string>
     <string name="lbl_sub_offset">Przesunięcie subwoofera:</string>

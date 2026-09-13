@@ -21,7 +21,7 @@
     <string name="fm_title">Krivka fyziologickej regulácie (Loudness)</string>
     <string name="enable_loudness">Zapnúť Loudness</string>
     <string name="trim_highs">Orezanie výšok</string>
-    <string name="sub_tweaking">Doladenie subwoofera</string>
+    <string name="sub_tweaking">Kompenzácia subwoofera</string>
     <string name="fm_visualizer_label">Náhľad kompenzácie v reálnom čase</string>
     <string name="lbl_volume">Hlasitosť:</string>
     <string name="lbl_sub_offset">Posun subwoofera:</string>

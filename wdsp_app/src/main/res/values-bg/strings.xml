@@ -21,7 +21,7 @@
     <string name="fm_title">Крива на тонкомпенсация (Loudness)</string>
     <string name="enable_loudness">Включване на Loudness</string>
     <string name="trim_highs">Подрязване на високи</string>
-    <string name="sub_tweaking">Настройка на субуфера</string>
+    <string name="sub_tweaking">Компенсация на субуфера</string>
     <string name="fm_visualizer_label">Преглед на компенсацията в реално време</string>
     <string name="lbl_volume">Сила на звука:</string>
     <string name="lbl_sub_offset">Изместване на суба:</string>

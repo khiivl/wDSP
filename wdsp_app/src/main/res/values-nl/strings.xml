@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness Compensatiecurve</string>
     <string name="enable_loudness">Loudness inschakelen</string>
     <string name="trim_highs">Hoge tonen dempen</string>
-    <string name="sub_tweaking">Subwoofer fijnafstemming</string>
+    <string name="sub_tweaking">Subwoofer-compensatie</string>
     <string name="fm_visualizer_label">Real-time compensatievoorbeeld</string>
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Sub-verschuiving:</string>

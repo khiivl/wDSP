@@ -21,7 +21,7 @@
     <string name="fm_title">Krivulja kompenzacije glasnoće (Loudness)</string>
     <string name="enable_loudness">Omogući Loudness</string>
     <string name="trim_highs">Obrezivanje visokih</string>
-    <string name="sub_tweaking">Podešavanje subwoofera</string>
+    <string name="sub_tweaking">Kompenzacija subwoofera</string>
     <string name="fm_visualizer_label">Pregled kompenzacije u stvarnom vremenu</string>
     <string name="lbl_volume">Glasnoća:</string>
     <string name="lbl_sub_offset">Pomak subwoofera:</string>

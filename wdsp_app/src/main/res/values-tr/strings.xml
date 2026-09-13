@@ -21,7 +21,7 @@
     <string name="fm_title">Loudness Dengeleme Eğrisi</string>
     <string name="enable_loudness">Loudness\'ı Etkinleştir</string>
     <string name="trim_highs">Tizleri Kırp</string>
-    <string name="sub_tweaking">Subwoofer İnce Ayarı</string>
+    <string name="sub_tweaking">Subwoofer telafisi</string>
     <string name="fm_visualizer_label">Gerçek Zamanlı Dengeleme Önizlemesi</string>
     <string name="lbl_volume">Ses Seviyesi:</string>
     <string name="lbl_sub_offset">Sub Kayması:</string>

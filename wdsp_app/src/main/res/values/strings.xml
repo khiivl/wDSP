@@ -26,7 +26,11 @@
     <string name="fm_title">Loudness Compensation Curve</string>
     <string name="enable_loudness">Enable Loudness</string>
     <string name="trim_highs">Trim Highs</string>
-    <string name="sub_tweaking">Sub Tweaking</string>
+    <!-- A toggle, not a way into settings: it adds the loudness curve's bass boost to the
+         subwoofer, and switching it on pulls a crossover above 80 Hz down to 80. The old wording,
+         "Sub Tweaking" / "Налаштування сабвуфера", read like a menu entry, and pressing it to look
+         at the subwoofer silently rewrote a measured crossover (owner's preset, 13-14.09.2026). -->
+    <string name="sub_tweaking">Sub compensation</string>
     <string name="fm_visualizer_label">Real-time Compensation Preview</string>
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Sub Offset:</string>

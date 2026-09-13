@@ -21,7 +21,7 @@
     <string name="fm_title">Fiziológiai hangerő kompenzációs görbe (Loudness)</string>
     <string name="enable_loudness">Loudness bekapcsolása</string>
     <string name="trim_highs">Magashang vágás</string>
-    <string name="sub_tweaking">Mélynyomó finomhangolás</string>
+    <string name="sub_tweaking">Mélynyomó kompenzáció</string>
     <string name="fm_visualizer_label">Valós idejű kompenzációs előnézet</string>
     <string name="lbl_volume">Hangerő:</string>
     <string name="lbl_sub_offset">Mélynyomó eltolás:</string>

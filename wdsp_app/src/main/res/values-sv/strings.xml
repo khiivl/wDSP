@@ -19,7 +19,7 @@
     <string name="fm_title">F-M Loudness-kurva</string>
     <string name="enable_loudness">Aktivera Loudness</string>
     <string name="trim_highs">Dämpa diskant</string>
-    <string name="sub_tweaking">Sub-justering</string>
+    <string name="sub_tweaking">Sub-kompensation</string>
     <string name="fm_visualizer_label">Realtidsvy korrigering</string>
     <string name="lbl_volume">Volym:</string>
     <string name="lbl_sub_offset">Sub-offset:</string>

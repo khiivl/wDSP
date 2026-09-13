@@ -21,7 +21,7 @@
     <string name="fm_title">Krivulja kompenzacije glasnosti (Loudness)</string>
     <string name="enable_loudness">Omogoči Loudness</string>
     <string name="trim_highs">Prireži visoke tone</string>
-    <string name="sub_tweaking">Prilagoditev nizkotonca</string>
+    <string name="sub_tweaking">Kompenzacija nizkotonca</string>
     <string name="fm_visualizer_label">Predogled kompenzacije v realnem času</string>
     <string name="lbl_volume">Glasnost:</string>
     <string name="lbl_sub_offset">Odmik nizkotonca:</string>
