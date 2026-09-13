@@ -547,6 +547,8 @@ public final class RoomMeasurement {
     /** Loudspeaker heights, same ear-line origin. 🧩 Door cards sit well below the ears. */
     private static final float SPEAKER_Z_DOOR_CM = -25f;
     private static final float SPEAKER_Z_SUB_CM = -35f;
+    /** A parcel shelf is about at window height, not down on the floor. */
+    private static final float SPEAKER_Z_SHELF_CM = -5f;
 
     /**
      * What the microphone is built into - a different question from where it is.
@@ -2172,10 +2174,12 @@ public final class RoomMeasurement {
      * centimetres, which is a few hundredths of a millisecond - small, but it is the difference
      * between a model that knows the speaker is under the window and one that thinks it is in it.
      */
-    private static float getSpeakerZ(Channel ch) {
+    private static float getSpeakerZ(Channel ch, int subPlace) {
         switch (ch) {
             case SUBWOOFER:
-                return SPEAKER_Z_SUB_CM;
+                // A parcel shelf sits at about window height; a boot floor and an under-seat
+                // enclosure are both down near the carpet.
+                return (subPlace == SUB_PLACE_SHELF) ? SPEAKER_Z_SHELF_CM : SPEAKER_Z_SUB_CM;
             case FRONT_LEFT:
             case FRONT_RIGHT:
             case REAR_LEFT:
@@ -2185,7 +2189,7 @@ public final class RoomMeasurement {
         }
     }
 
-    private static float getSpeakerY(Channel ch, float distListen) {
+    private static float getSpeakerY(Channel ch, float distListen, int subPlace) {
         switch (ch) {
             case FRONT_LEFT:
             case FRONT_RIGHT:
@@ -2194,9 +2198,43 @@ public final class RoomMeasurement {
             case REAR_RIGHT:
                 return distListen + 95f;
             case SUBWOOFER:
-                return distListen + 165f;
+                return subwooferY(distListen, subPlace);
             default:
                 return 15f;
+        }
+    }
+
+    /**
+     * How far behind the listener the subwoofer is, by where its owner said it is.
+     *
+     * 🔴 Until 13.09.2026 this was the single expression {@code distListen + 165}, applied
+     * whatever the answer. The setting was offered in Settings, saved, copied into the result
+     * and printed in the report - and read by nothing. The comment above {@link #SUB_PLACES}
+     * spelled out why it mattered ("a boot and an under-seat enclosure are more than a metre
+     * apart, which is three milliseconds - six steps of the delay slider") and then the wire
+     * to the geometry was never run. Asking somebody a question and discarding the answer is
+     * worse than not asking: they believe the measurement knows.
+     *
+     * <p>The figures are approximate on the same terms as the rest of this model, and they
+     * are measured from the ear line, so they follow the seat when the listening distance
+     * changes. What matters is that they differ from each other in the right direction and
+     * by roughly the right amount; the old behaviour is preserved exactly for the boot, which
+     * is what an unanswered setting still means.
+     */
+    private static float subwooferY(float distListen, int subPlace) {
+        switch (subPlace) {
+            case SUB_PLACE_UNDER_SEAT:
+                // Under the front seats: just ahead of the ear line, not behind it at all.
+                // This is the case the old constant got most wrong - by about two and a half
+                // metres, which is seven milliseconds of delay applied to a box that needed
+                // almost none.
+                return distListen - 15f;
+            case SUB_PLACE_SHELF:
+                // Parcel shelf: behind the rear seat backs, nearer than the boot floor.
+                return distListen + 135f;
+            case SUB_PLACE_BOOT:
+            default:
+                return distListen + 165f;
         }
     }
 
@@ -2341,8 +2379,8 @@ public final class RoomMeasurement {
             }
             Channel ch = allChannels[i];
             float sx = getSpeakerX(ch);
-            float sy = getSpeakerY(ch, distListen);
-            float sz = getSpeakerZ(ch);
+            float sy = getSpeakerY(ch, distListen, result.subPlace);
+            float sz = getSpeakerZ(ch, result.subPlace);
 
             // Three dimensions, not two. A dome-light microphone is 45 cm above the ears and a door
             // woofer 25 cm below them: in plan those are the same point and the height is the whole
