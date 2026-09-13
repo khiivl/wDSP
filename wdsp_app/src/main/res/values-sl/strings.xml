@@ -242,9 +242,13 @@ Globalno privzeto: %1$s</string>
     <string name="debug_section_title">Diagnostika</string>
     <string name="room_measure_label">Meritev kabine</string>
     <string name="room_measure_desc">Po vrsti predvaja sweep skozi vsak zvočnik in izmeri, kdaj je zvok prispel in ali je v fazi. Traja približno pol minute. Motor ugasnjen, vrata zaprta, običajna glasnost.</string>
+    <string name="room_needs_mic_title">Mikrofon še ni umerjen</string>
+    <string name="room_needs_mic_msg">Meritev kabine se bo zagnala, vendar bo predvidevala popolnoma linearen mikrofon: brez umerjanja je njegova korekcijska krivulja šestnajst ničel, zato se za samo kapsulo nič ne odšteje.\n\nVse, kar mikrofon obarva — lasten padec nizkih tonov, padec v odprtini, v kateri je nameščen —, bo pripisano vozilu, Auto-EQ pa bo to poskušal popraviti z zvočniki. Prednastavitev bo popačena, rezultat pa tega ne bo omenil.\n\nUmerjanje traja približno pol minute in se za ta mikrofon izvede samo enkrat.</string>
+    <string name="room_needs_mic_calibrate">Najprej umeri</string>
+    <string name="room_needs_mic_anyway">Meri brez umerjanja</string>
     <string name="room_measure_button">Izmeri</string>
     <string name="room_measure_running">Merjenje: %1$s</string>
-    <string name="room_measure_done">Končano — pošljem rezultat?</string>
+    <string name="room_measure_done">Prednastavitev «%1$s» ustvarjena in aktivirana!</string>
     <string name="room_measure_failed">Merjenje ni uspelo</string>
     <string name="room_measure_send">Shrani arhiv</string>
     <string name="room_measure_saved_title">Meritev shranjena</string>
@@ -396,8 +400,8 @@ Globalno privzeto: %1$s</string>
     <string name="banner_copied">Kopirano v odložišče</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Vklopljeno</string>
+    <string name="state_off">Izklopljeno</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

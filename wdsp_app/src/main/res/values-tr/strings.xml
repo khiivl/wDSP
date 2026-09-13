@@ -242,9 +242,13 @@ Genel Varsayılan: %1$s</string>
     <string name="debug_section_title">Tanılama</string>
     <string name="room_measure_label">Kabin ölçümü</string>
     <string name="room_measure_desc">Sırayla her hoparlörden bir süpürme sinyali çalar ve sesin ne zaman ulaştığını ve fazda olup olmadığını ölçer. Yaklaşık yarım dakika sürer. Motor kapalı, kapılar kapalı, normal ses seviyesi.</string>
+    <string name="room_needs_mic_title">Mikrofon henüz kalibre edilmedi</string>
+    <string name="room_needs_mic_msg">Kabin ölçümü çalıştırılacak, ancak mikrofonun tamamen doğrusal olduğu varsayılacak: kalibrasyon olmadan düzeltme eğrisi on altı sıfırdan oluşur, bu nedenle kapsülün kendisi için hiçbir şey düşülmez.\n\nMikrofonun renklendirdiği her şey — kendi bas düşüşü, bulunduğu açıklığın tiz kaybı — araca yüklenecek ve Auto-EQ bunu hoparlörlerden düzeltmeye çalışacaktır. Önayar çarpık çıkacak ve sonuçta bunu belirten hiçbir şey olmayacaktır.\n\nKalibrasyon yaklaşık yarım dakika sürer ve bu mikrofon için yalnızca bir kez yapılır.</string>
+    <string name="room_needs_mic_calibrate">Önce kalibre et</string>
+    <string name="room_needs_mic_anyway">Kalibre etmeden ölç</string>
     <string name="room_measure_button">Ölç</string>
     <string name="room_measure_running">Ölçülüyor: %1$s</string>
-    <string name="room_measure_done">Bitti — sonuç gönderilsin mi?</string>
+    <string name="room_measure_done">«%1$s» önayarı oluşturuldu ve etkinleştirildi!</string>
     <string name="room_measure_failed">Ölçüm başarısız</string>
     <string name="room_measure_send">Arşivi kaydet</string>
     <string name="room_measure_saved_title">Ölçüm kaydedildi</string>
@@ -396,8 +400,8 @@ Genel Varsayılan: %1$s</string>
     <string name="banner_copied">Panoya kopyalandı</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Açık</string>
+    <string name="state_off">Kapalı</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

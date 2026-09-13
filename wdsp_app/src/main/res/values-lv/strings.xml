@@ -242,9 +242,13 @@ Globāli noklusējums: %1$s</string>
     <string name="debug_section_title">Diagnostika</string>
     <string name="room_measure_label">Salona mērījums</string>
     <string name="room_measure_desc">Pēc kārtas atskaņo sweep caur katru skaļruni un izmēra, kad skaņa pienāca un vai tā ir fazē. Aizņem apmēram pusminūti. Dzinējs izslēgts, durvis aizvērtas, parasts skaļums.</string>
+    <string name="room_needs_mic_title">Mikrofons vēl nav kalibrēts</string>
+    <string name="room_needs_mic_msg">Salona mērījums tiks veikts, taču tiks pieņemts, ka mikrofons ir pilnīgi lineārs: bez kalibrēšanas tā korekcijas līkne ir sešpadsmit nulles, tāpēc pašai kapsulai nekas netiek atskaitīts.\n\nViss, ko iekrāso pats mikrofons — tā basu kritums, augsto frekvenču kritums atverē, kur tas atrodas —, tiks piedēvēts automašīnai, un Auto-EQ mēģinās to labot caur skaļruņiem. Iestatījums sanāks sagrozīts, un nekas rezultātā par to neliecinās.\n\nKalibrēšana aizņem apmēram pusminūti un šim mikrofonam tiek veikta vienu reizi.</string>
+    <string name="room_needs_mic_calibrate">Vispirms kalibrēt</string>
+    <string name="room_needs_mic_anyway">Mērīt bez tās</string>
     <string name="room_measure_button">Izmērīt</string>
     <string name="room_measure_running">Mēra: %1$s</string>
-    <string name="room_measure_done">Gatavs — sūtīt rezultātu?</string>
+    <string name="room_measure_done">Iestatījums «%1$s» izveidots un aktivizēts!</string>
     <string name="room_measure_failed">Mērījums neizdevās</string>
     <string name="room_measure_send">Saglabāt arhīvu</string>
     <string name="room_measure_saved_title">Mērījums saglabāts</string>
@@ -396,8 +400,8 @@ Globāli noklusējums: %1$s</string>
     <string name="banner_copied">Nokopēts starpliktuvē</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Ieslēgts</string>
+    <string name="state_off">Izslēgts</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

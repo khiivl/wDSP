@@ -51,7 +51,7 @@
     <string name="lbl_freq">Συχνότητα</string>
     <string name="lbl_freq_boost">Συχν. ενίσχυσης</string>
     <string name="lbl_center">Κέντρο</string>
-    <string name="fader_balance">Fader &amp; Balance</string>
+    <string name="fader_balance">Φέιντερ &amp; Ισορροπία</string>
     <string name="btn_left" translatable="false">←L</string>
     <string name="btn_right" translatable="false">R→</string>
     <string name="btn_front" translatable="false">F↑</string>
@@ -146,7 +146,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">Loudness</string>
+    <string name="FMtab">Αντιστάθμιση</string>
     <string name="DLtab">Καθυστερήσεις</string>
     <string name="OTtab">Άλλα</string>
     <string name="GLtab">Ταχύτητα</string>
@@ -242,9 +242,13 @@
     <string name="debug_section_title">Διαγνωστικά</string>
     <string name="room_measure_label">Μέτρηση καμπίνας</string>
     <string name="room_measure_desc">Αναπαράγει ένα sweep από κάθε ηχείο με τη σειρά και μετρά πότε έφτασε ο ήχος και αν είναι σε φάση. Διαρκεί περίπου μισό λεπτό. Κινητήρας σβηστός, πόρτες κλειστές, κανονική ένταση.</string>
+    <string name="room_needs_mic_title">Το μικρόφωνο δεν έχει βαθμονομηθεί ακόμα</string>
+    <string name="room_needs_mic_msg">Η μέτρηση καμπίνας θα εκτελεστεί, αλλά θα θεωρήσει το μικρόφωνο απόλυτα γραμμικό: χωρίς βαθμονόμηση η καμπύλη διόρθωσής του είναι δεκαέξι μηδενικά, οπότε δεν αφαιρείται τίποτα για την ίδια την κάψα.\n\nΌ,τι χρωματίζει το μικρόφωνο — η δική του αποκοπή χαμηλών, η αποκοπή υψηλών από την οπή στην οποία βρίσκεται — θα χρεωθεί στο αυτοκίνητο και το Auto-EQ θα προσπαθήσει να το διορθώσει από τα ηχεία. Η προεπιλογή θα προκύψει παραμορφωμένη και τίποτα στο αποτέλεσμα δεν θα το αναφέρει.\n\nΗ βαθμονόμηση διαρκεί περίπου μισό λεπτό και γίνεται μία φορά για αυτό το μικρόφωνο.</string>
+    <string name="room_needs_mic_calibrate">Πρώτα βαθμονόμηση</string>
+    <string name="room_needs_mic_anyway">Μέτρηση χωρίς αυτήν</string>
     <string name="room_measure_button">Μέτρηση</string>
     <string name="room_measure_running">Μέτρηση: %1$s</string>
-    <string name="room_measure_done">Έτοιμο — να σταλεί το αποτέλεσμα;</string>
+    <string name="room_measure_done">Η προεπιλογή «%1$s» δημιουργήθηκε και ενεργοποιήθηκε!</string>
     <string name="room_measure_failed">Η μέτρηση απέτυχε</string>
     <string name="room_measure_send">Αποθήκευση αρχείου</string>
     <string name="room_measure_saved_title">Η μέτρηση αποθηκεύτηκε</string>
@@ -396,8 +400,8 @@
     <string name="banner_copied">Αντιγράφηκε στο πρόχειρο</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Ενεργό</string>
+    <string name="state_off">Ανενεργό</string>
     <string name="pref_radio_mic_visualizer_title">Οπτικοποιητής FM Ραδιοφώνου (δοκιμή)</string>
     <string name="pref_radio_mic_visualizer_desc">Ακουστική φασματική ανάλυση ηχείων μέσω μικροφώνου για αναλογικό FM ραδιόφωνο</string>
     <string name="perm_wizard_item_root_title">Πρόσβαση Root (Magisk Superuser)</string>

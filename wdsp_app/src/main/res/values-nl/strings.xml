@@ -242,9 +242,13 @@ Globale standaard: %1$s</string>
     <string name="debug_section_title">Diagnose</string>
     <string name="room_measure_label">Meting van het interieur</string>
     <string name="room_measure_desc">Speelt om de beurt een sweep door elke luidspreker en meet wanneer het geluid aankwam en of het in fase is. Duurt ongeveer een halve minuut. Motor uit, deuren dicht, normaal volume.</string>
+    <string name="room_needs_mic_title">De microfoon is nog niet gekalibreerd</string>
+    <string name="room_needs_mic_msg">De cabinemeting wordt uitgevoerd, maar gaat ervan uit dat de microfoon perfect lineair is: zonder kalibratie bestaat de correctiecurve uit zestien nullen, waardoor er niets wordt afgetrokken voor de capsule zelf.\n\nAlles wat de microfoon kleurt — de eigen basafval, het verlies door de opening waarin deze zit — wordt aan de auto toegeschreven, en de Auto-EQ zal dit via de luidsprekers proberen te corrigeren. De preset raakt vervormd, zonder dat het resultaat dit aangeeft.\n\nDe kalibratie duurt ongeveer een halve minuut en hoeft voor deze microfoon slechts één keer te worden uitgevoerd.</string>
+    <string name="room_needs_mic_calibrate">Eerst kalibreren</string>
+    <string name="room_needs_mic_anyway">Zonder kalibratie meten</string>
     <string name="room_measure_button">Meten</string>
     <string name="room_measure_running">Bezig met meten: %1$s</string>
-    <string name="room_measure_done">Klaar — het resultaat versturen?</string>
+    <string name="room_measure_done">Preset «%1$s» aangemaakt en geactiveerd!</string>
     <string name="room_measure_failed">Meting mislukt</string>
     <string name="room_measure_send">Archief opslaan</string>
     <string name="room_measure_saved_title">Meting opgeslagen</string>
@@ -396,8 +400,8 @@ Globale standaard: %1$s</string>
     <string name="banner_copied">Gekopieerd naar het klembord</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Aan</string>
+    <string name="state_off">Uit</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

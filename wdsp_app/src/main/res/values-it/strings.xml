@@ -242,9 +242,13 @@ Predefinito globale: %1$s</string>
     <string name="debug_section_title">Diagnostica</string>
     <string name="room_measure_label">Misura dell\'abitacolo</string>
     <string name="room_measure_desc">Riproduce uno sweep da ciascun altoparlante a turno e misura quando è arrivato il suono e se è in fase. Richiede circa mezzo minuto. Motore spento, portiere chiuse, volume normale.</string>
+    <string name="room_needs_mic_title">Il microfono non è ancora calibrato</string>
+    <string name="room_needs_mic_msg">La misurazione dell\'abitacolo verrà avviata, ma assumerà che il microfono sia perfettamente lineare: senza calibrazione la sua curva di correzione è di sedici zeri, quindi non viene sottratto nulla per la capsula stessa.\n\nTutto ciò che il microfono colora — il proprio calo sui bassi, il calo dovuto al foro in cui risiede — verrà attribuito all\'auto, e l\'Auto-EQ tenterà di correggerlo tramite gli altoparlanti. Il preset risulterà sbilanciato, senza che nulla nel risultato lo evidenzi.\n\nLa calibrazione richiede circa mezzo minuto e viene eseguita una sola volta per questo microfono.</string>
+    <string name="room_needs_mic_calibrate">Prima calibra</string>
+    <string name="room_needs_mic_anyway">Misura senza calibrazione</string>
     <string name="room_measure_button">Misura</string>
     <string name="room_measure_running">Misurazione: %1$s</string>
-    <string name="room_measure_done">Fatto — inviare il risultato?</string>
+    <string name="room_measure_done">Preset «%1$s» creato e attivato!</string>
     <string name="room_measure_failed">Misurazione non riuscita</string>
     <string name="room_measure_send">Salva l\'archivio</string>
     <string name="room_measure_saved_title">Misurazione salvata</string>
@@ -396,8 +400,8 @@ Predefinito globale: %1$s</string>
     <string name="banner_copied">Copiato negli appunti</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Attivo</string>
+    <string name="state_off">Disattivo</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

@@ -242,9 +242,13 @@ Globalno zadano: %1$s</string>
     <string name="debug_section_title">Dijagnostika</string>
     <string name="room_measure_label">Mjerenje kabine</string>
     <string name="room_measure_desc">Reproducira sweep kroz svaki zvučnik redom i mjeri kada je zvuk stigao i je li u fazi. Traje oko pola minute. Motor ugašen, vrata zatvorena, uobičajena glasnoća.</string>
+    <string name="room_needs_mic_title">Mikrofon još nije kalibriran</string>
+    <string name="room_needs_mic_msg">Mjerenje kabine će se pokrenuti, ali će pretpostaviti da je mikrofon savršeno ravan: bez kalibracije njegova krivulja korekcije je šesnaest nula, pa se za samu kapsulu ništa ne oduzima.\n\nSve što mikrofon oboji — vlastiti pad basova, pad visokih u otvoru u kojem se nalazi — pripisat će se automobilu, a Auto-EQ će to pokušati ispraviti zvučnicima. Profil će ispasti izobličen, a u rezultatu to nigdje neće biti navedeno.\n\nKalibracija traje oko pola minute i radi se jednom za ovaj mikrofon.</string>
+    <string name="room_needs_mic_calibrate">Prvo kalibriraj</string>
+    <string name="room_needs_mic_anyway">Izmjeri bez kalibracije</string>
     <string name="room_measure_button">Izmjeri</string>
     <string name="room_measure_running">Mjerenje: %1$s</string>
-    <string name="room_measure_done">Gotovo — poslati rezultat?</string>
+    <string name="room_measure_done">Profil «%1$s» je stvoren i aktiviran!</string>
     <string name="room_measure_failed">Mjerenje nije uspjelo</string>
     <string name="room_measure_send">Spremi arhivu</string>
     <string name="room_measure_saved_title">Mjerenje spremljeno</string>
@@ -358,8 +362,8 @@ Globalno zadano: %1$s</string>
     <string name="banner_copied">Kopirano u međuspremnik</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Uključeno</string>
+    <string name="state_off">Isključeno</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="settings_reset_palette">Reset palette to default</string>

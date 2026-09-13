@@ -242,9 +242,13 @@
     <string name="debug_section_title">Дијагностика</string>
     <string name="room_measure_label">Мерење кабине</string>
     <string name="room_measure_desc">Редом пушта sweep кроз сваки звучник и мери када је звук стигао и да ли је у фази. Траје око пола минута. Мотор угашен, врата затворена, уобичајена јачина.</string>
+    <string name="room_needs_mic_title">Микрофон још није калибрисан</string>
+    <string name="room_needs_mic_msg">Мерење кабине ће се покренути, али ће претпоставити да је микрофон савршено раван: без калибрације његова крива корекције је шеснаест нула, па се за саму капсулу ништа не одузима.\n\nСве што микрофон обоји — сопствени пад баса, пад високих у отвору у којем се налази — биће приписано возилу, а Auto-EQ ће покушати да то исправи звучницима. Профил ће испасти изобличен, а у резултату то нигде неће бити наведено.\n\nКалибрација траје око пола минута и ради се једном за овај микрофон.</string>
+    <string name="room_needs_mic_calibrate">Прво калибриши</string>
+    <string name="room_needs_mic_anyway">Измери без калибрације</string>
     <string name="room_measure_button">Измери</string>
     <string name="room_measure_running">Мерење: %1$s</string>
-    <string name="room_measure_done">Готово — послати резултат?</string>
+    <string name="room_measure_done">Профил «%1$s» је успешно креиран и активиран!</string>
     <string name="room_measure_failed">Мерење није успело</string>
     <string name="room_measure_send">Сачувај архиву</string>
     <string name="room_measure_saved_title">Мерење сачувано</string>
@@ -396,8 +400,8 @@
     <string name="banner_copied">Копирано у привремени меморијски простор</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Укључено</string>
+    <string name="state_off">Искључено</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

@@ -242,9 +242,13 @@ Globális alapértelmezett: %1$s</string>
     <string name="debug_section_title">Diagnosztika</string>
     <string name="room_measure_label">Utastér mérése</string>
     <string name="room_measure_desc">Sorra megszólaltat egy sweepet minden hangszórón, és megméri, mikor érkezett meg a hang, és fázisban van-e. Körülbelül fél percig tart. Motor leállítva, ajtók becsukva, szokásos hangerő.</string>
+    <string name="room_needs_mic_title">A mikrofon még nincs kalibrálva</string>
+    <string name="room_needs_mic_msg">Az utastér mérése elindul, de feltételezi, hogy a mikrofon tökéletesen egyenes átvitelű: kalibrálás nélkül a korrekciós görbéje tizenhat nulla, így magáért a kapszuláért semmi sem kerül levonásra.\n\nBármit színez a mikrofon — a saját mélyhang-vágását, a beépítési nyílás okozta csillapítást —, azt az autónak tulajdonítja, és az Auto-EQ a hangszórókon keresztül próbálja korrigálni. A profil torzított lesz, és semmi sem jelzi ezt az eredményben.\n\nA kalibrálás körülbelül fél percet vesz igénybe, és ehhez a mikrofonhoz csak egyszer kell elvégezni.</string>
+    <string name="room_needs_mic_calibrate">Először kalibrálás</string>
+    <string name="room_needs_mic_anyway">Mérés kalibrálás nélkül</string>
     <string name="room_measure_button">Mérés</string>
     <string name="room_measure_running">Mérés: %1$s</string>
-    <string name="room_measure_done">Kész — elküldjük az eredményt?</string>
+    <string name="room_measure_done">A(z) «%1$s» profil létrehozva és aktiválva!</string>
     <string name="room_measure_failed">A mérés nem sikerült</string>
     <string name="room_measure_send">Archívum mentése</string>
     <string name="room_measure_saved_title">Mérés mentve</string>
@@ -358,8 +362,8 @@ Globális alapértelmezett: %1$s</string>
     <string name="banner_copied">Másolva a vágólapra</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Bekapcsolva</string>
+    <string name="state_off">Kikapcsolva</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="settings_reset_palette">Reset palette to default</string>

@@ -242,9 +242,13 @@ Implicit global: %1$s</string>
     <string name="debug_section_title">Diagnosticare</string>
     <string name="room_measure_label">Măsurarea habitaclului</string>
     <string name="room_measure_desc">Redă pe rând un sweep prin fiecare difuzor și măsoară când a ajuns sunetul și dacă este în fază. Durează circa jumătate de minut. Motorul oprit, ușile închise, volum obișnuit.</string>
+    <string name="room_needs_mic_title">Microfonul nu este încă calibrat</string>
+    <string name="room_needs_mic_msg">Măsurătoarea habitaclului va rula, dar va presupune că microfonul este perfect liniar: fără calibrare, curba sa de corecție este de șaisprezece zerouri, deci nu se scade nimic pentru capsula însăși.\n\nTot ce colorează microfonul — propria atenuare a bașilor, atenuarea orificiului în care este montat — va fi atribuit mașinii, iar Auto-EQ va încerca să corecteze prin difuzoare. Profilul va ieși denaturat, fără ca rezultatul să menționeze acest lucru.\n\nCalibrarea durează aproximativ o jumătate de minut și se efectuează o singură dată pentru acest microfon.</string>
+    <string name="room_needs_mic_calibrate">Calibrează mai întâi</string>
+    <string name="room_needs_mic_anyway">Măsoară fără calibrare</string>
     <string name="room_measure_button">Măsoară</string>
     <string name="room_measure_running">Se măsoară: %1$s</string>
-    <string name="room_measure_done">Gata — trimitem rezultatul?</string>
+    <string name="room_measure_done">Profilul «%1$s» a fost creat și activat!</string>
     <string name="room_measure_failed">Măsurarea a eșuat</string>
     <string name="room_measure_send">Salvare arhivă</string>
     <string name="room_measure_saved_title">Măsurătoare salvată</string>
@@ -396,8 +400,8 @@ Implicit global: %1$s</string>
     <string name="banner_copied">Copiat în clipboard</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Activat</string>
+    <string name="state_off">Dezactivat</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

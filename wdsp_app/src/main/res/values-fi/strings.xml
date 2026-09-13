@@ -242,9 +242,13 @@ Yleinen oletus: %1$s</string>
     <string name="debug_section_title">Diagnostiikka</string>
     <string name="room_measure_label">Ohjaamon mittaus</string>
     <string name="room_measure_desc">Toistaa pyyhkäisyäänen jokaisesta kaiuttimesta vuorollaan ja mittaa, milloin ääni saapui ja onko se vaiheessa. Kestää noin puoli minuuttia. Moottori sammuksissa, ovet kiinni, tavallinen äänenvoimakkuus.</string>
+    <string name="room_needs_mic_title">Mikrofonia ei ole vielä kalibroitu</string>
+    <string name="room_needs_mic_msg">Ohjaamomittaus suoritetaan, mutta se olettaa mikrofonin olevan täysin lineaarinen: ilman kalibrointia sen korjauskäyrä on kuusitoista nollaa, joten kapselille itselleen ei vähennetä mitään.\n\nKaikki, mitä mikrofoni värittää — sen oma bassovaimennus, asennusaukon aiheuttama vaimennus —, luetaan auton viaksi, ja Auto-EQ yrittää korjata sitä kaiuttimista. Esiasetuksesta tulee vääristynyt, eikä mikään tuloksessa kerro siitä.\n\nKalibrointi kestää noin puoli minuuttia ja tehdään tälle mikrofonille vain kerran.</string>
+    <string name="room_needs_mic_calibrate">Kalibroi ensin</string>
+    <string name="room_needs_mic_anyway">Mittaa ilman kalibrointia</string>
     <string name="room_measure_button">Mittaa</string>
     <string name="room_measure_running">Mitataan: %1$s</string>
-    <string name="room_measure_done">Valmis — lähetetäänkö tulos?</string>
+    <string name="room_measure_done">Esiasetus «%1$s» luotu ja aktivoitu!</string>
     <string name="room_measure_failed">Mittaus epäonnistui</string>
     <string name="room_measure_send">Tallenna arkisto</string>
     <string name="room_measure_saved_title">Mittaus tallennettu</string>
@@ -396,8 +400,8 @@ Yleinen oletus: %1$s</string>
     <string name="banner_copied">Kopioitu leikepöydälle</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Päällä</string>
+    <string name="state_off">Pois</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

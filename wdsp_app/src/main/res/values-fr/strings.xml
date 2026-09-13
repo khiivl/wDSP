@@ -242,9 +242,13 @@ Par défaut global : %1$s</string>
     <string name="debug_section_title">Diagnostic</string>
     <string name="room_measure_label">Mesure de l\'habitacle</string>
     <string name="room_measure_desc">Émet un balayage par chaque haut-parleur à tour de rôle et mesure quand le son est arrivé et s\'il est en phase. Dure environ une demi-minute. Moteur coupé, portes fermées, volume habituel.</string>
+    <string name="room_needs_mic_title">Le microphone n\'est pas encore calibré</string>
+    <string name="room_needs_mic_msg">La mesure de l\'habitacle se lancera, mais considérera le microphone comme parfaitement linéaire : sans calibrage, sa courbe de correction est de seize zéros, donc rien n\'est soustrait pour la capsule elle-même.\n\nTout ce que le microphone colore — son propre affaiblissement des basses, l\'atténuation de l\'ouverture où il est placé — sera imputé au véhicule, et l\'Auto-EQ tentera de le corriger par les haut-parleurs. Le préréglage sera faussé, sans que rien ne l\'indique dans le résultat.\n\nLe calibrage dure environ une demi-minute et ne se fait qu\'une seule fois pour ce microphone.</string>
+    <string name="room_needs_mic_calibrate">Calibrer d\'abord</string>
+    <string name="room_needs_mic_anyway">Mesurer sans calibrage</string>
     <string name="room_measure_button">Mesurer</string>
     <string name="room_measure_running">Mesure : %1$s</string>
-    <string name="room_measure_done">Terminé — envoyer le résultat ?</string>
+    <string name="room_measure_done">Préréglage « %1$s » créé et activé !</string>
     <string name="room_measure_failed">Échec de la mesure</string>
     <string name="room_measure_send">Enregistrer l\'archive</string>
     <string name="room_measure_saved_title">Mesure enregistrée</string>
@@ -396,8 +400,8 @@ Par défaut global : %1$s</string>
     <string name="banner_copied">Copié dans le presse-papiers</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Activé</string>
+    <string name="state_off">Désactivé</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

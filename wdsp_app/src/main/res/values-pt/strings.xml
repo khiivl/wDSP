@@ -240,9 +240,13 @@
     <string name="debug_section_title">Diagnóstico</string>
     <string name="room_measure_label">Medição do habitáculo</string>
     <string name="room_measure_desc">Reproduz um varrimento por cada coluna à vez e mede quando o som chegou e se está em fase. Demora cerca de meio minuto. Motor desligado, portas fechadas, volume normal.</string>
+    <string name="room_needs_mic_title">O microfone ainda não está calibrado</string>
+    <string name="room_needs_mic_msg">A medição do habitáculo será executada, mas assumirá que o microfone é perfeitamente plano: sem calibração, a sua curva de correção é de dezasseis zeros, pelo que nada é subtraído para a própria cápsula.\n\nTudo o que o microfone colorir — a sua própria quebra de graves, a quebra na abertura onde está instalado — será imputado ao automóvel, e o Auto-EQ tentará corrigi-lo através dos altifalantes. A predefinição sairá distorcida, sem que nada no resultado o indique.\n\nA calibração demora cerca de meio minuto e é feita uma única vez para este microfone.</string>
+    <string name="room_needs_mic_calibrate">Calibrar primeiro</string>
+    <string name="room_needs_mic_anyway">Medir sem calibração</string>
     <string name="room_measure_button">Medir</string>
     <string name="room_measure_running">A medir: %1$s</string>
-    <string name="room_measure_done">Concluído — enviar o resultado?</string>
+    <string name="room_measure_done">Predefinição «%1$s» criada e ativada!</string>
     <string name="room_measure_failed">Não foi possível medir</string>
     <string name="room_measure_saved_title">Medição guardada</string>
     <string name="room_measure_saved">O arquivo com %2$d ficheiros foi gravado em:\n\n%1$s\n\nAbra-o com um gestor de ficheiros, ou copie-o com um cabo USB ou cartão de memória.</string>
@@ -394,8 +398,8 @@
     <string name="banner_copied">Copiado para a área de transferência</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Ligado</string>
+    <string name="state_off">Desligado</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

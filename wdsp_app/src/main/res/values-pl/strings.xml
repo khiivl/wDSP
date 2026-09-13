@@ -230,9 +230,13 @@
     <string name="debug_section_title">Diagnostyka</string>
     <string name="room_measure_label">Pomiar kabiny</string>
     <string name="room_measure_desc">Odtwarza sweep kolejno przez każdy głośnik i mierzy, kiedy dźwięk dotarł i czy jest w fazie. Trwa około pół minuty. Silnik wyłączony, drzwi zamknięte, zwykła głośność.</string>
+    <string name="room_needs_mic_title">Mikrofon nie jest jeszcze skalibrowany</string>
+    <string name="room_needs_mic_msg">Pomiar kabiny zostanie wykonany, ale założy idealnie płaską charakterystykę mikrofonu: bez kalibracji jego krzywa korekcji to szesnaście zer, więc nic nie zostanie odjęte dla samej kapsuły.\n\nWszystko, co podbarwia sam mikrofon — jego własny spadek basu, spadek góry w otworze, w którym się znajduje — zostanie przypisane samochodowi, a Auto-EQ spróbuje to skompensować głośnikami. Profil wyjdzie zniekształcony i nic w wyniku o tym nie wspomni.\n\nKalibracja trwa około pół minuty i wykonuje się ją dla tego mikrofonu tylko raz.</string>
+    <string name="room_needs_mic_calibrate">Najpierw skalibruj</string>
+    <string name="room_needs_mic_anyway">Zmierz bez tego</string>
     <string name="room_measure_button">Zmierz</string>
     <string name="room_measure_running">Pomiar: %1$s</string>
-    <string name="room_measure_done">Gotowe — wysłać wynik?</string>
+    <string name="room_measure_done">Profil „%1$s” został utworzony i aktywowany!</string>
     <string name="room_measure_failed">Pomiar się nie powiódł</string>
     <string name="room_measure_saved_title">Pomiar zapisany</string>
     <string name="room_measure_saved">Archiwum z %2$d plikami zapisano tutaj:\n\n%1$s\n\nOtwórz je menedżerem plików albo skopiuj na pendrive lub przez USB.</string>
@@ -392,8 +396,8 @@
     <string name="banner_copied">Skopiowano do schowka</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Włączone</string>
+    <string name="state_off">Wyłączone</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

@@ -242,9 +242,13 @@ Globálne predvolené: %1$s</string>
     <string name="debug_section_title">Diagnostika</string>
     <string name="room_measure_label">Meranie kabiny</string>
     <string name="room_measure_desc">Postupne prehrá sweep cez každý reproduktor a zmeria, kedy zvuk dorazil a či je vo fáze. Trvá asi pol minúty. Vypnutý motor, zatvorené dvere, bežná hlasitosť.</string>
+    <string name="room_needs_mic_title">Mikrofón ešte nie je nakalibrovaný</string>
+    <string name="room_needs_mic_msg">Meranie kabíny prebehne, ale bude predpokladať dokonale lineárny mikrofón: bez kalibrácie je jeho korekčná krivka šestnásť núl, takže pre samotnú vložku sa neodpočíta nič.\n\nVšetko, čo mikrofón zafarbí — jeho vlastný pokles basov, pokles výšok v otvore, kde je umiestnený —, sa pripíše vozidlu a Auto-EQ sa to pokúsi korigovať reproduktormi. Predvoľba bude skreslená a vo výsledku o tom nebude žiadna zmienka.\n\nKalibrácia trvá približne pol minúty a pre tento mikrofón sa vykonáva iba raz.</string>
+    <string name="room_needs_mic_calibrate">Najprv nakalibrovať</string>
+    <string name="room_needs_mic_anyway">Merať bez kalibrácie</string>
     <string name="room_measure_button">Zmerať</string>
     <string name="room_measure_running">Meranie: %1$s</string>
-    <string name="room_measure_done">Hotovo — odoslať výsledok?</string>
+    <string name="room_measure_done">Predvoľba «%1$s» bola vytvorená a aktivovaná!</string>
     <string name="room_measure_failed">Meranie zlyhalo</string>
     <string name="room_measure_send">Uložiť archív</string>
     <string name="room_measure_saved_title">Meranie uložené</string>
@@ -396,8 +400,8 @@ Globálne predvolené: %1$s</string>
     <string name="banner_copied">Skopírované do schránky</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Zapnuté</string>
+    <string name="state_off">Vypnuté</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>

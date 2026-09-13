@@ -242,9 +242,13 @@
     <string name="debug_section_title">Диагностика</string>
     <string name="room_measure_label">Измерване на салона</string>
     <string name="room_measure_desc">Пуска тонален сигнал през всеки говорител поред и измерва кога пристига звукът и дали е във фаза. Отнема около половин минута. Спрян двигател, затворени врати, обичайна сила на звука.</string>
+    <string name="room_needs_mic_title">Микрофонът все още не е калибриран</string>
+    <string name="room_needs_mic_msg">Измерването на купето ще стартира, но ще приеме микрофона за идеално линеен: без калибриране неговата коригираща крива е шестнадесет нули, така че за самия капсул не се изважда нищо.\n\nВсичко, което микрофонът оцветява — неговият собствен спад на баса, спадът във високите от отвора, в който е монтиран, — ще бъде приписано на автомобила и Auto-EQ ще се опита да го компенсира през говорителите. Профилът ще се получи изкривен, без това да бъде отбелязано в резултатите.\n\nКалибрирането отнема около половин минута и се прави еднократно за този микрофон.</string>
+    <string name="room_needs_mic_calibrate">Първо калибриране</string>
+    <string name="room_needs_mic_anyway">Измерване без него</string>
     <string name="room_measure_button">Измери</string>
     <string name="room_measure_running">Измерване: %1$s</string>
-    <string name="room_measure_done">Готово — да изпратим ли резултата?</string>
+    <string name="room_measure_done">Профилът «%1$s» е създаден и активиран!</string>
     <string name="room_measure_failed">Измерването е неуспешно</string>
     <string name="room_measure_send">Запазване на архива</string>
     <string name="room_measure_saved_title">Измерването е запазено</string>
@@ -396,8 +400,8 @@
     <string name="banner_copied">Копирано в клипборда</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">Включено</string>
+    <string name="state_off">Изключено</string>
     <string name="pref_radio_mic_visualizer_title">FM Радио визуализатор (тест)</string>
     <string name="pref_radio_mic_visualizer_desc">Акустичен спектрален анализ на говорителите през микрофон за аналогово FM радио</string>
     <string name="perm_wizard_item_root_title">Root достъп (Magisk Superuser)</string>

@@ -309,6 +309,10 @@
     <string name="room_mic_cal_none">Microphone not calibrated</string>
     <string name="room_mic_cal_confirm_title">Microphone Calibration</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
+    <string name="room_needs_mic_title">The microphone is not calibrated yet</string>
+    <string name="room_needs_mic_msg">The cabin measurement will run, but it will assume the microphone is perfectly flat: with no calibration its correction curve is sixteen zeros, so nothing is subtracted for the capsule itself.\n\nWhatever the microphone colours - its own bass roll-off, the roll-off of the opening it sits in - is then charged to the car, and the Auto-EQ will try to correct it out of the speakers. The preset comes out skewed, and nothing in the result says so.\n\nCalibration takes about half a minute and is done once for this microphone.</string>
+    <string name="room_needs_mic_calibrate">Calibrate first</string>
+    <string name="room_needs_mic_anyway">Measure without it</string>
     <string name="room_measure_button">Calibrate Cabin &amp; Create Preset</string>
     <string name="room_measure_running">Calibrating: %1$s</string>
     <string name="room_measure_done">Preset \"%1$s\" created and activated!</string>

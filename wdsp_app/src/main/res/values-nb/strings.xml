@@ -242,9 +242,13 @@ Global standard: %1$s</string>
     <string name="debug_section_title">Diagnostikk</string>
     <string name="room_measure_label">Måling av kupeen</string>
     <string name="room_measure_desc">Spiller en sweep gjennom hver høyttaler etter tur og måler når lyden kom fram og om den er i fase. Tar omtrent et halvt minutt. Motoren av, dørene lukket, vanlig lydstyrke.</string>
+    <string name="room_needs_mic_title">Mikrofonen er ikke kalibrert ennå</string>
+    <string name="room_needs_mic_msg">Kupémålingen vil starte, men forutsetter at mikrofonen er helt lineær: uten kalibrering er korreksjonskurven seksten nuller, så ingenting trekkes fra for selve kapselen.\n\nAlt mikrofonen farger — dens eget bassfall, avrullingen fra åpningen den sitter i — tilskrives bilen, og Auto-EQ vil prøve å kompensere via høyttalerne. Forhåndsinnstillingen blir skjev, uten at resultatet opplyser om det.\n\nKalibreringen tar omtrent et halvt minutt og gjøres én gang for denne mikrofonen.</string>
+    <string name="room_needs_mic_calibrate">Kalibrer først</string>
+    <string name="room_needs_mic_anyway">Mål uten kalibrering</string>
     <string name="room_measure_button">Mål</string>
     <string name="room_measure_running">Måler: %1$s</string>
-    <string name="room_measure_done">Ferdig — sende resultatet?</string>
+    <string name="room_measure_done">Forhåndsinnstilling «%1$s» opprettet og aktivert!</string>
     <string name="room_measure_failed">Målingen mislyktes</string>
     <string name="room_measure_send">Lagre arkiv</string>
     <string name="room_measure_saved_title">Måling lagret</string>
@@ -396,8 +400,8 @@ Global standard: %1$s</string>
     <string name="banner_copied">Kopiert til utklippstavlen</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
-    <string name="state_on">On</string>
-    <string name="state_off">Off</string>
+    <string name="state_on">På</string>
+    <string name="state_off">Av</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
