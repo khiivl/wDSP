@@ -1985,8 +1985,23 @@ public class MainActivity extends AppCompatActivity {
         return Math.round(s.getValue());
     }
 
+    /**
+     * The subwoofer crossover index the spinner is showing, or {@code -1} when it is showing
+     * nothing this method recognises.
+     *
+     * 🔴 It used to answer 5 - eighty hertz - to both "the box is empty" and "I do not recognise
+     * that", which made an unloaded screen indistinguishable from a deliberate choice of 80 Hz.
+     * That is how a measured preset lost its crossover: the cabin sweep wrote 100 Hz into the
+     * preference, the screen had not read it yet, and the next save put 80 Hz back over it. The
+     * door high-pass stayed at 100 because it comes from a slider rather than from text, so the
+     * two ends of the crossover disagreed and the octave between them was left to nobody.
+     *
+     * A default belongs to a reader deciding what to do without a value, not to a writer inventing
+     * one. Callers decide what "unknown" means for them; {@link #savePreset} leaves the stored
+     * value alone.
+     */
     private int resolveSubFreqIndex(String text) {
-        if (text == null || text.trim().isEmpty()) return 5;
+        if (text == null || text.trim().isEmpty()) return -1;
         String trimmed = text.trim();
         int idx = java.util.Arrays.asList(SUB_FREQS).indexOf(trimmed);
         if (idx >= 0) return idx;
@@ -1997,7 +2012,7 @@ public class MainActivity extends AppCompatActivity {
             idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(digits);
             if (idx >= 0) return idx;
         }
-        return 5;
+        return -1;
     }
 
     private int resolveBassBoostFreqIndex(String text) {
@@ -2038,7 +2053,13 @@ public class MainActivity extends AppCompatActivity {
         int subFreqIdx = resolveSubFreqIndex(spinnerSubFreq != null ? spinnerSubFreq.getText().toString() : "");
         int subGain = seekSubGain != null ? getIntSlider(seekSubGain) : 0;
         e.putInt(name + "_sub_g", subGain);
-        e.putInt(name + "_sub_f", subFreqIdx);
+        // Only when the screen actually knows. Writing a fallback here would overwrite a crossover
+        // the cabin measurement had just computed with a number nobody chose - which is exactly
+        // what happened on 13.09.2026, turning a measured 100 Hz into 80 Hz while the door
+        // high-pass stayed at 100.
+        if (subFreqIdx >= 0) {
+            e.putInt(name + "_sub_f", subFreqIdx);
+        }
 
         int powerVal = parsePowerDb();
         e.putInt(name + "_power_vol", powerVal);
@@ -2635,7 +2656,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
+    /**
+     * Persists whatever the user has just changed on screen.
+     *
+     * 🔴 Guarded, because "whatever the user has just changed" is meaningless before the screen has
+     * finished loading: the user has changed nothing yet, and every control still holds a default.
+     * This runs from control listeners, and those fire while the layout is being populated as well
+     * as when a finger moves them, so an early one saved a half-built screen over a stored preset.
+     * savePreset already refused to write most fields without this flag - that guard exists inside
+     * it and is older than this bug - but the band gains, the subwoofer and the power level sat
+     * outside it and went out regardless.
+     *
+     * <p>The bootstrap callers are deliberately NOT routed through here: creating the first preset
+     * writes a screen that has just been reset on purpose, which is a value somebody chose.
+     */
     private void autoSaveCurrent() {
+        if (!isFullyInitialized) return;
         String n = spinnerPresets.getText().toString();
         savePreset(n);
     }
