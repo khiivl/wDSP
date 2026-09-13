@@ -567,6 +567,19 @@ public final class RoomMeasurement {
      * is always behind a pinhole in the fascia. That inference keeps every measurement already made
      * on this unit behaving as it did, instead of silently losing its cavity correction the day a
      * second question appeared on the screen.
+     *
+     * <p>🔴 It carries more weight since 13.09.2026, because the place list no longer says it out
+     * loud. Place 8 used to read "Built-in head unit mic (front panel hole)" - a name that answered
+     * the construction question inside the place question, so the same fact was asked twice and the
+     * owner, whose microphone is exactly that, could not tell which list to answer and picked
+     * "Dashboard". The name is now "Head unit front panel": a place, and nothing but a place. This
+     * line is therefore the only remaining place that knows a fascia microphone sits behind a
+     * pinhole. Owner, 13.09.2026: this is the commonest configuration of all, the one every car
+     * without a separate microphone has.
+     *
+     * <p>⚠️ The index 8 is load-bearing and frozen: {@link #MIC_PLACES} and
+     * {@link #MIC_PLACE_HEIGHT_CM} are indexed by the same number and measurements already made
+     * store it. Renaming an entry is safe; reordering the list is not.
      */
     public static int effectiveMicBody(int micBody, int micPlace) {
         if (micBody >= 0 && micBody < MIC_BODIES.length) return micBody;
@@ -649,9 +662,9 @@ public final class RoomMeasurement {
             case 5: return "dome light";
             case 6: return "steering wheel";
             case 7: return "dashboard";
-            case 8: return "built-in head unit mic";
+            case 8: return "head unit front panel";
             case 9: return "driver headrest (ear level)";
-            case 10: return "center armrest / console";
+            case 10: return "centre armrest";
             default: return "not stated";
         }
     }
