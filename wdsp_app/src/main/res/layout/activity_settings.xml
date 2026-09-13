@@ -2745,10 +2745,24 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Whether there is a subwoofer at all. It belongs here, next to where the
+                     microphone is and what the cabin is, because it is a fact about the car and not
+                     about a preset - it used to be asked only inside the measurement wizard, which
+                     meant the row below asked where the box stands without anyone having said there
+                     was one. Same preference the wizard writes; one fact, two doors to it. -->
+                <CheckBox
+                    android:id="@+id/cb_room_has_subwoofer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/room_wizard_subwoofer_check"
+                    android:textSize="@dimen/text_size_dense_label" />
+
                 <!-- The subwoofer's own place. At these frequencies the cabin is smaller than the
                      wavelength, so this barely changes the tone - but it changes the path length,
                      and the delay line is one of the few things reachable without patching the MCU.
-                     A boot and an under-seat box are more than a metre apart: six slider steps. -->
+                     A boot and an under-seat box are more than a metre apart: six slider steps.
+                     Hidden entirely when the box above says there is no subwoofer. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_room_sub_place"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"

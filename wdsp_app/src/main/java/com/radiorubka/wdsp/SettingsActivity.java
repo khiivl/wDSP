@@ -1600,6 +1600,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             wireMicPlace();
             wireMicBody();
+            wireHasSubwoofer();
             wireSubPlace();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
@@ -2016,6 +2017,39 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
+     * Whether there is a subwoofer at all, which has to be settled before asking where it stands.
+     *
+     * <p>The question lived only in the measurement wizard, which is the wrong scope twice over: a
+     * subwoofer is a fact about the car rather than about a preset, and the wizard runs after the
+     * microphone calibration - the one pass that cannot be honest without the answer, since with
+     * the box silent the only things playing at 80 and 125 Hz are door speakers and their roll-off
+     * gets charged to the capsule. Meanwhile this screen asked where the subwoofer stands without
+     * anybody having said there was one.
+     *
+     * <p>Same preference the wizard writes and the same one hasSubwoofer() reads, so this is a
+     * second door to one fact and not a second copy of it. Unchecking it hides the placement row
+     * rather than leaving a question standing that has no subject.
+     */
+    private void wireHasSubwoofer() {
+        CheckBox box = findViewById(R.id.cb_room_has_subwoofer);
+        View placeRow = findViewById(R.id.layout_room_sub_place);
+        if (box == null) return;
+        int cardBg = ThemeManager.cardBackground(this);
+        box.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg));
+        box.setButtonTintList(android.content.res.ColorStateList.valueOf(ThemeManager.accent(this)));
+        box.setChecked(RoomMeasurement.hasSubwoofer(this));
+        showSubPlace(placeRow, box.isChecked());
+        box.setOnCheckedChangeListener((button, checked) -> {
+            RoomMeasurement.setHasSubwoofer(this, checked);
+            showSubPlace(placeRow, checked);
+        });
+    }
+
+    private static void showSubPlace(View placeRow, boolean hasSub) {
+        if (placeRow != null) placeRow.setVisibility(hasSub ? View.VISIBLE : View.GONE);
+    }
+
+    /**
      * Where the subwoofer stands. Asked because it moves the box by a metre or more, and a metre is
      * three milliseconds - six steps of the delay slider, which is one of the few things that can
      * be set on this hardware without patching the MCU. It is not asked in order to change the
@@ -2030,6 +2064,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
         spinner.setOnItemClickListener((parent, view, position, id) ->
                 RoomMeasurement.setSubPlace(this, position));
+        // Visibility belongs to wireHasSubwoofer, which runs first; repeated here only so that the
+        // row cannot be left showing by a path that reaches this method without that one.
+        showSubPlace(findViewById(R.id.layout_room_sub_place), RoomMeasurement.hasSubwoofer(this));
     }
 
     private void wireMicNudge(BalancePointerView pointer, int buttonId, float dLr, float dFr) {
