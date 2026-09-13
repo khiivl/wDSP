@@ -1724,21 +1724,35 @@ public class MainActivity extends AppCompatActivity {
         //     at MainActivity.updateFmVisualizer
         //     at SegmentedPillNavView.setSelectedItemId
         //     at MainActivity.onCreate(MainActivity.java:315)
-        // ⚠️ How far this actually reaches, corrected after a first, overstated reading of it:
-        // through the interface it is normally SAFE, and the crash above was provoked by an adb
-        // launch that the UI does not produce. SettingsActivity:320 is the only place that ever
-        // sets `target_tab`, and MainActivity does not finish when it opens Settings - it stays in
-        // the task underneath. So tapping a tab there sends CLEAR_TOP | SINGLE_TOP into the
-        // existing instance and the intent arrives at onNewIntent, long after setup. Starting
-        // MainActivity cold with the extra already on it, as `am start --ei target_tab` does, is
-        // what runs onCreate down this path.
-        // ❓ The one case not settled by reading: the process killed in the background while
-        // Settings is on top - which this platform's power controller does readily - and the person
-        // then coming back and tapping a tab. Whether the rebuilt activity takes that intent
-        // through onCreate or onNewIntent is a property of how the task is reconstituted, and
-        // wants an experiment rather than an opinion.
-        // Either way the guard belongs here: updateEqVisualizer has carried exactly this one all
-        // along, the two siblings had drifted, and only one of them was protected.
+        // 🔬 It is reachable from the interface. That was established by experiment on 13.09.2026,
+        // after a reading of the code had said the opposite and been wrong twice over.
+        //
+        // The real journey: open the app, go to Settings, leave it, the process dies, come back
+        // and tap any tab in Settings' bottom bar. Reproduced on the unit - guard removed, the
+        // process killed while the app sat in the background with Settings on top, the task
+        // re-entered, one tap - and it died exactly as above.
+        //
+        // ⚠️ The thing that decides it is NOT onCreate versus onNewIntent, which is where the
+        // wrong reading went. Both crash, and the second one is the one a person actually hits:
+        //   at MainActivity.updateFmVisualizer
+        //   at MainActivity.handleTargetTab
+        //   at MainActivity.onNewIntent
+        //   at ActivityThread.deliverNewIntents
+        //   at ActivityThread.performResumeActivity
+        // What decides it is whether the POSTED initialisation has had its turn yet. setupEqBands,
+        // which fills gainSliders, is deliberately deferred - `handler.post(...)` under "EQ Bands
+        // are heavy" - so it runs on a later pass of the message loop. When the activity is being
+        // rebuilt, the pending intent is delivered inside performResumeActivity, in the same pass
+        // as onCreate, and the sliders do not exist yet. When MainActivity is merely sitting alive
+        // underneath Settings, the same intent arrives seconds later, long after that post ran,
+        // and nothing happens. That is the whole difference, and it is why this shipped.
+        //
+        // 📻 Worth knowing for anything else that leans on the process staying alive: `am kill`
+        // will not take this app, because McuService is a foreground service. It still dies - a
+        // crash does it, and one crash here therefore sets up the next.
+        //
+        // updateEqVisualizer has carried exactly this guard all along; the two siblings had
+        // drifted, and only one of them was protected.
         if (fmVisualizer == null || gainSliders.size() < AudioConfig.NUM_BANDS) return;
         float[] offs = calculateFmOffsets();
         AudioSpectrumEngine.getInstance().setFmOffsets(offs);
