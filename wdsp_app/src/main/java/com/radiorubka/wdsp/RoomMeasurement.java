@@ -916,31 +916,24 @@ public final class RoomMeasurement {
                 curve[i] = Float.parseFloat(parts[i].trim());
             } catch (NumberFormatException ignored) {}
         }
-        // 🔴 A "legacy upgrade" used to stand here. It recognised a curve saved by an older build
-        // (6, 6, 6, 0, 0...) and rewrote it in place as 16, 16, 16, 13, 8 - manufacturing precisely
-        // the fiction this project spent the night dismantling. A capsule is flat to +-0.5 dB across
-        // its band; below the microphone input's own high-pass there is no signal to restore, only
-        // the converter's thermal noise. Promoting an old curve to those numbers made the synthesis
-        // believe the car had a huge bass excess and cut real bass in reply. Deleted.
+        // 🔴 Two things stood here in turn and both are gone.
         //
-        // What replaces it is a refusal rather than a rewrite. Bands 0..2 are zeroed in the value
-        // HANDED OUT, and the stored preference is left exactly as the owner's calibration wrote it:
-        // it is his measurement, and quietly editing someone's data is how a disagreement becomes
-        // invisible. The zeroing is the same rule estimateMicCompensation now applies, so a curve
-        // measured before 13.09.2026 cannot do damage that a curve measured after it could not.
-        if (curve[0] != 0f || curve[1] != 0f || curve[2] != 0f) {
-            Log.w(TAG, String.format(Locale.US,
-                    "stored mic curve has %.1f/%.1f/%.1f dB at 20/31.5/50 Hz - it was measured "
-                            + "before 13.09.2026, when the low bands were still being estimated. "
-                            + "Nothing there is recoverable (the input high-pass sits at 72..154 Hz), "
-                            + "so those three bands are ignored. RE-RUN THE MICROPHONE CALIBRATION "
-                            + "before trusting a cabin measurement - the rest of this curve was fitted "
-                            + "against the same wrong assumption.",
-                    curve[0], curve[1], curve[2]));
-            curve[0] = 0f;
-            curve[1] = 0f;
-            curve[2] = 0f;
-        }
+        // The first was a "legacy upgrade" that recognised a curve saved by an older build and
+        // rewrote it in place with larger numbers. Manufacturing data on behalf of somebody else's
+        // measurement is indefensible whatever the numbers are.
+        //
+        // The second was mine, and it lasted a day: bands 0..2 were zeroed in the value handed out,
+        // on the reasoning that below the input high-pass there is nothing but converter noise. The
+        // premise was checkable and it is false on this hardware - 20 Hz measures at ~50 dB SNR -
+        // and the guard outlived the rule it mirrored. estimateMicCompensation now decides those
+        // bands from the cabin gain anchor and gates them on measured SNR, so a calibration that
+        // had just written +29.7 dB at 20 Hz was having it silently replaced with zero on the way
+        // out. The report showed the zeros and the log showed the measurement, and the two
+        // disagreed with nothing to say why.
+        //
+        // Nothing is edited here now. The stored curve is the calibration's own output, and any
+        // rule about what may be trusted belongs where the estimate is made, once, rather than
+        // being applied a second time by whoever reads it.
         return curve;
     }
 
