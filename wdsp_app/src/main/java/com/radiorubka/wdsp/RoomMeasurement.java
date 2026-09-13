@@ -1188,6 +1188,12 @@ public final class RoomMeasurement {
          */
         public final float[] noiseFloorDb16 = new float[NativeSweep.BAND_COUNT];
         /**
+         * Which channel the deconvolved floor above was taken from. It is one channel's, not an
+         * average, and the report used to print the numbers without saying so - which reads as a
+         * property of the room and is a property of the anchor.
+         */
+        public String noiseFloorChannel = "";
+        /**
          * The cabin's own silence, measured from the lead-in second before the first sweep tone.
          *
          * <p>🔴 Until 12.09.2026 this was measured into {@code noiseFloorDb16} and then overwritten
@@ -1943,6 +1949,7 @@ public final class RoomMeasurement {
         // quantities - one comes from the impulse response, the other from the car.
         if (refIdx >= 0 && result.channels[refIdx] != null) {
             System.arraycopy(result.channels[refIdx].noiseBandsDb, 0, result.noiseFloorDb16, 0, NativeSweep.BAND_COUNT);
+            result.noiseFloorChannel = result.channels[refIdx].label;
         }
         StringBuilder nfLog = new StringBuilder("deconvolved noise floor (16 bands):");
         for (float v : result.noiseFloorDb16) {
@@ -3019,15 +3026,18 @@ public final class RoomMeasurement {
             return "";
         }
         if (negative == 0) {
-            return "WIRING: every speaker heard directly is in phase with the others.\n";
+            return "WIRING: the main channels heard directly are in phase with each other. "
+                    + "The subwoofer is not compared: it plays through a 12 dB/oct low-pass that "
+                    + "turns its own phase, and plenty of them are wired inverted on purpose, so "
+                    + "its sign here says nothing about anybody's wiring.\n";
         }
         if (positive == 0) {
             // All of them inverted is not a fault in the car: it is one convention against
             // another, somewhere between the amplifier and the measurement, and it sounds the
             // same. Say so rather than send four speakers to be rewired.
-            return "WIRING: every speaker heard directly reads inverted. That is a convention, "
-                    + "not a fault - all four together sound identical to all four the other way "
-                    + "round. Nothing to do.\n";
+            return "WIRING: every main channel heard directly reads inverted. That is a "
+                    + "convention, not a fault - all four together sound identical to all four the "
+                    + "other way round. Nothing to do.\n";
         }
         return "WIRING: " + inverted + " reads inverted while the others do not - that speaker is "
                 + "most likely connected the wrong way round, and it will thin out the bass in "
@@ -3200,7 +3210,10 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %.1f", band));
             }
             sb.append("\n");
-            sb.append("Deconv. noise dB:     ");
+            sb.append(result.noiseFloorChannel.isEmpty()
+                    ? "Deconv. noise dB:     "
+                    : String.format(Locale.US, "%-22s",
+                            "Deconv. noise (" + result.noiseFloorChannel + "):"));
             for (float band : result.noiseFloorDb16) {
                 sb.append(String.format(Locale.US, " %.1f", band));
             }
