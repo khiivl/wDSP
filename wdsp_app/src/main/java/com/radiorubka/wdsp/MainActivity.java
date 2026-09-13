@@ -1710,7 +1710,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateFmVisualizer() {
-        if (fmVisualizer == null) return;
+        // 🔴 The sliders have to exist, not just the view. onCreate selects the bottom-nav tab at
+        // line ~315 - before the band sliders are built - so arriving here with `target_tab` set
+        // meant `gainSliders.get(0)` on an empty list and the process died during launch:
+        //   IndexOutOfBoundsException: Index: 0, Size: 0
+        //     at MainActivity.updateFmVisualizer
+        //     at SegmentedPillNavView.setSelectedItemId
+        //     at MainActivity.onCreate(MainActivity.java:315)
+        // The way a person reaches it: Settings -> tap the Loudness tab in the bottom bar
+        // (SettingsActivity puts `target_tab` on the intent) while MainActivity is not alive any
+        // more, which on this platform is often - the power controller kills it in the background.
+        // With it alive the intent goes to onNewIntent instead, long after setup, and nothing
+        // happens; that is why this survived testing and shipped in 0.4.9.8.
+        // updateEqVisualizer has carried exactly this guard all along - the two siblings had
+        // drifted, and only one of them was protected.
+        if (fmVisualizer == null || gainSliders.size() < AudioConfig.NUM_BANDS) return;
         float[] offs = calculateFmOffsets();
         AudioSpectrumEngine.getInstance().setFmOffsets(offs);
         int[] gs = new int[AudioConfig.NUM_BANDS]; float[] actual = new float[AudioConfig.NUM_BANDS]; float[] warns = new float[AudioConfig.NUM_BANDS];
