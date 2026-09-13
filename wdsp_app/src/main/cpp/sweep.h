@@ -154,15 +154,24 @@ public:
      * bandwidth and asymmetric boost/cut limits.
      * Also outputs recommended subwoofer LPF index and gain (if hasSub is true).
      */
+    /**
+     * @param snr16 per-band signal-to-noise ratio in dB from subtractNoise, or nullptr to trust
+     *              every band equally. A band measured a few decibels above its own noise floor
+     *              did not measure the car; correcting it confidently puts a real boost or cut
+     *              where the sweep knew nothing, and it happens most at the bottom, where cabin
+     *              noise is loudest and the corrections are largest.
+     */
     static void synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                   const float* snr16,
                                    int hpfCutoffIdx, bool hasSub, int targetCurveType,
                                    int* outGains16, int& outSubLpfIdx, int& outSubGain);
 
     /** Backward-compatibility wrapper defaulting to TARGET_HARMAN. */
     static void synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
+                                     const float* snr16,
                                      int hpfCutoffIdx, bool hasSub,
                                      int* outGains16, int& outSubLpfIdx, int& outSubGain) {
-        synthesizeAutoEq16(avgClean16, micComp16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
+        synthesizeAutoEq16(avgClean16, micComp16, snr16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
                            outGains16, outSubLpfIdx, outSubGain);
     }
 

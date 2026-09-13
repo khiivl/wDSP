@@ -123,10 +123,10 @@ public final class NativeAnalyzer {
         return handle == 0 ? 0 : nativeFrames(handle);
     }
 
-    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
-    public void setIsAcoustic(boolean acoustic) {
-        if (handle != 0) nativeSetIsAcoustic(handle, acoustic);
-    }
+    // setIsAcoustic(boolean) used to live here, documented as disabling the cabin rumble noise
+    // floor subtraction for microphone input. It disabled nothing: the native processFrame never
+    // read the flag. Removed rather than implemented - for a microphone pointed at a car the
+    // floor is the one thing that has to come off.
 
     /** Reads latest samples into byte array as 8-bit unsigned waveform centered at 128. */
     public int getWaveform(byte[] outBuffer) {
@@ -141,7 +141,6 @@ public final class NativeAnalyzer {
 
     private static native void nativePushPcm16(long handle, short[] samples, int count, float gain);
 
-    private static native void nativeSetIsAcoustic(long handle, boolean acoustic);
 
     private static native int nativeGetWaveform(long handle, byte[] outBuffer);
 

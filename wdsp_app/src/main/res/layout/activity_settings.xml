@@ -1987,6 +1987,14 @@
                     android:stepSize="1"
                     android:value="60" />
 
+                <!-- A microphone gate slider stood here for about twenty minutes on 13.09.2026 and
+                     was removed the moment it appeared on screen. The owner's rule: "результат має
+                     бути такий, щоб людина не чіпаючи налаштування по дефолту отримала правильний
+                     результат". The threshold was only ever hard to choose because the noise floor
+                     was learning from the music; with the floor learning in the pauses instead, one
+                     constant works, and RadioMicCapture keeps it. -->
+
+
                 <!-- 5. Спектроаналізатор FM-радіо через салонний мікрофон -->
                 <LinearLayout
                     android:layout_width="match_parent"

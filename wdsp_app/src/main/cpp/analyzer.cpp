@@ -47,8 +47,7 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
           lastProcessedSample_(0),
           longFftDueAt_(0),
           frameMaxPower_(0.0f),
-          running_(true),
-          isAcoustic_(false) {
+          running_(true) {
     (void) captureSize;
     for (int i = 0; i < kBands; i++) {
         bandPower_[i] = 0.0f;
@@ -62,11 +61,6 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
 }
 
 Analyzer::~Analyzer() = default;
-
-void Analyzer::setIsAcoustic(bool acoustic) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    isAcoustic_ = acoustic;
-}
 
 int Analyzer::getWaveform(uint8_t* out, int maxLen) {
     if (out == nullptr || maxLen <= 0) return 0;
@@ -281,11 +275,17 @@ void Analyzer::processFrame(bool haveLong) {
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
     for (int i = 0; i < kBands; i++) {
         float power = bandPower_[i];
+        // Only quiet frames teach the floor. The branch that used to stand here learned outside
+        // them as well - taking the running minimum of any frame at all - which is precisely what
+        // the comment above warns against: on stationary content the floor walks down onto the
+        // signal's own minima. The Java twin of this loop (AudioSpectrumEngine.processFft) never
+        // had that branch, so the two analysers disagreed about the same car.
+        //
+        // Nothing is lost by removing it: the quiet branch min-tracks, so the floor still falls
+        // the moment a genuinely quiet frame arrives that is lower than what is stored.
         if (quiet) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;
-        } else if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) {
-            noiseFloor_[i] = power;
         }
         float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
         if (signal < 0.0f) signal = 0.0f;

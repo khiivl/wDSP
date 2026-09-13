@@ -1645,6 +1645,22 @@ public class SettingsActivity extends AppCompatActivity {
     private void startRoomMeasurement() {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
+        // A cabin run with no microphone calibration neither fails nor complains. The curve simply
+        // reads back as sixteen zeros (getMicCompensationCurve returns a fresh array when nothing is
+        // saved), and synthesizeAutoEq16 adds it to the measured response - so the capsule is taken
+        // to be flat. Everything the microphone itself colours is then charged to the car and
+        // equalised out of the speakers, and the report says nothing about it. Hence the question,
+        // with the third way out left open: this is a diagnosis, not a lock.
+        if (!RoomMeasurement.hasMicCompensation(this)) {
+            ThemedDialog.builder(this)
+                    .setTitle(R.string.room_needs_mic_title)
+                    .setMessage(R.string.room_needs_mic_msg)
+                    .setPositiveButton(R.string.room_needs_mic_calibrate, (d, w) -> startMicCalibration())
+                    .setNeutralButton(R.string.room_needs_mic_anyway, (d, w) -> showRoomMeasurementWizard())
+                    .setNegativeButton(R.string.room_measure_confirm_cancel, null)
+                    .show();
+            return;
+        }
         showRoomMeasurementWizard();
     }
 
@@ -2030,10 +2046,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static float clampSpot(float v) {
         return v < -1f ? -1f : v > 1f ? 1f : v;
-    }
-
-    private void beginRoomMeasurement() {
-        showRoomMeasurementWizard();
     }
 
     private void runMeasurementInWizard(Dialog dialog, View layoutSetup, View layoutProgress, View layoutReport,

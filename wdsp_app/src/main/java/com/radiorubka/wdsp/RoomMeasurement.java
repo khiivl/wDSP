@@ -113,7 +113,29 @@ public final class RoomMeasurement {
      * the top of the frequency response, which this measurement does not act on anyway.
      */
     private static final float SWEEP_END_NARROW_HZ = 7000f;
-    private static final float DEFAULT_SECONDS = 3f;
+    /**
+     * How long one sweep lasts. Six seconds, raised from three on 13.09.2026.
+     *
+     * <p>Owner: "свіп надто швидкий... динамік має встигнути перейти в плато". The plateau argument
+     * belongs to stepped-sine measurement rather than to this one - a swept sine is deconvolved, and
+     * the impulse response that comes out carries the full response whether or not any single
+     * frequency reached steady state. So the sweep is not wrong at three seconds. It is, however,
+     * needlessly poor at the bottom, and that is worth the arithmetic:
+     *
+     * <p>20 Hz to 20 kHz is log2(1000) = 9.97 octaves. At three seconds that is <b>301 ms per
+     * octave</b>, and one cycle of 20 Hz lasts 50 ms - so the sweep spends about <b>six cycles</b>
+     * inside the lowest band. Six cycles of energy against a cabin whose noise is loudest exactly
+     * there is what produced the two symptoms already measured: a +-10 dB scatter across the bottom
+     * three bands between two identical empty channels, and a microphone compensation estimate that
+     * saturated its +16 dB cap in three bands at once.
+     *
+     * <p>Doubling the duration doubles the energy in every band: <b>+3 dB of signal-to-noise</b>,
+     * uniformly, for nothing but time. Five channels at six seconds with 1.5 s gaps plus lead and
+     * tail is about forty seconds of sound. If the bottom bands still scatter after this, the next
+     * step is twelve seconds (+6 dB) - and then the wizard text promising "близько півхвилини" has
+     * to change with it, which it does not yet at forty seconds.
+     */
+    private static final float DEFAULT_SECONDS = 6f;
     /**
      * Amplitude of the sweep, not of the head unit.
      *
@@ -172,6 +194,53 @@ public final class RoomMeasurement {
      * gave +14 dB, the one behind it +1 dB, and only the first of the two described a distance.
      */
     private static final float MIN_CLARITY_DB = 9f;
+    /**
+     * How far a channel's own response must stand above its own noise before we believe a speaker
+     * was driven there at all.
+     *
+     * <p>{@link #MIN_PEAK} asks the wrong question. It asks how loud the recording was, and a car
+     * answers that with its own noise: on the owner's bench, with no rear speakers fitted at all,
+     * both rear passes recorded -27.3 dBFS against a -40 dBFS bar, so both "passed". What was in
+     * those recordings was cabin noise and the front pair leaking - which is exactly the owner's
+     * point: the maths has to tell noise from a speaker's output by itself.
+     *
+     * <p>The honest test was already computed in the same run and read by nobody:
+     * {@code subtractNoise} produces a per-band signal-to-noise ratio. From that measurement:
+     * <pre>
+     *   front left   43.5 41.1 37.1 27.6 ... 30.5 15.2
+     *   front right  44.9 46.6 45.7 32.5 ... 35.4 35.0
+     *   subwoofer    44.1 40.8 42.8 33.9 ... 35.6 35.3
+     *   rear left     7.8  4.2  3.9 -5.6 -0.6 -1.5 -0.4 4.1 0.8 0.0 ...
+     *   rear right  -11.3 -6.5 -3.7 -2.7 -1.0 -0.0  0.3 0.5 ...
+     * </pre>
+     * A driven speaker stands 25 to 45 dB over its own noise; an empty channel sits at zero or
+     * below. Ten decibels separates them with three times the margin on either side, and it is the
+     * same figure whatever the cabin noise is, because it is a ratio rather than a level.
+     */
+    private static final float MIN_SNR_PRESENT_DB = 10f;
+    /** Bands the test is taken over: 80 Hz to 5 kHz, where any loudspeaker must produce something. */
+    private static final int SNR_TEST_FIRST_BAND = 3;
+    private static final int SNR_TEST_LAST_BAND = 12;
+
+    /**
+     * The median signal-to-noise ratio over a band range, in dB.
+     *
+     * <p>Median rather than mean: one band sitting on a cabin resonance, or one that the speaker
+     * genuinely cannot produce, should not decide whether the speaker exists.
+     */
+    private static float medianSnrDb(float[] snrDb, int firstBand, int lastBand) {
+        if (snrDb == null) return Float.NEGATIVE_INFINITY;
+        final int from = Math.max(0, firstBand);
+        final int to = Math.min(snrDb.length - 1, lastBand);
+        if (to < from) return Float.NEGATIVE_INFINITY;
+        float[] window = new float[to - from + 1];
+        System.arraycopy(snrDb, from, window, 0, window.length);
+        Arrays.sort(window);
+        final int mid = window.length / 2;
+        return (window.length % 2 == 1)
+                ? window[mid]
+                : 0.5f * (window[mid - 1] + window[mid]);
+    }
     /**
      * The largest difference in arrival times a vehicle cabin can physically produce.
      * In passenger cars and vans, the distance between any two speakers is under 3.5 metres (< 10 ms).
@@ -800,6 +869,15 @@ public final class RoomMeasurement {
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
+    /**
+     * How long the chip is given to receive the flat scratch preset before the first tone.
+     *
+     * <p>The write goes through a preference listener on a background handler and an EQ throttler,
+     * so the registers do not change on the same instruction. A sweep that started earlier would
+     * measure the first fraction of a second through the user's curve.
+     */
+    private static final long PRESET_SETTLE_MS = 450;
+
     private static volatile boolean running;
     /**
      * Diagnostic: play every sweep through the same routing.
@@ -972,7 +1050,17 @@ public final class RoomMeasurement {
          * and the report says so rather than quietly presenting it as fact.
          */
         public boolean confident;
-        /** There was signal at all. Below this nothing can be said about the channel. */
+        /**
+         * There was signal at all. Below this nothing can be said about the channel.
+         *
+         * <p>⚠️ Not the same question as "is there a speaker here". A car with no rear speakers still
+         * records something on the rear passes - the front pair leaking into the cabin - and it can
+         * be well above this bar: on the owner's bench both rears read -27.3 dBFS against a MIN_PEAK
+         * of -40 dBFS. What finally rejected them was the arrival time, 57 ms and 1224 ms from the
+         * anchor, which no cabin can produce. Both paths end in {@code ok == false}, and everything
+         * downstream - the average for the synthesis, the delay projection, the wiring verdict -
+         * already treats that as "this speaker does not exist". Owner, 13.09.2026: "не чує = немає".
+         */
         public boolean heardAtAll;
     }
 
@@ -1006,8 +1094,31 @@ public final class RoomMeasurement {
          * re-measuring, and none of that can start from a number that does not survive the run.
          */
         public final float[] ambientNoiseDb16 = new float[NativeSweep.BAND_COUNT];
+        /**
+         * Signal-to-noise ratio per band, averaged over the channels the synthesis actually used.
+         *
+         * <p>This is how far above its own noise each band's measurement stood, and it decides how
+         * much of the correction for that band is believed - a ramp from nothing at 6 dB to full
+         * trust at 18 dB, applied in synthesizeAutoEq16. It was computed per channel from the
+         * beginning ({@code subtractNoise} fills {@code ChannelResult.snrDb}) and read by nothing
+         * but the report, so a band measured three decibels above the noise was corrected exactly
+         * as confidently as one measured forty above - and that happens most at the bottom, where
+         * the cabin is loudest and the corrections are biggest.
+         */
+        public final float[] avgSnrDb16 = new float[NativeSweep.BAND_COUNT];
         /** 16-band microphone inverse compensation curve in dB. */
         public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
+        /**
+         * Whether the curve above was a calibrated one, or sixteen zeros standing in for it.
+         *
+         * <p>The run answers this itself, at the one line where it loads the curve, by asking the
+         * one function that owns the question ({@link #hasMicCompensation}). No caller passes it in
+         * and no screen decides it: a dialog can be skipped, reworded or added on a second path
+         * into the wizard, and this stays true regardless. Without it the difference between a
+         * measurement of the car and a measurement of the car plus the microphone's own colouring
+         * left no trace anywhere in the result.
+         */
+        public boolean micCalibrated;
         public String error;
         public String reportPath;
         /** What the microphone guard found and did, in one line for the report. */
@@ -1104,6 +1215,12 @@ public final class RoomMeasurement {
             running = true;
             Result result;
             try {
+                // The three literals here are deliberate, not defaults left lying about: a
+                // calibration pass ends at the capsule curve and never reaches synthesizeAutoEq16,
+                // so stage and target curve cannot affect its result, and `false` is what keeps it
+                // sweeping the four main speakers instead of five - the subwoofer has nothing to
+                // say about a microphone's own response. The car's body and the listening distance
+                // are read from the one place that owns them, as everywhere else.
                 result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, false,
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
                         getBodyType(context), getListeningDistanceCm(context), listener, true);
@@ -1118,32 +1235,24 @@ public final class RoomMeasurement {
         }, "wDSP_MicCalibration").start();
     }
 
-    public static void measureAsync(final Context context, final float amplitude,
-                                    final float seconds, final boolean hasSubwoofer,
-                                    final SoundstageMode soundstageMode,
-                                    final TargetCurve targetCurve,
-                                    final Listener listener) {
-        measureAsync(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve,
-                getBodyType(context), getListeningDistanceCm(context), listener);
-    }
-    public static void measureAsync(final Context context, final float amplitude,
-                                    final float seconds, final boolean hasSubwoofer,
-                                    final SoundstageMode soundstageMode,
-                                    final Listener listener) {
-        measureAsync(context, amplitude, seconds, hasSubwoofer, soundstageMode, TargetCurve.HARMAN, listener);
-    }
+    /**
+     * The short way in, used by the debug broadcast: what the car is gets read here, once, from the
+     * place that owns it.
+     *
+     * <p>This used to hand the run {@code false, SoundstageMode.DRIVER, TargetCurve.HARMAN},
+     * invented on the spot, and three further overloads did the same in different combinations. The
+     * same five facts are also written to preferences by the wizard and passed as arguments by the
+     * settings screen, so which car a measurement ran against depended on which door it came
+     * through: a sweep started from {@code MEASURE_ROOM} measured a car with no subwoofer, driver
+     * stage and a curve nobody had chosen, while the identical button in Settings measured the real
+     * one. The overloads that could invent an answer are gone; this is the only short form left,
+     * and it asks.
+     */
     public static void measureAsync(final Context context, final float amplitude,
                                     final float seconds, final Listener listener) {
-        measureAsync(context, amplitude, seconds, false, SoundstageMode.DRIVER, TargetCurve.HARMAN, listener);
-    }
-    public static void measureAsync(final Context context, final boolean hasSubwoofer,
-                                    final SoundstageMode soundstageMode, final Listener listener) {
-        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, TargetCurve.HARMAN, listener);
-    }
-    public static void measureAsync(final Context context, final boolean hasSubwoofer,
-                                    final SoundstageMode soundstageMode, final TargetCurve targetCurve,
-                                    final Listener listener) {
-        measureAsync(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, hasSubwoofer, soundstageMode, targetCurve, listener);
+        measureAsync(context, amplitude, seconds,
+                hasSubwoofer(context), getSoundstageMode(context), getTargetCurve(context),
+                getBodyType(context), getListeningDistanceCm(context), listener);
     }
     public static void measureAsync(final Context context, final boolean hasSubwoofer,
                                     final SoundstageMode soundstageMode, final TargetCurve targetCurve,
@@ -1253,7 +1362,26 @@ public final class RoomMeasurement {
         Log.i(TAG, "locked volume for measurement: " + origVolume + " -> 16 (readback=" + readbackVol
                 + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
         buildScratchPreset(prefs, preset);
-        Log.i(TAG, "measuring through " + SCRATCH_PRESET + ", copied from " + preset);
+
+        // And now actually switch to it. Until 13.09.2026 this line did not exist, and the whole
+        // idea above was a preference nobody read: McuService pushes one preset to the chip, the one
+        // named by last_selected_preset, and its preference listener only reacts to keys that start
+        // with that name (McuService.prefListener, the `key.startsWith(currentPresetName)` branch).
+        // The scratch preset's keys start with "wDSP Flat", so writing them changed nothing in the
+        // hardware while the user's own preset stayed loaded - with its equaliser curve, its delay
+        // lines, its bass boost and its loudness. Every sweep measured the correction on top of the
+        // car, which is exactly what the comment above promises not to do. The owner spotted it from
+        // the other end: "свіпити ж треба у повному флат режимі".
+        //
+        // Order matters: the copy is finished first, then selected, or the listener would push a
+        // half-built preset. RESET_AUDIO_MCU is sent rather than trusting the listener, because it
+        // clears the MCU cache and calls syncPreset() itself - one path, whatever the timing.
+        prefs.edit().putString(PREF_LAST_SELECTED, SCRATCH_PRESET).apply();
+        app.sendBroadcast(new Intent("com.radiorubka.wdsp.RESET_AUDIO_MCU").setPackage(app.getPackageName()));
+        sleep(PRESET_SETTLE_MS);
+        Log.i(TAG, "measuring through " + SCRATCH_PRESET + " (selected and pushed to the chip),"
+                + " copied from " + preset + "; the user's selection is in " + PREF_RECOVERY
+                + " and is restored in the finally block and by restoreIfInterrupted()");
 
         try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds)) {
             if (!sweep.isValid()) {
@@ -1452,7 +1580,15 @@ public final class RoomMeasurement {
             // acts, and it acts on its own schedule - the gap is long enough to absorb both.
             Thread router = new Thread(() -> {
                 for (int k = 1; k < channels.length; k++) {
-                    final long switchAtMs = (long) ((lead + k * period - gap / 2)
+                    // Tied to ROUTING_SETTLE_MS rather than to a fraction of the gap. It used to be
+                    // gap/2 - 750 ms ahead of the sweep - while the code's own figure for how long
+                    // the MCU needs to act on a routing change is 800 ms. Two numbers about the same
+                    // thing, fifty milliseconds apart, and nothing connecting them: the first tones
+                    // of each sweep could still be leaving the previous speaker. Now the switch is
+                    // sent exactly one settle-time before the sweep, which with a 1.5 s gap still
+                    // leaves 700 ms for the cabin to stop ringing after the previous one.
+                    final long settleFrames = ROUTING_SETTLE_MS * SAMPLE_RATE / 1000L;
+                    final long switchAtMs = (long) ((lead + k * period - settleFrames)
                             * 1000L / SAMPLE_RATE);
                     long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
                     if (waitMs > 0) sleep(waitMs);
@@ -1631,9 +1767,24 @@ public final class RoomMeasurement {
             // the other three. On a bench in the open air the same code gave 23 to 33 dB, and
             // that is where the nine-decibel threshold came from - the least representative
             // place it could have been calibrated.
-            cr.heardAtAll = cr.recordedPeak >= MIN_PEAK;
+            // Two tests, and the second is the one that means anything. The level says the recording
+            // was not empty; the ratio says what was in it belonged to a loudspeaker rather than to
+            // the car. A channel with nothing connected still records cabin noise and the other
+            // speakers leaking, and it can clear the level bar by thirteen decibels while standing
+            // nowhere at all above its own noise floor - see MIN_SNR_PRESENT_DB for the measurement.
+            final float midSnrDb = medianSnrDb(cr.snrDb, SNR_TEST_FIRST_BAND, SNR_TEST_LAST_BAND);
+            final boolean loudEnough = cr.recordedPeak >= MIN_PEAK;
+            final boolean aboveOwnNoise = midSnrDb >= MIN_SNR_PRESENT_DB;
+            cr.heardAtAll = loudEnough && aboveOwnNoise;
             cr.confident = cr.clarityDb >= MIN_CLARITY_DB;
             cr.ok = cr.heardAtAll;
+            Log.i(TAG, String.format(Locale.US,
+                    "%s: peak %.1f dBFS (%s), median SNR %.1f dB over bands %d-%d (%s) -> %s",
+                    cr.label, 20 * Math.log10(cr.recordedPeak + 1e-9f),
+                    loudEnough ? "above the level bar" : "below the level bar",
+                    midSnrDb, SNR_TEST_FIRST_BAND, SNR_TEST_LAST_BAND,
+                    aboveOwnNoise ? "a speaker was driven" : "noise, not a speaker",
+                    cr.ok ? "counted" : "not present"));
             if (delayTest != 0 && k > 0 && result.channels[0] != null) {
                 // What the hardware actually did, against what the slider claims it would do.
                 final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
@@ -1738,6 +1889,8 @@ public final class RoomMeasurement {
             }
             NativeSweep.estimateMicCompensation(avgClean16, result.micCompensation16);
             setMicCompensationCurve(context, result.micCompensation16);
+            result.micCalibrated = true; // this pass is the calibration
+
             StringBuilder mcLog = new StringBuilder("estimated & saved mic compensation (16 bands):");
             for (float v : result.micCompensation16) {
                 mcLog.append(String.format(Locale.US, " %+.1f", v));
@@ -1746,6 +1899,9 @@ public final class RoomMeasurement {
             AudioSpectrumEngine.getInstance().onMicCompensationUpdated();
         } else {
             // Standard cabin Auto-EQ pass: load calibrated microphone compensation curve (Hardware constant, kept intact!)
+            // Asked here, next to the load, because this is where "calibrated" and "sixteen zeros"
+            // actually differ - not in whatever screen happened to start the run.
+            result.micCalibrated = hasMicCompensation(context);
             float[] savedMicComp = getMicCompensationCurve(context);
             System.arraycopy(savedMicComp, 0, result.micCompensation16, 0, NativeSweep.BAND_COUNT);
             StringBuilder mcLog = new StringBuilder("using calibrated mic compensation (16 bands):");
@@ -2165,8 +2321,12 @@ public final class RoomMeasurement {
             Log.w(TAG, "POLARITY WARNING: " + result.wiringWarning);
         }
 
-        // 2. Average clean spectrum of confident channels (Front Left & Front Right prioritized)
+        // 2. Average clean spectrum of confident channels (Front Left & Front Right prioritized),
+        //    and the signal-to-noise ratio alongside it, averaged the same way. The ratio decides
+        //    how far the synthesis is allowed to trust each band: it was measured all along and
+        //    nothing read it, so every band was corrected as confidently as the best one.
         float[] avgClean = new float[NativeSweep.BAND_COUNT];
+        float[] avgSnr = new float[NativeSweep.BAND_COUNT];
         int usedCount = 0;
         for (int chIdx : new int[]{Channel.FRONT_LEFT.ordinal(), Channel.FRONT_RIGHT.ordinal(),
                                    Channel.REAR_LEFT.ordinal(), Channel.REAR_RIGHT.ordinal()}) {
@@ -2174,6 +2334,7 @@ public final class RoomMeasurement {
             if (c != null && c.ok && c.confident) {
                 for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
                     avgClean[b] += c.cleanBandsDb[b];
+                    avgSnr[b] += c.snrDb[b];
                 }
                 usedCount++;
             }
@@ -2181,8 +2342,10 @@ public final class RoomMeasurement {
         if (usedCount > 0) {
             for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
                 avgClean[b] /= usedCount;
+                avgSnr[b] /= usedCount;
             }
         }
+        System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
 
         // 3. Detect midbass roll-off HPF cutoff index
         if (result.hasSubwoofer) {
@@ -2201,7 +2364,7 @@ public final class RoomMeasurement {
 
         // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
         int[] subSettings = new int[2];
-        NativeSweep.synthesizeAutoEq16(avgClean, result.micCompensation16,
+        NativeSweep.synthesizeAutoEq16(avgClean, result.micCompensation16, avgSnr,
                 result.midbassHpfIdx, result.hasSubwoofer,
                 result.targetCurve != null ? result.targetCurve.id : NativeSweep.TARGET_HARMAN,
                 result.autoEqGains16, subSettings);
@@ -2228,15 +2391,18 @@ public final class RoomMeasurement {
             // 🧩 A 1.5-2 mm hole in front of the capsule is a Helmholtz cavity: it lifts roughly
             // 2.8-3.2 kHz by +4..+6 dB, so the synthesis reads that lift as the room and cuts it.
             // Give the speech presence back in bands 11 and 12 (2.5 and 4 kHz).
+            // These are hardware indices, not decibels: index 6 is flat and one step is 2 dB. The
+            // comments here used to name dB figures that did not match the arithmetic - "+2" is two
+            // steps, which is 4 dB, and a cap at 8 is +4 dB rather than the +3 it claimed.
             for (int b : new int[]{11, 12}) {
                 if (result.autoEqGains16[b] < 6) {
-                    result.autoEqGains16[b] = Math.min(6, result.autoEqGains16[b] + 2);
+                    result.autoEqGains16[b] = Math.min(6, result.autoEqGains16[b] + 2); // give back up to 4 dB
                 }
             }
             // And the same hole rolls the bottom off, which reads as a room that needs bass.
             for (int b = 0; b < 4; b++) {
                 if (result.autoEqGains16[b] > 8) {
-                    result.autoEqGains16[b] = 8; // cap to +3 dB boost
+                    result.autoEqGains16[b] = 8; // cap the boost at index 8 = +4 dB
                 }
             }
             Log.i(TAG, "Mic construction: pinhole - cavity lift returned to bands 11-12, sub-bass boost capped");
@@ -2265,7 +2431,7 @@ public final class RoomMeasurement {
         if (result.micPlace == 0) { // Windscreen
             for (int b = 10; b < NativeSweep.BAND_COUNT; b++) {
                 if (result.autoEqGains16[b] > 7) {
-                    result.autoEqGains16[b] = 7; // cap to +1.5 dB
+                    result.autoEqGains16[b] = 7; // index 7 = +2 dB (the comment here said +1.5)
                 }
             }
             Log.i(TAG, "Mic placement: windscreen - boundary reflection limiting applied");
@@ -2340,6 +2506,30 @@ public final class RoomMeasurement {
         e.putInt(presetName + "_f_lr", FADER_CENTRE);
         e.putInt(presetName + "_f_fr", FADER_CENTRE);
         e.putBoolean(presetName + "_loud", false);
+
+        // 6. Everything else this preset owns, written explicitly rather than left as it was.
+        //
+        // Until 13.09.2026 these keys were simply not touched, so an auto-preset was only as
+        // determined as its own history: create it once, change loudness by hand, create it again
+        // under the same name, and the second one plays differently from the first while claiming to
+        // be the same measurement. On this unit the effect was live - the owner's
+        // "AutoEQ Harman (Центр)" carried _fm_en=true, _fm_cal=16, _fm_str=100, so McuService was
+        // adding the Fletcher-Munson curve on top of the synthesized gains at low volume
+        // (updateEqWithFm: (cachedGains-6)*2 + fmOffsets). What was measured and what played were
+        // two different curves.
+        //
+        // Tone compensation is switched OFF here on purpose. This preset is the answer to "what does
+        // this car need"; loudness is an answer to "how loud am I listening", and it belongs to the
+        // person, not to the measurement. It is one switch away on the Loudness tab.
+        e.putBoolean(presetName + "_fm_en", false);
+        e.putBoolean(presetName + "_fat_en", false);
+        e.putInt(presetName + "_fm_cal", 0);
+        e.putInt(presetName + "_fm_str", 0);
+        // Bass boost is a second bass control on top of the one just synthesized; two of them
+        // fighting is how a preset ends up with a bottom nobody asked for.
+        for (String k : new String[]{"_bb_f", "_bb_r", "_bb_frq_f", "_bb_frq_r"}) {
+            e.putInt(presetName + k, 0);
+        }
 
         // 6. Add to preset list
         Set<String> presetNames = new HashSet<>(prefs.getStringSet(PREF_PRESET_NAMES, new HashSet<>()));
@@ -2840,7 +3030,24 @@ public final class RoomMeasurement {
             for (float band : result.micCompensation16) {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
-            sb.append("\n\n");
+            sb.append("\n");
+            sb.append("Avg SNR dB:           ");
+            for (float band : result.avgSnrDb16) {
+                sb.append(String.format(Locale.US, " %.1f", band));
+            }
+            sb.append("\n");
+            sb.append("EQ trust (0..1):      ");
+            for (float band : result.avgSnrDb16) {
+                float trust = (band - 6.0f) / 12.0f;
+                sb.append(String.format(Locale.US, " %.2f", Math.max(0f, Math.min(1f, trust))));
+            }
+            sb.append("\n");
+            sb.append("Mic calibrated:       ")
+              .append(result.micCalibrated
+                      ? "yes"
+                      : "NO - curve above is zeros, the capsule was taken to be flat and its own "
+                        + "colouring was charged to the car")
+              .append("\n\n");
             if (result.hasPolarityInversion && result.wiringWarning != null) {
                 sb.append("⚠️ УВАГА: ПОЛЯРНІСТЬ ДИНАМІКІВ!\n");
                 sb.append(result.wiringWarning).append("\n\n");
@@ -2858,9 +3065,19 @@ public final class RoomMeasurement {
             } else {
                 sb.append("Subwoofer: None (natural roll-off / infrasonic protection)\n");
             }
-            sb.append("Synthesized Auto-EQ gains (").append(result.targetCurve != null ? result.targetCurve.title : "Harman").append(" target, dB):");
+            // Printed twice on purpose. The line used to say "dB" and print the indices, so a
+            // Harman preset read as "+6 +6 +6 +7" where the chip was actually being told
+            // "0 0 0 +2" - the hardware grid is 2 dB a step with index 6 meaning flat. Anyone
+            // comparing this line against the measured response was comparing two different
+            // quantities, and the label was the one lying.
+            sb.append("Synthesized Auto-EQ (").append(result.targetCurve != null ? result.targetCurve.title : "Harman").append(" target), dB:");
             for (int g : result.autoEqGains16) {
-                sb.append(String.format(Locale.US, " %+d", g));
+                sb.append(String.format(Locale.US, " %+d", (g - EQ_FLAT_INDEX) * 2));
+            }
+            sb.append("\n");
+            sb.append("  same as hardware indices (6 = 0 dB, 2 dB a step):");
+            for (int g : result.autoEqGains16) {
+                sb.append(String.format(Locale.US, " %d", g));
             }
             sb.append("\n\n");
             sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "

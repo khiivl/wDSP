@@ -499,7 +499,12 @@ public class AudioSpectrumEngine {
         Log.i(TAG, "NATIVE frames=" + analyzer.frames()
                 + " discontinuities=" + analyzer.discontinuities()
                 + " latencyMs=" + nativeLatencyMs
-                + " agcMain=" + mainAgcEnabled + " agcBar=" + barAgcEnabled);
+                // The EFFECTIVE gain, not the preference: in microphone mode the main consumer is
+                // normalised regardless of it, and a log that printed the preference had me reading
+                // "agcMain=false" while the analyser was normalising.
+                + " agcMain=" + (isRadioCaptureActive() || mainAgcEnabled)
+                + (isRadioCaptureActive() ? " (forced: mic mode)" : "")
+                + " agcBar=" + barAgcEnabled);
     }
 
     private void dumpBands(float[] contentDb, float[] curveDb) {
@@ -748,6 +753,11 @@ public class AudioSpectrumEngine {
     private final Runnable watchdog = new Runnable() {
         @Override
         public void run() {
+            // Tell the microphone capture whether the speakers are quiet, so its noise floor is
+            // re-measured in the gaps between tracks rather than guessed from the audio. This is the
+            // one place that can answer it: radio bypasses AudioFlinger, so an empty session list is
+            // not silence, and isMediaPlaybackActive() already knows that.
+            publishPlaybackSilence();
             if (!listeners.isEmpty()) {
                 checkSourceState();
                 long now = System.currentTimeMillis();
@@ -950,7 +960,26 @@ public class AudioSpectrumEngine {
         float latency = radioActive ? 0f : nativeLatencyMs;
         analyzer.setConfig(nativeAttackMs, nativeReleaseMs, latency,
                 nativeRefMaxDb, nativeRangeDb);
-        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgcEnabled, mainAgcStrength, mainAgcFloorDb);
+        // In microphone mode the main analyser is normalised whatever the preference says, and the
+        // preference is not touched - it still governs the calculated mode, where it belongs.
+        //
+        // Why it has to differ by mode. The capture side's automatic gain no longer reaches the
+        // analyser: it moves between 0.5x and 16x, and a moving gain underneath a noise floor
+        // learned in linear power makes the floor describe the gain instead of the car - that is
+        // what turned cabin hiss into full-height bars in a pause. So the analyser is fed the raw
+        // stream. But the main consumer's gain is OFF by default, deliberately: for the CALCULATED
+        // spectrum the levels are absolute and an instrument that silently rescales itself cannot be
+        // read. Taking the capture gain away with nothing in its place left the microphone spectrum
+        // sitting far below the calculated one - the owner saw it at once ("до недавніх переробок
+        // розрахунковий і спектр мікрофона були значно ближчі між собою").
+        //
+        // For a microphone there is nothing absolute to preserve: the level depends on how loudly
+        // the car happens to be playing. So normalisation goes here, in the decibel domain, where it
+        // cannot corrupt the floor - instead of in the capture, where it did. No new setting: the
+        // owner's rule is that the default must already be right.
+        final boolean mainAgc = radioActive || mainAgcEnabled;
+        final float mainStrength = radioActive ? 1.0f : mainAgcStrength;
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgc, mainStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
         analyzer.setDspCurve(getEffectiveSpectrumCurve());
     }
@@ -1058,6 +1087,25 @@ public class AudioSpectrumEngine {
      * much playing. Relying on it meant the watchdog never even looked, and the visualizer sat at
      * zero for the whole of Bluetooth playback.
      */
+    /**
+     * Tells the microphone capture whether the speakers are quiet, so its noise floor is measured
+     * in the gaps instead of being guessed from the sound.
+     *
+     * <p>Only this class can answer it, which is why the answer is pushed rather than asked for:
+     * {@link #isMediaPlaybackActive()} already knows the platform's own source property, the
+     * hardware volume manager's active type and Android's playback configurations, and it knows
+     * that the radio bypasses AudioFlinger - so an empty session list is not silence. The radio is
+     * added back here explicitly: in microphone spectrum mode it is usually the thing playing, and
+     * {@link NowPlaying#isPlaying()} is what follows the screensaver's own play/pause.
+     */
+    private void publishPlaybackSilence() {
+        if (appContext == null) return;
+        NowPlaying now = NowPlaying.getInstance(appContext);
+        boolean radioAudible = now.isRadioSource() && now.isPlaying();
+        boolean silent = !radioAudible && !isMediaPlaybackActive() && !hasMediaSignalNow();
+        radioMicCapture.setPlaybackSilent(silent);
+    }
+
     private boolean isMediaPlaybackActive() {
         if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
             return false;
@@ -1166,23 +1214,29 @@ public class AudioSpectrumEngine {
             return;
         }
 
-        // Configure analyzer for acoustic capture:
-        // 1. Acoustic mode: bypass cabin rumble noise floor subtraction so 50 Hz sub-bass dances
-        nativeAnalyzer.setIsAcoustic(true);
-        // 2. Microphone inverse compensation curve: restores hardware capsule sub-bass and treble roll-off
+        // Microphone inverse compensation curve: restores hardware capsule sub-bass and treble roll-off
         nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
 
-        boolean started = radioMicCapture.start(appContext, (buffer, len) -> {
+        boolean started = radioMicCapture.start(appContext, (boosted, raw, len, captureGain) -> {
             if (!capturePolling) return;
-            noteMicSignal(buffer, len);
+            noteMicSignal(boosted, len);
             NativeAnalyzer analyzer = nativeAnalyzer;
             if (analyzer != null) {
-                analyzer.pushPcm16(buffer, len, 1.0f);
+                // The raw chunk, not the boosted one. The analyser learns its noise floor in
+                // linear power, and the capture side's automatic gain moves between 0.5x and 16x:
+                // every power value shifts underneath a floor that stays where it was learned. In
+                // a pause that gain climbs, the floor does not follow, and "power minus floor"
+                // turns cabin hiss into a full-height bar - which is exactly the fault reported
+                // from the car. The display still lifts quiet music, but through the analyser's
+                // own gain in getLevels(), which works in decibels and leaves the floor alone.
+                analyzer.pushPcm16(raw, len, 1.0f);
             }
             synchronized (waveformLock) {
+                // The waveform is a picture, so it keeps the boosted samples: at volume 2-4 the
+                // raw stream is a flat line on screen.
                 int copyLen = Math.min(len, latestWaveform.length);
                 for (int i = 0; i < copyLen; i++) {
-                    int val = (buffer[i] >> 8) + 128;
+                    int val = (boosted[i] >> 8) + 128;
                     latestWaveform[i] = (byte) Math.max(0, Math.min(255, val));
                 }
                 latestWaveformLen = copyLen;
@@ -1231,9 +1285,6 @@ public class AudioSpectrumEngine {
     private void stopRadioMicCapture() {
         if (radioMicCapture.isRunning()) {
             radioMicCapture.stop();
-        }
-        if (nativeAnalyzer != null) {
-            nativeAnalyzer.setIsAcoustic(false);
         }
     }
 

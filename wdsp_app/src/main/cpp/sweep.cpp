@@ -453,6 +453,16 @@ void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseD
     }
 }
 
+/**
+ * The largest low-frequency correction that can honestly be charged to the microphone's path.
+ *
+ * Derived rather than chosen: the worst credible input high-pass in a head unit is a 0.47 uF
+ * blocking capacitor into a 2.2 kOhm bias resistor, fc = 154 Hz, first order. That attenuates
+ * 80 Hz by 6.7 dB and 125 Hz by 4.0 dB. Eight decibels covers the worst case with margin; beyond
+ * it, the deficit belongs to the car and taking it off the car is the one thing we must not do.
+ */
+constexpr float kPathMaxLowDb = 8.0f;
+
 void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* outCompensation16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
     for (int b = 0; b < kHwBands; b++) {
@@ -474,23 +484,66 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
     // 1. Low-frequency roll-off & cabin gain compensation below 160 Hz (bands 0..4: 20, 31.5, 50, 80, 125 Hz)
     // Head unit mic hardware (pinhole cavity and input AC coupling capacitors) rolls off steeply below 150 Hz.
     // In a sealed passenger cabin, acoustic energy is maintained or boosted by cabin gain (+12 dB/oct below 80 Hz).
-    for (int b = 0; b < 5; b++) {
-        float expected = refMid;
-        if (kHwCenters[b] < 80.0f) {
-            float octaves = std::log2(80.0f / kHwCenters[b]);
-            expected += 6.0f * octaves; // gentle cabin gain expectation
-        }
-        float deficit = expected - avgClean16[b];
+    // 🔴 The "+6 dB/oct cabin gain expectation" that used to stand here has been removed, and this
+    // is a change to the numbers, not a tidy-up.
+    //
+    // What it did: below 80 Hz it expected the measurement to be LOUDER than the midband, by 6 dB
+    // per octave, and charged every decibel of shortfall to the microphone. But a calibration pass
+    // sweeps the door speakers with the subwoofer switched off (calibrateMicAsync passes
+    // hasSubwoofer = false), and doors genuinely give very little at 20-50 Hz. So the car's own bass
+    // shortfall was measured, attributed to the capsule, and then subtracted from every later cabin
+    // measurement as though it were a microphone fault - the same quantity counted twice, in
+    // opposite directions. On this unit it saturated the cap in three bands at once: the owner's
+    // curve reads +16.0 +16.0 +16.0 at 20, 31.5 and 50 Hz, and a saturated estimate is not a
+    // measurement of anything.
+    //
+    // What replaces it: expect the capsule to be flat to the midband and correct only what falls
+    // below that. The capsule's real roll-off is still recovered - that is what the deficit is - but
+    // nothing is invented about what the room ought to be doing.
+    // 🔴 Bands 0..2 - 20, 31.5 and 50 Hz - are left at zero on purpose, and this is a refusal to
+    // guess rather than an omission.
+    //
+    // A modern capsule, even a cheap one, is flat to +-0.5 dB across its band (MEMS: 100 Hz..6 kHz,
+    // electret: 40 Hz..4 kHz; its own barometric vent puts -3 dB at 25..35 Hz). So the capsule
+    // cannot be what a measurement sees missing down there. What IS down there is the microphone
+    // INPUT: a bias resistor of about 2.2 kOhm with a DC blocking capacitor of 0.47..1.0 uF gives a
+    // first-order high-pass at 1/(2*pi*R*C) = 72 Hz (1.0 uF) to 154 Hz (0.47 uF), and a handsfree
+    // DSP adds a second-order voice high-pass at 100..150 Hz on top. At 20 Hz that is tens of
+    // decibels of attenuation - the signal sits under the converter's own noise.
+    //
+    // So the old code, which charged the whole deficit to the capsule and boosted it by up to
+    // +16 dB, was amplifying the input stage's thermal noise and calling it the car. Worse, it did
+    // harm rather than nothing: synthesizeAutoEq16 computes m[b] = avgClean16[b] + micComp16[b],
+    // so a fabricated PLUS down here makes the response look louder than it was and the synthesis
+    // CUTS real bass in reply. The owner's own curve read +16.0 +16.0 +16.0 - three bands at the
+    // cap, which means the estimate had saturated and the true figure was unknown.
+    //
+    // Bands 3..4 (80, 125 Hz) are still measured, but bounded by what a PATH can plausibly do
+    // rather than by an arbitrary ceiling: the worst credible input filter (0.47 uF, fc = 154 Hz)
+    // attenuates 80 Hz by 6.7 dB and 125 Hz by 4.0 dB, so eight decibels covers it with room to
+    // spare. Anything larger than that is not the microphone and must not be taken off the car.
+    for (int b = 3; b < 5; b++) {
+        const float deficit = refMid - avgClean16[b];
         if (deficit > 0.0f) {
-            // Cap maximum low-frequency boost to +16 dB matching real capsule attenuation
-            outCompensation16[b] = std::min(deficit, 16.0f);
+            outCompensation16[b] = std::min(deficit, kPathMaxLowDb);
         }
     }
 
-    // 2. High-frequency acoustic port roll-off correction (12.5 kHz and 20 kHz)
-    // kHwCenters[12] = 5000 Hz
+    // 2. High-frequency acoustic port roll-off correction, from 8 kHz up.
+    //
+    // 🔴 The loop used to start at band 14, which left band 13 - 8 kHz - at exactly zero for every
+    // microphone ever calibrated. There was no reason for it: the reference is band 12 (5 kHz), and
+    // 8 kHz sits between that reference and the bands being corrected, so if the capsule's port is
+    // rolling off at 12.5 kHz it is already rolling off at 8. The owner listed it among the things
+    // that were quietly lost, and he was right - his own curve reads +0.0 at 8 kHz next to +3.5 at
+    // 20 kHz, which describes no physical capsule.
+    //
+    // ⚠️ Still zero by construction: bands 5..12, that is 200 Hz to 5 kHz. Those are not corrected at
+    // all, because this function has no opinion about what a capsule ought to do in the midband -
+    // the midband IS the reference here. Filling that hole needs a decision about what to measure
+    // against, not another guess, and it is left open deliberately.
     const float ref5k = avgClean16[12];
-    for (int b = 14; b < kHwBands; b++) {
+    for (int b = 13; b < kHwBands; b++) {
         const float drop = ref5k - avgClean16[b];
         if (drop > 2.0f) {
             outCompensation16[b] = std::min(drop - 2.0f, 8.0f);
@@ -616,7 +669,12 @@ int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
     return 7; // 100 Hz
 }
 
+/** Below this signal-to-noise ratio a band is not corrected at all; above kSnrFullDb, fully. */
+constexpr float kSnrNoneDb = 6.0f;
+constexpr float kSnrFullDb = 18.0f;
+
 void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
+                                         const float* snr16,
                                          int hpfCutoffIdx, bool hasSub, int targetCurveType,
                                          int* outGains16, int& outSubLpfIdx, int& outSubGain) {
     if (outGains16 == nullptr) return;
@@ -776,6 +834,18 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         // Error delta
         float deltaDb = target - (m[b] - refMid);
 
+        // How much of that error is worth acting on. The sweep already subtracts each band's own
+        // noise floor (subtractNoise, in the deconvolved domain where the two are comparable) and
+        // reports what was left over as snr16 - and until now nothing read it, so a band measured
+        // three decibels above the noise was corrected as confidently as one measured forty above.
+        // A ramp rather than a threshold: no band flips between fully corrected and ignored over a
+        // single decibel of cabin noise.
+        if (snr16 != nullptr) {
+            float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
+            confidence = std::min(1.0f, std::max(0.0f, confidence));
+            deltaDb *= confidence;
+        }
+
         // Subwoofer / Midbass Crossover Rule:
         // In BU32107, the 16-band EQ sits in the stereo mix BEFORE the crossover filters!
         // If we cut 20, 31.5, 50 Hz on the 16-band EQ, we cut those frequencies for the SUBWOOFER too.
@@ -784,7 +854,16 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         //    The door speakers are protected by the Door HPF (0703, 12 dB/oct).
         //    The 16-band EQ MUST NOT CUT sub-bass below cutoffHz! Keep it flat (0 dB, index 6),
         //    so the subwoofer receives a full, unattenuated input signal.
-        if (hasSub && freq < cutoffHz) {
+        // 0) Below the microphone's own input high-pass nothing was measured, so nothing is
+        //    corrected - whatever the car, whatever the subwoofer. The rules that follow are about
+        //    crossovers and cone travel; this one is about the measurement not existing. Until now
+        //    the bands were only pinned when a subwoofer was fitted, so a car WITHOUT one could
+        //    still be handed a boost at 31.5 and 50 Hz computed from the input stage's noise floor
+        //    (the !hasSub rule below stops at 40 Hz and let 50 Hz through).
+        if (freq <= 50.0f) {
+            deltaDb = 0.0f;
+        }
+        else if (hasSub && freq < cutoffHz) {
             deltaDb = 0.0f; // 0 dB (Flat index 6)
         }
         // 2) When hasSub is false:

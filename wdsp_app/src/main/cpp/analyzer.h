@@ -63,8 +63,11 @@ public:
     /** Response the hardware DSP will add, in dB, on the 16 hardware bands. */
     void setDspCurve(const float* curve16);
 
-    /** Sets acoustic microphone mode: disables cabin rumble noise floor subtraction so sub-bass (50 Hz) moves freely. */
-    void setIsAcoustic(bool acoustic);
+    // There used to be a setIsAcoustic(bool) here, documented in three places as disabling the
+    // noise floor subtraction for microphone input so sub-bass could move freely. It disabled
+    // nothing: processFrame never read the flag, so the subtraction always ran. The promise is
+    // gone rather than implemented, because for a microphone looking at a car the floor is the
+    // one thing that must come off - the cabin's own rumble is not content.
 
     /** Reads the newest samples as 8-bit unsigned waveform (0..255, centered 128). */
     int getWaveform(uint8_t* out, int maxLen);
@@ -177,7 +180,6 @@ private:
     mutable std::mutex mutex_;       // published frames, configuration, gain state
     std::condition_variable ringSignal_;
     bool running_;
-    bool isAcoustic_;
 };
 
 } // namespace wdsp

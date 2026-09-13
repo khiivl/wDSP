@@ -55,7 +55,18 @@ public class RadioMicCapture {
     private static final String TAG = "RadioMicCapture";
 
     public interface PcmCallback {
-        void onPcmChunk(short[] buffer, int count);
+        /**
+         * One chunk, delivered twice over.
+         *
+         * @param boosted samples after the automatic gain - what a waveform should draw
+         * @param raw     the samples as the microphone gave them, at a gain of exactly one. Any
+         *                analysis that learns a level over time needs these: a gain that moves
+         *                between 0.5x and 16x underneath a measurement makes the measurement
+         *                describe the gain instead of the car.
+         * @param count   valid samples in both arrays
+         * @param gain    the gain applied to {@code boosted}, so a caller can undo or report it
+         */
+        void onPcmChunk(short[] boosted, short[] raw, int count, float gain);
     }
 
     private static final int SAMPLE_RATE = 48000;
@@ -72,13 +83,59 @@ public class RadioMicCapture {
     private static final float TARGET_PEAK = 24000.0f; // ~ -2.7 dBFS
     private static final float MIN_GAIN = 0.5f;        // -6 dB attenuation for loud listening
     private static final float MAX_GAIN = 16.0f;       // +24 dB boost for quiet volumes (2-4 units)
-    private static final int NOISE_GATE_THRESHOLD = 150; // Silence floor
+    private static final int NOISE_GATE_THRESHOLD = 150; // absolute last resort, see the gate below
+
+    /**
+     * How far above the measured floor a chunk must stand before it counts as something to amplify.
+     *
+     * <p>Three times the floor is about ten decibels. The gate used to be {@link #NOISE_GATE_THRESHOLD}
+     * alone - an absolute number - and cabin noise clears it without difficulty: in a pause the gate
+     * opened, the gain climbed towards 16x, and every rustle became a full-height bar while the
+     * calibration reference it was measured against grew stale. What decides is not how loud a chunk
+     * is but how far above the floor it stands, so the floor is measured here, continuously.
+     */
+    private static final float SIGNAL_OVER_FLOOR = 2.5f;
+    /**
+     * How fast the floor is allowed to climb, per chunk of {@value #CHUNK_SIZE} samples (~10.7 ms).
+     *
+     * <p>It falls instantly to any quieter chunk and rises only slowly, which is what a moving car
+     * needs: speed, blower and road surface all lift the floor, and a floor measured at a standstill
+     * would be wrong a minute later. At this rate it covers a tenfold rise in about half a minute.
+     */
+    private static final float NOISE_FLOOR_RISE = 0.0015f;
 
     private AudioRecord audioRecord;
     private MicProbe.Suspension suspension;
     private Thread captureThread;
     private volatile boolean running = false;
     private float currentGain = 1.0f;
+    /** The cabin's own level, in RMS counts, measured from the raw stream. 0 until the first chunk. */
+    private volatile float noiseRms = 0f;
+
+    /**
+     * Whether the application believes nothing is coming out of the speakers right now.
+     *
+     * <p>Pushed in by {@link AudioSpectrumEngine}, which owns the question: it asks the platform's
+     * own source property, the hardware volume manager's active type, Android's playback
+     * configurations and {@link NowPlaying} - and it knows that radio bypasses AudioFlinger, so
+     * "no media session" does not mean "no sound". Starts false: until told otherwise, assume
+     * something is playing and do not learn a floor from music.
+     */
+    private volatile boolean playbackSilent = false;
+
+    /** Called by the engine whenever its picture of who is playing changes. */
+    public void setPlaybackSilent(boolean silent) {
+        if (this.playbackSilent != silent) {
+            Log.i(TAG, "playback " + (silent ? "silent - the floor may learn" : "live - the floor is held"));
+        }
+        this.playbackSilent = silent;
+    }
+
+    /** What the floor currently reads, in RMS counts, for whoever wants to report or subtract it. */
+    public float noiseFloorRms() {
+        return noiseRms;
+    }
+
     private Context appContext;
     private int bufferSize;
 
@@ -100,6 +157,9 @@ public class RadioMicCapture {
 
         running = true;
         currentGain = 1.0f;
+        // A fresh floor: the previous session may have ended in a different car, at a different
+        // speed, or with the blower on. Carrying its number over would gate this one wrongly.
+        noiseRms = 0f;
 
         captureThread = new Thread(() -> {
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
@@ -109,6 +169,10 @@ public class RadioMicCapture {
             int probed = 0;
             boolean probing = true;
             boolean reopened = false;
+            // One line a second, not one a chunk: at 512 samples of 48 kHz a chunk is 10.7 ms, and
+            // ninety-four log lines a second would cost more than the analysis.
+            int logTick = 0;
+            final int logEvery = SAMPLE_RATE / CHUNK_SIZE;
 
             while (running) {
                 AudioRecord rec = audioRecord;
@@ -153,16 +217,62 @@ public class RadioMicCapture {
                     }
                 }
 
-                // Measure peak amplitude of this chunk
+                // Measured twice: the peak says how much gain would fit without clipping, the RMS
+                // says whether there is anything here worth amplifying at all.
                 int peak = 0;
+                double sumSquares = 0;
                 for (int i = 0; i < read; i++) {
                     int abs = Math.abs(shortChunk[i]);
                     if (abs > peak) peak = abs;
+                    sumSquares += (double) shortChunk[i] * shortChunk[i];
+                }
+                final float rms = (float) Math.sqrt(sumSquares / read);
+
+                // The gate asks about the ratio, not the level, and it asks BEFORE the floor is
+                // touched. The absolute threshold stays as a last resort for the first chunks,
+                // while the floor is still unknown.
+                final float ratio = noiseRms > 0f ? rms / noiseRms : 0f;
+                final boolean contentPresent = peak > NOISE_GATE_THRESHOLD
+                        && (noiseRms <= 0f || ratio > SIGNAL_OVER_FLOOR);
+
+                // The floor learns ONLY while the gate is shut - that is, only while nothing is
+                // believed to be playing. The first version of this updated it on every chunk, and
+                // the measurement showed exactly what that costs: in silence the floor sat at ~190
+                // counts, and thirty seconds into music it had climbed to 4241 while the music
+                // itself read 7746. The ratio collapsed to 1.8, the gate shut in the middle of the
+                // music, and the analyser went deaf below about five units of volume - reported from
+                // the car, not guessed. A floor that is allowed to learn while content plays walks
+                // onto the content: the same fault as the branch just removed from analyzer.cpp:287,
+                // one layer up.
+                //
+                // Learning only in the gaps is also what the owner asked for in the first place -
+                // re-measure the cabin in the pauses. Instant down to anything quieter, slow up, so
+                // a car that gets noisier with speed is followed between tracks rather than during
+                // them.
+                // Two conditions, not one. The gate being shut is our own opinion about the sound;
+                // playbackSilent is what the application KNOWS - who is playing and whether they are
+                // paused. Guessing the pause from the audio was the wrong way round: the program
+                // already tracks the players, the screensaver drives their play/pause, and the
+                // platform reports the active source. When the speakers are silent, whatever the
+                // microphone hears IS the cabin - no inference needed. (Owner, 13.09.2026: «не треба
+                // вгадувати сиру величину - динаміки мовчать - ось тобі й сирий шум».)
+                final boolean learnFloor = !contentPresent && playbackSilent;
+                if (learnFloor) {
+                    if (noiseRms <= 0f || rms < noiseRms) {
+                        noiseRms = rms;
+                    } else {
+                        noiseRms += (rms - noiseRms) * NOISE_FLOOR_RISE;
+                    }
+                } else if (noiseRms <= 0f) {
+                    // Nothing has ever been measured and something is playing: seed the floor low
+                    // rather than leave it at zero, or the ratio stays 0 and the gate can only be
+                    // opened by the absolute threshold.
+                    noiseRms = Math.min(rms, NOISE_GATE_THRESHOLD);
                 }
 
                 float startGain = currentGain;
 
-                if (peak > NOISE_GATE_THRESHOLD) {
+                if (contentPresent) {
                     float desiredGain = TARGET_PEAK / peak;
                     if (desiredGain > MAX_GAIN) desiredGain = MAX_GAIN;
                     if (desiredGain < MIN_GAIN) desiredGain = MIN_GAIN;
@@ -179,6 +289,19 @@ public class RadioMicCapture {
                     currentGain += (1.0f - currentGain) * 0.10f;
                 }
 
+                // What the gate decided and why. This is the only way to tell, from a car, whether a
+                // climbing bar is music or the gate letting the floor through: three numbers and
+                // their ratio say it outright, where a picture cannot.
+                if (++logTick >= logEvery) {
+                    logTick = 0;
+                    Log.i(TAG, String.format(Locale.US,
+                            "gate: rms=%.0f floor=%.0f ratio=%.2f (opens at %.2f) peak=%d gain=%.2f %s, floor %s",
+                            rms, noiseRms, ratio, SIGNAL_OVER_FLOOR,
+                            peak, currentGain,
+                            contentPresent ? "OPEN" : "closed",
+                            learnFloor ? "learning" : (playbackSilent ? "held (gate open)" : "held (a player is live)")));
+                }
+
                 // Smooth linear interpolation across the chunk to prevent clicks
                 float gainStep = (currentGain - startGain) / read;
                 for (int i = 0; i < read; i++) {
@@ -190,7 +313,7 @@ public class RadioMicCapture {
                 }
 
                 try {
-                    callback.onPcmChunk(agcChunk, read);
+                    callback.onPcmChunk(agcChunk, shortChunk, read, currentGain);
                 } catch (Throwable t) {
                     Log.w(TAG, "PCM callback exception: " + t);
                 }

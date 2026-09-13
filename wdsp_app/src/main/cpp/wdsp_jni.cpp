@@ -65,13 +65,6 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativePushPcm16(JNIEnv* env, jclass, jlo
     env->ReleaseShortArrayElements(samples, data, JNI_ABORT);
 }
 
-JNIEXPORT void JNICALL
-Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetIsAcoustic(JNIEnv*, jclass, jlong handle,
-                                                            jboolean acoustic) {
-    auto* analyzer = asAnalyzer(handle);
-    if (analyzer != nullptr) analyzer->setIsAcoustic(acoustic == JNI_TRUE);
-}
-
 JNIEXPORT jint JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetWaveform(JNIEnv* env, jclass, jlong handle,
                                                          jbyteArray outBuffer) {
@@ -433,6 +426,7 @@ JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(JNIEnv* env, jclass,
                                                               jfloatArray avgClean16,
                                                               jfloatArray micComp16,
+                                                              jfloatArray snr16,
                                                               jint hpfCutoffIdx,
                                                               jboolean hasSub,
                                                               jint targetCurveType,
@@ -445,20 +439,24 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(JNIEnv* env, jclas
     jfloat* cleanData = env->GetFloatArrayElements(avgClean16, nullptr);
     jfloat* compData = (micComp16 != nullptr && env->GetArrayLength(micComp16) >= wdsp::kHwBands)
             ? env->GetFloatArrayElements(micComp16, nullptr) : nullptr;
+    jfloat* snrData = (snr16 != nullptr && env->GetArrayLength(snr16) >= wdsp::kHwBands)
+            ? env->GetFloatArrayElements(snr16, nullptr) : nullptr;
     if (cleanData == nullptr) {
         if (compData != nullptr) env->ReleaseFloatArrayElements(micComp16, compData, JNI_ABORT);
+        if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
         return;
     }
 
     int gains[wdsp::kHwBands];
     int subLpfIdx = 5;
     int subGain = 8;
-    wdsp::SweepMeasurement::synthesizeAutoEq16(cleanData, compData,
+    wdsp::SweepMeasurement::synthesizeAutoEq16(cleanData, compData, snrData,
                                                hpfCutoffIdx, hasSub, targetCurveType,
                                                gains, subLpfIdx, subGain);
 
     env->ReleaseFloatArrayElements(avgClean16, cleanData, JNI_ABORT);
     if (compData != nullptr) env->ReleaseFloatArrayElements(micComp16, compData, JNI_ABORT);
+    if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
 
     env->SetIntArrayRegion(outGains16, 0, wdsp::kHwBands, gains);
 
@@ -472,11 +470,13 @@ JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeHarmanEq16(JNIEnv* env, jclass clazz,
                                                                jfloatArray avgClean16,
                                                                jfloatArray micComp16,
+                                                               jfloatArray snr16,
                                                                jint hpfCutoffIdx,
                                                                jboolean hasSub,
                                                                jintArray outGains16,
                                                                jintArray outSubSettings2) {
     Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(env, clazz, avgClean16, micComp16,
+                                                                 snr16,
                                                                  hpfCutoffIdx, hasSub, 0 /* TARGET_HARMAN */,
                                                                  outGains16, outSubSettings2);
 }
