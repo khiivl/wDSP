@@ -28,6 +28,28 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
+    <!--
+        Storage. Declared, never requested at runtime - and on these head units that is the whole
+        mechanism: the grant arrives at install with no dialog. Measured on the owner's unit
+        13.09.2026 by comparing two apps with the same minSdk 29 / targetSdk 29 - QF Radio
+        (com.kostyamat.fmradio) shows both storage permissions `granted=true` with no USER_SET flag
+        among them, i.e. nobody ever tapped anything, plus RESTRICTION_INSTALLER_EXEMPT, which is an
+        installer-side decision rather than a user's. wDSP declared neither and had neither.
+
+        ⚠️ The permission alone is not the request. An app targeting API 29 gets scoped storage by
+        default, under which a raw /sdcard path is not the app's to open no matter which app created
+        the file - ownership lives in the MediaStore row, not in the folder. requestLegacyExternalStorage
+        below is what turns that off, and the radio carries it for the same reason.
+
+        ⚠️ And this stays a widening of what the app may do, not something it now depends on. Every
+        user-facing path still goes through the MediaStore (Downloads) or the system picker, both of
+        which need no permission at all, so on a unit whose firmware does NOT grant this the app
+        behaves exactly as it did before. Nothing here may become the only road to a file.
+    -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
@@ -45,6 +67,7 @@
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
+        android:requestLegacyExternalStorage="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"

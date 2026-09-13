@@ -26,8 +26,14 @@ import java.io.OutputStream;
  * by default.
  *
  * No permission is needed. Since API 29 an app may add its own entries to the MediaStore
- * collections without {@code WRITE_EXTERNAL_STORAGE}, and this app declares no storage permission
- * at all.
+ * collections without {@code WRITE_EXTERNAL_STORAGE}.
+ *
+ * <p>⚠️ Since 13.09.2026 the app <em>does</em> declare the storage permissions, because these head
+ * units grant them at install with no dialog and that makes the raw-path mechanisms work - see the
+ * note in the manifest. That changes nothing here and must not: this road needs no permission, so
+ * it is the one that still works on a unit whose firmware grants nothing. Do not "simplify" this
+ * into a plain {@code File} write on the strength of a permission that is only reliably present on
+ * the machine it was tested on.
  */
 public final class Downloads {
     private static final String TAG = "wDSP_Downloads";

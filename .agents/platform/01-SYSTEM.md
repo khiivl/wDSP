@@ -257,6 +257,40 @@ repeats them: a `rejectTime` in `cmd appops get` is **not** a refusal (it is log
 than `allow`, even when the window is then admitted through the permission), and `default` +
 `granted=true` is **not** an adb fingerprint — it is the platform's normal state.
 
+📻 *(13.09.2026, owner's unit, measured on two apps and then on ours)* **Storage behaves the same way
+— and the permission alone is only half of the request.**
+
+The owner's statement that started this: *«на цій системі доступ дає автоматично, якщо правильно
+сформований його запит в маніфесті»*. Both halves check out, and the second half is the one that is
+easy to get wrong.
+
+Evidence, from `dumpsys package` on two apps with **identical** `minSdk 29 / targetSdk 29`:
+
+| | `com.kostyamat.fmradio` (radio) | `com.radiorubka.wdsp` before |
+|---|---|---|
+| `PRIVATE_FLAG_REQUEST_LEGACY_EXTERNAL_STORAGE` | present | **absent** |
+| `READ/WRITE_EXTERNAL_STORAGE` | `granted=true` | not declared at all |
+| flags on the grant | `RESTRICTION_INSTALLER_EXEMPT`, **no `USER_SET`** | — |
+
+No `USER_SET` among the flags means nobody ever tapped a dialog, and `RESTRICTION_INSTALLER_EXEMPT`
+is the soft-restriction exemption, which is an **installer-side** decision rather than a person's.
+
+🔬 **Why the permission by itself is not enough.** An app targeting API 29 gets scoped storage by
+default. Under it a raw `/sdcard/...` path is not the app's to open **no matter which app created
+the file** — ownership lives in the MediaStore row, not in the folder. `requestLegacyExternalStorage`
+on `<application>` is what turns that off; the radio carries it, which is why the radio's raw-path
+code works and ours did not. ⚠️ The flag is honoured up to Android 10 only, and every unit in this
+family is Android 10 — on anything newer this stops working and the MediaStore road is the only one.
+
+📻 **Before and after on our own app, same command both times.** `ACTION_BACKUP` with
+`--es path /sdcard/Download/wDSP/prefs_probe.json`: refused before the manifest change (and reported
+as a *dialog* that stayed on screen), wrote 24 495 bytes after it. The grant arrived on a plain
+`adb install -r`, with no dialog and no `-g`.
+
+🧩 Rule that follows: the app may **use** this, and must not **depend** on it. Every user-facing file
+path stays on the MediaStore or the system picker, both of which need no permission, so a unit whose
+firmware grants nothing behaves as before. A raw path may never become the only road to a file.
+
 ❓ Not established: which other special grants behave the same (notification listener, battery
 optimisation, `su` policies), and what makes one stale — reinstall over another signature, a
 restore, a firmware update, or time.
