@@ -323,6 +323,18 @@ public final class RoomMeasurement {
      public static final String PREF_LAST_SELECTED = "last_selected_preset";
      public static final String PREF_PRESET_NAMES = "preset_names";
 
+     /**
+      * Centre frequency of each of the sixteen hardware equaliser bands.
+      *
+      * <p>The same numbers live in {@code kHwCenters} on the native side. Until 13.09.2026 the Java
+      * side had them only as a literal inside the report's "Band centres:" line, so any code that
+      * needed to know which band is which frequency had nowhere to ask.
+      */
+     public static final float[] BAND_CENTRES_HZ = {
+             20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
+             800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
+     };
+
      public static final int[] BASS_FILTER_FREQS_HZ = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250};
      public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
 
@@ -2420,35 +2432,6 @@ public final class RoomMeasurement {
         }
         System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
 
-        // 2-bis. The same quantity the synthesis is about to judge, kept for the spectrum analyser:
-        //        the car's response with the microphone's own curve taken off, expressed about its
-        //        own midband so it is a shape rather than a level. synthesizeAutoEq16 computes
-        //        m[b] = avgClean[b] + micComp[b] and refMid over bands 5..8; this mirrors it exactly,
-        //        including the -70 dB guard, so the picture and the correction cannot disagree.
-        //
-        //        Why it is stored at all: the CALCULATED spectrum reads PCM before the DSP and draws
-        //        it with the DSP curve applied - it shows what leaves the amplifier. What the
-        //        speakers and the cabin then do to it was measured here and went nowhere, so a car
-        //        with a hole at 80 Hz drew a level bar. Owner, 13.09.2026: "інакше він буде
-        //        показувати неправду".
-        float refMidSum = 0f;
-        int refMidCount = 0;
-        for (int b = 5; b <= 8; b++) {
-            float m = avgClean[b] + result.micCompensation16[b];
-            if (m > -70f) {
-                refMidSum += m;
-                refMidCount++;
-            }
-        }
-        final float refMid = refMidCount > 0 ? refMidSum / refMidCount : -20f;
-        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-            result.cabinResponseDb16[b] = (avgClean[b] + result.micCompensation16[b]) - refMid;
-        }
-        setCabinResponseCurve(context, result.cabinResponseDb16);
-        // Push it into the running analyser now. Saving a preference nobody re-reads is how the
-        // scratch preset spent months never reaching the chip (§6 item 8): the value existed, the
-        // wire did not.
-        AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
 
         // 3. Detect midbass roll-off HPF cutoff index
         if (result.hasSubwoofer) {
@@ -2480,6 +2463,62 @@ public final class RoomMeasurement {
             result.subLpfFreqHz = 63;
         }
         result.subGain = subSettings[1];
+
+        // 4-bis. What the car does to the sound, kept for the spectrum analyser.
+        //
+        // Why it is stored at all: the CALCULATED spectrum reads PCM before the DSP and draws it
+        // with the DSP curve applied - it shows what leaves the amplifier. What the loudspeakers and
+        // the cabin then do to it was measured right here and went nowhere, so a car with a hole at
+        // 80 Hz drew a level bar. Owner, 13.09.2026: "інакше він буде показувати неправду".
+        //
+        // The quantity is the one the synthesis itself judges: m[b] = avgClean[b] + micComp[b],
+        // about refMid over bands 5..8, with the same -70 dB guard - so the picture and the
+        // correction cannot disagree about what the car is doing. A shape, not a level.
+        //
+        // 🔴 And it is crossover-aware, which the first version was not. avgClean averages the four
+        // door channels; the subwoofer is deliberately excluded from it, because it plays the same
+        // low frequencies from somewhere else in the car and would smear the arrival. But below the
+        // midbass high-pass the doors are exactly what does NOT play - the subwoofer does. Storing
+        // the doors' own roll-off down there would tell the analyser the car has no bass, on a car
+        // that has a subwoofer. So below the crossover the subwoofer's measured response is used
+        // instead, against the same midband reference, which is what the listener actually hears.
+        //
+        // No double counting with the DSP curve: DspResponse.compute is given the sub's frequency
+        // and gain indices, so the preset's own contribution is already in the other half of the
+        // sum, while what is stored here was measured through the flat scratch preset (sub gain 0).
+        float refMidSum = 0f;
+        int refMidCount = 0;
+        for (int b = 5; b <= 8; b++) {
+            float m = avgClean[b] + result.micCompensation16[b];
+            if (m > -70f) {
+                refMidSum += m;
+                refMidCount++;
+            }
+        }
+        final float refMid = refMidCount > 0 ? refMidSum / refMidCount : -20f;
+
+        final ChannelResult sub = result.channels.length > Channel.SUBWOOFER.ordinal()
+                ? result.channels[Channel.SUBWOOFER.ordinal()] : null;
+        final boolean subUsable = result.hasSubwoofer && sub != null && sub.ok && sub.confident;
+        final float crossoverHz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : 0f;
+
+        int fromSub = 0;
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            final boolean belowCrossover = subUsable && crossoverHz > 0f
+                    && b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] < crossoverHz;
+            final float measured = belowCrossover ? sub.cleanBandsDb[b] : avgClean[b];
+            if (belowCrossover) fromSub++;
+            result.cabinResponseDb16[b] = (measured + result.micCompensation16[b]) - refMid;
+        }
+        Log.i(TAG, String.format(Locale.US,
+                "cabin response for the spectrum: %d of %d bands taken from the subwoofer "
+                        + "(crossover %.0f Hz, sub usable=%b)",
+                fromSub, NativeSweep.BAND_COUNT, crossoverHz, subUsable));
+        setCabinResponseCurve(context, result.cabinResponseDb16);
+        // Pushed into the running analyser now. A preference nobody re-reads is precisely how the
+        // flat scratch preset spent months never reaching the chip: the value existed, the wire
+        // did not.
+        AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
 
         // 5. Two corrections, from two different questions.
         //
@@ -3188,8 +3227,17 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %d", g));
             }
             sb.append("\n\n");
-            sb.append("Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 "
-                    + "8000 12500 20000 Hz\n");
+            // From the array rather than from a literal: the two used to be maintained separately,
+            // and a report that names the wrong frequency for a band is worse than one that names
+            // none - every column in every line above is read against this row.
+            sb.append("Band centres:");
+            for (float hz : BAND_CENTRES_HZ) {
+                sb.append(hz >= 1000f
+                        ? String.format(Locale.US, " %.0f", hz)
+                        : String.format(Locale.US, " %s", hz == Math.rint(hz)
+                                ? String.valueOf((int) hz) : String.valueOf(hz)));
+            }
+            sb.append(" Hz\n");
             if (result.reflectionDominated) {
                 sb.append("NOTE: some speakers were heard mainly through the cabin rather than "
                         + "directly - the clarity figure says which. That is normal with the "
