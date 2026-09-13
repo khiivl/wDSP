@@ -811,6 +811,24 @@ public final class RoomMeasurement {
                 .getBoolean(PREF_ROOM_HAS_SUBWOOFER, true);
     }
 
+    /**
+     * Whether anybody has actually answered the subwoofer question, as opposed to inheriting
+     * the default.
+     *
+     * <p>{@link #hasSubwoofer(Context)} answers true when unset, which is the safe default -
+     * sweeping a subwoofer output that is not connected costs one silent channel, while
+     * skipping one that IS connected costs the microphone calibration its only source below
+     * 160 Hz. But "true because nobody said" and "true because somebody said" are different
+     * facts, and only this can tell them apart. Used to decide whether to ask before a
+     * calibration pass rather than after it, in the wizard, which is where the question used
+     * to live - the presence of a subwoofer is a property of the car, not of a preset.
+     */
+    public static boolean isSubwooferAnswered(Context context) {
+        if (context == null) return false;
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .contains(PREF_ROOM_HAS_SUBWOOFER);
+    }
+
     public static void setHasSubwoofer(Context context, boolean hasSub) {
         if (context == null) return;
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
@@ -1375,6 +1393,68 @@ public final class RoomMeasurement {
         }, "wDSP_RoomMeasure").start();
     }
 
+    /**
+     * The best any channel managed in each band, each channel judged against its own midrange.
+     *
+     * <p>This replaces a power average across channels, and the difference is the whole point
+     * of the calibration. What is being estimated is the MICROPHONE, and a microphone's own
+     * response is a ceiling every channel shares: if any one speaker delivered 80 Hz within
+     * three decibels of its own midband, then the microphone is not attenuating 80 Hz by
+     * eight, whatever the other three did. The best channel bounds the capsule's deficit from
+     * above. An average measures the average loudspeaker, which is a fact about the car.
+     *
+     * <p>That mattered little while the pass swept four door speakers that all roll off
+     * together, and it matters entirely now that the subwoofer is swept too: averaged in with
+     * four doors, the one source that can actually produce 80 Hz is diluted fivefold and the
+     * fix would have looked like it had not worked.
+     *
+     * <p>Each channel is normalised to its own bands 5..8 before the comparison, so a channel
+     * does not win a band merely by being louder overall - which the subwoofer would, being
+     * the only one with its own amplifier. The envelope is therefore a shape, not a level, and
+     * estimateMicCompensation reads it as one: its internal midband reference lands near zero
+     * by construction.
+     *
+     * <p>It does NOT make 20, 31.5 and 50 Hz measurable - those stay at zero on the refusal
+     * that has its own argument in sweep.cpp. It removes one specific lie: the doors' bass
+     * shortfall being booked against the capsule.
+     */
+    private static float[] bestChannelEnvelope(Result result, int channelCount) {
+        final float[] best = new float[NativeSweep.BAND_COUNT];
+        java.util.Arrays.fill(best, Float.NEGATIVE_INFINITY);
+        final StringBuilder who = new StringBuilder();
+        int contributors = 0;
+        for (int k = 0; k < channelCount && k < result.channels.length; k++) {
+            final ChannelResult cr = result.channels[k];
+            if (cr == null || !cr.ok || !cr.confident || cr.cleanBandsDb == null) continue;
+            // This channel's own midrange, the same bands 5..8 the native side uses.
+            double sumMid = 0.0;
+            int countMid = 0;
+            for (int b = 5; b <= 8 && b < cr.cleanBandsDb.length; b++) {
+                sumMid += cr.cleanBandsDb[b];
+                countMid++;
+            }
+            if (countMid == 0) continue;
+            final float chMid = (float) (sumMid / countMid);
+            for (int b = 0; b < NativeSweep.BAND_COUNT && b < cr.cleanBandsDb.length; b++) {
+                final float shape = cr.cleanBandsDb[b] - chMid;
+                if (shape > best[b]) best[b] = shape;
+            }
+            if (who.length() > 0) who.append(", ");
+            who.append(cr.label);
+            contributors++;
+        }
+        if (contributors == 0) {
+            java.util.Arrays.fill(best, -120f);
+            Log.w(TAG, "no channel was heard well enough to calibrate the microphone against");
+            return best;
+        }
+        final StringBuilder log = new StringBuilder("mic calibration envelope (best of ")
+                .append(who).append("), dB re own midband:");
+        for (float v : best) log.append(String.format(Locale.US, " %+.1f", v));
+        Log.i(TAG, log.toString());
+        return best;
+    }
+
     public static void calibrateMicAsync(final Context context, final Listener listener) {
         if (running) {
             Log.w(TAG, "a measurement is already running, ignoring mic calibration request");
@@ -1384,13 +1464,25 @@ public final class RoomMeasurement {
             running = true;
             Result result;
             try {
-                // The three literals here are deliberate, not defaults left lying about: a
-                // calibration pass ends at the capsule curve and never reaches synthesizeAutoEq16,
-                // so stage and target curve cannot affect its result, and `false` is what keeps it
-                // sweeping the four main speakers instead of five - the subwoofer has nothing to
-                // say about a microphone's own response. The car's body and the listening distance
-                // are read from the one place that owns them, as everywhere else.
-                result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS, false,
+                // Stage and target curve are literals on purpose: a calibration pass ends at the
+                // capsule curve and never reaches synthesizeAutoEq16, so neither can affect it.
+                //
+                // 🔴 The subwoofer is NOT a literal any more, and the argument that made it one
+                // was wrong in a way that cost this project a week. It read: "the subwoofer has
+                // nothing to say about a microphone's own response". True of the capsule, false
+                // of the measurement - because what the estimate actually sees is the product of
+                // microphone and whatever was driven, and with the sub off the only things
+                // playing at 80 and 125 Hz are door speakers, which genuinely give very little
+                // there. The shortfall was the doors' and it was charged to the capsule. That is
+                // exactly how a curve reading +16 dB at the bottom was produced, and the cap that
+                // now bounds it at 8 dB treats the symptom: both bands came back pinned at the
+                // cap on 13.09, which is a saturated estimate, not a measurement.
+                //
+                // Whether there is a subwoofer is a fact about the car, not about a preset, and
+                // hasSubwoofer() is the one function that owns it. A literal here was a third
+                // road to the same fact, hidden inside an overload.
+                result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS,
+                        hasSubwoofer(context),
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
                         getBodyType(context), getListeningDistanceCm(context), listener, true);
             } catch (Throwable t) {
@@ -2066,20 +2158,8 @@ public final class RoomMeasurement {
 
         if (isMicCalibrationOnly) {
             // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
-            float[] avgClean16 = new float[NativeSweep.BAND_COUNT];
-            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-                double sumP = 0.0;
-                int validCh = 0;
-                for (int k = 0; k < channels.length; k++) {
-                    ChannelResult cr = result.channels[k];
-                    if (cr != null && cr.ok && cr.confident && cr.cleanBandsDb != null) {
-                        sumP += Math.pow(10.0, cr.cleanBandsDb[b] * 0.1);
-                        validCh++;
-                    }
-                }
-                avgClean16[b] = validCh > 0 ? (float) (10.0 * Math.log10(sumP / validCh)) : -120f;
-            }
-            NativeSweep.estimateMicCompensation(avgClean16, result.micCompensation16);
+            final float[] bestClean16 = bestChannelEnvelope(result, channels.length);
+            NativeSweep.estimateMicCompensation(bestClean16, result.micCompensation16);
             setMicCompensationCurve(context, result.micCompensation16);
             result.micCalibrated = true; // this pass is the calibration
 

@@ -2171,6 +2171,32 @@ public class SettingsActivity extends AppCompatActivity {
         if (RoomMeasurement.isRunning()) return;
         if (!ensureMicrophone()) return;
 
+        // Whether the car has a subwoofer is a fact about the car, and the calibration pass
+        // needs it: with the sub silent, the only things playing at 80 and 125 Hz are door
+        // speakers, and their roll-off gets charged to the microphone. The question used to be
+        // asked only in the cabin wizard, which runs AFTER calibration, so the pass that needed
+        // the answer most was the one pass that never had it.
+        //
+        // Asked once, and only when nobody has answered: the wizard checkbox stays where it is
+        // and remains the place to change the answer. Both entry points to calibration - the
+        // button and the "not calibrated yet" dialog - come through here, so this is the whole
+        // of "before a calibration".
+        if (!RoomMeasurement.isSubwooferAnswered(this)) {
+            ThemedDialog.builder(this)
+                    .setTitle(R.string.room_wizard_subwoofer_title)
+                    .setMessage(R.string.room_wizard_subwoofer_desc)
+                    .setPositiveButton(android.R.string.yes, (d, w) -> {
+                        RoomMeasurement.setHasSubwoofer(this, true);
+                        startMicCalibration();
+                    })
+                    .setNegativeButton(android.R.string.no, (d, w) -> {
+                        RoomMeasurement.setHasSubwoofer(this, false);
+                        startMicCalibration();
+                    })
+                    .show();
+            return;
+        }
+
         ThemedDialog.builder(this)
                 .setTitle(R.string.room_mic_cal_confirm_title)
                 .setMessage(R.string.room_mic_cal_confirm_msg)

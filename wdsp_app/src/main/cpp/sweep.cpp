@@ -488,14 +488,23 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, float* o
     // is a change to the numbers, not a tidy-up.
     //
     // What it did: below 80 Hz it expected the measurement to be LOUDER than the midband, by 6 dB
-    // per octave, and charged every decibel of shortfall to the microphone. But a calibration pass
-    // sweeps the door speakers with the subwoofer switched off (calibrateMicAsync passes
-    // hasSubwoofer = false), and doors genuinely give very little at 20-50 Hz. So the car's own bass
-    // shortfall was measured, attributed to the capsule, and then subtracted from every later cabin
-    // measurement as though it were a microphone fault - the same quantity counted twice, in
-    // opposite directions. On this unit it saturated the cap in three bands at once: the owner's
-    // curve reads +16.0 +16.0 +16.0 at 20, 31.5 and 50 Hz, and a saturated estimate is not a
-    // measurement of anything.
+    // per octave, and charged every decibel of shortfall to the microphone. The car's own bass
+    // shortfall was measured, attributed to the capsule, and then subtracted from every later
+    // cabin measurement as though it were a microphone fault - the same quantity counted twice,
+    // in opposite directions. On this unit it saturated the cap in three bands at once: the
+    // owner's curve read +16.0 +16.0 +16.0 at 20, 31.5 and 50 Hz, and a saturated estimate is
+    // not a measurement of anything.
+    //
+    // 🔴 Why the shortfall was the car's: until 13.09.2026 a calibration pass swept the door
+    // speakers with the subwoofer switched off - calibrateMicAsync passed hasSubwoofer = false,
+    // on the argument that a subwoofer has nothing to say about a microphone's own response.
+    // The capsule does not care, but the ESTIMATE does: what it sees is the product of the
+    // microphone and whatever was driven, and with the sub silent the only things playing at 80
+    // and 125 Hz were doors, which give very little there. Removing the cabin-gain expectation
+    // and capping the result treated the symptom; the owner found the cause. The pass now sweeps
+    // the subwoofer when the car has one, and the Java side hands this function the best channel
+    // per band rather than the average of them - an average of four doors and one subwoofer
+    // dilutes the only source that can reach these bands fivefold. See bestChannelEnvelope.
     //
     // What replaces it: expect the capsule to be flat to the midband and correct only what falls
     // below that. The capsule's real roll-off is still recovered - that is what the deficit is - but
