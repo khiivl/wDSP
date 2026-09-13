@@ -208,6 +208,17 @@ Global standard: %1$s</string>
     <string name="gala_section_smoothing_sim">Udjævning og simulering</string>
     <string name="settings_perm_overlay">Overlejringstilladelse (Vis over apps)</string>
     <string name="fm_controls_title">Kalibrering og korrektionsstyrke</string>
+
+    <string name="loud_check_ok">Kurven passer til profilen. Intet at ændre.</string>
+    <string name="loud_check_fix">Indstil korrekt</string>
+    <string name="loud_check_inert">Denne kurve er indstillet til ikke at gøre noget: kalibreringspunktet eller korrektionsstyrken er på nul. Aktivering af Loudness ændrer ikke lyden, før de er indstillet.</string>
+    <string name="loud_check_cal_low">Kalibreringspunktet er for lavt — der er ikke noget lydstyrkeområde under det, som kurven kan virke i.</string>
+    <string name="loud_check_strength_zero">Korrektionsstyrken er nul, så kurven ganges væk.</string>
+    <string name="loud_check_fatigue_no_room">Diskantdæmpning er slået til, men der er ikke noget lydstyrkeområde over kalibreringspunktet, hvor det kan virke.</string>
+    <string name="loud_check_ceiling">Under lydstyrke %1$d mangler kurven overskud: %2$d bånd holder op med at stige, og den flader ud til en hylde i stedet for en kurve.</string>
+    <string name="loud_check_sub_double">Subwooferen kompenseres separat, og båndene omkring %1$d Hz hæves igen — bassen tilføjes to gange.</string>
+    <string name="loud_check_bass_stacks">Et separat basboost er også slået til. Det er to basreguleringer under én kurve.</string>
+    <string name="loud_check_cal_not_measured">Kurven er forankret ved lydstyrke %1$d, men bilen blev målt ved %2$d. Profilen er præcis ved den målte lydstyrke, så det er der, kurven bør stoppe.</string>
     <string name="perm_battery_opt">Batterioptimering</string>
     <string name="perm_audio_record">Lydoptagelse (EQ)</string>
     <string name="perm_gps_location">GPS-placering (GALA)</string>

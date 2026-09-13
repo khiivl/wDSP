@@ -208,6 +208,17 @@ Genel Varsayılan: %1$s</string>
     <string name="gala_section_smoothing_sim">Yumuşatma ve benzetim</string>
     <string name="settings_perm_overlay">Yer paylaşımı izni (Diğer uygulamaların üzerinde göster)</string>
     <string name="fm_controls_title">Kalibrasyon ve düzeltme şiddeti</string>
+
+    <string name="loud_check_ok">Bu eğri profile uyuyor. Değiştirilecek bir şey yok.</string>
+    <string name="loud_check_fix">Doğru şekilde ayarla</string>
+    <string name="loud_check_inert">Bu eğri hiçbir şey yapmayacak şekilde ayarlanmış: kalibrasyon noktası veya düzeltme gücü sıfırda. Bunlar ayarlanana kadar Loudness\'ı açmak sesi değiştirmeyecektir.</string>
+    <string name="loud_check_cal_low">Kalibrasyon noktası çok düşük — altında eğrinin çalışabileceği bir ses seviyesi kalmıyor.</string>
+    <string name="loud_check_strength_zero">Düzeltme gücü sıfır olduğundan eğrinin etkisi sıfırlanır.</string>
+    <string name="loud_check_fatigue_no_room">Tizleri kırpma açık, ancak kalibrasyon noktasının üzerinde etkili olabileceği bir ses seviyesi yok.</string>
+    <string name="loud_check_ceiling">%1$d ses seviyesinin altında eğrinin payı tükeniyor: %2$d bant yükselmeyi durduruyor ve eğri yerine düz bir rafa dönüşüyor.</string>
+    <string name="loud_check_sub_double">Subwoofer ayrı olarak dengeleniyor ve %1$d Hz civarındaki bantlar tekrar yükseltiliyor — bas iki kez eklenmiş oluyor.</string>
+    <string name="loud_check_bass_stacks">Ayrı bir bas güçlendirme de açık. Bu, tek bir eğri altında iki bas kontrolü demektir.</string>
+    <string name="loud_check_cal_not_measured">Eğri %1$d ses seviyesine sabitlenmiş, ancak araç %2$d seviyesinde ölçülmüştü. Profil ölçülen ses seviyesinde tam doğrudur, bu yüzden eğri tam orada durmalıdır.</string>
     <string name="perm_battery_opt">Pil optimizasyonu</string>
     <string name="perm_audio_record">Ses kaydı (EQ)</string>
     <string name="perm_gps_location">GPS konumu (GALA)</string>

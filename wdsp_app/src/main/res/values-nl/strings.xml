@@ -208,6 +208,17 @@ Globale standaard: %1$s</string>
     <string name="gala_section_smoothing_sim">Afvlakking en simulatie</string>
     <string name="settings_perm_overlay">Overlay-toestemming (Weergeven over apps)</string>
     <string name="fm_controls_title">Kalibratie en correctiesterkte</string>
+
+    <string name="loud_check_ok">Deze curve past bij het profiel. Niets te wijzigen.</string>
+    <string name="loud_check_fix">Correct instellen</string>
+    <string name="loud_check_inert">Deze curve is ingesteld om niets te doen: het kalibratiepunt of de correctiesterkte staat op nul. Loudness inschakelen verandert het geluid pas als deze zijn ingesteld.</string>
+    <string name="loud_check_cal_low">Het kalibratiepunt is te laag — er is geen volume daaronder waarin de curve kan werken.</string>
+    <string name="loud_check_strength_zero">De correctiesterkte is nul, waardoor de curve vervalt.</string>
+    <string name="loud_check_fatigue_no_room">Hoge tonen dempen is actief, maar er is geen volume boven het kalibratiepunt waarin dit kan werken.</string>
+    <string name="loud_check_ceiling">Onder volume %1$d heeft de curve geen speelruimte meer: %2$d banden stoppen met stijgen en het vlakt af tot een plateau in plaats van een curve.</string>
+    <string name="loud_check_sub_double">De subwoofer wordt apart gecompenseerd en de banden rond %1$d Hz worden opnieuw versterkt — de bas wordt dubbel toegevoegd.</string>
+    <string name="loud_check_bass_stacks">Er is ook een afzonderlijke basversterking ingeschakeld. Dat zijn twee basregelaars onder één curve.</string>
+    <string name="loud_check_cal_not_measured">De curve is gekoppeld aan volume %1$d, maar de auto is gemeten op %2$d. Het profiel is exact op het gemeten volume, dus daar moet de curve stoppen.</string>
     <string name="perm_battery_opt">Batterijoptimalisatie</string>
     <string name="perm_audio_record">Audio-opname (EQ)</string>
     <string name="perm_gps_location">GPS-locatie (GALA)</string>

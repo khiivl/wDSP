@@ -196,6 +196,17 @@
     <string name="gala_section_smoothing_sim">Glättung und Simulation</string>
     <string name="settings_perm_overlay">Overlay-Berechtigung (Über anderen Apps anzeigen)</string>
     <string name="fm_controls_title">Kalibrierung und Korrekturstärke</string>
+
+    <string name="loud_check_ok">Diese Kurve passt zum Profil. Nichts zu ändern.</string>
+    <string name="loud_check_fix">Richtig einstellen</string>
+    <string name="loud_check_inert">Diese Kurve ist so eingestellt, dass sie nichts bewirkt: Der Kalibrationspunkt oder die Anpassungsstärke steht auf Null. Das Aktivieren von Loudness ändert den Klang erst, wenn beide eingestellt sind.</string>
+    <string name="loud_check_cal_low">Der Kalibrationspunkt ist zu niedrig — darunter bleibt keine Lautstärke übrig, in der die Kurve wirken könnte.</string>
+    <string name="loud_check_strength_zero">Die Anpassungsstärke ist null, daher wird die Kurve auf null multipliziert.</string>
+    <string name="loud_check_fatigue_no_room">Die Höhenreduzierung ist aktiv, aber oberhalb des Kalibrationspunkts bleibt keine Lautstärke, in der sie wirken könnte.</string>
+    <string name="loud_check_ceiling">Unterhalb von Lautstärke %1$d geht der Kurve der Spielraum aus: %2$d Bänder steigen nicht weiter an und verflachen zu einer Stufe statt einer Kurve.</string>
+    <string name="loud_check_sub_double">Der Subwoofer wird separat kompensiert und die Bänder um %1$d Hz werden erneut angehoben — der Bass wird doppelt verstärkt.</string>
+    <string name="loud_check_bass_stacks">Eine separate Bassanhebung ist ebenfalls aktiv. Das sind zwei Bassregler unter einer Kurve.</string>
+    <string name="loud_check_cal_not_measured">Die Kurve ist bei Lautstärke %1$d verankert, das Fahrzeug wurde jedoch bei %2$d gemessen. Das Profil stimmt bei der Messlautstärke, genau dort sollte die Kurve enden.</string>
     <string name="perm_battery_opt">Akkuoptimierung</string>
     <string name="perm_audio_record">Audioaufnahme (EQ)</string>
     <string name="perm_gps_location">GPS-Standort (GALA)</string>

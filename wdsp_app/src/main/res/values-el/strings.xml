@@ -208,6 +208,17 @@
     <string name="gala_section_smoothing_sim">Εξομάλυνση και προσομοίωση</string>
     <string name="settings_perm_overlay">Άδεια επικάλυψης (Εμφάνιση πάνω από εφαρμογές)</string>
     <string name="fm_controls_title">Βαθμονόμηση και ένταση διόρθωσης</string>
+
+    <string name="loud_check_ok">Η καμπύλη ταιριάζει στην προεπιλογή. Δεν χρειάζεται αλλαγή.</string>
+    <string name="loud_check_fix">Σωστή ρύθμιση</string>
+    <string name="loud_check_inert">Η καμπύλη έχει ρυθμιστεί ώστε να μην κάνει τίποτα: το σημείο βαθμονόμησης ή η ισχύς διόρθωσης είναι στο μηδέν. Η ενεργοποίηση του Loudness δεν θα αλλάξει τον ήχο μέχρι να ρυθμιστούν.</string>
+    <string name="loud_check_cal_low">Το σημείο βαθμονόμησης είναι πολύ χαμηλό — δεν υπάρχει ένταση κάτω από αυτό για να λειτουργήσει η καμπύλη.</string>
+    <string name="loud_check_strength_zero">Η ισχύς διόρθωσης είναι μηδέν, επομένως η καμπύλη μηδενίζεται.</string>
+    <string name="loud_check_fatigue_no_room">Η περικοπή πρίμων είναι ενεργή, αλλά δεν υπάρχει ένταση πάνω από το σημείο βαθμονόμησης για να λειτουργήσει.</string>
+    <string name="loud_check_ceiling">Κάτω από την ένταση %1$d η καμπύλη εξαντλεί τα περιθώρια: %2$d ζώνες σταματούν να αυξάνονται και γίνονται επίπεδο ράφι αντί για καμπύλη.</string>
+    <string name="loud_check_sub_double">Το υπογούφερ αντισταθμίζεται ξεχωριστά και οι ζώνες γύρω από τα %1$d Hz ενισχύονται ξανά — τα μπάσα προστίθενται δύο φορές.</string>
+    <string name="loud_check_bass_stacks">Είναι ενεργοποιημένη και ξεχωριστή ενίσχυση μπάσων. Πρόκειται για δύο ρυθμιστικά μπάσων κάτω από μία καμπύλη.</string>
+    <string name="loud_check_cal_not_measured">Η καμπύλη έχει αγκιστρωθεί στην ένταση %1$d, αλλά το αυτοκίνητο μετρήθηκε στο %2$d. Η προεπιλογή είναι ακριβής στην ένταση μέτρησης, οπότε εκεί ακριβώς θα πρέπει να σταματά η καμπύλη.</string>
     <string name="perm_battery_opt">Βελτιστοποίηση μπαταρίας</string>
     <string name="perm_audio_record">Εγγραφή ήχου (EQ)</string>
     <string name="perm_gps_location">Τοποθεσία GPS (GALA)</string>

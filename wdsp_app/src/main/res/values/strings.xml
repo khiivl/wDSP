@@ -222,6 +222,17 @@
     <string name="eq_vis_enable_label">Display spectrum bars</string>
 
     <string name="fm_controls_title">Calibration &amp; Correction Intensity</string>
+
+    <string name="loud_check_ok">This curve fits the preset. Nothing to change.</string>
+    <string name="loud_check_fix">Set it correctly</string>
+    <string name="loud_check_inert">This curve is set to do nothing: the calibration point or the strength is at zero. Switching Loudness on will not change the sound until they are set.</string>
+    <string name="loud_check_cal_low">The calibration point is too low — there is no volume below it for the curve to work in.</string>
+    <string name="loud_check_strength_zero">The correction strength is zero, so the curve is multiplied away.</string>
+    <string name="loud_check_fatigue_no_room">The fatigue trim is on, but there is no volume above the calibration point for it to act in.</string>
+    <string name="loud_check_ceiling">Below volume %1$d the curve runs out of headroom: %2$d bands stop rising and it flattens into a shelf instead of a curve.</string>
+    <string name="loud_check_sub_double">The subwoofer is compensated separately and the bands around %1$d Hz are raised again — the bass is added twice.</string>
+    <string name="loud_check_bass_stacks">A separate bass boost is switched on as well. That is two bass controls under one curve.</string>
+    <string name="loud_check_cal_not_measured">The curve is anchored at volume %1$d, but the car was measured at %2$d. The preset is exact at the volume it was measured at, so that is where the curve should stop.</string>
     <string name="perm_battery_opt">Battery Optimization</string>
     <string name="perm_notification_access">Notification Access (Metadata)</string>
     <string name="perm_audio_record">Audio Record (EQ)</string>

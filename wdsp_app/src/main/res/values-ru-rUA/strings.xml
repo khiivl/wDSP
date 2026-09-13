@@ -202,6 +202,17 @@
     <string name="gala_section_smoothing_sim">Сглаживание и симуляция</string>
     <string name="settings_perm_overlay">Разрешение на наложение (Показ поверх приложений)</string>
     <string name="fm_controls_title">Калибровка и сила коррекции</string>
+
+    <string name="loud_check_ok">Кривая соответствует профилю. Менять ничего не нужно.</string>
+    <string name="loud_check_fix">Выставить правильно</string>
+    <string name="loud_check_inert">Кривая настроена так, что ничего не делает: точка калибровки или степень коррекции равна нулю. Включение тонкомпенсации не изменит звук, пока они не настроены.</string>
+    <string name="loud_check_cal_low">Точка калибровки слишком низкая — ниже неё не остаётся громкости, где кривая могла бы работать.</string>
+    <string name="loud_check_strength_zero">Степень коррекции равна нулю, поэтому действие кривой сведено к нулю.</string>
+    <string name="loud_check_fatigue_no_room">Ослабление ВЧ включено, но выше точки калибровки нет громкости, где оно могло бы действовать.</string>
+    <string name="loud_check_ceiling">Ниже громкости %1$d кривой не хватает запаса: %2$d полос перестают подниматься, и вместо кривой получается полка.</string>
+    <string name="loud_check_sub_double">Сабвуфер компенсируется отдельно, и полосы около %1$d Гц поднимаются ещё раз — бас добавляется дважды.</string>
+    <string name="loud_check_bass_stacks">Включено ещё и отдельное усиление баса. Это два регулятора баса под одной кривой.</string>
+    <string name="loud_check_cal_not_measured">Кривая привязана к громкости %1$d, а машина измерена на %2$d. На громкости измерения профиль точен, поэтому именно там кривая и должна заканчиваться.</string>
     <string name="perm_battery_opt">Оптимизация батареи</string>
     <string name="perm_audio_record">Запись звука (EQ)</string>
     <string name="perm_gps_location">GPS-местоположение (GALA)</string>

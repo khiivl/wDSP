@@ -1610,7 +1610,11 @@ public class McuService extends Service implements LocationListener {
 
         if (hardwareVol != lastVolumeRead) {
             lastVolumeRead = hardwareVol;
-            if (cachedFmEn) {
+            // Both curves follow the volume, not just the loudness one. This used to read
+            // `if (cachedFmEn)`, so a preset with the fatigue trim on and loudness off never had
+            // its trim recomputed when the knob moved: the top stayed wherever the last full apply
+            // had left it, and the switch appeared to do nothing until the preset was reloaded.
+            if (cachedFmEn || cachedFatEn) {
                 applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
             }
             if (isUiVisible) {
@@ -1791,56 +1795,19 @@ public class McuService extends Service implements LocationListener {
     }
 
     private void updateFmOffsets(int vol) {
-        Arrays.fill(fmOffsets, 0f);
-        if (!cachedFmEn && !cachedFatEn) return;
-
-        float strength = cachedFmStr / 100.0f;
-        int deadzone = 1;
-
-        if (cachedFmEn && vol < (cachedFmCal - deadzone)) {
-            float range = (float) Math.max(1, cachedFmCal - deadzone);
-            float ratio = (range - vol) / range;
-            for (int i = 0; i < 16; i++) {
-                fmOffsets[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * strength;
-            }
-        }
-        else if (cachedFatEn && vol > (cachedFmCal + deadzone)) {
-            float range = (float) Math.max(1, 32 - (cachedFmCal + deadzone));
-            float ratio = (vol - (cachedFmCal + deadzone)) / range;
-            for (int i = 0; i < 16; i++) {
-                fmOffsets[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * ratio * strength;
-            }
-        }
+        LoudnessCurve.offsets(vol, cachedFmCal, cachedFmStr, cachedFmEn, cachedFatEn, fmOffsets);
     }
 
     private void updateSubwoofer(int currentVol) {
         subData[0] = (byte) 0x8B;
-        float subOffset = 0f;
-        int deadzone = 1;
-
-        if (cachedSubComp && cachedFmEn && currentVol < (cachedFmCal - deadzone)) {
-            float range = (float) Math.max(1, cachedFmCal - deadzone);
-            float ratio = (range - currentVol) / range;
-            float maxBassBoost = getMaxBassBoost();
-            subOffset = maxBassBoost * ratio * (cachedFmStr / 100.0f);
-        }
+        float subOffset = LoudnessCurve.subOffset(currentVol, cachedFmCal, cachedFmStr,
+                cachedFmEn, cachedSubComp, cachedSubFreq);
 
         int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset)));
         effectiveSubGainIdx = finalGainIdx;
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
         sendSubThrottled(subData);
         publishDspStateToSpectrum();
-    }
-
-    private float getMaxBassBoost() {
-        int[] freqs = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
-        int freq = (cachedSubFreq >= 0 && cachedSubFreq < freqs.length) ? freqs[cachedSubFreq] : 80;
-
-        if (freq == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
-        if (freq == 63 || freq == 50) return AudioConfig.ISO_MAX_OFFSETS[2];
-        if (freq == 40 || freq == 32) return AudioConfig.ISO_MAX_OFFSETS[1];
-        if (freq == 25) return AudioConfig.ISO_MAX_OFFSETS[0];
-        return 0;
     }
 
     private void applyBassBoost() {

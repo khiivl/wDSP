@@ -208,6 +208,17 @@ Bendras numatytasis: %1$s</string>
     <string name="gala_section_smoothing_sim">Glodinimas ir imitacija</string>
     <string name="settings_perm_overlay">Perdangos leidimas (Rodyti virš programų)</string>
     <string name="fm_controls_title">Kalibravimas ir korekcijos stiprumas</string>
+
+    <string name="loud_check_ok">Ši kreivė atitinka profilį. Nėra ko keisti.</string>
+    <string name="loud_check_fix">Nustatyti teisingai</string>
+    <string name="loud_check_inert">Ši kreivė nustatyta taip, kad nieko nedarytų: kalibravimo taškas arba korekcijos stiprumas yra ties nuliu. Loudness įjungimas nepakeis garso, kol jie nebus nustatyti.</string>
+    <string name="loud_check_cal_low">Kalibravimo taškas per žemas — žemiau jo nėra garsumo, kuriame kreivė galėtų veikti.</string>
+    <string name="loud_check_strength_zero">Korekcijos stiprumas lygus nuliui, todėl kreivė dauginama iš nulio.</string>
+    <string name="loud_check_fatigue_no_room">Aukštų dažnių apkarpymas įjungtas, bet virš kalibravimo taško nėra garsumo, kuriame jis galėtų veikti.</string>
+    <string name="loud_check_ceiling">Žemiau %1$d garsumo kreivei pritrūksta atsargos: %2$d juostų nustoja kilti ir vietoje kreivės gaunama lygi lentyna.</string>
+    <string name="loud_check_sub_double">Žemųjų dažnių garsiakalbis kompensuojamas atskirai, o juostos ties %1$d Hz vėl pakeliamos — žemi dažniai pridedami du kartus.</string>
+    <string name="loud_check_bass_stacks">Kartu įjungtas ir atskiras žemų dažnių stiprinimas. Tai du žemų dažnių valdikliai po viena kreive.</string>
+    <string name="loud_check_cal_not_measured">Kreivė susieta su garsumu %1$d, bet automobilis buvo matuojamas ties %2$d. Profilis tikslus ties matavimo garsumu, todėl būtent ten kreivė ir turėtų baigtis.</string>
     <string name="perm_battery_opt">Baterijos optimizavimas</string>
     <string name="perm_audio_record">Garso įrašymas (EQ)</string>
     <string name="perm_gps_location">GPS vieta (GALA)</string>

@@ -208,6 +208,17 @@
     <string name="gala_section_smoothing_sim">Silumine ja simulatsioon</string>
     <string name="settings_perm_overlay">Ülekatte luba (Kuvamine teiste rakenduste peal)</string>
     <string name="fm_controls_title">Kalibreerimine ja korrektsiooni tugevus</string>
+
+    <string name="loud_check_ok">See kõver sobib profiiliga. Pole midagi muuta.</string>
+    <string name="loud_check_fix">Seadista õigesti</string>
+    <string name="loud_check_inert">See kõver on seadistatud mitte midagi tegema: kalibreerimispunkt või kompensatsiooni tugevus on nullis. Loudnessi sisselülitamine ei muuda heli enne, kui need on määratud.</string>
+    <string name="loud_check_cal_low">Kalibreerimispunkt on liiga madal — selle all pole helitugevust, milles kõver saaks toimida.</string>
+    <string name="loud_check_strength_zero">Kompensatsiooni tugevus on null, mistõttu kõver korrutatakse nulliga.</string>
+    <string name="loud_check_fatigue_no_room">Kõrgete helide kärpimine on sees, kuid kalibreerimispunktist kõrgemal pole helitugevust, kus see saaks toimida.</string>
+    <string name="loud_check_ceiling">Helitugevusest %1$d allpool saab kõveral varu otsa: %2$d sagedusriba ei tõuse enam ja kõvera asemel tekib riiul.</string>
+    <string name="loud_check_sub_double">Bassikõlarit kompenseeritakse eraldi ning ribasid umbes %1$d Hz juures tõstetakse uuesti — bassi lisatakse kaks korda.</string>
+    <string name="loud_check_bass_stacks">Sisse on lülitatud ka eraldi bassivõimendus. See on kaks bassiregulaatorit ühe kõvera all.</string>
+    <string name="loud_check_cal_not_measured">Kõver on seotud helitugevusega %1$d, kuid autot mõõdeti tasemel %2$d. Profiil on täpne mõõdetud helitugevusel, seega peaks kõver lõppema just seal.</string>
     <string name="perm_battery_opt">Aku optimeerimine</string>
     <string name="perm_audio_record">Heli salvestamine (EQ)</string>
     <string name="perm_gps_location">GPS-asukoht (GALA)</string>

@@ -208,6 +208,17 @@ Par défaut global : %1$s</string>
     <string name="gala_section_smoothing_sim">Lissage et simulation</string>
     <string name="settings_perm_overlay">Autorisation de superposition (Afficher par-dessus les applis)</string>
     <string name="fm_controls_title">Étalonnage et intensité de correction</string>
+
+    <string name="loud_check_ok">Cette courbe correspond au profil. Rien à modifier.</string>
+    <string name="loud_check_fix">Régler correctement</string>
+    <string name="loud_check_inert">Cette courbe est configurée pour ne rien faire : le point de calibrage ou l\'intensité de correction est à zéro. Activer le Loudness ne changera pas le son tant qu\'ils ne sont pas réglés.</string>
+    <string name="loud_check_cal_low">Le point de calibrage est trop bas — il n\'y a pas de volume en dessous pour que la courbe agisse.</string>
+    <string name="loud_check_strength_zero">L\'intensité de correction est à zéro, la courbe est donc annulée.</string>
+    <string name="loud_check_fatigue_no_room">L\'atténuation des aigus est activée, mais il n\'y a pas de volume au-dessus du point de calibrage pour qu\'elle agisse.</string>
+    <string name="loud_check_ceiling">En dessous du volume %1$d, la courbe manque de marge : %2$d bandes cessent d\'augmenter et elle s\'aplatit en palier au lieu d\'une courbe.</string>
+    <string name="loud_check_sub_double">Le caisson de basses est compensé séparément et les bandes autour de %1$d Hz sont relevées à nouveau — les basses sont ajoutées deux fois.</string>
+    <string name="loud_check_bass_stacks">Une amplification séparée des basses est également activée. Cela fait deux réglages de basses sous une même courbe.</string>
+    <string name="loud_check_cal_not_measured">La courbe est calée sur le volume %1$d, mais le véhicule a été mesuré à %2$d. Le profil est exact au volume mesuré, c\'est donc là que la courbe doit s\'arrêter.</string>
     <string name="perm_battery_opt">Optimisation de la batterie</string>
     <string name="perm_audio_record">Enregistrement audio (EQ)</string>
     <string name="perm_gps_location">Position GPS (GALA)</string>

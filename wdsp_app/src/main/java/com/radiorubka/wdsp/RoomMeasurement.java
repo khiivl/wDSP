@@ -239,8 +239,13 @@ public final class RoomMeasurement {
      * -2.9 dBFS, under 3 dB from the converter rail, and clipping folds down into exactly the
      * bands this work is trying to measure. Lowering it costs SNR. That trade wants numbers
      * from both ends before a constant is chosen, which is what this name is now for.
+     *
+     * <p>Public since 13.09.2026 because {@link LoudnessCheck} anchors the loudness curve here: the
+     * band gains are the correction measured at this volume, so this is the volume at which the
+     * preset is true and the curve should do nothing. If this number ever moves, that anchor moves
+     * with it, which is the correct behaviour and the reason it is read rather than copied.
      */
-    private static final int MEASURE_VOLUME = 16;
+    public static final int MEASURE_VOLUME = 16;
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
     /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
     private static final int CLIP_MAGNITUDE = 32690;
@@ -2992,10 +2997,33 @@ public final class RoomMeasurement {
         // Tone compensation is switched OFF here on purpose. This preset is the answer to "what does
         // this car need"; loudness is an answer to "how loud am I listening", and it belongs to the
         // person, not to the measurement. It is one switch away on the Loudness tab.
+        //
+        // 🔴 But the two numbers under that switch are set here, and until 13.09.2026 they were
+        // written as zeros. That made the sentence above false: the switch was one tap away and it
+        // did nothing, because a calibration point of 0 leaves no volume below it and a strength of
+        // 0 multiplies the curve away. The owner's unit was in exactly that state - fm_cal = 0,
+        // fm_str = 0 - so anyone who tried loudness after a measurement heard no change and had
+        // nothing on screen to tell them why. That is the guessing this pass was told to end.
+        //
+        // So they are written as the answer the measurement can actually give:
+        //   - the calibration point is MEASURE_VOLUME, because these band gains are the correction
+        //     measured at that volume and are true only there. Below it the ear loses the bottom
+        //     and the correction no longer matches what is heard, which is the gap the curve fills;
+        //   - the strength is the strongest curve these particular gains leave room for. A preset
+        //     that already raises the bass has less headroom under the equaliser's +12 dB ceiling,
+        //     and a curve asking for more than that does not get louder, it goes flat at the top
+        //     and stops being a curve.
+        int autoFmStrength = LoudnessCheck.maxDeliverableStrength(
+                result.autoEqGains16,
+                result.hasSubwoofer ? result.subGain : 0,
+                result.hasSubwoofer ? result.subLpfIdx : 5,
+                false);
         e.putBoolean(presetName + "_fm_en", false);
         e.putBoolean(presetName + "_fat_en", false);
-        e.putInt(presetName + "_fm_cal", 0);
-        e.putInt(presetName + "_fm_str", 0);
+        e.putInt(presetName + "_fm_cal", MEASURE_VOLUME);
+        e.putInt(presetName + "_fm_str", autoFmStrength);
+        Log.i(TAG, "loudness curve left ready but off: cal=" + MEASURE_VOLUME
+                + " strength=" + autoFmStrength + "% (headroom under the +12 dB ceiling)");
         // Bass boost is a second bass control on top of the one just synthesized; two of them
         // fighting is how a preset ends up with a bottom nobody asked for.
         for (String k : new String[]{"_bb_f", "_bb_r", "_bb_frq_f", "_bb_frq_r"}) {

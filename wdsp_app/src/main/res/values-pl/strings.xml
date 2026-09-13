@@ -196,6 +196,17 @@
     <string name="gala_section_smoothing_sim">Wygładzanie i symulacja</string>
     <string name="settings_perm_overlay">Uprawnienie nakładki (Wyświetlanie nad aplikacjami)</string>
     <string name="fm_controls_title">Kalibracja i siła korekcji</string>
+
+    <string name="loud_check_ok">Ta krzywa pasuje do profilu. Nie trzeba nic zmieniać.</string>
+    <string name="loud_check_fix">Ustaw poprawnie</string>
+    <string name="loud_check_inert">Ta krzywa jest ustawiona tak, że nic nie robi: punkt kalibracji lub siła korekcji wynosi zero. Włączenie Loudness nie zmieni dźwięku, dopóki nie zostaną ustawione.</string>
+    <string name="loud_check_cal_low">Punkt kalibracji jest zbyt niski — poniżej niego nie ma głośności, w której krzywa mogłaby działać.</string>
+    <string name="loud_check_strength_zero">Siła korekcji wynosi zero, więc krzywa zostaje pomnożona przez zero.</string>
+    <string name="loud_check_fatigue_no_room">Ograniczenie wysokich tonów jest włączone, ale powyżej punktu kalibracji nie ma głośności, w której mogłoby działać.</string>
+    <string name="loud_check_ceiling">Poniżej głośności %1$d krzywej brakuje zapasu: %2$d pasm przestaje rosnąć i zamiast krzywej powstaje płaska półka.</string>
+    <string name="loud_check_sub_double">Subwoofer jest kompensowany oddzielnie, a pasma wokół %1$d Hz są ponownie podbijane — bas jest dodawany podwójnie.</string>
+    <string name="loud_check_bass_stacks">Włączone jest także osobne podbicie basu. To dwa regulatory basu pod jedną krzywą.</string>
+    <string name="loud_check_cal_not_measured">Krzywa jest zakotwiczona przy głośności %1$d, a samochód został zmierzony przy %2$d. Profil jest dokładny przy głośności pomiaru, więc to tam krzywa powinna się kończyć.</string>
     <string name="perm_battery_opt">Optymalizacja baterii</string>
     <string name="perm_audio_record">Nagrywanie dźwięku (EQ)</string>
     <string name="perm_gps_location">Lokalizacja GPS (GALA)</string>

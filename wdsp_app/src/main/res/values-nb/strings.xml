@@ -208,6 +208,17 @@ Global standard: %1$s</string>
     <string name="gala_section_smoothing_sim">Utjevning og simulering</string>
     <string name="settings_perm_overlay">Overleggstillatelse (Vis over apper)</string>
     <string name="fm_controls_title">Kalibrering og korreksjonsstyrke</string>
+
+    <string name="loud_check_ok">Denne kurven passer til profilen. Ingenting å endre.</string>
+    <string name="loud_check_fix">Still inn riktig</string>
+    <string name="loud_check_inert">Denne kurven er stilt inn til å ikke gjøre noe: kalibreringspunktet eller korreksjonsstyrken står på null. Å slå på Loudness vil ikke endre lyden før de er stilt inn.</string>
+    <string name="loud_check_cal_low">Kalibreringspunktet er for lavt — det er ikke noe volum under det som kurven kan virke i.</string>
+    <string name="loud_check_strength_zero">Korreksjonsstyrken er null, så kurven ganges bort.</string>
+    <string name="loud_check_fatigue_no_room">Diskantdemping er på, men det er ikke noe volum over kalibreringspunktet der den kan virke.</string>
+    <string name="loud_check_ceiling">Under volum %1$d slipper kurven opp for takhøyde: %2$d bånd slutter å stige og den flater ut til en hylle i stedet for en kurve.</string>
+    <string name="loud_check_sub_double">Subwooferen kompenseres separat, og båndene rundt %1$d Hz heves igjen — bassen legges til to ganger.</string>
+    <string name="loud_check_bass_stacks">En separat bassheving er også slått på. Det er to basskontroller under én kurve.</string>
+    <string name="loud_check_cal_not_measured">Kurven er forankret ved volum %1$d, men bilen ble målt ved %2$d. Profilen er nøyaktig ved det målte volumet, så det er der kurven bør stoppe.</string>
     <string name="perm_battery_opt">Batterioptimalisering</string>
     <string name="perm_audio_record">Lydopptak (EQ)</string>
     <string name="perm_gps_location">GPS-posisjon (GALA)</string>

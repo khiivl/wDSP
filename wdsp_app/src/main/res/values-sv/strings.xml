@@ -195,6 +195,17 @@
     <string name="gala_section_smoothing_sim">Utjämning och simulering</string>
     <string name="settings_perm_overlay">Överläggsbehörighet (Visa över appar)</string>
     <string name="fm_controls_title">Kalibrering och korrigeringsstyrka</string>
+
+    <string name="loud_check_ok">Den här kurvan passar profilen. Inget att ändra.</string>
+    <string name="loud_check_fix">Ställ in korrekt</string>
+    <string name="loud_check_inert">Den här kurvan är inställd på att inte göra något: kalibreringspunkten eller korrigeringsstyrkan står på noll. Att slå på Loudness ändrar inte ljudet förrän de har ställts in.</string>
+    <string name="loud_check_cal_low">Kalibreringspunkten är för låg — det finns ingen volym under den där kurvan kan verka.</string>
+    <string name="loud_check_strength_zero">Korrigeringsstyrkan är noll, så kurvan multipliceras bort.</string>
+    <string name="loud_check_fatigue_no_room">Diskantdämpning är på, men det finns ingen volym över kalibreringspunkten där den kan verka.</string>
+    <string name="loud_check_ceiling">Under volym %1$d tar marginalen slut för kurvan: %2$d band slutar stiga och den planar ut till en hylla i stället för en kurva.</string>
+    <string name="loud_check_sub_double">Subwoofern kompenseras separat och banden runt %1$d Hz höjs igen — basen läggs till två gånger.</string>
+    <string name="loud_check_bass_stacks">En separat basförstärkning är också påslagen. Det innebär två baskontroller under samma kurva.</string>
+    <string name="loud_check_cal_not_measured">Kurvan är förankrad vid volym %1$d, men bilen mättes vid %2$d. Profilen är exakt vid den uppmätta volymen, så det är där kurvan bör sluta.</string>
     <string name="perm_battery_opt">Batterioptimering</string>
     <string name="perm_audio_record">Ljudinspelning (EQ)</string>
     <string name="perm_gps_location">GPS-position (GALA)</string>

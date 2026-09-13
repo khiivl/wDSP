@@ -210,6 +210,17 @@
     <string name="eq_vis_enable_label">Відображати стовпчики спектру</string>
 
     <string name="fm_controls_title">Параметри калібрування та інтенсивність</string>
+
+    <string name="loud_check_ok">Крива відповідає пресету. Міняти нічого не треба.</string>
+    <string name="loud_check_fix">Виставити правильно</string>
+    <string name="loud_check_inert">Криву виставлено так, що вона нічого не робить: точка калібрування або сила дорівнює нулю. Увімкнути Loudness — і звук не зміниться, доки їх не виставлено.</string>
+    <string name="loud_check_cal_low">Точка вивірки надто низька — нижче за неї не лишається гучності, де крива могла б працювати.</string>
+    <string name="loud_check_strength_zero">Сила корекції дорівнює нулю, тож криву помножено на нуль.</string>
+    <string name="loud_check_fatigue_no_room">Підрізання втоми ввімкнено, але вище за точку вивірки немає гучності, де воно могло б діяти.</string>
+    <string name="loud_check_ceiling">Нижче гучності %1$d кривій не вистачає запасу: %2$d смуг перестають підійматися, і замість кривої виходить полиця.</string>
+    <string name="loud_check_sub_double">Сабвуфер компенсується окремо, і смуги біля %1$d Гц підіймаються ще раз — бас додається двічі.</string>
+    <string name="loud_check_bass_stacks">Увімкнено ще й окреме підсилення баса. Це два регулятори баса під однією кривою.</string>
+    <string name="loud_check_cal_not_measured">Криву прив\'язано до гучності %1$d, а машину зміряно на %2$d. На гучності виміру пресет точний, тож саме там крива й має закінчуватися.</string>
     <string name="perm_battery_opt">Оптимізація батареї</string>
     <string name="perm_notification_access">Доступ до сповіщень (метадані)</string>
     <string name="perm_audio_record">Запис аудіо (EQ)</string>

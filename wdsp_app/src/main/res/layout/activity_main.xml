@@ -1038,6 +1038,50 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/lbl_strength"
                             app:layout_constraintBottom_toBottomOf="@id/lbl_strength" />
+
+                        <!--
+                            The verdict on the curve. These two sliders are the only numbers in the
+                            app a person is asked to choose with no reference of any kind, so the
+                            app states what is wrong with the pair they have and offers the pair it
+                            would use. LoudnessCheck does the arithmetic; this only shows it.
+                        -->
+                        <TextView
+                            android:id="@+id/tv_loud_check"
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/loud_check_ok"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fm_strength"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_loud_fix"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_marginTop="10dp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="@color/card_bg_theme_aware"
+                            android:text="@string/loud_check_fix"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:visibility="gone"
+                            app:layout_constraintTop_toBottomOf="@id/tv_loud_check"
+                            app:layout_constraintStart_toStartOf="parent" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>

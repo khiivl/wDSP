@@ -208,6 +208,17 @@ Globální výchozí: %1$s</string>
     <string name="gala_section_smoothing_sim">Vyhlazení a simulace</string>
     <string name="settings_perm_overlay">Oprávnění překrytí (Zobrazení přes aplikace)</string>
     <string name="fm_controls_title">Kalibrace a intenzita korekce</string>
+
+    <string name="loud_check_ok">Křivka odpovídá profilu. Není co měnit.</string>
+    <string name="loud_check_fix">Nastavit správně</string>
+    <string name="loud_check_inert">Křivka je nastavena tak, že nic nedělá: kalibrační bod nebo síla korekce je na nule. Zapnutí Loudness nezmění zvuk, dokud nebudou nastaveny.</string>
+    <string name="loud_check_cal_low">Kalibrační bod je příliš nízko — pod ním nezbývá hlasitost, ve které by křivka mohla působit.</string>
+    <string name="loud_check_strength_zero">Síla korekce je nulová, takže křivka se násobí nulou.</string>
+    <string name="loud_check_fatigue_no_room">Oříznutí výšek je zapnuté, ale nad kalibračním bodem nezbývá hlasitost, ve které by mohlo působit.</string>
+    <string name="loud_check_ceiling">Pod hlasitostí %1$d křivce dochází rezerva: %2$d pásem přestává stoupat a místo křivky vzniká rovná plocha.</string>
+    <string name="loud_check_sub_double">Subwoofer se kompenzuje samostatně a pásma kolem %1$d Hz se zvedají znovu — basy se přidávají dvakrát.</string>
+    <string name="loud_check_bass_stacks">Současně je zapnuto i samostatné zvýraznění basů. To jsou dva ovladače basů pod jednou křivkou.</string>
+    <string name="loud_check_cal_not_measured">Křivka je ukotvena při hlasitosti %1$d, ale vůz byl měřen při %2$d. Profil je přesný při hlasitosti měření, takže právě tam by měla křivka končit.</string>
     <string name="perm_battery_opt">Optimalizace baterie</string>
     <string name="perm_audio_record">Nahrávání zvuku (EQ)</string>
     <string name="perm_gps_location">Poloha GPS (GALA)</string>

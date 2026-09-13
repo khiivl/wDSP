@@ -206,6 +206,17 @@
     <string name="gala_section_smoothing_sim">Suavização e simulação</string>
     <string name="settings_perm_overlay">Permissão de sobreposição (Mostrar sobre outras apps)</string>
     <string name="fm_controls_title">Calibração e intensidade da correção</string>
+
+    <string name="loud_check_ok">Esta curva adapta-se ao perfil. Nada a alterar.</string>
+    <string name="loud_check_fix">Ajustar corretamente</string>
+    <string name="loud_check_inert">Esta curva está configurada para não fazer nada: o ponto de calibração ou a força da correção está a zero. Ativar o Loudness não alterará o som até que sejam configurados.</string>
+    <string name="loud_check_cal_low">O ponto de calibração é demasiado baixo — não há volume abaixo dele para a curva atuar.</string>
+    <string name="loud_check_strength_zero">A força da correção é zero, pelo que a curva é anulada.</string>
+    <string name="loud_check_fatigue_no_room">A atenuação de agudos está ativada, mas não há volume acima do ponto de calibração para que atue.</string>
+    <string name="loud_check_ceiling">Abaixo do volume %1$d a curva fica sem margem: %2$d bandas param de subir e ela achata-se num patamar em vez de curva.</string>
+    <string name="loud_check_sub_double">O subwoofer é compensado separadamente e as bandas em torno de %1$d Hz são elevadas novamente — os graves são adicionados duas vezes.</string>
+    <string name="loud_check_bass_stacks">Um reforço de graves separado também está ativado. São dois controlos de graves sob uma mesma curva.</string>
+    <string name="loud_check_cal_not_measured">A curva está ancorada no volume %1$d, mas o veículo foi medido a %2$d. O perfil é exato no volume medido, pelo que é aí que a curva deve parar.</string>
     <string name="perm_battery_opt">Otimização da bateria</string>
     <string name="perm_audio_record">Gravação de áudio (EQ)</string>
     <string name="perm_gps_location">Localização GPS (GALA)</string>

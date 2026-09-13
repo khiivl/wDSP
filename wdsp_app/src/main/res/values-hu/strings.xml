@@ -208,6 +208,17 @@ Globális alapértelmezett: %1$s</string>
     <string name="gala_section_smoothing_sim">Simítás és szimuláció</string>
     <string name="settings_perm_overlay">Átfedési engedély (Megjelenítés más alkalmazások felett)</string>
     <string name="fm_controls_title">Kalibrálás és korrekciós erősség</string>
+
+    <string name="loud_check_ok">A görbe illeszkedik a profilhoz. Nincs mit változtatni.</string>
+    <string name="loud_check_fix">Helyes beállítás</string>
+    <string name="loud_check_inert">A görbe úgy van beállítva, hogy semmit sem csinál: a kalibrációs pont vagy a korrekció erőssége nullán áll. A Loudness bekapcsolása nem változtatja meg a hangot, amíg nincsenek beállítva.</string>
+    <string name="loud_check_cal_low">A kalibrációs pont túl alacsony — alatta nincs olyan hangerő, ahol a görbe működhetne.</string>
+    <string name="loud_check_strength_zero">A korrekció erőssége nulla, így a görbe hatása elvész.</string>
+    <string name="loud_check_fatigue_no_room">A magashang-vágás be van kapcsolva, de a kalibrációs pont felett nincs hangerő, ahol hathatna.</string>
+    <string name="loud_check_ceiling">%1$d hangerő alatt a görbének elfogy a tartaléka: %2$d sáv emelkedése megáll, és görbe helyett lapos polc keletkezik.</string>
+    <string name="loud_check_sub_double">A mélynyomó külön kompenzációt kap, és a %1$d Hz körüli sávok újra emelkednek — a mélyhang kétszer adódik hozzá.</string>
+    <string name="loud_check_bass_stacks">Egy különálló mélyhang-kiemelés is be van kapcsolva. Ez két mélyhang-szabályozás egyetlen görbe alatt.</string>
+    <string name="loud_check_cal_not_measured">A görbe a(z) %1$d hangerőhöz van rögzítve, de a mérés %2$d hangerőn történt. A profil a mérési hangerőn pontos, ezért a görbének ott kell véget érnie.</string>
     <string name="perm_battery_opt">Akkumulátoroptimalizálás</string>
     <string name="perm_audio_record">Hangfelvétel (EQ)</string>
     <string name="perm_gps_location">GPS-helymeghatározás (GALA)</string>

@@ -167,6 +167,10 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp;
     private Slider seekFmCalVol, seekFmStrength;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
+    private TextView tvLoudCheck;
+    private MaterialButton btnLoudFix;
+    /** The last verdict drawn, so the fix button applies exactly what the person was shown. */
+    private LoudnessCheck.Result lastLoudnessResult;
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
@@ -1201,7 +1205,10 @@ public class MainActivity extends AppCompatActivity {
         tvSysVolumeVal = findViewById(R.id.tv_sys_volume_val);
         tvSubOffsetVal = findViewById(R.id.tv_sub_offset_val);
         tvSubOffsetWarn = findViewById(R.id.tv_sub_offset_warn);
-        
+        tvLoudCheck = findViewById(R.id.tv_loud_check);
+        btnLoudFix = findViewById(R.id.btn_loud_fix);
+        if (btnLoudFix != null) btnLoudFix.setOnClickListener(v -> applyLoudnessRecommendation());
+
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
@@ -1744,30 +1751,119 @@ public class MainActivity extends AppCompatActivity {
             tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : getString(R.string.btn_ok));
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
+        updateLoudnessCheck();
     }
 
+    /**
+     * The preview under the two sliders. It used to compute the curve itself, with arithmetic that
+     * was not the arithmetic {@code McuService} pushed to the chip - the preview was a whole volume
+     * step ahead of the hardware, so the picture a person set the curve by was never the curve they
+     * got. Both now call {@link LoudnessCurve}; if this drawing is wrong, the sound is wrong in the
+     * same way, which is the only honest relationship between a preview and a device.
+     */
     private float[] calculateFmOffsets() {
         float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
         if (seekFmCalVol == null || seekFmStrength == null || switchFmEnable == null || switchFatigueEnable == null) {
             return offs;
         }
-        int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
-        int cal = getIntSlider(seekFmCalVol); float str = getIntSlider(seekFmStrength) / 100f;
-        if (vol < cal && switchFmEnable.isChecked()) {
-            float ratio = (float)(cal - vol) / (float)(cal - 1);
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
-            if (switchFmSubComp != null && switchFmSubComp.isChecked()) {
-                int currentSubFreq = Globals.currentSubFreqHz;
-                if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[3] * ratio * str;
-                else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[2] * ratio * str;
-                else if (currentSubFreq == 40 || currentSubFreq == 32) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[1] * ratio * str;
-                else if (currentSubFreq == 25) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[0] * ratio * str;
-            }
-        } else if (vol > cal && switchFatigueEnable.isChecked()) {
-            float ratio = (float)(vol - cal) / ((32 - cal) > 0 ? (float)(32 - cal) : 1f);
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * ratio * str;
-        }
+        int vol = Math.max(LoudnessCurve.VOL_MIN,
+                (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
+        int cal = getIntSlider(seekFmCalVol);
+        int str = getIntSlider(seekFmStrength);
+        LoudnessCurve.offsets(vol, cal, str,
+                switchFmEnable.isChecked(), switchFatigueEnable.isChecked(), offs);
+        currentFmSubOffset = LoudnessCurve.subOffset(vol, cal, str, switchFmEnable.isChecked(),
+                switchFmSubComp != null && switchFmSubComp.isChecked(),
+                subFreqIndexOf(Globals.currentSubFreqHz));
         return offs;
+    }
+
+    /** The crossover the subwoofer spinner is on, as an index into {@link DspResponse#SUB_FREQS_HZ}. */
+    private int subFreqIndexOf(int hz) {
+        for (int i = 0; i < DspResponse.SUB_FREQS_HZ.length; i++) {
+            if (DspResponse.SUB_FREQS_HZ[i] == hz) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Says what is wrong with the loudness curve as it currently stands, and offers the pair of
+     * numbers the app would use instead. Runs on every redraw of the preview, so it follows the
+     * sliders as they move rather than waiting for the preset to be saved.
+     */
+    private void updateLoudnessCheck() {
+        if (tvLoudCheck == null || seekFmCalVol == null || seekFmStrength == null) return;
+
+        int[] gains = new int[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS && i < gainSliders.size(); i++) {
+            gains[i] = getIntSlider(gainSliders.get(i));
+        }
+        int bassBoost = Math.max(getIntSlider(seekBassBoostFront), getIntSlider(seekBassBoostRear));
+        boolean carMeasured = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getString(RoomMeasurement.PREF_LAST_AUTOEQ_PRESET, null) != null;
+
+        LoudnessCheck.Result r = LoudnessCheck.inspect(
+                gains,
+                getIntSlider(seekSubGain),
+                subFreqIndexOf(Globals.currentSubFreqHz),
+                bassBoost,
+                switchFmEnable != null && switchFmEnable.isChecked(),
+                switchFatigueEnable != null && switchFatigueEnable.isChecked(),
+                switchFmSubComp != null && switchFmSubComp.isChecked(),
+                getIntSlider(seekFmCalVol),
+                getIntSlider(seekFmStrength),
+                carMeasured);
+        lastLoudnessResult = r;
+
+        StringBuilder sb = new StringBuilder();
+        for (LoudnessCheck.Finding f : r.findings) {
+            if (sb.length() > 0) sb.append('\n');
+            sb.append(loudnessFindingText(f));
+        }
+        tvLoudCheck.setText(sb.length() == 0 ? getString(R.string.loud_check_ok) : sb.toString());
+
+        boolean isNight = ThemeManager.isNight(this);
+        tvLoudCheck.setTextColor(r.isClean()
+                ? ThemeManager.textSecondary(this, isNight)
+                : ThemeManager.accent(this, isNight));
+
+        // The button is offered only when the app has something better to offer: a calibration
+        // point it can justify, or a strength the preset actually leaves room for.
+        boolean canFix = !r.isClean()
+                && (r.recommendedCal > 0 || r.recommendedStrength != getIntSlider(seekFmStrength));
+        if (btnLoudFix != null) {
+            btnLoudFix.setVisibility(canFix ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /** One finding as a sentence. The numbers live in the finding; the words live in resources. */
+    private String loudnessFindingText(LoudnessCheck.Finding f) {
+        switch (f.code) {
+            case CURVE_INERT:         return getString(R.string.loud_check_inert);
+            case CAL_TOO_LOW:         return getString(R.string.loud_check_cal_low);
+            case STRENGTH_ZERO:       return getString(R.string.loud_check_strength_zero);
+            case FATIGUE_NO_ROOM:     return getString(R.string.loud_check_fatigue_no_room);
+            case CEILING_CLIPS:       return getString(R.string.loud_check_ceiling, f.args[0], f.args[1]);
+            case SUB_DOUBLE_BASS:     return getString(R.string.loud_check_sub_double, f.args[0]);
+            case BASS_BOOST_STACKS:   return getString(R.string.loud_check_bass_stacks);
+            case CAL_NOT_AT_MEASURED: return getString(R.string.loud_check_cal_not_measured, f.args[0], f.args[1]);
+            default:                  return "";
+        }
+    }
+
+    /** Moves the two sliders onto the recommendation and saves, the way a manual drag would. */
+    private void applyLoudnessRecommendation() {
+        if (lastLoudnessResult == null || seekFmCalVol == null || seekFmStrength == null) return;
+        isUpdatingUi = true;
+        if (lastLoudnessResult.recommendedCal > 0) {
+            seekFmCalVol.setValue(lastLoudnessResult.recommendedCal);
+            tvFmCalVolVal.setText(String.valueOf(lastLoudnessResult.recommendedCal));
+        }
+        seekFmStrength.setValue(lastLoudnessResult.recommendedStrength);
+        tvFmStrengthVal.setText(String.valueOf(lastLoudnessResult.recommendedStrength));
+        isUpdatingUi = false;
+        updateFmVisualizer();
+        autoSaveCurrent();
     }
 
     private void checkStatusBarHeightCalibration() {

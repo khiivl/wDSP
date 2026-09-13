@@ -203,6 +203,17 @@
     <string name="gala_section_smoothing_sim">Suavizado y simulación</string>
     <string name="settings_perm_overlay">Permiso de superposición (Mostrar sobre otras apps)</string>
     <string name="fm_controls_title">Calibración e intensidad de corrección</string>
+
+    <string name="loud_check_ok">Esta curva se ajusta al perfil. Nada que cambiar.</string>
+    <string name="loud_check_fix">Ajustar correctamente</string>
+    <string name="loud_check_inert">Esta curva está configurada para no hacer nada: el punto de calibración o la fuerza de corrección están en cero. Activar Loudness no cambiará el sonido hasta que se configuren.</string>
+    <string name="loud_check_cal_low">El punto de calibración es demasiado bajo — no queda volumen por debajo para que la curva actúe.</string>
+    <string name="loud_check_strength_zero">La fuerza de corrección es cero, por lo que la curva queda anulada.</string>
+    <string name="loud_check_fatigue_no_room">La atenuación de agudos está activada, pero no hay volumen por encima del punto de calibración para que actúe.</string>
+    <string name="loud_check_ceiling">Por debajo del volumen %1$d la curva se queda sin margen: %2$d bandas dejan de subir y se aplanan en una meseta en lugar de una curva.</string>
+    <string name="loud_check_sub_double">El subwoofer se compensa por separado y las bandas alrededor de %1$d Hz se elevan de nuevo — los graves se suman dos veces.</string>
+    <string name="loud_check_bass_stacks">También está activado un refuerzo de graves independiente. Son dos controles de graves bajo una misma curva.</string>
+    <string name="loud_check_cal_not_measured">La curva está anclada al volumen %1$d, pero el auto se midió a %2$d. El perfil es exacto al volumen medido, por lo que ahí es donde debería terminar la curva.</string>
     <string name="perm_battery_opt">Optimización de batería</string>
     <string name="perm_audio_record">Grabación de audio (EQ)</string>
     <string name="perm_gps_location">Ubicación GPS (GALA)</string>

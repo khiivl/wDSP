@@ -208,6 +208,17 @@ Globāli noklusējums: %1$s</string>
     <string name="gala_section_smoothing_sim">Izlīdzināšana un simulācija</string>
     <string name="settings_perm_overlay">Pārklājuma atļauja (Rādīt virs lietotnēm)</string>
     <string name="fm_controls_title">Kalibrēšana un korekcijas intensitāte</string>
+
+    <string name="loud_check_ok">Līkne atbilst profilam. Nekas nav jāmaina.</string>
+    <string name="loud_check_fix">Iestatīt pareizi</string>
+    <string name="loud_check_inert">Šī līkne ir iestatīta tā, lai neko nedarītu: kalibrēšanas punkts vai korekcijas stiprums ir uz nulles. Loudness ieslēgšana nemainīs skaņu, kamēr tie nav iestatīti.</string>
+    <string name="loud_check_cal_low">Kalibrēšanas punkts ir pārāk zems — zem tā nav skaļuma, kurā līkne varētu darboties.</string>
+    <string name="loud_check_strength_zero">Korekcijas stiprums ir nulle, tāpēc līkne tiek reizināta ar nulli.</string>
+    <string name="loud_check_fatigue_no_room">Augsto frekvenču apgriešana ir ieslēgta, taču virs kalibrēšanas punkta nav skaļuma, kurā tā varētu darboties.</string>
+    <string name="loud_check_ceiling">Zem skaļuma %1$d līknei pietrūkst rezerves: %2$d joslas pārstāj pieaugt un tā kļūst plakana kā plaukts, nevis līkne.</string>
+    <string name="loud_check_sub_double">Zemfrekvences skaļrunis tiek kompensēts atsevišķi, un joslas ap %1$d Hz tiek atkal paceltas — basi tiek pievienoti divreiz.</string>
+    <string name="loud_check_bass_stacks">Ir ieslēgts arī atsevišķs basu pastiprinājums. Tie ir divi basu regulatori zem vienas līknes.</string>
+    <string name="loud_check_cal_not_measured">Līkne ir piesaistīta skaļumam %1$d, bet automašīna tika mērīta pie %2$d. Profils ir precīzs mērījuma skaļumā, tāpēc līknei būtu jābeidzas tieši tur.</string>
     <string name="perm_battery_opt">Akumulatora optimizācija</string>
     <string name="perm_audio_record">Audio ierakstīšana (EQ)</string>
     <string name="perm_gps_location">GPS atrašanās vieta (GALA)</string>

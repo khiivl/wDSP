@@ -208,6 +208,17 @@
     <string name="gala_section_smoothing_sim">Zaglađivanje i simulacija</string>
     <string name="settings_perm_overlay">Dozvola za preklapanje (Prikaz preko aplikacija)</string>
     <string name="fm_controls_title">Kalibracija i jačina korekcije</string>
+
+    <string name="loud_check_ok">Ова крива одговара профилу. Нема ништа да се мења.</string>
+    <string name="loud_check_fix">Подеси правилно</string>
+    <string name="loud_check_inert">Ова крива је подешена тако да не ради ништа: тачка калибрације или снага корекције је на нули. Укључивање Loudness неће променити звук док се не подесе.</string>
+    <string name="loud_check_cal_low">Тачка калибрације је прениска — испод ње нема јачине звука у којој би крива могла да делује.</string>
+    <string name="loud_check_strength_zero">Снага корекције је нула, па се дејство криве поништава.</string>
+    <string name="loud_check_fatigue_no_room">Подрезивање високих је укључено, али изнад тачке калибрације нема јачине звука у којој би могло да делује.</string>
+    <string name="loud_check_ceiling">Испод јачине звука %1$d кривој понестаје резерве: %2$d опсега престаје да расте и формира се равна полица уместо криве.</string>
+    <string name="loud_check_sub_double">Субвуфер се компензује посебно, а опсези око %1$d Hz се поново подижу — бас се додаје два пута.</string>
+    <string name="loud_check_bass_stacks">Укључено је и посебно појачање баса. То су два регулатора баса под једном кривом.</string>
+    <string name="loud_check_cal_not_measured">Крива је усидрена на јачини звука %1$d, а возило је измерено на %2$d. Профил је тачан при јачини мерења, па би управо тамо крива требало да се завршава.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>
     <string name="perm_audio_record">Snimanje zvuka (EQ)</string>
     <string name="perm_gps_location">GPS lokacija (GALA)</string>

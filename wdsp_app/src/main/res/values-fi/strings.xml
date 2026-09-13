@@ -208,6 +208,17 @@ Yleinen oletus: %1$s</string>
     <string name="gala_section_smoothing_sim">Pehmennys ja simulointi</string>
     <string name="settings_perm_overlay">Päällekkäisyyslupa (Näytä muiden sovellusten päällä)</string>
     <string name="fm_controls_title">Kalibrointi ja korjauksen voimakkuus</string>
+
+    <string name="loud_check_ok">Tämä käyrä sopii profiiliin. Ei muutettavaa.</string>
+    <string name="loud_check_fix">Aseta oikein</string>
+    <string name="loud_check_inert">Tämä käyrä on asetettu olemaan tekemättä mitään: kalibrointipiste tai korjauksen voimakkuus on nollassa. Loudnessin kytkeminen päälle ei muuta ääntä ennen kuin ne on asetettu.</string>
+    <string name="loud_check_cal_low">Kalibrointipiste on liian matala — sen alapuolella ei ole äänenvoimakkuutta, jolla käyrä voisi toimia.</string>
+    <string name="loud_check_strength_zero">Korjauksen voimakkuus on nolla, joten käyrä nollautuu.</string>
+    <string name="loud_check_fatigue_no_room">Diskantin vaimennus on päällä, mutta kalibrointipisteen yläpuolella ei ole äänenvoimakkuutta, jolla se voisi toimia.</string>
+    <string name="loud_check_ceiling">Äänenvoimakkuuden %1$d alapuolella käyrästä loppuu tila: %2$d kaistaa lakkaa nousemasta ja käyrä litistyy tasanteeksi.</string>
+    <string name="loud_check_sub_double">Subwoofer kompensoidaan erikseen ja taajuusalueita noin %1$d Hz nostetaan uudelleen — bassoa lisätään kahdesti.</string>
+    <string name="loud_check_bass_stacks">Myös erillinen bassokorostus on päällä. Se tarkoittaa kahta bassosäädintä saman käyrän alla.</string>
+    <string name="loud_check_cal_not_measured">Käyrä on ankkuroitu äänenvoimakkuuteen %1$d, mutta auto mitattiin tasolla %2$d. Profiili on tarkka mittausvoimakkuudella, joten käyrän tulisi päättyä siihen.</string>
     <string name="perm_battery_opt">Akun optimointi</string>
     <string name="perm_audio_record">Äänen tallennus (EQ)</string>
     <string name="perm_gps_location">GPS-sijainti (GALA)</string>

@@ -208,6 +208,17 @@
     <string name="gala_section_smoothing_sim">Изглаждане и симулация</string>
     <string name="settings_perm_overlay">Разрешение за наслагване (Показване върху приложения)</string>
     <string name="fm_controls_title">Калибриране и сила на корекцията</string>
+
+    <string name="loud_check_ok">Кривата съответства на профила. Няма нищо за промяна.</string>
+    <string name="loud_check_fix">Задай правилно</string>
+    <string name="loud_check_inert">Кривата е настроена така, че да не прави нищо: точката на калибриране или силата на корекцията е на нула. Включването на Loudness няма да промени звука, докато не бъдат зададени.</string>
+    <string name="loud_check_cal_low">Точката на калибриране е твърде ниска — под нея няма сила на звука, в която кривата да действа.</string>
+    <string name="loud_check_strength_zero">Силата на корекцията е нула, затова кривата се умножава по нула.</string>
+    <string name="loud_check_fatigue_no_room">Подрязването на високите е включено, но над точката на калибриране няма сила на звука, в която да действа.</string>
+    <string name="loud_check_ceiling">Под сила на звука %1$d на кривата не й достига запас: %2$d честотни ленти спират да растат и се образува праг вместо крива.</string>
+    <string name="loud_check_sub_double">Субуферът се компенсира отделно, а лентите около %1$d Hz се повдигат отново — басът се добавя два пъти.</string>
+    <string name="loud_check_bass_stacks">Включено е и отделно усилване на баса. Това са два регулатора на баса под една крива.</string>
+    <string name="loud_check_cal_not_measured">Кривата е фиксирана при сила на звука %1$d, а автомобилът е измерен при %2$d. Профилът е точен при силата на звука на измерване, затова кривата трябва да спира именно там.</string>
     <string name="perm_battery_opt">Оптимизация на батерията</string>
     <string name="perm_audio_record">Запис на звук (EQ)</string>
     <string name="perm_gps_location">GPS местоположение (GALA)</string>

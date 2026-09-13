@@ -208,6 +208,17 @@ Globalno zadano: %1$s</string>
     <string name="gala_section_smoothing_sim">Zaglađivanje i simulacija</string>
     <string name="settings_perm_overlay">Dopuštenje preklapanja (Prikaz preko aplikacija)</string>
     <string name="fm_controls_title">Kalibracija i jačina korekcije</string>
+
+    <string name="loud_check_ok">Krivulja odgovara profilu. Nema potrebe za promjenom.</string>
+    <string name="loud_check_fix">Postavi ispravno</string>
+    <string name="loud_check_inert">Krivulja je postavljena tako da ne radi ništa: kalibracijska točka ili snaga korekcije je na nuli. Uključivanje funkcije Loudness neće promijeniti zvuk dok se ne postave.</string>
+    <string name="loud_check_cal_low">Kalibracijska točka je preniska — ispod nje nema glasnoće u kojoj bi krivulja mogla djelovati.</string>
+    <string name="loud_check_strength_zero">Snaga korekcije je nula, pa je krivulja pomnožena s nulom.</string>
+    <string name="loud_check_fatigue_no_room">Obrezivanje visokih je uključeno, ali iznad kalibracijske točke nema glasnoće u kojoj bi moglo djelovati.</string>
+    <string name="loud_check_ceiling">Ispod glasnoće %1$d krivulji ponestaje rezerve: %2$d pojaseva prestaje rasti i stvara se polica umjesto krivulje.</string>
+    <string name="loud_check_sub_double">Subwoofer se kompenzira zasebno, a pojasevi oko %1$d Hz ponovno se podižu — bas se dodaje dvaput.</string>
+    <string name="loud_check_bass_stacks">Uključeno je i zasebno pojačanje basa. To su dva regulatora basa pod jednom krivuljom.</string>
+    <string name="loud_check_cal_not_measured">Krivulja je usidrena na glasnoći %1$d, a automobil je izmjeren na %2$d. Profil je točan pri glasnoći mjerenja, pa bi krivulja trebala završavati upravo tamo.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>
     <string name="perm_audio_record">Snimanje zvuka (EQ)</string>
     <string name="perm_gps_location">GPS lokacija (GALA)</string>
