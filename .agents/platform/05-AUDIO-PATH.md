@@ -133,6 +133,51 @@ silent cabin. 📻 **"Ok Google" answered** while attached to our 48 kHz stream 
 **before** the assistant reopens, and it came back in two seconds here — so stop it and open
 immediately, with no measuring or sleeping in between.
 
+#### After a real cold boot the order is ours without doing anything — 14.09.2026
+
+📻 PC and head unit rebooted by the owner; read afterwards from `dumpsys audio`, whose recording
+event log does not roll the way logcat does:
+
+```
+00:52:54      boot
+00:53:50.315  wDSP        rec start   (+56 s)
+00:54:21.367  assistant   rec start   (+87 s, 31 s after us, as a second client)
+```
+
+So on this unit, with wDSP starting from `BOOT_COMPLETED`, the service opens the input half a minute
+before the Google assistant does. No stop, no root. ❓ Whether the first probe came up full band is
+not recoverable — logcat had rolled by the time it was read. ❓ One boot, one unit; the assistant's
+start time is not guaranteed.
+
+#### A phone call sits beside our capture, not instead of it — 13.09.2026
+
+📻 Four Bluetooth calls with our 48 kHz `UNPROCESSED` capture held throughout. The call's recorder
+appears as `uid:0`, empty package name, its own session; our capture logged without a gap for the
+whole call; **the owner heard no echo and no noise at the far end, on two separate calls.** Effects
+are per session and the BT stack brings its own. ⇒ The microphone does not have to be released for
+calls (owner's decision, 14.09.2026: "не треба віддавати мікрофон, дріт доказав"). Full call trace:
+`08-VOLUME-AND-SOURCES.md`, "A Bluetooth call, measured end to end".
+
+#### ⚠️ What can actually take the microphone: the vendor assistants, and they depend on the ROM
+
+*(owner, 14.09.2026)* The Google assistant shares. The ones that **do not** are the vendor's own:
+the Chinese "Toppal" assistant and the **TXZ** voice service that is built into these head units —
+both run with **priority** over the microphone. On his own unit the owner forbade them the
+microphone. ❓ The priority mechanism itself has not been measured here.
+
+Which of them exist depends on the Android ROM build, not the hardware:
+
+| ROM project | Toppal | TXZ |
+|---|---|---|
+| **Haiwai** (overseas; the owner's unit, latest build) | absent — possibly removed by the vendor for good | 📻 only `com.txznet.debugtool` and `com.txznet.weather` present; no core service package, visible or hidden (`pm list packages -u` adds only `com.navimods.radio`) |
+| **Jitu2** | present | present — "all that junk is there" |
+
+🔴 Consequence: a tester on a Jitu2 ROM can have the microphone taken by a vendor assistant that the
+owner's unit simply does not carry, and "full band on the owner's unit" says nothing about them.
+Ask which ROM before reading a tester's capture report. ❓ The package names of Toppal and of the
+TXZ core service are not known on this machine — find them on a Jitu2 unit before writing any
+detection for them.
+
 ### When the microphone cannot be freed, sweep only where it hears
 
 Sweeping to 20 kHz through a 16 kHz stream throws away more than half the signal: the energy is
