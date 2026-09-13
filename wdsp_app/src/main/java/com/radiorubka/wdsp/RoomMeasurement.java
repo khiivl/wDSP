@@ -197,6 +197,10 @@ public final class RoomMeasurement {
      * an impulse response - of the room noise - and it can look convincing on its own.
      */
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
+    /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
+    private static final int CLIP_MAGNITUDE = 32690;
+    /** Above this the pass is undamaged but has no margin left. */
+    private static final float HEADROOM_WARN_DBFS = -3.0f;
     /**
      * How far the direct sound has to stand above the room before its arrival time is believed.
      *
@@ -1194,6 +1198,28 @@ public final class RoomMeasurement {
          */
         public String noiseFloorChannel = "";
         /**
+         * The capture source this pass actually got, spelled out.
+         *
+         * <p>The header line above it lists the effects the PLATFORM offers, which is not the
+         * same question and reads as though the sweep had been run through echo cancellation.
+         * Whether it was depends entirely on this: UNPROCESSED is absent from the preprocess
+         * list in {@code audio_effects.xml}, VOICE_RECOGNITION is in it.
+         */
+        public String captureSource = "";
+        /**
+         * Samples in the recording that sat on the converter's rail, and the peak they reached.
+         *
+         * <p>The per-channel peak was already reported, and it answers "was anything heard".
+         * It does not answer "was the loudest thing heard undamaged", and those separate once
+         * a channel comes within a few dB of full scale: a converter at the rail folds the
+         * energy it cannot represent back into the spectrum as intermodulation, which lands
+         * low. A channel clipped at the top therefore reads as a channel with unusually good
+         * bass - the one conclusion in this report nobody would question, and the one that
+         * would be wrong.
+         */
+        public int clippedSamples;
+        public float passPeakDbfs = Float.NEGATIVE_INFINITY;
+        /**
          * The cabin's own silence, measured from the lead-in second before the first sweep tone.
          *
          * <p>🔴 Until 12.09.2026 this was measured into {@code noiseFloorDb16} and then overwritten
@@ -1673,6 +1699,7 @@ public final class RoomMeasurement {
             Log.i(TAG, "audio focus for the sweep: " + result.focus);
 
             record = openMicrophone();
+            result.captureSource = describeCaptureSource(record);
             if (record == null) {
                 result.error = "the microphone could not be opened";
                 Log.e(TAG, result.error);
@@ -1771,19 +1798,39 @@ public final class RoomMeasurement {
 
         float[] asFloat = new float[got];
         int peak = 0;
+        int clipped = 0;
         double sumSquares = 0;
         for (int i = 0; i < got; i++) {
             asFloat[i] = captured[i] / 32768f;
-            if (Math.abs(captured[i]) > peak) peak = Math.abs(captured[i]);
+            final int mag = Math.abs(captured[i]);
+            if (mag > peak) peak = mag;
+            // Not 32767: a converter that limits rather than wraps parks a run of samples a
+            // hair below the rail, and dither moves the last bit about. Anything inside the
+            // top 0.02 dB is on the rail for the purposes of this question.
+            if (mag >= CLIP_MAGNITUDE) clipped++;
             sumSquares += (double) asFloat[i] * asFloat[i];
         }
         final float passPeak = peak / 32768f;
+        result.clippedSamples = clipped;
+        result.passPeakDbfs = (float) (20 * Math.log10(passPeak + 1e-9f));
         final float passRms = got > 0 ? (float) Math.sqrt(sumSquares / got) : 0f;
         final float passBandwidth = NativeSweep.bandwidthRatioDb(asFloat, got, SAMPLE_RATE);
         Log.i(TAG, String.format(Locale.US,
                 "pass: %d frames, peak %.1f dBFS, rms %.1f dBFS, above 8 kHz %.1f dB",
                 got, 20 * Math.log10(passPeak + 1e-9f), 20 * Math.log10(passRms + 1e-9f),
                 passBandwidth));
+        if (clipped > 0) {
+            Log.w(TAG, String.format(Locale.US,
+                    "%d samples of %d sat on the converter rail (peak %.1f dBFS). The loudest "
+                    + "channel was recorded damaged, and clipping folds down: its low bands "
+                    + "will read better than they are. Lower the playback volume and repeat.",
+                    clipped, got, result.passPeakDbfs));
+        } else if (result.passPeakDbfs > HEADROOM_WARN_DBFS) {
+            Log.w(TAG, String.format(Locale.US,
+                    "peak %.1f dBFS leaves under %.0f dB of headroom - nothing clipped this "
+                    + "time, but a slightly louder room would, and the margin is not measured "
+                    + "by anything else here.", result.passPeakDbfs, -HEADROOM_WARN_DBFS));
+        }
         if (passBandwidth < BANDWIDTH_WARN_DB) {
             Log.w(TAG, "the recording has nothing above 8 kHz. The microphone is running at "
                     + "16 kHz because something else has it open - an assistant hotword is the "
@@ -2877,6 +2924,26 @@ public final class RoomMeasurement {
      * VBC ADC0 DG Set} either way — the {@code UnprocessRecord} block in {@code audio_pga.xml},
      * with its {@code 0x18}, is dead and the HAL never applies it. Levels measured 0.2 dB apart.
      */
+    /**
+     * Names the source an open record ended up on, and says what the policy does with it.
+     *
+     * <p>Asked of the {@link AudioRecord} rather than remembered from the call that opened it:
+     * the fallback inside {@link #openMicrophone()} means the source requested and the source
+     * obtained are not always the same, and it is the one obtained that shaped the recording.
+     */
+    private static String describeCaptureSource(AudioRecord record) {
+        if (record == null) return "";
+        final int source = record.getAudioSource();
+        if (source == MediaRecorder.AudioSource.UNPROCESSED) {
+            return "UNPROCESSED - the policy attaches no AEC/NS to this source";
+        }
+        if (source == MediaRecorder.AudioSource.VOICE_RECOGNITION) {
+            return "VOICE_RECOGNITION - the policy DOES attach AEC and NS to this source, "
+                    + "and both remove sweep: read the low bands with that in mind";
+        }
+        return "source " + source;
+    }
+
     private static AudioRecord openMicrophone() {
         int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
@@ -3120,6 +3187,12 @@ public final class RoomMeasurement {
             StringBuilder sb = new StringBuilder();
             sb.append("wDSP room measurement\n");
             sb.append(HardwareProfile.describe()).append('\n');
+            // Directly under the line that lists the effects the platform OFFERS, because that line
+            // reads as "the sweep went through echo cancellation" and this is the one that settles
+            // whether it did.
+            if (!result.captureSource.isEmpty()) {
+                sb.append("capture source: ").append(result.captureSource).append('\n');
+            }
             // The machine and the screen. A report is evidence about one particular head unit, and
             // two units with the same MCU code can still be different computers. The screen line
             // carries the system-bar insets as well - the only way to work out where the bar really
@@ -3261,6 +3334,17 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %.2f", Math.max(0f, Math.min(1f, trust))));
             }
             sb.append("\n");
+            if (result.clippedSamples > 0) {
+                sb.append(String.format(Locale.US,
+                        "CLIPPED: %d samples on the converter rail, peak %.1f dBFS. The loudest "
+                        + "channel is damaged and its low bands read too well - lower the volume "
+                        + "and repeat.\n",
+                        result.clippedSamples, result.passPeakDbfs));
+            } else if (result.passPeakDbfs > HEADROOM_WARN_DBFS) {
+                sb.append(String.format(Locale.US,
+                        "Headroom:              %.1f dBFS peak - nothing clipped, no margin left.\n",
+                        result.passPeakDbfs));
+            }
             sb.append("Mic calibrated:       ")
               .append(result.micCalibrated
                       ? "yes"

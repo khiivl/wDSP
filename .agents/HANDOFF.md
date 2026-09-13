@@ -1321,3 +1321,55 @@ NS=true` — це `isAvailable()`, тобто **наявність**, а не у
 `install -r` — спершу `pidof`, потім `am start-foreground-service`, і лише тоді широкомовне.
 
 
+
+## 🔴 The owner's bench is NOT a cabin — no acoustic conclusion may be drawn from it (13.09.2026 14:30)
+
+Stated by the owner after I did exactly that, twice in two messages. Written down because
+every sweep we will run for the next while is run there, and the temptation repeats.
+
+**What the bench is:** open shelving with shelves to the left, open balcony space to the
+right, glass 1.35 m in front of the speakers, roughly 1 m between speaker centres. No
+rear speakers. It is an asymmetric half-open space, not a sealed cabin with boundary gain.
+
+**What that invalidates, from the 13.09 14:07 report:**
+
+- The 18 dB spread between front left and front right at 20 Hz is the *environment* — one
+  driver firing into a loaded cabinet, the other into open air off a balcony. I attributed
+  it to the speakers. Withdrawn.
+- `LF slope 20-80 Hz: +12.8 dB/oct` is a correct measurement of that space. Reading it as
+  "second order, therefore the handsfree DSP's high-pass is in the microphone path" has no
+  support. Withdrawn. The yardstick the report prints next to it (+4.4 / +5.5 dB/oct for a
+  first-order RC at 72 / 154 Hz) is still worth printing; what is not allowed is concluding
+  from it on this bench.
+
+**What survives, and why:**
+
+- The microphone hears 20 and 31.5 Hz. Front right reads SNR 61.7 / 57.6 dB there — the
+  best signal in the whole report, better than 8 kHz. "The mic went deaf at the bottom" is
+  about the *display*: the old stored curve lifted bands 0..2 by +16 dB and that curve is
+  applied to the live microphone spectrum too, so removing the fiction dropped three bars
+  by 16 dB on screen. Nothing about the sensor changed.
+- A filter common to every channel cannot produce a spread *between* channels. So whatever
+  the spread at 20 Hz is, it is not the microphone. That argument does not depend on the
+  room at all, and it is the reason bands 0..2 of the mic curve must not be fitted from a
+  room sweep.
+
+**The conclusion that follows, and it is a negative one:** bands 20 / 31.5 / 50 Hz of the
+microphone curve cannot be derived from a sweep in *any* room — bench or cabin. The
+acoustic term down there is always larger than the electrical term we are trying to find,
+and one sweep does not separate them. My earlier proposal to take "the common part across
+channels" fails for the same reason: in an asymmetric space the common part is just the
+quietest channel.
+
+So those three bands stay at zero, and the honest act is for the report to say they are
+not measured rather than to substitute a number. That is what the code does now. Do not
+"improve" it without new physics — a second known transducer, a known electrical
+injection point, or a measurement that does not go through the air.
+
+**Still open and NOT room-dependent** (so the bench can answer these):
+
+- Front right peaked at −2.9 dBFS, front left at −8.5. Clip and headroom detection landed
+  13.09; whether the answer is a quieter sweep is a trade against SNR and wants a
+  measurement, not a nudged constant.
+- Bands 5..12 of the microphone curve are zero by construction — the midband is the
+  reference for itself. Needs a decision about what to measure against.

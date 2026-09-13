@@ -229,11 +229,20 @@ public final class HardwareProfile {
         return NoiseSuppressor.isAvailable();
     }
 
-    /** One line for the log and for the diagnostics screen. */
+    /**
+     * One line for the log and for the diagnostics screen.
+     *
+     * <p>The three effect flags are {@code isAvailable()} - what the platform can attach to a
+     * capture, not what it attached to ours. Read as "AEC and NS were on during the sweep" it
+     * says the measurement was filtered by the two effects built to remove exactly what a sweep
+     * is, which would discredit the whole report; the room measurement in fact opens
+     * UNPROCESSED, which the policy does not preprocess, and it prints the source it got.
+     */
     public static String describe() {
         return String.format(Locale.US,
                 "MCU code=%s (%s), sound processor=%s, tuner=%s, path=%s, "
-                        + "capture effects: AEC=%b NS=%b AGC=%b",
+                        + "capture effects the platform OFFERS (not what any given "
+                        + "capture got): AEC=%b NS=%b AGC=%b",
                 mcuCode(), mcuType(), soundProcessor(), tuner(), outputPath(),
                 AcousticEchoCanceler.isAvailable(), NoiseSuppressor.isAvailable(),
                 AutomaticGainControl.isAvailable());
