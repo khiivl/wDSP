@@ -24,7 +24,7 @@
     <string name="lbl_volume">Głośność:</string>
     <string name="lbl_sub_offset">Przesunięcie subwoofera:</string>
     <string name="lbl_lower_sub_by">Obniż poziom subwoofera o:</string>
-    <string name="lbl_calibration_point">Punkt kalibracji (powinien być ok. 80 dB):</string>
+    <string name="lbl_calibration_point">Punkt kalibracji (głośność, powyżej której krzywa nie działa):</string>
     <string name="lbl_correction_strength">Siła korekcji:</string>
 
     <!-- Delays Tab -->

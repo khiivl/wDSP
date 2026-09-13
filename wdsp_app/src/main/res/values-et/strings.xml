@@ -26,7 +26,7 @@
     <string name="lbl_volume">Helitugevus:</string>
     <string name="lbl_sub_offset">Bassikõlari nihe:</string>
     <string name="lbl_lower_sub_by">Vähenda bassi:</string>
-    <string name="lbl_calibration_point">Kalibreerimispunkt (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibreerimispunkt (helitugevus, millest kõrgemal kõver ei toimi):</string>
     <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
 
     <!-- Delays Tab -->

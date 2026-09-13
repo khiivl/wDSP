@@ -26,7 +26,7 @@
     <string name="lbl_volume">Hangerő:</string>
     <string name="lbl_sub_offset">Mélynyomó eltolás:</string>
     <string name="lbl_lower_sub_by">Mélynyomó csökkentése:</string>
-    <string name="lbl_calibration_point">Kalibrációs pont (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibrációs pont (hangerő, amely felett a görbe nem hat):</string>
     <string name="lbl_correction_strength">Korrekció erőssége:</string>
 
     <!-- Delays Tab -->

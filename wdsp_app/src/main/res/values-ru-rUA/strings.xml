@@ -23,7 +23,7 @@
     <string name="lbl_volume">Громкость:</string>
     <string name="lbl_sub_offset">Смещение Sub:</string>
     <string name="lbl_lower_sub_by">Снизить sub на:</string>
-    <string name="lbl_calibration_point">Точка калибровки (около 80 дБ):</string>
+    <string name="lbl_calibration_point">Точка калибровки (громкость, выше которой кривая не действует):</string>
     <string name="lbl_correction_strength">Степень коррекции:</string>
 
     <!-- Delays Tab -->

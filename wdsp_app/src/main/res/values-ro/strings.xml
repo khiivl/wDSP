@@ -26,7 +26,7 @@
     <string name="lbl_volume">Volum:</string>
     <string name="lbl_sub_offset">Decalaj Sub:</string>
     <string name="lbl_lower_sub_by">Redu sub cu:</string>
-    <string name="lbl_calibration_point">Punct de calibrare (~80 dB):</string>
+    <string name="lbl_calibration_point">Punct de calibrare (volum peste care curba nu acționează):</string>
     <string name="lbl_correction_strength">Putere corecție:</string>
 
     <!-- Delays Tab -->

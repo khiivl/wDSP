@@ -24,7 +24,7 @@
     <string name="lbl_volume">Volym:</string>
     <string name="lbl_sub_offset">Sub-offset:</string>
     <string name="lbl_lower_sub_by">Sänk sub med:</string>
-    <string name="lbl_calibration_point">Kalibreringspunkt (bör vara ca 80 dB):</string>
+    <string name="lbl_calibration_point">Kalibreringspunkt (volym över vilken kurvan inte verkar):</string>
     <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
 
     <!-- Delays Tab -->

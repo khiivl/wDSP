@@ -23,7 +23,7 @@
     <string name="lbl_volume">Lautstärke:</string>
     <string name="lbl_sub_offset">Sub-Offset:</string>
     <string name="lbl_lower_sub_by">Sub absenken um:</string>
-    <string name="lbl_calibration_point">Kalibrationspunkt (muss ca. 80 dB sein):</string>
+    <string name="lbl_calibration_point">Kalibrationspunkt (Lautstärke, oberhalb der die Kurve nicht wirkt):</string>
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
 
     <!-- Delays Tab -->

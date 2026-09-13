@@ -26,7 +26,7 @@
     <string name="lbl_volume">Ένταση:</string>
     <string name="lbl_sub_offset">Μετατόπιση Sub:</string>
     <string name="lbl_lower_sub_by">Μείωση sub κατά:</string>
-    <string name="lbl_calibration_point">Σημείο βαθμονόμησης (~80 dB):</string>
+    <string name="lbl_calibration_point">Σημείο βαθμονόμησης (ένταση πάνω από την οποία η καμπύλη παύει να δρα):</string>
     <string name="lbl_correction_strength">Ισχύς διόρθωσης:</string>
 
     <!-- Delays Tab -->

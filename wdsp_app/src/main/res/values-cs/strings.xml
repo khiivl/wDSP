@@ -26,7 +26,7 @@
     <string name="lbl_volume">Hlasitost:</string>
     <string name="lbl_sub_offset">Posun subwooferu:</string>
     <string name="lbl_lower_sub_by">Snížit subwoofer o:</string>
-    <string name="lbl_calibration_point">Kalibrační bod (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibrační bod (hlasitost, nad kterou křivka nepůsobí):</string>
     <string name="lbl_correction_strength">Síla korekce:</string>
 
     <!-- Delays Tab -->

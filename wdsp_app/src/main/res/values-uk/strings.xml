@@ -29,7 +29,7 @@
     <string name="lbl_volume">Гучність:</string>
     <string name="lbl_sub_offset">Зміщення сабвуфера:</string>
     <string name="lbl_lower_sub_by">Знизити рівень сабвуфера на:</string>
-    <string name="lbl_calibration_point">Точка калібрування (має бути ~80 дБ):</string>
+    <string name="lbl_calibration_point">Точка калібрування (гучність, вище якої крива не діє):</string>
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
 
     <!-- Delays Tab -->

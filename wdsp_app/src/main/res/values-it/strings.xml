@@ -26,7 +26,7 @@
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Offset Sub:</string>
     <string name="lbl_lower_sub_by">Riduci sub di:</string>
-    <string name="lbl_calibration_point">Punto di calibrazione (~80 dB):</string>
+    <string name="lbl_calibration_point">Punto di calibrazione (volume oltre il quale la curva non agisce):</string>
     <string name="lbl_correction_strength">Intensità correzione:</string>
 
     <!-- Delays Tab -->

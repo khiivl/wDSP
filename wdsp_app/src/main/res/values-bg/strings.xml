@@ -26,7 +26,7 @@
     <string name="lbl_volume">Сила на звука:</string>
     <string name="lbl_sub_offset">Изместване на суба:</string>
     <string name="lbl_lower_sub_by">Намаляване на суба с:</string>
-    <string name="lbl_calibration_point">Точка на калибриране (~80 dB):</string>
+    <string name="lbl_calibration_point">Точка на калибриране (сила на звука, над която кривата не действа):</string>
     <string name="lbl_correction_strength">Сила на корекцията:</string>
 
     <!-- Delays Tab -->

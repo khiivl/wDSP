@@ -26,7 +26,7 @@
     <string name="lbl_volume">Garsumas:</string>
     <string name="lbl_sub_offset">Žemų dažnių poslinkis:</string>
     <string name="lbl_lower_sub_by">Sumažinti žemus dažnius:</string>
-    <string name="lbl_calibration_point">Kalibravimo taškas (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibravimo taškas (garsumas, virš kurio kreivė neveikia):</string>
     <string name="lbl_correction_strength">Korekcijos stiprumas:</string>
 
     <!-- Delays Tab -->

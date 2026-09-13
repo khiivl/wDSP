@@ -26,7 +26,7 @@
     <string name="lbl_volume">Glasnoća:</string>
     <string name="lbl_sub_offset">Pomak subwoofera:</string>
     <string name="lbl_lower_sub_by">Smanji sub za:</string>
-    <string name="lbl_calibration_point">Kalibracijska točka (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibracijska točka (glasnoća iznad koje krivulja ne djeluje):</string>
     <string name="lbl_correction_strength">Snaga korekcije:</string>
 
     <!-- Delays Tab -->

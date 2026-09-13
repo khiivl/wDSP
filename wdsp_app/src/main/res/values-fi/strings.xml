@@ -26,7 +26,7 @@
     <string name="lbl_volume">Äänenvoimakkuus:</string>
     <string name="lbl_sub_offset">Sub-siirtymä:</string>
     <string name="lbl_lower_sub_by">Vaimenna subia:</string>
-    <string name="lbl_calibration_point">Kalibrointipiste (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibrointipiste (äänenvoimakkuus, jonka yläpuolella käyrä ei toimi):</string>
     <string name="lbl_correction_strength">Korjauksen voimakkuus:</string>
 
     <!-- Delays Tab -->

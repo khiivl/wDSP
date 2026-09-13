@@ -23,7 +23,7 @@
     <string name="lbl_volume">Volumen:</string>
     <string name="lbl_sub_offset">Compensación de Subwoofer:</string>
     <string name="lbl_lower_sub_by">Atenuar Subwoofer en:</string>
-    <string name="lbl_calibration_point">Punto de Calibración (debe rondar 80 dB):</string>
+    <string name="lbl_calibration_point">Punto de calibración (volumen por encima del cual la curva no actúa):</string>
     <string name="lbl_correction_strength">Intensidad de la Corrección:</string>
 
     <!-- Delays Tab -->

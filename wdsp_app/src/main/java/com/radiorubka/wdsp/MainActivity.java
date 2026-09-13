@@ -1724,13 +1724,21 @@ public class MainActivity extends AppCompatActivity {
         //     at MainActivity.updateFmVisualizer
         //     at SegmentedPillNavView.setSelectedItemId
         //     at MainActivity.onCreate(MainActivity.java:315)
-        // The way a person reaches it: Settings -> tap the Loudness tab in the bottom bar
-        // (SettingsActivity puts `target_tab` on the intent) while MainActivity is not alive any
-        // more, which on this platform is often - the power controller kills it in the background.
-        // With it alive the intent goes to onNewIntent instead, long after setup, and nothing
-        // happens; that is why this survived testing and shipped in 0.4.9.8.
-        // updateEqVisualizer has carried exactly this guard all along - the two siblings had
-        // drifted, and only one of them was protected.
+        // ⚠️ How far this actually reaches, corrected after a first, overstated reading of it:
+        // through the interface it is normally SAFE, and the crash above was provoked by an adb
+        // launch that the UI does not produce. SettingsActivity:320 is the only place that ever
+        // sets `target_tab`, and MainActivity does not finish when it opens Settings - it stays in
+        // the task underneath. So tapping a tab there sends CLEAR_TOP | SINGLE_TOP into the
+        // existing instance and the intent arrives at onNewIntent, long after setup. Starting
+        // MainActivity cold with the extra already on it, as `am start --ei target_tab` does, is
+        // what runs onCreate down this path.
+        // ❓ The one case not settled by reading: the process killed in the background while
+        // Settings is on top - which this platform's power controller does readily - and the person
+        // then coming back and tapping a tab. Whether the rebuilt activity takes that intent
+        // through onCreate or onNewIntent is a property of how the task is reconstituted, and
+        // wants an experiment rather than an opinion.
+        // Either way the guard belongs here: updateEqVisualizer has carried exactly this one all
+        // along, the two siblings had drifted, and only one of them was protected.
         if (fmVisualizer == null || gainSliders.size() < AudioConfig.NUM_BANDS) return;
         float[] offs = calculateFmOffsets();
         AudioSpectrumEngine.getInstance().setFmOffsets(offs);
@@ -1829,7 +1837,14 @@ public class MainActivity extends AppCompatActivity {
 
         // The button is offered only when the app has something better to offer: a calibration
         // point it can justify, or a strength the preset actually leaves room for.
-        boolean canFix = !r.isClean()
+        //
+        // ⚠️ recommendedStrength of 0 is not an offer, it is the absence of one. A preset whose
+        // bands already sit at the +12 dB ceiling leaves the curve no headroom at all, and the
+        // honest answer there is that this preset cannot carry a loudness curve - not a button
+        // that would set the strength to zero and so produce, in one tap, the very dead state the
+        // verdict above is warning about. The findings still explain the situation; only the
+        // promise of a fix is withheld.
+        boolean canFix = !r.isClean() && r.recommendedStrength > 0
                 && (r.recommendedCal > 0 || r.recommendedStrength != getIntSlider(seekFmStrength));
         if (btnLoudFix != null) {
             btnLoudFix.setVisibility(canFix ? View.VISIBLE : View.GONE);

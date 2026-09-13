@@ -26,7 +26,7 @@
     <string name="lbl_volume">Ses Seviyesi:</string>
     <string name="lbl_sub_offset">Sub Kayması:</string>
     <string name="lbl_lower_sub_by">Subwoofer\'ı düşür:</string>
-    <string name="lbl_calibration_point">Kalibrasyon Noktası (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibrasyon noktası (üstünde eğrinin etki etmediği ses seviyesi):</string>
     <string name="lbl_correction_strength">Düzeltme Gücü:</string>
 
     <!-- Delays Tab -->

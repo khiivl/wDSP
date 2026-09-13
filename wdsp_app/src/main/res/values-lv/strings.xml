@@ -26,7 +26,7 @@
     <string name="lbl_volume">Skaļums:</string>
     <string name="lbl_sub_offset">Zemfrekvences nobīde:</string>
     <string name="lbl_lower_sub_by">Samazināt basu par:</string>
-    <string name="lbl_calibration_point">Kalibrēšanas punkts (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibrēšanas punkts (skaļums, virs kura līkne nedarbojas):</string>
     <string name="lbl_correction_strength">Korekcijas stiprums:</string>
 
     <!-- Delays Tab -->

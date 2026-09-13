@@ -26,7 +26,7 @@
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Sub-verschuiving:</string>
     <string name="lbl_lower_sub_by">Verlaag sub met:</string>
-    <string name="lbl_calibration_point">Kalibratiepunt (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibratiepunt (volume waarboven de curve niet meer werkt):</string>
     <string name="lbl_correction_strength">Correctiesterkte:</string>
 
     <!-- Delays Tab -->

@@ -295,17 +295,18 @@ prefs.
 - **Two divergent `TouchGlow` classes** exist and are both live: `ui/TouchGlow.java` (used by
   `SettingsActivity`) and `ui/theme/TouchGlow.java` (used fully-qualified by `MainActivity`). Fixing
   one does not fix the other.
-- **Two full copies of the main layout**: `layout/activity_main.xml` (landscape head units, ~2600
-  lines) and `layout-port/activity_main.xml` (vertical and near-square units, ~1970 lines). The
-  portrait file is the more dangerous of the two because it is edited far less often. A missing id
-  costs a null check; **the same id declared as a different widget type costs a crash in
-  `onCreate`** — `findViewById` returns whatever was inflated and the field it is assigned to has
-  the other type. Eight switches and six preset buttons had drifted apart exactly like that, and
-  the app died on every portrait and Tesla-shaped screen. Run this after touching either file:
+- **There is now only one copy of the main layout.** `layout-port/activity_main.xml` was deleted in
+  `34a9e9a` ("Drop the portrait copy of the main screen") and `layout-port/` is an empty directory;
+  every geometry inflates `layout/activity_main.xml`. This entry used to describe the second copy
+  and to tell you to diff the two, which sent at least one session looking for a file that is not
+  there — so keep it accurate rather than deleting it.
 
-```bash
-python tools/layout_diff.py wdsp_app/src/main/res/layout/activity_main.xml wdsp_app/src/main/res/layout-port/activity_main.xml
-```
+  Why it existed matters, because it is the trap to avoid if a second copy is ever reintroduced: a
+  missing id costs a null check, but **the same id declared as a different widget type costs a crash
+  in `onCreate`** — `findViewById` returns whatever was inflated and the field it is assigned to has
+  the other type. Eight switches and six preset buttons had drifted apart exactly like that, and the
+  app died on every portrait and Tesla-shaped screen. `tools/layout_diff.py` still exists and is
+  what catches it; it currently has nothing to compare.
 
 - **Screen geometries**: the platform matrix lives in
   `kostyamat_fmradio/.agents/SCREEN_MATRIX.md` — 132 panels, and the real set of UI geometries is

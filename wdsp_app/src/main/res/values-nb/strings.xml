@@ -26,7 +26,7 @@
     <string name="lbl_volume">Volum:</string>
     <string name="lbl_sub_offset">Sub-forskyvning:</string>
     <string name="lbl_lower_sub_by">Senk sub med:</string>
-    <string name="lbl_calibration_point">Kalibreringspunkt (~80 dB):</string>
+    <string name="lbl_calibration_point">Kalibreringspunkt (volum over hvilket kurven ikke virker):</string>
     <string name="lbl_correction_strength">Korreksjonsstyrke:</string>
 
     <!-- Delays Tab -->

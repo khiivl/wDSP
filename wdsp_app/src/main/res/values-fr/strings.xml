@@ -26,7 +26,7 @@
     <string name="lbl_volume">Volume :</string>
     <string name="lbl_sub_offset">Décalage du caisson :</string>
     <string name="lbl_lower_sub_by">Réduire le caisson de :</string>
-    <string name="lbl_calibration_point">Point de calibrage (~80 dB) :</string>
+    <string name="lbl_calibration_point">Point de calibrage (volume au-dessus duquel la courbe n\'agit pas) :</string>
     <string name="lbl_correction_strength">Intensité de correction :</string>
 
     <!-- Delays Tab -->
