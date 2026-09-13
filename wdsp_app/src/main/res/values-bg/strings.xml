@@ -295,7 +295,7 @@
     <string name="room_root_no">Не</string>
     <string name="room_root_blocked">Тогава първо го включете: отворете Magisk → Superuser, намерете wDSP и му дайте разрешение (или задайте да пита и разрешете, когато попита).\n\nИзмерването не е стартирано. Стартирайте го отново, след като root бъде разрешен.</string>
     <string name="screensaver_info_h">Лента на песента</string>
-    <string name="room_mic_place_hint">Към какво е прикрепен</string>
+    <string name="room_mic_place_hint">Къде се намира в купето</string>
     <string name="room_mic_place_windscreen">Предно стъкло</string>
     <string name="room_mic_place_visor">Под сенника</string>
     <string name="room_mic_place_mirror">Огледало за обратно виждане</string>
@@ -484,10 +484,10 @@
     <string name="screen_topology_copy">Копирай</string>
     <string name="screen_topology_copied">Топологията на екрана е копирана в клипборда</string>
     <string name="screen_topology_save">Запази</string>
-    <string name="room_mic_place_headunit">Вграден микрофон на мултимедията (отвор на панела)</string>
+    <string name="room_mic_place_headunit">Преден панел на мултимедията</string>
     <string name="room_mic_place_headrest">Подглавник на водача (ниво на ушите)</string>
-    <string name="room_mic_place_armrest">Централен подлакътник / конзола</string>
-    <string name="room_mic_body_hint">Тип вграждане</string>
+    <string name="room_mic_place_armrest">Централен подлакътник</string>
+    <string name="room_mic_body_hint">Какво обгражда капсула</string>
     <string name="room_mic_body_open">Открита капсула, нищо наоколо</string>
     <string name="room_mic_body_pinhole">Зад малък отвор в панела</string>
     <string name="room_mic_body_housing">Вдлъбнат в корпуса или плафона</string>

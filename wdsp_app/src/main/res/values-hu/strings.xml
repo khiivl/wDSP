@@ -295,7 +295,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_root_no">Nem</string>
     <string name="room_root_blocked">Akkor először kapcsold be: nyisd meg a Magisk → Superuser menüt, keresd meg a wDSP-t, és állítsd Engedélyezésre (vagy Kérdezzen, és engedélyezd, amikor kéri).\n\nA mérés nem indult el. Futtasd újra, amint a root engedélyezve van.</string>
     <string name="screensaver_info_h">Szám sávja</string>
-    <string name="room_mic_place_hint">Mire van rögzítve</string>
+    <string name="room_mic_place_hint">Hol található az utastérben</string>
     <string name="room_mic_place_windscreen">Szélvédő</string>
     <string name="room_mic_place_visor">A napellenző alatt</string>
     <string name="room_mic_place_mirror">Visszapillantó tükör</string>
@@ -471,9 +471,9 @@ Globális alapértelmezett: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Fejegység előlapja</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
+    <string name="room_mic_place_armrest">Középső kartámasz</string>
     <string name="toast_cannot_open_notification_settings">Cannot open notification settings</string>
     <string name="backup_invalid_empty">Invalid backup: empty content</string>
     <string name="backup_invalid_format">Invalid wDSP backup format</string>
@@ -487,7 +487,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="notif_capture_probe">Acoustic probe active</string>
     <string name="status_bar_alpha_theme">%1$s (%2$s)</string>
     <string name="val_px_zero">0 px</string>
-    <string name="room_mic_body_hint">Beépítés jellege</string>
+    <string name="room_mic_body_hint">Mi veszi körül a kapszulát</string>
     <string name="room_mic_body_open">Nyitott kapszula, szabadon</string>
     <string name="room_mic_body_pinhole">Előlap kis furata mögött</string>
     <string name="room_mic_body_housing">Házba vagy mennyezeti lámpába süllyesztve</string>

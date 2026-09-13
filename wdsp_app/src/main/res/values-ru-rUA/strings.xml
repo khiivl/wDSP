@@ -289,7 +289,7 @@
     <string name="room_root_no">Ні</string>
     <string name="room_root_blocked">Тоді спершу дозвольте: Magisk → Суперкористувач, знайдіть wDSP і поставте «Дозволити» (або «Питати» й дозвольте, коли спитає).\n\nВимір не запускався. Запустіть його ще раз, коли рут буде дозволено.</string>
     <string name="screensaver_info_h">Track strip</string>
-    <string name="room_mic_place_hint">На чому закріплений</string>
+    <string name="room_mic_place_hint">Где он в салоне</string>
     <string name="room_mic_place_windscreen">Лобове скло</string>
     <string name="room_mic_place_visor">Під козирком</string>
     <string name="room_mic_place_mirror">Дзеркало</string>
@@ -484,10 +484,10 @@
     <string name="screen_topology_copy">Копировать</string>
     <string name="screen_topology_copied">Топология экрана скопирована в буфер обмена</string>
     <string name="screen_topology_save">Сохранить</string>
-    <string name="room_mic_place_headunit">Встроенный микрофон магнитолы (отверстие на панели)</string>
+    <string name="room_mic_place_headunit">Передняя панель магнитолы</string>
     <string name="room_mic_place_headrest">Подголовник водителя (уровень ушей)</string>
-    <string name="room_mic_place_armrest">Центральный подлокотник / консоль</string>
-    <string name="room_mic_body_hint">Как встроен</string>
+    <string name="room_mic_place_armrest">Центральный подлокотник</string>
+    <string name="room_mic_body_hint">Что вокруг капсюля</string>
     <string name="room_mic_body_open">Открытый капсюль, ничего вокруг</string>
     <string name="room_mic_body_pinhole">За маленьким отверстием в панели</string>
     <string name="room_mic_body_housing">Утоплен в корпусе или плафоне</string>

@@ -283,7 +283,7 @@
     <string name="room_root_no">Nein</string>
     <string name="room_root_blocked">Dann schalte ihn zuerst ein: Öffne Magisk → Superuser, finde wDSP und stelle es auf Zulassen (oder Nachfragen und erlaube es, wenn es fragt).\n\nDie Messung wurde nicht gestartet. Führe sie erneut aus, sobald Root erlaubt ist.</string>
     <string name="screensaver_info_h">Titel-Streifen</string>
-    <string name="room_mic_place_hint">Woran es befestigt ist</string>
+    <string name="room_mic_place_hint">Wo es sich im Innenraum befindet</string>
     <string name="room_mic_place_windscreen">Windschutzscheibe</string>
     <string name="room_mic_place_visor">Unter der Sonnenblende</string>
     <string name="room_mic_place_mirror">Rückspiegel</string>
@@ -480,10 +480,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Frontpanel des Hauptgeräts</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Einbauart</string>
+    <string name="room_mic_place_armrest">Mittelarmlehne</string>
+    <string name="room_mic_body_hint">Was die Kapsel umgibt</string>
     <string name="room_mic_body_open">Offene Kapsel, frei im Raum</string>
     <string name="room_mic_body_pinhole">Hinter kleiner Öffnung in der Blende</string>
     <string name="room_mic_body_housing">Vertieft im Gehäuse oder in Deckenleuchte</string>

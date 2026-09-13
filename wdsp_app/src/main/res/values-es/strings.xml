@@ -284,7 +284,7 @@
     <string name="room_root_no">No</string>
     <string name="room_root_blocked">Entonces actívalo primero: abre Magisk → Superuser, busca wDSP y establécelo en Permitir (o Preguntar, y permítelo cuando pregunte).\n\nLa medición no se inició. Vuelve a ejecutarla una vez que se permita el root.</string>
     <string name="screensaver_info_h">Banda de pista</string>
-    <string name="room_mic_place_hint">A qué está sujeto</string>
+    <string name="room_mic_place_hint">Dónde está en el habitáculo</string>
     <string name="room_mic_place_windscreen">Parabrisas</string>
     <string name="room_mic_place_visor">Bajo el parasol</string>
     <string name="room_mic_place_mirror">Espejo retrovisor</string>
@@ -481,10 +481,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Panel frontal de la pantalla</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Tipo de montaje</string>
+    <string name="room_mic_place_armrest">Reposabrazos central</string>
+    <string name="room_mic_body_hint">Qué rodea la cápsula</string>
     <string name="room_mic_body_open">Cápsula abierta, sin obstáculos</string>
     <string name="room_mic_body_pinhole">Tras un pequeño orificio en el panel</string>
     <string name="room_mic_body_housing">Empotrado en carcasa o plafón</string>

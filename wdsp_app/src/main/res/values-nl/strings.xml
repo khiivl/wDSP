@@ -295,7 +295,7 @@ Globale standaard: %1$s</string>
     <string name="room_root_no">Nee</string>
     <string name="room_root_blocked">Zet het dan eerst aan: open Magisk → Superuser, zoek wDSP en zet het op Toestaan (of Vragen, en sta het toe wanneer erom wordt gevraagd).\n\nDe meting is niet gestart. Voer het opnieuw uit zodra root is toegestaan.</string>
     <string name="screensaver_info_h">Nummerstrook</string>
-    <string name="room_mic_place_hint">Waar het aan bevestigd is</string>
+    <string name="room_mic_place_hint">Waar het zich in de cabine bevindt</string>
     <string name="room_mic_place_windscreen">Voorruit</string>
     <string name="room_mic_place_visor">Onder de zonneklep</string>
     <string name="room_mic_place_mirror">Achteruitkijkspiegel</string>
@@ -484,10 +484,10 @@ Globale standaard: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Voorpaneel van het hoofdapparaat</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Type inbouw</string>
+    <string name="room_mic_place_armrest">Middenarmsteun</string>
+    <string name="room_mic_body_hint">Wat de capsule omringt</string>
     <string name="room_mic_body_open">Open capsule, vrijstaand</string>
     <string name="room_mic_body_pinhole">Achter een klein gaatje in het paneel</string>
     <string name="room_mic_body_housing">Verzonken in behuizing of plafondunit</string>

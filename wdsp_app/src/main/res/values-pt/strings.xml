@@ -293,7 +293,7 @@
     <string name="room_root_no">Não</string>
     <string name="room_root_blocked">Então ative-o primeiro: abra o Magisk → Superuser, encontre o wDSP e defina-o como Permitir (ou Perguntar, e permita quando ele perguntar).\n\nA medição não foi iniciada. Execute-a novamente assim que o root for permitido.</string>
     <string name="screensaver_info_h">Faixa da música</string>
-    <string name="room_mic_place_hint">No que está fixado</string>
+    <string name="room_mic_place_hint">Onde está no habitáculo</string>
     <string name="room_mic_place_windscreen">Para-brisa</string>
     <string name="room_mic_place_visor">Sob o quebra-sol</string>
     <string name="room_mic_place_mirror">Espelho retrovisor</string>
@@ -482,10 +482,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Painel frontal do rádio</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Tipo de integração</string>
+    <string name="room_mic_place_armrest">Apoio de braço central</string>
+    <string name="room_mic_body_hint">O que envolve a cápsula</string>
     <string name="room_mic_body_open">Cápsula aberta, livre</string>
     <string name="room_mic_body_pinhole">Atrás de um pequeno orifício no painel</string>
     <string name="room_mic_body_housing">Embutido num encaixe ou plafonier</string>

@@ -295,7 +295,7 @@
     <string name="room_root_no">Ei</string>
     <string name="room_root_blocked">Siis lülitage see kõigepealt sisse: avage Magisk → Superuser, leidke wDSP ja määrake see valikule Luba (või Küsi ja lubage, kui see küsib).\n\nMõõtmist ei käivitatud. Käivitage see uuesti, kui root on lubatud.</string>
     <string name="screensaver_info_h">Loo riba</string>
-    <string name="room_mic_place_hint">Mille külge see on kinnitatud</string>
+    <string name="room_mic_place_hint">Kus see salongis asub</string>
     <string name="room_mic_place_windscreen">Tuuleklaas</string>
     <string name="room_mic_place_visor">Päikesesirmi all</string>
     <string name="room_mic_place_mirror">Tahavaatepeegel</string>
@@ -484,10 +484,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Autoraadio esipaneel</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Paigaldusviis</string>
+    <string name="room_mic_place_armrest">Keskmine käetugi</string>
+    <string name="room_mic_body_hint">Mis kapslit ümbritseb</string>
     <string name="room_mic_body_open">Avatud kapsel, vaba</string>
     <string name="room_mic_body_pinhole">Paneeli väikese ava taga</string>
     <string name="room_mic_body_housing">Süvistatud korpusesse või laevalgustisse</string>

@@ -283,7 +283,7 @@
     <string name="room_root_no">Nie</string>
     <string name="room_root_blocked">Więc najpierw go włącz: otwórz Magisk → Superuser, znajdź wDSP i ustaw na Zezwól (lub Zapytaj i zezwól, gdy zapyta).\n\nPomiar nie został uruchomiony. Uruchom go ponownie, gdy root będzie dozwolony.</string>
     <string name="screensaver_info_h">Pasek utworu</string>
-    <string name="room_mic_place_hint">Do czego jest przymocowany</string>
+    <string name="room_mic_place_hint">Gdzie znajduje się w kabinie</string>
     <string name="room_mic_place_windscreen">Przednia szyba</string>
     <string name="room_mic_place_visor">Pod osłoną przeciwsłoneczną</string>
     <string name="room_mic_place_mirror">Lusterko wsteczne</string>
@@ -480,10 +480,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Przedni panel radia</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Sposób montażu</string>
+    <string name="room_mic_place_armrest">Podłokietnik środkowy</string>
+    <string name="room_mic_body_hint">Co otacza kapsułę</string>
     <string name="room_mic_body_open">Otwarta kapsuła, nic wokół</string>
     <string name="room_mic_body_pinhole">Za małym otworem w panelu</string>
     <string name="room_mic_body_housing">Wpuszczony w obudowę lub lampkę sufitową</string>

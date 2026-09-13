@@ -295,7 +295,7 @@ Par défaut global : %1$s</string>
     <string name="room_root_no">Non</string>
     <string name="room_root_blocked">Alors activez-le d\'abord : ouvrez Magisk → Superuser, trouvez wDSP, et réglez-le sur Autoriser (ou Demander, et autorisez-le quand il le demande).\n\nLa mesure n\'a pas été lancée. Relancez-la une fois le root autorisé.</string>
     <string name="screensaver_info_h">Bande de piste</string>
-    <string name="room_mic_place_hint">Sur quoi il est fixé</string>
+    <string name="room_mic_place_hint">Où il se trouve dans l\'habitacle</string>
     <string name="room_mic_place_windscreen">Pare-brise</string>
     <string name="room_mic_place_visor">Sous le pare-soleil</string>
     <string name="room_mic_place_mirror">Rétroviseur</string>
@@ -484,10 +484,10 @@ Par défaut global : %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Façade de l\'autoradio</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Type d\'intégration</string>
+    <string name="room_mic_place_armrest">Accoudoir central</string>
+    <string name="room_mic_body_hint">Ce qui entoure la capsule</string>
     <string name="room_mic_body_open">Capsule ouverte, aucun obstacle</string>
     <string name="room_mic_body_pinhole">Derrière un petit trou dans le panneau</string>
     <string name="room_mic_body_housing">Encastré dans un boîtier ou plafonnier</string>

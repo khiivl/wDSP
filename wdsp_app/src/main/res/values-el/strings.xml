@@ -295,7 +295,7 @@
     <string name="room_root_no">Όχι</string>
     <string name="room_root_blocked">Τότε ενεργοποιήστε το πρώτα: ανοίξτε το Magisk → Superuser, βρείτε το wDSP και ορίστε το σε Να επιτρέπεται (ή Ερώτηση, και επιτρέψτε το όταν ρωτήσει).\n\nΗ μέτρηση δεν ξεκίνησε. Εκτελέστε την ξανά μόλις επιτραπεί το root.</string>
     <string name="screensaver_info_h">Λωρίδα κομματιού</string>
-    <string name="room_mic_place_hint">Πού είναι τοποθετημένο</string>
+    <string name="room_mic_place_hint">Πού βρίσκεται στην καμπίνα</string>
     <string name="room_mic_place_windscreen">Παρμπρίζ</string>
     <string name="room_mic_place_visor">Κάτω από το σκίαστρο</string>
     <string name="room_mic_place_mirror">Καθρέπτης</string>
@@ -484,10 +484,10 @@
     <string name="screen_topology_copy">Αντιγραφή</string>
     <string name="screen_topology_copied">Η τοπολογία οθόνης αντιγράφηκε στο πρόχειρο</string>
     <string name="screen_topology_save">Αποθήκευση</string>
-    <string name="room_mic_place_headunit">Ενσωματωμένο μικρόφωνο οθόνης (οπή στην πρόσοψη)</string>
+    <string name="room_mic_place_headunit">Μπροστινό πάνελ οθόνης</string>
     <string name="room_mic_place_headrest">Προσκέφαλο οδηγού (ύψος αυτιών)</string>
-    <string name="room_mic_place_armrest">Κεντρικό υποβραχιόνιο / κονσόλα</string>
-    <string name="room_mic_body_hint">Τρόπος τοποθέτησης</string>
+    <string name="room_mic_place_armrest">Κεντρικό υποβραχιόνιο</string>
+    <string name="room_mic_body_hint">Τι περιβάλλει την κάψουλα</string>
     <string name="room_mic_body_open">Ανοιχτή κάψα, ελεύθερη</string>
     <string name="room_mic_body_pinhole">Πίσω από μικρή οπή στο ταμπλό</string>
     <string name="room_mic_body_housing">Χωνευτό σε πλαίσιο ή πλαφονιέρα</string>

@@ -283,7 +283,7 @@
     <string name="room_root_no">Nej</string>
     <string name="room_root_blocked">Slå då på den först: öppna Magisk → Superuser, hitta wDSP och ställ in den på Tillåt (eller Fråga, och tillåt när den frågar).\n\nMätningen startades inte. Kör den igen när root är tillåtet.</string>
     <string name="screensaver_info_h">Spårremsa</string>
-    <string name="room_mic_place_hint">Vad den är monterad på</string>
+    <string name="room_mic_place_hint">Var den är i kupén</string>
     <string name="room_mic_place_windscreen">Vindruta</string>
     <string name="room_mic_place_visor">Under solskyddet</string>
     <string name="room_mic_place_mirror">Backspegel</string>
@@ -480,10 +480,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Huvudenhetens frontpanel</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Monteringssätt</string>
+    <string name="room_mic_place_armrest">Mittarmstöd</string>
+    <string name="room_mic_body_hint">Vad som omger kapseln</string>
     <string name="room_mic_body_open">Öppen kapsel, fritt placerad</string>
     <string name="room_mic_body_pinhole">Bakom ett litet hål i panelen</string>
     <string name="room_mic_body_housing">Infälld i hölje eller takbelysning</string>

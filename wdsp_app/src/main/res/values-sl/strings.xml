@@ -295,7 +295,7 @@ Globalno privzeto: %1$s</string>
     <string name="room_root_no">Ne</string>
     <string name="room_root_blocked">Potem ga najprej vklopite: odprite Magisk → Superuser, poiščite wDSP in ga nastavite na Dovoli (ali Vprašaj in dovolite, ko vpraša).\n\nMeritev ni bila zagnana. Zaženite jo znova, ko bo root dovoljen.</string>
     <string name="screensaver_info_h">Trak pesmi</string>
-    <string name="room_mic_place_hint">Na kaj je pritrjen</string>
+    <string name="room_mic_place_hint">Kje je v kabini</string>
     <string name="room_mic_place_windscreen">Vetrobransko steklo</string>
     <string name="room_mic_place_visor">Pod senčnikom</string>
     <string name="room_mic_place_mirror">Vzvratno ogledalo</string>
@@ -484,10 +484,10 @@ Globalno privzeto: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Sprednja plošča avtoradia</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Način vgradnje</string>
+    <string name="room_mic_place_armrest">Sredinski naslon za roko</string>
+    <string name="room_mic_body_hint">Kaj obdaja kapsulo</string>
     <string name="room_mic_body_open">Odprta kapsula, prosto nameščena</string>
     <string name="room_mic_body_pinhole">Za majhno luknjico v plošči</string>
     <string name="room_mic_body_housing">Vdrt v ohišje ali stropno lučko</string>

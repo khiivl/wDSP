@@ -295,7 +295,7 @@ Global standard: %1$s</string>
     <string name="room_root_no">Nej</string>
     <string name="room_root_blocked">Så slå det til først: åbn Magisk → Superuser, find wDSP, og indstil den til Tillad (eller Spørg, og tillad det, når den spørger).\n\nMålingen blev ikke startet. Kør den igen, når root er tilladt.</string>
     <string name="screensaver_info_h">Nummer-stribe</string>
-    <string name="room_mic_place_hint">Hvad den er monteret på</string>
+    <string name="room_mic_place_hint">Hvor den er i kabinen</string>
     <string name="room_mic_place_windscreen">Forrude</string>
     <string name="room_mic_place_visor">Under solskærmen</string>
     <string name="room_mic_place_mirror">Bakspejl</string>
@@ -484,10 +484,10 @@ Global standard: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Hovedenhedens frontpanel</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Indbygningstype</string>
+    <string name="room_mic_place_armrest">Midterarmlæn</string>
+    <string name="room_mic_body_hint">Hvad der omgiver kapslen</string>
     <string name="room_mic_body_open">Åben kapsel, intet omkring</string>
     <string name="room_mic_body_pinhole">Bag et lille hul i panelet</string>
     <string name="room_mic_body_housing">Forsænket i hus eller loftslampe</string>

@@ -295,7 +295,7 @@ Bendras numatytasis: %1$s</string>
     <string name="room_root_no">Ne</string>
     <string name="room_root_blocked">Tada pirmiausia jį įjunkite: atidarykite Magisk → Superuser, raskite wDSP ir nustatykite Leisti (arba Klausti, ir leiskite, kai paklaus).\n\nMatavimas nebuvo pradėtas. Paleiskite jį dar kartą, kai bus leista root prieiga.</string>
     <string name="screensaver_info_h">Kūrinio juosta</string>
-    <string name="room_mic_place_hint">Prie ko pritvirtintas</string>
+    <string name="room_mic_place_hint">Kur jis yra salone</string>
     <string name="room_mic_place_windscreen">Priekinis stiklas</string>
     <string name="room_mic_place_visor">Po skydeliu nuo saulės</string>
     <string name="room_mic_place_mirror">Galinio vaizdo veidrodėlis</string>
@@ -484,10 +484,10 @@ Bendras numatytasis: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Magnetolos priekinis skydelis</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Montavimo būdas</string>
+    <string name="room_mic_place_armrest">Centrinis porankis</string>
+    <string name="room_mic_body_hint">Kas supa kapsulę</string>
     <string name="room_mic_body_open">Atvira kapsulė, neuždengta</string>
     <string name="room_mic_body_pinhole">Už nedidelės angos skydelyje</string>
     <string name="room_mic_body_housing">Įgilintas korpuse ar lubų šviestuve</string>

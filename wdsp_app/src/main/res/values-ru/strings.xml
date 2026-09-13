@@ -295,7 +295,7 @@
     <string name="room_root_yes">Да, разрешён</string>
     <string name="room_root_no">Нет</string>
     <string name="room_root_blocked">Тогда сначала разрешите: Magisk → Суперпользователь, найдите wDSP и поставьте «Разрешить» (или «Спрашивать» и разрешите, когда спросит).\n\nИзмерение не запускалось. Запустите его снова, когда root будет разрешён.</string>
-    <string name="room_mic_place_hint">На чём закреплён</string>
+    <string name="room_mic_place_hint">Где он в салоне</string>
     <string name="room_mic_place_windscreen">Лобовое стекло</string>
     <string name="room_mic_place_visor">Под козырьком</string>
     <string name="room_mic_place_mirror">Зеркало</string>
@@ -482,10 +482,10 @@
     <string name="screen_topology_copy">Копировать</string>
     <string name="screen_topology_copied">Топология экрана скопирована в буфер обмена</string>
     <string name="screen_topology_save">Сохранить</string>
-    <string name="room_mic_place_headunit">Встроенный микрофон магнитолы (отверстие на панели)</string>
+    <string name="room_mic_place_headunit">Передняя панель магнитолы</string>
     <string name="room_mic_place_headrest">Подголовник водителя (уровень ушей)</string>
-    <string name="room_mic_place_armrest">Центральный подлокотник / консоль</string>
-    <string name="room_mic_body_hint">Как встроен</string>
+    <string name="room_mic_place_armrest">Центральный подлокотник</string>
+    <string name="room_mic_body_hint">Что вокруг капсюля</string>
     <string name="room_mic_body_open">Открытый капсюль, ничего вокруг</string>
     <string name="room_mic_body_pinhole">За маленьким отверстием в панели</string>
     <string name="room_mic_body_housing">Утоплен в корпусе или плафоне</string>

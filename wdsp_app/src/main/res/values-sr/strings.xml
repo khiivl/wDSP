@@ -295,7 +295,7 @@
     <string name="room_root_no">Ne</string>
     <string name="room_root_blocked">Onda ga prvo uključite: otvorite Magisk → Superuser, pronađite wDSP i podesite na Dozvoli (ili Pitaj, pa dozvolite kad pita).\n\nMerenje nije pokrenuto. Pokrenite ga ponovo kada root bude dozvoljen.</string>
     <string name="screensaver_info_h">Трака песме</string>
-    <string name="room_mic_place_hint">Na šta je pričvršćen</string>
+    <string name="room_mic_place_hint">Где је у кабини</string>
     <string name="room_mic_place_windscreen">Vetrobransko staklo</string>
     <string name="room_mic_place_visor">Ispod štitnika za sunce</string>
     <string name="room_mic_place_mirror">Retrovizor</string>
@@ -484,10 +484,10 @@
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Предња плоча мултимедије</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Начин уградње</string>
+    <string name="room_mic_place_armrest">Средишњи наслон за руку</string>
+    <string name="room_mic_body_hint">Шта окружује капсулу</string>
     <string name="room_mic_body_open">Отворена капсула, без препрека</string>
     <string name="room_mic_body_pinhole">Иза малог отвора на панелу</string>
     <string name="room_mic_body_housing">Увучен у кућиште или плафоњеру</string>

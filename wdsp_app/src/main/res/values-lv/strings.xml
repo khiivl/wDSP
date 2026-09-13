@@ -295,7 +295,7 @@ Globāli noklusējums: %1$s</string>
     <string name="room_root_no">Nē</string>
     <string name="room_root_blocked">Tad vispirms to ieslēdziet: atveriet Magisk → Superuser, atrodiet wDSP un iestatiet to uz Atļaut (vai Jautāt, un atļaujiet, kad tas jautā).\n\nMērījums netika sākts. Palaidiet to vēlreiz, kad root būs atļauts.</string>
     <string name="screensaver_info_h">Dziesmas josla</string>
-    <string name="room_mic_place_hint">Pie kā tas ir piestiprināts</string>
+    <string name="room_mic_place_hint">Kur tas atrodas salonā</string>
     <string name="room_mic_place_windscreen">Vējstikls</string>
     <string name="room_mic_place_visor">Zem saulessarga</string>
     <string name="room_mic_place_mirror">Atpakaļskata spogulis</string>
@@ -484,10 +484,10 @@ Globāli noklusējums: %1$s</string>
     <string name="screen_topology_copy">Copy</string>
     <string name="screen_topology_copied">Screen topology copied to clipboard</string>
     <string name="screen_topology_save">Save</string>
-    <string name="room_mic_place_headunit">Built-in head unit mic (front panel hole)</string>
+    <string name="room_mic_place_headunit">Magnetolas priekšējais panelis</string>
     <string name="room_mic_place_headrest">Driver headrest (ear level)</string>
-    <string name="room_mic_place_armrest">Center armrest / console</string>
-    <string name="room_mic_body_hint">Montāžas veids</string>
+    <string name="room_mic_place_armrest">Centrālais roku balsts</string>
+    <string name="room_mic_body_hint">Kas ieskauj kapsulu</string>
     <string name="room_mic_body_open">Atvērta kapsula, bez šķēršļiem</string>
     <string name="room_mic_body_pinhole">Aiz neliela paneļa atvēruma</string>
     <string name="room_mic_body_housing">Iegremdēts korpusā vai griestu lampā</string>
