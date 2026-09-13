@@ -878,16 +878,30 @@ public final class RoomMeasurement {
                 curve[i] = Float.parseFloat(parts[i].trim());
             } catch (NumberFormatException ignored) {}
         }
-        // Upgrade legacy curve saved with old 6 dB clamp bug (6.00, 6.00, 6.00, 0.00, 0.00...)
-        if (curve[0] > 0.0f && curve[0] <= 6.01f && curve[1] <= 6.01f && curve[2] <= 6.01f
-                && curve[3] == 0.0f && curve[4] == 0.0f) {
-            curve[0] = 16.0f; // 20 Hz
-            curve[1] = 16.0f; // 31.5 Hz
-            curve[2] = 16.0f; // 50 Hz
-            curve[3] = 13.0f; // 80 Hz
-            curve[4] = 8.0f;  // 125 Hz
-            setMicCompensationCurve(context, curve);
-            Log.i(TAG, "Upgraded legacy 6 dB-clamped mic compensation curve to full acoustic profile");
+        // 🔴 A "legacy upgrade" used to stand here. It recognised a curve saved by an older build
+        // (6, 6, 6, 0, 0...) and rewrote it in place as 16, 16, 16, 13, 8 - manufacturing precisely
+        // the fiction this project spent the night dismantling. A capsule is flat to +-0.5 dB across
+        // its band; below the microphone input's own high-pass there is no signal to restore, only
+        // the converter's thermal noise. Promoting an old curve to those numbers made the synthesis
+        // believe the car had a huge bass excess and cut real bass in reply. Deleted.
+        //
+        // What replaces it is a refusal rather than a rewrite. Bands 0..2 are zeroed in the value
+        // HANDED OUT, and the stored preference is left exactly as the owner's calibration wrote it:
+        // it is his measurement, and quietly editing someone's data is how a disagreement becomes
+        // invisible. The zeroing is the same rule estimateMicCompensation now applies, so a curve
+        // measured before 13.09.2026 cannot do damage that a curve measured after it could not.
+        if (curve[0] != 0f || curve[1] != 0f || curve[2] != 0f) {
+            Log.w(TAG, String.format(Locale.US,
+                    "stored mic curve has %.1f/%.1f/%.1f dB at 20/31.5/50 Hz - it was measured "
+                            + "before 13.09.2026, when the low bands were still being estimated. "
+                            + "Nothing there is recoverable (the input high-pass sits at 72..154 Hz), "
+                            + "so those three bands are ignored. RE-RUN THE MICROPHONE CALIBRATION "
+                            + "before trusting a cabin measurement - the rest of this curve was fitted "
+                            + "against the same wrong assumption.",
+                    curve[0], curve[1], curve[2]));
+            curve[0] = 0f;
+            curve[1] = 0f;
+            curve[2] = 0f;
         }
         return curve;
     }
