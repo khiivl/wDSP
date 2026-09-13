@@ -2348,7 +2348,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void saveScreenTopologyToFile(String topology) {
-        String name = "wdsp_screen_topology_"
+        String name = "wdsp_screen_topology_" + HardwareProfile.appVersionTag(this) + "_"
                 + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()) + ".txt";
         Downloads.Pending pending = Downloads.create(this, name, "text/plain");
         if (pending != null) {
@@ -2392,7 +2392,7 @@ public class SettingsActivity extends AppCompatActivity {
                 Log.e("wDSP_Settings", "could not build the system report", t);
                 report = "the report failed while being collected: " + t;
             }
-            final String name = "wdsp_system_report_"
+            final String name = "wdsp_system_report_" + HardwareProfile.appVersionTag(this) + "_"
                     + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                     .format(new java.util.Date()) + ".txt";
             // Straight into Download/wDSP rather than the app's own folder: this one is not packed
@@ -2441,15 +2441,10 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
         java.io.File dir = RoomMeasurement.outputDir(this);
-        String versionName = "unknown";
-        int versionCode = 0;
-        try {
-            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
-            if (pi.versionName != null) versionName = pi.versionName;
-            versionCode = pi.versionCode;
-        } catch (Exception ignored) {}
-        String name = String.format(Locale.US, "wdsp_room_measurement_v%s_vc%d_%s.zip",
-                versionName, versionCode,
+        // Was an inline PackageInfo block that spelled the version its own way. One fact,
+        // one function - and now the report inside the archive spells it identically.
+        String name = String.format(Locale.US, "wdsp_room_measurement_%s_%s.zip",
+                HardwareProfile.appVersionTag(this),
                 new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new java.util.Date()));
 
         Downloads.Pending pending = Downloads.create(this, name, "application/zip");
@@ -2484,7 +2479,8 @@ public class SettingsActivity extends AppCompatActivity {
                     Log.e("wDSP_Settings", "could not build the system report for the archive", t);
                     report = "the report failed while being collected: " + t;
                 }
-                zos.putNextEntry(new java.util.zip.ZipEntry("wdsp_system_report.txt"));
+                zos.putNextEntry(new java.util.zip.ZipEntry(
+                        "wdsp_system_report_" + HardwareProfile.appVersionTag(this) + ".txt"));
                 zos.write(report.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 zos.closeEntry();
                 packed++;

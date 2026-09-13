@@ -3319,6 +3319,10 @@ public final class RoomMeasurement {
         try (FileOutputStream out = new FileOutputStream(file)) {
             StringBuilder sb = new StringBuilder();
             sb.append("wDSP room measurement\n");
+            // Which build took it. The archive name carries this too, but a report gets
+            // pasted into a message far more often than it gets sent as a file, and then the
+            // name is gone.
+            sb.append("app ").append(HardwareProfile.appVersion(context)).append('\n');
             sb.append(HardwareProfile.describe()).append('\n');
             // Directly under the line that lists the effects the platform OFFERS, because that line
             // reads as "the sweep went through echo cancellation" and this is the one that settles

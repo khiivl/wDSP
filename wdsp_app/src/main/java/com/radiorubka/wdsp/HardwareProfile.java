@@ -230,6 +230,47 @@ public final class HardwareProfile {
     }
 
     /**
+     * The build that produced whatever is being written, as a human reads it.
+     *
+     * <p>Three copies of this existed: a private one in SystemDiagnostics, an inline
+     * PackageInfo block in SettingsActivity that built the archive name, and nothing at all in
+     * the room measurement report. So a report could carry one spelling, its archive another
+     * and the measurement inside it none, and a bug report would arrive without saying which
+     * build made it - which is the first thing anybody needs and the one thing nobody can
+     * reconstruct afterwards.
+     */
+    public static String appVersion(android.content.Context context) {
+        if (context == null) return "unknown";
+        try {
+            android.content.pm.PackageInfo info = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return (info.versionName == null ? "unknown" : info.versionName)
+                    + " (vc" + info.versionCode + ")";
+        } catch (Throwable t) {
+            return "unknown";
+        }
+    }
+
+    /**
+     * The same fact shaped for a file name: no spaces, no brackets, sorts sensibly.
+     *
+     * <p>Every file this app hands to a user goes through here, so a file that turns up on a
+     * desk months later still says which build wrote it without being opened.
+     */
+    public static String appVersionTag(android.content.Context context) {
+        if (context == null) return "vunknown";
+        try {
+            android.content.pm.PackageInfo info = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            final String name = (info.versionName == null ? "unknown" : info.versionName)
+                    .replaceAll("[^A-Za-z0-9._-]", "_");
+            return "v" + name + "_vc" + info.versionCode;
+        } catch (Throwable t) {
+            return "vunknown";
+        }
+    }
+
+    /**
      * One line for the log and for the diagnostics screen.
      *
      * <p>The three effect flags are {@code isAvailable()} - what the platform can attach to a

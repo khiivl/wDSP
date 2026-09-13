@@ -155,6 +155,32 @@ public final class SystemDiagnostics {
             {"persist.qf.arm.default.volume", "the module pins this, which is why the index sits at the ceiling"},
             {"persist.vendor.audio_hal.period_size", "HAL period the module asks for"},
             {"ro.vendor.audio.sdk.fluencetype", "vendor voice processing; the module sets none"},
+            {"init.svc.audioserver", "running, or the unit is silent until ctl.restart audioserver"},
+    };
+
+    /**
+     * Which physical panel this is, as opposed to how many pixels it happens to be showing.
+     *
+     * <p>screenDescription() reports the runtime geometry thoroughly, and two units with different
+     * panels can produce byte-identical runtime geometry. The panel's own declared size and native
+     * orientation cannot be recovered from that, and the physical millimetres are what a layout
+     * matrix actually needs - 1280x720 says nothing about whether it is a seven inch screen or a
+     * ten inch one.
+     */
+    private static final String[][] SCREEN_PANEL = {
+            {"persist.sys.qf.lcd.width.height", "the panel's own resolution, in its native orientation"},
+            {"ro.sf.lcd_width", "physical width in mm - this, not pixels, is the panel's size"},
+            {"ro.sf.lcd_height", "physical height in mm"},
+            {"ro.sf.lcd_density", "density the build declares"},
+            {"persist.sys.qf.lcd_density", "density the platform overrides it with"},
+            {"sys.panel.incell.type", "panel construction"},
+            {"persist.sys.displayinset.top", "inset the platform reserves at the top"},
+            {"persist.sys.second_display.enable", "a second display is present"},
+            {"persist.sys.float_bar_display", "floating bar"},
+            {"ro.sprd.superresolution", "scaler on; when set the panel is not being driven 1:1"},
+            {"ro.sr.displaysize.defaultresolution", "which resolution the scaler calls default"},
+            {"ro.sr.displaysize.lowresolution", "and which it calls low"},
+            {"ro.build.display.id", "the build, for pairing a panel with a firmware"},
     };
 
     private static final String[][] AUDIO_PATH = {
@@ -228,6 +254,11 @@ public final class SystemDiagnostics {
         sb.append('\n');
 
         appendAudioHub(sb);
+        // Second, because everything below this line describes the platform underneath us and
+        // nothing described us at all. A report that cannot say which preset was selected or
+        // whether the microphone was ever calibrated cannot answer a single question anybody
+        // actually sends this app a report about.
+        appendWdspState(sb, context);
         appendProps(sb, "PLATFORM VOLUME - live values", VOLUME_LIVE);
         sb.append("  note: sys.*.vol are NOT persistent properties. An empty value below means the\n");
         sb.append("        platform is reading the persist.* default in the next block instead.\n\n");
@@ -237,6 +268,8 @@ public final class SystemDiagnostics {
         appendProps(sb, "AUDIO POLICY MODULE - is one installed, and what it asked for",
                 AUDIO_MODULE);
         appendProps(sb, "BLUETOOTH AND CALLS", BLUETOOTH_AND_CALL);
+        appendProps(sb, "SCREEN PANEL - which screen this is, not just how big it renders",
+                SCREEN_PANEL);
 
         appendVendorVolume(sb);
         appendAndroidVolume(sb, context);
@@ -274,6 +307,76 @@ public final class SystemDiagnostics {
      * Units without one leave the level alone. Almost every volume complaint we have had comes
      * from the first group, and nothing else in this report says which group a unit is in.
      */
+    /**
+     * What this app is actually set to - the part the report used to leave out entirely.
+     *
+     * <p>Everything else here describes the platform underneath us. None of it said which preset
+     * is selected, what is in it, whether the microphone has ever been calibrated or what the
+     * cabin measurement decided - which is to say, none of it answered the questions people send
+     * reports about. "The bass is wrong" used to arrive with sixteen band gains invisible.
+     *
+     * <p>The preset is dumped by walking the preference file rather than by listing the keys this
+     * class expects, on purpose. A hard-coded list would be a second description of the preset
+     * schema, kept in step by hand and silently wrong the first time somebody adds a field; the
+     * walk shows whatever is really there, including fields written by a build newer than this
+     * code.
+     */
+    private static void appendWdspState(StringBuilder sb, Context context) {
+        sb.append("wDSP STATE - what this app is set to\n");
+        if (context == null) {
+            sb.append("  no context\n\n");
+            return;
+        }
+        try {
+            final android.content.SharedPreferences prefs = context.getSharedPreferences(
+                    RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE);
+            final java.util.Map<String, ?> all = prefs.getAll();
+            final String selected = prefs.getString(RoomMeasurement.PREF_LAST_SELECTED, null);
+            sb.append(String.format(Locale.US, "  selected preset = %s%n", orUnset(selected)));
+
+            // The car and the measurement, which belong to the vehicle rather than to any preset.
+            final java.util.TreeMap<String, Object> room = new java.util.TreeMap<>();
+            final java.util.TreeMap<String, Object> mine = new java.util.TreeMap<>();
+            final java.util.TreeSet<String> otherPresets = new java.util.TreeSet<>();
+            for (java.util.Map.Entry<String, ?> e : all.entrySet()) {
+                final String k = e.getKey();
+                if (k.startsWith("room_") || k.startsWith("pref_")) {
+                    room.put(k, e.getValue());
+                } else if (selected != null && k.startsWith(selected + "_")) {
+                    mine.put(k.substring(selected.length() + 1), e.getValue());
+                } else {
+                    final int cut = k.lastIndexOf('_');
+                    if (cut > 0) otherPresets.add(k.substring(0, cut));
+                }
+            }
+
+            sb.append("  CAR AND MEASUREMENT\n");
+            if (room.isEmpty()) {
+                sb.append("    nothing saved - never measured, never configured\n");
+            } else {
+                for (java.util.Map.Entry<String, Object> e : room.entrySet()) {
+                    sb.append(String.format(Locale.US, "    %-28s = %s%n", e.getKey(), e.getValue()));
+                }
+            }
+
+            sb.append("  SELECTED PRESET - every field as stored\n");
+            if (mine.isEmpty()) {
+                sb.append("    nothing stored under that name - the chip is running defaults\n");
+            } else {
+                for (java.util.Map.Entry<String, Object> e : mine.entrySet()) {
+                    sb.append(String.format(Locale.US, "    %-12s = %s%n", e.getKey(), e.getValue()));
+                }
+            }
+
+            if (selected != null) otherPresets.remove(selected);
+            sb.append(String.format(Locale.US, "  other presets   = %d  %s%n",
+                    otherPresets.size(), otherPresets.isEmpty() ? "" : otherPresets));
+        } catch (Throwable t) {
+            sb.append("  could not be read: ").append(t).append('\n');
+        }
+        sb.append('\n');
+    }
+
     private static void appendAudioHub(StringBuilder sb) {
         String hub = HardwareProfile.audioHub();
         sb.append("SECOND DSP (audio hub)\n");
@@ -477,12 +580,18 @@ public final class SystemDiagnostics {
      *
      * <p>Three outcomes matter and they are not the same problem. A source that will not open is
      * usually held by the voice assistant's hotword listener; one that opens but delivers silence
-     * is a routing or amplifier problem; one that opens and delivers signal is fine. The cabin
-     * measurement uses {@code VOICE_RECOGNITION}, so that one is tried first.
+     * is a routing or amplifier problem; one that opens and delivers signal is fine.
+     *
+     * <p>The cabin measurement opens {@code UNPROCESSED} - that is the whole point of it, since
+     * UNPROCESSED is absent from the preprocess list in {@code audio_effects.xml} and so carries
+     * no echo cancellation or noise suppression. This text used to say VOICE_RECOGNITION, which
+     * stopped being true when the measurement changed, and would have had a reader discount a
+     * perfectly good sweep as filtered.
      */
     public static String microphoneProbe() {
         StringBuilder sb = new StringBuilder("MICROPHONE\n");
-        sb.append("  the cabin measurement uses VOICE_RECOGNITION; the rest are for comparison\n");
+        sb.append("  the cabin measurement uses UNPROCESSED (no policy AEC/NS); "
+                + "the rest are for comparison\n");
         for (int source : MIC_SOURCES) {
             sb.append(String.format(Locale.US, "  %-20s %s%n", sourceName(source), probeSource(source)));
         }
@@ -695,14 +804,9 @@ public final class SystemDiagnostics {
         return "(hidden)";
     }
 
+    /** Delegates: the build is one fact and {@link HardwareProfile} owns it. */
     private static String appVersion(Context context) {
-        try {
-            android.content.pm.PackageInfo info = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
-            return info.versionName + " (" + info.versionCode + ")";
-        } catch (Throwable t) {
-            return "unknown";
-        }
+        return HardwareProfile.appVersion(context);
     }
 
     private static String timestamp() {
