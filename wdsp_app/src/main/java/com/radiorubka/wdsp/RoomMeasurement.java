@@ -648,6 +648,20 @@ public final class RoomMeasurement {
         }
     }
 
+    /**
+     * Slope a first-order high-pass produces between two frequencies, in dB per octave.
+     *
+     * <p>Magnitude of a single RC section is {@code f / sqrt(f^2 + fc^2)}; the slope is the
+     * difference in dB divided by the number of octaves. Used only to print a yardstick next to a
+     * measured slope, never to correct anything.
+     */
+    private static float firstOrderSlopeDbPerOct(float fromHz, float toHz, float cornerHz) {
+        final double lo = 20.0 * Math.log10(fromHz / Math.sqrt(fromHz * fromHz + cornerHz * cornerHz));
+        final double hi = 20.0 * Math.log10(toHz / Math.sqrt(toHz * toHz + cornerHz * cornerHz));
+        final double octaves = Math.log(toHz / fromHz) / Math.log(2.0);
+        return (float) ((hi - lo) / octaves);
+    }
+
     /** Height of the microphone above the ear line, in centimetres. */
     private static float micHeightCm(int micPlace) {
         if (micPlace >= 0 && micPlace < MIC_PLACE_HEIGHT_CM.length) {
@@ -3178,6 +3192,26 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
             sb.append("\n");
+            // What the bottom two octaves are doing, and what they would be doing if the input
+            // high-pass were the only thing happening there.
+            //
+            // Deliberately NOT an estimate of the corner frequency. The measured fall at 20-80 Hz is
+            // the product of three things - the microphone input's high-pass, the doors' own
+            // roll-off, and the cabin's compression gain pushing the other way - and one sweep
+            // cannot separate them. Printing "fc = 96 Hz" would be a fourth invented number. The
+            // slope is measured; the two reference figures are what a first-order RC high-pass at
+            // the two credible corner frequencies would produce on its own (1.0 uF and 0.47 uF into
+            // 2.2 kOhm); the reader compares.
+            //
+            // A measured slope near the references means the input filter explains the whole fall.
+            // Steeper means the doors are rolling off as well. Shallower means the cabin gain is
+            // filling it back in - the effect a sealed car has below about 80 Hz.
+            final float lowSlope = (result.cabinResponseDb16[3] - result.cabinResponseDb16[0]) / 2f;
+            sb.append(String.format(Locale.US,
+                    "LF slope 20-80 Hz:     %+.1f dB/oct measured  (an input RC high-pass alone "
+                            + "would give %+.1f at fc=72 Hz, %+.1f at fc=154 Hz)\n",
+                    lowSlope, firstOrderSlopeDbPerOct(20f, 80f, 72f),
+                    firstOrderSlopeDbPerOct(20f, 80f, 154f)));
             sb.append("Avg SNR dB:           ");
             for (float band : result.avgSnrDb16) {
                 sb.append(String.format(Locale.US, " %.1f", band));
