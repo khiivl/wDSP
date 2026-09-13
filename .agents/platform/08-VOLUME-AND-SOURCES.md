@@ -713,3 +713,50 @@ commands as a sixteen-band BU32107, and the MCU translates. So a difference in h
 between two boards is more likely to come from coefficients the framework computed *before*
 sending, than from the commands themselves. ❓ What else the framework scales this way is not yet
 mapped.
+
+---
+
+## A Bluetooth call, measured end to end (13.09.2026)
+
+📻 Four calls placed through the owner's unit while sampling the properties four times a second and
+capturing the log. What a call actually does here, in order:
+
+| what | evidence |
+|---|---|
+| **The level moves ~3 s BEFORE the type flips** | `New Base=12` at 22:11:11.4, `sys.current.vol.type → btcall_type` at 22:11:14.4 |
+| **The stored call level is applied and restored** | 7 → 12 on the way in, 12 → 7 on the way out, from `persist.sys.phone_volume` = 12 (`sys.call.vol` mirrors it) |
+| **The BT stack takes the microphone as its own client** | `rec start … uid:0 session:153 src:MIC pack:` — root, empty package name, separate session |
+| **Nobody is evicted** | our 48 kHz capture kept logging without a gap for the whole call |
+| **`sys.current.vol.type` is rock steady** | `btcall_type` for 237 consecutive samples, never flickering |
+
+🔴 **The Android audio mode does NOT change.** `- mode (internal)` and `- mode (external)` stay
+`NORMAL` for the entire call. So `AudioManager.getMode()`, which looks like the obvious
+permission-free way to detect a call, **detects nothing here** — the vendor's BT path never goes
+through `MODE_IN_CALL` or `MODE_IN_COMMUNICATION`. The signal that works is
+`sys.current.vol.type == btcall_type`, and it is reliable.
+⚠️ That is established for the vendor's own Bluetooth HFP path only. Whether a SIM call or a
+third-party dialer moves the mode has not been tested, and on newer firmwares these units do make
+SIM calls.
+
+🔴 **Holding the microphone through a call does not spoil it.** Our capture is `UNPROCESSED`,
+48 kHz, with AEC and NS deliberately switched off, and it ran right through — yet the owner reports
+no echo and no noise at the far end, on two separate calls. The effects attach per session, and the
+BT stack has its own.
+
+⚠️ **AGC is off on purpose — it is the owner's decision, not a gap to be closed.** His reasoning:
+in a car automatic gain only gets in the way. Do not "restore" it. Separately, the log line
+`AGC available=false` on our capture session says the platform does not offer it there at all, so
+the two facts are easy to confuse: one is a choice, the other is the hardware. Neither is a defect.
+
+🔑 **Order beats force for the microphone.** Observed after a service restart:
+```
+22:08:32.482  assistant  rec release
+22:08:32.593  wDSP       rec start      (111 ms later)
+22:08:35.473  assistant  rec start      (back 3 s later, alongside us)
+```
+We opened first and came up full band — `own stream: -20.0 dB above 8 kHz - full band` — with the
+assistant returning as a second client rather than capping the input. 🧩 This is the argument for
+dropping the root requirement from the microphone path: root exists here only to kill the assistant
+when our stream comes up narrow, and being first removes the need.
+❓ Untested: the cold case, where the assistant opens first after a boot and we open second with the
+input not already at 48 kHz.
