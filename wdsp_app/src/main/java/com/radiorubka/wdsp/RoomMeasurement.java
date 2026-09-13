@@ -1219,6 +1219,14 @@ public final class RoomMeasurement {
          * {@link #PREF_CABIN_RESPONSE} for why this is kept rather than only reported.
          */
         public final float[] cabinResponseDb16 = new float[NativeSweep.BAND_COUNT];
+        /**
+         * Whether {@link #cabinResponseDb16} holds a measurement or is still sixteen zeros.
+         *
+         * <p>A microphone calibration pass never reaches analyzeAcousticsAndSynthesize, so its
+         * report would otherwise print a flat cabin response and a slope of zero - a picture of a
+         * perfectly neutral car that nobody measured.
+         */
+        public boolean cabinResponseMeasured;
         /** 16-band microphone inverse compensation curve in dB. */
         public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
         /**
@@ -2542,6 +2550,7 @@ public final class RoomMeasurement {
                 "cabin response for the spectrum: %d of %d bands taken from the subwoofer "
                         + "(crossover %.0f Hz, sub usable=%b)",
                 fromSub, NativeSweep.BAND_COUNT, crossoverHz, subUsable));
+        result.cabinResponseMeasured = true;
         setCabinResponseCurve(context, result.cabinResponseDb16);
         // Pushed into the running analyser now. A preference nobody re-reads is precisely how the
         // flat scratch preset spent months never reaching the chip: the value existed, the wire
@@ -3201,6 +3210,7 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
             sb.append("\n");
+            if (result.cabinResponseMeasured) {
             sb.append("Cabin response dB:    ");
             for (float band : result.cabinResponseDb16) {
                 sb.append(String.format(Locale.US, " %+.1f", band));
@@ -3226,6 +3236,7 @@ public final class RoomMeasurement {
                             + "would give %+.1f at fc=72 Hz, %+.1f at fc=154 Hz)\n",
                     lowSlope, firstOrderSlopeDbPerOct(20f, 80f, 72f),
                     firstOrderSlopeDbPerOct(20f, 80f, 154f)));
+            }
             sb.append("Avg SNR dB:           ");
             for (float band : result.avgSnrDb16) {
                 sb.append(String.format(Locale.US, " %.1f", band));
