@@ -138,6 +138,17 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+                <!--
+                    🔴 After the app updates itself, the platform kills the process and does NOT
+                    bring a foreground service back. Nothing else started it either: the only other
+                    starter is MainActivity.onCreate, and on this app the screen is opened perhaps
+                    twice a year. So an update left McuService dead until the next power cycle -
+                    no preset switching, no loudness curve, no GALA, no call preset, no volume sync,
+                    and the chip simply keeping whatever was last pushed into it.
+                    Found on 13.09.2026 the hard way: a test of the call fix reported a clean run
+                    with zero frames, and the service had not been running for any of it.
+                -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

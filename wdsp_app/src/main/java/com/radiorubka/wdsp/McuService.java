@@ -1733,9 +1733,34 @@ public class McuService extends Service implements LocationListener {
 
         // Process Call switch; If Call is the Player and the current Preset is not Call, queue to Call preset,
         // save last applied preset
-        if (currentPlayer.equals("Call") && !currentPresetName.equals("Call")) {
+        // 🔴 The Call branch is TERMINAL. Call is not a player without a preset of its own - it has
+        // one, by name - so the "no preset → the default one" chain further down must never see it.
+        //
+        // It did, and it cost a 10 Hz ping-pong through every Bluetooth call. Measured on the unit
+        // 13.09.2026, with sys.current.vol.type steady at btcall_type for 237 consecutive samples:
+        //
+        //   21:52:00.064  BASS 88 80 80 77   SPATIAL 8C 00 0F 00 00 1E   <- the AutoEQ preset
+        //   21:52:00.149  BASS 88 80 80 00   SPATIAL 8C 00 00 00 00 00   <- the Call preset
+        //   21:52:00.248  BASS 88 80 80 77   SPATIAL 8C 00 0F 00 00 1E   <- AutoEQ again
+        //   21:52:00.350  BASS 88 80 80 00   SPATIAL 8C 00 00 00 00 00   <- Call again
+        //
+        // The cycle: on the poll that finds btcall_type with another preset loaded, the first
+        // branch switches to Call - correct. On the next poll, 100 ms later, Call is loaded and
+        // the player is still Call, so neither Call branch matches, presetToLoad stays null, and
+        // the default chain below happily switches away from Call. The poll after that switches
+        // back. Ten full re-applies a second, every frame of the DSP rewritten twice over, for the
+        // whole length of the call - and presetBeforeCall overwritten with the default each time,
+        // so what is restored when the call ends is wrong as well.
+        //
+        // The platform was not at fault and neither was BitPerfect: the vendor property never
+        // wavered. The upstream original has no default chain here at all, which is why it never
+        // ping-ponged; this project added the chain to fix presets not switching for unmapped
+        // players, and did not exclude a player whose preset is already the right one.
+        if (currentPlayer.equals("Call")) {
+            String callPreset = presetToLoad != null ? presetToLoad : "Call";
+            if (callPreset.equals(currentPresetName)) return;   // already there; nothing to decide
             presetBeforeCall = currentPresetName;
-            presetToLoad = "Call";
+            presetToLoad = callPreset;
         }
         // If Call is not the Player, queue to the preset that was active before Call if the Default preset doesn't exist
         // or queue to Default if it does

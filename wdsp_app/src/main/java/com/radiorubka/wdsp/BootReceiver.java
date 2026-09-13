@@ -23,7 +23,11 @@ public class BootReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(action) ||
             Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action) ||
             "android.intent.action.QUICKBOOT_POWERON".equals(action) ||
-            "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
+            "com.htc.intent.action.QUICKBOOT_POWERON".equals(action) ||
+            // An update kills the process and the platform does not bring a foreground service
+            // back by itself. Without this the service stayed dead until somebody opened the
+            // screen - see the note beside this action in the manifest.
+            Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
             
             Log.d(TAG, "Starting McuService as foreground service...");
             Intent serviceIntent = new Intent(context, McuService.class);
