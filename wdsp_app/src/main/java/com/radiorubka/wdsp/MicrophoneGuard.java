@@ -195,7 +195,96 @@ public final class MicrophoneGuard {
                     + "is running in the foreground where it cannot be stopped. The measurement "
                     + "will go ahead, but everything above 8 kHz is missing from it.");
         }
+        holdOpen();
         return outcome;
+    }
+
+    /**
+     * A recorder that exists only to own the input until the caller's real capture is open.
+     *
+     * 🔴 The reason this class holds it, rather than each caller doing so for itself: winning the
+     * microphone is decided by WHO HAS IT OPEN, not by who kills whom. The owner found that out -
+     * with the spectrum analyser in microphone mode this app has the input open continuously and
+     * the assistant hotword simply cannot take it; he switched the analyser to calculated mode
+     * before a sweep, the capture stopped, and the hotword had the input at 16 kHz before the
+     * measurement ever asked for it. Force-stopping the hotword does not settle it either: it
+     * restarts a moment later and finds a free microphone.
+     *
+     * <p>Between this verdict and the caller's own open there is real time - a scratch preset, a
+     * volume lock, a push to the sound processor and its settle delay. Better part of a second of
+     * an idle input, on every pass. So the device is claimed here and let go only once the caller
+     * says it has its own, which leaves no instant in which the input is free.
+     *
+     * <p>It is never read from; owning it is the whole point.
+     */
+    private static AudioRecord holder;
+
+    private static void holdOpen() {
+        releaseHold();
+        AudioRecord candidate = openCaptureRecord();
+        if (candidate == null) return;
+        try {
+            candidate.startRecording();
+            holder = candidate;
+            Log.i(TAG, "holding the input open so nothing can take it back before the capture");
+        } catch (Throwable t) {
+            Log.w(TAG, "could not hold the input open: " + t);
+            try { candidate.release(); } catch (Throwable ignored) {}
+        }
+    }
+
+    /**
+     * Lets the placeholder go. Call it AFTER the real capture is open, never before: two clients
+     * on one input for a moment is fine, an input with none is what loses it.
+     *
+     * <p>Idempotent, and safe to call when nothing was ever held.
+     */
+    public static void releaseHold() {
+        final AudioRecord held = holder;
+        holder = null;
+        if (held == null) return;
+        try { held.stop(); } catch (Throwable ignored) {}
+        try { held.release(); } catch (Throwable ignored) {}
+    }
+
+    /**
+     * Opens a capture the way this app measures with - one place, so that what the guard holds and
+     * what the measurement records are the same kind of stream.
+     *
+     * <p>UNPROCESSED first because it is absent from the preprocess list in
+     * {@code audio_effects.xml} and so carries no echo cancellation or noise suppression;
+     * VOICE_RECOGNITION as a fallback, because a unit that cannot offer the first is better
+     * measured imperfectly than not at all. Callers ask the returned record which one they got.
+     */
+    public static AudioRecord openCaptureRecord() {
+        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        if (minBytes <= 0) return null;
+        AudioRecord record = tryOpenCapture(MediaRecorder.AudioSource.UNPROCESSED, minBytes);
+        if (record == null) {
+            Log.w(TAG, "UNPROCESSED unavailable, falling back to VOICE_RECOGNITION - "
+                    + "the platform will attach AEC/NS to this capture");
+            record = tryOpenCapture(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBytes);
+        }
+        return record;
+    }
+
+    private static AudioRecord tryOpenCapture(int source, int minBytes) {
+        try {
+            AudioRecord record = new AudioRecord(source, SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 8);
+            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
+                record.release();
+                return null;
+            }
+            Log.i(TAG, "capture opened with source " + source
+                    + (source == MediaRecorder.AudioSource.UNPROCESSED
+                       ? " (UNPROCESSED - no policy preprocessing)" : ""));
+            return record;
+        } catch (Throwable t) {
+            Log.w(TAG, "could not open capture source " + source + ": " + t);
+            return null;
+        }
     }
 
     /**

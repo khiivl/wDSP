@@ -1606,6 +1606,26 @@ public final class RoomMeasurement {
         // we ended up with can actually hear.
         MicrophoneGuard.Outcome mic = MicrophoneGuard.ensureOurs(app);
         result.microphone = mic.toString();
+
+        // 🔴 ensureOurs also HOLDS it from this instant until releaseHold(), which is why the
+        // measurement no longer opens a placeholder of its own.
+        //
+        // The owner found why the guard kept losing: with the spectrum analyser in microphone mode
+        // this app has the microphone open all the time, and nothing else can take it. He switched
+        // the analyser to calculated mode before a sweep, the capture stopped, the input went idle
+        // - and the assistant hotword had it at 16 kHz before the measurement ever asked. The two
+        // reports say it in one line each: "microphone was already ours" that morning,
+        // "held by another app ... STILL HELD" that evening.
+        //
+        // That also explains why force-stopping the hotword does not settle it. We kill it, it
+        // comes back a moment later, and it finds a free microphone. The contest is won by holding
+        // the input, not by killing the holder - and between ensureOurs above and openMicrophone
+        // two hundred lines below sit the scratch preset, the volume lock, the push to the chip and
+        // its settle delay. That is a second or more of an idle input, every single pass.
+        //
+        // So a placeholder claims the device at 48 kHz right here and is let go only AFTER the
+        // measurement's own record is open, which leaves no instant in which the input is free.
+        // It is never read from; owning it is the entire point.
         final float topHz = (mic.wasHeld && !mic.freed) ? SWEEP_END_NARROW_HZ : SWEEP_END_HZ;
         if (topHz < SWEEP_END_HZ) {
             Log.w(TAG, "the microphone is limited to 16 kHz and could not be freed, so the sweep "
@@ -1689,6 +1709,10 @@ public final class RoomMeasurement {
                 }
             }
         } finally {
+            // Belt and braces: if the pass threw between claiming the input and opening the real
+            // capture, a recorder nobody reads would otherwise be left running for the life of the
+            // process - and it is the microphone, so nothing else could use it either.
+            MicrophoneGuard.releaseHold();
             SharedPreferences.Editor editor = prefs.edit();
             applySaved(editor, saved);
             editor.remove(PREF_RECOVERY);
@@ -1819,6 +1843,10 @@ public final class RoomMeasurement {
             Log.i(TAG, "audio focus for the sweep: " + result.focus);
 
             record = openMicrophone();
+            // Only now, with a second client already on the same input, does the placeholder go.
+            // Released before the null check on purpose: if the real open failed we are abandoning
+            // the pass anyway, and leaving a recorder running would be worse than the failure.
+            MicrophoneGuard.releaseHold();
             result.captureSource = describeCaptureSource(record);
             if (record == null) {
                 result.error = "the microphone could not be opened";
@@ -3130,38 +3158,16 @@ public final class RoomMeasurement {
         return "source " + source;
     }
 
+    /**
+     * Delegates. Owning the microphone is one job and {@link MicrophoneGuard} has it.
+     *
+     * 🔴 The opening lived here and the holding lived there, which meant two places knew how this
+     * app takes a capture - and the guard could have been holding a different kind of stream from
+     * the one the sweep then recorded through. One method is the source of truth; this name stays
+     * only because the call sites read better with it.
+     */
     private static AudioRecord openMicrophone() {
-        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT);
-        if (minBytes <= 0) return null;
-
-        AudioRecord record = tryOpen(MediaRecorder.AudioSource.UNPROCESSED, minBytes);
-        if (record == null) {
-            // Not every unit offers it. Falling back is better than refusing to measure, and the
-            // report says which source was used so a result can be read in that light.
-            Log.w(TAG, "UNPROCESSED unavailable, falling back to VOICE_RECOGNITION - "
-                    + "the platform will attach AEC/NS to this capture");
-            record = tryOpen(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBytes);
-        }
-        return record;
-    }
-
-    private static AudioRecord tryOpen(int source, int minBytes) {
-        try {
-            AudioRecord record = new AudioRecord(source, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 8);
-            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-                record.release();
-                return null;
-            }
-            Log.i(TAG, "microphone opened with source " + source
-                    + (source == MediaRecorder.AudioSource.UNPROCESSED
-                       ? " (UNPROCESSED - no policy preprocessing)" : ""));
-            return record;
-        } catch (Throwable t) {
-            Log.w(TAG, "could not open capture source " + source + ": " + t);
-            return null;
-        }
+        return MicrophoneGuard.openCaptureRecord();
     }
 
     /**
@@ -3171,6 +3177,7 @@ public final class RoomMeasurement {
      * {@link #isRunning()} guarantees it.
      */
     private static android.media.AudioFocusRequest focusRequest;
+
 
     /**
      * What happened to the focus while the sweep ran, or null if nothing did.
