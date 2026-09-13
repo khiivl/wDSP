@@ -294,3 +294,44 @@ firmware grants nothing behaves as before. A raw path may never become the only 
 ❓ Not established: which other special grants behave the same (notification listener, battery
 optimisation, `su` policies), and what makes one stale — reinstall over another signature, a
 restore, a firmware update, or time.
+
+---
+
+## 8. The boot timeline, and why `BOOT_COMPLETED` is the wrong trigger for hardware
+
+📻 *(measured on the unit by the Antigravity/Gemini session; relayed by the owner 13.09.2026.
+Unisoc UIS7862, MCU APM32, Android 10. Times are from ignition.)*
+
+| t | what happens |
+|---|---|
+| 0.00 s | ACC applied: the MCU powers the SoC through the PMIC. SPL → U-Boot → kernel 4.14 → init; Magisk mounts its overlays at `post-fs-data` |
+| +17.99 s | `boot_progress_start` — Zygote, `system_server` |
+| +27.91 s | `boot_progress_ams_ready` |
+| +30.60 s | `boot_progress_enable_screen` |
+| +32.60 s | `framework_locked_boot_completed` → `LOCKED_BOOT_COMPLETED`. **Only device-protected storage exists; ordinary SharedPreferences do not** |
+| +32.79 s | ⚠️ `QFSleepWakeupThread.initState()` **resets `STREAM_MUSIC` to 9** (`persist.qf.arm.default.volume`) |
+| +33.18 s | `framework_boot_completed` — user 0 unlocked, storage decrypted |
+| +33.19 s | `android.intent.action.BOOT_COMPLETED` |
+| +33.50 s | 🔌 **the UART opens** — `QFInitServer` / `McuManagerService` bring up `/dev/ttyS*` at 115200 |
+| +34.20 s | 📻 MCU frame `0x24 00` (ACC ON) arrives over that UART |
+| +34.25 s | 📡 `com.qf.action.ACC_ON` broadcast by `DefaultMcuStateListener` |
+| +35.00 s | `CarSettingService` starts its timers and the 2-second `update_battery_power` broadcasts |
+
+🔴 **Three consequences, and the first one is a trap this project is standing in.**
+
+1. **`BOOT_COMPLETED` arrives about a second BEFORE anything can reach the MCU.** A command sent on
+   that broadcast goes into a UART that is not open yet. The correct trigger for touching hardware
+   is **`com.qf.action.ACC_ON`**, at +34.25 s.
+   ⚠️ And the failure is silent in the worst possible way if the sender de-duplicates: a frame that
+   was "sent" before the link existed can be recorded as sent and never repeated. Anything caching
+   what it wrote to the MCU **must drop that cache on `ACC_ON`**, or the first write of the session
+   is the one that is lost and nothing ever notices.
+2. **Direct Boot, before +33.18 s**: `SharedPreferences` are empty or the app crashes on them. Early
+   state has to come from `DeviceProtectedStorage`, from SQLite, or from `persist.sys.qf.*`.
+3. **The platform resets music volume to 9 at +32.79 s**, from `persist.qf.arm.default.volume`, in
+   `QFSleepWakeupThread`. Anything that wants a different level after a boot has to restore it in
+   the window after that — the BitPerfect daemon does it between roughly 33 s and 40 s. This is the
+   boot-time twin of the volume behaviour in `08-VOLUME-AND-SOURCES.md`.
+
+🧩 Trust note: relayed rather than re-measured here. The times are one unit's, and the ordering is
+what matters — `BOOT_COMPLETED` before UART before `ACC_ON` — not the exact seconds.

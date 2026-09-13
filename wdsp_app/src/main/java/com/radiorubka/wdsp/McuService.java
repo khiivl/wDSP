@@ -467,6 +467,26 @@ public class McuService extends Service implements LocationListener {
                         statusBarManager.setScreenState(true);
                         statusBarManager.evaluateVisibility();
                     }
+                    // 🔴 The cache goes first, and this is not belt-and-braces - it is the whole
+                    // point of re-applying here.
+                    //
+                    // Measured boot order on this platform (01-SYSTEM.md §8): BOOT_COMPLETED at
+                    // +33.19 s, the UART to the MCU opens at +33.50 s, the MCU answers at +34.20 s
+                    // and ACC_ON is broadcast at +34.25 s. BootReceiver starts this service on
+                    // BOOT_COMPLETED, so our first apply can run a fraction of a second before
+                    // anything can reach the chip at all.
+                    //
+                    // sendToHardware de-duplicates on mcuCache, and it records a frame as sent
+                    // whenever the reflective call did not throw - which says the framework
+                    // accepted it, not that it went down a wire that was open. So a first apply
+                    // into a UART that is not up yet can be remembered as delivered, and then
+                    // every later apply, this one included, sends nothing because the cache says
+                    // the chip already has it. The preset would be missing from the hardware for
+                    // the whole drive, with a clean log and no symptom to chase.
+                    //
+                    // ACC_ON is the platform's own statement that the MCU link exists. Forget what
+                    // we think the chip holds and say all of it again.
+                    mcuCache.clear();
                     applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
