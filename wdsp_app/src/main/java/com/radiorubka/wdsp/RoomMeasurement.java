@@ -114,6 +114,15 @@ public final class RoomMeasurement {
      */
     private static final float SWEEP_END_NARROW_HZ = 7000f;
     /**
+     * The signal-to-noise ratio given to a band the sweep never reached.
+     *
+     * <p>Far below the synthesis's own floor for trusting a band, so the confidence ramp it
+     * already applies takes the correction to nothing. It is not a measurement and is never
+     * compared against one; it exists so that "not measured" travels through the same path
+     * as "measured badly" and arrives at the same place: leave it alone.
+     */
+    private static final float UNMEASURED_SNR_DB = -100f;
+    /**
      * How long one sweep lasts. Six seconds, raised from three on 13.09.2026.
      *
      * <p>Owner: "свіп надто швидкий... динамік має встигнути перейти в плато". The plateau argument
@@ -2662,6 +2671,34 @@ public final class RoomMeasurement {
                 avgSnr[b] /= usedCount;
             }
         }
+        // 🔴 A band the sweep never reached is not a band that measured badly - it is a band that
+        // was not measured, and the two must not be handed to the synthesis as the same thing.
+        //
+        // When the microphone is stuck at 16 kHz because something else has it open, the pass is
+        // deliberately narrowed (sweepTopHz drops to 7 kHz) and says so. Everything above that then
+        // recorded silence, the deconvolution turned the silence into a deep hole, and the
+        // synthesis dutifully boosted it to the ceiling: on 13.09.2026 the owner's preset came back
+        // with 8 k, 12.5 k and 20 kHz all at +4 dB, computed from a cabin response of -10, -51 and
+        // -53 dB in bands that were never excited at all.
+        //
+        // Rather than a new branch, this uses the mechanism that already exists for exactly this
+        // question. The synthesis weights every band by its signal-to-noise confidence; a band
+        // outside the sweep is given a confidence of none, so the correction for it comes out flat
+        // and the cabin response stops claiming to describe it. One rule about trust, in one place.
+        int unswept = 0;
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            if (b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] > result.sweepTopHz) {
+                avgSnr[b] = UNMEASURED_SNR_DB;
+                unswept++;
+            }
+        }
+        if (unswept > 0) {
+            Log.w(TAG, String.format(Locale.US,
+                    "the sweep stopped at %.0f Hz, so %d band(s) above it were never excited - "
+                    + "they are marked unmeasured and left flat instead of being read as a hole "
+                    + "in the car. Free the microphone and measure again for a full result.",
+                    result.sweepTopHz, unswept));
+        }
         System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
 
 
@@ -2741,6 +2778,13 @@ public final class RoomMeasurement {
             final float measured = belowCrossover ? sub.cleanBandsDb[b] : avgClean[b];
             if (belowCrossover) fromSub++;
             result.cabinResponseDb16[b] = (measured + result.micCompensation16[b]) - refMid;
+            // Above the sweep's top there was no signal to respond to. Zero here means "the car
+            // adds nothing that we know of", which is what the spectrum display falls back to for
+            // a car that has never been measured at all - and is the honest answer for a band
+            // this pass could not reach.
+            if (b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] > result.sweepTopHz) {
+                result.cabinResponseDb16[b] = 0f;
+            }
         }
         Log.i(TAG, String.format(Locale.US,
                 "cabin response for the spectrum: %d of %d bands taken from the subwoofer "
