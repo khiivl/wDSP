@@ -196,6 +196,20 @@ public final class RoomMeasurement {
      * The recording also has to contain something. A channel that was never driven still produces
      * an impulse response - of the room noise - and it can look convincing on its own.
      */
+    /**
+     * The volume every measurement runs at.
+     *
+     * <p>It was the literal 16 written four times in one block - twice as an argument and
+     * twice inside the log lines that report what was done. Three of the four were only
+     * describing the fourth, so the first person to try the pass at a different level would
+     * have had the log confidently state the old number. It is one fact; it gets one name.
+     *
+     * <p>The value itself is not settled. On the owner's bench 16 puts the loudest channel at
+     * -2.9 dBFS, under 3 dB from the converter rail, and clipping folds down into exactly the
+     * bands this work is trying to measure. Lowering it costs SNR. That trade wants numbers
+     * from both ends before a constant is chosen, which is what this name is now for.
+     */
+    private static final int MEASURE_VOLUME = 16;
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
     /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
     private static final int CLIP_MAGNITUDE = 32690;
@@ -1502,17 +1516,18 @@ public final class RoomMeasurement {
                     + "that is the first thing to suspect");
         }
 
-        // Touch only: preset (switched to flat scratch preset) and volume (locked to 16).
+        // Touch only: preset (switched to flat scratch preset) and volume.
         McuService.ensureStarted(app);
         VolumeHelper.init(app);
         int origVolume = VolumeHelper.getVolume();
-        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> 16");
+        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> " + MEASURE_VOLUME);
         String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
-        VolumeHelper.setVolume(16);
-        VolumeHelper.setVolumeForType("media_type", 16);
+        VolumeHelper.setVolume(MEASURE_VOLUME);
+        VolumeHelper.setVolumeForType("media_type", MEASURE_VOLUME);
         int readbackVol = VolumeHelper.getVolume();
-        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> 16 (readback=" + readbackVol
+        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> " + MEASURE_VOLUME
+                + " (readback=" + readbackVol
                 + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
         buildScratchPreset(prefs, preset);
 
