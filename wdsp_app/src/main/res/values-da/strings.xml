@@ -216,7 +216,6 @@ Global standard: %1$s</string>
     <string name="loud_check_strength_zero">Korrektionsstyrken er nul, så kurven ganges væk.</string>
     <string name="loud_check_fatigue_no_room">Diskantdæmpning er slået til, men der er ikke noget lydstyrkeområde over kalibreringspunktet, hvor det kan virke.</string>
     <string name="loud_check_ceiling">Under lydstyrke %1$d mangler kurven overskud: %2$d bånd holder op med at stige, og den flader ud til en hylde i stedet for en kurve.</string>
-    <string name="loud_check_sub_double">Subwooferen kompenseres separat, og båndene omkring %1$d Hz hæves igen — bassen tilføjes to gange.</string>
     <string name="loud_check_bass_stacks">Et separat basboost er også slået til. Det er to basreguleringer under én kurve.</string>
     <string name="loud_check_cal_not_measured">Kurven er forankret ved lydstyrke %1$d, men bilen blev målt ved %2$d. Profilen er præcis ved den målte lydstyrke, så det er der, kurven bør stoppe.</string>
     <string name="perm_battery_opt">Batterioptimering</string>

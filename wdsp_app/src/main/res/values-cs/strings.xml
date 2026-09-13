@@ -216,7 +216,6 @@ Globální výchozí: %1$s</string>
     <string name="loud_check_strength_zero">Síla korekce je nulová, takže křivka se násobí nulou.</string>
     <string name="loud_check_fatigue_no_room">Oříznutí výšek je zapnuté, ale nad kalibračním bodem nezbývá hlasitost, ve které by mohlo působit.</string>
     <string name="loud_check_ceiling">Pod hlasitostí %1$d křivce dochází rezerva: %2$d pásem přestává stoupat a místo křivky vzniká rovná plocha.</string>
-    <string name="loud_check_sub_double">Subwoofer se kompenzuje samostatně a pásma kolem %1$d Hz se zvedají znovu — basy se přidávají dvakrát.</string>
     <string name="loud_check_bass_stacks">Současně je zapnuto i samostatné zvýraznění basů. To jsou dva ovladače basů pod jednou křivkou.</string>
     <string name="loud_check_cal_not_measured">Křivka je ukotvena při hlasitosti %1$d, ale vůz byl měřen při %2$d. Profil je přesný při hlasitosti měření, takže právě tam by měla křivka končit.</string>
     <string name="perm_battery_opt">Optimalizace baterie</string>

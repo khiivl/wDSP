@@ -204,7 +204,6 @@
     <string name="loud_check_strength_zero">Die Anpassungsstärke ist null, daher wird die Kurve auf null multipliziert.</string>
     <string name="loud_check_fatigue_no_room">Die Höhenreduzierung ist aktiv, aber oberhalb des Kalibrationspunkts bleibt keine Lautstärke, in der sie wirken könnte.</string>
     <string name="loud_check_ceiling">Unterhalb von Lautstärke %1$d geht der Kurve der Spielraum aus: %2$d Bänder steigen nicht weiter an und verflachen zu einer Stufe statt einer Kurve.</string>
-    <string name="loud_check_sub_double">Der Subwoofer wird separat kompensiert und die Bänder um %1$d Hz werden erneut angehoben — der Bass wird doppelt verstärkt.</string>
     <string name="loud_check_bass_stacks">Eine separate Bassanhebung ist ebenfalls aktiv. Das sind zwei Bassregler unter einer Kurve.</string>
     <string name="loud_check_cal_not_measured">Die Kurve ist bei Lautstärke %1$d verankert, das Fahrzeug wurde jedoch bei %2$d gemessen. Das Profil stimmt bei der Messlautstärke, genau dort sollte die Kurve enden.</string>
     <string name="perm_battery_opt">Akkuoptimierung</string>

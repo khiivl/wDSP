@@ -216,7 +216,6 @@ Implicit global: %1$s</string>
     <string name="loud_check_strength_zero">Puterea corecției este zero, astfel că efectul curbei dispare.</string>
     <string name="loud_check_fatigue_no_room">Atenuarea înaltelor este activată, dar nu există volum peste punctul de calibrare în care să poată acționa.</string>
     <string name="loud_check_ceiling">Sub volumul %1$d curba rămâne fără rezervă: %2$d benzi nu mai cresc și se aplatizează într-un prag în loc de curbă.</string>
-    <string name="loud_check_sub_double">Subwooferul este compensat separat, iar benzile din jurul a %1$d Hz sunt ridicate din nou — basul se adaugă de două ori.</string>
     <string name="loud_check_bass_stacks">Este activată și o amplificare separată a basului. Aceasta înseamnă două reglaje de bas sub o singură curbă.</string>
     <string name="loud_check_cal_not_measured">Curba este ancorată la volumul %1$d, dar mașina a fost măsurată la %2$d. Profilul este exact la volumul măsurat, deci acolo ar trebui să se oprească curba.</string>
     <string name="perm_battery_opt">Optimizarea bateriei</string>

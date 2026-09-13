@@ -216,7 +216,6 @@ Globalno privzeto: %1$s</string>
     <string name="loud_check_strength_zero">Moč korekcije je nič, zato se krivulja izniči.</string>
     <string name="loud_check_fatigue_no_room">Prirejanje visokih tonov je vklopljeno, vendar nad kalibracijsko točko ni glasnosti, v kateri bi lahko delovalo.</string>
     <string name="loud_check_ceiling">Pod glasnostjo %1$d krivulji zmanjka rezerve: %2$d pasov ne narašča več in nastane ravna polica namesto krivulje.</string>
-    <string name="loud_check_sub_double">Nizkotonec se kompenzira ločeno, pasovi okoli %1$d Hz pa se ponovno dvignejo — bas se doda dvakrat.</string>
     <string name="loud_check_bass_stacks">Vklopljena je tudi ločena ojačitev basov. To sta dva regulatorja basov pod eno krivuljo.</string>
     <string name="loud_check_cal_not_measured">Krivulja je zasidrana pri glasnosti %1$d, avto pa je bil izmerjen pri %2$d. Profil je točen pri glasnosti merjenja, zato bi se morala krivulja končati prav tam.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>

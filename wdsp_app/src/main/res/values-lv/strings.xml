@@ -216,7 +216,6 @@ Globāli noklusējums: %1$s</string>
     <string name="loud_check_strength_zero">Korekcijas stiprums ir nulle, tāpēc līkne tiek reizināta ar nulli.</string>
     <string name="loud_check_fatigue_no_room">Augsto frekvenču apgriešana ir ieslēgta, taču virs kalibrēšanas punkta nav skaļuma, kurā tā varētu darboties.</string>
     <string name="loud_check_ceiling">Zem skaļuma %1$d līknei pietrūkst rezerves: %2$d joslas pārstāj pieaugt un tā kļūst plakana kā plaukts, nevis līkne.</string>
-    <string name="loud_check_sub_double">Zemfrekvences skaļrunis tiek kompensēts atsevišķi, un joslas ap %1$d Hz tiek atkal paceltas — basi tiek pievienoti divreiz.</string>
     <string name="loud_check_bass_stacks">Ir ieslēgts arī atsevišķs basu pastiprinājums. Tie ir divi basu regulatori zem vienas līknes.</string>
     <string name="loud_check_cal_not_measured">Līkne ir piesaistīta skaļumam %1$d, bet automašīna tika mērīta pie %2$d. Profils ir precīzs mērījuma skaļumā, tāpēc līknei būtu jābeidzas tieši tur.</string>
     <string name="perm_battery_opt">Akumulatora optimizācija</string>

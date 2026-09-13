@@ -216,7 +216,6 @@ Genel Varsayılan: %1$s</string>
     <string name="loud_check_strength_zero">Düzeltme gücü sıfır olduğundan eğrinin etkisi sıfırlanır.</string>
     <string name="loud_check_fatigue_no_room">Tizleri kırpma açık, ancak kalibrasyon noktasının üzerinde etkili olabileceği bir ses seviyesi yok.</string>
     <string name="loud_check_ceiling">%1$d ses seviyesinin altında eğrinin payı tükeniyor: %2$d bant yükselmeyi durduruyor ve eğri yerine düz bir rafa dönüşüyor.</string>
-    <string name="loud_check_sub_double">Subwoofer ayrı olarak dengeleniyor ve %1$d Hz civarındaki bantlar tekrar yükseltiliyor — bas iki kez eklenmiş oluyor.</string>
     <string name="loud_check_bass_stacks">Ayrı bir bas güçlendirme de açık. Bu, tek bir eğri altında iki bas kontrolü demektir.</string>
     <string name="loud_check_cal_not_measured">Eğri %1$d ses seviyesine sabitlenmiş, ancak araç %2$d seviyesinde ölçülmüştü. Profil ölçülen ses seviyesinde tam doğrudur, bu yüzden eğri tam orada durmalıdır.</string>
     <string name="perm_battery_opt">Pil optimizasyonu</string>

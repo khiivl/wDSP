@@ -216,7 +216,6 @@ Predefinito globale: %1$s</string>
     <string name="loud_check_strength_zero">L\'intensità correzione è pari a zero, quindi la curva viene annullata.</string>
     <string name="loud_check_fatigue_no_room">Il taglio alti è attivo, ma non c\'è volume sopra il punto di calibrazione entro cui possa agire.</string>
     <string name="loud_check_ceiling">Al di sotto del volume %1$d la curva esaurisce il margine: %2$d bande smettono di salire e si appiattiscono creando un gradino anziché una curva.</string>
-    <string name="loud_check_sub_double">Il subwoofer è compensato separatamente e le bande intorno a %1$d Hz vengono rialzate — i bassi vengono aggiunti due volte.</string>
     <string name="loud_check_bass_stacks">È attivo anche un incremento separato dei bassi. Si tratta di due controlli dei bassi sotto una stessa curva.</string>
     <string name="loud_check_cal_not_measured">La curva è ancorata al volume %1$d, ma l\'auto è stata misurata a %2$d. Il profilo è esatto al volume misurato, quindi la curva dovrebbe fermarsi proprio lì.</string>
     <string name="perm_battery_opt">Ottimizzazione della batteria</string>

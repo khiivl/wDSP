@@ -47,8 +47,6 @@ public final class LoudnessCheck {
         FATIGUE_NO_ROOM,
         /** The preset plus the curve exceeds what the equaliser can deliver; the shape collapses. */
         CEILING_CLIPS,
-        /** Subwoofer compensation and the band offsets raise the same bass twice. */
-        SUB_DOUBLE_BASS,
         /** A separate bass boost is stacked under a curve that is already raising the bottom. */
         BASS_BOOST_STACKS,
         /** The curve is anchored at a volume other than the one the car was measured at. */
@@ -157,13 +155,15 @@ public final class LoudnessCheck {
             }
         }
 
-        // 3. Two bass controls under one curve. Neither of these is wrong on its own; together
-        //    with a curve that is already lifting 20-80 Hz they are the usual way a preset ends up
-        //    with a bottom nobody chose.
-        if (fmEnabled && subComp && LoudnessCurve.maxSubBoost(subFreqIdx) > 0f) {
-            r.findings.add(new Finding(Code.SUB_DOUBLE_BASS, Level.NOTE,
-                    LoudnessCurve.hzOf(subFreqIdx)));
-        }
+        // 3. A separate bass boost under a curve that is already lifting 20-80 Hz.
+        //
+        //    ⚠️ There used to be a sibling of this check, "subwoofer compensation plus the band
+        //    offsets raise the same bass twice", and it was removed on 14.09.2026 at the owner's
+        //    request. It was reasoning, not measurement, and it was wrong by construction:
+        //    subwoofer compensation does nothing at all unless loudness is on
+        //    (LoudnessCurve.subOffset returns 0 otherwise), so it fired on the one configuration
+        //    in which that feature works as designed - and it did so beneath a fix button that
+        //    could not change it. A warning that condemns the intended use of a feature is noise.
         if (fmEnabled && bassBoost > 0) {
             r.findings.add(new Finding(Code.BASS_BOOST_STACKS, Level.NOTE, bassBoost));
         }

@@ -203,7 +203,6 @@
     <string name="loud_check_strength_zero">Korrigeringsstyrkan är noll, så kurvan multipliceras bort.</string>
     <string name="loud_check_fatigue_no_room">Diskantdämpning är på, men det finns ingen volym över kalibreringspunkten där den kan verka.</string>
     <string name="loud_check_ceiling">Under volym %1$d tar marginalen slut för kurvan: %2$d band slutar stiga och den planar ut till en hylla i stället för en kurva.</string>
-    <string name="loud_check_sub_double">Subwoofern kompenseras separat och banden runt %1$d Hz höjs igen — basen läggs till två gånger.</string>
     <string name="loud_check_bass_stacks">En separat basförstärkning är också påslagen. Det innebär två baskontroller under samma kurva.</string>
     <string name="loud_check_cal_not_measured">Kurvan är förankrad vid volym %1$d, men bilen mättes vid %2$d. Profilen är exakt vid den uppmätta volymen, så det är där kurvan bör sluta.</string>
     <string name="perm_battery_opt">Batterioptimering</string>

@@ -204,7 +204,6 @@
     <string name="loud_check_strength_zero">Siła korekcji wynosi zero, więc krzywa zostaje pomnożona przez zero.</string>
     <string name="loud_check_fatigue_no_room">Ograniczenie wysokich tonów jest włączone, ale powyżej punktu kalibracji nie ma głośności, w której mogłoby działać.</string>
     <string name="loud_check_ceiling">Poniżej głośności %1$d krzywej brakuje zapasu: %2$d pasm przestaje rosnąć i zamiast krzywej powstaje płaska półka.</string>
-    <string name="loud_check_sub_double">Subwoofer jest kompensowany oddzielnie, a pasma wokół %1$d Hz są ponownie podbijane — bas jest dodawany podwójnie.</string>
     <string name="loud_check_bass_stacks">Włączone jest także osobne podbicie basu. To dwa regulatory basu pod jedną krzywą.</string>
     <string name="loud_check_cal_not_measured">Krzywa jest zakotwiczona przy głośności %1$d, a samochód został zmierzony przy %2$d. Profil jest dokładny przy głośności pomiaru, więc to tam krzywa powinna się kończyć.</string>
     <string name="perm_battery_opt">Optymalizacja baterii</string>

@@ -216,7 +216,6 @@ Globalno zadano: %1$s</string>
     <string name="loud_check_strength_zero">Snaga korekcije je nula, pa je krivulja pomnožena s nulom.</string>
     <string name="loud_check_fatigue_no_room">Obrezivanje visokih je uključeno, ali iznad kalibracijske točke nema glasnoće u kojoj bi moglo djelovati.</string>
     <string name="loud_check_ceiling">Ispod glasnoće %1$d krivulji ponestaje rezerve: %2$d pojaseva prestaje rasti i stvara se polica umjesto krivulje.</string>
-    <string name="loud_check_sub_double">Subwoofer se kompenzira zasebno, a pojasevi oko %1$d Hz ponovno se podižu — bas se dodaje dvaput.</string>
     <string name="loud_check_bass_stacks">Uključeno je i zasebno pojačanje basa. To su dva regulatora basa pod jednom krivuljom.</string>
     <string name="loud_check_cal_not_measured">Krivulja je usidrena na glasnoći %1$d, a automobil je izmjeren na %2$d. Profil je točan pri glasnoći mjerenja, pa bi krivulja trebala završavati upravo tamo.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>

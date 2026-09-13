@@ -216,7 +216,6 @@ Yleinen oletus: %1$s</string>
     <string name="loud_check_strength_zero">Korjauksen voimakkuus on nolla, joten käyrä nollautuu.</string>
     <string name="loud_check_fatigue_no_room">Diskantin vaimennus on päällä, mutta kalibrointipisteen yläpuolella ei ole äänenvoimakkuutta, jolla se voisi toimia.</string>
     <string name="loud_check_ceiling">Äänenvoimakkuuden %1$d alapuolella käyrästä loppuu tila: %2$d kaistaa lakkaa nousemasta ja käyrä litistyy tasanteeksi.</string>
-    <string name="loud_check_sub_double">Subwoofer kompensoidaan erikseen ja taajuusalueita noin %1$d Hz nostetaan uudelleen — bassoa lisätään kahdesti.</string>
     <string name="loud_check_bass_stacks">Myös erillinen bassokorostus on päällä. Se tarkoittaa kahta bassosäädintä saman käyrän alla.</string>
     <string name="loud_check_cal_not_measured">Käyrä on ankkuroitu äänenvoimakkuuteen %1$d, mutta auto mitattiin tasolla %2$d. Profiili on tarkka mittausvoimakkuudella, joten käyrän tulisi päättyä siihen.</string>
     <string name="perm_battery_opt">Akun optimointi</string>

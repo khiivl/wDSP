@@ -216,7 +216,6 @@ Global standard: %1$s</string>
     <string name="loud_check_strength_zero">Korreksjonsstyrken er null, så kurven ganges bort.</string>
     <string name="loud_check_fatigue_no_room">Diskantdemping er på, men det er ikke noe volum over kalibreringspunktet der den kan virke.</string>
     <string name="loud_check_ceiling">Under volum %1$d slipper kurven opp for takhøyde: %2$d bånd slutter å stige og den flater ut til en hylle i stedet for en kurve.</string>
-    <string name="loud_check_sub_double">Subwooferen kompenseres separat, og båndene rundt %1$d Hz heves igjen — bassen legges til to ganger.</string>
     <string name="loud_check_bass_stacks">En separat bassheving er også slått på. Det er to basskontroller under én kurve.</string>
     <string name="loud_check_cal_not_measured">Kurven er forankret ved volum %1$d, men bilen ble målt ved %2$d. Profilen er nøyaktig ved det målte volumet, så det er der kurven bør stoppe.</string>
     <string name="perm_battery_opt">Batterioptimalisering</string>

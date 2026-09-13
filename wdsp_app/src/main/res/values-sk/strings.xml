@@ -216,7 +216,6 @@ Globálne predvolené: %1$s</string>
     <string name="loud_check_strength_zero">Sila korekcie je nulová, takže krivka sa násobí nulou.</string>
     <string name="loud_check_fatigue_no_room">Orezanie výšok je zapnuté, ale nad kalibračným bodom nezostáva hlasitosť, v ktorej by mohlo pôsobiť.</string>
     <string name="loud_check_ceiling">Pod hlasitosťou %1$d krivke dochádza rezerva: %2$d pásiem prestáva stúpať a namiesto krivky vzniká rovná polica.</string>
-    <string name="loud_check_sub_double">Subwoofer sa kompenzuje samostatne a pásma okolo %1$d Hz sa dvíhajú znova — basy sa pridávajú dvakrát.</string>
     <string name="loud_check_bass_stacks">Súčasne je zapnuté aj samostatné zvýraznenie basov. To sú dva ovládače basov pod jednou krivkou.</string>
     <string name="loud_check_cal_not_measured">Krivka je ukotvená pri hlasitosti %1$d, ale vozidlo bolo merané pri %2$d. Profil je presný pri hlasitosti merania, takže práve tam by mala krivka končiť.</string>
     <string name="perm_battery_opt">Optimalizácia batérie</string>

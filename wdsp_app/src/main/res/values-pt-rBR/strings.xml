@@ -214,7 +214,6 @@
     <string name="loud_check_strength_zero">A intensidade da correção é zero, portanto a curva é anulada.</string>
     <string name="loud_check_fatigue_no_room">A atenuação de agudos está ativada, mas não há volume acima do ponto de calibração para que atue.</string>
     <string name="loud_check_ceiling">Abaixo do volume %1$d a curva fica sem margem: %2$d faixas param de subir e ela se torna plana como uma prateleira em vez de curva.</string>
-    <string name="loud_check_sub_double">O subwoofer é compensado separadamente e as faixas em torno de %1$d Hz são elevadas novamente — o grave é adicionado duas vezes.</string>
     <string name="loud_check_bass_stacks">Um reforço de graves separado também está ativado. São dois controles de graves sob uma mesma curva.</string>
     <string name="loud_check_cal_not_measured">A curva está ancorada no volume %1$d, mas o veículo foi medido em %2$d. O perfil é exato no volume medido, portanto é aí que a curva deve parar.</string>
     <string name="perm_battery_opt">Otimização da bateria</string>

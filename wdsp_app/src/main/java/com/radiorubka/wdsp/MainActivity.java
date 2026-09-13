@@ -1879,7 +1879,6 @@ public class MainActivity extends AppCompatActivity {
             case STRENGTH_ZERO:       return getString(R.string.loud_check_strength_zero);
             case FATIGUE_NO_ROOM:     return getString(R.string.loud_check_fatigue_no_room);
             case CEILING_CLIPS:       return getString(R.string.loud_check_ceiling, f.args[0], f.args[1]);
-            case SUB_DOUBLE_BASS:     return getString(R.string.loud_check_sub_double, f.args[0]);
             case BASS_BOOST_STACKS:   return getString(R.string.loud_check_bass_stacks);
             case CAL_NOT_AT_MEASURED: return getString(R.string.loud_check_cal_not_measured, f.args[0], f.args[1]);
             default:                  return "";

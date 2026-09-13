@@ -216,7 +216,6 @@
     <string name="loud_check_strength_zero">Снага корекције је нула, па се дејство криве поништава.</string>
     <string name="loud_check_fatigue_no_room">Подрезивање високих је укључено, али изнад тачке калибрације нема јачине звука у којој би могло да делује.</string>
     <string name="loud_check_ceiling">Испод јачине звука %1$d кривој понестаје резерве: %2$d опсега престаје да расте и формира се равна полица уместо криве.</string>
-    <string name="loud_check_sub_double">Субвуфер се компензује посебно, а опсези око %1$d Hz се поново подижу — бас се додаје два пута.</string>
     <string name="loud_check_bass_stacks">Укључено је и посебно појачање баса. То су два регулатора баса под једном кривом.</string>
     <string name="loud_check_cal_not_measured">Крива је усидрена на јачини звука %1$d, а возило је измерено на %2$d. Профил је тачан при јачини мерења, па би управо тамо крива требало да се завршава.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>

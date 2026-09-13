@@ -216,7 +216,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="loud_check_strength_zero">A korrekció erőssége nulla, így a görbe hatása elvész.</string>
     <string name="loud_check_fatigue_no_room">A magashang-vágás be van kapcsolva, de a kalibrációs pont felett nincs hangerő, ahol hathatna.</string>
     <string name="loud_check_ceiling">%1$d hangerő alatt a görbének elfogy a tartaléka: %2$d sáv emelkedése megáll, és görbe helyett lapos polc keletkezik.</string>
-    <string name="loud_check_sub_double">A mélynyomó külön kompenzációt kap, és a %1$d Hz körüli sávok újra emelkednek — a mélyhang kétszer adódik hozzá.</string>
     <string name="loud_check_bass_stacks">Egy különálló mélyhang-kiemelés is be van kapcsolva. Ez két mélyhang-szabályozás egyetlen görbe alatt.</string>
     <string name="loud_check_cal_not_measured">A görbe a(z) %1$d hangerőhöz van rögzítve, de a mérés %2$d hangerőn történt. A profil a mérési hangerőn pontos, ezért a görbének ott kell véget érnie.</string>
     <string name="perm_battery_opt">Akkumulátoroptimalizálás</string>

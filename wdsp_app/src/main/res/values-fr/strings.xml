@@ -216,7 +216,6 @@ Par défaut global : %1$s</string>
     <string name="loud_check_strength_zero">L\'intensité de correction est à zéro, la courbe est donc annulée.</string>
     <string name="loud_check_fatigue_no_room">L\'atténuation des aigus est activée, mais il n\'y a pas de volume au-dessus du point de calibrage pour qu\'elle agisse.</string>
     <string name="loud_check_ceiling">En dessous du volume %1$d, la courbe manque de marge : %2$d bandes cessent d\'augmenter et elle s\'aplatit en palier au lieu d\'une courbe.</string>
-    <string name="loud_check_sub_double">Le caisson de basses est compensé séparément et les bandes autour de %1$d Hz sont relevées à nouveau — les basses sont ajoutées deux fois.</string>
     <string name="loud_check_bass_stacks">Une amplification séparée des basses est également activée. Cela fait deux réglages de basses sous une même courbe.</string>
     <string name="loud_check_cal_not_measured">La courbe est calée sur le volume %1$d, mais le véhicule a été mesuré à %2$d. Le profil est exact au volume mesuré, c\'est donc là que la courbe doit s\'arrêter.</string>
     <string name="perm_battery_opt">Optimisation de la batterie</string>
