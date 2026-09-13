@@ -1858,8 +1858,14 @@ public class MainActivity extends AppCompatActivity {
         // that would set the strength to zero and so produce, in one tap, the very dead state the
         // verdict above is warning about. The findings still explain the situation; only the
         // promise of a fix is withheld.
-        boolean canFix = !r.isClean() && r.recommendedStrength > 0
-                && (r.recommendedCal > 0 || r.recommendedStrength != getIntSlider(seekFmStrength));
+        //
+        // ⚠️ And only when pressing it would change something. The first version offered it
+        // whenever the car had been measured, so on the owner's unit it sat under "the bass is
+        // added twice" with the calibration point already at 16 and the strength already at 100 -
+        // a button that does nothing, beneath a finding it cannot fix.
+        boolean changesCal = r.recommendedCal > 0 && r.recommendedCal != getIntSlider(seekFmCalVol);
+        boolean changesStrength = r.recommendedStrength != getIntSlider(seekFmStrength);
+        boolean canFix = !r.isClean() && r.recommendedStrength > 0 && (changesCal || changesStrength);
         if (btnLoudFix != null) {
             btnLoudFix.setVisibility(canFix ? View.VISIBLE : View.GONE);
         }

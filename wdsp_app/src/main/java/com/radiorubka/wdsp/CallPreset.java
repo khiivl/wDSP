@@ -49,6 +49,7 @@ public final class CallPreset {
      * The subwoofer as far down as the hardware goes. ⚠️ 0x8B has no negative gain - index 0 is
      * 0 dB, not a cut - so the lever that actually takes the sub out of the voice band is its
      * low-pass: index 0 is the lowest crossover, 25 Hz, where nothing a voice contains remains.
+     * Confirmed by the owner 14.09.2026 as the meaning of "the subwoofer fully down".
      */
     public static final int SUB_GAIN_IDX = 0;
     public static final int SUB_FREQ_IDX = 0;
