@@ -90,7 +90,7 @@
     <string name="toast_cannot_delete_last">Nie można usunąć ostatniego profilu</string>
     <string name="toast_exported">Wyeksportowano</string>
     <string name="toast_imported">Zaimportowano</string>
-    <string name="toast_sub_comp_limit">Kompensacja subwoofera ograniczona do 80Hz</string>
+    <string name="toast_sub_comp_limit">Kompensacja subwoofera ograniczona do 100Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Praca wDSP w tle</string>

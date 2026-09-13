@@ -27,9 +27,10 @@
     <string name="enable_loudness">Enable Loudness</string>
     <string name="trim_highs">Trim Highs</string>
     <!-- A toggle, not a way into settings: it adds the loudness curve's bass boost to the
-         subwoofer, and switching it on pulls a crossover above 80 Hz down to 80. The old wording,
-         "Sub Tweaking" / "Налаштування сабвуфера", read like a menu entry, and pressing it to look
-         at the subwoofer silently rewrote a measured crossover (owner's preset, 13-14.09.2026). -->
+         subwoofer. The old wording, "Sub Tweaking" / "Налаштування сабвуфера", read like a menu
+         entry, and pressing it to look at the subwoofer used to rewrite a measured 100 Hz crossover
+         to 80 (owner's preset, 13-14.09.2026). Since 14.09.2026 it no longer touches the crossover,
+         and compensation works up to 100 Hz. -->
     <string name="sub_tweaking">Sub compensation</string>
     <string name="fm_visualizer_label">Real-time Compensation Preview</string>
     <string name="lbl_volume">Volume:</string>
@@ -108,7 +109,7 @@
     <string name="toast_cannot_delete_last">Cannot delete the last preset</string>
     <string name="toast_exported">Exported</string>
     <string name="toast_imported">Imported</string>
-    <string name="toast_sub_comp_limit">Sub Comp limited to 80Hz</string>
+    <string name="toast_sub_comp_limit">Sub Comp limited to 100Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Keep wDSP Running</string>

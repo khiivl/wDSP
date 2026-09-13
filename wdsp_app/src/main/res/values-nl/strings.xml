@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Kan de laatste voorinstelling niet verwijderen</string>
     <string name="toast_exported">Geëxporteerd</string>
     <string name="toast_imported">Geïmporteerd</string>
-    <string name="toast_sub_comp_limit">Sub-comp. beperkt tot 80 Hz</string>
+    <string name="toast_sub_comp_limit">Sub-comp. beperkt tot 100 Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP Actief Houden</string>

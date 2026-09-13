@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Nemožno zmazať poslednú predvoľbu</string>
     <string name="toast_exported">Exportované</string>
     <string name="toast_imported">Importované</string>
-    <string name="toast_sub_comp_limit">Komp. sub obmedzená na 80 Hz</string>
+    <string name="toast_sub_comp_limit">Komp. sub obmedzená na 100 Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Udržať wDSP spustené</string>

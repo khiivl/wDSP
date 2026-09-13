@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Az utolsó előbeállítás nem törölhető</string>
     <string name="toast_exported">Exportálva</string>
     <string name="toast_imported">Importálva</string>
-    <string name="toast_sub_comp_limit">Mélynyomó komp. 80 Hz-re korlátozva</string>
+    <string name="toast_sub_comp_limit">Mélynyomó komp. 100 Hz-re korlátozva</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP futtatása a háttérben</string>

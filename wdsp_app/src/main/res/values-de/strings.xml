@@ -89,7 +89,7 @@
     <string name="toast_cannot_delete_last">Letztes Preset kann nicht gelöscht werden</string>
     <string name="toast_exported">Exportiert</string>
     <string name="toast_imported">Importiert</string>
-    <string name="toast_sub_comp_limit">Sub-Kompensation auf 80Hz begrenzt</string>
+    <string name="toast_sub_comp_limit">Sub-Kompensation auf 100Hz begrenzt</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP im Hintergrund ausführen</string>

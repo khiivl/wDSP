@@ -89,7 +89,7 @@
     <string name="toast_cannot_delete_last">Невозможно удалить послед. предуст. </string>
     <string name="toast_exported">Экспортированно</string>
     <string name="toast_imported">Импортированно</string>
-    <string name="toast_sub_comp_limit">Сабвуфер ограничен 80Гц</string>
+    <string name="toast_sub_comp_limit">Сабвуфер ограничен 100Гц</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Оставить wDSP работать в фоне</string>

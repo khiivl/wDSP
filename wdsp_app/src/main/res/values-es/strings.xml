@@ -89,7 +89,7 @@
     <string name="toast_cannot_delete_last">No se puede eliminar el último preajuste</string>
     <string name="toast_exported">Exportado</string>
     <string name="toast_imported">Importado</string>
-    <string name="toast_sub_comp_limit">Compensación de Subwoofer limitada a 80Hz</string>
+    <string name="toast_sub_comp_limit">Compensación de Subwoofer limitada a 100Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Mantener wDSP en ejecución</string>

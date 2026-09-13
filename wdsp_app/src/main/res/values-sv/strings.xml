@@ -90,7 +90,7 @@
     <string name="toast_cannot_delete_last">Kan inte radera sista profilen</string>
     <string name="toast_exported">Exporterad</string>
     <string name="toast_imported">Importerad</string>
-    <string name="toast_sub_comp_limit">Sub-komp begränsad till 80Hz</string>
+    <string name="toast_sub_comp_limit">Sub-komp begränsad till 100Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Låt wDSP köras</string>

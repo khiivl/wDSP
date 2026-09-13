@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Δεν είναι δυνατή η διαγραφή του τελευταίου προφίλ</string>
     <string name="toast_exported">Εξήχθη</string>
     <string name="toast_imported">Εισήχθη</string>
-    <string name="toast_sub_comp_limit">Η αντιστάθμιση sub περιορίζεται στα 80 Hz</string>
+    <string name="toast_sub_comp_limit">Η αντιστάθμιση sub περιορίζεται στα 100 Hz</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Διατήρηση wDSP σε λειτουργία</string>

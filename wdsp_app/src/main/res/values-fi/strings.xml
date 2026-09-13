@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Viimeistä esiasetusta ei voi poistaa</string>
     <string name="toast_exported">Viety</string>
     <string name="toast_imported">Tuotu</string>
-    <string name="toast_sub_comp_limit">Sub-kompensaatio rajoitettu 80 Hz:iin</string>
+    <string name="toast_sub_comp_limit">Sub-kompensaatio rajoitettu 100 Hz:iin</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Pidä wDSP käynnissä</string>

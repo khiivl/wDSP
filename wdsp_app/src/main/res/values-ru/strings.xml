@@ -96,7 +96,7 @@
     <string name="toast_cannot_delete_last">Нельзя удалить последний пресет</string>
     <string name="toast_exported">Экспортировано</string>
     <string name="toast_imported">Импортировано</string>
-    <string name="toast_sub_comp_limit">Саб ограничен до 80 Гц</string>
+    <string name="toast_sub_comp_limit">Саб ограничен до 100 Гц</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Работа wDSP в фоне</string>

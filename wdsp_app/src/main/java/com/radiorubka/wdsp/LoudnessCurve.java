@@ -108,7 +108,14 @@ public final class LoudnessCurve {
     /** The subwoofer's share of {@link AudioConfig#ISO_MAX_OFFSETS}, by crossover frequency. */
     public static float maxSubBoost(int subFreqIdx) {
         int hz = hzOf(subFreqIdx);
-        if (hz == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
+        // 100 Hz added 14.09.2026 on the owner's instruction. The original table stopped at 80 and
+        // answered zero above it, which is a gap in the table rather than physics: a subwoofer
+        // crossed over at 100 Hz plays the 80 Hz band as well. It takes the 80 Hz band by the rule
+        // the rest of the table already follows - the band at or just below the crossover (40 ->
+        // 31.5, 63 -> 50). Measurement sets 100 Hz on real cars, and the gap is what used to force
+        // the crossover down to 80 whenever compensation was switched on.
+        // ❓ 125 Hz and above still answer zero; nobody has asked for them.
+        if (hz == 100 || hz == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
         if (hz == 63 || hz == 50) return AudioConfig.ISO_MAX_OFFSETS[2];
         if (hz == 40 || hz == 32) return AudioConfig.ISO_MAX_OFFSETS[1];
         if (hz == 25) return AudioConfig.ISO_MAX_OFFSETS[0];
