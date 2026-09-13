@@ -341,6 +341,8 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSubtractNoise(JNIEnv* env, jclass,
 JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, jclass,
                                                                    jfloatArray avgClean16,
+                                                                   jfloatArray snr16,
+                                                                   jint micBody,
                                                                    jfloatArray outCompensation16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
     if (env->GetArrayLength(avgClean16) < wdsp::kHwBands ||
@@ -349,9 +351,17 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     jfloat* avgData = env->GetFloatArrayElements(avgClean16, nullptr);
     if (avgData == nullptr) return;
 
+    // Optional: a caller with no per-band SNR gets the estimate ungated, which is what the
+    // behaviour was before the ramp existed.
+    jfloat* snrData = nullptr;
+    if (snr16 != nullptr && env->GetArrayLength(snr16) >= wdsp::kHwBands) {
+        snrData = env->GetFloatArrayElements(snr16, nullptr);
+    }
+
     float comp[wdsp::kHwBands];
-    wdsp::SweepMeasurement::estimateMicCompensation(avgData, comp);
+    wdsp::SweepMeasurement::estimateMicCompensation(avgData, snrData, micBody, comp);
     env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
+    if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
 
     env->SetFloatArrayRegion(outCompensation16, 0, wdsp::kHwBands, comp);
 }

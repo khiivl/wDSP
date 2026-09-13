@@ -114,12 +114,28 @@ public final class NativeSweep implements AutoCloseable {
     }
 
     /**
-     * Estimates the 16-band microphone inverse compensation curve from 4-channel average clean response
-     * using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency acoustic port roll-off correction.
+     * Estimates the 16-band microphone inverse compensation curve.
+     *
+     * <p>{@code envelope16} is a SHAPE, not a level: the best channel in each band, each channel
+     * measured against its own midrange. The low bands are read against the cabin gain a sealed
+     * car should be producing, and the shortfall - bounded by what the microphone input's own
+     * two-stage high-pass can do - is the path's attenuation. The high bands are read against
+     * 5 kHz.
+     *
+     * <p>{@code micBody} is how the capsule is built in - one of the {@code MIC_BODY_*} indices in
+     * {@link RoomMeasurement}. It seeds the curve with what that mounting is known to do, which is
+     * the only thing that speaks for the midband, since a sweep takes the midband as its own
+     * reference and can say nothing about it.
+     *
+     * <p>{@code snr16} gates it: bands measured close to the noise are corrected proportionally
+     * less and bands below the ramp's floor not at all, so a unit whose bottom really does sink
+     * under the converter's noise gets zeros from its own measurement rather than from a
+     * hard-coded band index. May be null, which leaves the estimate ungated.
      */
-    public static void estimateMicCompensation(float[] avgClean16, float[] outCompensation16) {
-        if (isAvailable() && avgClean16 != null && outCompensation16 != null) {
-            nativeEstimateMicCompensation(avgClean16, outCompensation16);
+    public static void estimateMicCompensation(float[] envelope16, float[] snr16,
+                                               int micBody, float[] outCompensation16) {
+        if (isAvailable() && envelope16 != null && outCompensation16 != null) {
+            nativeEstimateMicCompensation(envelope16, snr16, micBody, outCompensation16);
         }
     }
 
@@ -203,7 +219,9 @@ public final class NativeSweep implements AutoCloseable {
     private static native void nativeSubtractNoise(float[] sweepDb16, float[] noiseDb16,
                                                    float[] outCleanDb16, float[] outSnrDb16);
 
-    private static native void nativeEstimateMicCompensation(float[] avgClean16,
+    private static native void nativeEstimateMicCompensation(float[] envelope16,
+                                                            float[] snr16,
+                                                            int micBody,
                                                             float[] outCompensation16);
 
     private static native int nativeDeconvolve(long handle, float[] recorded, int length,

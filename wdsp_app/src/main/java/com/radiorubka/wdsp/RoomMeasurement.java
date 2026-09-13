@@ -1418,9 +1418,10 @@ public final class RoomMeasurement {
      * that has its own argument in sweep.cpp. It removes one specific lie: the doors' bass
      * shortfall being booked against the capsule.
      */
-    private static float[] bestChannelEnvelope(Result result, int channelCount) {
+    private static float[] bestChannelEnvelope(Result result, int channelCount, float[] outSnr16) {
         final float[] best = new float[NativeSweep.BAND_COUNT];
         java.util.Arrays.fill(best, Float.NEGATIVE_INFINITY);
+        if (outSnr16 != null) java.util.Arrays.fill(outSnr16, 0f);
         final StringBuilder who = new StringBuilder();
         int contributors = 0;
         for (int k = 0; k < channelCount && k < result.channels.length; k++) {
@@ -1437,7 +1438,15 @@ public final class RoomMeasurement {
             final float chMid = (float) (sumMid / countMid);
             for (int b = 0; b < NativeSweep.BAND_COUNT && b < cr.cleanBandsDb.length; b++) {
                 final float shape = cr.cleanBandsDb[b] - chMid;
-                if (shape > best[b]) best[b] = shape;
+                if (shape > best[b]) {
+                    best[b] = shape;
+                    // The SNR that belongs with this band is the winning channel's, not an average
+                    // across channels: the estimate is going to be made from THIS number, so the
+                    // confidence attached to it has to be the confidence of the same observation.
+                    if (outSnr16 != null && cr.snrDb != null && b < cr.snrDb.length) {
+                        outSnr16[b] = cr.snrDb[b];
+                    }
+                }
             }
             if (who.length() > 0) who.append(", ");
             who.append(cr.label);
@@ -2158,8 +2167,15 @@ public final class RoomMeasurement {
 
         if (isMicCalibrationOnly) {
             // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
-            final float[] bestClean16 = bestChannelEnvelope(result, channels.length);
-            NativeSweep.estimateMicCompensation(bestClean16, result.micCompensation16);
+            final float[] envelopeSnr16 = new float[NativeSweep.BAND_COUNT];
+            final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16);
+            NativeSweep.estimateMicCompensation(bestClean16, envelopeSnr16,
+                    micBody(context), result.micCompensation16);
+            StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
+            for (float v : envelopeSnr16) {
+                snrLog.append(String.format(Locale.US, " %.0f", v));
+            }
+            Log.i(TAG, snrLog.toString());
             setMicCompensationCurve(context, result.micCompensation16);
             result.micCalibrated = true; // this pass is the calibration
 

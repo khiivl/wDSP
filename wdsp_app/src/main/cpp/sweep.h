@@ -121,7 +121,8 @@ public:
      * clean response using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency
      * acoustic port roll-off correction.
      */
-    static void estimateMicCompensation(const float* avgClean16, float* outCompensation16);
+    static void estimateMicCompensation(const float* avgClean16, const float* snr16,
+                                       int micBody, float* outCompensation16);
 
     /**
      * Time difference of arrival (TDOA) in fractional samples between a channel impulse response
