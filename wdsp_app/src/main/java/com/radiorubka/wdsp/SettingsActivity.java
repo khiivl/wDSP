@@ -1680,12 +1680,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Step 1: Setup
         View layoutSetup = view.findViewById(R.id.layout_wizard_setup);
-        View cardSub = view.findViewById(R.id.card_subwoofer);
-        cardSub.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
-        CheckBox cbSub = view.findViewById(R.id.cb_has_subwoofer);
-        if (cbSub != null) {
-            cbSub.setChecked(RoomMeasurement.hasSubwoofer(this));
-        }
+        // No subwoofer question here any more. It is a fact about the car, it is asked in
+        // Settings beside the other facts about the car, and it is needed by the microphone
+        // calibration - which runs before this wizard ever opens. Asking it twice meant the two
+        // answers could differ and the later screen would win for reasons nobody could see.
 
         View cardStage = view.findViewById(R.id.card_soundstage);
         cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
@@ -1890,7 +1888,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> dialog.dismiss());
 
         btnStart.setOnClickListener(v -> {
-            boolean hasSub = cbSub.isChecked();
+            boolean hasSub = RoomMeasurement.hasSubwoofer(this);
             RoomMeasurement.SoundstageMode mode = RoomMeasurement.SoundstageMode.DRIVER;
             int selectedId = rgStage.getCheckedRadioButtonId();
             if (selectedId == R.id.rb_stage_front_center) {
