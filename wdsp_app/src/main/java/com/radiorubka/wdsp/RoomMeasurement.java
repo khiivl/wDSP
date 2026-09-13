@@ -150,6 +150,18 @@ public final class RoomMeasurement {
     private static final float LEAD_SECONDS = 1.0f;
     public static final String PREF_MIC_COMPENSATION = "pref_mic_compensation";
     /**
+     * What the car itself does to the sound, in dB relative to its own midband.
+     *
+     * <p>Not a level - a shape. It is {@code avgClean16[b] + micCompensation16[b]} minus the mean of
+     * bands 5..8, which is exactly the quantity {@code synthesizeAutoEq16} compares against the
+     * target curve when it decides the corrections. Stored so the CALCULATED spectrum can stop
+     * lying: that mode reads PCM before the DSP and draws it with the DSP's own response applied,
+     * so it shows what leaves the amplifier and knows nothing about the speakers or the cabin. Where
+     * the car has a hole at 80 Hz, the bar stood level. Owner, 13.09.2026: "ми маємо враховувати
+     * віддачу акустики в розрахунковому спектрі… інакше він буде показувати неправду".
+     */
+    public static final String PREF_CABIN_RESPONSE = "pref_cabin_response";
+    /**
      * Silence between sweeps.
      *
      * Long enough for two things at once: the cabin to stop ringing, and the MCU to act on the
@@ -866,6 +878,49 @@ public final class RoomMeasurement {
                 .apply();
         Log.i(TAG, "saved mic compensation curve to preferences: " + sb);
     }
+
+    /** True when a cabin measurement has left a response curve behind - see {@link #PREF_CABIN_RESPONSE}. */
+    public static boolean hasCabinResponse(Context context) {
+        if (context == null) return false;
+        String s = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_CABIN_RESPONSE, null);
+        return s != null && !s.trim().isEmpty();
+    }
+
+    /**
+     * The car's own response shape, or sixteen zeros when nothing has been measured.
+     *
+     * <p>Zeros are the honest answer for an unmeasured car: they add nothing to the calculated
+     * spectrum, which then shows exactly what it showed before - the signal at the DSP output, and
+     * no pretence of knowing the room.
+     */
+    public static float[] getCabinResponseCurve(Context context) {
+        float[] curve = new float[NativeSweep.BAND_COUNT];
+        if (context == null) return curve;
+        String s = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_CABIN_RESPONSE, null);
+        if (s == null || s.isEmpty()) return curve;
+        String[] parts = s.split(",");
+        for (int i = 0; i < Math.min(parts.length, curve.length); i++) {
+            try {
+                curve[i] = Float.parseFloat(parts[i].trim());
+            } catch (NumberFormatException ignored) {}
+        }
+        return curve;
+    }
+
+    public static void setCabinResponseCurve(Context context, float[] curve) {
+        if (context == null || curve == null || curve.length < NativeSweep.BAND_COUNT) return;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < NativeSweep.BAND_COUNT; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(String.format(Locale.US, "%.2f", curve[i]));
+        }
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(PREF_CABIN_RESPONSE, sb.toString())
+                .apply();
+        Log.i(TAG, "saved cabin response shape to preferences: " + sb);
+    }
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
     private static final String PREF_RECOVERY = "room_measure_recovery";
 
@@ -1106,6 +1161,11 @@ public final class RoomMeasurement {
          * the cabin is loudest and the corrections are biggest.
          */
         public final float[] avgSnrDb16 = new float[NativeSweep.BAND_COUNT];
+        /**
+         * What the car does to the sound, in dB about its own midband - see
+         * {@link #PREF_CABIN_RESPONSE} for why this is kept rather than only reported.
+         */
+        public final float[] cabinResponseDb16 = new float[NativeSweep.BAND_COUNT];
         /** 16-band microphone inverse compensation curve in dB. */
         public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
         /**
@@ -1399,7 +1459,7 @@ public final class RoomMeasurement {
                 if (listener != null) {
                     listener.onProgress(4, 5, "Синтез Auto-EQ", "Аналіз спаду мідбасів, сабвуфера та 16 смуг...", 92);
                 }
-                analyzeAcousticsAndSynthesize(result);
+                analyzeAcousticsAndSynthesize(app, result);
 
                 result.sweepTopHz = topHz;
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
@@ -1896,7 +1956,7 @@ public final class RoomMeasurement {
                 mcLog.append(String.format(Locale.US, " %+.1f", v));
             }
             Log.i(TAG, mcLog.toString());
-            AudioSpectrumEngine.getInstance().onMicCompensationUpdated();
+            AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
         } else {
             // Standard cabin Auto-EQ pass: load calibrated microphone compensation curve (Hardware constant, kept intact!)
             // Asked here, next to the load, because this is where "calibrated" and "sixteen zeros"
@@ -2300,7 +2360,7 @@ public final class RoomMeasurement {
         }
     }
 
-    private static void analyzeAcousticsAndSynthesize(Result result) {
+    private static void analyzeAcousticsAndSynthesize(Context context, Result result) {
         // 1. Check wiring polarity
         int positive = 0, negative = 0;
         StringBuilder inverted = new StringBuilder();
@@ -2346,6 +2406,36 @@ public final class RoomMeasurement {
             }
         }
         System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
+
+        // 2-bis. The same quantity the synthesis is about to judge, kept for the spectrum analyser:
+        //        the car's response with the microphone's own curve taken off, expressed about its
+        //        own midband so it is a shape rather than a level. synthesizeAutoEq16 computes
+        //        m[b] = avgClean[b] + micComp[b] and refMid over bands 5..8; this mirrors it exactly,
+        //        including the -70 dB guard, so the picture and the correction cannot disagree.
+        //
+        //        Why it is stored at all: the CALCULATED spectrum reads PCM before the DSP and draws
+        //        it with the DSP curve applied - it shows what leaves the amplifier. What the
+        //        speakers and the cabin then do to it was measured here and went nowhere, so a car
+        //        with a hole at 80 Hz drew a level bar. Owner, 13.09.2026: "інакше він буде
+        //        показувати неправду".
+        float refMidSum = 0f;
+        int refMidCount = 0;
+        for (int b = 5; b <= 8; b++) {
+            float m = avgClean[b] + result.micCompensation16[b];
+            if (m > -70f) {
+                refMidSum += m;
+                refMidCount++;
+            }
+        }
+        final float refMid = refMidCount > 0 ? refMidSum / refMidCount : -20f;
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            result.cabinResponseDb16[b] = (avgClean[b] + result.micCompensation16[b]) - refMid;
+        }
+        setCabinResponseCurve(context, result.cabinResponseDb16);
+        // Push it into the running analyser now. Saving a preference nobody re-reads is how the
+        // scratch preset spent months never reaching the chip (§6 item 8): the value existed, the
+        // wire did not.
+        AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
 
         // 3. Detect midbass roll-off HPF cutoff index
         if (result.hasSubwoofer) {
@@ -3028,6 +3118,11 @@ public final class RoomMeasurement {
             sb.append("\n");
             sb.append("Mic compensation dB:  ");
             for (float band : result.micCompensation16) {
+                sb.append(String.format(Locale.US, " %+.1f", band));
+            }
+            sb.append("\n");
+            sb.append("Cabin response dB:    ");
+            for (float band : result.cabinResponseDb16) {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
             sb.append("\n");

@@ -564,12 +564,43 @@ public class AudioSpectrumEngine {
     public float[] getEffectiveSpectrumCurve() {
         if (isRadioCaptureActive() || SPECTRUM_MODE_MIC.equals(spectrumMode)) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
-        } else {
-            return getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
         }
+        // Calculated mode: the DSP's own response, plus what the car then does to it.
+        //
+        // Until 13.09.2026 this returned the DSP curve alone, and that is a picture of the signal
+        // LEAVING THE AMPLIFIER - it knows nothing about the loudspeakers or the cabin. A car with a
+        // hole at 80 Hz drew a level bar there, because the DSP is indeed doing nothing at 80 Hz.
+        // The missing half was measured all along and stored nowhere: the cabin sweep produces the
+        // car's response about its own midband. Owner: "інакше він буде показувати неправду".
+        //
+        // No double counting when an Auto-EQ preset is loaded. The DSP curve then already contains
+        // the correction that cancels this very dip, so the sum comes out nearly level - which is
+        // right, because that is what the listener hears. The sum is "signal x preset x cabin" for
+        // any preset, not only the automatic one.
+        //
+        // A car that has never been measured contributes sixteen zeros, so the display falls back
+        // to exactly what it showed before rather than pretending to know the room.
+        final float[] dsp = getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
+        final float[] cabin = RoomMeasurement.getCabinResponseCurve(appContext);
+        // A fresh array: getDspCurve hands back its own cached buffer, and adding into that would
+        // corrupt the cache for every later reader. Sixteen floats, built only when settings change.
+        final float[] out = new float[NUM_BANDS_16];
+        for (int i = 0; i < NUM_BANDS_16; i++) {
+            out[i] = dsp[i] + cabin[i];
+        }
+        return out;
     }
 
-    public void onMicCompensationUpdated() {
+    /**
+     * Re-pushes whatever the measurements have taught us into the running analyser.
+     *
+     * <p>Called when a calibration or a cabin sweep finishes. It was named
+     * {@code onMicCompensationUpdated} while the microphone's curve was the only measured thing the
+     * spectrum used; the cabin response now feeds the calculated mode as well, and a name that
+     * covered half of what it does is how a reader ends up believing the other half is not
+     * refreshed. One caller, so the rename cost nothing.
+     */
+    public void onMeasuredCurvesChanged() {
         if (nativeAnalyzer != null) {
             nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
         }
