@@ -684,7 +684,30 @@ public class McuService extends Service implements LocationListener {
         // nobody is looking at the app. It only listens; there is no polling behind this.
         SystemDiagnostics.arm(this);
 
-        applyCurrentSettings();
+        // 🔴 There used to be an applyCurrentSettings() here, as the last line of onCreate, and it
+        // pushed rubbish to the chip on every single start of this service - which on this app is
+        // every car start, since the screen is opened perhaps twice a year.
+        //
+        // It ran on the MAIN thread, immediately, while the block posted to wDSP_Worker above had
+        // not run yet. At that moment `prefs` was still null, `currentPresetName` still null, and
+        // `cachedGains` still the zero-filled array it is declared as - and gain index 0 is not
+        // "unset", it is -12 dB. Measured on the unit, reproducing the boot path with
+        // `am start-foreground-service`:
+        //
+        //   [EQ]:  80 00 00 00 00 00 00 00 00 00 00 00   <- -12 dB on all sixteen bands
+        //   [SUB]: 8B 00                                 <- 25 Hz, gain 0
+        //   ... 500 ms later, through the EQ throttle ...
+        //   [EQ]:  80 66 66 78 65 66 88 68 88            <- the preset, at last
+        //
+        // Half a second of the chip held at the bottom of its range before anything true reaches
+        // it. Silent at a cold boot because nothing is playing yet; an audible dip whenever the
+        // service restarts with music running, which is what happens after any crash.
+        //
+        // Nothing is lost by removing it: syncPreset(true) in the posted block reads the selected
+        // preset, loads it, and applies all seven commands - on the worker thread, where every
+        // other hardware write in this class belongs. The static half of this call was a no-op
+        // anyway: applyStaticSettings() returns immediately while currentPresetName is null, which
+        // is why the log shows the fader and the delays only on the second pass.
     }
 
     @NonNull
