@@ -51,7 +51,7 @@ public class AudioSpectrumEngine {
     private final float[] dspCurveDb = new float[NUM_BANDS_16];
     private volatile boolean dspCurveDirty = true;
     /**
-     * The running native analyser holds an older curve than {@link #getEffectiveSpectrumCurve()}
+     * The Visualizer's analyser holds an older curve than {@link #getEffectiveSpectrumCurve}
      * would give now. Consumed by {@link #dispatchNativeFrame()}, the one place that hands the curve
      * over - on the display thread, which is joined before the analyser is released.
      *
@@ -66,6 +66,7 @@ public class AudioSpectrumEngine {
     private void markDspCurveChanged() {
         dspCurveDirty = true;
         nativeCurveStale = true;
+        micCurveStale = true;
     }
     private float dspCurveSampleRate = 0f;
 
@@ -124,10 +125,44 @@ public class AudioSpectrumEngine {
     // bands linearly interpolated up to 32 as before. Interpolation cannot create detail that was
     // never measured, which is why the bottom of the display used to move as one lump.
 
-    private NativeAnalyzer nativeAnalyzer;
+    /** The Visualizer's analyser - digital, the calculated spectrum. */
+    private volatile NativeAnalyzer nativeAnalyzer;
     private Thread pollThread;
     private Thread analysisThread;
-    private Thread displayThread;
+    private volatile Thread displayThread;
+    private volatile boolean displaying = false;
+
+    /**
+     * The microphone's analyser, running beside the Visualizer's while the microphone spectrum is
+     * wanted (owner's option (b), 14.09.2026) - or alone on radio, where there is no PCM.
+     */
+    private volatile NativeAnalyzer micAnalyzer;
+    private Thread micAnalysisThread;
+    private volatile boolean micAnalysing = false;
+    /** The microphone's analyser holds an older curve than it should - see {@link #nativeCurveStale}. */
+    private volatile boolean micCurveStale = true;
+
+    /**
+     * The shift that puts the microphone on the calculated spectrum's scale, in dB, and whether one
+     * has been measured since the microphone's analysis started.
+     *
+     * <p>Owner, 14.09.2026, option (b): the microphone spectrum is moved so that its 200-800 Hz middle
+     * (bands 5..8 - the reference the calibration and the stored cabin response use) equals the
+     * calculated spectrum's. Both then read in the track's dBFS, and what differs between them is
+     * what the speakers and the car did. Smoothed over {@link #MIC_OFFSET_TIME_CONSTANT_MS} so a drum
+     * hit does not move the whole picture, and held while the track is silent. Until the first valid
+     * reading, and on radio where there is no calculated spectrum, the microphone is normalised as
+     * before.
+     */
+    private volatile boolean micOffsetValid = false;
+    private float micOffsetDb = 0f;
+    private static final float MIC_OFFSET_TIME_CONSTANT_MS = 2000f;
+    /** Below this the track's middle is silence - there is nothing to align the microphone to. */
+    private static final float OFFSET_REFERENCE_MIN_DB = -70f;
+    /** Below this the microphone's middle, after its noise floor, has nothing in it either. */
+    private static final float OFFSET_MICROPHONE_MIN_DB = -100f;
+    private final float[] offsetReferenceDb16 = new float[NUM_BANDS_16];
+    private final float[] offsetMicrophoneDb16 = new float[NUM_BANDS_16];
 
     /** Frames a second while the main analyser is on screen. */
     private static final int HOP_ACTIVE = 512;
@@ -207,9 +242,9 @@ public class AudioSpectrumEngine {
      */
     static final float BAR_AGC_FLOOR_DIGITAL_DB = -30f;
 
-    /** The decorations' gain floor for whatever is being drawn now. */
-    private float barFloorDb() {
-        return analysingMicrophone() ? barAgcFloorDb : BAR_AGC_FLOOR_DIGITAL_DB;
+    /** The decorations' gain floor for what this analyser listens to. */
+    private float barFloorDb(NativeAnalyzer analyzer) {
+        return analyzer != null && analyzer.isAcoustic() ? barAgcFloorDb : BAR_AGC_FLOOR_DIGITAL_DB;
     }
 
     private boolean radioMicVisualizerEnabled = true;
@@ -416,10 +451,10 @@ public class AudioSpectrumEngine {
                 : "it was held, not drawn; waiting for the input to be free"));
         stopRadioMicCapture();
         if (wasAnalysed) {
-            stopNativeCapture();
-            if (!listeners.isEmpty()) {
-                startInternal(currentSessionId);
-                requestResolve("microphone unavailable");
+            // The tap has been running underneath on a PCM source; on radio there is nothing to show.
+            stopMicAnalysis();
+            if (!listeners.isEmpty() && (visualizer == null || nativeAnalyzer == null)) {
+                attachKnownSessionOrResolve("microphone unavailable");
             }
         }
         micInputWindow.watch(appContext, radioMicCapture::isRunning, radioMicCapture.lastSessionId(),
@@ -724,7 +759,7 @@ public class AudioSpectrumEngine {
     /**
      * Single Source of Truth for spectrum analyzer curve (DSP EQ vs Mic Compensation).
      *
-     * - For an analyser listening to the microphone (analysingMicrophone()):
+     * - For an analyser listening to the microphone (analyzer.isAcoustic()):
      *   Sound in the cabin has already passed through the hardware DSP (BU32107), power amp,
      *   and cabin speakers. The analyzer must NOT apply DSP EQ again.
      *   Instead, it applies the calibrated microphone inverse compensation curve from
@@ -734,9 +769,11 @@ public class AudioSpectrumEngine {
      * - For an analyser on the Visualizer tap:
      *   Audio is captured from pre-DSP AudioFlinger. The analyzer applies the simulated
      *   hardware DSP curve from getDspCurve().
+     *
+     * @param analyzer the analyser the curve is for - two can run at once, each with its own
      */
-    public float[] getEffectiveSpectrumCurve() {
-        if (analysingMicrophone()) {
+    private float[] getEffectiveSpectrumCurve(NativeAnalyzer analyzer) {
+        if (analyzer.isAcoustic()) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
         }
         // Calculated mode: the DSP's own response, and nothing about the car.
@@ -913,6 +950,20 @@ public class AudioSpectrumEngine {
      */
     private static final long RESOLVE_RETRY_MS = 4000;
     private boolean lastResolveFoundNothing = false;
+    /**
+     * Sweeps in a row that found nothing. Each one doubles the wait before the next, up to
+     * {@link #RESOLVE_RETRY_MAX_MS}; any signal on the tap, a resolution that finds a session, or a
+     * change of player starts it again from {@link #RESOLVE_RETRY_MS}.
+     *
+     * <p>Measured 14.09.2026 after a reboot (boot logger, bootlog/0008): with YouTube Music paused,
+     * sys.qf.last_audio_src still names it, isMediaPlaybackActive() says media plays, the tap is
+     * silent - and a sweep ran every four to five seconds, from 39 s after boot onwards, finding
+     * nothing each time. The backoff keeps the case the retry exists for (a player that ducked for a
+     * moment) and stops the loop over one that is simply paused, without trusting a player's own play
+     * state - Bluetooth audio has no Java player for that.
+     */
+    private int fruitlessResolves = 0;
+    private static final long RESOLVE_RETRY_MAX_MS = 60000;
     private static final long WATCHDOG_PERIOD_MS = 2000;
     /**
      * Waveform samples are unsigned 8-bit centred on 128. Any step off the centre is signal.
@@ -976,6 +1027,7 @@ public class AudioSpectrumEngine {
         // second or two that are not worth a sweep. Just lift the cooldown so that if the session
         // really has gone, the watchdog may act at once instead of waiting one out.
         lastResolveTime = 0;
+        fruitlessResolves = 0;
     }
 
     /** Marks the currently attached session as alive; called from the capture callback. */
@@ -1010,9 +1062,13 @@ public class AudioSpectrumEngine {
                 }
                 checkSourceState();
                 long now = System.currentTimeMillis();
-                long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
-                boolean micActive = micModeInEffect() || isMicPipelineRunning();
-                if (!micActive && now - lastSignalTime > SILENCE_TOLERANCE_MS
+                if (now - lastSignalTime < SILENCE_TOLERANCE_MS) fruitlessResolves = 0;
+                long wait = lastResolveFoundNothing
+                        ? Math.min(RESOLVE_RETRY_MAX_MS, RESOLVE_RETRY_MS << Math.min(Math.max(0, fruitlessResolves - 1), 4))
+                        : RESOLVE_COOLDOWN_MS;
+                // The tap runs in the microphone mode too, as its reference, so a silent session is
+                // re-resolved whatever the mode. On radio isMediaPlaybackActive() is false.
+                if (visualizer != null && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && now - lastResolveTime > wait
                         && isMediaPlaybackActive()) {
                     requestResolve("attached session silent while media plays");
@@ -1032,8 +1088,9 @@ public class AudioSpectrumEngine {
      */
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
-        if (appContext != null && (NowPlaying.getInstance(appContext).isRadioSource()
-                || micModeInEffect() || isMicPipelineRunning())) {
+        // Radio only: on a PCM source the tap runs in the microphone mode too, as its reference, and
+        // is resolved like any other; the microphone's analysis is not touched by it.
+        if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
             return;
         }
         lastResolveTime = System.currentTimeMillis();
@@ -1049,6 +1106,7 @@ public class AudioSpectrumEngine {
             synchronized (AudioSpectrumEngine.this) {
                 int target = sessionId >= 0 ? sessionId : previousSession;
                 lastResolveFoundNothing = sessionId < 0;
+                fruitlessResolves = sessionId < 0 ? fruitlessResolves + 1 : 0;
                 if (sessionId < 0) {
                     Log.w(TAG, "No session carrying audio found; staying on " + previousSession);
                 } else {
@@ -1060,17 +1118,15 @@ public class AudioSpectrumEngine {
                     sessionHeardFor = getActivePlayerPackage();
                 }
                 currentSessionId = target;
-                // A microphone pipeline that came up while the sweep ran is left alone - the same
-                // guard as in start(), for the same reason: visualizer is null for the whole life of
-                // a microphone pipeline. Measured 14.09.2026: a resolve requested while the
-                // microphone was unavailable finished 3 s after MicInputWindow had taken the input
-                // back, and closed and reopened the full-band capture for nothing.
-                if (isMicPipelineRunning() && wantsMicPipeline(isRadioSourceNow())) {
-                    armWatchdog();
-                } else if (!listeners.isEmpty() && visualizer == null) {
+                // A microphone pipeline that came up while the sweep ran is left alone: startInternal
+                // only starts the microphone's analysis when it is not running. Measured 14.09.2026:
+                // a resolve requested while the microphone was unavailable finished 3 s after
+                // MicInputWindow had taken the input back, and closed and reopened the full-band
+                // capture for nothing - back when the resolver restarted the whole pipeline.
+                if (!listeners.isEmpty() && visualizer == null) {
                     startInternal(target);
-                    armWatchdog();
                 }
+                armWatchdog();
             }
         });
 
@@ -1120,10 +1176,20 @@ public class AudioSpectrumEngine {
      * until the watchdog switches - would hand that analyser the microphone's +30 dB bass
      * compensation. Found reading the code, not seen on screen; owner: "це не дрібне, це не
      * стабільна поведінка".
+     *
+     * <p>Since the microphone is drawn on the calculated scale (owner's option (b), 14.09.2026) two
+     * analysers can run at once, and this asks about the one that is SHOWN: the microphone's while
+     * its analysis runs, the Visualizer's otherwise.
      */
     private boolean analysingMicrophone() {
-        NativeAnalyzer analyzer = nativeAnalyzer;
+        NativeAnalyzer analyzer = shownAnalyzer();
         return analyzer != null && analyzer.isAcoustic();
+    }
+
+    /** The analyser the display draws: the microphone's while it runs, else the Visualizer's. */
+    private NativeAnalyzer shownAnalyzer() {
+        NativeAnalyzer mic = micAnalyzer;
+        return micAnalysing && mic != null ? mic : nativeAnalyzer;
     }
 
     /**
@@ -1152,15 +1218,18 @@ public class AudioSpectrumEngine {
         return 48000;
     }
 
+    /** The Visualizer's pipeline: its analyser, the poll thread and the analysis thread. */
     private void startNativeCapture(int captureSize, int sampleRate) {
-        stopNativeCapture();
+        stopVisualizerPipeline();
 
-        nativeAnalyzer = newAnalyzer(sampleRate, captureSize, false);
-        if (!nativeAnalyzer.isValid()) {
+        NativeAnalyzer created = newAnalyzer(sampleRate, captureSize, false);
+        if (!created.isValid()) {
             Log.w(TAG, "Native analyser did not initialise; nothing will be measured");
             return;
         }
-        applyNativeSettings();
+        nativeAnalyzer = created;
+        nativeCurveStale = true;
+        applyNativeSettings(created);
 
         capturePolling = true;
         applyAnalysisProfile();
@@ -1175,18 +1244,23 @@ public class AudioSpectrumEngine {
                     if (!pausedForCall && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
                         long readAt = System.nanoTime();
                         noteSignal(buffer);
-                        int fresh = nativeAnalyzer.push(buffer, size, readAt);
+                        int fresh = created.push(buffer, size, readAt);
                         if (captureDumpUntil != 0) writeCaptureDump(buffer, size, fresh, sampleRate);
-                        synchronized (waveformLock) {
-                            System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(size, latestWaveform.length));
-                            latestWaveformLen = Math.min(size, latestWaveform.length);
+                        // The oscilloscope follows what is shown: while the microphone is drawn its
+                        // own chunks fill the waveform, and two sources would make it flicker.
+                        if (!micAnalysing) {
+                            synchronized (waveformLock) {
+                                System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(size, latestWaveform.length));
+                                latestWaveformLen = Math.min(size, latestWaveform.length);
+                            }
                         }
                     }
                 } catch (Throwable t) {
                     break;
                 }
                 try {
-                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
+                    // Only a reference while the microphone is drawn, so no faster than for the widget.
+                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) && !micAnalysing
                             ? POLL_PERIOD_MS : POLL_PERIOD_IDLE_MS);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
@@ -1203,14 +1277,12 @@ public class AudioSpectrumEngine {
         // its place and count a discontinuity.
         analysisThread = new Thread(() -> {
             while (capturePolling) {
-                NativeAnalyzer analyzer = nativeAnalyzer;
-                if (analyzer == null) break;
                 try {
                     if (pausedForCall) {
                         Thread.sleep(50);   // interruption on stop lands in the catch below
                         continue;
                     }
-                    analyzer.process(20);
+                    created.process(20);
                 } catch (Throwable t) {
                     break;
                 }
@@ -1218,31 +1290,31 @@ public class AudioSpectrumEngine {
         }, "wDSP_Analysis");
         analysisThread.start();
 
-        displayThread = new Thread(() -> {
-            while (capturePolling) {
-                try {
-                    dispatchNativeFrame();
-                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
-                            ? DISPLAY_PERIOD_MS : DISPLAY_PERIOD_IDLE_MS);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Throwable ignored) {
-                }
-            }
-        }, "wDSP_Display");
-        displayThread.start();
+        ensureDisplayThread();
     }
 
+    /** Everything that analyses: the Visualizer's pipeline and the microphone's analysis. */
     private void stopNativeCapture() {
+        stopMicAnalysis();
+        stopVisualizerPipeline();
+    }
+
+    /**
+     * Guards the lifetime of both native analysers: held while the display thread reads them and
+     * while the microphone capture pushes into its one, and taken to release either. The display
+     * thread is shared and outlives each analyser, and the capture outlives its analysis now that
+     * the microphone is held, so joining threads alone no longer keeps a released object out of reach.
+     */
+    private final Object analyzerLock = new Object();
+
+    private void stopVisualizerPipeline() {
         capturePolling = false;
-        if (nativeAnalyzer != null) nativeAnalyzer.stop();
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        if (analyzer != null) analyzer.stop();
         Thread poll = pollThread;
         Thread analysis = analysisThread;
-        Thread display = displayThread;
         pollThread = null;
         analysisThread = null;
-        displayThread = null;
         // Join before releasing: the native object must not vanish while a thread is inside it.
         // The wait is bounded by one poll period, so this costs milliseconds.
         try {
@@ -1254,16 +1326,72 @@ public class AudioSpectrumEngine {
                 analysis.interrupt();
                 analysis.join(200);
             }
-            if (display != null) {
-                display.interrupt();
-                display.join(200);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+        synchronized (analyzerLock) {
+            if (analyzer != null) analyzer.release();
+            nativeAnalyzer = null;
+        }
+        stopDisplayIfIdle();
+    }
+
+    private void stopMicAnalysis() {
+        micAnalysing = false;
+        micOffsetValid = false;
+        NativeAnalyzer analyzer = micAnalyzer;
+        if (analyzer != null) analyzer.stop();
+        Thread analysis = micAnalysisThread;
+        micAnalysisThread = null;
+        try {
+            if (analysis != null) {
+                analysis.interrupt();
+                analysis.join(200);
             }
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
-        if (nativeAnalyzer != null) {
-            nativeAnalyzer.release();
-            nativeAnalyzer = null;
+        synchronized (analyzerLock) {
+            if (analyzer != null) analyzer.release();
+            micAnalyzer = null;
+        }
+        stopDisplayIfIdle();
+    }
+
+    /** One display thread for whichever analysers run; started by whichever starts first. */
+    private void ensureDisplayThread() {
+        Thread running = displayThread;
+        if (running != null && running.isAlive()) return;
+        displaying = true;
+        Thread display = new Thread(() -> {
+            while (displaying) {
+                try {
+                    dispatchNativeFrame();
+                    Thread.sleep(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN)
+                            ? DISPLAY_PERIOD_MS : DISPLAY_PERIOD_IDLE_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "wDSP_Display");
+        displayThread = display;
+        display.start();
+    }
+
+    /** Stops the display thread once neither analyser is left. */
+    private void stopDisplayIfIdle() {
+        if (nativeAnalyzer != null || micAnalyzer != null) return;
+        displaying = false;
+        Thread display = displayThread;
+        displayThread = null;
+        if (display == null || display == Thread.currentThread()) return;
+        try {
+            display.interrupt();
+            display.join(200);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1275,9 +1403,13 @@ public class AudioSpectrumEngine {
         return radioMicCapture != null && radioMicCapture.isCapturing();
     }
 
-    /** Pushes the current settings - ballistics, latency and both gain profiles - into native. */
+    /** Pushes the current settings - ballistics, latency and both gain profiles - into every analyser. */
     public void applyNativeSettings() {
-        NativeAnalyzer analyzer = nativeAnalyzer;
+        applyNativeSettings(nativeAnalyzer);
+        applyNativeSettings(micAnalyzer);
+    }
+
+    private void applyNativeSettings(NativeAnalyzer analyzer) {
         if (analyzer == null || !analyzer.isValid()) return;
         // What this analyser is fed, as it was told when it was made - see analysingMicrophone().
         boolean radioActive = analyzer.isAcoustic();
@@ -1303,14 +1435,20 @@ public class AudioSpectrumEngine {
         // owner's rule is that the default must already be right.
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainGainEnabled(analyzer),
                 mainGainStrength(analyzer), mainAgcFloorDb);
-        analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barFloorDb());
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength,
+                barFloorDb(analyzer));
         // The curve is handed over by dispatchNativeFrame, the only place that does it.
-        nativeCurveStale = true;
+        if (analyzer.isAcoustic()) micCurveStale = true; else nativeCurveStale = true;
     }
 
     /**
-     * Whether the main consumer's gain is on for this analyser: always for a microphone (see
-     * applyNativeSettings for why), otherwise as the preference says.
+     * Whether the main consumer's gain is on for this analyser.
+     *
+     * <p>For a microphone: off once it is aligned to the calculated spectrum (option (b) - then it
+     * reads in the track's dBFS like the calculated one, and the preference governs both alike); on,
+     * at full strength, while there is nothing to align it to (radio, a silent track, the first
+     * moments) - see applyNativeSettings for why a raw microphone needs it. For the Visualizer's
+     * analyser: as the preference says.
      *
      * <p>🔴 One function because the answer was given in two places that disagreed.
      * applyNativeSettings forced the gain on for a microphone, and dispatchNativeFrame then set it
@@ -1318,22 +1456,22 @@ public class AudioSpectrumEngine {
      * milliseconds, and the normalised microphone levels were never normalised by default.
      */
     private boolean mainGainEnabled(NativeAnalyzer analyzer) {
-        return analyzer.isAcoustic() || mainAgcEnabled;
+        return (analyzer.isAcoustic() && !micOffsetValid) || mainAgcEnabled;
     }
 
-    /** The strength that goes with {@link #mainGainEnabled}: full for a microphone. */
+    /** The strength that goes with {@link #mainGainEnabled}: full for an unaligned microphone. */
     private float mainGainStrength(NativeAnalyzer analyzer) {
-        return analyzer.isAcoustic() ? 1.0f : mainAgcStrength;
+        return analyzer.isAcoustic() && !micOffsetValid ? 1.0f : mainAgcStrength;
     }
 
     /** Picks the frame rate from who is actually watching. */
     private void applyAnalysisProfile() {
-        NativeAnalyzer analyzer = nativeAnalyzer;
-        if (analyzer == null || !analyzer.isValid()) return;
-        if (analyzer.isAcoustic()) {
-            analyzer.setHop(HOP_ACTIVE);
-        } else {
-            analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
+        NativeAnalyzer mic = micAnalyzer;
+        if (mic != null && mic.isValid()) mic.setHop(HOP_ACTIVE);
+        NativeAnalyzer tap = nativeAnalyzer;
+        if (tap != null && tap.isValid()) {
+            // While the microphone is drawn the Visualizer's analyser is only its reference.
+            tap.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) && !micAnalysing ? HOP_ACTIVE : HOP_IDLE);
         }
     }
 
@@ -1348,47 +1486,62 @@ public class AudioSpectrumEngine {
     }
 
     private void dispatchNativeFrame() {
-        if (pausedForCall) return;
-        NativeAnalyzer analyzer = nativeAnalyzer;
-        if (analyzer == null || !analyzer.isValid() || listeners.isEmpty()) return;
-        if (nativeCurveStale) {
-            nativeCurveStale = false;   // before the read: a change during it marks it again
-            analyzer.setDspCurve(getEffectiveSpectrumCurve());
+        if (pausedForCall || listeners.isEmpty()) return;
+        synchronized (analyzerLock) {
+            NativeAnalyzer tap = nativeAnalyzer;
+            NativeAnalyzer mic = micAnalysing ? micAnalyzer : null;
+            if (tap != null && !tap.isValid()) tap = null;
+            if (mic != null && !mic.isValid()) mic = null;
+            final NativeAnalyzer analyzer = mic != null ? mic : tap;
+            if (analyzer == null) return;
+            // Each analyser gets its own curve: the DSP model for the tap, the microphone's
+            // compensation for the microphone - and the tap keeps its curve while it is only the
+            // reference, because the microphone is aligned to the calculated spectrum as drawn.
+            if (tap != null && nativeCurveStale) {
+                nativeCurveStale = false;   // before the read: a change during it marks it again
+                tap.setDspCurve(getEffectiveSpectrumCurve(tap));
+            }
+            if (mic != null && micCurveStale) {
+                micCurveStale = false;
+                mic.setDspCurve(getEffectiveSpectrumCurve(mic));
+            }
+
+            long now = System.currentTimeMillis();
+            if (lastCaptureTime != 0) {
+                long observed = now - lastCaptureTime;
+                if (observed > 0) captureIntervalMs = observed;
+            }
+            lastCaptureTime = now;
+
+            if (mic != null) alignMicrophoneToCalculated(mic, tap);
+
+            for (int consumer = 0; consumer <= 1; consumer++) {
+                // Nobody is looking at this one - every call below is a lock taken away from the
+                // measurement thread for nothing.
+                if (!hasListenerFor(consumer)) continue;
+                ConsumerFrames f = frames[consumer];
+                // Absolute levels for the "no normalisation" view, and this consumer's gain profile
+                // for the other. Two calls because the gain state is per consumer by design.
+                analyzer.setAgc(consumer, false, 0f, 0f);
+                analyzer.getLevels(consumer, f.level32, f.level16);
+                boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainEnabled(analyzer) : barAgcEnabled;
+                float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainStrength(analyzer) : barAgcStrength;
+                float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barFloorDb(analyzer);
+                analyzer.setAgc(consumer, enabled, strength, floorDb);
+                analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
+
+                System.arraycopy(f.display16, 0, f.prev16, 0, NUM_BANDS_16);
+                System.arraycopy(f.level16, 0, f.display16, 0, NUM_BANDS_16);
+                System.arraycopy(f.display16Norm, 0, f.prev16Norm, 0, NUM_BANDS_16);
+                System.arraycopy(f.level16Agc, 0, f.display16Norm, 0, NUM_BANDS_16);
+                System.arraycopy(f.display32, 0, f.prev32, 0, NUM_BANDS_32);
+                System.arraycopy(f.level32, 0, f.display32, 0, NUM_BANDS_32);
+                System.arraycopy(f.display32Norm, 0, f.prev32Norm, 0, NUM_BANDS_32);
+                System.arraycopy(f.level32Agc, 0, f.display32Norm, 0, NUM_BANDS_32);
+            }
+
+            if (debugDump) dumpNativeBands(analyzer);
         }
-
-        long now = System.currentTimeMillis();
-        if (lastCaptureTime != 0) {
-            long observed = now - lastCaptureTime;
-            if (observed > 0) captureIntervalMs = observed;
-        }
-        lastCaptureTime = now;
-
-        for (int consumer = 0; consumer <= 1; consumer++) {
-            // Nobody is looking at this one - every call below is a lock taken away from the
-            // measurement thread for nothing.
-            if (!hasListenerFor(consumer)) continue;
-            ConsumerFrames f = frames[consumer];
-            // Absolute levels for the "no normalisation" view, and this consumer's gain profile
-            // for the other. Two calls because the gain state is per consumer by design.
-            analyzer.setAgc(consumer, false, 0f, 0f);
-            analyzer.getLevels(consumer, f.level32, f.level16);
-            boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainEnabled(analyzer) : barAgcEnabled;
-            float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainStrength(analyzer) : barAgcStrength;
-            float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barFloorDb();
-            analyzer.setAgc(consumer, enabled, strength, floorDb);
-            analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
-
-            System.arraycopy(f.display16, 0, f.prev16, 0, NUM_BANDS_16);
-            System.arraycopy(f.level16, 0, f.display16, 0, NUM_BANDS_16);
-            System.arraycopy(f.display16Norm, 0, f.prev16Norm, 0, NUM_BANDS_16);
-            System.arraycopy(f.level16Agc, 0, f.display16Norm, 0, NUM_BANDS_16);
-            System.arraycopy(f.display32, 0, f.prev32, 0, NUM_BANDS_32);
-            System.arraycopy(f.level32, 0, f.display32, 0, NUM_BANDS_32);
-            System.arraycopy(f.display32Norm, 0, f.prev32Norm, 0, NUM_BANDS_32);
-            System.arraycopy(f.level32Agc, 0, f.display32Norm, 0, NUM_BANDS_32);
-        }
-
-        if (debugDump) dumpNativeBands(analyzer);
 
         for (OnSpectrumDataListener l : listeners) {
             Integer c = consumerOf.get(l);
@@ -1402,10 +1555,54 @@ public class AudioSpectrumEngine {
         }
     }
 
-    /** Drops the Visualizer without touching listeners or the watchdog. */
+    /**
+     * Option (b): moves the microphone's main consumer so that its 200-800 Hz middle equals the
+     * calculated spectrum's. Display thread, under {@link #analyzerLock}.
+     *
+     * <p>Mean of the four bands in dB - 200, 315, 500, 800 Hz - the same reference the calibration's
+     * synthesis and the stored cabin response are taken against, so what remains different between
+     * the two spectra is exactly the quantity the cabin measurement describes. Taken through the one
+     * native fold on both sides. Smoothed; held while either middle has nothing in it; with no tap
+     * (radio) there is no calculated spectrum, and the microphone is normalised instead.
+     */
+    private void alignMicrophoneToCalculated(NativeAnalyzer mic, NativeAnalyzer tap) {
+        if (tap == null) {
+            micOffsetValid = false;
+            mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, 0f);
+            return;
+        }
+        tap.getLevelsDb16(offsetReferenceDb16);
+        mic.getLevelsDb16(offsetMicrophoneDb16);
+        float reference = midbandDb(offsetReferenceDb16);
+        float microphone = midbandDb(offsetMicrophoneDb16);
+        if (reference > OFFSET_REFERENCE_MIN_DB && microphone > OFFSET_MICROPHONE_MIN_DB) {
+            float target = reference - microphone;
+            if (!micOffsetValid) {
+                micOffsetDb = target;
+                micOffsetValid = true;
+                Log.i(TAG, String.format(java.util.Locale.US,
+                        "microphone aligned to the calculated spectrum: 200-800 Hz %.1f dBFS (track) vs "
+                                + "%.1f dB (microphone), offset %+.1f dB", reference, microphone, target));
+            } else {
+                float alpha = Math.min(1f, captureIntervalMs / MIC_OFFSET_TIME_CONSTANT_MS);
+                micOffsetDb += (target - micOffsetDb) * alpha;
+            }
+        }
+        mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, micOffsetValid ? micOffsetDb : 0f);
+    }
+
+    /** The 200-800 Hz reference: equaliser bands 5..8, mean in dB. */
+    private static float midbandDb(float[] db16) {
+        return (db16[5] + db16[6] + db16[7] + db16[8]) / 4f;
+    }
+
+    /**
+     * Drops the Visualizer without touching listeners or the watchdog - and without touching the
+     * microphone: a resolution looks for the tap's session, and the microphone's analysis, which the
+     * tap is only the reference for, goes on through it.
+     */
     private synchronized void releaseCapture() {
-        stopNativeCapture();
-        stopRadioMicCapture();
+        stopVisualizerPipeline();
         if (visualizer == null) return;
         try {
             visualizer.release();
@@ -1603,7 +1800,10 @@ public class AudioSpectrumEngine {
         decideMicrophonePolicy();
         if (!radioMicCapture.isCapturing()) return;
         radioMicCapture.forgetNoiseFloor();
-        if (analysingMicrophone()) nativeAnalyzer.forgetNoiseFloor();
+        synchronized (analyzerLock) {
+            NativeAnalyzer mic = micAnalyzer;
+            if (mic != null) mic.forgetNoiseFloor();
+        }
         Log.i(TAG, "woke up with the microphone still open: capture kept, noise floors forgotten");
     }
 
@@ -1617,7 +1817,7 @@ public class AudioSpectrumEngine {
      * resolver, the source check, the call's end.
      */
     private boolean isMicPipelineRunning() {
-        return capturePolling && analysingMicrophone() && radioMicCapture.isCapturing();
+        return micAnalysing && micAnalyzer != null && radioMicCapture.isCapturing();
     }
 
     private boolean isRadioSourceNow() {
@@ -1647,68 +1847,61 @@ public class AudioSpectrumEngine {
         watchdogHandler.postDelayed(watchdog, WATCHDOG_PERIOD_MS);
     }
 
+    /**
+     * The microphone's analysis: its analyser and analysis thread, beside whatever the Visualizer's
+     * pipeline is doing - that one is left alone and becomes the reference (option (b)).
+     */
     private void startRadioMicPipeline() {
-        stopNativeCapture();
+        stopMicAnalysis();
         // The capture is NOT closed and reopened here any more. A held microphone (no root) is
         // simply analysed from now on; and closing it only to open it again was a moment in which
         // somebody else could open the input first.
         if (appContext == null) return;
 
         final int captureSize = 1024;
-        nativeAnalyzer = newAnalyzer(RadioMicCapture.SAMPLE_RATE, captureSize, true);
-        if (!nativeAnalyzer.isValid()) {
-            Log.w(TAG, "Native analyser did not initialise for Radio MIC");
+        final NativeAnalyzer created = newAnalyzer(RadioMicCapture.SAMPLE_RATE, captureSize, true);
+        if (!created.isValid()) {
+            Log.w(TAG, "Native analyser did not initialise for the microphone");
             return;
         }
-
-        // Microphone inverse compensation curve: restores hardware capsule sub-bass and treble
-        // roll-off. Handed over by dispatchNativeFrame on the first frame, like every other curve.
-        nativeCurveStale = true;
 
         boolean started = radioMicCapture.isCapturing()
                 || radioMicCapture.start(appContext, this::onMicChunk);
 
         if (!started) {
             Log.w(TAG, "RadioMicCapture failed to start");
-            stopNativeCapture();
+            created.release();
             return;
         }
 
-        applyNativeSettings();
-        capturePolling = true;
+        micAnalyzer = created;
+        micOffsetValid = false;
+        // Microphone inverse compensation curve: restores hardware capsule sub-bass and treble
+        // roll-off. Handed over by dispatchNativeFrame on the first frame, like every other curve.
+        micCurveStale = true;
+        applyNativeSettings(created);
+        micAnalysing = true;
         applyAnalysisProfile();
 
-        analysisThread = new Thread(() -> {
-            while (capturePolling) {
-                NativeAnalyzer analyzer = nativeAnalyzer;
-                if (analyzer == null) break;
+        micAnalysisThread = new Thread(() -> {
+            while (micAnalysing) {
                 try {
                     if (pausedForCall) {
                         Thread.sleep(50);   // interruption on stop lands in the catch below
                         continue;
                     }
-                    analyzer.process(20);
+                    created.process(20);
                 } catch (Throwable t) {
                     break;
                 }
             }
-        }, "wDSP_Analysis");
-        analysisThread.start();
+        }, "wDSP_MicAnalysis");
+        micAnalysisThread.start();
 
-        displayThread = new Thread(() -> {
-            while (capturePolling) {
-                try {
-                    dispatchNativeFrame();
-                    Thread.sleep(DISPLAY_PERIOD_MS);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Throwable ignored) {
-                }
-            }
-        }, "wDSP_Display");
-        displayThread.start();
-        Log.i(TAG, "Radio MIC analysis pipeline running with adaptive AGC");
+        ensureDisplayThread();
+        Log.i(TAG, "microphone analysis running" + (nativeAnalyzer != null
+                ? ", aligned to the calculated spectrum running beside it"
+                : " alone, normalised - no calculated spectrum on this source"));
     }
 
     /**
@@ -1716,20 +1909,23 @@ public class AudioSpectrumEngine {
      * whatever is analysing it. Capture thread.
      */
     private void onMicChunk(short[] boosted, short[] raw, int len, float captureGain) {
-        if (!capturePolling) return;
-        if (pausedForCall) return;   // the stream stays open; the samples go nowhere
-        NativeAnalyzer analyzer = nativeAnalyzer;
         // Held but not analysed: the samples go nowhere, and nothing downstream is told of them -
         // signal from a microphone nobody is drawing must not look like playback to NowPlaying.
-        if (analyzer == null || !analyzer.isAcoustic()) return;
+        if (!micAnalysing) return;
+        if (pausedForCall) return;   // the stream stays open; the samples go nowhere
+        synchronized (analyzerLock) {
+            NativeAnalyzer analyzer = micAnalyzer;
+            if (analyzer == null) return;
+            // The raw chunk, not the boosted one. The analyser learns its noise floor in linear
+            // power, and the capture side's automatic gain moves between 0.5x and 16x: every power
+            // value shifts underneath a floor that stays where it was learned. In a pause that gain
+            // climbs, the floor does not follow, and "power minus floor" turns cabin hiss into a
+            // full-height bar - which is exactly the fault reported from the car. The display still
+            // lifts quiet music, but through the analyser's own gain in getLevels(), which works in
+            // decibels and leaves the floor alone.
+            analyzer.pushPcm16(raw, len, 1.0f);
+        }
         noteMicSignal(boosted, len);
-        // The raw chunk, not the boosted one. The analyser learns its noise floor in linear power,
-        // and the capture side's automatic gain moves between 0.5x and 16x: every power value shifts
-        // underneath a floor that stays where it was learned. In a pause that gain climbs, the floor
-        // does not follow, and "power minus floor" turns cabin hiss into a full-height bar - which is
-        // exactly the fault reported from the car. The display still lifts quiet music, but through
-        // the analyser's own gain in getLevels(), which works in decibels and leaves the floor alone.
-        analyzer.pushPcm16(raw, len, 1.0f);
         synchronized (waveformLock) {
             // The waveform is a picture, so it keeps the boosted samples: at volume 2-4 the raw
             // stream is a flat line on screen.
@@ -1855,8 +2051,14 @@ public class AudioSpectrumEngine {
                 }
             } else {
                 if (isMicPipelineRunning()) {
+                    // The tap has been running under the microphone all along: stopping the
+                    // microphone's analysis is the whole switch.
                     Log.i(TAG, "Source switched to AudioFlinger - restoring PCM capture");
-                    attachKnownSessionOrResolve("source switched to audioflinger");
+                    stopMicAnalysis();
+                    stopRadioMicCapture();
+                    if (visualizer == null || nativeAnalyzer == null) {
+                        attachKnownSessionOrResolve("source switched to audioflinger");
+                    }
                 }
             }
         }
@@ -1884,35 +2086,44 @@ public class AudioSpectrumEngine {
         boolean wantMic = wantsMicPipeline(isRadio);
 
         if (isRadio) {
-            if (visualizer != null) {
-                try {
-                    visualizer.setEnabled(false);
-                    visualizer.release();
-                } catch (Throwable ignored) {}
-                visualizer = null;
-            }
+            // No PCM: no tap to keep, and the microphone - if it is wanted - is drawn alone.
+            releaseVisualizer();
+            stopVisualizerPipeline();
             if (wantMic) {
-                startRadioMicPipeline();
+                if (!isMicPipelineRunning()) startRadioMicPipeline();
             } else {
+                stopMicAnalysis();
                 stopRadioMicCapture();
-                stopNativeCapture();
             }
             return;
         }
 
+        // A PCM source: the tap runs whatever the mode. It is the calculated spectrum, and in the
+        // microphone mode the reference the microphone is aligned to (owner's option (b)) - so it is
+        // attached first, and a return to the calculated mode only has to stop the microphone.
+        if (visualizer == null || nativeAnalyzer == null) {
+            releaseVisualizer();
+            attachVisualizer(sessionId);
+        }
         if (wantMic) {
-            if (visualizer != null) {
-                try {
-                    visualizer.setEnabled(false);
-                    visualizer.release();
-                } catch (Throwable ignored) {}
-                visualizer = null;
-            }
-            startRadioMicPipeline();
-            return;
+            if (!isMicPipelineRunning()) startRadioMicPipeline();
+        } else {
+            stopMicAnalysis();
+            stopRadioMicCapture();
         }
+    }
 
-        stopRadioMicCapture();
+    private void releaseVisualizer() {
+        if (visualizer == null) return;
+        try {
+            visualizer.setEnabled(false);
+            visualizer.release();
+        } catch (Throwable ignored) {}
+        visualizer = null;
+    }
+
+    /** Creates the Visualizer on a session and starts its pipeline; session 0 if that one fails. */
+    private void attachVisualizer(int sessionId) {
         try {
             Visualizer v = new Visualizer(sessionId);
 
@@ -1961,7 +2172,7 @@ public class AudioSpectrumEngine {
             Log.w(TAG, "AudioSpectrumEngine session " + sessionId + " failed: " + t);
             if (sessionId != 0) {
                 try {
-                    startInternal(0);
+                    attachVisualizer(0);
                     currentSessionId = 0;
                 } catch (Throwable ignored) {
                     visualizer = null;
