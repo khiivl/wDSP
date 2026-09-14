@@ -105,6 +105,32 @@ which looks exactly like "the feature did not run".
 `uiautomator dump` gets killed for memory on this unit fairly often. A screenshot pulled with
 `adb shell screencap -p /sdcard/s.png` then `adb pull` is the reliable fallback.
 
+### Watching sleep and wake-up: a shell daemon on the unit, not adb and not logcat afterwards
+
+*(owner, 14.09.2026)* Two things make sleep invisible from the PC: **the power manager clears the
+logcat buffer**, and adb over Wi-Fi drops while the unit sleeps. What does work:
+
+- **Shell daemons survive sleep.** A process started in the background from a shell - root or not -
+  keeps running through ACC off and on, and it is **among the very first things to wake**, so it can
+  write down anything from the first moments after wake-up. It does not survive a reboot.
+- So start the observer on the unit, detached, writing to the card, and read the files afterwards:
+
+```sh
+# as root, detached from adb:  su -c 'setsid nohup /data/local/tmp/watch.sh >/dev/null 2>&1 </dev/null &'
+logcat -c
+nohup logcat -v time -f /sdcard/Download/wDSP/sleep_logcat.txt <tags>:V *:S >/dev/null 2>&1 &
+while true; do
+  { echo "=== $(date +%H:%M:%S)"; <snapshot commands>; } >> /sdcard/Download/wDSP/sleep_audio.txt
+  sleep 3
+done
+```
+
+`logcat -f` keeps what it has already read even when the buffer is cleared under it. For state that
+logcat does not carry, snapshot it in the loop - e.g. `dumpsys media.audio_flinger` for the input
+sample rate and `dumpsys audio | grep 'rec '` for who opened the microphone. The recording event log
+in `dumpsys audio` itself lives in system_server and does not roll the way logcat does.
+Remember to kill the daemon afterwards (`pkill -f watch.sh; pkill logcat`).
+
 ## 8. Host tests for anything measured
 
 Two C++ harnesses in `wdsp_app/src/main/cpp` build with plain `g++` and are deliberately not part
