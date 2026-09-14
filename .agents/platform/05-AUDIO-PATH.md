@@ -149,6 +149,85 @@ before the Google assistant does. No stop, no root. ❓ Whether the first probe 
 not recoverable — logcat had rolled by the time it was read. ❓ One boot, one unit; the assistant's
 start time is not guaranteed.
 
+🔴 **And the next boot proved it is not.** The same unit, booted at about 06:10 the same day (uptime
+8:47 at 14:57), `dumpsys audio` event log:
+
+```
+06:10:50.329  assistant   rec start   riid 39      <- first, about +41 s
+06:10:51.765  assistant + wDSP rec update           <- ours joined its 16 kHz input
+06:10:52.330  wDSP        rec stop    riid 47      (root denied for the test: "no root", let go)
+```
+
+So after a cold boot the order is a race won by half a minute once and lost by 1.4 s the next time.
+Nothing about the app can be built on being first at boot.
+
+📻 **Why it is a race, read from a whole boot** (`adb reboot` 15:23, the boot logger module
+`tools/wdsp_bootlog_module`, timestamps in seconds since boot):
+
+```
+32.390  wDSP BootReceiver gets LOCKED_BOOT_COMPLETED, starts McuService
+32.399  ActivityManager: Unable to start service McuService U=0: not found
+        (BootReceiver is directBootAware, McuService is not: before unlock it does not exist)
+32.587  assistant's :interactor process starts
+32.604  user unlocked (am_user_state_changed [0,3]); USER_UNLOCKED broadcast at 32.638
+45.392  assistant AudioRecord start, 16 kHz        <- 12.8 s of its own initialisation
+45.530  wDSP BootReceiver gets BOOT_COMPLETED       <- 12.9 s after unlock, ordered broadcast queue
+45.539  McuService created;  46.030 our AudioRecord start - 0.64 s too late
+```
+
+Both sides wait about thirteen seconds after unlock for unrelated reasons and arrive within a second
+of each other. wDSP loses those seconds only because it starts from `BOOT_COMPLETED`: the process is
+alive from 32.39 and the user is unlocked at 32.60. ❓ Starting the service at unlock instead would put
+the capture about 12 s ahead on this unit - not done: it also moves the first preset application
+earlier, towards the UART opening (the "background at car start" fault of 13.09), which is the
+owner's call. Cold boot after a power removal not yet read.
+
+#### A stopped recording is not yet a closed input — 14.09.2026
+
+📻 Measured to find out when a newcomer can set the input's rate. wDSP stopped, the assistant alone on
+a 16 kHz input, then `am force-stop` of the assistant and `dumpsys` in a loop:
+
+```
++70 ms    force-stop returns
++86 ms    active recordings 0, input threads 1      <- the list is already empty
++209 ms   active recordings 0, input threads 0      <- the input is closed
++1920 ms  active recordings 1, input threads 1      <- the assistant is back
+```
+
+And what a capture opened inside that window gets: wDSP waiting for a free input opened at
+14:58:55.289, 75 ms after the recording callback reported the list empty (the assistant's
+`rec release` is logged at .213) - and the platform reported **16000 Hz** under it 2 ms later.
+The assistant's new recording did not start until 14:58:57.102, so nobody else was there: the capture
+was handed the input that was still open, at its old rate.
+
+So a recording that has stopped - even one whose `rec release` is already in AudioService's log -
+leaves its input open until the native side lets go of the last client, and a client that arrives
+in between inherits the rate. Waiting a few hundred milliseconds after the list empties is what makes
+a gap usable (`MicInputWindow`). ⚠️ Read from a killed process; an assistant that releases its
+recorder on its own may close the input faster or slower.
+
+📻 The assistant does leave such gaps on its own, not only when killed: `rec release` 15:00:55.673 →
+next `rec start` 15:00:57.478 (1.8 s), ~2 minutes after its previous start; the same 1.8 s at
+06:34:47.650 → 06:34:49.463. ⚠️ But not reliably: after 15:00:57 it held one recording for over ten
+minutes without a gap.
+
+🟢 **Taking the input back through a gap works, with the wait** (`MicInputWindow`, root denied for
+wDSP), 14.09.2026 - the whole chain, on the wire:
+
+```
+15:29:24      setprop ctl.restart audioserver
+15:29:26.715  recording callback: our input restored at 16000 Hz -> microphone unavailable,
+              spectrum calculated, window waiting ("input held at 16000 Hz by another app")
+15:29:29.759  assistant rec release (force-stop from adb)
+15:29:29.760  window: gap - trying in 300 ms
+15:29:30.101  wDSP rec start
+15:29:30.861  input device at 48000 Hz - microphone back at full band
+15:29:31.695  assistant rec start: client 16000 Hz on our dev 48000 Hz
+```
+
+The same at 15:25:56 → 57.923 after a reboot the assistant had won. Without the wait (first build,
+75 ms) the capture got 16 kHz.
+
 #### After hibernation the assistant reopens first — onto our input, which never closed — 14.09.2026
 
 📻 The owner's unit put to sleep for ~15 minutes with the wDSP main screen **closed**, so only the

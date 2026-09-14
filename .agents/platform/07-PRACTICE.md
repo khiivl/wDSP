@@ -157,6 +157,24 @@ its start-up lines ("started", "own stream", the heal) were already gone while s
 same second remained (14.09.2026). Read such events from `dumpsys audio` (`rec start/stop`) and from
 system tags (`ActivityManager: Force stopping`), or run the on-unit logger before the event.
 
+### 🟢 Every boot logged from its first seconds: the Magisk module in `tools/wdsp_bootlog_module`
+
+*(owner's order, 14.09.2026)* Installed on the owner's unit. Magisk's late_start service starts it
+about 19 s into a boot, and logcat hands over its whole buffer first - the first boot read back from
+2.455 s. One folder per boot, `/data/local/tmp/bootlog/NNNN` (`latest` names the current one):
+header with `sys.boot.reason` and uptime / wall-clock pairs, `dmesg`, **every buffer unfiltered with
+seconds-since-boot timestamps until boot_completed + 240 s** (boot order reads directly, also after a
+power removal when the clock is set late), then a rotated run log with `VolumeState` / `VolumeManager`
+/ `chatty` silenced, and `dumpsys audio` / `audio_flinger` when the boot window closes. Newest 15
+boots kept; about 10 MB per boot window. Being a shell daemon, it keeps logging through sleep.
+
+It already paid for itself: a `logcat -d` from a root script found nothing 20 s after an audioserver
+restart, while the module's run log held every line. Build only in WSL (`build.sh` refuses CR bytes;
+`.gitattributes` pins LF, since `core.autocrlf` is on in this repo). Install:
+`adb push out/wDSP_bootlog.zip /data/local/tmp/` then `su -c 'magisk --install-module …'`, reboot.
+Reason strings seen so far: `reboot,adb` for `adb reboot`, `reboot` for others; a power removal -
+not yet seen.
+
 ⚠️ `dmesg` on this unit is useless for the suspend timeline: a vendor `system_rescue` process runs
 `ps` every 5 s and floods the ring with SELinux audit lines, so `PM: suspend entry/exit` has rolled
 out within minutes. `/d/suspend_stats` keeps the count.
