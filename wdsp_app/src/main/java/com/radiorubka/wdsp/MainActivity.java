@@ -487,7 +487,6 @@ public class MainActivity extends AppCompatActivity {
         updateVisualizer();
         applyAppTheme();
         checkAndStartSpectrumAnalyzer();
-        RootAccess.checkAsync(this, this::updateSpectrumModeUi);
         updateSpectrumModeUi();
         checkRadioMicCalibrationInvite();
     }
@@ -976,7 +975,6 @@ public class MainActivity extends AppCompatActivity {
             updateSpectrumModeUi();
         });
 
-        RootAccess.checkAsync(this, this::updateSpectrumModeUi);
         updateSpectrumModeUi();
     }
 

@@ -154,7 +154,9 @@ public final class MicrophoneGuard {
 
         // Root: force-stop does not disable or uninstall anything, and the assistant comes back the
         // next time the system starts it - onto our input, which is by then open at 48 kHz.
-        if (RootAccess.hasRootNow(context)) {
+        // A measurement is a person switching the microphone on - the moment Magisk is asked, once
+        // per process (RootAccess.checkForMicrophone).
+        if (RootAccess.checkForMicrophone(context)) {
             releaseHold();
             // The holders as AudioFlinger lists them, not a list of suspects - and takeInputAsRoot
             // waits for the input to close under them before we claim it.

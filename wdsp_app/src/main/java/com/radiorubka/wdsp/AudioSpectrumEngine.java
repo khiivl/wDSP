@@ -329,6 +329,9 @@ public class AudioSpectrumEngine {
                     .putString(PREF_SPECTRUM_MODE, mode).apply();
         }
         checkSourceState();
+        // A person has switched the microphone on: the moment root is asked for (owner, 14.09.2026),
+        // once per process - Magisk's prompt, if it has never answered us, comes from this tap.
+        if (SPECTRUM_MODE_MIC.equals(mode)) decideMicrophonePolicy(RootQuestion.MICROPHONE);
     }
 
     public boolean isRadioMicVisualizerEnabled() {
@@ -986,7 +989,7 @@ public class AudioSpectrumEngine {
         loadDisplaySettings(appContext);
         // At unlock, straight after audioserver is up: without root this is what makes us first on
         // the input for the rest of the drive.
-        decideMicrophonePolicy();
+        decideMicrophonePolicy(RootQuestion.START);
         if (watchdogHandler == null) {
             watchdogHandler = new Handler(Looper.getMainLooper());
         }
@@ -1798,8 +1801,9 @@ public class AudioSpectrumEngine {
      * as a side effect; now that it no longer happens, forgetting them has to be said out loud.
      */
     public synchronized void onWake() {
-        // Root may have been granted or taken away while the unit slept.
-        decideMicrophonePolicy();
+        // Not a root question: root is asked at start and on a person's action, never polled - a
+        // wake re-applies whatever Magisk last answered.
+        decideMicrophonePolicy(RootQuestion.KNOWN);
         if (!radioMicCapture.isCapturing()) return;
         radioMicCapture.forgetNoiseFloor();
         synchronized (analyzerLock) {
@@ -1966,8 +1970,9 @@ public class AudioSpectrumEngine {
      *   already on the input is stopped through root and both are checked - our input full band,
      *   the stopped app running again (RadioMicCapture, MicrophoneGuard.takeInputAsRoot).</li>
      * </ul>
-     * Decided once a context is there, off the main thread (the root check may block), and again on
-     * every wake - root can be granted or taken away in Magisk in between.
+     * Decided once a context is there, off the main thread (the root check may block); again when a
+     * person switches the spectrum to the microphone, and whenever RootAccess takes a new answer. Not
+     * on wake: root is not polled (owner, 14.09.2026 - every su makes Magisk toast).
      */
     private volatile boolean holdMicrophone;
     private final Handler micHoldHandler = new Handler(Looper.getMainLooper());
@@ -1981,12 +1986,37 @@ public class AudioSpectrumEngine {
         }
     };
 
+    /** Which root question the policy is decided on - see RootAccess for when su may run. */
+    private enum RootQuestion {
+        /** The process is starting: Magisk is asked if it has answered this installation before. */
+        START,
+        /** A person has switched the microphone on: Magisk is asked once per process, prompt and all. */
+        MICROPHONE,
+        /** Whatever Magisk last answered; no su. */
+        KNOWN,
+    }
+
+    /** RootAccess took a new answer (the root card, a first microphone use elsewhere). */
+    public void onRootAnswerChanged() {
+        decideMicrophonePolicy(RootQuestion.KNOWN);
+    }
+
     /** Chooses the policy above; the second half runs on the main thread. */
-    private void decideMicrophonePolicy() {
+    private void decideMicrophonePolicy(final RootQuestion question) {
         final Context ctx = appContext;
         if (ctx == null) return;
         new Thread(() -> {
-            final boolean root = RootAccess.hasRootNow(ctx);
+            final boolean root;
+            switch (question) {
+                case START:
+                    root = RootAccess.checkAtStart(ctx);
+                    break;
+                case MICROPHONE:
+                    root = RootAccess.checkForMicrophone(ctx);
+                    break;
+                default:
+                    root = RootAccess.hasRoot();
+            }
             micHoldHandler.post(() -> {
                 boolean was = holdMicrophone;
                 holdMicrophone = !root;

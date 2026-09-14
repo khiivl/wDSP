@@ -668,11 +668,13 @@ public class McuService extends Service implements LocationListener {
         instance = this;
         createNotificationChannel();
 
-        // Starts the background root check when root was granted before - and with it the one-time
-        // repair of the assistant's microphone that 0.4.9.x broke. Here rather than only in the UI,
-        // because an owner who updates and never opens the app must still get "Ok Google" back.
-        // Never prompts: without a stored grant this returns false and runs nothing.
-        RootAccess.hasRoot(getApplicationContext());
+        // The start's root check (boot, or the first start after an update) - and with a grant, the
+        // one-time repair of the assistant's microphone that 0.4.9.x broke. Here rather than only in
+        // the UI, because an owner who updates and never opens the app must still get "Ok Google"
+        // back. Never prompts: an installation Magisk has not answered is not asked at start. The
+        // spectrum engine asks the same question at unlock and waits for this one's answer.
+        final Context appForRoot = getApplicationContext();
+        new Thread(() -> RootAccess.checkAtStart(appForRoot), "wDSP_RootAtStart").start();
 
         // The service is the process's usual first entry (boot, restart after a crash); from here
         // a crash anywhere in the process leaves its stack for the screen report.

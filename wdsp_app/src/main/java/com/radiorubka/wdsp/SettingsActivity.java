@@ -230,12 +230,12 @@ public class SettingsActivity extends AppCompatActivity {
         PermissionsWizard.refreshCurrent();
         NowPlaying.getInstance(this).refresh();
         updatePermissionButtonsState();
-        RootAccess.checkAsync(this, () -> {
-            if (settingsColumn != null) {
-                SettingsAccordion.refresh(settingsColumn);
-            }
-            showRoomRootNote();
-        });
+        // No root check here: it used to run on every resume and Magisk toasted each time. The
+        // answer is whatever RootAccess last took (start, first microphone use, the root card).
+        if (settingsColumn != null) {
+            SettingsAccordion.refresh(settingsColumn);
+        }
+        showRoomRootNote();
     }
 
     @Override
@@ -1634,7 +1634,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void showRoomRootNote() {
         View note = findViewById(R.id.desc_room_no_root);
         if (note == null) return;
-        note.setVisibility(RootAccess.hasRoot(this) ? View.GONE : View.VISIBLE);
+        note.setVisibility(RootAccess.hasRoot() ? View.GONE : View.VISIBLE);
     }
 
     private void showRoomStatus() {

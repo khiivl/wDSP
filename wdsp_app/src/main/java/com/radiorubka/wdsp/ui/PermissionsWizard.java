@@ -51,7 +51,7 @@ public final class PermissionsWizard {
     private static WeakReference<PermissionsWizard> sCurrentInstance;
 
     public static boolean isRootGranted(Context context) {
-        return RootAccess.hasRoot(context);
+        return RootAccess.hasRoot();
     }
 
     private final Activity activity;
@@ -195,11 +195,8 @@ public final class PermissionsWizard {
         PermissionsWizard wizard = new PermissionsWizard(activity, onDismiss);
         wizard.buildAndShow();
         sCurrentInstance = new WeakReference<>(wizard);
-        // The root card starts from the last known answer; ask again and repaint when it comes.
-        // Only where root was granted before - asking an ungranted app raises Magisk's prompt.
-        if (ThemeManager.prefs(activity).getBoolean(RootAccess.PREF_ROOT_GRANTED, false)) {
-            RootAccess.checkAsync(activity, PermissionsWizard::refreshCurrent);
-        }
+        // The root card shows the answer RootAccess last took; opening the wizard does not ask
+        // Magisk again (that was a su, and a Magisk toast, on every opening). A tap on the card does.
         return wizard;
     }
 
@@ -254,7 +251,11 @@ public final class PermissionsWizard {
                     act.startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
                     return;
                 case 6:
-                    RootAccess.checkAsync(act, PermissionsWizard::refreshCurrent);   // root lives in Magisk
+                    // Root lives in Magisk: a tap on the green card asks it again.
+                    new Thread(() -> {
+                        RootAccess.request(act);
+                        act.runOnUiThread(PermissionsWizard::refreshCurrent);
+                    }, "wDSP_WizardRootRecheck").start();
                     return;
                 default:
                     act.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -389,7 +390,7 @@ public final class PermissionsWizard {
                 6,
                 R.string.perm_wizard_item_root_title,
                 R.string.perm_wizard_item_root_desc,
-                RootAccess::hasRoot,
+                ctx -> RootAccess.hasRoot(),
                 act -> new Thread(() -> {
                     RootAccess.Outcome outcome = RootAccess.request(act);
                     if (outcome == RootAccess.Outcome.DENIED_BY_POLICY) {

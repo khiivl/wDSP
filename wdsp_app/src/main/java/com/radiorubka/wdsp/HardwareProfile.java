@@ -477,7 +477,7 @@ public final class HardwareProfile {
 
         // 2. dumpsys window displays (filtered)
         try {
-            boolean hasRoot = RootAccess.hasRoot(context);
+            boolean hasRoot = RootAccess.hasRoot();
             String[] cmd = hasRoot
                     ? new String[]{"su", "-c", "dumpsys window displays | grep -E 'DisplayFrames|mStable=|mDock=|mContent=|mContentFrame='"}
                     : new String[]{"sh", "-c", "dumpsys window displays | grep -E 'DisplayFrames|mStable=|mDock=|mContent=|mContentFrame='"};
@@ -499,7 +499,7 @@ public final class HardwareProfile {
 
         // 3. active system window frames (StatusBar, NavigationBar, Hvac, etc.)
         try {
-            boolean hasRoot = RootAccess.hasRoot(context);
+            boolean hasRoot = RootAccess.hasRoot();
             String[] cmd = hasRoot
                     ? new String[]{"su", "-c", "dumpsys window windows | grep -E 'StatusBar|NavigationBar|Hvac|CarPanel|Climate|mFrame=' | head -n 25"}
                     : new String[]{"sh", "-c", "dumpsys window windows | grep -E 'StatusBar|NavigationBar|Hvac|CarPanel|Climate|mFrame=' | head -n 25"};

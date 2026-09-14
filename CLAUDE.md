@@ -237,8 +237,18 @@ chosen by root (`AudioSpectrumEngine.decideMicrophonePolicy`): without root the 
 from start-up** and never closed by a mode switch; with root it is opened when wanted, and if somebody
 was on the input first, `MicrophoneGuard.takeInputAsRoot` stops whoever AudioFlinger lists, waits for
 the input to close, reopens, checks full band, and `checkCameBackAsync` reports whether the stopped app
-came back. Nothing starts during a call. ⚠️ `RootAccess.hasRootNow()` trusts `pref_root_granted` and never
-tries `su` when it is false — root re-granted in Magisk is not seen until the root card is tapped.
+came back. Nothing starts during a call.
+
+**Root is one class and is never polled** (owner, 14–15.09.2026). `RootAccess.hasRoot()` is the answer this
+process last took — no preference holds it, no `su` runs to read it. Magisk is asked only at the start
+(`checkAtStart`, once per process, and only if Magisk has answered this installation before — the fact
+lives in `wdsp_device_state`, outside backups), at a person's first microphone switch-on in the process
+(`checkForMicrophone`: the spectrum's microphone mode, a measurement — Magisk's first prompt comes from
+this tap), and on the root card (`request`). Every `su` makes Magisk toast; a check on resume or on wake
+is exactly what not to add.
+
+The cabin section is open without root: when another app got to the microphone first, a sweep does not
+start and the person is asked to restart the head unit; the section says so in `desc_room_no_root`.
 
 **On a PCM source the Visualizer's pipeline runs whatever the mode.** In the microphone mode it is the
 reference: the microphone's analyser runs beside it and is drawn shifted so that its 200–800 Hz middle

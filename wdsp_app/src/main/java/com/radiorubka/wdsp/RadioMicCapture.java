@@ -315,7 +315,7 @@ public class RadioMicCapture {
                         if (deviceRate > 0 && deviceRate < SAMPLE_RATE) {
                             narrowBecause = "input device at " + deviceRate + " Hz";
                         } else if (deviceRate >= SAMPLE_RATE && othersOnInputAtOpen > 0
-                                && !takeoverAttempted && RootAccess.hasRootNow(appContext)) {
+                                && !takeoverAttempted && RootAccess.hasRoot()) {
                             // Full band, but not ours: somebody opened the input before us, and the
                             // one who opens it sets it up (owner, 14.09.2026: with root, take it -
                             // "в любому випадку"). Without root this is left alone; a unit without
@@ -331,7 +331,7 @@ public class RadioMicCapture {
                 if (narrowBecause != null) {
                     // Owner, 14.09.2026: with root, heal it on the fly; without root, the microphone
                     // is not available - no narrow stream is shown as if it were the cabin.
-                    if (!healAttempted && RootAccess.hasRootNow(appContext)) {
+                    if (!healAttempted && RootAccess.hasRoot()) {
                         healAttempted = true;
                         Log.i(TAG, "input narrow (" + narrowBecause + ") - taking it back through root");
                         if (!reopenAfterStoppingAssistant()) break;
