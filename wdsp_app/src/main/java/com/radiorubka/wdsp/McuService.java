@@ -369,7 +369,22 @@ public class McuService extends Service implements LocationListener {
      */
     private String galavoltype_last;
 
-    private StatusBarVisualizerManager statusBarManager;
+    /** Volatile: assigned on the main thread once audioserver is up, read on wDSP_Worker. */
+    private volatile StatusBarVisualizerManager statusBarManager;
+
+    /**
+     * Set on wDSP_Worker once the MCU is reachable and the selected preset is loaded and applied.
+     * Until then nothing that touches the hardware or reads {@code prefs} may run - see
+     * {@link #runWhenReady}.
+     */
+    private volatile boolean presetsReady = false;
+    /** Work that arrived before {@link #presetsReady}, in arrival order. wDSP_Worker only. */
+    private final java.util.List<Runnable> beforeReady = new java.util.ArrayList<>();
+
+    /** Bounds on the boot stages' waits; past them the stage goes ahead and says so. */
+    private static final long AUDIOSERVER_WAIT_MS = 30000;
+    private static final long MCU_WAIT_MS = 20000;
+    private static final long BOOT_POLL_MS = 100;
 
     private int media_standstill = -1;
     private int btcall_standstill = -1;
@@ -456,7 +471,10 @@ public class McuService extends Service implements LocationListener {
     private final BroadcastReceiver controlReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            backgroundHandler.post(() -> {
+            // Deferred until the boot stages have loaded the preset: the service now starts at
+            // user unlock, before the MCU link exists, and ACC_ON or a debug action arriving in
+            // that window would otherwise apply an unloaded preset or read a null prefs.
+            runWhenReady(() -> {
                 String action = intent.getAction();
                 Log.d(TAG, "Received broadcast: " + action);
                 if ("com.qf.action.ACC_ON".equals(action)
@@ -644,10 +662,6 @@ public class McuService extends Service implements LocationListener {
         instance = this;
         createNotificationChannel();
 
-        AudioSpectrumEngine.getInstance().initContext(this);
-        statusBarManager = StatusBarVisualizerManager.getInstance(this);
-        statusBarManager.evaluateVisibility();
-
         // Starts the background root check when root was granted before - and with it the one-time
         // repair of the assistant's microphone that 0.4.9.x broke. Here rather than only in the UI,
         // because an owner who updates and never opens the app must still get "Ok Google" back.
@@ -669,28 +683,21 @@ public class McuService extends Service implements LocationListener {
         workerThread.start();
         backgroundHandler = new Handler(workerThread.getLooper());
 
-        backgroundHandler.post(() -> {
-            VolumeHelper.init(this);
-            initReflection();
-            PresetsDatabaseValidator.validateAndMigrate(getApplicationContext());
-            prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            // Both flags before syncPreset, because applying a preset consults isGalaEnabled().
-            galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
-            galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
-            prefs.registerOnSharedPreferenceChangeListener(prefListener);
-            loadPlayerMap();
-            // syncPreset reads last_selected_preset, loads it and applies it - all three. What
-            // stood here did the first two by hand and got the first one wrong: it asked for a
-            // preference literally named "Preset 1" rather than the key that stores which preset
-            // is selected, so it loaded Preset 1's settings over whatever the owner had chosen.
-            // syncPreset then corrected it two lines later, which is why nothing was ever visibly
-            // broken - but the PRESET_CHANGED broadcast went out in between, announcing the wrong
-            // one. Announced after now, when the name is true.
-            syncPreset(true);
-            sendBroadcast(presetChangedIntent);
-            askRadioForItsState();
-            isBootStart = false;
-        });
+        // 🔴 Boot in stages, on threads of their own (owner, 14.09.2026: start at unlock, check
+        // that audioserver is up and take the microphone, then check the MCU service and only then
+        // apply the presets - not in one thread, so nothing holds up the boot of the system).
+        //
+        // Why at unlock at all: measured 14.09.2026, the user is unlocked 32.6 s into a boot and
+        // BOOT_COMPLETED reached this app 12.9 s later, while the Google assistant opened the
+        // microphone at 16 kHz 0.14 s before that - so a service started on BOOT_COMPLETED lost the
+        // input by 0.64 s (platform/05-AUDIO-PATH.md). BootReceiver now starts it on USER_UNLOCKED.
+        //
+        // Why the stages wait: an earlier start is also an earlier moment for the first hardware
+        // write, and the UART to the MCU opens after unlock (platform/01-SYSTEM.md §8). The audio
+        // side does not need the MCU and the MCU side does not need audioserver, so neither waits
+        // for the other.
+        startAudioStage();
+        startMcuStage();
 
         IntentFilter controlFilter = getIntentFilter();
 
@@ -731,6 +738,124 @@ public class McuService extends Service implements LocationListener {
         // other hardware write in this class belongs. The static half of this call was a no-op
         // anyway: applyStaticSettings() returns immediately while currentPresetName is null, which
         // is why the log shows the fader and the delays only on the second pass.
+    }
+
+    /**
+     * Audio stage: wait for audioserver, then hand the spectrum engine its context and bring up
+     * the status bar widget - which is what opens the microphone when the analyser wants it.
+     * On the main thread, because the widget is a window.
+     */
+    private void startAudioStage() {
+        new Thread(() -> {
+            long waited = waitUntil(() -> hasBinder("media.audio_flinger")
+                    && hasBinder("media.audio_policy"), AUDIOSERVER_WAIT_MS);
+            Log.i(TAG, String.format(Locale.US, "boot: audioserver %s at %.2f s since boot - taking the microphone",
+                    waited >= 0 ? "up after " + waited + " ms" : "NOT seen in " + AUDIOSERVER_WAIT_MS + " ms, going ahead",
+                    android.os.SystemClock.uptimeMillis() / 1000.0));
+            mainHandler.post(() -> {
+                AudioSpectrumEngine.getInstance().initContext(this);
+                StatusBarVisualizerManager manager = StatusBarVisualizerManager.getInstance(this);
+                statusBarManager = manager;
+                manager.evaluateVisibility();
+            });
+        }, "wDSP_AudioBoot").start();
+    }
+
+    /**
+     * MCU stage: wait for the MCU service and for the platform's own word that the MCU has spoken
+     * ({@code sys.qf.is.acc.on}, a per-boot property, true on the owner's unit while ACC is on),
+     * then load and apply the selected preset on wDSP_Worker. ACC_ON still clears the cache and
+     * applies again: whether that property is set before or after the UART opens is not measured
+     * yet, and the log line below says when each wait ended so the boot logger can tell.
+     */
+    private void startMcuStage() {
+        new Thread(() -> {
+            long binder = waitUntil(() -> hasBinder("mcu_service"), MCU_WAIT_MS);
+            long acc = waitUntil(() -> "true".equals(sysProp("sys.qf.is.acc.on")), MCU_WAIT_MS);
+            Log.i(TAG, String.format(Locale.US,
+                    "boot: mcu_service %s, sys.qf.is.acc.on %s - applying presets at %.2f s since boot",
+                    binder >= 0 ? "after " + binder + " ms" : "NOT seen",
+                    acc >= 0 ? "after " + acc + " ms" : "NOT true in " + MCU_WAIT_MS + " ms",
+                    android.os.SystemClock.uptimeMillis() / 1000.0));
+            backgroundHandler.post(this::loadAndApplyPresets);
+        }, "wDSP_McuBoot").start();
+    }
+
+    /** wDSP_Worker. The block onCreate used to post directly, now run once the MCU stage allows. */
+    private void loadAndApplyPresets() {
+        VolumeHelper.init(this);
+        initReflection();
+        PresetsDatabaseValidator.validateAndMigrate(getApplicationContext());
+        prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        // Both flags before syncPreset, because applying a preset consults isGalaEnabled().
+        galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+        galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+        prefs.registerOnSharedPreferenceChangeListener(prefListener);
+        loadPlayerMap();
+        // syncPreset reads last_selected_preset, loads it and applies it - all three. What
+        // stood here did the first two by hand and got the first one wrong: it asked for a
+        // preference literally named "Preset 1" rather than the key that stores which preset
+        // is selected, so it loaded Preset 1's settings over whatever the owner had chosen.
+        // syncPreset then corrected it two lines later, which is why nothing was ever visibly
+        // broken - but the PRESET_CHANGED broadcast went out in between, announcing the wrong
+        // one. Announced after now, when the name is true.
+        syncPreset(true);
+        sendBroadcast(presetChangedIntent);
+        askRadioForItsState();
+        isBootStart = false;
+
+        presetsReady = true;
+        if (!beforeReady.isEmpty()) {
+            Log.i(TAG, "boot: running " + beforeReady.size() + " action(s) that arrived before the presets were ready");
+            for (Runnable r : beforeReady) r.run();
+            beforeReady.clear();
+        }
+    }
+
+    /** Runs on wDSP_Worker now, or right after the presets are ready if they are not yet. */
+    private void runWhenReady(Runnable work) {
+        backgroundHandler.post(() -> {
+            if (presetsReady) work.run();
+            else beforeReady.add(work);
+        });
+    }
+
+    /** Polls on the calling thread. How long it took, or -1 when the time ran out. */
+    private static long waitUntil(java.util.function.BooleanSupplier ready, long timeoutMs) {
+        final long start = android.os.SystemClock.uptimeMillis();
+        while (!ready.getAsBoolean()) {
+            if (android.os.SystemClock.uptimeMillis() - start >= timeoutMs) return -1;
+            try {
+                Thread.sleep(BOOT_POLL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return -1;
+            }
+        }
+        return android.os.SystemClock.uptimeMillis() - start;
+    }
+
+    /**
+     * Whether a system service is registered, without waiting for it. When the question cannot be
+     * asked at all (hidden API refused), the answer is yes: a boot must not be held hostage to
+     * reflection.
+     */
+    private static boolean hasBinder(String name) {
+        try {
+            @SuppressLint("PrivateApi") Class<?> sm = Class.forName("android.os.ServiceManager");
+            return sm.getMethod("checkService", String.class).invoke(null, name) != null;
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
+    private static String sysProp(String key) {
+        try {
+            @SuppressLint("PrivateApi") Class<?> sp = Class.forName("android.os.SystemProperties");
+            return (String) sp.getMethod("get", String.class, String.class).invoke(null, key, "");
+        } catch (Throwable t) {
+            return "";
+        }
     }
 
     @NonNull
@@ -856,7 +981,10 @@ public class McuService extends Service implements LocationListener {
         startForeground(NOTIFICATION_ID, notification);
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            backgroundHandler.post(() -> {
+            // Not before the presets are loaded: with the start moved to unlock, three seconds can
+            // end before the MCU stage has passed, and applyCurrentSettings with nothing loaded
+            // pushes -12 dB on all sixteen bands (see the note at the end of onCreate).
+            runWhenReady(() -> {
                 applyCurrentSettings();
                 startPolling();
                 startGps();

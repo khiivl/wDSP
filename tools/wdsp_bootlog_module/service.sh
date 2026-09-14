@@ -11,6 +11,8 @@
 # /data/local/tmp/bootlog/NNNN:
 #   00_header.txt        boot number, boot reason, uptime / wall-clock pairs, kernel command line
 #   01_dmesg.txt         the kernel ring buffer as it stood when logging started
+#   02_props.txt         boot-stage properties each time they change, seconds since boot, until
+#                        90 s after boot_completed
 #   10_boot.log          every buffer, unfiltered, until boot_completed + BOOT_WINDOW_S. Timestamps
 #                        are seconds since boot (-v monotonic), so the boot order reads directly,
 #                        also after the power was removed and the wall clock is set only later
@@ -28,6 +30,7 @@ KEEP=15
 BOOT_WINDOW_S=240
 RUN_KB=4096
 RUN_FILES=4
+PROPS_AFTER_BOOT_TICKS=450   # 90 s of property watching after boot_completed, at 0.2 s a tick
 
 (
     umask 022
@@ -61,6 +64,26 @@ RUN_FILES=4
     } > "$DIR/00_header.txt"
 
     dmesg > "$DIR/01_dmesg.txt" 2>&1
+
+    # When the properties that mark the boot's stages change, in seconds since boot: logcat does
+    # not say when a property is set, and wDSP's boot stages wait on some of these.
+    watch_props() {
+        PREV=""
+        AFTER=0
+        while :; do
+            CUR="acc_on=$(getprop sys.qf.is.acc.on) audioserver=$(getprop init.svc.audioserver) boot_completed=$(getprop sys.boot_completed) audio_src=$(getprop sys.qf.last_audio_src)"
+            if [ "$CUR" != "$PREV" ]; then
+                echo "$(cut -d' ' -f1 /proc/uptime) $CUR" >> "$DIR/02_props.txt"
+                PREV="$CUR"
+            fi
+            if [ "$(getprop sys.boot_completed)" = "1" ]; then
+                AFTER=$((AFTER + 1))
+                [ "$AFTER" -ge "$PROPS_AFTER_BOOT_TICKS" ] && break
+            fi
+            sleep 0.2
+        done
+    }
+    watch_props &
 
     logcat -b main,system,events,crash -v threadtime -v monotonic > "$DIR/10_boot.log" 2>&1 &
     BOOT_PID=$!
