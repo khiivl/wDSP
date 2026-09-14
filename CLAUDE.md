@@ -230,6 +230,27 @@ microphone could fill that in, with two rules that must not be forgotten:
   passed through `DspResponse` the way the digital signal is. Doing that would apply the equaliser
   curve twice.
 
+### The microphone: who holds it, and two analysers at once (14.09.2026)
+
+**Whoever opens the microphone input first sets it up for everybody; the rest join.** So the policy is
+chosen by root (`AudioSpectrumEngine.decideMicrophonePolicy`): without root the capture is **held open
+from start-up** and never closed by a mode switch; with root it is opened when wanted, and if somebody
+was on the input first, `MicrophoneGuard.takeInputAsRoot` stops whoever AudioFlinger lists, waits for
+the input to close, reopens, checks full band, and `checkCameBackAsync` reports whether the stopped app
+came back. Nothing starts during a call. ⚠️ `RootAccess.hasRootNow()` trusts `pref_root_granted` and never
+tries `su` when it is false — root re-granted in Magisk is not seen until the root card is tapped.
+
+**On a PCM source the Visualizer's pipeline runs whatever the mode.** In the microphone mode it is the
+reference: the microphone's analyser runs beside it and is drawn shifted so that its 200–800 Hz middle
+(bands 5..8, mean dB, through the one native fold) equals the calculated spectrum's
+(`alignMicrophoneToCalculated`, 2 s smoothing). Aligned, the microphone reads in the track's dBFS with
+no gain, like the calculated spectrum; unaligned (radio, silence) it is normalised. One display thread
+draws `shownAnalyzer()`; `analyzerLock` guards both analysers' lifetime. Returning to the calculated
+mode only stops the microphone's analysis — no re-attach, no sweep.
+
+Logs on the owner's unit: read the Magisk boot logger (`/data/local/tmp/bootlog/<latest>/10_boot.log`,
+`20_run.log*`), not `logcat`.
+
 ### UI
 
 `MainActivity` (~2100 lines) is a single activity holding **five sections in one layout**
