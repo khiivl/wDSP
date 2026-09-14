@@ -584,7 +584,8 @@ public class AudioSpectrumEngine {
             }
             captureDumpFrom = System.currentTimeMillis() + settle;
             Log.i(TAG, "capture dump: " + ms + " ms, session " + currentSessionId
-                    + ", Visualizer rate " + (v != null ? v.getSamplingRate() : -1) + " mHz"
+                    + ", tap rate " + visualizerSampleRateHz() + " Hz"
+                    + " (Visualizer reports " + (v != null ? v.getSamplingRate() : -1) + " mHz)"
                     + ", scaling " + (v != null ? v.getScalingMode() : -1)
                     + ", measurement mode " + (v != null ? v.getMeasurementMode() : -1)
                     + ", capture size " + (v != null ? v.getCaptureSize() : -1));
@@ -1052,10 +1053,35 @@ public class AudioSpectrumEngine {
         return analyzer;
     }
 
-    private void startNativeCapture(int captureSize, int samplingRateMilliHz) {
+    /**
+     * The rate the Visualizer's samples are really at - the one number every frequency on the
+     * spectrum hangs on, and every consumer of the tap reads it here.
+     *
+     * <p>🔴 Not {@link Visualizer#getSamplingRate()}. Measured 14.09.2026: it reports 44 100 000 mHz
+     * while delivering 48 kHz. A 1 kHz + 10 kHz test tone read at the reported rate came out at
+     * 918.5 and 9187 Hz, in every raw block, with no stitching involved; two dumps of music gave
+     * 47 992 and 48 011 new samples a second. Every band on screen had been drawn 8.8 % below its
+     * label - invisible on pink noise, which looks the same at any scale. The samples are the output
+     * mix, so their rate is the output's: here the primary output, AudioOut_D, at 48 000 Hz.
+     */
+    private int visualizerSampleRateHz() {
+        try {
+            AudioManager am = appContext != null
+                    ? (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE) : null;
+            String rate = am != null ? am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE) : null;
+            if (rate != null) {
+                int hz = Integer.parseInt(rate.trim());
+                if (hz > 0) return hz;
+            }
+        } catch (RuntimeException ignored) {
+            // A property the platform does not fill in: fall through to the rate this unit runs at.
+        }
+        return 48000;
+    }
+
+    private void startNativeCapture(int captureSize, int sampleRate) {
         stopNativeCapture();
 
-        int sampleRate = samplingRateMilliHz > 0 ? samplingRateMilliHz / 1000 : 48000;
         nativeAnalyzer = newAnalyzer(sampleRate, captureSize, false);
         if (!nativeAnalyzer.isValid()) {
             Log.w(TAG, "Native analyser did not initialise; nothing will be measured");
@@ -1741,9 +1767,11 @@ public class AudioSpectrumEngine {
             // from. The polling thread reads the same buffer far more often.
             v.setEnabled(true);
             visualizer = v;
-            startNativeCapture(captureSize, v.getSamplingRate());
+            int sampleRate = visualizerSampleRateHz();
+            startNativeCapture(captureSize, sampleRate);
             Log.d(TAG, "AudioSpectrumEngine attached to session " + sessionId
-                    + ", captureSize=" + captureSize + ", native polled capture");
+                    + ", captureSize=" + captureSize + ", native polled capture at " + sampleRate
+                    + " Hz (Visualizer reports " + v.getSamplingRate() + " mHz)");
         } catch (Throwable t) {
             Log.w(TAG, "AudioSpectrumEngine session " + sessionId + " failed: " + t);
             if (sessionId != 0) {
