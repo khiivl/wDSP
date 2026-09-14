@@ -2733,10 +2733,21 @@ public final class RoomMeasurement {
         }
 
         // 2. Average clean spectrum of confident channels (Front Left & Front Right prioritized),
-        //    and the signal-to-noise ratio alongside it, averaged the same way. The ratio decides
-        //    how far the synthesis is allowed to trust each band: it was measured all along and
-        //    nothing read it, so every band was corrected as confidently as the best one.
+        //    and the signal-to-noise ratio alongside it. The ratio decides how far the synthesis is
+        //    allowed to trust each band: it was measured all along and nothing read it, so every
+        //    band was corrected as confidently as the best one.
+        //
+        // 🔴 The spectrum is averaged in POWER, not in dB (15.09.2026). A dB mean is "a typical
+        // channel", and nobody listens to one: the ear and the microphone hear the doors together,
+        // and the loud one dominates. On the owner's unit the front left tweeter reads -32.7 / -50.5 dB
+        // at 12.5 / 20 kHz against -5.5 / -9.3 on the right, and the dB mean put the car 10 and 17 dB
+        // lower there than it sounds - the stored cabin curve disagreed with live pink noise by +11.4
+        // and +19.1 dB. The same report in power leaves +1.4 and +2.1 (offline, the 13.09 report
+        // against the 14.09 pink-noise dumps; memory cabin-average-in-power-not-db). It also made the
+        // synthesis lift both bands for a dead tweeter, which raises them in the healthy channel.
+        // The ratio stays a dB mean: it is a measure of trust, not a level.
         float[] avgClean = new float[NativeSweep.BAND_COUNT];
+        double[] avgPower = new double[NativeSweep.BAND_COUNT];
         float[] avgSnr = new float[NativeSweep.BAND_COUNT];
         int usedCount = 0;
         for (int chIdx : new int[]{Channel.FRONT_LEFT.ordinal(), Channel.FRONT_RIGHT.ordinal(),
@@ -2744,7 +2755,7 @@ public final class RoomMeasurement {
             ChannelResult c = result.channels[chIdx];
             if (c != null && c.ok && c.confident) {
                 for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-                    avgClean[b] += c.cleanBandsDb[b];
+                    avgPower[b] += Math.pow(10.0, c.cleanBandsDb[b] / 10.0);
                     avgSnr[b] += c.snrDb[b];
                 }
                 usedCount++;
@@ -2752,7 +2763,7 @@ public final class RoomMeasurement {
         }
         if (usedCount > 0) {
             for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-                avgClean[b] /= usedCount;
+                avgClean[b] = (float) (10.0 * Math.log10(Math.max(avgPower[b] / usedCount, 1e-30)));
                 avgSnr[b] /= usedCount;
             }
         }
