@@ -29,62 +29,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class AudioSpectrumEngine {
     private static final String TAG = "wDSP_SpectrumEngine";
 
-    // Edge frequencies (Hz) bounding each of the 16 AudioConfig bands, placed
-    // at the geometric mean between neighboring band centers (20...20k).
-    private static final float[] BAND_EDGES_HZ = {
-            15.9f, 25.1f, 39.7f, 63.2f, 100f, 158.1f, 250.8f, 397.4f,
-            632.5f, 1000f, 1581.1f, 2506.0f, 3969.1f, 6299.6f, 10000f, 15849f, 25198f
-    };
-
-    private static final float REF_MIN_DB = 0f;
-    private static final float REF_MAX_DB = 54f;
-    private static final float RISE_SMOOTHING = 0.92f; // Instant explosive attack on beats/transients
-    private static final float FALL_SMOOTHING = 0.26f; // Snappy musical release for punchy bounce
-    private static final float ATTENUATION_DB = 8f;
-    private static final float SILENCE_FADE_DB = 3.0f;
-
-    // Residual measurement tilt, in dB per band. Zero by design: with band energy summed
-    // instead of averaged per bin, pink noise reads flat on its own. The previous table rose to
-    // +25.5 dB at 20 kHz because it was fitted on top of the averaging bug - it made pink noise
-    // look perfect while burying real, narrow-band content such as cymbals. Re-measure with a
-    // pink noise disc before putting any number back here.
-    private static final float[] PINK_NOISE_CALIBRATION_DB = new float[16];
-
-    // Fast, responsive bass resolution (4096-sample FFT window for 10.7Hz bin resolution, zero throttling)
-    private static final int LOW_FFT_SIZE = 4096;
-    // Scale 4096-FFT peak magnitude (N/2 = 2048 for full-scale float) to match Android 8-bit FFT magnitude domain (~128 max)
-    private static final float LOW_BAND_MAGNITUDE_SCALE = 128.0f / (LOW_FFT_SIZE / 2.0f); // 0.0625f
-
-    private final float[] lowRingBuffer = new float[LOW_FFT_SIZE];
-    private int lowRingFill = 0;
-    private long lastLowFftTime = 0;
-    private boolean lowBandsReady = false;
-    /** Band 0 and 1 energy, already converted into the same units as the main FFT path. */
-    private final double[] lowBandPower = new double[2];
-    private final int[] lowBandBins = new int[2];
-    /** Coherent gain of the Hann window applied before the low-band transform. */
-    private static final float HANN_COHERENT_GAIN = 0.5f;
-    private final float[] fftScratchRe = new float[LOW_FFT_SIZE];
-    private final float[] fftScratchIm = new float[LOW_FFT_SIZE];
-
     private Visualizer visualizer;
 
     public static final int NUM_BANDS_16 = 16;
     public static final int NUM_BANDS_32 = 32;
-
-    private final float[] rawLevels16 = new float[NUM_BANDS_16];
-    private final float[] displayLevels16 = new float[NUM_BANDS_16];
-    private final float[] prevLevels16 = new float[NUM_BANDS_16];
-
-    private final float[] rawLevels16Norm = new float[NUM_BANDS_16];
-    private final float[] displayLevels16Norm = new float[NUM_BANDS_16];
-    private final float[] prevLevels16Norm = new float[NUM_BANDS_16];
-
-    private final float[] smoothedContentDb = new float[NUM_BANDS_16];
-
-    private static final double POWER_EPSILON = 1e-6;
-    /** Offset applied after the power-to-dB conversion, to sit in the display's 0..54 dB window. */
-    private static final float POWER_REFERENCE_DB = 0f;
 
     // DSP state as last sent to the hardware by McuService: Fletcher-Munson already folded into
     // the gain indices, quantised to 2 dB steps and clamped at +/-12, plus the subwoofer. This is
@@ -118,19 +66,10 @@ public class AudioSpectrumEngine {
     }
     private float dspCurveSampleRate = 0f;
 
-    private final float[] rawLevels32 = new float[NUM_BANDS_32];
-    private final float[] displayLevels32 = new float[NUM_BANDS_32];
-    private final float[] prevLevels32 = new float[NUM_BANDS_32];
-
-    private final float[] rawLevels32Norm = new float[NUM_BANDS_32];
-    private final float[] displayLevels32Norm = new float[NUM_BANDS_32];
-    private final float[] prevLevels32Norm = new float[NUM_BANDS_32];
-
     // State parameters for Post-DSP synthesis
     private final int[] gains = new int[NUM_BANDS_16];
     private final boolean[] qNarrow = new boolean[NUM_BANDS_16];
     private final float[] fmOffsets = new float[NUM_BANDS_16];
-    private float runningPeakDb = 25f;
 
     private long lastCaptureTime = 0;
     private long captureIntervalMs = 50;
@@ -690,20 +629,6 @@ public class AudioSpectrumEngine {
                 + " agcMain=" + (isRadioCaptureActive() || mainAgcEnabled)
                 + (isRadioCaptureActive() ? " (forced: mic mode)" : "")
                 + " agcBar=" + barAgcEnabled);
-    }
-
-    private void dumpBands(float[] contentDb, float[] curveDb) {
-        long now = System.currentTimeMillis();
-        if (now - lastDumpTime < 1000) return;
-        lastDumpTime = now;
-        StringBuilder level = new StringBuilder("LEVEL ");
-        StringBuilder curve = new StringBuilder("CURVE ");
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            level.append(String.format(java.util.Locale.US, "%s=%.0f ", AudioConfig.BAND_LABELS[i], contentDb[i]));
-            curve.append(String.format(java.util.Locale.US, "%s=%+.1f ", AudioConfig.BAND_LABELS[i], curveDb[i]));
-        }
-        Log.i(TAG, level.toString());
-        Log.i(TAG, curve.toString());
     }
 
     /** The DSP response curve, recomputed only when the state or the sample rate changed. */
@@ -1730,44 +1655,22 @@ public class AudioSpectrumEngine {
             }
             v.setCaptureSize(captureSize);
 
-            int rate = Visualizer.getMaxCaptureRate();
-            if (rate <= 0) rate = 20000;
-
-            if (NativeAnalyzer.isAvailable()) {
-                // No capture listener at all: the 20 Hz callback is exactly what we are getting
-                // away from. The polling thread below reads the same buffer far more often.
-                v.setEnabled(true);
-                visualizer = v;
-                startNativeCapture(captureSize, v.getSamplingRate());
-            } else {
-                v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
-                    @Override
-                    public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                        if (pausedForCall) return;
-                        noteSignal(waveform);
-                        processWaveform(waveform, samplingRate);
-                        if (waveform != null) {
-                            synchronized (waveformLock) {
-                                int len = Math.min(waveform.length, latestWaveform.length);
-                                System.arraycopy(waveform, 0, latestWaveform, 0, len);
-                                latestWaveformLen = len;
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-                        if (pausedForCall) return;
-                        processFft(fft, samplingRate);
-                    }
-                }, rate, true, true);
-
-                v.setEnabled(true);
-                visualizer = v;
+            // 🔴 The native analyser is the only one. A Java twin used to run on Visualizer callbacks
+            // when the library failed to load - a second analyser with its own band plan, floor
+            // and ballistics, which drifted from the native one (owner, 14.09.2026: one source of
+            // truth for the whole app; removed). Without the library nothing is measured.
+            if (!NativeAnalyzer.isAvailable()) {
+                Log.e(TAG, "native analyser library not loaded - no spectrum");
+                v.release();
+                return;
             }
+            // No capture listener at all: the 20 Hz callback is exactly what we are getting away
+            // from. The polling thread reads the same buffer far more often.
+            v.setEnabled(true);
+            visualizer = v;
+            startNativeCapture(captureSize, v.getSamplingRate());
             Log.d(TAG, "AudioSpectrumEngine attached to session " + sessionId
-                    + ", captureSize=" + captureSize
-                    + (NativeAnalyzer.isAvailable() ? ", native polled capture" : ", java callbacks"));
+                    + ", captureSize=" + captureSize + ", native polled capture");
         } catch (Throwable t) {
             Log.w(TAG, "AudioSpectrumEngine session " + sessionId + " failed: " + t);
             if (sessionId != 0) {
@@ -1798,305 +1701,5 @@ public class AudioSpectrumEngine {
         } finally {
             visualizer = null;
         }
-        lowRingFill = 0;
-        lowBandsReady = false;
-        lastLowFftTime = 0;
-    }
-
-    private void processFft(byte[] fft, int samplingRateMilliHz) {
-        int n = fft.length;
-        if (n < 4) return;
-        int numBins = n / 2;
-        float sampleRateHz = samplingRateMilliHz / 1000f;
-
-        // Band level is the ENERGY in the band - the sum of bin powers - not the average
-        // magnitude per bin. The bands are 2/3 of an octave wide, so at a 46.9 Hz bin spacing the
-        // 50 Hz band holds about one bin while the 20 kHz band holds about 174. Averaging over
-        // those 174 returned the noise floor as a steady number, drowning a cymbal (a few loud
-        // bins among the 174) by some 45 dB while lighting the top of the display permanently.
-        // Summing power is also what makes pink noise read flat by itself, with no correction
-        // table: equal energy per octave in, equal reading out.
-        double[] bandPower = new double[AudioConfig.NUM_BANDS];
-        int[] bandBins = new int[AudioConfig.NUM_BANDS];
-
-        for (int bin = 0; bin <= numBins; bin++) {
-            float re, im;
-            if (bin == 0) {
-                re = fft[0]; im = 0;
-            } else if (bin == numBins) {
-                re = fft[1]; im = 0;
-            } else {
-                re = fft[2 * bin]; im = fft[2 * bin + 1];
-            }
-
-            float freqHz = bin * sampleRateHz / n;
-            int band = bandForFrequency(freqHz);
-            if (band >= 0) {
-                bandPower[band] += (double) re * re + (double) im * im;
-                bandBins[band]++;
-            }
-        }
-
-        // The bottom two bands are narrower than one bin of this FFT, so they come from the
-        // separate 4096-point transform fed by the waveform.
-        // Bands 0 (15.9-25.1 Hz) and 1 (25.1-39.7 Hz) are deliberately left empty here, so the
-        // density fallback below fills them from the 50 Hz band.
-        //
-        // They cannot be measured with what Visualizer gives us. Capture size tops out at 1024,
-        // which at 48 kHz is a 46.9 Hz bin - both bands are narrower than a single bin. The
-        // previous attempt at a workaround stitched 1024-sample blocks into a 4096-point buffer
-        // and transformed that, but the blocks are not contiguous: 1024 samples arrive 20 times a
-        // second while the stream runs at 48000, so 29 ms out of every 50 is missing and the
-        // assembled buffer runs 2.3x fast. Its output below 47 Hz was an artefact of the
-        // stitching, which is why 31.5 Hz jumped between 17 and 0 on stationary pink noise.
-        //
-        // Measuring these two for real needs a continuous PCM stream - polled capture with
-        // overlap alignment, or MediaProjection - not a larger transform.
-
-        // Turn the accumulated bin powers into band energy the same way for every band:
-        // mean power per bin, times the number of bins the band SHOULD hold at this resolution.
-        //
-        // A plain sum is only right where a band is wide enough to be sampled properly. At a
-        // 46.9 Hz bin spacing the 50, 80 and 125 Hz bands land on a single bin each, and the two
-        // bottom bands are narrower than one bin - summing there reports whatever that one bin
-        // happened to catch. Scaling the density by the band's own width removes that bias and
-        // makes wide and narrow bands directly comparable.
-        double binWidthHz = sampleRateHz / n;
-        double[] bandDensity = new double[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (bandBins[i] > 0) bandDensity[i] = bandPower[i] / bandBins[i];
-        }
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            double density = bandDensity[i];
-            if (bandBins[i] == 0) {
-                // No bin of its own: borrow the nearest measured density rather than invent a level.
-                for (int distance = 1; distance < AudioConfig.NUM_BANDS && density == 0; distance++) {
-                    int lo = i - distance, hi = i + distance;
-                    if (lo >= 0 && bandBins[lo] > 0) density = bandDensity[lo];
-                    else if (hi < AudioConfig.NUM_BANDS && bandBins[hi] > 0) density = bandDensity[hi];
-                }
-            }
-            double expectedBins = (BAND_EDGES_HZ[i + 1] - BAND_EDGES_HZ[i]) / binWidthHz;
-            bandPower[i] = density * expectedBins;
-        }
-
-        // 1. What the hardware DSP will do to this content - real biquad responses, see DspResponse.
-        float[] postDspGainDb = getDspCurve(sampleRateHz);
-
-        // 2. Content level per band
-        float[] postSignalDb = new float[AudioConfig.NUM_BANDS];
-        float maxPostDb = 0f;
-
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            // 🔴 No noise floor comes off here. This path only ever reads the Visualizer's digital
-            // PCM, and there is no acoustic noise in it to take away - owner, 14.09.2026: "нахріна
-            // це взагалі враховувати в розрахунковій кривій, це ж для мікрофону". It used to learn a
-            // floor in quiet frames and subtract it linearly, which on steady content can take a
-            // whole band down to nothing (the native twin read -133 dB at 17.8 kHz on pink noise).
-            double signalPower = bandPower[i];
-
-            float rawSignalDb = (float) (10.0 * Math.log10(signalPower + POWER_EPSILON)
-                    - POWER_REFERENCE_DB);
-            if (rawSignalDb < 0f) rawSignalDb = 0f;
-
-            // Presence gate: only a band with real content above its floor earns the DSP curve.
-            float presence = rawSignalDb / SILENCE_FADE_DB;
-            presence = Math.max(0f, Math.min(1f, presence));
-
-            // Residual measurement tilt. Zero by design now that band energy is summed rather
-            // than averaged - kept so the curve can be re-measured with a pink noise disc.
-            float calibratedDb = rawSignalDb + presence * PINK_NOISE_CALIBRATION_DB[i];
-
-            // Fast-attack, smooth-release ballistics applied to content
-            float prevContentDb = smoothedContentDb[i];
-            float contentSmoothing = calibratedDb > prevContentDb ? RISE_SMOOTHING : FALL_SMOOTHING;
-            smoothedContentDb[i] = prevContentDb + (calibratedDb - prevContentDb) * contentSmoothing;
-
-            float finalDb = smoothedContentDb[i] + presence * postDspGainDb[i] - ATTENUATION_DB;
-            postSignalDb[i] = Math.max(0f, finalDb);
-            if (finalDb > maxPostDb) {
-                maxPostDb = finalDb;
-            }
-        }
-
-        if (debugDump) {
-            dumpBands(postSignalDb, postDspGainDb);
-        }
-
-        // 3. Compute Unnormalized Mapping [0..54 dB] with soft ceiling headroom (16-band)
-        for (int i = 0; i < NUM_BANDS_16; i++) {
-            float normalized = (postSignalDb[i] - REF_MIN_DB) / (REF_MAX_DB - REF_MIN_DB);
-            rawLevels16[i] = applySoftHeadroom(normalized);
-        }
-
-        // 4. Compute Dynamic AGC Normalization Mapping (16-band)
-        if (maxPostDb > runningPeakDb) {
-            // Fast attack on musical transients/beats
-            runningPeakDb += (maxPostDb - runningPeakDb) * 0.40f;
-        } else {
-            // Smooth musical release (~2.5 sec)
-            runningPeakDb += (maxPostDb - runningPeakDb) * 0.008f;
-        }
-        float effectivePeak = Math.max(10f, runningPeakDb);
-        for (int i = 0; i < NUM_BANDS_16; i++) {
-            float normAgc = postSignalDb[i] / effectivePeak;
-            rawLevels16Norm[i] = applySoftHeadroom(normAgc);
-        }
-
-        // 5. Synthesize continuous, ultra-smooth 32-band spectrum for RTA/Status bar
-        for (int k = 0; k < NUM_BANDS_32; k++) {
-            float pos = k * (15f / 31f);
-            int idx = (int) pos;
-            float frac = pos - idx;
-            if (idx < 15) {
-                rawLevels32[k] = rawLevels16[idx] * (1.0f - frac) + rawLevels16[idx + 1] * frac;
-                rawLevels32Norm[k] = rawLevels16Norm[idx] * (1.0f - frac) + rawLevels16Norm[idx + 1] * frac;
-            } else {
-                rawLevels32[k] = rawLevels16[15];
-                rawLevels32Norm[k] = rawLevels16Norm[15];
-            }
-        }
-
-        long now = System.currentTimeMillis();
-        if (lastCaptureTime != 0) {
-            long observed = now - lastCaptureTime;
-            if (observed > 0) captureIntervalMs = observed;
-        }
-        System.arraycopy(displayLevels16, 0, prevLevels16, 0, NUM_BANDS_16);
-        System.arraycopy(rawLevels16, 0, displayLevels16, 0, NUM_BANDS_16);
-
-        System.arraycopy(displayLevels16Norm, 0, prevLevels16Norm, 0, NUM_BANDS_16);
-        System.arraycopy(rawLevels16Norm, 0, displayLevels16Norm, 0, NUM_BANDS_16);
-
-        System.arraycopy(displayLevels32, 0, prevLevels32, 0, NUM_BANDS_32);
-        System.arraycopy(rawLevels32, 0, displayLevels32, 0, NUM_BANDS_32);
-
-        System.arraycopy(displayLevels32Norm, 0, prevLevels32Norm, 0, NUM_BANDS_32);
-        System.arraycopy(rawLevels32Norm, 0, displayLevels32Norm, 0, NUM_BANDS_32);
-
-        lastCaptureTime = now;
-
-        for (OnSpectrumDataListener l : listeners) {
-            try {
-                l.onSpectrumCapture(displayLevels16, displayLevels16Norm, prevLevels16, prevLevels16Norm,
-                                   displayLevels32, displayLevels32Norm, prevLevels32, prevLevels32Norm,
-                                   lastCaptureTime, captureIntervalMs);
-            } catch (Throwable ignored) {}
-        }
-    }
-
-    private void processWaveform(byte[] waveform, int samplingRateMilliHz) {
-        int len = waveform.length;
-        if (len == 0) return;
-
-        if (len >= LOW_FFT_SIZE) {
-            for (int i = 0; i < LOW_FFT_SIZE; i++) {
-                int b = waveform[len - LOW_FFT_SIZE + i] & 0xFF;
-                lowRingBuffer[i] = (b - 128) / 128f;
-            }
-            lowRingFill = LOW_FFT_SIZE;
-        } else {
-            System.arraycopy(lowRingBuffer, len, lowRingBuffer, 0, LOW_FFT_SIZE - len);
-            for (int i = 0; i < len; i++) {
-                int b = waveform[i] & 0xFF;
-                lowRingBuffer[LOW_FFT_SIZE - len + i] = (b - 128) / 128f;
-            }
-            lowRingFill = Math.min(LOW_FFT_SIZE, lowRingFill + len);
-        }
-
-        if (lowRingFill < LOW_FFT_SIZE) return;
-
-        // computeLowBandMagnitudes() is intentionally not called: see the note in processFft()
-        // about why a transform over stitched, non-contiguous blocks cannot measure 20-40 Hz.
-        // The ring buffer and the transform stay in place for the continuous-capture rework.
-    }
-
-    private void computeLowBandMagnitudes(float sampleRateHz) {
-        for (int i = 0; i < LOW_FFT_SIZE; i++) {
-            float w = 0.5f - 0.5f * (float) Math.cos(2 * Math.PI * i / (LOW_FFT_SIZE - 1));
-            fftScratchRe[i] = lowRingBuffer[i] * w;
-            fftScratchIm[i] = 0f;
-        }
-        fft(fftScratchRe, fftScratchIm);
-
-        // Sum POWER, in the same units the main path uses, so the two bottom bands sit on the
-        // same scale as the other fourteen. Averaging magnitude here while the main path summed
-        // power was showing up as a hole at the very bottom of the display.
-        double band0Power = 0; int band0Bins = 0;
-        double band1Power = 0; int band1Bins = 0;
-        int half = LOW_FFT_SIZE / 2;
-        for (int bin = 1; bin < half; bin++) {
-            float freqHz = bin * sampleRateHz / LOW_FFT_SIZE;
-            if (freqHz >= BAND_EDGES_HZ[2]) break;
-            float magnitude = (float) Math.sqrt(fftScratchRe[bin] * fftScratchRe[bin]
-                    + fftScratchIm[bin] * fftScratchIm[bin]);
-            // Into the platform FFT's magnitude domain, undoing the Hann window's coherent gain
-            // (the platform's own transform is not windowed).
-            double mag = magnitude * LOW_BAND_MAGNITUDE_SCALE / HANN_COHERENT_GAIN;
-            double power = mag * mag;
-            if (freqHz >= BAND_EDGES_HZ[0] && freqHz < BAND_EDGES_HZ[1]) {
-                band0Power += power; band0Bins++;
-            } else if (freqHz >= BAND_EDGES_HZ[1]) {
-                band1Power += power; band1Bins++;
-            }
-        }
-
-        lowBandPower[0] = band0Power;
-        lowBandPower[1] = band1Power;
-        lowBandBins[0] = band0Bins;
-        lowBandBins[1] = band1Bins;
-        lowBandsReady = true;
-    }
-
-    private static void fft(float[] re, float[] im) {
-        int n = re.length;
-        for (int i = 1, j = 0; i < n; i++) {
-            int bit = n >> 1;
-            for (; (j & bit) != 0; bit >>= 1) j ^= bit;
-            j ^= bit;
-            if (i < j) {
-                float tr = re[i]; re[i] = re[j]; re[j] = tr;
-                float ti = im[i]; im[i] = im[j]; im[j] = ti;
-            }
-        }
-        for (int len = 2; len <= n; len <<= 1) {
-            double angStep = -2 * Math.PI / len;
-            float wr = (float) Math.cos(angStep);
-            float wi = (float) Math.sin(angStep);
-            for (int start = 0; start < n; start += len) {
-                float curWr = 1f, curWi = 0f;
-                int half = len / 2;
-                for (int k = 0; k < half; k++) {
-                    int a = start + k;
-                    int b = start + k + half;
-                    float tr = re[b] * curWr - im[b] * curWi;
-                    float ti = re[b] * curWi + im[b] * curWr;
-                    re[b] = re[a] - tr;
-                    im[b] = im[a] - ti;
-                    re[a] += tr;
-                    im[a] += ti;
-                    float nextWr = curWr * wr - curWi * wi;
-                    float nextWi = curWr * wi + curWi * wr;
-                    curWr = nextWr; curWi = nextWi;
-                }
-            }
-        }
-    }
-
-    private int bandForFrequency(float freqHz) {
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (freqHz >= BAND_EDGES_HZ[i] && freqHz < BAND_EDGES_HZ[i + 1]) return i;
-        }
-        return -1;
-    }
-
-    private static float applySoftHeadroom(float normalized) {
-        if (normalized <= 0.80f) {
-            return Math.max(0f, normalized);
-        }
-        // Graceful analog-style saturation knee: smoothly compresses extreme peaks between 80% and 95%
-        float excess = normalized - 0.80f;
-        float compressed = 0.80f + (float) Math.tanh(excess * 1.5f) * 0.15f;
-        return Math.min(0.95f, compressed);
     }
 }
