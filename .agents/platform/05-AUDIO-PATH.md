@@ -185,6 +185,22 @@ the case that ends at 16 kHz. ❓ Whether the input's rate was reconfigured insi
 visible: both clients got a `rec update` at .739, the moment ours rejoined, and a snapshot every
 3 s cannot say what changed.
 
+📻 **Repeated with that restart removed** (wDSP `6ba2839`), same night, ~22 minutes asleep:
+
+```
+02:44:07.218  wDSP        rec start  riid 415
+02:47:42.101  assistant   rec start, 02:47:53.932 rec stop   (its short listen before sleep)
+              ---- unit asleep; 2 more successful suspends counted ----
+03:09:42.138  assistant   rec start  <- first again
+03:09:42.380  ACC_ON reaches wDSP (242 ms later)
+03:09:42.402  wDSP: "woke up with the microphone still open: capture kept, noise floors forgotten"
+              wDSP        no rec stop, no rec start - riid 415 still active at 03:09:59
+03:09:59      both clients on patch 69, dev=1ch 48000Hz; assistant client 16000Hz
+```
+
+Same pid before and after. The assistant still reopens first, and there is no longer any moment at
+which it is alone on the input.
+
 #### A phone call sits beside our capture, not instead of it — 13.09.2026
 
 📻 Four Bluetooth calls with our 48 kHz `UNPROCESSED` capture held throughout. The call's recorder
