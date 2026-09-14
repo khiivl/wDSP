@@ -228,9 +228,26 @@ What this means:
 - The only signal is the platform's own recording-configuration change — the `rec update` lines,
   which `AudioManager.AudioRecordingCallback` delivers to an app with the device format in
   `AudioRecordingConfiguration`. ❓ Not yet used or tested by wDSP.
-- ❓ Whether our session's pre-processing came back on after the restore: our effect handles died
-  (`W/AudioEffect IEffect died`), and the dump now lists `effects client='Noise Suppression'` on our
-  session where it listed the two disabled ones before. Enabled or not was not read.
+- 📻 **And our session's noise suppression came back ON.** Our effect handles died with the server
+  (`W/AudioEffect IEffect died`), so the "switched off" that wDSP set at open was lost. Read at
+  03:16 from `dumpsys media.audio_flinger`, effect chains on the new 16 kHz input:
+
+  ```
+  session 265 (wDSP)       Noise Suppression (AOSP)        Enabled y  Suspended n   <- acting on our samples
+  session 289 (assistant)  Acoustic Echo Canceler (sprd)   Enabled y  Suspended y
+                           Noise Suppression (AOSP)        Enabled y  Suspended y
+  ```
+
+  So after a restore our capture is narrow **and** noise-suppressed, and nothing in the app knows.
+  The input reports `Audio source: 1 (AUDIO_SOURCE_MIC)` for both clients, although wDSP asks for
+  `UNPROCESSED`.
+- 📻 The capture itself stayed alive: samples kept flowing (the gate log at 1 s intervals, rms up to
+  1919), and the status bar bars moved — with the top five of 32 bands flat, i.e. nothing above 8 kHz.
+- 📻 *(owner, the same night, before the restart)* After the sleep, at volume 2 with the air
+  conditioning running on wake, the microphone spectrum read hot at both ends with a clear dip in
+  the middle — his explanation: the noise suppressor pressing down the band the air conditioner
+  fills. Before the restart the dump listed `dev='Noise Suppression'` for both clients; ❓ which
+  session's chain was the active one at that moment was not read.
 - Playback came back by itself (`restoreTrack_l`), media on `AudioOut_D` again.
 
 #### A phone call sits beside our capture, not instead of it — 13.09.2026
