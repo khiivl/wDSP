@@ -97,6 +97,7 @@
     <string name="toast_exported">Εξήχθη</string>
     <string name="toast_imported">Εισήχθη</string>
     <string name="toast_sub_comp_limit">Η αντιστάθμιση sub περιορίζεται στα 100 Hz</string>
+    <string name="mic_narrow_restart">Το μικρόφωνο χρησιμοποιείται από άλλη εφαρμογή και έχει περιοριστεί στα 8 kHz. Επανεκκινήστε το ηχοσύστημα — μετά την εκκίνηση το wDSP το δεσμεύει πρώτο.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Διατήρηση wDSP σε λειτουργία</string>

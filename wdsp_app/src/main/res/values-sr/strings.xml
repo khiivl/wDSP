@@ -97,6 +97,7 @@
     <string name="toast_exported">Извезено</string>
     <string name="toast_imported">Увезено</string>
     <string name="toast_sub_comp_limit">Суб компензација ограничена на 100 Hz</string>
+    <string name="mic_narrow_restart">Микрофон користи друга апликација и ограничен је на 8 kHz. Поново покрените ауторадио — након покретања wDSP га преузима први.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Одржи wDSP покренутим</string>

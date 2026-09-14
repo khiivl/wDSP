@@ -97,6 +97,7 @@
     <string name="toast_exported">Eksportuota</string>
     <string name="toast_imported">Importuota</string>
     <string name="toast_sub_comp_limit">Žemų dažnių kompensavimas apribotas iki 100 Hz</string>
+    <string name="mic_narrow_restart">Mikrofoną naudoja kita programa ir jis apribotas ties 8 kHz. Paleiskite magnetolą iš naujo — po paleidimo wDSP jį užima pirmas.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Palaikyti wDSP veikimą</string>

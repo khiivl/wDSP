@@ -333,10 +333,21 @@ public class RadioMicCapture {
      *
      * @return false when capturing has to end
      */
+    /** Once per process: the restart advice is worth one toast, not one on every reopen. */
+    private static volatile boolean sToldToRestart;
+
     private boolean reopenAfterStoppingAssistant() {
         Context ctx = appContext;
         if (ctx == null || !RootAccess.hasRoot(ctx)) {
             Log.i(TAG, "microphone held at 16 kHz and no root to free it - staying on the narrow stream");
+            // Without root there is no fighting for the input, and there does not need to be: after
+            // a start-up wDSP opens the microphone first (measured 14.09.2026, 31 s ahead of the
+            // assistant). So the honest thing is to say how to get the full band back (owner's
+            // wording, 14.09.2026) - not to stop anyone, and not to stay silent about it.
+            if (ctx != null && !sToldToRestart) {
+                sToldToRestart = true;
+                Toaster.show(ctx, R.string.mic_narrow_restart);
+            }
             return true;
         }
         synchronized (this) {

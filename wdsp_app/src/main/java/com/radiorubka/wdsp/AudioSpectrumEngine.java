@@ -1365,9 +1365,7 @@ public class AudioSpectrumEngine {
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
         boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
-        boolean hasRoot = RootAccess.hasRoot(appContext);
-        boolean hasMicCal = RoomMeasurement.hasMicCompensation(appContext);
-        boolean canRunMic = hasRoot && hasMicCal;
+        boolean canRunMic = canRunMic();
 
         if (isRadio) {
             boolean shouldRunMic = (micMode || radioMicVisualizerEnabled) && canRunMic;
@@ -1378,7 +1376,7 @@ public class AudioSpectrumEngine {
                 }
             } else {
                 if (isRadioCaptureActive() || visualizer != null) {
-                    Log.i(TAG, "Source is Radio (no root / mic uncalibrated / mode calc) - stopping active capture");
+                    Log.i(TAG, "Source is Radio (mic uncalibrated / mode calc) - stopping active capture");
                     stopRadioMicCapture();
                     stopNativeCapture();
                     if (visualizer != null) {
@@ -1406,12 +1404,27 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /**
+     * Whether the microphone pipeline may run: a calibrated microphone, and nothing else.
+     *
+     * <p>🔴 Root is not a condition any more (owner, 14.09.2026: "рут лише запасний", and "якщо ми
+     * перші, і гарантовано, беремо мікрофон, то і рут там не потрібен"). It was required because root
+     * is how the assistant is stopped when it holds the input at 16 kHz - but measured after a cold
+     * boot, wDSP opens the microphone 31 s before the assistant does, so the input is ours at 48 kHz
+     * without stopping anyone. Root remains the fallback inside RadioMicCapture for a stream that
+     * does come up narrow; without root, that case tells the person to restart the head unit.
+     *
+     * <p>One function now: this condition used to be computed twice, in checkSourceState and
+     * startInternal, with identical code that would have drifted the first time one was edited.
+     */
+    private boolean canRunMic() {
+        return appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+    }
+
     private void startInternal(int sessionId) {
         boolean isRadio = appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
         boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
-        boolean hasRoot = appContext != null && RootAccess.hasRoot(appContext);
-        boolean hasMicCal = appContext != null && RoomMeasurement.hasMicCompensation(appContext);
-        boolean canRunMic = hasRoot && hasMicCal;
+        boolean canRunMic = canRunMic();
 
         if (isRadio) {
             if (visualizer != null) {

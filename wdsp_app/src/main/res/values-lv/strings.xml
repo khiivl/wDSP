@@ -97,6 +97,7 @@
     <string name="toast_exported">Eksportēts</string>
     <string name="toast_imported">Importēts</string>
     <string name="toast_sub_comp_limit">Zemfrekvences komp. ierobežota līdz 100 Hz</string>
+    <string name="mic_narrow_restart">Mikrofonu aizņem cita lietotne un tas ir apgriezts pie 8 kHz. Restartējiet magnetolu — pēc starta wDSP to paņem pirmais.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Uzturēt wDSP darbību</string>

@@ -97,6 +97,7 @@
     <string name="toast_exported">Exportado</string>
     <string name="toast_imported">Importado</string>
     <string name="toast_sub_comp_limit">Compensação de Sub limitada a 100 Hz</string>
+    <string name="mic_narrow_restart">O microfone está ocupado por outro app e limitado a 8 kHz. Reinicie a central multimídia — após o início o wDSP assume primeiro.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Manter wDSP em Execução</string>

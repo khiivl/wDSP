@@ -97,6 +97,7 @@
     <string name="toast_exported">Viety</string>
     <string name="toast_imported">Tuotu</string>
     <string name="toast_sub_comp_limit">Sub-kompensaatio rajoitettu 100 Hz:iin</string>
+    <string name="mic_narrow_restart">Mikrofoni on toisen sovelluksen käytössä ja leikattu 8 kHz:iin. Käynnistä autoradio uudelleen — käynnistyksen jälkeen wDSP ottaa sen ensimmäisenä.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Pidä wDSP käynnissä</string>

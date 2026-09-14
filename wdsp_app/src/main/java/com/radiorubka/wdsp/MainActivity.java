@@ -976,19 +976,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSpectrumModeUi() {
         View toggleLayout = findViewById(R.id.layout_spectrum_mode_toggle);
-        boolean hasRoot = PermissionsWizard.isRootGranted(this);
-        boolean hasMic = RoomMeasurement.hasMicCompensation(this);
-        boolean isAvailable = hasRoot && hasMic;
+        // A calibrated microphone is the only requirement; root is not (see
+        // AudioSpectrumEngine.canRunMic).
+        boolean isAvailable = RoomMeasurement.hasMicCompensation(this);
 
         if (toggleLayout != null) {
             toggleLayout.setVisibility(isAvailable ? View.VISIBLE : View.GONE);
         }
 
-        if (!isAvailable) {
-            if (AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(AudioSpectrumEngine.getInstance().getSpectrumMode())) {
-                AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
-            }
-        }
+        // 🔴 The person's choice is never switched here any more. This used to write "calc" over a
+        // chosen "mic" whenever the check failed - and it runs synchronously in onCreate, before the
+        // asynchronous root check has answered, so after every reinstall or update root read as
+        // absent and the spectrum silently became "calculated" (observed on the owner's unit
+        // 14.09.2026: the screen showed calc while the stored mode was still mic). When the
+        // microphone genuinely cannot run, the engine already falls back on its own and returns to
+        // the microphone by itself once it can; the stored choice stays what the person made it.
 
         if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
         boolean isNight = ThemeManager.isNight(this);
@@ -1025,7 +1027,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkRadioMicCalibrationInvite() {
         if (sPromptedMicCalibration) return;
-        if (PermissionsWizard.isRootGranted(this) && !RoomMeasurement.hasMicCompensation(this)) {
+        if (!RoomMeasurement.hasMicCompensation(this)) {   // root is not a requirement for the mic spectrum
             if (NowPlaying.getInstance(this).isRadioSource()) {
                 sPromptedMicCalibration = true;
                 showMicCalibrationInviteDialog();

@@ -97,6 +97,7 @@
     <string name="toast_exported">Esportato</string>
     <string name="toast_imported">Importato</string>
     <string name="toast_sub_comp_limit">Comp. Sub limitata a 100 Hz</string>
+    <string name="mic_narrow_restart">Il microfono è occupato da un\'altra app e limitato a 8 kHz. Riavvia l\'autoradio — dopo l\'avvio wDSP lo prende per primo.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Mantieni wDSP in esecuzione</string>

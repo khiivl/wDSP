@@ -97,6 +97,7 @@
     <string name="toast_exported">Eksporditud</string>
     <string name="toast_imported">Imporditud</string>
     <string name="toast_sub_comp_limit">Bassikõlari komp. piiratud 100 Hz-ga</string>
+    <string name="mic_narrow_restart">Mikrofon on hõivatud teise rakenduse poolt ja piiratud 8 kHz juures. Taaskäivitage autoradio — pärast käivitamist võtab wDSP selle esimesena.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Hoia wDSP töös</string>
