@@ -2140,7 +2140,11 @@ public class SettingsActivity extends AppCompatActivity {
 
                     // 2. Crossover
                     if (result.hasSubwoofer) {
-                        tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
+                        if (result.midbassHpfFreqHz > 0) {
+                            tvHpf.setText(getString(R.string.room_wizard_crossover_hpf, result.midbassHpfFreqHz));
+                        } else {
+                            tvHpf.setText(R.string.room_wizard_crossover_hpf_through);
+                        }
                         tvSub.setText(getString(R.string.room_wizard_crossover_sub, result.subLpfFreqHz, result.subGain));
                     } else {
                         tvHpf.setText(R.string.room_wizard_crossover_hpf_through);

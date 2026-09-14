@@ -138,7 +138,16 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
     private TextView tvBassFilterFrontVal, tvBassBoostFrontDb, tvBassFilterRearVal, tvBassBoostRearDb;
     private AutoCompleteTextView spinnerBassFreqFront, spinnerBassFreqRear;
-    private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
+    /**
+     * The door high-pass slider's label, from the chip's own table (DspResponse.DOOR_HPF_HZ). Code 0 is
+     * Through - no filter - and was labelled "20 Hz" by the copy this replaced, code 2 "31" for 31.5.
+     */
+    private String doorHighPassLabel(int code) {
+        if (code <= 0 || code >= DspResponse.DOOR_HPF_HZ.length) return getString(R.string.freq_off);
+        final float hz = DspResponse.DOOR_HPF_HZ[code];
+        final String text = hz == Math.round(hz) ? String.valueOf(Math.round(hz)) : String.valueOf(hz);
+        return getString(R.string.lbl_hz_fmt, text);
+    }
     private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
     /**
      * What the bass-boost dropdowns actually show: the same frequencies with the hertz unit on
@@ -1553,9 +1562,9 @@ public class MainActivity extends AppCompatActivity {
 
         Slider.OnChangeListener bl = (slider, value, fromUser) -> {
             int p = (int) value;
-            if (slider == seekBassFilterFront) tvBassFilterFrontVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
+            if (slider == seekBassFilterFront) tvBassFilterFrontVal.setText(doorHighPassLabel(p));
             else if (slider == seekBassBoostFront) tvBassBoostFrontDb.setText(getString(R.string.lbl_db_fmt, p));
-            else if (slider == seekBassFilterRear) tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
+            else if (slider == seekBassFilterRear) tvBassFilterRearVal.setText(doorHighPassLabel(p));
             else if (slider == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();

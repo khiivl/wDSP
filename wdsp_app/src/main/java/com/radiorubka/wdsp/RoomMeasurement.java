@@ -395,8 +395,9 @@ public final class RoomMeasurement {
              800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
      };
 
-     public static final int[] BASS_FILTER_FREQS_HZ = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250};
-     public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
+     // The door high-pass and subwoofer crossover tables live in DspResponse (DOOR_HPF_HZ,
+     // SUB_FREQS_HZ), as the chip has them. The copies here called the high-pass's code 0 "20 Hz";
+     // it is Through - no filter (15.09.2026).
 
      public enum SoundstageMode {
          DRIVER(0, "Водій", "Водій"),
@@ -2801,8 +2802,9 @@ public final class RoomMeasurement {
         // 3. Detect midbass roll-off HPF cutoff index
         if (result.hasSubwoofer) {
             result.midbassHpfIdx = NativeSweep.detectMidbassRollOff(avgClean);
-            if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < BASS_FILTER_FREQS_HZ.length) {
-                result.midbassHpfFreqHz = BASS_FILTER_FREQS_HZ[result.midbassHpfIdx];
+            if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < DspResponse.DOOR_HPF_HZ.length) {
+                // 0 for code 0: Through, which is how the no-subwoofer branch below says it too.
+                result.midbassHpfFreqHz = Math.round(DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx]);
             } else {
                 result.midbassHpfIdx = 5;
                 result.midbassHpfFreqHz = 63;
@@ -2821,8 +2823,8 @@ public final class RoomMeasurement {
                 result.autoEqGains16, subSettings);
 
         result.subLpfIdx = subSettings[0];
-        if (result.subLpfIdx >= 0 && result.subLpfIdx < SUB_FREQS_HZ.length) {
-            result.subLpfFreqHz = SUB_FREQS_HZ[result.subLpfIdx];
+        if (result.subLpfIdx >= 0 && result.subLpfIdx < DspResponse.SUB_FREQS_HZ.length) {
+            result.subLpfFreqHz = DspResponse.SUB_FREQS_HZ[result.subLpfIdx];
         } else {
             result.subLpfIdx = 4;
             result.subLpfFreqHz = 63;
@@ -3649,7 +3651,9 @@ public final class RoomMeasurement {
             if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
                 sb.append("Dolby Atmos 3D Surround: Active (RSSE +4 dB, Rear Surround Delay 12.7 ms)\n");
             }
-            sb.append(String.format(Locale.US, "Midbass HPF: %d Hz (idx %d)\n", result.midbassHpfFreqHz, result.midbassHpfIdx));
+            sb.append(result.midbassHpfFreqHz > 0
+                    ? String.format(Locale.US, "Midbass HPF: %d Hz (idx %d)\n", result.midbassHpfFreqHz, result.midbassHpfIdx)
+                    : String.format(Locale.US, "Midbass HPF: Through (idx %d)\n", result.midbassHpfIdx));
             if (result.hasSubwoofer) {
                 sb.append(String.format(Locale.US, "Subwoofer: Installed, LPF %d Hz (idx %d), Gain %+d dB, Delay %.1f ms (%d steps)\n",
                         result.subLpfFreqHz, result.subLpfIdx, result.subGain, result.suggestedSubDelayMs, result.suggestedSubDelaySteps));

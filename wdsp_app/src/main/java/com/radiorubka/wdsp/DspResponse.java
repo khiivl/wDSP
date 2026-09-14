@@ -37,9 +37,9 @@ public final class DspResponse {
      * Second order, 12 dB/octave: the MCU writes the order bit as 0. Read from the datasheet and the
      * MCU reverse, {@code .agents/platform/03-SOUND-PROCESSOR.md} §5.
      *
-     * <p>⚠️ Not the same as the two tables the app shows and measures with
-     * ({@code MainActivity.BASS_FILTER_FREQS}, {@code RoomMeasurement.BASS_FILTER_FREQS_HZ}), which
-     * call code 0 "20 Hz". A model of the chip has to follow the chip.
+     * <p>The one table: until 15.09.2026 the slider label ({@code MainActivity.BASS_FILTER_FREQS}) and
+     * the measurement ({@code RoomMeasurement.BASS_FILTER_FREQS_HZ}) each had a copy that called code 0
+     * "20 Hz" and code 2 "31". A model of the chip has to follow the chip, and so does its label.
      */
     static final float[] DOOR_HPF_HZ = {0f, 25f, 31.5f, 40f, 50f, 63f, 80f, 100f, 125f, 160f, 200f, 250f};
 
