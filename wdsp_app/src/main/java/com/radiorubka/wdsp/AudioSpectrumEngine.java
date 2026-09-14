@@ -725,7 +725,9 @@ public class AudioSpectrumEngine {
                 // normalised regardless of it, and a log that printed the preference had me reading
                 // "agcMain=false" while the analyser was normalising.
                 + " agcMain=" + mainGainEnabled(analyzer)
-                + (analyzer.isAcoustic() ? " (forced: mic mode)" : "")
+                + (analyzer.isAcoustic() ? (micOffsetValid
+                        ? String.format(java.util.Locale.US, " (mic aligned, offset %+.1f dB)", micOffsetDb)
+                        : " (forced: mic not aligned)") : "")
                 + " agcBar=" + barAgcEnabled);
     }
 
