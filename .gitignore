@@ -15,3 +15,15 @@
 local.properties
 rules.md
 agents.md
+
+# Native build intermediates
+wdsp_app/.cxx/
+
+# Release builds - the signed APK is an artefact, not source
+wdsp_app/release/
+*.apk
+
+# Byte code left behind by the scripts in tools/. Importing check_locales.py to test it
+# creates tools/__pycache__, which then sits in `git status` looking like work.
+__pycache__/
+*.pyc

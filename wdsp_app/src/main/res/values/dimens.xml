@@ -1,43 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Text Sizes -->
-    <dimen name="text_size_title">20sp</dimen>
+    <!-- Text Sizes Hierarchy: Title (24sp) -> Subtitle/Header (18sp bold) -> Label/Slider (16sp) -> Desc/Note (14sp) -->
+    <dimen name="text_size_title">24sp</dimen>
     <dimen name="text_size_header">18sp</dimen>
+    <dimen name="text_size_subtitle">18sp</dimen>
     <dimen name="text_size_label">16sp</dimen>
+    <dimen name="text_size_value">16sp</dimen>
     <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_note">14sp</dimen>
     <dimen name="text_size_log">12sp</dimen>
-    <dimen name="text_size_button">18sp</dimen>
+    <dimen name="text_size_button">16sp</dimen>
+
+    <!-- DENSE TIER: dialogs that put many rows on one screen - the room measurement wizard above
+         all. It exists so that "small" is still a named decision with a floor, instead of a number
+         somebody typed into a layout. Before 12.09.2026 that wizard carried 9.5sp descriptions and
+         11.5sp option titles written straight into the layout, unreadable in a moving car and
+         invisible to any global change of scale.
+
+         The floor is 13sp. Nothing in this application may be smaller in a dialog: the panel sits
+         at arm's length in daylight, and the owner has asked three times for readable type. -->
+    <!-- The smallest a control may be and still be hit with a thumb in a moving car. Android's own
+         guidance says 48dp; this panel cannot afford that in the equaliser strip, so 28dp is the
+         floor we hold everywhere, and the audit script on the unit fails anything under 24dp.
+         Weight beats a minimum in LinearLayout, so a control that must not shrink is given this
+         width outright rather than 0dp plus a weight - which is exactly how the amplifier volume
+         buttons ended up 22dp wide on 800x480 and 15dp in split screen. -->
+    <dimen name="tap_target_min">28dp</dimen>
+
+    <!-- Every square button in the equaliser control row - the two amplifier volume buttons and the
+         three quick actions (-, +, 0). One dimension for all five, because the owner asked for
+         buttons of the same size with the same gaps, and because a weight gave each of the three a
+         different width from the other two on every panel.
+
+         🔴 Equal at the LARGEST the row can afford, never at the smallest. The first attempt made
+         all five 36dp - uniform, and unhittable in a moving car, which the owner said at once. The
+         room for a big target is there: it comes from the subwoofer frequency dropdown, which needs
+         only "100 Hz" and an arrow and was taking a fifth of the row.
+
+         48dp is Android's own minimum target and the BASE, so the narrowest case: on a 640dp split
+         window the row also carries a caption, a value, a slider and that dropdown. The panel this
+         car actually has is 1280dp wide, and there the size is 68dp - see
+         values-w1000dp/dimens_eq.xml. -->
+    <dimen name="eq_action_button">48dp</dimen>
+
+    <!-- The subwoofer frequency dropdown in the same row. It only ever shows a value like "100 Hz"
+         plus the Material end icon, so it is sized to that and NOT given a weight: with a weight it
+         grew with the panel and took a fifth of a 1280dp row, which is the space the buttons beside
+         it need. 124dp = the widest value, the 48dp arrow and the outlined box's own padding. -->
+    <dimen name="eq_freq_dropdown">124dp</dimen>
+
+    <!-- The subwoofer gain slider in that same row, sized to be used while driving rather than to
+         look neat. A 7dp thumb radius is 14dp of finger target - the owner could not catch it on
+         the move, and no amount of track length fixes that. 11dp of radius is 22dp across, with a
+         6dp track so the thumb has something to sit on. -->
+    <dimen name="eq_slider_thumb">11dp</dimen>
+    <dimen name="eq_slider_track">6dp</dimen>
+
+    <!-- Ceiling for the two captions of that row ("Підсилення:", "Субвуфер:"). They are sized by
+         their own text, NOT by a weight: a weight stretched "Підсилення:" to 195dp and left a wide
+         empty gap before the value, which reads as a crooked margin; trimming the weight instead
+         cut "Субвуфер:" down to "Субвуф…". Natural width for both, and the gaps between everything
+         in the row become the same 6dp on their own.
+
+         The cap is what makes that safe on a narrow panel, where wrap_content once pushed the
+         amplifier buttons clean out of the layout. 96dp is the base (the caption ellipsizes there);
+         the wide-panel value in values-w1000dp/dimens_eq.xml fits both words whole. -->
+    <dimen name="eq_caption_max">96dp</dimen>
+
+    <dimen name="text_size_dense_title">15sp</dimen>
+    <dimen name="text_size_dense_label">14sp</dimen>
+    <dimen name="text_size_dense_desc">13sp</dimen>
 
     <!-- Paddings and Margins -->
     <dimen name="padding_standard">16dp</dimen>
     <dimen name="padding_small">8dp</dimen>
-    <dimen name="margin_large">32dp</dimen>
     <dimen name="margin_standard">16dp</dimen>
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_tiny">4dp</dimen>
 
     <!-- Component Sizes -->
-    <dimen name="slider_max_width">300dp</dimen>
-    <dimen name="slider_max_width_big">600dp</dimen>
     <dimen name="slider_track_height">5dp</dimen>
     <dimen name="control_block_max_width">340dp</dimen>
     <dimen name="fader_length">300dp</dimen>
-    <dimen name="fader_textlength">100dp</dimen>
-    <dimen name="seekbar_padding_horizontal">12dp</dimen>
     <!-- Gap left/right and top/bottom of the car image so a borderless arrow
          icon plus its step-count label fit stacked/side-by-side in the
          margin, centered around the car. -->
-    <dimen name="fader_arrow_gap_h">84dp</dimen>
-    <dimen name="fader_arrow_gap_v">88dp</dimen>
-    <dimen name="fader_arrow_icon_size">40dp</dimen>
+    <dimen name="fader_arrow_gap_h">28dp</dimen>
+    <dimen name="fader_arrow_gap_v">24dp</dimen>
+    <dimen name="fader_arrow_icon_size">36dp</dimen>
     <dimen name="fader_arrow_label_size">28dp</dimen>
+    <!-- The car with its arrows and numbers is laid out once, at the size it has on the 1280x720
+         reference (the right half of 1280x648dp of content), and scaled whole to fit whatever
+         room a panel leaves - see ScaleToFitLayout. -->
+    <!-- Design width of the fader group (the car with its arrows and numbers). This is the BASE, so
+         the narrowest case: half of a 600dp Tesla panel is 300dp, and a 640dp group there had to be
+         scaled to 0.47, which left the arrows 17dp and the numbers about 8sp - measured on the unit
+         12.09.2026. At 400dp the same pane gives 0.75, so the arrows stay near 27dp and the group
+         scrolls vertically instead of shrinking further. The full 640dp lives in
+         values-w1000dp/dimens_fader.xml, where there is room for it. -->
+    <dimen name="fader_group_width">400dp</dimen>
+    <dimen name="fader_group_height">648dp</dimen>
+    <!-- Room kept free under content for the floating navigation pill. Measured by uiautomator on
+         every geometry, 11.09.2026: the pill and its margin take 82dp from the bottom (74 + 8), so
+         the 76dp used before left the rear fader arrow 2dp under it. 82 plus a small gap. -->
+    <dimen name="bottom_nav_clearance">88dp</dimen>
 
     <!-- Button Sizes -->
-    <dimen name="button_radius">5dp</dimen>
-    <dimen name="stroke_width">1.3dp</dimen>
+    <dimen name="button_radius">10dp</dimen>
+    <dimen name="stroke_width">1.5dp</dimen>
     <dimen name="button_width">45dp</dimen>
     <dimen name="button_height">55dp</dimen>
-    <dimen name="button_top_height">43dp</dimen>
 
     <dimen name="thumb_height">20dp</dimen>
+    <!-- The microphone-placement car in Diagnostics. 300dp is half of a 1024x600 fascia and
+         well under half of a 1280x720 one, so the arrows above and below it stay on screen
+         without the page having to be scrolled to find them. Density is 1.0 on these units, so
+         dp and px are the same thing here. -->
+    <dimen name="room_mic_car_height">300dp</dimen>
 </resources>
