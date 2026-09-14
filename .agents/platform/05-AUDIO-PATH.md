@@ -243,6 +243,24 @@ What this means:
   `UNPROCESSED`.
 - 📻 The capture itself stayed alive: samples kept flowing (the gate log at 1 s intervals, rms up to
   1919), and the status bar bars moved — with the top five of 32 bands flat, i.e. nothing above 8 kHz.
+- 📻 **The recording callback does see it** — repeated at 03:43 with wDSP `ed42121`, which listens to
+  `AudioRecordingCallback` for its own session's device rate (on-unit logger, so logd could not
+  prune it):
+
+  ```
+  03:43:02      setprop ctl.restart audioserver
+  03:43:04.706  assistant rec update, 04.707 wDSP rec update   (restored; assistant 1 ms first)
+  03:43:04.708  wDSP: "recording callback: the input under our recorder runs at 16000 Hz"
+  03:43:04.786  wDSP: "input narrow (...) - taking it back through root"
+  03:43:04.941  root force-stop googlequicksearchbox, 05.047 googleassistant
+  03:43:05.079  wDSP rec start (new record): "reopened the microphone: ok"
+  03:43:05.753  wDSP: "own stream: -0.0 dB above 8 kHz - full band"
+  03:43:06.998  assistant rec start, joins: patch 24, dev 48000 Hz, client 16000 Hz
+  ```
+
+  From the restart to a full-band capture: under 3 s; the device rate arrived 2 ms after the
+  restore. The owner saw the top bands move again. The effect chains afterwards repeat the
+  last-starter rule below: wDSP's AEC+NS suspended, the assistant's NS acting.
 
 #### Whose noise suppressor is acting: the last client to start — 14.09.2026
 
