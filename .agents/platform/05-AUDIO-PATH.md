@@ -264,20 +264,24 @@ platform's AEC and NS all the same. Read from the effect chains, same input, bot
 So on a shared input exactly one session's chain acts, and here it was the client that started last
 (both are `MIC`, so priority does not separate them). 📚 Pre-processing effects are attached to the
 HAL input stream, so the acting chain processes what **every** client reads — AOSP design, not
-re-measured here. ⇒ Whether wDSP's spectrum is noise-suppressed is decided by the start order, not by
-wDSP: after a wake the assistant reopens after us, its NS acts, and the owner's observation that same
-night — a dip in the middle at volume 2 with the air conditioning on — fits exactly.
+re-measured here. ⇒ Whether wDSP's spectrum is noise-suppressed by the platform is decided by the
+start order, not by wDSP: after a wake the assistant reopens after us, so its NS would be the one
+acting. ❓ What that does to our spectrum has not been measured; the owner's mid-band dip that night
+was our own gate, not this (see the audioserver section above).
 
 🔴 Consequence, owner's decision 14.09.2026: **wDSP does not operate these effects at all.** Switching
 our own off, as the capture did until then, switched off the chain that happened to be acting — for
 the assistant too — and "did it work" became a function of who started last. Capture sits on the
 stream as the platform gives it. A cabin sweep, which does need a clean stream, is a separate
 question.
-- 📻 *(owner, the same night, before the restart)* After the sleep, at volume 2 with the air
+- *(owner, the same night, before the restart)* After the sleep, at volume 2 with the air
   conditioning running on wake, the microphone spectrum read hot at both ends with a clear dip in
-  the middle — his explanation: the noise suppressor pressing down the band the air conditioner
-  fills. Before the restart the dump listed `dev='Noise Suppression'` for both clients; ❓ which
-  session's chain was the active one at that moment was not read.
+  the middle — his explanation: **wDSP's own noise gate** ("шумодав": the capture's floor and the
+  analyser's floor, which the wake handler forgets on purpose since `6ba2839`) took the air
+  conditioner as the cabin's floor and pressed down the band it fills. That is our analyser doing
+  what it was built to do, **not a platform effect**. ⚠️ The first version of this paragraph read
+  "шумодав" as the platform's noise suppressor and tied the observation to it — a misreading of the
+  owner's word; in this project the word means our gate (see HANDOFF, the gate-threshold slider).
 - Playback came back by itself (`restoreTrack_l`), media on `AudioOut_D` again.
 
 #### A phone call sits beside our capture, not instead of it — 13.09.2026
