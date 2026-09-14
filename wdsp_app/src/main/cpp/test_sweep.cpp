@@ -93,8 +93,13 @@ void testPolarity(const SweepMeasurement& m) {
     }
 }
 
-void testFlatResponse(const SweepMeasurement& m) {
-    std::printf("\nA flat path measures flat\n");
+/**
+ * @param tolerance spread allowed across all sixteen bands. The 2 s harness sweep passes 20-25 Hz in
+ *                  about a cycle and a half, and a chirp that short ripples at its start by a couple of
+ *                  dB; the app's 6 s sweep is held to a dB.
+ */
+void testFlatResponse(const SweepMeasurement& m, const char* which, float tolerance) {
+    std::printf("\nA flat path measures flat (%s)\n", which);
     std::vector<float> rec = playThrough(m, 2400, 0.5f, false, 0.0f, kRate / 2);
     std::vector<float> ir;
     m.deconvolve(rec.data(), (int) rec.size(), ir);
@@ -104,11 +109,12 @@ void testFlatResponse(const SweepMeasurement& m) {
     float bands[kHwBands];
     m.bandLevelsDb(ir.data(), (int) ir.size(), arrival, bands);
 
-    // The sweep only covers 20 Hz to 20 kHz, so the outermost bands sit on its edges where there
-    // is nothing to measure. Judge the range the sweep actually excites.
+    // All sixteen, the edges included: a band is measured over the part the sweep excites, so the
+    // 20 Hz and 20 kHz bands, half outside a 20 Hz - 20 kHz sweep, read flat too (until 15.09.2026
+    // they read -6.5 and -6.6 and this judged bands 2..14 only).
     float lowest = 1e9f;
     float highest = -1e9f;
-    for (int b = 2; b < kHwBands - 1; b++) {
+    for (int b = 0; b < kHwBands; b++) {
         lowest = std::min(lowest, bands[b]);
         highest = std::max(highest, bands[b]);
     }
@@ -118,8 +124,8 @@ void testFlatResponse(const SweepMeasurement& m) {
         std::printf("        %7.1f Hz  %8.2f dB\n", centres[b], bands[b]);
     }
     char detail[128];
-    std::snprintf(detail, sizeof(detail), "spread across bands 2..14 is %.1f dB", highest - lowest);
-    check(highest - lowest < 3.0f, "flatness", detail);
+    std::snprintf(detail, sizeof(detail), "spread across all 16 bands is %.1f dB", highest - lowest);
+    check(highest - lowest < tolerance, "flatness", detail);
 }
 
 void testKnownFilter(const SweepMeasurement& m) {
@@ -229,7 +235,10 @@ int main() {
 
     testCleanRecovery(m);
     testPolarity(m);
-    testFlatResponse(m);
+    testFlatResponse(m, "2 s, 20 Hz - 20 kHz", 2.5f);
+    // What the app plays (RoomMeasurement: DEFAULT_SECONDS, SWEEP_START_HZ, SWEEP_END_HZ).
+    SweepMeasurement app(kRate, 20.0f, 20000.0f, 6.0f);
+    testFlatResponse(app, "the app's sweep, 6 s, 20 Hz - 20 kHz", 1.0f);
     testKnownFilter(m);
     testKnownHighPass(m);
     testNoiseTolerance(m);

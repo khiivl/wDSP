@@ -374,9 +374,21 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     const float binHz = static_cast<float>(sampleRate_) / static_cast<float>(n);
     const float third = std::pow(2.0f, 1.0f / 3.0f);
 
+    // Where the sweep is at full height: past its fade-in, short of its fade-out.
+    const float sweepSeconds = static_cast<float>(sweepLength()) / static_cast<float>(sampleRate_);
+    const float octaves = std::log(endHz_ / startHz_);
+    const float fullLow = startHz_ * std::exp(kFadeInSec * octaves / sweepSeconds);
+    const float fullHigh = endHz_ * std::exp(-kFadeOutSec * octaves / sweepSeconds);
+
     for (int b = 0; b < kHwBands; b++) {
-        const float low = kHwCenters[b] / third;
-        const float high = std::min(kHwCenters[b] * third,
+        // Only the part of the band the sweep excited at full height. The mean below is a transfer
+        // function, and a bin the sweep never reached has nothing to transfer: counted, it halved
+        // the edge bands - 20 kHz read -6.6 dB on a flat path for as long as the sweep ended at
+        // 20 kHz, and 20 Hz the same once the window stopped filling it with splatter (15.09.2026).
+        // Two bins of margin at the bottom: the window smooths the sweep's lower edge over about
+        // that much, and at 20 Hz those are a large part of a band only five hertz wide.
+        const float low = std::max(kHwCenters[b] / third, fullLow + 2.0f * binHz);
+        const float high = std::min(std::min(kHwCenters[b] * third, fullHigh),
                                     static_cast<float>(sampleRate_) * 0.5f);
         int first = static_cast<int>(std::ceil(low / binHz));
         int last = static_cast<int>(std::floor(high / binHz));
