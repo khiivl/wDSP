@@ -31,57 +31,104 @@ public final class DspResponse {
     /** Subwoofer crossover frequencies, index order as sent to the MCU in command 0x8B. */
     public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
 
+    /**
+     * Door high-pass cut-offs by the code the chip receives in {@code 0x88} byte 3 (front high nibble,
+     * rear low nibble), registers {@code 0703}/{@code 0704}; code 0 is Through - no filter at all.
+     * Second order, 12 dB/octave: the MCU writes the order bit as 0. Read from the datasheet and the
+     * MCU reverse, {@code .agents/platform/03-SOUND-PROCESSOR.md} §5.
+     *
+     * <p>⚠️ Not the same as the two tables the app shows and measures with
+     * ({@code MainActivity.BASS_FILTER_FREQS}, {@code RoomMeasurement.BASS_FILTER_FREQS_HZ}), which
+     * call code 0 "20 Hz". A model of the chip has to follow the chip.
+     */
+    static final float[] DOOR_HPF_HZ = {0f, 25f, 31.5f, 40f, 50f, 63f, 80f, 100f, 125f, 160f, 200f, 250f};
+
+    /**
+     * 🔴 The MCU firmware forces Q = 2.2 on every equaliser band whatever the Q switches say (bit 5
+     * ORed into every write in FUN_080050d4, 03-SOUND-PROCESSOR.md §7). The switches stay in the
+     * interface for a firmware byte patch (owner, 12.09 and 14.09.2026); until that patch is on the
+     * unit the model must draw what the chip does. Set to false once the firmware honours Q.
+     */
+    static final boolean FIRMWARE_FORCES_WIDE_Q = true;
+
     private DspResponse() {
     }
 
     /**
-     * Full DSP response in dB per band.
+     * Full DSP response in dB per band - what the preset makes the hardware do, the "target" the
+     * calculated spectrum shows (owner, 14.09.2026), with nothing of the car in it.
      *
-     * @param gains      per-band index 0..12, where 6 is flat and each step is 2 dB
-     * @param qNarrow    true where the band uses Q 4.7 instead of Q 2.2
-     * @param fmOffsets  Fletcher-Munson / fatigue offsets already in dB, may be null
-     * @param subFreqIdx index into {@link #SUB_FREQS_HZ}, negative to disable the subwoofer path
-     * @param subGainIdx subwoofer gain 0..12, in dB
-     * @param sampleRate capture sample rate in Hz
-     * @param out        16-element destination
+     * <p>The chip's order: 16-band EQ, then the split - doors through their high-pass, subwoofer
+     * through its low-pass. Both outputs carry the equalised signal, so the doors are the EQ response
+     * through the door high-pass (front and rear power-averaged) and the subwoofer is the EQ response
+     * at its own gain through the low-pass; the two are summed as energy, as two sources playing the
+     * same band do.
+     *
+     * @param gains        per-band index 0..12, where 6 is flat and each step is 2 dB
+     * @param qNarrow      the Q switches; ignored while {@link #FIRMWARE_FORCES_WIDE_Q}
+     * @param fmOffsets    Fletcher-Munson / fatigue offsets already in dB, may be null
+     * @param subFreqIdx   index into {@link #SUB_FREQS_HZ}, negative when there is no subwoofer
+     * @param subGainIdx   subwoofer gain 0..12, in dB
+     * @param hpfFrontCode door high-pass code for the front pair, see {@link #DOOR_HPF_HZ}
+     * @param hpfRearCode  the same for the rear pair
+     * @param sampleRate   capture sample rate in Hz
+     * @param out          16-element destination
      */
     public static void compute(int[] gains, boolean[] qNarrow, float[] fmOffsets,
-                               int subFreqIdx, int subGainIdx, float sampleRate, float[] out) {
+                               int subFreqIdx, int subGainIdx, int hpfFrontCode, int hpfRearCode,
+                               float sampleRate, float[] out) {
         final int bands = AudioConfig.NUM_BANDS;
         if (out == null || out.length < bands) return;
         if (sampleRate <= 0) sampleRate = 48000f;
 
-        // 1. Equaliser: sum the magnitude responses of all 16 peaking filters at each band centre.
+        final float frontHz = doorHpfHz(hpfFrontCode);
+        final float rearHz = doorHpfHz(hpfRearCode);
+        final boolean hasSub = subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length;
+        final float crossoverHz = hasSub ? SUB_FREQS_HZ[subFreqIdx] : 0f;
+        final float subGainDb = Math.max(0, Math.min(12, subGainIdx));
+
         for (int i = 0; i < bands; i++) {
-            float totalDb = 0f;
+            // 1. Equaliser: the magnitude responses of all 16 peaking filters, in cascade.
+            float eqDb = 0f;
             float probeHz = BAND_CENTERS_HZ[i];
             for (int j = 0; j < bands; j++) {
                 float gainDb = gains != null ? (gains[j] - 6) * 2.0f : 0f;
                 if (gainDb == 0f) continue;
-                float q = (qNarrow != null && qNarrow[j]) ? Q_NARROW : Q_WIDE;
-                totalDb += peakingResponseDb(probeHz, BAND_CENTERS_HZ[j], q, gainDb, sampleRate);
+                boolean narrow = !FIRMWARE_FORCES_WIDE_Q && qNarrow != null && qNarrow[j];
+                eqDb += peakingResponseDb(probeHz, BAND_CENTERS_HZ[j], narrow ? Q_NARROW : Q_WIDE,
+                        gainDb, sampleRate);
             }
             if (fmOffsets != null && inRange(i, fmOffsets.length)) {
-                totalDb += fmOffsets[i];
+                eqDb += fmOffsets[i];
             }
-            out[i] = totalDb;
-        }
 
-        // 2. Subwoofer: a second-order low-passed path at its own gain, power-summed with the
-        //    main path. Two sources reproducing the same band add energy, which is why a sub at
-        //    0 dB gain still lifts the bottom end slightly rather than doing nothing.
-        if (subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length) {
-            float crossoverHz = SUB_FREQS_HZ[subFreqIdx];
-            float subGainDb = Math.max(0, Math.min(12, subGainIdx));
-            for (int i = 0; i < bands; i++) {
-                float f = BAND_CENTERS_HZ[i];
-                float lowPassDb = lowPass2Db(f, crossoverHz);
-                if (lowPassDb < -30f) continue; // negligible this far above the crossover
-                float mainDb = out[i];
-                float subDb = out[i] + subGainDb + lowPassDb;
-                out[i] = powerSumDb(mainDb, subDb);
+            // 2. Doors: front and rear through their own high-pass, averaged as power.
+            double front = Math.pow(10.0, highPass2Db(probeHz, frontHz) / 10.0);
+            double rear = Math.pow(10.0, highPass2Db(probeHz, rearHz) / 10.0);
+            float doorsDb = eqDb + (float) (10.0 * Math.log10((front + rear) / 2.0));
+
+            // 3. Subwoofer: the same equalised signal, at its gain, through its low-pass.
+            if (hasSub) {
+                float lowPassDb = lowPass2Db(probeHz, crossoverHz);
+                if (lowPassDb >= -30f) { // negligible this far above the crossover
+                    out[i] = powerSumDb(doorsDb, eqDb + subGainDb + lowPassDb);
+                    continue;
+                }
             }
+            out[i] = doorsDb;
         }
+    }
+
+    /** Hz for a door high-pass code; 0 for Through or an unknown code. */
+    static float doorHpfHz(int code) {
+        return code > 0 && code < DOOR_HPF_HZ.length ? DOOR_HPF_HZ[code] : 0f;
+    }
+
+    /** Second-order Butterworth high-pass magnitude in dB - the door crossover slope. 0 dB when off. */
+    public static float highPass2Db(float freqHz, float cutoffHz) {
+        if (cutoffHz <= 0 || freqHz <= 0) return 0f;
+        double r4 = Math.pow(freqHz / cutoffHz, 4);
+        return (float) (10.0 * Math.log10(r4 / (1.0 + r4)));
     }
 
     private static boolean inRange(int index, int length) {

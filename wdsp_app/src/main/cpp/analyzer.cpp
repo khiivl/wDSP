@@ -102,18 +102,20 @@ void Analyzer::getTermsDb(float* powerDb32, float* floorDb32, float* curveDb32) 
 }
 
 void Analyzer::buildBandPlan() {
-    // Each hardware band is two-thirds of an octave wide, so splitting it in two gives third-octave
-    // analysis bands centred a sixth of an octave either side of the hardware centre.
-    // A hardware band spans HW/2^(1/3) .. HW*2^(1/3). Its two halves are therefore centred at
-    // HW/2^(1/6) and HW*2^(1/6), each a third of an octave wide - the same 2^(1/6) factor sets
-    // both the offset and the half-width, so the halves meet exactly at HW and tile the band with
-    // no overlap and no gap.
+    // The standard third-octave grid, 16 Hz .. 20 kHz: exact centres 1000 * 2^((i - 18) / 3), so
+    // band 31 is 20 kHz and every hardware centre (20, 31.5, 50 ... 20000) is an odd band.
+    //
+    // 🔴 Until 14.09.2026 the 32 bands were the two halves of each hardware band, centred a sixth of
+    // an octave either side of it: 17.8, 22.4, 28.1 ... 17818, 22449 Hz. The fold back to 16 was an
+    // exact pair sum, but the grid sat a sixth of an octave off every standard frequency and its top
+    // band, 20-25 kHz, was always empty - on the owner's unit the Visualizer tap ran at 44.1 kHz and
+    // that bar read -16 dB on pink noise, pulling the 20 kHz hardware bar down with it. Owner:
+    // "сітку стандартну".
     const float sixth = std::pow(2.0f, 1.0f / 6.0f);
     const float nyquist = static_cast<float>(sampleRate_) * 0.5f;
 
     for (int i = 0; i < kBands; i++) {
-        int hw = i / 2;
-        float center = kHwCenters[hw] * ((i % 2 == 0) ? (1.0f / sixth) : sixth);
+        float center = 1000.0f * std::pow(2.0f, static_cast<float>(i - 18) / 3.0f);
         // A third-octave band spans a sixth of an octave either side of its centre.
         float low = center / sixth;
         float high = center * sixth;
@@ -148,8 +150,13 @@ void Analyzer::setAgcConfig(int consumer, const AgcConfig& config) {
 void Analyzer::setDspCurve(const float* curve16) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curve16 == nullptr) return;
+    // On the standard grid an odd band sits exactly on hardware centre (i - 1) / 2; an even band sits
+    // half way between two hardware centres and takes the mean of their dB values. Band 0 (16 Hz)
+    // is below the lowest hardware centre and takes its value.
     for (int i = 0; i < kBands; i++) {
-        dspCurve_[i] = curve16[i / 2];
+        if (i % 2 == 1) dspCurve_[i] = curve16[(i - 1) / 2];
+        else if (i == 0) dspCurve_[i] = curve16[0];
+        else dspCurve_[i] = 0.5f * (curve16[i / 2 - 1] + curve16[i / 2]);
     }
 }
 
@@ -397,11 +404,21 @@ void Analyzer::getLevels(int consumer, float* out32, float* out16) {
 
     if (out16 != nullptr) {
         for (int i = 0; i < kHwBands; i++) {
-            // Folding pairs back to the hardware grid is an exact energy sum, because the two
-            // analysis bands are precisely the two halves of the hardware band.
-            float a = std::pow(10.0f, db[i * 2] / 10.0f);
-            float b = std::pow(10.0f, db[i * 2 + 1] / 10.0f);
-            float sumDb = toDb(a + b);
+            // A hardware band is two-thirds of an octave around its centre: the third-octave band on
+            // that centre (index 2i + 1) and the inner half of each neighbour. Half the neighbour's
+            // energy is exact for pink content - its two log-halves carry equal energy - and close
+            // for anything that does not change sharply inside one third of an octave.
+            //
+            // The top hardware band has no neighbour above 20 kHz on this grid (22.4-25.4 kHz is
+            // not a band). Its missing quarter is taken at the density of what was measured, x4/3,
+            // so a flat input reads level at 20 kHz instead of 1.25 dB low.
+            const int c = i * 2 + 1;
+            float centre = std::pow(10.0f, db[c] / 10.0f);
+            float below = 0.5f * std::pow(10.0f, db[c - 1] / 10.0f);
+            float sum = centre + below;
+            if (c + 1 < kBands) sum += 0.5f * std::pow(10.0f, db[c + 1] / 10.0f);
+            else sum *= 4.0f / 3.0f;
+            float sumDb = toDb(sum);
             float level = (sumDb - (reference - range)) / range;
             out16[i] = std::min(1.0f, std::max(0.0f, level));
         }

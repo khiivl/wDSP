@@ -92,11 +92,12 @@ void feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRea
     }
 }
 
+// The standard third-octave grid, 1000 * 2^((i - 18) / 3), by nominal name.
 const char* kBandNames[wdsp::kBands] = {
-        "17.8", "22.4", "28.1", "35.4", "44.5", "56.1", "71.3", "89.8",
-        "111", "140", "178", "224", "281", "354", "445", "561",
-        "713", "898", "1114", "1403", "1782", "2245", "2806", "3536",
-        "4454", "5612", "7127", "8980", "11136", "14031", "17818", "22449"
+        "16", "20", "25", "31.5", "40", "50", "63", "80",
+        "100", "125", "160", "200", "250", "315", "400", "500",
+        "630", "800", "1000", "1250", "1600", "2000", "2500", "3150",
+        "4000", "5000", "6300", "8000", "10000", "12500", "16000", "20000"
 };
 
 int runPinkNoise() {
@@ -129,7 +130,30 @@ int runPinkNoise() {
            spread < 6.0f ? "PASS" : "FAIL");
     printf("  discontinuities: %d, frames: %d\n",
            analyzer.discontinuities(), analyzer.framesProduced());
-    return spread < 6.0f ? 0 : 1;
+
+    // The fold onto the 16 equaliser bands, each centred on its slider's frequency - including the
+    // 20 kHz band, whose upper neighbour does not exist on this grid.
+    float l32[wdsp::kBands], l16[wdsp::kHwBands];
+    wdsp::Analyzer::AgcConfig noAgc;
+    noAgc.enabled = false;              // absolute levels, or every band reads as full scale
+    analyzer.setAgcConfig(0, noAgc);
+    analyzer.getLevels(0, l32, l16);
+    const float range = config.rangeDb;
+    const char* hwNames[wdsp::kHwBands] = {"20", "31.5", "50", "80", "125", "200", "315", "500",
+                                           "800", "1250", "2000", "3150", "5000", "8000", "12500", "20000"};
+    printf("\nSame noise folded onto the 16 equaliser bands (should be flat, 20 kHz included):\n");
+    float min16 = 1e9f, max16 = -1e9f;
+    for (int i = 0; i < wdsp::kHwBands; i++) {
+        float d = l16[i] * range - range + config.refMaxDb;
+        printf("  %6s Hz  %7.1f dB\n", hwNames[i], d);
+        if (i >= 1) {   // the 20 Hz band sits at the resolution limit of the long window
+            min16 = std::min(min16, d);
+            max16 = std::max(max16, d);
+        }
+    }
+    float spread16 = max16 - min16;
+    printf("  spread across 31.5 Hz..20 kHz: %.1f dB  -> %s\n", spread16, spread16 < 4.0f ? "PASS" : "FAIL");
+    return (spread < 6.0f && spread16 < 4.0f) ? 0 : 1;
 }
 
 int runTone(float freqHz, int expectedBand) {
@@ -155,7 +179,7 @@ int runTone(float freqHz, int expectedBand) {
     // Leakage into the top of the spectrum is what used to make a bass line light up 20 kHz.
     float topDb = db[wdsp::kBands - 2];
     float leak = db[peak] - topDb;
-    printf("  peak %.1f dB, 18 kHz band %.1f dB, separation %.1f dB -> %s\n",
+    printf("  peak %.1f dB, 16 kHz band %.1f dB, separation %.1f dB -> %s\n",
            db[peak], topDb, leak, leak > 30.0f ? "PASS" : "FAIL");
     return (ok && leak > 30.0f) ? 0 : 1;
 }
@@ -165,8 +189,8 @@ int runTone(float freqHz, int expectedBand) {
 int main() {
     int failures = 0;
     failures += runPinkNoise();
-    failures += runTone(50.0f, 4);
-    failures += runTone(1000.0f, 17);
+    failures += runTone(50.0f, 5);     // standard grid: band 5 is 50 Hz
+    failures += runTone(1000.0f, 18);  // band 18 is 1 kHz
     printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES PRESENT");
     return failures;
 }

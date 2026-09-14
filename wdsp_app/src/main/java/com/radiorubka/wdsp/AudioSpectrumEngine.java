@@ -43,6 +43,9 @@ public class AudioSpectrumEngine {
     private final boolean[] dspQNarrow = new boolean[NUM_BANDS_16];
     private int dspSubFreqIdx = -1;
     private int dspSubGainIdx = 0;
+    /** Door high-pass codes as sent in 0x88 byte 3; 0 is Through. See DspResponse.DOOR_HPF_HZ. */
+    private int dspHpfFrontCode = 0;
+    private int dspHpfRearCode = 0;
     private boolean hasServiceDspState = false;
 
     private final float[] dspCurveDb = new float[NUM_BANDS_16];
@@ -483,7 +486,8 @@ public class AudioSpectrumEngine {
      * Feeding the analyser from here rather than from MainActivity also means the status bar
      * visualizer stays correct while the UI is closed.
      */
-    public void setDspState(int[] gainIdx, boolean[] qNarrow, int subFreqIdx, int subGainIdx) {
+    public void setDspState(int[] gainIdx, boolean[] qNarrow, int subFreqIdx, int subGainIdx,
+                            int hpfFrontCode, int hpfRearCode) {
         synchronized (dspGainIdx) {
             if (gainIdx != null) {
                 System.arraycopy(gainIdx, 0, dspGainIdx, 0, Math.min(gainIdx.length, NUM_BANDS_16));
@@ -493,6 +497,8 @@ public class AudioSpectrumEngine {
             }
             dspSubFreqIdx = subFreqIdx;
             dspSubGainIdx = subGainIdx;
+            dspHpfFrontCode = hpfFrontCode;
+            dspHpfRearCode = hpfRearCode;
             hasServiceDspState = true;
             markDspCurveChanged();
         }
@@ -637,7 +643,8 @@ public class AudioSpectrumEngine {
             if (dspCurveDirty || sampleRateHz != dspCurveSampleRate) {
                 if (hasServiceDspState) {
                     DspResponse.compute(dspGainIdx, dspQNarrow, null,
-                            dspSubFreqIdx, dspSubGainIdx, sampleRateHz, dspCurveDb);
+                            dspSubFreqIdx, dspSubGainIdx, dspHpfFrontCode, dspHpfRearCode,
+                            sampleRateHz, dspCurveDb);
                 } else {
                     // No service state yet: fall back to the raw sliders, and since the curve is
                     // not baked into them here, add the Fletcher-Munson offsets explicitly.
@@ -645,7 +652,7 @@ public class AudioSpectrumEngine {
                         synchronized (qNarrow) {
                             synchronized (fmOffsets) {
                                 DspResponse.compute(gains, qNarrow, fmOffsets,
-                                        -1, 0, sampleRateHz, dspCurveDb);
+                                        -1, 0, 0, 0, sampleRateHz, dspCurveDb);
                             }
                         }
                     }

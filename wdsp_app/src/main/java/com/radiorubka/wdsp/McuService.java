@@ -2016,8 +2016,16 @@ public class McuService extends Service implements LocationListener {
             q[i] = (cachedQByte1 & (1 << i)) != 0;
             q[i + 8] = (cachedQByte2 & (1 << i)) != 0;
         }
+        if (currentPresetName == null) return;
+        // The door high-pass, exactly as applyBassBoost packs it into 0x88 byte 3, so the model's
+        // doors stop playing below their crossover the way the chip's do. And no subwoofer path for a
+        // car that has none: a model adding a subwoofer that is not connected drew +3 dB of bass
+        // nobody hears.
+        int hpfFront = presetPrefs().getInt(currentPresetName + "_bf_f", 0);
+        int hpfRear = presetPrefs().getInt(currentPresetName + "_bf_r", 0);
+        int subFreq = RoomMeasurement.hasSubwoofer(this) ? cachedSubFreq : -1;
         AudioSpectrumEngine.getInstance().setDspState(
-                effectiveGainIdx, q, cachedSubFreq, effectiveSubGainIdx);
+                effectiveGainIdx, q, subFreq, effectiveSubGainIdx, hpfFront, hpfRear);
     }
 
     private void updateFmOffsets(int vol) {
@@ -2041,6 +2049,9 @@ public class McuService extends Service implements LocationListener {
                 (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
                 (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
                 (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+        // The door high-pass is part of the spectrum model; a change of it must reach the analyser
+        // as a change of the EQ does.
+        publishDspStateToSpectrum();
     }
 
     private void applyFaderLoud() {
