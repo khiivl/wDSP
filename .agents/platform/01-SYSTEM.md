@@ -350,3 +350,39 @@ Unisoc UIS7862, MCU APM32, Android 10. Times are from ignition.)*
 
 🧩 Trust note: relayed rather than re-measured here. The times are one unit's, and the ordering is
 what matters — `BOOT_COMPLETED` before UART before `ACC_ON` — not the exact seconds.
+
+### 8a. Re-measured 14.09.2026: an `adb reboot` against a sudden power loss
+
+📻 The owner's unit (MCU `002121`, BU32107), the boot logger module (`tools/wdsp_bootlog_module`,
+07-PRACTICE §7), wDSP `1a287d0`. Seconds since boot (kernel start, not ignition); the power-loss boot
+was the owner cutting the supply outright.
+
+| milestone | `adb reboot` | power loss |
+|---|---|---|
+| `boot_progress_start` (zygote, system_server) | 17.52 | 17.53 |
+| `sd` opens `/dev/ttyS2` | 27.40 | **26.51** |
+| `boot_progress_ams_ready` | 27.36 | **29.76** |
+| `sys.qf.is.acc.on` becomes `true` | 28.87 | 31.09 |
+| `boot_progress_enable_screen` | 30.17 | 32.58 |
+| `am_user_state_changed [0,1]` (LOCKED_BOOT_COMPLETED) | 32.03 | 34.43 |
+| user unlocked `[0,3]` | 33.02 | 35.77 |
+| QFSleepWakeup sets music volume to 9 | 33.40 | 35.81 |
+| wDSP McuService created (at unlock) | 33.21 | 36.01 |
+| wDSP first EQ frame / microphone open | 34.36 / 34.49 | 36.78 / 36.98 |
+| `com.qf.action.ACC_ON` reaches wDSP | 34.55 | 37.13 (twice, +0.1 s) |
+| assistant `:interactor` process | 32.97 | 35.24 |
+| wDSP receives `BOOT_COMPLETED` | 45.79 | 47.83 |
+| assistant `AudioRecord` start (16 kHz) | 46.07 | 48.39 |
+
+- Identical up to zygote; from `ams_ready` on, the power-loss boot runs **about 2.4 s later**, all of it.
+  The one thing that moves the other way is `sd` opening `/dev/ttyS2`, a second earlier.
+- `sys.boot.reason` is `reboot,adb` for the first and plain `reboot` for the power loss (the 06:10
+  boot the same day read `reboot` too, so that was a power loss as well).
+- `BOOT_COMPLETED` reaches an ordinary app **about 12 s after unlock** in both, and the Google
+  assistant opens the microphone 0.3–0.6 s after that in both - it looks triggered by the same
+  broadcast. Anything that must beat it has to start at unlock (05-AUDIO-PATH.md).
+- `sys.qf.is.acc.on` is true about 6 s before the `ACC_ON` broadcast; it says the platform knows ACC
+  is on, not that the UART write path is open. ❓ Whether `sd` is the MCU's UART daemon is not
+  confirmed; its `/dev/ttyS2` opens twice (27.4 and 38.5 s).
+- The wall clock was right from the first log line after the power loss (15:55:29): the unit keeps
+  time without the SoC powered.

@@ -177,10 +177,12 @@ Nothing about the app can be built on being first at boot.
 
 Both sides wait about thirteen seconds after unlock for unrelated reasons and arrive within a second
 of each other. wDSP loses those seconds only because it starts from `BOOT_COMPLETED`: the process is
-alive from 32.39 and the user is unlocked at 32.60. ❓ Starting the service at unlock instead would put
-the capture about 12 s ahead on this unit - not done: it also moves the first preset application
-earlier, towards the UART opening (the "background at car start" fault of 13.09), which is the
-owner's call. Cold boot after a power removal not yet read.
+alive from 32.39 and the user is unlocked at 32.60. 🟢 **Done by the owner's order, `1a287d0`: the service starts at unlock** - audioserver checked and
+the microphone taken on one thread, the MCU service checked and the presets applied on another.
+Measured the same day: after `adb reboot` our capture opened at 34.49 s and the assistant's at 46.07;
+after a sudden power loss at 36.98 and 48.39. Both times the input came up at 48000 Hz with the
+assistant riding it at 16000 Hz, 11.6 and 11.4 s behind us. The two boots side by side:
+01-SYSTEM.md §8a.
 
 #### A stopped recording is not yet a closed input — 14.09.2026
 
