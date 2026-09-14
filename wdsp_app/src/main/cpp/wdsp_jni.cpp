@@ -34,7 +34,7 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeDestroy(JNIEnv*, jclass, jlong han
 
 JNIEXPORT jint JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativePush(JNIEnv* env, jclass, jlong handle,
-                                                   jbyteArray block, jint len) {
+                                                   jbyteArray block, jint len, jlong captureTimeNs) {
     auto* analyzer = asAnalyzer(handle);
     if (analyzer == nullptr || block == nullptr || len <= 0) return 0;
 
@@ -43,7 +43,8 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativePush(JNIEnv* env, jclass, jlong ha
     jsize available = env->GetArrayLength(block);
     if (len > available) len = available;
 
-    int fresh = analyzer->pushWaveform(reinterpret_cast<const uint8_t*>(data), len);
+    int fresh = analyzer->pushWaveform(reinterpret_cast<const uint8_t*>(data), len,
+                                       static_cast<int64_t>(captureTimeNs));
 
     env->ReleaseByteArrayElements(block, data, JNI_ABORT);
     return fresh;

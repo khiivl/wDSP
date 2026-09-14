@@ -1100,8 +1100,9 @@ public class AudioSpectrumEngine {
                 if (v == null) break;
                 try {
                     if (!pausedForCall && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
+                        long readAt = System.nanoTime();
                         noteSignal(buffer);
-                        int fresh = nativeAnalyzer.push(buffer, size);
+                        int fresh = nativeAnalyzer.push(buffer, size, readAt);
                         if (captureDumpUntil != 0) writeCaptureDump(buffer, size, fresh, sampleRate);
                         synchronized (waveformLock) {
                             System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(size, latestWaveform.length));

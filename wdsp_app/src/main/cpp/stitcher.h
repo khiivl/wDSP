@@ -29,11 +29,13 @@ public:
     /**
      * Appends one freshly polled block.
      *
-     * @param block unsigned 8-bit samples centred on 128, as Visualizer.getWaveForm delivers them
-     * @param len   number of samples
+     * @param block       unsigned 8-bit samples centred on 128, as Visualizer.getWaveForm delivers them
+     * @param len         number of samples
+     * @param expectedNew how many samples the clock says are new since the previous block, or -1
+     *                    when it cannot say (the first block)
      * @return how many samples were genuinely new
      */
-    int push(const uint8_t* block, int len);
+    int push(const uint8_t* block, int len, int expectedNew);
 
     /**
      * Appends samples that are already known to be continuous, skipping the alignment search.

@@ -254,10 +254,17 @@ it blocks and reads levels; everything else happens in native. Two things about 
 
 **Capture is polled, not callback-driven.** `getMaxCaptureRate()` is 20 Hz on this platform and each
 callback carries 1024 samples — 21 ms of audio out of every 50, with the rest missing. `Stitcher`
-polls every 9 ms so consecutive reads overlap, then aligns them by normalised cross-correlation and
-appends only the new tail. `discontinuities()` counts failures; a rising count means the poll rate is
-too low. Without this there is no continuous stream, and no transform below the block rate means
-anything.
+polls every 9 ms so consecutive reads overlap, then aligns them and appends only the new tail.
+Overlaps are bit-identical, so it first looks for an exact match nearest to what the clock predicts
+(time since the last read × rate) and falls back to normalised cross-correlation. The clock is not
+optional: a test tone with a whole-sample period matches at every period of shift including zero,
+and before 14.09.2026 the stitcher took "nothing new" on every poll and the spectrum froze.
+`discontinuities()` counts failures; a rising count means the poll rate is too low. Without this
+there is no continuous stream, and no transform below the block rate means anything.
+
+**The Visualizer's own sample rate is wrong.** `getSamplingRate()` reports 44.1 kHz; the samples are
+at the output's 48 kHz (measured with a test tone, 14.09.2026). `AudioSpectrumEngine.visualizerSampleRateHz()`
+is the one place the tap's rate comes from — `PROPERTY_OUTPUT_SAMPLE_RATE`.
 
 **32 third-octave bands are measured and folded down to 16, never interpolated up.** The bands sit
 on the standard grid, exact centres `1000·2^((i−18)/3)`, 16 Hz … 20 kHz, so every equaliser centre

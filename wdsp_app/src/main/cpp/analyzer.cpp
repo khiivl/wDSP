@@ -168,11 +168,17 @@ void Analyzer::forgetNoiseFloor() {
     }
 }
 
-int Analyzer::pushWaveform(const uint8_t* block, int len) {
+int Analyzer::pushWaveform(const uint8_t* block, int len, int64_t captureTimeNs) {
     int fresh;
     {
         std::lock_guard<std::mutex> lock(ringMutex_);
-        fresh = stitcher_.push(block, len);
+        int expectedNew = -1;
+        if (lastCaptureNs_ > 0 && captureTimeNs > lastCaptureNs_) {
+            expectedNew = static_cast<int>(std::min<int64_t>(
+                    (captureTimeNs - lastCaptureNs_) * sampleRate_ / 1000000000LL, len));
+        }
+        lastCaptureNs_ = captureTimeNs;
+        fresh = stitcher_.push(block, len, expectedNew);
     }
     ringSignal_.notify_one();
     return fresh;

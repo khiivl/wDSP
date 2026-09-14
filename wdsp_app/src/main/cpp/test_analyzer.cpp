@@ -73,23 +73,60 @@ std::vector<float> makePinkNoise(int samples) {
     return out;
 }
 
-std::vector<float> makeSine(int samples, float freqHz) {
+/**
+ * A tone, or the sum of two, at amplitude each. In double: a float phase stops repeating exactly
+ * after a few seconds, and a tone that is not exactly periodic hides the very failure a test file
+ * made of whole-period tones exposes.
+ */
+std::vector<float> makeSine(int samples, float freqHz, float amplitude = 0.5f,
+                            float secondHz = 0.0f) {
     std::vector<float> out(static_cast<size_t>(samples));
+    const double w1 = 2.0 * 3.14159265358979323846 * freqHz / kSampleRate;
+    const double w2 = 2.0 * 3.14159265358979323846 * secondHz / kSampleRate;
     for (int i = 0; i < samples; i++) {
-        out[static_cast<size_t>(i)] = 0.5f * std::sin(2.0f * 3.14159265358979f * freqHz
-                                                      * static_cast<float>(i) / kSampleRate);
+        double v = std::sin(w1 * i) + (secondHz > 0.0f ? std::sin(w2 * i) : 0.0);
+        out[static_cast<size_t>(i)] = static_cast<float>(amplitude * v);
     }
     return out;
 }
 
-void feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRead) {
+/**
+ * Polls the fake tap the way the app polls Visualizer, and returns how many samples the stitcher
+ * took as new - which, for a stream it rebuilt correctly, is the length of the signal.
+ *
+ * The timing is the head unit's, measured on 14.09.2026 from four capture dumps (923 polls): polls
+ * 10-13 ms apart; Visualizer's window moves in whole milliseconds - every advance was a multiple
+ * of 48 samples - and a timestamp predicts the advance with an error inside +-131 samples that
+ * does not accumulate. So each read advances by a whole number of milliseconds around the poll
+ * interval, and the timestamp handed over carries its own scatter on top.
+ */
+int64_t feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRead) {
+    const int msSamples = kSampleRate / 1000;
+    std::mt19937 rng(77);
+    std::uniform_int_distribution<int> pollScatterMs(-1, 1);
+    std::uniform_int_distribution<int> clockScatter(-60, 60);
     FakeTap tap(std::move(signal));
+    int64_t position = 0;
+    int64_t taken = 0;
     while (!tap.exhausted()) {
-        std::vector<uint8_t> block = tap.read(advancePerRead);
-        analyzer.pushWaveform(block.data(), kCaptureSize);
+        int advance = (advancePerRead / msSamples + pollScatterMs(rng)) * msSamples;
+        position += advance;
+        std::vector<uint8_t> block = tap.read(advance);
+        int64_t timeNs = (position + clockScatter(rng)) * 1000000000LL / kSampleRate;
+        taken += analyzer.pushWaveform(block.data(), kCaptureSize, timeNs);
         // Analysis now lives on its own thread in the app; drain it synchronously here.
         analyzer.waitAndProcess(0);
     }
+    return taken - kCaptureSize;   // the first read is taken whole
+}
+
+/** A rebuilt stream as long as the signal fed, within 2 %. */
+bool streamIsWhole(int64_t taken, size_t fed, const char* what) {
+    double ratio = static_cast<double>(taken) / static_cast<double>(fed);
+    bool ok = ratio > 0.98 && ratio < 1.02;
+    printf("  %s: stitcher took %lld of %zu samples (%.1f %%) -> %s\n", what,
+           static_cast<long long>(taken), fed, ratio * 100.0, ok ? "PASS" : "FAIL");
+    return ok;
 }
 
 // The standard third-octave grid, 1000 * 2^((i - 18) / 3), by nominal name.
@@ -109,7 +146,9 @@ int runPinkNoise() {
     config.releaseMs = 1500.0f;
     analyzer.setConfig(config);
 
-    feed(analyzer, makePinkNoise(kSampleRate * 12), 480); // read every 10 ms, blocks overlap
+    const size_t fed = static_cast<size_t>(kSampleRate * 12);
+    int64_t taken = feed(analyzer, makePinkNoise(kSampleRate * 12), 480); // read every 10 ms, blocks overlap
+    bool whole = streamIsWhole(taken, fed, "pink noise");
 
     float db[wdsp::kBands];
     analyzer.getLevelsDb(db);
@@ -153,7 +192,7 @@ int runPinkNoise() {
     }
     float spread16 = max16 - min16;
     printf("  spread across 31.5 Hz..20 kHz: %.1f dB  -> %s\n", spread16, spread16 < 4.0f ? "PASS" : "FAIL");
-    return (spread < 6.0f && spread16 < 4.0f) ? 0 : 1;
+    return (whole && spread < 6.0f && spread16 < 4.0f) ? 0 : 1;
 }
 
 int runTone(float freqHz, int expectedBand) {
@@ -163,7 +202,13 @@ int runTone(float freqHz, int expectedBand) {
     config.releaseMs = 5.0f;
     analyzer.setConfig(config);
 
-    feed(analyzer, makeSine(kSampleRate * 4, freqHz), 480);
+    printf("\n%.0f Hz tone:\n", freqHz);
+    // A tone is periodic, so a block matches what the stitcher holds at every whole period of
+    // shift - including a shift of nothing. On the head unit a 1 kHz + 10 kHz test tone (a period
+    // of exactly 48 samples) was taken as "nothing new" on all 203 polls, and the analyser drew
+    // nothing while it played (14.09.2026).
+    int64_t taken = feed(analyzer, makeSine(kSampleRate * 4, freqHz), 480);
+    bool whole = streamIsWhole(taken, static_cast<size_t>(kSampleRate * 4), "stream");
 
     float db[wdsp::kBands];
     analyzer.getLevelsDb(db);
@@ -173,15 +218,44 @@ int runTone(float freqHz, int expectedBand) {
         if (db[i] > db[peak]) peak = i;
     }
     bool ok = std::abs(peak - expectedBand) <= 1;
-    printf("\n%.0f Hz tone -> peak in band %d (%s Hz), expected around %d  -> %s\n",
-           freqHz, peak, kBandNames[peak], expectedBand, ok ? "PASS" : "FAIL");
+    printf("  peak in band %d (%s Hz), expected around %d  -> %s\n",
+           peak, kBandNames[peak], expectedBand, ok ? "PASS" : "FAIL");
 
-    // Leakage into the top of the spectrum is what used to make a bass line light up 20 kHz.
-    float topDb = db[wdsp::kBands - 2];
-    float leak = db[peak] - topDb;
-    printf("  peak %.1f dB, 16 kHz band %.1f dB, separation %.1f dB -> %s\n",
-           db[peak], topDb, leak, leak > 30.0f ? "PASS" : "FAIL");
-    return (ok && leak > 30.0f) ? 0 : 1;
+    // Leakage into the top of the spectrum is what used to make a bass line light up 20 kHz. A
+    // tone in the treble is itself near the top, so there it is judged against the bottom instead.
+    int farBand = expectedBand < wdsp::kBands / 2 ? wdsp::kBands - 2 : 8;
+    float farDb = db[farBand];
+    float leak = db[peak] - farDb;
+    printf("  peak %.1f dB, %s Hz band %.1f dB, separation %.1f dB -> %s\n",
+           db[peak], kBandNames[farBand], farDb, leak, leak > 30.0f ? "PASS" : "FAIL");
+    return (whole && ok && leak > 30.0f) ? 0 : 1;
+}
+
+/**
+ * tone_1k_10k_48k.wav as it reaches the tap: 1 kHz + 10 kHz, -23 dBFS each (-20 dBFS together).
+ * Played on the head unit it gave nothing new on 461 polls of 461, in two players, and nothing on
+ * screen (14.09.2026).
+ */
+int runTestFile() {
+    wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
+    wdsp::Analyzer::Config config;
+    config.attackMs = 5.0f;
+    config.releaseMs = 5.0f;
+    analyzer.setConfig(config);
+
+    printf("\ntone_1k_10k_48k.wav (1 kHz + 10 kHz, -23 dBFS each):\n");
+    const float amplitude = static_cast<float>(std::pow(10.0, -23.0 / 20.0) * std::sqrt(2.0));
+    int64_t taken = feed(analyzer, makeSine(kSampleRate * 4, 1000.0f, amplitude, 10000.0f), 480);
+    bool whole = streamIsWhole(taken, static_cast<size_t>(kSampleRate * 4), "stream");
+
+    float db[wdsp::kBands];
+    analyzer.getLevelsDb(db);
+    // Both tones stand well above the band between them.
+    float gap1 = db[18] - db[23], gap10 = db[28] - db[23];
+    bool both = gap1 > 30.0f && gap10 > 30.0f;
+    printf("  1 kHz band %.1f dB, 10 kHz band %.1f dB, 3150 Hz band %.1f dB -> %s\n",
+           db[18], db[28], db[23], both ? "PASS" : "FAIL");
+    return (whole && both) ? 0 : 1;
 }
 
 } // namespace
@@ -190,7 +264,10 @@ int main() {
     int failures = 0;
     failures += runPinkNoise();
     failures += runTone(50.0f, 5);     // standard grid: band 5 is 50 Hz
-    failures += runTone(1000.0f, 18);  // band 18 is 1 kHz
+    failures += runTone(1000.0f, 18);  // band 18 is 1 kHz; a period of exactly 48 samples
+    failures += runTone(440.0f, 14);   // a period that is not a whole number of samples
+    failures += runTone(10000.0f, 28); // band 28 is 10 kHz; a period of exactly 4.8 samples
+    failures += runTestFile();
     printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES PRESENT");
     return failures;
 }

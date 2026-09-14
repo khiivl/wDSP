@@ -59,9 +59,15 @@ public final class NativeAnalyzer {
         }
     }
 
-    /** Feeds one polled block of unsigned 8-bit samples. Returns how many samples were new. */
-    public int push(byte[] waveform, int length) {
-        return handle == 0 ? 0 : nativePush(handle, waveform, length);
+    /**
+     * Feeds one polled block of unsigned 8-bit samples. Returns how many samples were new.
+     *
+     * @param captureTimeNs {@link System#nanoTime()} taken as the block was read. The stitcher
+     *                      uses the time between reads to pick the right shift when a periodic
+     *                      signal - a test tone - matches at several.
+     */
+    public int push(byte[] waveform, int length, long captureTimeNs) {
+        return handle == 0 ? 0 : nativePush(handle, waveform, length, captureTimeNs);
     }
 
     /** Feeds continuous 16-bit PCM samples directly into the analyser ring buffer, skipping the stitcher. */
@@ -163,7 +169,7 @@ public final class NativeAnalyzer {
 
     private static native void nativeDestroy(long handle);
 
-    private static native int nativePush(long handle, byte[] block, int len);
+    private static native int nativePush(long handle, byte[] block, int len, long captureTimeNs);
 
     private static native void nativePushPcm16(long handle, short[] samples, int count, float gain);
 

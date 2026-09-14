@@ -12,6 +12,11 @@ constexpr int kCompare = 256;
 constexpr float kMatchThreshold = 0.90f;
 /** Coarse search stride; the winner is then refined sample by sample. */
 constexpr int kCoarseStep = 8;
+
+/** True when the block's window ending s samples before its end is identical to ref. */
+bool matchesExactly(const float* ref, const float* block, int len, int s) {
+    return std::memcmp(ref, block + (len - s - kCompare), sizeof(float) * kCompare) == 0;
+}
 }
 
 Stitcher::Stitcher(int capacity)
@@ -57,7 +62,7 @@ float Stitcher::correlate(const float* a, const float* b, int count, float energ
     return dot / denom;
 }
 
-int Stitcher::push(const uint8_t* block, int len) {
+int Stitcher::push(const uint8_t* block, int len, int expectedNew) {
     if (len <= 0) return 0;
 
     std::vector<float> in(static_cast<size_t>(len));
@@ -86,6 +91,34 @@ int Stitcher::push(const uint8_t* block, int len) {
     // s is the count of new samples at the end of the block. Trying s means claiming that the
     // block's window ending at len - s lines up with what we already hold.
     int maxS = len - kCompare;
+
+    // 🔴 A periodic signal matches what we hold at every whole period of shift - including a shift
+    // of nothing. Measured 14.09.2026: a test file of 1 kHz + 10 kHz, a period of exactly 48 samples,
+    // matched at s = 0 on 461 polls of 461 in two players; this took nothing as new, and the
+    // analyser, the status bar and the screensaver drew nothing while it played. The correlation
+    // below cannot tell those shifts apart, because they are equally good.
+    //
+    // Two reads of the same rolling buffer overlap not approximately but bit for bit, so the shifts
+    // worth considering are the ones that match exactly, and of those the right one is the one the
+    // clock predicts. For anything that is not periodic there is only one such shift, and it is the
+    // one the correlation would have found; searching outward from the prediction finds it without
+    // running the correlation at all. The prediction is good to +-131 samples on this head unit.
+    if (expectedNew >= 0) {
+        const int centre = expectedNew < maxS ? expectedNew : maxS;
+        for (int d = 0; centre - d >= 0 || centre + d <= maxS; d++) {
+            int s = -1;
+            if (centre + d <= maxS && matchesExactly(ref, in.data(), len, centre + d)) {
+                s = centre + d;
+            } else if (d > 0 && centre - d >= 0 && matchesExactly(ref, in.data(), len, centre - d)) {
+                s = centre - d;
+            }
+            if (s < 0) continue;
+            if (s == 0) return 0;
+            append(in.data() + (len - s), s);
+            return s;
+        }
+    }
+
     int bestS = -1;
     float bestScore = -1.0f;
 

@@ -104,8 +104,13 @@ public:
      * Running the transforms here as well meant a long window - four times the work of the short
      * one - could hold up the next poll, and a poll that arrives late is a poll that misses part
      * of the rolling buffer, which is exactly what the stitcher then has to paper over.
+     *
+     * @param captureTimeNs when the block was read, on a monotonic clock (System.nanoTime). The
+     *                      time since the previous read, at the sample rate, says roughly how many
+     *                      samples are new - which is how the stitcher picks the right shift when a
+     *                      periodic signal matches at several (see Stitcher::push).
      */
-    int pushWaveform(const uint8_t* block, int len);
+    int pushWaveform(const uint8_t* block, int len, int64_t captureTimeNs);
 
     /**
      * Runs the analysis for whatever has accumulated, blocking until there is enough or the
@@ -169,6 +174,8 @@ private:
     int sampleRate_;
     int hop_;
     Stitcher stitcher_;
+    /** Time of the previous pushWaveform, 0 before the first. Under ringMutex_. */
+    int64_t lastCaptureNs_ = 0;
     Fft longFft_;
     Fft shortFft_;
 

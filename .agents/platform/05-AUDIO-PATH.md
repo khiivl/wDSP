@@ -613,11 +613,12 @@ cannot ask for it.
 2.7 s of raw `Visualizer.getWaveForm()` blocks and the stitched stream its analyser reads
 (`PROBE_SESSION --ei wav 2700`), analysed on the PC:
 
-- **The tap runs at 44 100 Hz** (`getSamplingRate()` 44100000 mHz), capture size 1024,
-  scaling mode 0 = `SCALING_MODE_NORMALIZED`, measurement mode none; session 0.
+- ❌ ~~**The tap runs at 44 100 Hz**~~ — corrected the same evening, see below: `getSamplingRate()`
+  says 44100000 mHz, the samples are at **48 000**. Capture size 1024, scaling mode 0 =
+  `SCALING_MODE_NORMALIZED`, measurement mode none; session 0.
 - **The stitched stream is flat**: third-octave bands within ±1.5 dB from 18 Hz to 14 kHz, computed
-  both independently (Welch) and exactly as the native analyser does. 17.8 kHz reads −5.4 dB (the
-  44.1 kHz path's own top end), 22.4 kHz −25 dB (above Nyquist).
+  both independently (Welch) and exactly as the native analyser does. (The frequencies in this
+  line were computed at 44.1 kHz and are 8.8 % low; flatness of pink noise does not depend on it.)
 - Raw blocks: a poll every 13 ms took 576–720 new samples; overlaps matched byte for byte; the signal
   used 226 of 256 levels; 0 discontinuities.
 
@@ -627,6 +628,42 @@ curve (wDSP 14.09.2026: the model's curve reached the analyser only when a captu
 preset change was drawn with the previous preset's curve).
 
 ⚠️ Consequence for any 32-band display built on this tap: a band above ~20 kHz has nothing in it.
+
+### 🔴 The Visualizer's sample rate is a declaration, not the rate (14.09.2026, evening)
+
+📻 Three witnesses, two of them independent of any stitching:
+
+| witness | result |
+|---|---|
+| test file 1 kHz + 10 kHz, −23 dBFS each, 48 kHz, in `com.qf.musicplayer` **and** Pulsar; each raw 1024-sample block read at the reported 44.1 kHz | tones at **918.5 and 9187.3 Hz** in every block → true rate 48 012 / 48 001 Hz |
+| new samples per second of wall clock, two dumps of non-periodic content (music, pink noise) | **47 992** and **48 011** |
+| `dumpsys media.audio_flinger` / `media.audio_policy` | primary output 13 = `AudioOut_D`, mixer, **48 000 Hz**; the other mixer thread 48 000 too |
+
+`Visualizer.getSamplingRate()` returned 44 100 000 mHz throughout. 🧩 The samples are the output
+mix, so their rate is the output's; `AudioManager.getProperty(PROPERTY_OUTPUT_SAMPLE_RATE)` gives
+the primary output's, 48 000 here. Every spectrum built on the declared rate draws each frequency
+**8.8 % low** — invisible on pink noise, which looks the same at any scale, and invisible on a
+third-octave display for most tones (918 Hz is still inside the 1 kHz band).
+
+### How the tap's window moves (923 polls, four dumps)
+
+- 📻 **In whole milliseconds.** Every advance between two reads was a multiple of 48 samples.
+- 📻 **With the clock.** Time between reads × 48 000 predicts the advance to within ±131 samples
+  (1st–99th percentile −58…+80), and the error does not accumulate.
+- 📻 **Overlaps are bit-identical** in `SCALING_MODE_AS_PLAYED` — two reads of the same rolling
+  buffer, not two similar signals.
+
+### ⚠️ A periodic signal stalls an alignment by correlation
+
+📻 A tone whose period is a whole number of samples (1 kHz = 48, 10 kHz = 24 over five cycles — most
+"round" test tones at 48 kHz) matches the held stream at **every** whole period of shift, including a
+shift of nothing. wDSP's stitcher took the first equally good match, s = 0: **461 polls of 461 took
+nothing as new**, in both players, and the analyser, the status bar and the screensaver froze on the
+frame computed when capture attached (frame counter 223 at two readings a second apart). It looked
+like a correct picture — two bars at 1 and 10 kHz — that never moved. Cure in wDSP (14.09.2026):
+among the shifts that match **exactly**, take the one nearest the clock's prediction; correlation
+only when nothing matches exactly. After it: 263 polls, 0 empty, tones at 1000.00 / 10000.00 Hz,
+RMS −20.06 dBFS against −20.00 in the file, bars fall on pause.
 
 ## 4. Capture does not give a continuous stream
 
