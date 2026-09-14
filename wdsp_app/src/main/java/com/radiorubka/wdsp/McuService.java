@@ -355,6 +355,8 @@ public class McuService extends Service implements LocationListener {
     private boolean isUiVisible = false;
     private boolean isBootStart = true;
     private String presetBeforeCall;
+    /** Whether the previous checkPlayer poll saw a call - so its start is acted on once. Worker thread. */
+    private boolean callSeenLastPoll;
 
     /**
      * The source the previous poll reasoned about, or null until the first poll has run.
@@ -1849,6 +1851,13 @@ public class McuService extends Service implements LocationListener {
         boolean inCall = CallState.isCallType(activeType);
         AudioSpectrumEngine.getInstance().setCallActive(inCall);
         AudioSpectrumEngine.getInstance().checkSourceState();
+        // The screensaver's own tick looks every two seconds; this poll sees the call within 100 ms,
+        // so the moment it begins the screensaver is taken down from here (owner, 14.09.2026). The
+        // same reading as above, and the same body the screensaver's tick runs.
+        if (inCall && !callSeenLastPoll) {
+            mainHandler.post(() -> ScreensaverManager.getInstance(McuService.this).onCallInProgress());
+        }
+        callSeenLastPoll = inCall;
 
         // Process the naming convention for the "unknown" preset.
         if (isPlayingMedia && NowPlaying.getInstance(this).playerPackage() != null

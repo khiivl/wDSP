@@ -1126,6 +1126,24 @@ public final class ScreensaverManager {
     }
 
     /**
+     * A call takes the screen, whatever else is true (owner, 14.09.2026: "подзвонили - скрінсейвер
+     * зняти"). Removed even in preview, because the call's own screen is what the person needs to
+     * see; and the idle clock is held at zero for the length of the call so the curtain does not
+     * drop the moment it ends. Main thread.
+     *
+     * <p>Called from this class's own two-second tick and, the moment a call begins, from the
+     * service's 100 ms poll - the owner: take the screensaver down as soon as the system reports the
+     * call, not up to two seconds later. One body for both, so the two cannot come to differ.
+     */
+    public void onCallInProgress() {
+        if (attached) {
+            Log.i(TAG, "Screensaver removed: a call is in progress");
+            hide();
+        }
+        resetIdleClock();
+    }
+
+    /**
      * Somebody touched the screen, so the delay starts again from here.
      *
      * <p>Cheap on purpose - one field, no work, no waking anything. It is called once per gesture
@@ -1166,16 +1184,8 @@ public final class ScreensaverManager {
 
     private void tick() {
         updatePlaybackBelief();
-        // A call takes the screen, whatever else is true (owner, 14.09.2026: "подзвонили -
-        // скрінсейвер зняти"). Removed even in preview, because the call's own screen is what the
-        // person needs to see; and the idle clock is held at zero for the length of the call so
-        // the curtain does not drop the moment it ends.
         if (CallState.isActive()) {
-            if (attached) {
-                Log.i(TAG, "Screensaver removed: a call is in progress");
-                hide();
-            }
-            resetIdleClock();
+            onCallInProgress();
             return;
         }
         String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
