@@ -607,6 +607,27 @@ cannot ask for it.
 
 ---
 
+## 4-bis. What the Visualizer tap really delivers — measured on pink noise, 14.09.2026
+
+📻 The owner's unit, `com.qf.musicplayer` looping the EMMA 2018 pink-noise WAV, flat preset. wDSP dumped
+2.7 s of raw `Visualizer.getWaveForm()` blocks and the stitched stream its analyser reads
+(`PROBE_SESSION --ei wav 2700`), analysed on the PC:
+
+- **The tap runs at 44 100 Hz** (`getSamplingRate()` 44100000 mHz), capture size 1024,
+  scaling mode 0 = `SCALING_MODE_NORMALIZED`, measurement mode none; session 0.
+- **The stitched stream is flat**: third-octave bands within ±1.5 dB from 18 Hz to 14 kHz, computed
+  both independently (Welch) and exactly as the native analyser does. 17.8 kHz reads −5.4 dB (the
+  44.1 kHz path's own top end), 22.4 kHz −25 dB (above Nyquist).
+- Raw blocks: a poll every 13 ms took 576–720 new samples; overlaps matched byte for byte; the signal
+  used 226 of 256 levels; 0 discontinuities.
+
+So neither the tap, the 8-bit normalisation nor the stitching shapes the spectrum. A shape seen on
+screen in the calculated mode comes from what is added after the bands: the DSP model and the cabin
+curve (wDSP 14.09.2026: the model's curve reached the analyser only when a capture started, so a
+preset change was drawn with the previous preset's curve).
+
+⚠️ Consequence for any 32-band display built on this tap: a band above ~20 kHz has nothing in it.
+
 ## 4. Capture does not give a continuous stream
 
 ```

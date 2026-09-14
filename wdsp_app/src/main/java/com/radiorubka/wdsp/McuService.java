@@ -559,6 +559,9 @@ public class McuService extends Service implements LocationListener {
                         AudioSpectrumEngine.getInstance()
                                 .setDebugDump(intent.getIntExtra("dump", 0) != 0);
                     }
+                    else if (intent.hasExtra("wav")) {
+                        AudioSpectrumEngine.getInstance().dumpCapture(intent.getIntExtra("wav", 2500));
+                    }
                     else if (sid >= 0) {
                         SessionProbe.probeAsync(sid, ms);
                     } else {

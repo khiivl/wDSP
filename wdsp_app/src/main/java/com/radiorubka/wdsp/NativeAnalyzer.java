@@ -138,6 +138,27 @@ public final class NativeAnalyzer {
         return handle != 0 && outBuffer != null ? nativeGetWaveform(handle, outBuffer) : 0;
     }
 
+    /** Diagnostics: the newest stitched samples as the transforms read them. Returns the count. */
+    public int readStream(float[] out) {
+        return handle != 0 && out != null ? nativeReadStream(handle, out) : 0;
+    }
+
+    private static native int nativeReadStream(long handle, float[] out);
+
+    /** Diagnostics: band power before the floor, the learned floor and the added curve, in dB. */
+    public void getTermsDb(float[] power32, float[] floor32, float[] curve32) {
+        if (handle != 0) nativeGetTermsDb(handle, power32, floor32, curve32);
+    }
+
+    private static native void nativeGetTermsDb(long handle, float[] power, float[] floor, float[] curve);
+
+    /** Noise floor learning and subtraction: for a microphone only. Off in a new analyser. */
+    public void setNoiseFloorEnabled(boolean enabled) {
+        if (handle != 0) nativeSetNoiseFloorEnabled(handle, enabled);
+    }
+
+    private static native void nativeSetNoiseFloorEnabled(long handle, boolean enabled);
+
     private static native long nativeCreate(int sampleRate, int captureSize);
 
     private static native void nativeDestroy(long handle);

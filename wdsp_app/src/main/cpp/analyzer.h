@@ -78,6 +78,26 @@ public:
     int getWaveform(uint8_t* out, int maxLen);
 
     /**
+     * Diagnostics: the newest samples of the stitched stream exactly as the transforms read them,
+     * -1..1. Returns how many were copied (fewer than asked while the ring is still filling).
+     */
+    int readStream(float* out, int count);
+
+    /**
+     * Diagnostics: for each of the 32 bands, the power of the last frame before the noise floor
+     * came off, the learned floor, and the curve added on top - all in dB. What a display level is
+     * made of, term by term.
+     */
+    void getTermsDb(float* powerDb32, float* floorDb32, float* curveDb32);
+
+    /**
+     * Whether a noise floor is learned and taken off. Off by default: only a microphone brings
+     * acoustic noise with it. The Visualizer's PCM is digital, and a floor subtracted from it can
+     * only eat content (owner, 14.09.2026: "це ж для мікрофону").
+     */
+    void setNoiseFloorEnabled(bool enabled);
+
+    /**
      * Feeds one polled Visualizer block. Returns the number of genuinely new samples.
      *
      * Deliberately cheap: it only stitches the block into the ring and wakes the analysis thread.
@@ -162,6 +182,7 @@ private:
     float bandPower_[kBands];
     float smoothedDb_[kBands];
     float noiseFloor_[kBands];
+    bool noiseFloorEnabled_ = false;
     float dspCurve_[kBands];
 
     // Ring of finished frames, so the display can be held back by the playback latency.

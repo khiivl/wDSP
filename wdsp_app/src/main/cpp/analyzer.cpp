@@ -75,6 +75,32 @@ int Analyzer::getWaveform(uint8_t* out, int maxLen) {
     return count;
 }
 
+int Analyzer::readStream(float* out, int count) {
+    if (out == nullptr || count <= 0) return 0;
+    std::lock_guard<std::mutex> lock(ringMutex_);
+    int64_t total = stitcher_.totalSamples();
+    if (total < count) count = static_cast<int>(total);
+    if (count <= 0 || !stitcher_.readNewest(out, count)) return 0;
+    return count;
+}
+
+void Analyzer::setNoiseFloorEnabled(bool enabled) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    noiseFloorEnabled_ = enabled;
+    if (!enabled) {
+        for (int i = 0; i < kBands; i++) noiseFloor_[i] = 0.0f;
+    }
+}
+
+void Analyzer::getTermsDb(float* powerDb32, float* floorDb32, float* curveDb32) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (int i = 0; i < kBands; i++) {
+        if (powerDb32 != nullptr) powerDb32[i] = toDb(bandPower_[i]);
+        if (floorDb32 != nullptr) floorDb32[i] = toDb(noiseFloor_[i]);
+        if (curveDb32 != nullptr) curveDb32[i] = dspCurve_[i];
+    }
+}
+
 void Analyzer::buildBandPlan() {
     // Each hardware band is two-thirds of an octave wide, so splitting it in two gives third-octave
     // analysis bands centred a sixth of an octave either side of the hardware centre.
@@ -291,11 +317,15 @@ void Analyzer::processFrame(bool haveLong) {
         //
         // Nothing is lost by removing it: the quiet branch min-tracks, so the floor still falls
         // the moment a genuinely quiet frame arrives that is lower than what is stored.
-        if (quiet) {
+        //
+        // And only for a microphone (noiseFloorEnabled_): the Visualizer's PCM has no acoustic
+        // noise in it, and on 14.09.2026 a floor learned in the calculated mode took the 17.8 kHz
+        // band of steady pink noise down to nothing.
+        if (quiet && noiseFloorEnabled_) {
             if (noiseFloor_[i] <= 0.0f || power < noiseFloor_[i]) noiseFloor_[i] = power;
             else noiseFloor_[i] += (power - noiseFloor_[i]) * kNoiseFloorRise;
         }
-        float signal = power - noiseFloor_[i] * kNoiseFloorMargin;
+        float signal = noiseFloorEnabled_ ? power - noiseFloor_[i] * kNoiseFloorMargin : power;
         if (signal < 0.0f) signal = 0.0f;
 
         float db = toDb(signal) + curve[i];

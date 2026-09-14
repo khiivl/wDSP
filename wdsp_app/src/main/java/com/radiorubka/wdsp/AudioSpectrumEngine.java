@@ -82,17 +82,6 @@ public class AudioSpectrumEngine {
 
     private final float[] smoothedContentDb = new float[NUM_BANDS_16];
 
-    /** Per-band noise floor in the power domain - see the subtraction in processFft(). */
-    private final double[] noiseFloorPower = new double[NUM_BANDS_16];
-    /** Within a quiet frame the floor drops at once and rises only very slowly. */
-    private static final float NOISE_FLOOR_RISE = 0.0002f;
-    /** Loudest recent frame, used to recognise a quiet one. Decays slowly so it survives a pause. */
-    private double frameMaxPower = 0;
-    private static final double FRAME_MAX_DECAY = 0.999;
-    /** A frame this far below the loudest recent one counts as silence: about 17 dB down. */
-    private static final double QUIET_FRACTION = 0.02;
-    /** Subtract slightly more than the floor so noise reads as nothing, not as a low bar. */
-    private static final float NOISE_FLOOR_MARGIN = 1.2f;
     private static final double POWER_EPSILON = 1e-6;
     /** Offset applied after the power-to-dB conversion, to sit in the display's 0..54 dB window. */
     private static final float POWER_REFERENCE_DB = 0f;
@@ -110,6 +99,23 @@ public class AudioSpectrumEngine {
 
     private final float[] dspCurveDb = new float[NUM_BANDS_16];
     private volatile boolean dspCurveDirty = true;
+    /**
+     * The running native analyser holds an older curve than {@link #getEffectiveSpectrumCurve()}
+     * would give now. Consumed by {@link #dispatchNativeFrame()}, the one place that hands the curve
+     * over - on the display thread, which is joined before the analyser is released.
+     *
+     * <p>🔴 Until 14.09.2026 the curve reached the analyser only when a capture started or settings
+     * were reloaded, while the service republished the DSP state on every preset change. Measured on
+     * pink noise: the hardware had been flat for a minute (EQ 80 66 66 ...) and the spectrum still
+     * drew the previous AutoEQ preset's curve - +20 dB of bass that was never played.
+     */
+    private volatile boolean nativeCurveStale = true;
+
+    /** Every change that alters the effective curve comes through here. */
+    private void markDspCurveChanged() {
+        dspCurveDirty = true;
+        nativeCurveStale = true;
+    }
     private float dspCurveSampleRate = 0f;
 
     private final float[] rawLevels32 = new float[NUM_BANDS_32];
@@ -518,7 +524,7 @@ public class AudioSpectrumEngine {
         synchronized (gains) {
             System.arraycopy(newGains, 0, this.gains, 0, Math.min(newGains.length, AudioConfig.NUM_BANDS));
         }
-        dspCurveDirty = true;
+        markDspCurveChanged();
     }
 
     public void setQFactors(boolean[] newQNarrow) {
@@ -526,7 +532,7 @@ public class AudioSpectrumEngine {
         synchronized (qNarrow) {
             System.arraycopy(newQNarrow, 0, this.qNarrow, 0, Math.min(newQNarrow.length, AudioConfig.NUM_BANDS));
         }
-        dspCurveDirty = true;
+        markDspCurveChanged();
     }
 
     /**
@@ -549,7 +555,7 @@ public class AudioSpectrumEngine {
             dspSubFreqIdx = subFreqIdx;
             dspSubGainIdx = subGainIdx;
             hasServiceDspState = true;
-            dspCurveDirty = true;
+            markDspCurveChanged();
         }
     }
 
@@ -569,6 +575,89 @@ public class AudioSpectrumEngine {
 
     private final float[] dumpDb32 = new float[NUM_BANDS_32];
 
+    // --- Capture dump, driven by PROBE_SESSION --ei wav <ms> ---
+    //
+    // Answers "is the shape already in what the analyser is fed, or does the band maths make it?"
+    // on a real unit, where the host harness cannot look: every raw Visualizer block for a few
+    // seconds with its poll time and how many samples the stitcher took from it, then the stitched
+    // stream the transforms actually read, as a WAV. Both land in the app's files directory.
+
+    private volatile long captureDumpUntil = 0;
+    private java.io.DataOutputStream captureDumpBlocks;
+    private int captureDumpCount;
+
+    /** Starts a capture dump of {@code ms} milliseconds, 500..2700 (the stitched ring holds 2.7 s). */
+    public void dumpCapture(int ms) {
+        if (appContext == null || nativeAnalyzer == null || visualizer == null) {
+            Log.w(TAG, "capture dump: no Visualizer capture running (microphone mode, or nothing attached)");
+            return;
+        }
+        ms = Math.max(500, Math.min(2700, ms));
+        try {
+            java.io.File file = new java.io.File(appContext.getFilesDir(), "capture_blocks.bin");
+            captureDumpBlocks = new java.io.DataOutputStream(new java.io.BufferedOutputStream(
+                    new java.io.FileOutputStream(file)));
+            captureDumpCount = 0;
+            Visualizer v = visualizer;
+            Log.i(TAG, "capture dump: " + ms + " ms, session " + currentSessionId
+                    + ", Visualizer rate " + (v != null ? v.getSamplingRate() : -1) + " mHz"
+                    + ", scaling " + (v != null ? v.getScalingMode() : -1)
+                    + ", measurement mode " + (v != null ? v.getMeasurementMode() : -1)
+                    + ", capture size " + (v != null ? v.getCaptureSize() : -1));
+            captureDumpUntil = System.currentTimeMillis() + ms;
+        } catch (Throwable t) {
+            Log.w(TAG, "capture dump could not start: " + t);
+            captureDumpUntil = 0;
+        }
+    }
+
+    /** Capture thread. One record per poll: nanoTime, samples the stitcher took, the raw block. */
+    private void writeCaptureDump(byte[] block, int size, int fresh, int sampleRate) {
+        java.io.DataOutputStream out = captureDumpBlocks;
+        if (out == null) return;
+        try {
+            out.writeLong(System.nanoTime());
+            out.writeInt(fresh);
+            out.writeInt(size);
+            out.write(block, 0, size);
+            captureDumpCount++;
+            if (System.currentTimeMillis() < captureDumpUntil) return;
+
+            captureDumpUntil = 0;
+            captureDumpBlocks = null;
+            out.close();
+            NativeAnalyzer analyzer = nativeAnalyzer;
+            float[] stream = new float[1 << 17];
+            int got = analyzer != null ? analyzer.readStream(stream) : 0;
+            java.io.File wav = new java.io.File(appContext.getFilesDir(), "capture_stitched.wav");
+            writeWav16(wav, stream, got, sampleRate);
+            Log.i(TAG, "capture dump written: " + captureDumpCount + " blocks, " + got
+                    + " stitched samples at " + sampleRate + " Hz, discontinuities "
+                    + (analyzer != null ? analyzer.discontinuities() : -1));
+        } catch (Throwable t) {
+            Log.w(TAG, "capture dump failed: " + t);
+            captureDumpUntil = 0;
+            captureDumpBlocks = null;
+        }
+    }
+
+    private static void writeWav16(java.io.File file, float[] samples, int count, int sampleRate)
+            throws java.io.IOException {
+        java.nio.ByteBuffer b = java.nio.ByteBuffer.allocate(44 + count * 2)
+                .order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        b.put("RIFF".getBytes()).putInt(36 + count * 2).put("WAVE".getBytes());
+        b.put("fmt ".getBytes()).putInt(16).putShort((short) 1).putShort((short) 1)
+                .putInt(sampleRate).putInt(sampleRate * 2).putShort((short) 2).putShort((short) 16);
+        b.put("data".getBytes()).putInt(count * 2);
+        for (int i = 0; i < count; i++) {
+            float s = Math.max(-1f, Math.min(1f, samples[i]));
+            b.putShort((short) Math.round(s * 32767f));
+        }
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+            fos.write(b.array());
+        }
+    }
+
     /** Logs the 32 measured bands plus the health of the stitcher. */
     private void dumpNativeBands(NativeAnalyzer analyzer) {
         long now = System.currentTimeMillis();
@@ -580,6 +669,18 @@ public class AudioSpectrumEngine {
             sb.append(String.format(java.util.Locale.US, "%.0f ", dumpDb32[i]));
         }
         Log.i(TAG, sb.toString());
+        // The display level term by term: power - 1.2 x floor, in dB, plus the curve.
+        float[] power = new float[NUM_BANDS_32], floor = new float[NUM_BANDS_32], curve = new float[NUM_BANDS_32];
+        analyzer.getTermsDb(power, floor, curve);
+        StringBuilder p = new StringBuilder("POWER32 "), f = new StringBuilder("FLOOR32 "), c = new StringBuilder("CURVE32 ");
+        for (int i = 0; i < NUM_BANDS_32; i++) {
+            p.append(String.format(java.util.Locale.US, "%.0f ", power[i]));
+            f.append(String.format(java.util.Locale.US, "%.0f ", floor[i]));
+            c.append(String.format(java.util.Locale.US, "%.1f ", curve[i]));
+        }
+        Log.i(TAG, p.toString());
+        Log.i(TAG, f.toString());
+        Log.i(TAG, c.toString());
         Log.i(TAG, "NATIVE frames=" + analyzer.frames()
                 + " discontinuities=" + analyzer.discontinuities()
                 + " latencyMs=" + nativeLatencyMs
@@ -685,9 +786,9 @@ public class AudioSpectrumEngine {
      * refreshed. One caller, so the rename cost nothing.
      */
     public void onMeasuredCurvesChanged() {
-        if (nativeAnalyzer != null) {
-            nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
-        }
+        // Marked, not pushed from here: this runs on the measurement's thread, and the analyser may
+        // be released under it. The display thread hands the new curve over on its next frame.
+        markDspCurveChanged();
         checkSourceState();
     }
 
@@ -699,7 +800,7 @@ public class AudioSpectrumEngine {
                 System.arraycopy(newFmOffsets, 0, this.fmOffsets, 0, Math.min(newFmOffsets.length, AudioConfig.NUM_BANDS));
             }
         }
-        dspCurveDirty = true;
+        markDspCurveChanged();
     }
 
     private int currentSessionId = 0;
@@ -960,11 +1061,22 @@ public class AudioSpectrumEngine {
      * which is not a rate anyone should be drawing at; the display wants a steady 60 and does not
      * care how many measurements happened in between.
      */
+    /**
+     * The one place an analyser is made, and the one place that says whether its input is acoustic.
+     * A noise floor is learned and taken off only for a microphone: digital PCM from the Visualizer
+     * carries no cabin noise, and a floor subtracted from it can only eat content.
+     */
+    private static NativeAnalyzer newAnalyzer(int sampleRate, int captureSize, boolean acoustic) {
+        NativeAnalyzer analyzer = new NativeAnalyzer(sampleRate, captureSize);
+        analyzer.setNoiseFloorEnabled(acoustic);
+        return analyzer;
+    }
+
     private void startNativeCapture(int captureSize, int samplingRateMilliHz) {
         stopNativeCapture();
 
         int sampleRate = samplingRateMilliHz > 0 ? samplingRateMilliHz / 1000 : 48000;
-        nativeAnalyzer = new NativeAnalyzer(sampleRate, captureSize);
+        nativeAnalyzer = newAnalyzer(sampleRate, captureSize, false);
         if (!nativeAnalyzer.isValid()) {
             Log.w(TAG, "Native analyser did not initialise; nothing will be measured");
             return;
@@ -983,7 +1095,8 @@ public class AudioSpectrumEngine {
                 try {
                     if (!pausedForCall && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
                         noteSignal(buffer);
-                        nativeAnalyzer.push(buffer, size);
+                        int fresh = nativeAnalyzer.push(buffer, size);
+                        if (captureDumpUntil != 0) writeCaptureDump(buffer, size, fresh, sampleRate);
                         synchronized (waveformLock) {
                             System.arraycopy(buffer, 0, latestWaveform, 0, Math.min(size, latestWaveform.length));
                             latestWaveformLen = Math.min(size, latestWaveform.length);
@@ -1111,7 +1224,8 @@ public class AudioSpectrumEngine {
         final float mainStrength = radioActive ? 1.0f : mainAgcStrength;
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgc, mainStrength, mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
-        analyzer.setDspCurve(getEffectiveSpectrumCurve());
+        // The curve is handed over by dispatchNativeFrame, the only place that does it.
+        nativeCurveStale = true;
     }
 
     /** Picks the frame rate from who is actually watching. */
@@ -1139,6 +1253,10 @@ public class AudioSpectrumEngine {
         if (pausedForCall) return;
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid() || listeners.isEmpty()) return;
+        if (nativeCurveStale) {
+            nativeCurveStale = false;   // before the read: a change during it marks it again
+            analyzer.setDspCurve(getEffectiveSpectrumCurve());
+        }
 
         long now = System.currentTimeMillis();
         if (lastCaptureTime != 0) {
@@ -1426,14 +1544,15 @@ public class AudioSpectrumEngine {
 
         final int captureSize = 1024;
         final int sampleRate = 48000;
-        nativeAnalyzer = new NativeAnalyzer(sampleRate, captureSize);
+        nativeAnalyzer = newAnalyzer(sampleRate, captureSize, true);
         if (!nativeAnalyzer.isValid()) {
             Log.w(TAG, "Native analyser did not initialise for Radio MIC");
             return;
         }
 
-        // Microphone inverse compensation curve: restores hardware capsule sub-bass and treble roll-off
-        nativeAnalyzer.setDspCurve(getEffectiveSpectrumCurve());
+        // Microphone inverse compensation curve: restores hardware capsule sub-bass and treble
+        // roll-off. Handed over by dispatchNativeFrame on the first frame, like every other curve.
+        nativeCurveStale = true;
 
         boolean started = radioMicCapture.start(appContext, (boosted, raw, len, captureGain) -> {
             if (!capturePolling) return;
@@ -1769,39 +1888,17 @@ public class AudioSpectrumEngine {
         // 1. What the hardware DSP will do to this content - real biquad responses, see DspResponse.
         float[] postDspGainDb = getDspCurve(sampleRateHz);
 
-        // 2. Content level per band, above that band's own noise floor
+        // 2. Content level per band
         float[] postSignalDb = new float[AudioConfig.NUM_BANDS];
         float maxPostDb = 0f;
 
-        // The noise floor may only be learned from frames where essentially nothing is playing.
-        // Learning it continuously eats stationary signals: pink noise never varies, so a floor
-        // that chases the running minimum settles onto the signal itself - and it does so faster
-        // in wide high bands, whose many bins average out the variation, than in narrow low ones.
-        // That alone produces a convincing but entirely artificial high-frequency roll-off, which
-        // is exactly the sort of thing a calibration disc would then bake into a correction table.
-        double frameTotal = 0;
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) frameTotal += bandPower[i];
-        if (frameTotal > frameMaxPower) {
-            frameMaxPower = frameTotal;
-        } else {
-            frameMaxPower *= FRAME_MAX_DECAY;
-        }
-        boolean quietFrame = frameMaxPower > 0 && frameTotal < frameMaxPower * QUIET_FRACTION;
-
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            double power = bandPower[i];
-
-            if (quietFrame) {
-                if (noiseFloorPower[i] <= 0) {
-                    noiseFloorPower[i] = power;
-                } else if (power < noiseFloorPower[i]) {
-                    noiseFloorPower[i] = power;
-                } else {
-                    noiseFloorPower[i] += (power - noiseFloorPower[i]) * NOISE_FLOOR_RISE;
-                }
-            }
-            double signalPower = power - noiseFloorPower[i] * NOISE_FLOOR_MARGIN;
-            if (signalPower < 0) signalPower = 0;
+            // 🔴 No noise floor comes off here. This path only ever reads the Visualizer's digital
+            // PCM, and there is no acoustic noise in it to take away - owner, 14.09.2026: "нахріна
+            // це взагалі враховувати в розрахунковій кривій, це ж для мікрофону". It used to learn a
+            // floor in quiet frames and subtract it linearly, which on steady content can take a
+            // whole band down to nothing (the native twin read -133 dB at 17.8 kHz on pink noise).
+            double signalPower = bandPower[i];
 
             float rawSignalDb = (float) (10.0 * Math.log10(signalPower + POWER_EPSILON)
                     - POWER_REFERENCE_DB);

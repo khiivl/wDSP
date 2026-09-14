@@ -81,6 +81,41 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetWaveform(JNIEnv* env, jclass, j
     return got;
 }
 
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeReadStream(JNIEnv* env, jclass, jlong handle,
+                                                        jfloatArray out) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || out == nullptr) return 0;
+    jsize len = env->GetArrayLength(out);
+    if (len <= 0) return 0;
+    std::vector<float> tmp(static_cast<size_t>(len));
+    int got = analyzer->readStream(tmp.data(), len);
+    if (got > 0) env->SetFloatArrayRegion(out, 0, got, tmp.data());
+    return got;
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetNoiseFloorEnabled(JNIEnv*, jclass, jlong handle,
+                                                                  jboolean enabled) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->setNoiseFloorEnabled(enabled == JNI_TRUE);
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetTermsDb(JNIEnv* env, jclass, jlong handle,
+                                                        jfloatArray power, jfloatArray floor,
+                                                        jfloatArray curve) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || power == nullptr || floor == nullptr || curve == nullptr) return;
+    if (env->GetArrayLength(power) < wdsp::kBands || env->GetArrayLength(floor) < wdsp::kBands
+            || env->GetArrayLength(curve) < wdsp::kBands) return;
+    float p[wdsp::kBands], f[wdsp::kBands], c[wdsp::kBands];
+    analyzer->getTermsDb(p, f, c);
+    env->SetFloatArrayRegion(power, 0, wdsp::kBands, p);
+    env->SetFloatArrayRegion(floor, 0, wdsp::kBands, f);
+    env->SetFloatArrayRegion(curve, 0, wdsp::kBands, c);
+}
+
 JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeProcess(JNIEnv*, jclass, jlong handle,
                                                       jint timeoutMs) {
