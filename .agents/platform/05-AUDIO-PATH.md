@@ -149,6 +149,42 @@ before the Google assistant does. No stop, no root. ❓ Whether the first probe 
 not recoverable — logcat had rolled by the time it was read. ❓ One boot, one unit; the assistant's
 start time is not guaranteed.
 
+#### After hibernation the assistant reopens first — onto our input, which never closed — 14.09.2026
+
+📻 The owner's unit put to sleep for ~15 minutes with the wDSP main screen **closed**, so only the
+service held the microphone (a first run with the screen open was discarded: the screen started a
+capture of its own on wake). Read from a root shell daemon on the unit, which survives sleep and
+wakes before anything else (`07-PRACTICE.md` §7), plus `dumpsys audio`:
+
+```
+02:11:39.601  ACC_OFF reaches wDSP; our capture keeps logging
+02:12:18.084  assistant   rec stop  (its last client before sleep)
+              wDSP        no rec stop - riid 383 stays "started" through the whole sleep
+02:12:17.676  last line from our process          ---- unit frozen ~14.5 min ----
+02:26:50.090  first line from our process: the pre-sleep capture is still delivering samples
+02:26:50.172  assistant   rec start  <- the first client to open anything after wake
+02:26:50.454  ACC_ON reaches wDSP (282 ms after the assistant)
+02:26:50.574  wDSP        rec stop   (riid 383 - our own restart, see below)
+02:26:50.738  wDSP        capture started again, 48000 Hz UNPROCESSED      (164 ms gap)
+02:26:51.257  own stream: -3.5 dB above 8 kHz - full band
+02:28:17      dumpsys: both clients on patch 69, dev=1ch 48000Hz;
+              assistant client=1ch 16000Hz (resampled), wDSP client=1ch 48000Hz
+```
+
+So "who is first after sleep" is the wrong question on this unit: **the input does not close for
+sleep.** A capture that was open when the unit froze is still open when it thaws, and the
+assistant, which does reopen and does so before `ACC_ON` is even delivered, joins a 48 kHz input
+that already exists — the "shared, not taken" case above. The owner saw it independently on the
+screen: the 12.5 kHz and 20 kHz bars moving.
+
+⚠️ The only window this wake had was **ours**: the app closed its own capture on `ACC_ON` and
+reopened it 164 ms later, with the assistant alone on the input in between. It came back full band,
+consistent with "an input keeps the rate it was opened at until it is closed" — but that is one
+wake on one unit, and a unit whose assistant is first *and alone* for longer than that is exactly
+the case that ends at 16 kHz. ❓ Whether the input's rate was reconfigured inside those 164 ms is not
+visible: both clients got a `rec update` at .739, the moment ours rejoined, and a snapshot every
+3 s cannot say what changed.
+
 #### A phone call sits beside our capture, not instead of it — 13.09.2026
 
 📻 Four Bluetooth calls with our 48 kHz `UNPROCESSED` capture held throughout. The call's recorder
