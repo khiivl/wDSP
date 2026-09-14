@@ -785,6 +785,40 @@ public class AudioSpectrumEngine {
     private SessionResolver sessionResolver;
     /** Last time the attached session actually delivered something other than silence. */
     private volatile long lastSignalTime = 0;
+    /**
+     * The player {@link #currentSessionId} was last heard carrying audio for, from
+     * sys.qf.last_audio_src; null until a session has been heard.
+     *
+     * <p>Owner, 14.09.2026: switching the spectrum from the microphone back to the calculated mode
+     * took about five seconds, the other way round was instant - "ми знаємо що плеєр не мінявся,
+     * відповідно канал можна просто зберігати". The five seconds were a full session sweep, run on
+     * every return to the Visualizer whether or not anything had changed. A session heard for this
+     * very player is attached again at once; the watchdog still re-resolves if it then stays silent.
+     */
+    private volatile String sessionHeardFor;
+
+    /** Whether the session we would attach to was heard carrying the player that is current now. */
+    private boolean sessionKnownForCurrentPlayer() {
+        String heard = sessionHeardFor;
+        return heard != null && !heard.isEmpty() && heard.equals(getActivePlayerPackage());
+    }
+
+    /**
+     * Attaches the Visualizer to the session we already have, and sweeps for another only when that
+     * session was not heard for the current player. {@code reason} goes to the log either way.
+     */
+    private void attachKnownSessionOrResolve(String reason) {
+        startInternal(currentSessionId);
+        if (sessionKnownForCurrentPlayer()) {
+            // The watchdog judges silence from here, so give the fresh capture its tolerance.
+            lastSignalTime = System.currentTimeMillis();
+            armWatchdog();
+            Log.i(TAG, reason + ": session " + currentSessionId + " was heard for " + sessionHeardFor
+                    + " and the player has not changed - attached without a sweep");
+        } else {
+            requestResolve(reason);
+        }
+    }
     private volatile long lastResolveTime = 0;
     private Handler watchdogHandler;
 
@@ -956,6 +990,11 @@ public class AudioSpectrumEngine {
             // not silence, and isMediaPlaybackActive() already knows that.
             publishPlaybackSilence();
             if (!listeners.isEmpty()) {
+                // The session is carrying this player right now: remember it, so a return from the
+                // microphone does not have to sweep for it again.
+                if (visualizer != null && System.currentTimeMillis() - lastSignalTime < SILENCE_TOLERANCE_MS) {
+                    sessionHeardFor = getActivePlayerPackage();
+                }
                 checkSourceState();
                 long now = System.currentTimeMillis();
                 long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
@@ -1004,6 +1043,8 @@ public class AudioSpectrumEngine {
                         Log.i(TAG, "Switching capture session: " + previousSession + " -> " + sessionId);
                     }
                     lastSignalTime = System.currentTimeMillis();
+                    // The resolver heard audio on it, for the player that is current now.
+                    sessionHeardFor = getActivePlayerPackage();
                 }
                 currentSessionId = target;
                 // A microphone pipeline that came up while the sweep ran is left alone - the same
@@ -1529,8 +1570,7 @@ public class AudioSpectrumEngine {
         // watchdog's checkSourceState(). That restart used to heal it by accident.
         if (isMicPipelineRunning() && wantsMicPipeline(isRadioSourceNow())) return;
         if (sessionResolver != null && sessionResolver.isResolving()) return;
-        startInternal(currentSessionId);
-        requestResolve("capture started");
+        attachKnownSessionOrResolve("capture started");
     }
 
     /**
@@ -1708,8 +1748,7 @@ public class AudioSpectrumEngine {
             } else {
                 if (isRadioCaptureActive()) {
                     Log.i(TAG, "Source switched to AudioFlinger - restoring PCM capture");
-                    startInternal(currentSessionId);
-                    requestResolve("source switched to audioflinger");
+                    attachKnownSessionOrResolve("source switched to audioflinger");
                 }
             }
         }
