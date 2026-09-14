@@ -318,10 +318,13 @@ the Chinese "Toppal" assistant and the **TXZ** voice service that is built into 
 both run with **priority** over the microphone. On his own unit the owner forbade them the
 microphone. ❓ The priority mechanism itself has not been measured here.
 
-*(owner, 14.09.2026, from his unit when it ran Jitu2)* **Google Assistant did not work until he
-denied the microphone to the TXZ service through adb** — TXZ was holding it. **And Toppal was not
-deafened by that:** it kept hearing with TXZ's microphone denied, so it reaches the microphone by a
-path of its own. ⇒ On a Jitu2 unit, do not expect a free-input window from these two; a measurement
+*(owner, 14.09.2026)* **TXZ and Toppal are one product, not two:** Toppal is the assistant, TXZ
+(`com.txznet.*`) is its service, and it talks to the system through a bridge APK —
+`com.qf.ailit.bridge`, which `NotKillAppsBeforeSleep.ini` on the owner's unit lists (so the table
+above should be read as one assistant, not two columns). From his unit when it ran Jitu2: **Google
+Assistant did not work until he denied the microphone to the TXZ service through adb** — and **the
+assistant still heard**: denying TXZ's own permission did not deafen it, so its microphone arrives by
+another path, presumably through that bridge. ❓ The path itself was not traced. ⇒ On a Jitu2 unit, do not expect a free-input window from these two; a measurement
 that waits for one needs a time limit and then plain advice to restart the head unit.
 
 Which of them exist depends on the Android ROM build, not the hardware:
