@@ -194,6 +194,24 @@ public class AudioSpectrumEngine {
     private float barAgcStrength = 1.0f;
     private float barAgcFloorDb = -50f;
 
+    /**
+     * The lowest level the decorations' automatic gain may lift to full scale when they draw the
+     * Visualizer's digital tap, in dBFS.
+     *
+     * <p>Owner, 14.09.2026: the status bar widget and the screensaver are decoration - the more of
+     * the screen they fill the better - but a visualiser showing full signal while the music has gone
+     * quiet is not good either. Since the tap reads absolute levels (SCALING_MODE_AS_PLAYED) a quiet
+     * passage really is lower, and this floor is what keeps it lower: the gain stops rising once the
+     * reference reaches it. ⚠️ A starting value, not a measured one - to be set on real music. The
+     * microphone keeps {@link #barAgcFloorDb}: a cabin at a low volume is far quieter than any track.
+     */
+    static final float BAR_AGC_FLOOR_DIGITAL_DB = -30f;
+
+    /** The decorations' gain floor for whatever is being drawn now. */
+    private float barFloorDb() {
+        return isRadioCaptureActive() ? barAgcFloorDb : BAR_AGC_FLOOR_DIGITAL_DB;
+    }
+
     private boolean radioMicVisualizerEnabled = true;
     private final RadioMicCapture radioMicCapture = new RadioMicCapture();
     private volatile long lastMicSignalTime = 0;
@@ -528,11 +546,22 @@ public class AudioSpectrumEngine {
     // stream the transforms actually read, as a WAV. Both land in the app's files directory.
 
     private volatile long captureDumpUntil = 0;
+    /** Blocks before this time are not written: the stream is settling after a scaling switch. */
+    private volatile long captureDumpFrom = 0;
+    /** Scaling mode to put back when the dump ends, or -1 when the dump did not change it. */
+    private volatile int captureDumpRestoreScaling = -1;
     private java.io.DataOutputStream captureDumpBlocks;
     private int captureDumpCount;
 
-    /** Starts a capture dump of {@code ms} milliseconds, 500..2700 (the stitched ring holds 2.7 s). */
-    public void dumpCapture(int ms) {
+    /**
+     * Starts a capture dump of {@code ms} milliseconds, 500..2700 (the stitched ring holds 2.7 s).
+     *
+     * @param asPlayed switch the Visualizer to SCALING_MODE_AS_PLAYED for the dump - to find out
+     *                 whether its levels are absolute - and back to what it was afterwards. The
+     *                 first 3 s after the switch are not recorded, so the stitched ring holds only
+     *                 samples captured in the new mode.
+     */
+    public void dumpCapture(int ms, boolean asPlayed) {
         if (appContext == null || nativeAnalyzer == null || visualizer == null) {
             Log.w(TAG, "capture dump: no Visualizer capture running (microphone mode, or nothing attached)");
             return;
@@ -544,12 +573,22 @@ public class AudioSpectrumEngine {
                     new java.io.FileOutputStream(file)));
             captureDumpCount = 0;
             Visualizer v = visualizer;
+            long settle = 0;
+            captureDumpRestoreScaling = -1;
+            if (asPlayed && v != null) {
+                int before = v.getScalingMode();
+                int status = v.setScalingMode(Visualizer.SCALING_MODE_AS_PLAYED);
+                Log.i(TAG, "capture dump: scaling " + before + " -> AS_PLAYED, status " + status);
+                captureDumpRestoreScaling = before;
+                settle = 3000;
+            }
+            captureDumpFrom = System.currentTimeMillis() + settle;
             Log.i(TAG, "capture dump: " + ms + " ms, session " + currentSessionId
                     + ", Visualizer rate " + (v != null ? v.getSamplingRate() : -1) + " mHz"
                     + ", scaling " + (v != null ? v.getScalingMode() : -1)
                     + ", measurement mode " + (v != null ? v.getMeasurementMode() : -1)
                     + ", capture size " + (v != null ? v.getCaptureSize() : -1));
-            captureDumpUntil = System.currentTimeMillis() + ms;
+            captureDumpUntil = captureDumpFrom + ms;
         } catch (Throwable t) {
             Log.w(TAG, "capture dump could not start: " + t);
             captureDumpUntil = 0;
@@ -560,6 +599,7 @@ public class AudioSpectrumEngine {
     private void writeCaptureDump(byte[] block, int size, int fresh, int sampleRate) {
         java.io.DataOutputStream out = captureDumpBlocks;
         if (out == null) return;
+        if (System.currentTimeMillis() < captureDumpFrom) return;
         try {
             out.writeLong(System.nanoTime());
             out.writeInt(fresh);
@@ -579,6 +619,12 @@ public class AudioSpectrumEngine {
             Log.i(TAG, "capture dump written: " + captureDumpCount + " blocks, " + got
                     + " stitched samples at " + sampleRate + " Hz, discontinuities "
                     + (analyzer != null ? analyzer.discontinuities() : -1));
+            Visualizer v = visualizer;
+            if (captureDumpRestoreScaling >= 0 && v != null) {
+                v.setScalingMode(captureDumpRestoreScaling);
+                Log.i(TAG, "capture dump: scaling restored to " + v.getScalingMode());
+            }
+            captureDumpRestoreScaling = -1;
         } catch (Throwable t) {
             Log.w(TAG, "capture dump failed: " + t);
             captureDumpUntil = 0;
@@ -823,8 +869,15 @@ public class AudioSpectrumEngine {
     private static final long RESOLVE_RETRY_MS = 4000;
     private boolean lastResolveFoundNothing = false;
     private static final long WATCHDOG_PERIOD_MS = 2000;
-    /** Waveform samples are unsigned 8-bit centred on 128. */
-    private static final int SIGNAL_THRESHOLD = 2;
+    /**
+     * Waveform samples are unsigned 8-bit centred on 128. Any step off the centre is signal.
+     *
+     * <p>It was 2 while the Visualizer normalised every block to full scale, where only digital
+     * silence stayed near 128. With absolute levels (AS_PLAYED) 2 steps is a peak of -36 dBFS, and a
+     * quiet passage below it would read as silence: the watchdog would go looking for another session
+     * and hasMediaSignalNow() would tell the service nothing is playing.
+     */
+    private static final int SIGNAL_THRESHOLD = 0;
 
     public void initContext(Context context) {
         if (context == null) return;
@@ -1150,7 +1203,7 @@ public class AudioSpectrumEngine {
         final boolean mainAgc = radioActive || mainAgcEnabled;
         final float mainStrength = radioActive ? 1.0f : mainAgcStrength;
         analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgc, mainStrength, mainAgcFloorDb);
-        analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barAgcFloorDb);
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barFloorDb());
         // The curve is handed over by dispatchNativeFrame, the only place that does it.
         nativeCurveStale = true;
     }
@@ -1203,7 +1256,7 @@ public class AudioSpectrumEngine {
             analyzer.getLevels(consumer, f.level32, f.level16);
             boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcEnabled : barAgcEnabled;
             float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcStrength : barAgcStrength;
-            float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barAgcFloorDb;
+            float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barFloorDb();
             analyzer.setAgc(consumer, enabled, strength, floorDb);
             analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
 
@@ -1661,6 +1714,19 @@ public class AudioSpectrumEngine {
                 v.setEnabled(false);
             }
             v.setCaptureSize(captureSize);
+            // 🔴 Absolute levels. Owner, 14.09.2026: the main screen's calculated spectrum is a
+            // measuring instrument - it shows the track as recorded, whatever the volume, with the
+            // preset's effects laid on; decorations may fill the screen but should drop when the
+            // music does. The default SCALING_MODE_NORMALIZED rescales every block to full scale, so
+            // no level on screen meant anything. Measured on pink noise (-25.24 dBFS RMS in the
+            // file): AS_PLAYED read -25.35 at volume 6 and -25.33 at volume 4 - the file's own level,
+            // independent of the head unit's volume, which the MCU applies after this tap. The price
+            // is 8 bits: that pink noise used 34 of 256 levels, so very quiet passages carry
+            // quantisation noise in the top bands.
+            int scaling = v.setScalingMode(Visualizer.SCALING_MODE_AS_PLAYED);
+            if (scaling != Visualizer.SUCCESS) {
+                Log.w(TAG, "Visualizer refused SCALING_MODE_AS_PLAYED (" + scaling + ") - levels are normalised");
+            }
 
             // 🔴 The native analyser is the only one. A Java twin used to run on Visualizer callbacks
             // when the library failed to load - a second analyser with its own band plan, floor

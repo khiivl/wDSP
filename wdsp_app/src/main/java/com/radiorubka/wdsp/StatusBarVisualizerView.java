@@ -126,6 +126,16 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     private final boolean[] oscHistoryValid = new boolean[MAX_OSC_TRAILS];
     private int oscHistoryHead = 0;
     private final byte[] rawWaveform = new byte[1024];
+    /**
+     * The oscilloscope's own gain. The Visualizer tap reads absolute levels since 14.09.2026
+     * (AS_PLAYED), so a trace scaled for a normalised block would be a thread on quiet music. It lifts
+     * the peak towards the full height, but no further than a peak at
+     * {@link AudioSpectrumEngine#BAR_AGC_FLOOR_DIGITAL_DB} would go - the same floor the bars use, so a
+     * quiet passage looks quiet here too (owner: a visualiser at full swing in silence is not good).
+     */
+    private float oscAutoGain = 1f;
+    private static final float OSC_MAX_GAIN =
+            (float) Math.pow(10.0, -AudioSpectrumEngine.BAR_AGC_FLOOR_DIGITAL_DB / 20.0);
     private final android.graphics.Path oscPath = new android.graphics.Path();
     private final android.graphics.Path oscHistoryPath = new android.graphics.Path();
     private final Paint oscPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -984,15 +994,27 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         // 1. Fetch genuine live PCM audio waveform from AudioSpectrumEngine
         int waveLen = AudioSpectrumEngine.getInstance().getLatestWaveform(rawWaveform);
 
+        // 1-bis. Gain from the block's own peak: fast down, slow up, capped at the floor.
+        int peak = 0;
+        for (int i = 0; i < waveLen; i++) {
+            int a = Math.abs((rawWaveform[i] & 0xFF) - 128);
+            if (a > peak) peak = a;
+        }
+        float desiredGain = peak > 0 ? Math.min(OSC_MAX_GAIN, 115f / peak) : oscAutoGain;
+        oscAutoGain += (desiredGain - oscAutoGain) * (desiredGain < oscAutoGain ? 0.5f : 0.05f);
+
         // 2. Hardware-like Zero-Crossing Trigger
-        // Finds positive slope zero-crossing (<= 128 to > 130) to freeze periodic musical waves in phase
+        // Finds a positive-slope zero crossing to freeze periodic musical waves in phase. The step
+        // above the centre scales with the block's peak: a fixed 130 never triggered on quiet music
+        // once levels became absolute.
+        int triggerStep = Math.max(1, peak / 16);
         int triggerOffset = 0;
         if (waveLen > 32) {
             int searchLimit = Math.min(waveLen / 2, 256);
             for (int i = 1; i < searchLimit; i++) {
                 int prev = (rawWaveform[i - 1] & 0xFF);
                 int curr = (rawWaveform[i] & 0xFF);
-                if (prev <= 128 && curr > 130) {
+                if (prev <= 128 && curr > 128 + triggerStep) {
                     triggerOffset = i;
                     break;
                 }
@@ -1042,7 +1064,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
                 int sampleIdx = triggerOffset + (int) (u * (sweepSamples - 1));
                 sampleIdx = Math.max(0, Math.min(sampleIdx, waveLen - 1));
                 int raw = (rawWaveform[sampleIdx] & 0xFF) - 128; // -128..+127
-                sampleAmp = (raw / 128.0f) * gain;
+                sampleAmp = (raw / 128.0f) * gain * oscAutoGain;
             }
 
             // Gentle cosine edge taper on the outer 3% to anchor cleanly at centerY margins
