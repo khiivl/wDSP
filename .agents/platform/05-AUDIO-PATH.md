@@ -871,6 +871,37 @@ gets round to reporting. If the HAL has a stream open by then, that stream is wh
 are loaded; it is the path underneath them that is dead. Check `state:` in
 `/proc/asound/card0/pcm3p/sub0/status`, not `dumpsys`.
 
+### A second variant: the owner is alive, mid-session, no restart (14.09.2026, 21:02)
+
+📻 BitPerfect v5.3 enabled, 16 minutes after an `adb reboot`, no audioserver restart since. Pulsar had
+played normally on `AudioOut_D` until 20:53; at 21:02 YouTube Music played "into nowhere". Everything
+Android shows was healthy: its track active on `AudioOut_D`, frames written, stream volume 0 dB. The
+HAL said otherwise, every 6–13 ms:
+
+```
+start_output_stream:cannot open pcm:cannot open device '/dev/snd/pcmC0D3p': Device or resource busy
+```
+
+```
+$ cat /proc/asound/card0/pcm3p/sub0/status ; hw_params
+state: SETUP      owner_pid: 3629   ← the LIVE audio HAL (android.hardware.audio@2.0-service)
+trigger_time: 0   hw_ptr: 0   appl_ptr: 48
+access: MMAP_INTERLEAVED   format: S24_LE   period_size: 1040
+```
+
+The primary stream opens this device with a period of 640, so the substream holding it belongs to
+**another** output stream of the same HAL — opened, never started, never closed. 🧩 The candidate, not
+proven: at 20:58:02–20:58:10 `com.txznet.weather` (TXZ voice weather) played an 8 s track on
+`AudioOut_15`, the FAST output; the device was busy the first time anything tried it afterwards. The
+logs that would settle it are gone — the retry storm filled all five files of the boot logger's
+rotation (4 MB each) within about 20 seconds.
+
+Owner, the same evening: a restart of audioserver would only remove the symptom — "BitPerfect явно
+калічний" — and the current version also makes TTS completely silent. Not restarted, state kept.
+
+⚠️ For the logger (`tools/wdsp_bootlog_module`): a HAL retry storm must not be allowed to evict the
+history that explains it — rate-limit repeated `audio_hw_primary` lines.
+
 ## The capture source is ignored; the effect on the session is not
 
 📻 28.08.2026, two probes back to back on the same unit, watching the mixer *during* the capture:
