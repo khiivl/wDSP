@@ -1812,3 +1812,39 @@ subwoofer         -5.5       -9.3
 **Для інформаційної сторінки:** це **та вада, яку людина виправляє сама** — поміняти два дроти на
 твітері. Але сказати треба точно, **на якому саме** динаміку й на якій ланці, інакше порада
 некорисна: «у вас щось переплутано» — це не дія.
+
+### 📋 🔴 Наказ 14.09.2026 ~03:25 — АВТОВІДНОВЛЕННЯ ПЛЕЄРА ПІСЛЯ СНУ (у черзі; спершу мікрофон)
+
+Власник: *«я хотів би впровадити цю загублену китайцями функцію, раз wDSP стартує першим»*, і
+одразу — *«в туду внеси, а зараз продовжуй з мікрофоном, по порядку»*. Джерело ідеї — документ
+сесії Дж `60ce423d-b3ca-47e4-bb3f-2cb19b048f15` на дошці: *QF Platform Sleep Lifecycle & Autonomous
+Media Resumption (Haiwai vs Jitu2)* (`gemini__60ce423d-…__qf-sleep-media-resumption__2026-09-14-01-09-11.md`).
+Суть: Jitu2 відновлює будь-який сторонній плеєр після сну й ребуту, Haiwai — лише свої п'ять.
+
+**Звірено на апараті власника (Haiwai, 14.09.2026 03:23), а не взято з документа:**
+- 📻 `/system/config/RestoreAppsWhenWakeup.ini` — рівно п'ять заводських: `com.qf.musicplayer`,
+  `com.qf.videoplayer`, `com.android.fmradio`, `com.android.fmradio.ext`, `com.zjinnova.zlink`.
+- 📻 `/system/config/NotKillAppsBeforeSleep.ini` — ні YouTube Music, ні wDSP, ні радіо там немає.
+  Живуть вони завдяки `/great/sleep/sleep_whitelist` (system, 0600): `com.navioverlay.car`,
+  `com.radiorubka.wdsp`, `com.huautobrightness.controller`, `com.kostyamat.fmradio`.
+- 📻 **Плеєр сон не пережив:** YouTube Music (morphe) грав до сну о 02:47, а о 03:23 його pid
+  стартував о 03:10:51 — після пробудження о 03:09:42. wDSP той самий pid весь час.
+- 📻 `persist.sys.qf.last_audio_src` = `com.android.fmradio` (застарілий), `sys.qf.last_audio_src` =
+  плеєр, що грає. Пропа `last_src_before_sleep` у `getprop` **немає** — ❓ назва в документі може
+  бути іншою або проп не створюється на цій прошивці.
+- ❓ Не звірено: чи справді `killAppsBeforeSleep` вбиває все поза списками (бачили лише один плеєр),
+  затримку між `ACC_OFF` і вбивством, чи встигає плеєр поставити паузу до того, як ми прочитаємо стан.
+
+**Що вже є в wDSP:** `NotificationAccess` (слухач сповіщень) і `NowPlaying` з
+`MediaSessionManager.getActiveSessions`, `TransportControls` та запасним `dispatchMediaKeyEvent`.
+Холодного старту вбитого плеєра (`ACTION_MEDIA_BUTTON` на його приймач або `MediaBrowser`) немає.
+
+**Що вирішити з власником перед кодом:**
+1. **Радіо.** QFRadio відновлює себе саме (`sleep_whitelist`, своя робота після сну). Якщо до сну
+   грало радіо, wDSP не чіпає нічого; якщо плеєр — чи не підніметься радіо поверх. Це пункт у
+   `C:\APPS_Contacts\wDSP--QFRadio\AUDIO_OWNERSHIP_CONTRACT.md`, а не рішення однієї сторони.
+   Контракт уже каже: запит wDSP **не будить** зупинене радіо.
+2. «Грав до сну» — знімок на `ACC_OFF` чи останній стан, що тримався N секунд (платформа могла
+   поставити паузу раніше за нас).
+3. Після ребуту теж (як у Jitu2) чи лише після сну.
+4. Пауза, яку людина поставила сама перед вимкненням, — не відновлювати.

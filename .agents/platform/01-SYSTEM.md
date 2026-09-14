@@ -202,6 +202,21 @@ reference each other, so a grep says "used" while nothing reaches them from the 
 The chain is visible on the wire: MCU frame `0x24 01` → `ACC_OFF`, `0x24 00` → `ACC_ON`, and on the
 Android side `QFSleepWakeup.start()` plus a broadcast.
 
+📻 **Who survives it, and who is brought back** — read on the owner's Haiwai unit, 14.09.2026:
+
+| file | what it holds | effect |
+|---|---|---|
+| `/system/config/RestoreAppsWhenWakeup.ini` | exactly five factory apps: `com.qf.musicplayer`, `com.qf.videoplayer`, `com.android.fmradio`, `com.android.fmradio.ext`, `com.zjinnova.zlink` | the only players the platform restarts after sleep |
+| `/system/config/NotKillAppsBeforeSleep.ini` | system services, vendor apps, Google services — no third-party player | everything else is a candidate for being killed |
+| `/great/sleep/sleep_whitelist` (system, 0600) | `com.navioverlay.car`, `com.radiorubka.wdsp`, `com.huautobrightness.controller`, `com.kostyamat.fmradio` | why wDSP and the radio keep their process through sleep on this unit |
+
+Measured the same night: YouTube Music, playing before a 22-minute sleep, came back with a new pid
+started after wake — killed, not frozen — while wDSP kept its pid. Why third-party players are not
+restored, read from firmware by the Gemini session `60ce423d-…` (`QFSleepWakeup.storeAppBeforeSleep`,
+`killAppsBeforeSleep`) and not re-read here: a package not in `RestoreAppsWhenWakeup.ini` is stored
+as `nothing`. ❓ The property that document names, `persist.sys.qf.last_src_before_sleep`, does not
+appear in `getprop` on this unit.
+
 Related: [07-PRACTICE.md](07-PRACTICE.md) for how to work with all of this without wasting runs.
 
 ## 7. A special permission can read "granted" and not work
