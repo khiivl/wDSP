@@ -729,4 +729,13 @@ public class RadioMicCapture {
         Thread t = captureThread;
         return running && t != null && t.isAlive();
     }
+
+    /**
+     * Capturing, and nobody was on the input when our recorder opened it - so the input is set up
+     * the way we opened it, whoever joined later. The measurement asks this before it adds a
+     * recorder of its own (MicrophoneGuard.ensureOurs).
+     */
+    public boolean firstOnInput() {
+        return isCapturing() && othersOnInputAtOpen == 0;
+    }
 }

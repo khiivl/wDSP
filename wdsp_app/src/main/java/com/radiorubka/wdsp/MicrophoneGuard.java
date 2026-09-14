@@ -89,6 +89,13 @@ public final class MicrophoneGuard {
         public int rateAfter;
         public final List<String> stopped = new ArrayList<>();
         public boolean wasHeld;
+        /**
+         * Full band or not, the input was opened by another app before us. Whoever opens it sets it
+         * up for everybody (14.09.2026: a steady tone held ±0 dB when we were first, and our session
+         * carried the echo canceller and noise suppressor when we joined) - a sweep through it is not
+         * a measurement of the car.
+         */
+        public boolean setUpByAnother;
         public boolean freed;
         /** True when root was used to stop the holder. */
         public boolean usedRoot;
@@ -116,7 +123,8 @@ public final class MicrophoneGuard {
             if (!wasHeld) {
                 return "microphone was already ours (input device at " + rateBefore + " Hz)";
             }
-            return "microphone was held by another app (input device at " + rateBefore + " Hz); "
+            return "microphone was held by another app (input device at " + rateBefore + " Hz"
+                    + (setUpByAnother ? ", opened by it before us" : "") + "); "
                     + "stopped " + (stopped.isEmpty() ? "nothing" : stopped.toString())
                     + "; now " + rateAfter + " Hz - "
                     + (freed ? "released through root" : "STILL HELD, restart needed");
@@ -132,6 +140,10 @@ public final class MicrophoneGuard {
      */
     public static Outcome ensureOurs(Context context) {
         Outcome outcome = new Outcome();
+        // Who opened the input is asked before a recorder of ours joins it - afterwards ours is
+        // among the recordings and the question has no answer (owner, 14.09.2026: whoever is first
+        // sets the input up; with root take it, without root a restart).
+        outcome.setUpByAnother = inputSetUpByAnother(context);
         // Claim first, then ask: the verdict is about the recorder that stays open until the
         // measurement's own capture replaces it, not about a probe that closes again and leaves
         // the input free for a moment.
@@ -146,7 +158,7 @@ public final class MicrophoneGuard {
             Log.w(TAG, outcome.toString());
             return outcome;
         }
-        if (outcome.rateBefore >= SAMPLE_RATE) {
+        if (outcome.rateBefore >= SAMPLE_RATE && !outcome.setUpByAnother) {
             Log.i(TAG, outcome.toString());
             return outcome;
         }
@@ -157,15 +169,29 @@ public final class MicrophoneGuard {
         // A measurement is a person switching the microphone on - the moment Magisk is asked, once
         // per process (RootAccess.checkForMicrophone).
         if (RootAccess.checkForMicrophone(context)) {
-            releaseHold();
-            // The holders as AudioFlinger lists them, not a list of suspects - and takeInputAsRoot
-            // waits for the input to close under them before we claim it.
-            outcome.stopped.addAll(takeInputAsRoot(context, ROOT_WAIT_DELIBERATE_S));
-            outcome.usedRoot = !outcome.stopped.isEmpty();
-            holdOpen();
-            outcome.rateAfter = heldDeviceRate(context);
-            outcome.freed = outcome.rateAfter >= SAMPLE_RATE;
-            checkCameBackAsync(context, outcome.stopped);
+            if (AudioSpectrumEngine.getInstance().isMicrophoneOpen()) {
+                // The spectrum's own capture joined the other app's input and keeps it open: stopping
+                // them from here would not reopen it, and that capture already tried to take it when
+                // it opened (RadioMicCapture). Not freed - said, not guessed.
+                Log.w(TAG, "the spectrum's microphone capture is on an input another app opened, and "
+                        + "holds it open - the input cannot be retaken from the measurement");
+            } else {
+                releaseHold();
+                // The holders as AudioFlinger lists them, not a list of suspects - and
+                // takeInputAsRoot waits for the input to close under them before we claim it.
+                outcome.stopped.addAll(takeInputAsRoot(context, ROOT_WAIT_DELIBERATE_S));
+                outcome.usedRoot = !outcome.stopped.isEmpty();
+                // Somebody back on the input before our claim sets it up again - the same question
+                // as above, asked again at the moment it decides.
+                final boolean anotherFirstAgain = inputSetUpByAnother(context);
+                holdOpen();
+                outcome.rateAfter = heldDeviceRate(context);
+                outcome.freed = outcome.rateAfter >= SAMPLE_RATE && !anotherFirstAgain;
+                if (anotherFirstAgain) {
+                    Log.w(TAG, "another app was back on the input before the measurement claimed it");
+                }
+                checkCameBackAsync(context, outcome.stopped);
+            }
         }
         outcome.needsRestart = !outcome.freed;
         if (outcome.needsRestart) {
@@ -175,6 +201,34 @@ public final class MicrophoneGuard {
             Log.i(TAG, outcome.toString());
         }
         return outcome;
+    }
+
+    /**
+     * Whether the input was opened by another app: the spectrum's capture answers for itself when it
+     * is open (it counted who was there when it opened); otherwise any recording listed now that is
+     * not one of ours was there before us. Ours are recognised by session - the placeholder's and the
+     * spectrum's, both kept after release, because the platform lists a released recording for a
+     * moment. The same count RadioMicCapture decides its own takeover by.
+     */
+    private static boolean inputSetUpByAnother(Context context) {
+        AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
+        if (engine.isMicrophoneOpen()) return !engine.isMicrophoneFirstOnInput();
+        if (context == null) return false;
+        AudioManager am = (AudioManager) context.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return false;
+        int spectrumSession = engine.microphoneSessionId();
+        int others = 0;
+        try {
+            for (AudioRecordingConfiguration config : am.getActiveRecordingConfigurations()) {
+                int session = config.getClientAudioSessionId();
+                if (session != 0 && (session == holderSessionId || session == spectrumSession)) continue;
+                others++;
+            }
+        } catch (Throwable t) {
+            return false;
+        }
+        if (others > 0) Log.i(TAG, others + " recording(s) on the input before the measurement's own");
+        return others > 0;
     }
 
     /**
@@ -222,6 +276,8 @@ public final class MicrophoneGuard {
      * <p>It is never read from; owning it is the whole point.
      */
     private static AudioRecord holder;
+    /** The placeholder's session, kept after release - see {@link #inputSetUpByAnother}. */
+    private static volatile int holderSessionId;
 
     private static void holdOpen() {
         releaseHold();
@@ -230,6 +286,7 @@ public final class MicrophoneGuard {
         try {
             candidate.startRecording();
             holder = candidate;
+            holderSessionId = candidate.getAudioSessionId();
             Log.i(TAG, "holding the input open so nothing can take it back before the capture");
         } catch (Throwable t) {
             Log.w(TAG, "could not hold the input open: " + t);

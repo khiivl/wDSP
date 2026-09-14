@@ -1651,10 +1651,13 @@ public final class RoomMeasurement {
         // the input first. Nothing has been changed yet at this point (no preset, no volume), and the
         // guard holds nothing in this case, so returning is the whole clean-up. The narrow sweep
         // below (SWEEP_END_NARROW_HZ) is no longer reached from here.
+        // 15.09.2026: the same for an input another app opened before us at full band - it set the
+        // input up, and its effects reach our recording (MicrophoneGuard.Outcome.setUpByAnother).
         if (mic.needsRestart) {
             result.needsRestart = true;
-            result.error = "the microphone is held at " + mic.rateAfter + " Hz by another app and could "
-                    + "not be taken back - restart the head unit";
+            result.error = "the microphone is held by another app (input at " + mic.rateAfter + " Hz"
+                    + (mic.setUpByAnother ? ", opened by it before us" : "") + ") and could not be "
+                    + "taken back - restart the head unit";
             Log.w(TAG, result.error);
             return result;
         }

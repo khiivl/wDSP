@@ -437,6 +437,21 @@ public class AudioSpectrumEngine {
         return micUnavailable;
     }
 
+    /** The spectrum's own microphone capture is open and reading. */
+    public boolean isMicrophoneOpen() {
+        return radioMicCapture.isCapturing();
+    }
+
+    /** The spectrum's capture opened the input itself - see RadioMicCapture.firstOnInput. */
+    public boolean isMicrophoneFirstOnInput() {
+        return radioMicCapture.firstOnInput();
+    }
+
+    /** Session of the spectrum's latest recorder (kept after release), 0 when there has been none. */
+    public int microphoneSessionId() {
+        return radioMicCapture.lastSessionId();
+    }
+
     /** Main thread. */
     private synchronized void onMicrophoneUnavailable() {
         micUnavailable = true;
