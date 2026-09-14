@@ -147,6 +147,59 @@ void testKnownFilter(const SweepMeasurement& m) {
     check(drop > 8.0f && drop < 16.0f, "slope", detail);
 }
 
+/** One-pole high pass: what is left after the one-pole low pass is taken away. */
+void highPass(std::vector<float>& signal, float cutoffHz) {
+    const float dt = 1.0f / kRate;
+    const float rc = 1.0f / (2.0f * 3.14159265f * cutoffHz);
+    const float alpha = rc / (rc + dt);
+    float prevIn = 0.0f;
+    float prevOut = 0.0f;
+    for (float& v : signal) {
+        const float out = alpha * (prevOut + v - prevIn);
+        prevIn = v;
+        prevOut = out;
+        v = out;
+    }
+}
+
+/**
+ * A door speaker gives almost nothing at 31.5 Hz, and the measurement has to say so.
+ *
+ * 15.09.2026: on the owner's car the door channels read -16 to -19 dB at 20 and 31.5 Hz against their
+ * midband, where the same recording's own band energy said -32 to -54. The impulse window opened 64
+ * samples before the arrival, and the cut through the band-limited impulse's pre-ringing filled the
+ * deep bins. A flat path cannot show it - there is nothing down there to be masked.
+ */
+void testKnownHighPass(const SweepMeasurement& m) {
+    std::printf("\nA door speaker's missing bass is measured as missing\n");
+    // The largest peak is not the first sound: a microphone in the head unit's panel hears the
+    // direct sound, and a moment later a louder reflection off the dashboard or the glass. Here the
+    // direct sound comes 2 ms before a reflection nearly twice its height - a window opened just
+    // before the peak cuts straight through the first arrival.
+    std::vector<float> rec = playThrough(m, 9600, 0.3f, false, 0.0f, kRate);
+    const std::vector<float> reflection = playThrough(m, 9600 + 96, 0.5f, false, 0.0f, kRate - 96);
+    for (size_t i = 0; i < rec.size() && i < reflection.size(); i++) rec[i] += reflection[i];
+    highPass(rec, 150.0f);
+    highPass(rec, 150.0f);
+
+    std::vector<float> ir;
+    m.deconvolve(rec.data(), (int) rec.size(), ir);
+    float prominence = 0.0f;
+    const int arrival = SweepMeasurement::findArrival(ir.data(), (int) ir.size(), prominence);
+
+    float bands[kHwBands];
+    m.bandLevelsDb(ir.data(), (int) ir.size(), arrival, bands);
+
+    // Two one-pole high passes at 150 Hz: 13.7 dB each at 31.5 Hz, 10 dB each at 50 Hz, 0.4 dB each
+    // at 500 Hz - so about 27 and 19 dB below 500 Hz. Band averaging moves that by a dB or two.
+    const float at31 = bands[7] - bands[1];
+    const float at50 = bands[7] - bands[2];
+    char detail[160];
+    std::snprintf(detail, sizeof(detail),
+                  "31.5 Hz %.1f dB and 50 Hz %.1f dB below 500 Hz (theory ~27 and ~19)", at31, at50);
+    check(at31 > 22.0f && at31 < 32.0f && at50 > 15.0f && at50 < 23.0f, "high pass", detail);
+}
+
 void testNoiseTolerance(const SweepMeasurement& m) {
     std::printf("\nA noisy cabin does not move the arrival\n");
     for (float noise : {0.001f, 0.01f, 0.05f}) {
@@ -178,6 +231,7 @@ int main() {
     testPolarity(m);
     testFlatResponse(m);
     testKnownFilter(m);
+    testKnownHighPass(m);
     testNoiseTolerance(m);
 
     std::printf("\n%s (%d failures)\n", failures == 0 ? "ALL PASS" : "FAILURES", failures);

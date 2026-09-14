@@ -11,9 +11,22 @@ constexpr float kPi = 3.14159265358979323846f;
 /** Fade at each end of the sweep, so it neither clicks nor rings the tweeter on the way in. */
 constexpr float kFadeInSec = 0.02f;
 constexpr float kFadeOutSec = 0.05f;
-/** How much of the impulse response is kept, and how far before the arrival the window opens. */
+/** How much of the impulse response is kept from the arrival on. */
 constexpr int kAnalysisWindow = 16384;
+/** Full height from this many samples before the arrival peak. */
 constexpr int kPreArrival = 64;
+/**
+ * How far before the arrival peak the window opens, rising to full height by kPreArrival.
+ *
+ * 15.09.2026: it used to open abruptly at kPreArrival. The largest peak is not the first sound - on
+ * the owner's car the microphone in the panel hears a louder reflection a moment after the direct
+ * sound - so the cut went through the first arrival, and its splatter filled the deepest bands: the
+ * door channels read -16 to -19 dB at 20 and 31.5 Hz against their midband, where the recording's own
+ * band energy said -32 to -54. Opened 100 ms earlier the same recording agrees with it within 2-3 dB
+ * from 31.5 Hz up, and nothing above 125 Hz moves by a tenth. Harmonic distortion is still left out:
+ * the second harmonic sits T*ln2/ln(1000) before the arrival, 0.2 s for the shortest sweep used.
+ */
+constexpr int kPreArrivalOpen = 4800;
 
 int nextPowerOfTwo(int n) {
     int size = 1;
@@ -327,24 +340,31 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     for (int b = 0; b < kHwBands; b++) out16[b] = -120.0f;
     if (impulse == nullptr || arrival < 0 || arrival >= length) return;
 
-    const int from = std::max(0, arrival - kPreArrival);
+    const int from = std::max(0, arrival - kPreArrivalOpen);
     const int available = length - from;
-    const int windowLen = std::min(kAnalysisWindow, available);
-    if (windowLen < 1024) return;
+    const int pre = arrival - from;
+    const int windowLen = std::min(pre + kAnalysisWindow, available);
+    if (windowLen - pre < 1024) return;
 
     const int n = nextPowerOfTwo(windowLen);
     std::vector<float> re(n, 0.0f);
     std::vector<float> im(n, 0.0f);
 
-    // A half-Hann fade at the tail only: the arrival must keep its full height, but the window has
-    // to close smoothly or the transform will show the cut as broadband splatter.
-    const int fade = windowLen / 4;
+    // Half-Hann at both ends. The arrival keeps its full height - the rise ends kPreArrival samples
+    // before the peak - but the window has to open and close smoothly, or the transform shows the
+    // cut as splatter: at the tail as broadband, at the head, through the first arrival, in the
+    // deepest bands (see kPreArrivalOpen). The tail fade stays a quarter of what follows the arrival.
+    const int rise = std::max(0, pre - kPreArrival);
+    const int fade = (windowLen - pre) / 4;
     for (int i = 0; i < windowLen; i++) {
         float w = 1.0f;
+        if (i < rise) {
+            w = 0.5f - 0.5f * std::cos(kPi * static_cast<float>(i) / static_cast<float>(rise));
+        }
         const int fromEnd = windowLen - 1 - i;
         if (fromEnd < fade) {
-            w = 0.5f - 0.5f * std::cos(kPi * static_cast<float>(fromEnd)
-                                       / static_cast<float>(fade));
+            w *= 0.5f - 0.5f * std::cos(kPi * static_cast<float>(fromEnd)
+                                        / static_cast<float>(fade));
         }
         re[i] = impulse[from + i] * w;
     }
