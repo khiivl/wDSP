@@ -168,6 +168,11 @@ public final class RoomMeasurement {
      * so it shows what leaves the amplifier and knows nothing about the speakers or the cabin. Where
      * the car has a hole at 80 Hz, the bar stood level. Owner, 13.09.2026: "ми маємо враховувати
      * віддачу акустики в розрахунковому спектрі… інакше він буде показувати неправду".
+     *
+     * <p>🔴 Reversed by the owner on 14.09.2026: the calculated spectrum is the target and the
+     * microphone spectrum is what is actually there, so cabin specifics do not belong in the
+     * calculated one. The curve is still stored and still in the report; the spectrum no longer
+     * reads it (see AudioSpectrumEngine.getEffectiveSpectrumCurve).
      */
     public static final String PREF_CABIN_RESPONSE = "pref_cabin_response";
     /**

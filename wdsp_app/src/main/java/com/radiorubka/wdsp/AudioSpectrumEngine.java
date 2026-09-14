@@ -750,30 +750,25 @@ public class AudioSpectrumEngine {
         if (isRadioCaptureActive() || micModeInEffect()) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
         }
-        // Calculated mode: the DSP's own response, plus what the car then does to it.
+        // Calculated mode: the DSP's own response, and nothing about the car.
         //
-        // Until 13.09.2026 this returned the DSP curve alone, and that is a picture of the signal
-        // LEAVING THE AMPLIFIER - it knows nothing about the loudspeakers or the cabin. A car with a
-        // hole at 80 Hz drew a level bar there, because the DSP is indeed doing nothing at 80 Hz.
-        // The missing half was measured all along and stored nowhere: the cabin sweep produces the
-        // car's response about its own midband. Owner: "інакше він буде показувати неправду".
+        // 🔴 Owner, 14.09.2026: "розрахунковий спектроаналізатор це цільове, мікрофонний наявне" -
+        // "в розрахунковому не місце для враховування всякиї специфік кабіни". The calculated
+        // spectrum shows what the preset MEANS to do to the signal; what the car then does to it is
+        // what the microphone spectrum is for. The two views are useful precisely because they
+        // differ.
         //
-        // No double counting when an Auto-EQ preset is loaded. The DSP curve then already contains
-        // the correction that cancels this very dip, so the sum comes out nearly level - which is
-        // right, because that is what the listener hears. The sum is "signal x preset x cabin" for
-        // any preset, not only the automatic one.
+        // From 13.09 to 14.09.2026 the stored cabin response (RoomMeasurement.PREF_CABIN_RESPONSE)
+        // was added here, on the owner's word of 13.09 that the calculated spectrum would otherwise
+        // "show untruth". Measured on pink noise with the flat preset, it bent a flat input by
+        // +4.6 dB at 20 Hz, -7.7 at 3.15 kHz and -13 at 20 kHz - a curve taken on the bench, which
+        // is not a cabin. It is still stored and still reported by the measurement; it no longer
+        // reaches the spectrum.
         //
-        // A car that has never been measured contributes sixteen zeros, so the display falls back
-        // to exactly what it showed before rather than pretending to know the room.
-        final float[] dsp = getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
-        final float[] cabin = RoomMeasurement.getCabinResponseCurve(appContext);
-        // A fresh array: getDspCurve hands back its own cached buffer, and adding into that would
+        // A fresh array: getDspCurve hands back its own cached buffer, and a caller changing it would
         // corrupt the cache for every later reader. Sixteen floats, built only when settings change.
-        final float[] out = new float[NUM_BANDS_16];
-        for (int i = 0; i < NUM_BANDS_16; i++) {
-            out[i] = dsp[i] + cabin[i];
-        }
-        return out;
+        final float[] dsp = getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
+        return Arrays.copyOf(dsp, NUM_BANDS_16);
     }
 
     /**
