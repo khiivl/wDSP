@@ -98,6 +98,7 @@
     <string name="toast_imported">Uvezeno</string>
     <string name="toast_sub_comp_limit">Sub kompenzacija ograničena na 100 Hz</string>
     <string name="mic_narrow_restart">Mikrofon koristi druga aplikacija. Ponovno pokrenite autoradio, inače mikrofon nije dostupan.</string>
+    <string name="mic_busy_calculated">Mikrofon je privremeno zauzet, spektar je izračunat</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Održi wDSP pokrenutim</string>

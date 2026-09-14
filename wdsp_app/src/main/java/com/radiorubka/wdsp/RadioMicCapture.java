@@ -58,8 +58,8 @@ import java.util.Locale;
  * record inside the same AudioRecord, with no error, at whatever rate the first client to come back
  * asked for (measured 14.09.2026). So the platform's recording callback is listened to for the
  * device rate. Without root, or when the heal does not take, the microphone is declared unavailable
- * until the next restart and the spectrum goes to calculated (owner's decision, 14.09.2026) - a
- * narrow stream is never shown as the cabin.
+ * and the spectrum goes to calculated (owner's decision, 14.09.2026) - a narrow stream is never shown
+ * as the cabin - until {@link MicInputWindow} sees the input free and the capture is opened again.
  *
  * <h2>Effects are not ours to operate</h2>
  *
@@ -150,6 +150,16 @@ public class RadioMicCapture {
      */
     private volatile boolean narrowReported = false;
     private volatile int reportedDeviceRate = 0;
+    /**
+     * Session of the most recent recorder, kept after it is released: the platform can list a
+     * recording for a moment after it is gone, and whoever waits for the input to be free must not
+     * mistake ours for somebody else's.
+     */
+    private volatile int lastSessionId = 0;
+
+    public int lastSessionId() {
+        return lastSessionId;
+    }
     private AudioManager audioManager;
     private AudioManager.AudioRecordingCallback recordingCallback;
 
@@ -295,6 +305,8 @@ public class RadioMicCapture {
                             narrowBecause = "input device at " + deviceRate + " Hz";
                         } else if (deviceRate >= SAMPLE_RATE) {
                             healAttempted = false;
+                            UnavailableListener l = unavailableListener;
+                            if (l != null) l.onMicrophoneFullBand();
                         }
                     }
                 }
@@ -311,7 +323,7 @@ public class RadioMicCapture {
                     }
                     Log.w(TAG, "input narrow (" + narrowBecause + ")"
                             + (healAttempted ? " again after stopping the assistant" : ", no root")
-                            + " - microphone unavailable until restart");
+                            + " - microphone unavailable until the input is free");
                     UnavailableListener l = unavailableListener;
                     if (l != null) l.onMicrophoneUnavailable();
                     break;
@@ -433,13 +445,19 @@ public class RadioMicCapture {
         return true;
     }
 
-    /**
-     * Told when the microphone cannot be had at full band and root cannot fix it. The capture has
-     * already ended by the time this is called; what to show instead is the listener's business.
-     * Called on the capture thread.
-     */
+    /** Called on the capture thread. */
     public interface UnavailableListener {
+        /**
+         * The microphone cannot be had at full band and root cannot fix it. The capture has already
+         * ended by the time this is called; what to show instead is the listener's business.
+         */
         void onMicrophoneUnavailable();
+
+        /**
+         * Half a second into an open, the platform reports the input under our recorder at full
+         * band - after a cold start, and after taking the input back through a gap.
+         */
+        void onMicrophoneFullBand();
     }
 
     private volatile UnavailableListener unavailableListener;
@@ -520,6 +538,7 @@ public class RadioMicCapture {
         }
 
         audioRecord = rec;
+        lastSessionId = rec.getAudioSessionId();
         try {
             rec.startRecording();
         } catch (Throwable t) {

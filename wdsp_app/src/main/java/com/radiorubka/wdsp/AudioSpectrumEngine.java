@@ -396,42 +396,85 @@ public class AudioSpectrumEngine {
         Arrays.fill(gains, 6);
         Arrays.fill(qNarrow, false);
         Arrays.fill(fmOffsets, 0f);
-        radioMicCapture.setUnavailableListener(() ->
-                new Handler(Looper.getMainLooper()).post(this::onMicrophoneUnavailable));
+        final Handler main = new Handler(Looper.getMainLooper());
+        radioMicCapture.setUnavailableListener(new RadioMicCapture.UnavailableListener() {
+            @Override
+            public void onMicrophoneUnavailable() {
+                main.post(AudioSpectrumEngine.this::onMicrophoneUnavailable);
+            }
+
+            @Override
+            public void onMicrophoneFullBand() {
+                main.post(AudioSpectrumEngine.this::onMicrophoneFullBand);
+            }
+        });
     }
 
     /**
-     * The microphone cannot be had at full band in this process: another app holds the input at
-     * 16 kHz and root did not take it back, or there is no root. Until the next start of the head
-     * unit - after which wDSP opens the input first.
+     * The microphone cannot be had at full band right now: another app holds the input at 16 kHz and
+     * root did not take it back, or there is no root. Until {@link MicInputWindow} sees a gap on the
+     * input, and the capture opened in it hears full band.
      *
      * <p>Owner, 14.09.2026: "точно переходити на розрахунковий, і пофіг на радіо" - the spectrum
      * goes to the calculated mode even where that mode has nothing to show (radio bypasses
      * AudioFlinger), because a narrow microphone passed off as the cabin is worse than no picture.
-     * The stored choice is left alone: after a restart the microphone is available again and the
-     * person should not have to choose it a second time.
+     * The stored choice is left alone: once the microphone is back the person should not have to
+     * choose it a second time.
      */
     private volatile boolean micUnavailable;
-    /** One toast per process; the state it describes does not change until a restart. */
+    /**
+     * One toast per episode. Failed attempts inside an episode say nothing more; a microphone that
+     * came back at full band and was lost again is a new episode, and is told.
+     */
     private volatile boolean toldMicUnavailable;
+    private final MicInputWindow micInputWindow = new MicInputWindow();
 
     public boolean isMicrophoneUnavailable() {
         return micUnavailable;
     }
 
+    /** Main thread. */
     private synchronized void onMicrophoneUnavailable() {
         micUnavailable = true;
         if (appContext != null && !toldMicUnavailable) {
             toldMicUnavailable = true;
-            Toaster.show(appContext, R.string.mic_narrow_restart);
+            // Daily use: the spectrum is decoration and an instrument, not a reason to restart the
+            // car (owner, 14.09.2026). Calibration asks differently, and is not this path.
+            Toaster.show(appContext, R.string.mic_busy_calculated);
         }
-        Log.w(TAG, "microphone unavailable until restart - spectrum falls back to calculated");
+        Log.w(TAG, "microphone unavailable - spectrum falls back to calculated until the input is free");
         stopNativeCapture();
         stopRadioMicCapture();
         if (!listeners.isEmpty()) {
             startInternal(currentSessionId);
             requestResolve("microphone unavailable");
         }
+        micInputWindow.watch(appContext, radioMicCapture::isRunning, radioMicCapture.lastSessionId(),
+                this::onMicrophoneInputFree);
+    }
+
+    /**
+     * Main thread. The input has no narrow recording left on it: open the capture now, while it is
+     * ours to set the rate. Whether that worked is decided by the capture itself, half a second in,
+     * by the device rate - full band ends the episode, narrow again starts the wait again.
+     */
+    private synchronized void onMicrophoneInputFree() {
+        if (!micUnavailable) return;
+        micUnavailable = false;
+        if (!listeners.isEmpty() && !pausedForCall && wantsMicPipeline(isRadioSourceNow())) {
+            Log.i(TAG, "input free - reopening the microphone pipeline");
+            startInternal(currentSessionId);
+        } else {
+            // Nothing wants the microphone at this moment. Holding the input for nobody is not ours
+            // to do; the next start opens it and is judged the same way.
+            Log.i(TAG, "input free - nothing wants the microphone now; the next start will judge it");
+        }
+    }
+
+    /** Main thread. */
+    private synchronized void onMicrophoneFullBand() {
+        if (toldMicUnavailable) Log.i(TAG, "microphone back at full band");
+        toldMicUnavailable = false;
     }
 
     /** Whether the microphone spectrum is what is actually in force, not merely what was chosen. */
@@ -881,7 +924,14 @@ public class AudioSpectrumEngine {
                     lastSignalTime = System.currentTimeMillis();
                 }
                 currentSessionId = target;
-                if (!listeners.isEmpty() && visualizer == null) {
+                // A microphone pipeline that came up while the sweep ran is left alone - the same
+                // guard as in start(), for the same reason: visualizer is null for the whole life of
+                // a microphone pipeline. Measured 14.09.2026: a resolve requested while the
+                // microphone was unavailable finished 3 s after MicInputWindow had taken the input
+                // back, and closed and reopened the full-band capture for nothing.
+                if (isMicPipelineRunning() && wantsMicPipeline(isRadioSourceNow())) {
+                    armWatchdog();
+                } else if (!listeners.isEmpty() && visualizer == null) {
                     startInternal(target);
                     armWatchdog();
                 }

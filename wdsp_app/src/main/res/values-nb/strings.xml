@@ -98,6 +98,7 @@
     <string name="toast_imported">Importert</string>
     <string name="toast_sub_comp_limit">Sub-komp. begrenset til 100 Hz</string>
     <string name="mic_narrow_restart">Mikrofonen er opptatt av en annen app. Start autoradioen på nytt, ellers er mikrofonen ikke tilgjengelig.</string>
+    <string name="mic_busy_calculated">Mikrofonen er midlertidig opptatt, spekteret er beregnet</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Hold wDSP i gang</string>

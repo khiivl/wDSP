@@ -98,6 +98,7 @@
     <string name="toast_imported">Импортирано</string>
     <string name="toast_sub_comp_limit">Суб комп. ограничена до 100 Hz</string>
     <string name="mic_narrow_restart">Микрофонът е зает от друго приложение. Рестартирайте мултимедията, иначе микрофонът е недостъпен.</string>
+    <string name="mic_busy_calculated">Микрофонът е временно зает, спектърът е изчислен</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Поддържане на wDSP активен</string>

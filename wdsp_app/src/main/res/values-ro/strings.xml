@@ -98,6 +98,7 @@
     <string name="toast_imported">Importat</string>
     <string name="toast_sub_comp_limit">Comp. Sub limitată la 100 Hz</string>
     <string name="mic_narrow_restart">Microfonul este utilizat de altă aplicație. Reporniți sistemul audio, altfel microfonul nu este disponibil.</string>
+    <string name="mic_busy_calculated">Microfon ocupat temporar, spectru calculat</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Menține wDSP activ</string>

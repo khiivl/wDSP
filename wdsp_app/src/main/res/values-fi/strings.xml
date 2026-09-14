@@ -98,6 +98,7 @@
     <string name="toast_imported">Tuotu</string>
     <string name="toast_sub_comp_limit">Sub-kompensaatio rajoitettu 100 Hz:iin</string>
     <string name="mic_narrow_restart">Mikrofoni on toisen sovelluksen käytössä. Käynnistä autoradio uudelleen, muuten mikrofoni ei ole käytettävissä.</string>
+    <string name="mic_busy_calculated">Mikrofoni tilapäisesti varattu, spektri on laskettu</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Pidä wDSP käynnissä</string>

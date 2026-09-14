@@ -98,6 +98,7 @@
     <string name="toast_imported">Importé</string>
     <string name="toast_sub_comp_limit">Comp. caisson limitée à 100 Hz</string>
     <string name="mic_narrow_restart">Le microphone est occupé par une autre application. Redémarrez l\'autoradio, sinon le microphone n\'est pas disponible.</string>
+    <string name="mic_busy_calculated">Microphone temporairement occupé, spectre calculé</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Maintenir wDSP actif</string>

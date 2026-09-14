@@ -92,6 +92,7 @@
     <string name="toast_imported">Zaimportowano</string>
     <string name="toast_sub_comp_limit">Kompensacja subwoofera ograniczona do 100Hz</string>
     <string name="mic_narrow_restart">Mikrofon jest zajęty przez inną aplikację. Uruchom ponownie radio samochodowe, inaczej mikrofon jest niedostępny.</string>
+    <string name="mic_busy_calculated">Mikrofon chwilowo zajęty, widmo obliczeniowe</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Praca wDSP w tle</string>

@@ -966,10 +966,10 @@ public class MainActivity extends AppCompatActivity {
                 showMicCalibrationInviteDialog();
                 return;
             }
-            // Held by another app at 16 kHz and not recoverable in this process: say so again
-            // rather than show a button that lights up and changes nothing.
+            // Held by another app at 16 kHz until it leaves a gap on the input: say so again rather
+            // than show a button that lights up and changes nothing.
             if (AudioSpectrumEngine.getInstance().isMicrophoneUnavailable()) {
-                Toaster.show(this, R.string.mic_narrow_restart);
+                Toaster.show(this, R.string.mic_busy_calculated);
                 return;
             }
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
@@ -1007,8 +1007,8 @@ public class MainActivity extends AppCompatActivity {
         int substrate = ThemeManager.dockSubstrateColor(this, isNight);
 
         String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
-        // What is in force, not only what was chosen: when the microphone is unavailable until a
-        // restart the spectrum is calculated, and the pills say that (the stored choice stays).
+        // What is in force, not only what was chosen: while the microphone is held by another app
+        // the spectrum is calculated, and the pills say that (the stored choice stays).
         boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode)
                 && !AudioSpectrumEngine.getInstance().isMicrophoneUnavailable();
 

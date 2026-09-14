@@ -100,6 +100,7 @@
     <string name="toast_imported">Імпортовано</string>
     <string name="toast_sub_comp_limit">Компенсація сабвуфера обмежена 100Гц</string>
     <string name="mic_narrow_restart">Мікрофон зайнятий іншою програмою. Перезавантажте магнітолу, інакше мікрофон недоступний.</string>
+    <string name="mic_busy_calculated">Мікрофон тимчасово зайнятий, спектр розрахунковий</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Робота wDSP у фоні</string>

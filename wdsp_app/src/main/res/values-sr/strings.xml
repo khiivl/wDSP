@@ -98,6 +98,7 @@
     <string name="toast_imported">Увезено</string>
     <string name="toast_sub_comp_limit">Суб компензација ограничена на 100 Hz</string>
     <string name="mic_narrow_restart">Микрофон користи друга апликација. Поново покрените ауторадио, иначе микрофон није доступан.</string>
+    <string name="mic_busy_calculated">Микрофон је привремено заузет, спектар је израчунат</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Одржи wDSP покренутим</string>

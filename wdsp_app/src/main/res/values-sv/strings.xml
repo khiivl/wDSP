@@ -92,6 +92,7 @@
     <string name="toast_imported">Importerad</string>
     <string name="toast_sub_comp_limit">Sub-komp begränsad till 100Hz</string>
     <string name="mic_narrow_restart">Mikrofonen används av en annan app. Starta om bilradion, annars är mikrofonen inte tillgänglig.</string>
+    <string name="mic_busy_calculated">Mikrofonen är tillfälligt upptagen, spektrumet är beräknat</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Låt wDSP köras</string>
