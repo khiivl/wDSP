@@ -1879,3 +1879,22 @@ Media Resumption (Haiwai vs Jitu2)* (`gemini__60ce423d-…__qf-sleep-media-resum
   зараз недоступний на повну смугу»**. Причина — спостереження власника на Jitu2: Google-асистент не працював, доки
   через adb не заборонили мікрофон сервісу **TXZ**, а асистент при цьому глухим не став. **TXZ і Toppal — один продукт** (TXZ — сервіс,
   Toppal — асистент, з системою говорить через `com.qf.ailit.bridge`); мікрофон приходить іншим шляхом. Вікна від них не чекати (`platform/05-AUDIO-PATH.md`, вендорні асистенти).
+
+### 📋 Наказ 14.09.2026 ~15:10 — ЗАСТАВКА: МЕТАДАНІ СИСТЕМНИХ ПЛЕЄРІВ (у черзі, не зараз)
+
+Власник: *«Наш скрінсейвер не вміє показувати метадані з цих системних застосунків, а треба буде
+навчити»*. Джерело — дошка #539 від сесії Дж `60ce423d` (реверс протоколу віджетів лаунчера й
+CAN-кластера), записано нею в `qf-platform/references/08-VOLUME-AND-SOURCES.md` §6:
+- **BT-музика `com.qf.bluetooth`**: трансляція `com.qf.action.BT.MUSIC.INFO` (`songName`,
+  `songSinger`, `songAlbum`); для CAN `com.qf.action.bt.music` (`songName`, `songArt`); позиція в
+  пропі `persist.sys.bt.music.progress` (`"pos_ms,total_ms"`); керування
+  `com.qf.action.BT.MUSIC.CONTROL` (`command` 1..5).
+- **Системний плеєр `com.qf.musicplayer`**: `…action.LAUNCHER_INIT_ACTION` (початкова синхронізація),
+  `…action.UPDATE_ACTION` з Parcelable `MusicInfoData` (`name`, `artist`, `album`, `path`, `currTime`,
+  `totalTime`, `curPlayStatus`, …); обкладинка — `MediaMetadataRetriever.getEmbeddedPicture()` з `path`.
+- **Заводське радіо `com.android.fmradio`**: `com.qf.radio.update_action` (частота, діапазон, назва).
+
+⚠️ Звірити до роботи, не припускати: `NowPlaying.java` **вже** слухає `com.qf.musicplayer.action.UPDATE_ACTION`
+(`MusicInfoData`), а BT-музику й `LAUNCHER_INIT_ACTION` — ні. Отже, спершу з'ясувати, чому заставка
+не показує навіть системний плеєр (не доходить трансляція, чи заставка бере лише MediaSession), і
+лише тоді додавати BT. Протокол від Дж — звіряти на дроті (довіра ~80%).
