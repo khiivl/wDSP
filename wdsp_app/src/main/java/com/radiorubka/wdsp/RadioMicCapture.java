@@ -49,8 +49,10 @@ import java.util.Locale;
  * nothing above 8 kHz. The answer is order, not force. Measured 11.09.2026: once our 48 kHz
  * stream is open, the assistant comes back as a 16 kHz client riding on it, keeps listening and
  * answers "Ok Google", and the input stays at 48 kHz even after we leave. So the capture listens
- * to its own first half second; if the top end is missing it stops the assistant once, through
- * root, and reopens at once - the assistant is back within two seconds and has to find us there.
+ * to its own first half second - it reads the device rate the platform reports for our recording
+ * (the content itself cannot tell: a quiet cabin has nothing above 8 kHz either) - and if the input
+ * runs at 16 kHz it stops the assistant once, through root, and reopens at once - the assistant is
+ * back within two seconds and has to find us there.
  *
  * <p>The input can also be rebuilt underneath an open capture: an audioserver restart restores the
  * record inside the same AudioRecord, with no error, at whatever rate the first client to come back
@@ -261,11 +263,17 @@ public class RadioMicCapture {
                     currentGain = 1.0f;
                 }
 
-                // Two witnesses to a narrow input, one decision. Our own ear hears the first half
-                // second of every open. The platform's recording callback reports the device's rate
-                // whenever the input is rebuilt underneath us - which after an audioserver restart
-                // happens with no error, the same AudioRecord and the same recording id, so the ear,
-                // having already listened, would never hear it (measured 14.09.2026).
+                // Whether the input is narrow is the platform's fact, never our ear's guess: the
+                // device rate of our own recording, as AudioManager describes it. Read half a second
+                // into every open, and again whenever the recording callback says the input was
+                // rebuilt underneath us - which after an audioserver restart happens with no error,
+                // the same AudioRecord and the same recording id (measured 14.09.2026).
+                //
+                // 🔴 The half-second listen used to decide, and it cannot: it judges the CONTENT
+                // above 8 kHz, and a quiet cabin has none. After a cold boot on 14.09.2026 our capture
+                // was the only client of a 48 kHz input, nothing was playing yet, the listen read
+                // "narrow", and with root denied the microphone was declared unavailable until
+                // restart, 0.8 s after it opened. The listen stays, for the log only.
                 String narrowBecause = null;
                 if (narrowReported) {
                     narrowReported = false;
@@ -278,15 +286,15 @@ public class RadioMicCapture {
                     if (probed == probe.length) {
                         probing = false;
                         float bw = bandwidthDb(probe, probed);
-                        if (!Float.isNaN(bw)) {
-                            boolean narrow = bw < MicrophoneGuard.BANDWIDTH_OK_DB;
-                            Log.i(TAG, String.format(Locale.US, "own stream: %.1f dB above 8 kHz - %s",
-                                    bw, narrow ? "held at 16 kHz by another app" : "full band"));
-                            if (narrow) {
-                                narrowBecause = "own stream has nothing above 8 kHz";
-                            } else {
-                                healAttempted = false;
-                            }
+                        int deviceRate = deviceRateNow();
+                        Log.i(TAG, String.format(Locale.US,
+                                "own stream: %s above 8 kHz (content, for the record); input device at %s",
+                                Float.isNaN(bw) ? "silence" : String.format(Locale.US, "%.1f dB", bw),
+                                deviceRate > 0 ? deviceRate + " Hz" : "unknown"));
+                        if (deviceRate > 0 && deviceRate < SAMPLE_RATE) {
+                            narrowBecause = "input device at " + deviceRate + " Hz";
+                        } else if (deviceRate >= SAMPLE_RATE) {
+                            healAttempted = false;
                         }
                     }
                 }
@@ -552,6 +560,26 @@ public class RadioMicCapture {
         } catch (Throwable ignored) {
         }
         recordingCallback = null;
+    }
+
+    /**
+     * The device rate under our recorder right now, or 0 when the platform does not list it (yet).
+     * The same fact the recording callback carries, asked for directly.
+     */
+    private int deviceRateNow() {
+        AudioManager am = audioManager;
+        AudioRecord rec = audioRecord;
+        if (am == null || rec == null) return 0;
+        try {
+            int session = rec.getAudioSessionId();
+            for (AudioRecordingConfiguration config : am.getActiveRecordingConfigurations()) {
+                if (config.getClientAudioSessionId() != session) continue;
+                AudioFormat device = config.getFormat();
+                return device != null ? device.getSampleRate() : 0;
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
     }
 
     /**

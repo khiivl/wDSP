@@ -143,6 +143,14 @@ Remember to kill the daemon afterwards (`pkill -f watch.sh; pkill logcat`). ⚠�
 the `su -c` itself - it kills its own shell (exit 143) and may stop before the rest runs. Check with
 `ps -A -o PID,ARGS | grep watch` afterwards.
 
+⚠️ **After a cold boot the main log buffer is 256 KiB and our process fills it in under a minute.**
+`logcat -g` on the owner's unit: `main` 256 KiB. The platform's `android.qf.os.VolumeState`, called
+from wDSP's 100 ms poll, logs three `D/VolumeState` lines per call inside our pid; with that, the
+capture's decision 0.8 s after it opened at boot was already gone when read 12 s later. What
+survived and settled it: `dumpsys media.audio_flinger` keeps closed input threads with their
+`Local log` (`AT::add` / `AT::remove` with pid, session and rate) — our capture was the only client
+of a **48000 Hz** input from 03:53:50.765 to 03:53:51.567.
+
 ⚠️ **Our own once-a-second log gets our important lines pruned.** logd trims the chattiest uid
 first; with the capture's gate line every second, wDSP is that uid, and 40 seconds after an install
 its start-up lines ("started", "own stream", the heal) were already gone while system lines from the
