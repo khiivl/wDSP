@@ -2131,7 +2131,7 @@ public class SettingsActivity extends AppCompatActivity {
                         }
                         ThemedDialog.notice(SettingsActivity.this,
                                 getString(R.string.room_measure_failed),
-                                result != null && result.error != null ? result.error : "Unknown error");
+                                measurementFailureText(result));
                         dialog.dismiss();
                         return;
                     }
@@ -2298,7 +2298,7 @@ public class SettingsActivity extends AppCompatActivity {
                         }
                         ThemedDialog.notice(SettingsActivity.this,
                                 getString(R.string.room_measure_failed),
-                                result != null && result.error != null ? result.error : "Unknown error");
+                                measurementFailureText(result));
                         return;
                     }
                     showMicCalStatus();
@@ -2308,6 +2308,16 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    /**
+     * What a failed room measurement or microphone calibration tells the person. A microphone held
+     * narrow by another app is the one failure they can fix themselves, so it gets its own words
+     * (owner, 14.09.2026: without root, a sweep only after a restart) instead of the run's log line.
+     */
+    private String measurementFailureText(RoomMeasurement.Result result) {
+        if (result != null && result.needsRestart) return getString(R.string.mic_narrow_restart);
+        return result != null && result.error != null ? result.error : "Unknown error";
     }
 
     /**

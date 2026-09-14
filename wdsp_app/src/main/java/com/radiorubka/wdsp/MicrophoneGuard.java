@@ -1,11 +1,13 @@
 package com.radiorubka.wdsp;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioRecordingConfiguration;
 import android.media.MediaRecorder;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -35,34 +37,32 @@ import java.util.Locale;
  *
  * <h2>How</h2>
  *
- * {@link ActivityManager#killBackgroundProcesses} needs only a normal permission and stops a
- * background process. The assistant comes back on its own the next time the system wants it -
- * there is nothing to restore afterwards, and nothing is uninstalled, disabled or configured. A
- * process that was in the foreground is not touched at all.
+ * The input is claimed first and then the platform is asked what rate the device under our own
+ * recording runs at ({@code AudioRecordingConfiguration.getFormat()}) - the same fact
+ * {@link RadioMicCapture} decides by. Our recorder's own {@code getSampleRate()} is the wrong
+ * question (it reports what was asked for), and listening for content above 8 kHz was the wrong
+ * answer too: a quiet cabin has none, and on 14.09.2026 a full-band 48 kHz input read -30.4 dB
+ * against the -30 dB this class used to require.
  *
- * The microphone is tested by listening to it rather than by asking about it, because asking
- * returns the wrong answer.
+ * <p>Owner, 14.09.2026: for a sweep there is no waiting and no polite asking - with root the
+ * hotword listeners are force-stopped and the input claimed at once; without root, or when that did
+ * not take, the measurement does not start and the person is told to restart the head unit, after
+ * which wDSP opens the input first. {@code killBackgroundProcesses} used to be tried before root; it
+ * never worked on a unit where the assistant is a system app, which is the unit this is for.
  */
 public final class MicrophoneGuard {
     private static final String TAG = "wDSP_MicGuard";
 
     private static final int SAMPLE_RATE = 48000;
-    /** Half a second is plenty to tell a 16 kHz stream from a 48 kHz one. */
-    private static final int PROBE_MS = 500;
+    /** How long the platform is given to list a recording that has just started. */
+    private static final long RATE_WAIT_MS = 500;
     /**
-     * Above this, the recording has a top end and the microphone is ours.
-     *
-     * Measured: −15 dB with the microphone free, −71 dB and below when it is being shared with a
-     * 16 kHz client. The gap is enormous, so the threshold does not need to be precise.
+     * From a force-stop returning to claiming the input again. Measured 14.09.2026: the killed
+     * assistant's 16 kHz input thread was still open 86 ms after its death and closed by 209 ms, and
+     * a recorder opened before that inherits 16 kHz (platform/05-AUDIO-PATH.md). The assistant came
+     * back after about 1.9 s.
      */
-    static final float BANDWIDTH_OK_DB = -30f;
-
-    /**
-     * Below this the probe heard silence, and silence says nothing about a stream's rate: the ratio
-     * of two bands of noise is noise. Same value as {@code RadioMicCapture.PROBE_MIN_RMS}, for the
-     * same reason.
-     */
-    private static final double PROBE_MIN_RMS = 1e-4;
+    private static final long INPUT_CLOSE_MS = 300;
 
     /**
      * Known hotword listeners, most likely first.
@@ -83,120 +83,126 @@ public final class MicrophoneGuard {
 
     /** What the guard did, for the log and for the report a tester sends back. */
     public static final class Outcome {
-        /** Bandwidth before anything was done, in dB above 8 kHz relative to the band below. */
-        public float before;
-        /** Bandwidth afterwards. Equal to {@link #before} when nothing needed doing. */
-        public float after;
+        /** Device rate under our recording before anything was done, in Hz; 0 when not listed. */
+        public int rateBefore;
+        /** Device rate afterwards. Equal to {@link #rateBefore} when nothing needed doing. */
+        public int rateAfter;
         public final List<String> stopped = new ArrayList<>();
         public boolean wasHeld;
         public boolean freed;
-        /** True when the polite request failed and root was needed to finish the job. */
+        /** True when root was used to stop the holder. */
         public boolean usedRoot;
         /**
-         * True when the microphone could not be listened to at all, so nothing is known about it.
+         * Held narrow and not taken back: no root, or root did not help. The measurement must not
+         * start; the person is told to restart the head unit. The guard holds nothing in this case.
+         */
+        public boolean needsRestart;
+        /**
+         * True when the platform did not describe our recording, so nothing is known about it.
          *
          * This is not the same as "it is ours", and the difference used to be invisible: every
-         * failure returned 0 dB, which sails past a threshold of -30 dB and was reported as a free
-         * microphone. A sweep then ran to 20 kHz through a microphone nobody had checked, and the
-         * report a tester sent back said the microphone was fine.
+         * failure of the old listening probe returned 0 dB, which sailed past its threshold and was
+         * reported as a free microphone. A sweep then ran to 20 kHz through a microphone nobody had
+         * checked, and the report a tester sent back said the microphone was fine.
          */
         public boolean unknown;
 
         @Override
         public String toString() {
             if (unknown) {
-                return "microphone could not be checked - the probe did not record anything usable; "
+                return "microphone could not be checked - the platform did not list our recording; "
                         + "nothing was stopped and nothing is claimed about it";
             }
             if (!wasHeld) {
-                return String.format(Locale.US, "microphone was already ours (%.1f dB above 8 kHz)",
-                        before);
+                return "microphone was already ours (input device at " + rateBefore + " Hz)";
             }
-            return String.format(Locale.US,
-                    "microphone was held by another app (%.1f dB above 8 kHz); stopped %s; "
-                            + "now %.1f dB - %s",
-                    before, stopped.isEmpty() ? "nothing" : stopped.toString(), after,
-                    freed ? (usedRoot ? "released, root was needed" : "released") : "STILL HELD");
+            return "microphone was held by another app (input device at " + rateBefore + " Hz); "
+                    + "stopped " + (stopped.isEmpty() ? "nothing" : stopped.toString())
+                    + "; now " + rateAfter + " Hz - "
+                    + (freed ? "released through root" : "STILL HELD, restart needed");
         }
     }
 
     /**
-     * Checks the microphone and, if something else has it, asks the system to stop that something.
+     * Claims the microphone and checks, by the device rate, that it is full band; if another app
+     * holds it narrow, takes it back through root or says a restart is needed.
      *
-     * Safe to call when nothing is wrong: it costs half a second of listening and does nothing.
+     * <p>On return the input is HELD (see {@link #holder}) unless {@link Outcome#needsRestart}; the
+     * caller lets it go with {@link #releaseHold()} once its own capture is open.
      */
     public static Outcome ensureOurs(Context context) {
         Outcome outcome = new Outcome();
-        outcome.before = measureBandwidth();
-        outcome.after = outcome.before;
+        // Claim first, then ask: the verdict is about the recorder that stays open until the
+        // measurement's own capture replaces it, not about a probe that closes again and leaves
+        // the input free for a moment.
+        holdOpen();
+        outcome.rateBefore = heldDeviceRate(context);
+        outcome.rateAfter = outcome.rateBefore;
 
-        // "Did not measure" is not "measured and fine". Killing somebody else's process on a
-        // failed probe would be worse than doing nothing, so an unknown answer stops here - and
-        // says so, instead of letting a caller read silence as a healthy microphone.
-        if (Float.isNaN(outcome.before)) {
+        // "Did not measure" is not "measured and fine". Killing somebody else's process on an
+        // unknown answer would be worse than doing nothing, so it stops here - and says so.
+        if (outcome.rateBefore <= 0) {
             outcome.unknown = true;
             Log.w(TAG, outcome.toString());
             return outcome;
         }
-
-        if (outcome.before >= BANDWIDTH_OK_DB) {
+        if (outcome.rateBefore >= SAMPLE_RATE) {
             Log.i(TAG, outcome.toString());
             return outcome;
         }
         outcome.wasHeld = true;
 
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        PackageManager pm = context.getPackageManager();
-        if (am == null) {
-            Log.w(TAG, "no activity manager, cannot free the microphone");
-            return outcome;
-        }
-
-        for (String pkg : HOTWORD_PACKAGES) {
-            if (!isInstalled(pm, pkg)) continue;
-            try {
-                am.killBackgroundProcesses(pkg);
-                outcome.stopped.add(pkg);
-                Log.i(TAG, "asked the system to stop " + pkg);
-            } catch (Throwable t) {
-                // Missing permission, or the process is in the foreground and protected. Either
-                // way the measurement can still go ahead, just through a narrower microphone.
-                Log.w(TAG, "could not stop " + pkg + ": " + t);
-            }
-        }
-
-        if (!outcome.stopped.isEmpty()) {
-            sleep(700);   // the stream has to close before ours can be opened at full width
-            outcome.after = measureBandwidth();
-        }
-        outcome.freed = outcome.after >= BANDWIDTH_OK_DB;
-
-        // The polite request does not work on a head unit where the assistant is a system app:
-        // killBackgroundProcesses will not touch one, and measured on such a unit the microphone
-        // stayed at 16 kHz however many times it was asked. Most of these head units are rooted,
-        // so if root is there, use it - a force-stop does what the polite request could not.
-        //
-        // Still nothing to restore: force-stop does not disable or uninstall anything, and the
-        // assistant comes back the next time the system starts it.
-        if (!outcome.freed && !outcome.stopped.isEmpty() && RootAccess.hasRoot(context)) {
+        // Root: force-stop does not disable or uninstall anything, and the assistant comes back the
+        // next time the system starts it - onto our input, which is by then open at 48 kHz.
+        if (RootAccess.hasRootNow(context)) {
+            releaseHold();
+            PackageManager pm = context.getPackageManager();
             for (String pkg : HOTWORD_PACKAGES) {
                 if (!isInstalled(pm, pkg)) continue;
-                if (forceStopAsRoot(pkg, ROOT_WAIT_DELIBERATE_S)) outcome.usedRoot = true;
+                if (forceStopAsRoot(pkg, ROOT_WAIT_DELIBERATE_S)) {
+                    outcome.usedRoot = true;
+                    outcome.stopped.add(pkg);
+                }
             }
-            if (outcome.usedRoot) {
-                sleep(900);
-                outcome.after = measureBandwidth();
-                outcome.freed = outcome.after >= BANDWIDTH_OK_DB;
-            }
+            if (outcome.usedRoot) sleep(INPUT_CLOSE_MS);
+            holdOpen();
+            outcome.rateAfter = heldDeviceRate(context);
+            outcome.freed = outcome.rateAfter >= SAMPLE_RATE;
         }
-        Log.i(TAG, outcome.toString());
-        if (!outcome.freed) {
-            Log.w(TAG, "the microphone is still limited. Whatever holds it is not in the list, or "
-                    + "is running in the foreground where it cannot be stopped. The measurement "
-                    + "will go ahead, but everything above 8 kHz is missing from it.");
+        outcome.needsRestart = !outcome.freed;
+        if (outcome.needsRestart) {
+            releaseHold();
+            Log.w(TAG, outcome + " - the measurement will not start");
+        } else {
+            Log.i(TAG, outcome.toString());
         }
-        holdOpen();
         return outcome;
+    }
+
+    /**
+     * The device rate under the held recorder, as the platform lists it, or 0 when it does not
+     * list it within {@link #RATE_WAIT_MS}.
+     */
+    private static int heldDeviceRate(Context context) {
+        final AudioRecord held = holder;
+        if (held == null || context == null) return 0;
+        final AudioManager am = (AudioManager) context.getApplicationContext()
+                .getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return 0;
+        final int session = held.getAudioSessionId();
+        final long until = SystemClock.uptimeMillis() + RATE_WAIT_MS;
+        do {
+            try {
+                for (AudioRecordingConfiguration config : am.getActiveRecordingConfigurations()) {
+                    if (config.getClientAudioSessionId() != session) continue;
+                    AudioFormat device = config.getFormat();
+                    if (device != null && device.getSampleRate() > 0) return device.getSampleRate();
+                }
+            } catch (Throwable ignored) {
+            }
+            sleep(20);
+        } while (SystemClock.uptimeMillis() < until);
+        return 0;
     }
 
     /**
@@ -284,68 +290,6 @@ public final class MicrophoneGuard {
         } catch (Throwable t) {
             Log.w(TAG, "could not open capture source " + source + ": " + t);
             return null;
-        }
-    }
-
-    /**
-     * Records briefly and reports how much of it lives above 8 kHz.
-     *
-     * @return {@code Float.NaN} whenever the answer is not known - no native analyser, no input,
-     *         too little recorded, or silence, because silence says nothing about a stream's rate.
-     *         Never 0 dB for a failure: 0 passes every threshold this class compares against, and
-     *         that is how an unchecked microphone came to be reported as a free one.
-     *         {@code RadioMicCapture.bandwidthDb} has always done it this way; this method was the
-     *         odd one out.
-     */
-    private static float measureBandwidth() {
-        if (!NativeSweep.isAvailable()) {
-            Log.w(TAG, "no native analyser - the microphone cannot be checked");
-            return Float.NaN;
-        }
-        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT);
-        if (minBytes <= 0) return Float.NaN;
-
-        AudioRecord record = null;
-        try {
-            record = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 4);
-            if (record.getState() != AudioRecord.STATE_INITIALIZED) return Float.NaN;
-
-            final int wanted = SAMPLE_RATE * PROBE_MS / 1000;
-            short[] buffer = new short[minBytes];
-            float[] all = new float[wanted];
-            int got = 0;
-            record.startRecording();
-            while (got < wanted) {
-                int read = record.read(buffer, 0, Math.min(buffer.length, wanted - got));
-                if (read <= 0) break;
-                for (int i = 0; i < read; i++) all[got + i] = buffer[i] / 32768f;
-                got += read;
-            }
-            record.stop();
-            if (got < SAMPLE_RATE / 8) return Float.NaN;
-
-            // Silence carries no evidence either way: a quiet cabin has nothing above 8 kHz and
-            // nothing below it, and the ratio of the two is noise divided by noise. The same floor
-            // as RadioMicCapture uses for its own probe.
-            double sum = 0;
-            for (int i = 0; i < got; i++) sum += all[i] * all[i];
-            if (Math.sqrt(sum / got) < PROBE_MIN_RMS) {
-                Log.w(TAG, "the probe recorded silence - nothing can be said about the microphone");
-                return Float.NaN;
-            }
-            return NativeSweep.bandwidthRatioDb(all, got, SAMPLE_RATE);
-        } catch (Throwable t) {
-            Log.w(TAG, "could not listen to the microphone: " + t);
-            return Float.NaN;
-        } finally {
-            if (record != null) {
-                try {
-                    record.release();
-                } catch (Throwable ignored) {
-                }
-            }
         }
     }
 

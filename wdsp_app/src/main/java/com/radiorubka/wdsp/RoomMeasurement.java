@@ -184,7 +184,8 @@ public final class RoomMeasurement {
     /**
      * Below this much energy above 8 kHz, the sweep recording did not contain the top of the sweep.
      *
-     * 🔴 Was -30 dB, which is the same number {@link MicrophoneGuard#BANDWIDTH_OK_DB} uses - and
+     * 🔴 Was -30 dB, which is the same number MicrophoneGuard's listening probe used (it decides by
+     * the device rate now, since 14.09.2026) - and
      * that was the mistake, because the two are asked of completely different signals. The guard
      * measures half a second of whatever the room happens to be making; this is asked of a six
      * second sweep that climbs to 20 kHz, whose energy is spread across the whole span. The two
@@ -1336,6 +1337,12 @@ public final class RoomMeasurement {
          */
         public boolean micCalibrated;
         public String error;
+        /**
+         * The microphone is held narrow by another app and could not be taken back, so the run did
+         * not start: the screen tells the person to restart the head unit (owner, 14.09.2026: a
+         * sweep without root is made only after a restart).
+         */
+        public boolean needsRestart;
         public String reportPath;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
@@ -1633,6 +1640,19 @@ public final class RoomMeasurement {
         // we ended up with can actually hear.
         MicrophoneGuard.Outcome mic = MicrophoneGuard.ensureOurs(app);
         result.microphone = mic.toString();
+
+        // 🔴 Owner, 14.09.2026: a sweep through a microphone held at 16 kHz is not made at all, and
+        // without root there is no waiting for the input either - a restart, after which wDSP opens
+        // the input first. Nothing has been changed yet at this point (no preset, no volume), and the
+        // guard holds nothing in this case, so returning is the whole clean-up. The narrow sweep
+        // below (SWEEP_END_NARROW_HZ) is no longer reached from here.
+        if (mic.needsRestart) {
+            result.needsRestart = true;
+            result.error = "the microphone is held at " + mic.rateAfter + " Hz by another app and could "
+                    + "not be taken back - restart the head unit";
+            Log.w(TAG, result.error);
+            return result;
+        }
 
         // 🔴 ensureOurs also HOLDS it from this instant until releaseHold(), which is why the
         // measurement no longer opens a placeholder of its own.
