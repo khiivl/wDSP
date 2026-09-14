@@ -201,6 +201,38 @@ visible: both clients got a `rec update` at .739, the moment ours rejoined, and 
 Same pid before and after. The assistant still reopens first, and there is no longer any moment at
 which it is alone on the input.
 
+#### An audioserver restart does not kill a capture — it narrows it, silently — 14.09.2026
+
+📻 `su -c 'setprop ctl.restart audioserver'` at 03:13:05, with our 48 kHz capture (riid 415) and the
+assistant's (riid 447) both on a 48 kHz input, YouTube Music playing:
+
+```
+03:13:05.563  our process: W/AudioRecord restoreRecord_l: dead IAudioRecord, creating a new one
+              E/AudioRecord createRecord_l: status -32 (audioserver not up yet), retries 3
+03:13:06.565  AudioService: "Audioserver started."
+03:13:06.874  assistant   rec update   <- its record restored first
+03:13:07.356  assistant + wDSP rec update
+03:13:32      new input thread AudioIn_2E: Sample rate 16000 Hz, patch 18
+              wDSP  riid 415 (same id): client 48000Hz, dev=1ch 16000Hz
+              assistant riid 447:       client 16000Hz, dev=1ch 16000Hz
+```
+
+What this means:
+- **The app never learns that anything happened.** `libaudioclient` re-creates the record inside the
+  same `AudioRecord` object; `read()` returned no error, our read loop logged on without a gap, the
+  recording id did not change. Code that waits for a read error to reopen waits for ever.
+- **The rate of the re-created input is set by whichever client restores first** — the same "first
+  client sets the rate" rule as at boot, replayed in a race nobody controls. Here the assistant won,
+  so our 48 kHz client is now fed from a 16 kHz device: nothing above 8 kHz, while every number the
+  capture itself can see (its format, its id, its state) still says 48 kHz.
+- The only signal is the platform's own recording-configuration change — the `rec update` lines,
+  which `AudioManager.AudioRecordingCallback` delivers to an app with the device format in
+  `AudioRecordingConfiguration`. ❓ Not yet used or tested by wDSP.
+- ❓ Whether our session's pre-processing came back on after the restore: our effect handles died
+  (`W/AudioEffect IEffect died`), and the dump now lists `effects client='Noise Suppression'` on our
+  session where it listed the two disabled ones before. Enabled or not was not read.
+- Playback came back by itself (`restoreTrack_l`), media on `AudioOut_D` again.
+
 #### A phone call sits beside our capture, not instead of it — 13.09.2026
 
 📻 Four Bluetooth calls with our 48 kHz `UNPROCESSED` capture held throughout. The call's recorder
