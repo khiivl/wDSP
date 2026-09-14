@@ -259,11 +259,23 @@ appends only the new tail. `discontinuities()` counts failures; a rising count m
 too low. Without this there is no continuous stream, and no transform below the block rate means
 anything.
 
-**32 third-octave bands are measured and folded down to 16, never interpolated up.** Each analysis
-band is exactly half a hardware band (`HW/2^(1/6)` and `HW*2^(1/6)`), so folding pairs is an exact
-energy sum. Band energy is mean bin power times the number of bins the band *should* hold at that
-resolution — a plain sum biases narrow bands, an average per bin biases wide ones. Two window
-lengths run at once: 8192 below 800 Hz where resolution is needed, 1024 above where speed is.
+**32 third-octave bands are measured and folded down to 16, never interpolated up.** The bands sit
+on the standard grid, exact centres `1000·2^((i−18)/3)`, 16 Hz … 20 kHz, so every equaliser centre
+(20, 31.5 … 20000) is an odd band. A hardware band is folded as the band on its centre plus half of
+each neighbour — exact for pink content — and the 20 kHz band, which has no neighbour above, takes
+its missing quarter at the measured density. (Until 14.09.2026 the bands were the two halves of each
+hardware band, 17.8 … 22449 Hz; the top one was always empty.) Band energy is mean bin power times
+the number of bins the band *should* hold at that resolution — a plain sum biases narrow bands, an
+average per bin biases wide ones. Two window lengths run at once: 8192 below 800 Hz where resolution
+is needed, 1024 above where speed is. The native analyser is the only one: the Java twin that ran on
+Visualizer callbacks was removed, and without the library there is no spectrum.
+
+**The calculated spectrum is the target, the microphone spectrum is what is there** (owner,
+14.09.2026). Calculated = the Visualizer's PCM plus `DspResponse` — the preset as the chip applies
+it: EQ at Q 2.2 (the firmware forces it), doors through their high-pass, subwoofer through its
+low-pass — and nothing of the car. A noise floor is taken off only for the microphone.
+`PROBE_SESSION --ei wav <ms>` dumps the raw Visualizer blocks and the stitched stream, and
+`--ei dump 1` logs every band's power, floor and curve.
 
 `test_analyzer.cpp` is a host-side harness, excluded from the app build. Run it after touching the
 band plan, the transforms or the stitcher:
