@@ -56,14 +56,16 @@ public final class SettingsAccordion {
 
     private static boolean sNight = true;
 
+    /**
+     * 🔴 The cabin section was locked without root until 14.09.2026, and is not any more (owner): the
+     * microphone is ours from start-up without root, and when another app got to it first a sweep does
+     * not start and the person is asked to restart the head unit (MicrophoneGuard.ensureOurs,
+     * SettingsActivity.measurementFailureText) - root only spares them that restart. The section says
+     * so itself, in desc_room_no_root, while there is no root. The lock glyph is still stripped below
+     * in case a title carries one.
+     */
     private static void setHeaderState(TextView title, View body, boolean open, int accent, int textPrimary) {
         Context ctx = title.getContext();
-        boolean isRoom = (title.getId() == R.id.label_room_section);
-        boolean isLocked = isRoom && !PermissionsWizard.isRootGranted(ctx);
-
-        if (isLocked) {
-            open = false;
-        }
 
         if (body != null) {
             body.setVisibility(open ? View.VISIBLE : View.GONE);
@@ -96,8 +98,7 @@ public final class SettingsAccordion {
             s = s.replace("\uFFFD", "").trim();
 
             String prefix = open ? "▾ " : "▸ ";
-            String suffix = isLocked ? " 🔒" : "";
-            title.setText(prefix + s + suffix);
+            title.setText(prefix + s);
         }
         int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
         int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
@@ -106,9 +107,6 @@ public final class SettingsAccordion {
             int openBorder = ColorUtils.setAlphaComponent(accent, sNight ? 75 : 60);
             title.setBackground(ThemeManager.roundedDrawable(ctx, 12f, openBg, openBorder, 1.0f));
             title.setTextColor(accent);
-        } else if (isLocked) {
-            title.setBackground(null);
-            title.setTextColor(ColorUtils.setAlphaComponent(textPrimary, 180));
         } else {
             title.setBackground(null);
             title.setTextColor(textPrimary);
@@ -241,21 +239,9 @@ public final class SettingsAccordion {
             final LinearLayout section = bodies.get(i);
             final String key = PREF_PREFIX + title.getId();
             boolean open = (i == openIdx);
-            if (title.getId() == R.id.label_room_section && !PermissionsWizard.isRootGranted(ctx)) {
-                open = false;
-            }
             setHeaderState(title, section, open, accent, textPrimary);
 
             title.setOnClickListener(b -> {
-                if (title.getId() == R.id.label_room_section) {
-                    if (!PermissionsWizard.isRootGranted(ctx)) {
-                        com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
-                        if (ctx instanceof android.app.Activity) {
-                            PermissionsWizard.show((android.app.Activity) ctx, () -> refresh(column));
-                        }
-                        return;
-                    }
-                }
                 boolean nowOpen = section.getVisibility() != View.VISIBLE;
                 if (nowOpen) {
                     // Collapse all other sections
@@ -297,13 +283,6 @@ public final class SettingsAccordion {
         for (int i = 0; i < column.getChildCount(); i++) {
             View titleView = column.getChildAt(i);
             if (titleView instanceof TextView && titleView.getId() == headerId && (i + 1) < column.getChildCount()) {
-                if (headerId == R.id.label_room_section && !PermissionsWizard.isRootGranted(ctx)) {
-                    com.radiorubka.wdsp.Toaster.show(ctx, ctx.getString(R.string.room_root_required_toast));
-                    if (ctx instanceof android.app.Activity) {
-                        PermissionsWizard.show((android.app.Activity) ctx, () -> refresh(column));
-                    }
-                    return;
-                }
                 View targetBody = column.getChildAt(i + 1);
                 boolean night = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(ctx);
                 int acc = sAccent != 0 ? sAccent : com.radiorubka.wdsp.ui.theme.ThemeManager.accent(ctx, night);

@@ -243,7 +243,7 @@
     <string name="perm_wizard_item_audio_title">Мікрофон (Запис звуку)</string>
     <string name="perm_wizard_item_audio_desc">Вимірювання акустики салону та спектроаналізатор FM-радіо</string>
     <string name="perm_wizard_item_root_title">Рут-доступ (Magisk Суперкористувач)</string>
-    <string name="perm_wizard_item_root_desc">Опціонально: звільняє повні 48 кГц мікрофона від асистента та калібрує салон</string>
+    <string name="perm_wizard_item_root_desc">Опціонально: забирає повні 48 кГц мікрофона в голосового асистента без перезавантаження магнітоли</string>
     <string name="settings_backup_btn">Резервна копія налаштувань</string>
     <string name="settings_restore_btn">Відновити налаштування</string>
     <string name="toast_backup_success">Резервну копію збережено</string>
@@ -287,6 +287,7 @@
     <string name="debug_section_title">Діагностика</string>
     <string name="room_measure_label">Вимір салону</string>
     <string name="room_measure_desc">По черзі програє свіп через кожен динамік і вимірює, коли прийшов звук і чи він у фазі. Триває близько півхвилини. Двигун вимкнений, двері зачинені, гучність звичайна.</string>
+    <string name="room_no_root_note">Без рута: для виміру мікрофон має належати wDSP. wDSP забирає його під час старту магнітоли, але якщо першою його зайняла інша програма (голосовий асистент) — так буває одразу після встановлення чи оновлення wDSP, — вимір не почнеться, і програма попросить перезавантажити магнітолу. З рутом wDSP забирає мікрофон сам, без перезавантаження.</string>
     <string name="room_measure_confirm_title">Акустичне вимірювання салону</string>
     <string name="room_measure_confirm_msg">Перед початком вимірювання свіпом:\n\n1. Відтворення музики буде призупинено.\n2. Гучність буде тимчасово встановлено на рівень 16 одиниць (~50%) для лінійного вимірювання. Буде гучно!\n3. DSP еквалайзер буде тимчасово скинуто в Flat.\n4. Протягом 1 секунди буде виміряно фоновий шум салону в тиші, після чого пролунає свіп через кожен динамік по черзі.\n5. Двигун має бути вимкнений, двері та вікна зачинені.\n\nПісля завершення початковий рівень гучності та ваш пресет DSP будуть автоматично відновлені.</string>
     <string name="room_measure_confirm_start">Почати</string>
@@ -314,7 +315,6 @@
     <string name="telegram_link_copied">Посилання скопійовано: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">Немає створених Auto-EQ пресетів</string>
     <string name="room_section_title">Акустичне калібрування салону та авто-пресети</string>
-    <string name="room_root_required_toast">Для акустичного калібрування необхідні Root-права</string>
     <string name="debug_sweep_button">Діагностичний свіп</string>
     <string name="debug_sweep_done">Діагностичний замір виконано. Готово до збереження архіву.</string>
     <string name="debug_sweep_nothing">Діагностичних замірів ще немає</string>
@@ -415,11 +415,7 @@
     <string name="screensaver_note">Навігація ніколи не перекривається.</string>
     <string name="room_mic_spot_label">Де стоїть мікрофон</string>
     <string name="room_mic_spot_desc">Перетягніть крапку туди, де мікрофон насправді. На свіп це не впливає — це підказує, як читати результат: без неї мікрофон, що лежить на одному динаміку, виглядає точно як три несправні.</string>
-    <string name="room_root_title">Ви дозволили рут-доступ?</string>
-    <string name="room_root_message">Зараз отримати рут не вдалося, тому доводиться спитати.\n\nВін потрібен рівно на одну дію: зупинити фоновий процес, що тримає мікрофон відкритим на 16 кГц. Платформа має лише один вхідний потік, тож без цього наш запис чіпляють до нього — і половина свіпу зникає. Android про це не повідомляє: частота дискретизації все одно показує 48000.\n\nНічого не вимикається й не видаляється — асистент піднімається сам.</string>
-    <string name="room_root_yes">Так, дозволено</string>
-    <string name="room_root_no">Ні</string>
-    <string name="room_root_blocked">Тоді спершу дозвольте: Magisk → Суперкористувач, знайдіть wDSP і поставте «Дозволити» (або «Питати» й дозвольте, коли спитає).\n\nВимір не запускався. Запустіть його ще раз, коли рут буде дозволено.</string>
+    <string name="room_root_blocked">Magisk відмовляє wDSP у руті. Щоб дозволити: Magisk → Суперкористувач, знайдіть wDSP і поставте «Дозволити» (або «Питати» й дозвольте, коли спитає).</string>
     <string name="room_mic_place_hint">Де він у салоні</string>
     <string name="room_mic_place_windscreen">Лобове скло</string>
     <string name="room_mic_place_visor">Під козирком</string>

@@ -2630,7 +2630,7 @@
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
-                 СЕКЦІЯ: 🎙️ Акустичне калібрування салону (експериментальна, root)
+                 СЕКЦІЯ: 🎙️ Акустичне калібрування салону (експериментальна; рут не обов'язковий)
                  ════════════════════════════════════════════════════════════ -->
             <TextView
                 android:id="@+id/label_room_section"
@@ -2665,6 +2665,18 @@
                     android:lineSpacingExtra="3dp"
                     android:text="@string/room_measure_desc"
                     android:textSize="@dimen/settings_note_text" />
+
+                <!-- Without root only (SettingsActivity.showRoomRootNote): a sweep needs the
+                     microphone to be ours, and when it is not, the app asks for a restart. -->
+                <TextView
+                    android:id="@+id/desc_room_no_root"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/room_no_root_note"
+                    android:textSize="@dimen/settings_note_text"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/label_room_mic_spot"

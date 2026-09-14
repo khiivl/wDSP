@@ -254,6 +254,7 @@ Globale standaard: %1$s</string>
     <string name="debug_section_title">Diagnose</string>
     <string name="room_measure_label">Meting van het interieur</string>
     <string name="room_measure_desc">Speelt om de beurt een sweep door elke luidspreker en meet wanneer het geluid aankwam en of het in fase is. Duurt ongeveer een halve minuut. Motor uit, deuren dicht, normaal volume.</string>
+    <string name="room_no_root_note">Zonder root: de meting heeft de microfoon nodig voor wDSP. wDSP neemt hem bij het starten van de autoradio, maar als een andere app (een spraakassistent) er eerder bij was — zoals direct na het installeren of bijwerken van wDSP — start de meting niet en wordt u gevraagd de autoradio te herstarten. Met root neemt wDSP de microfoon zelf terug, zonder herstart.</string>
     <string name="room_needs_mic_title">De microfoon is nog niet gekalibreerd</string>
     <string name="room_needs_mic_msg">De cabinemeting wordt uitgevoerd, maar gaat ervan uit dat de microfoon perfect lineair is: zonder kalibratie bestaat de correctiecurve uit zestien nullen, waardoor er niets wordt afgetrokken voor de capsule zelf.\n\nAlles wat de microfoon kleurt — de eigen basafval, het verlies door de opening waarin deze zit — wordt aan de auto toegeschreven, en de Auto-EQ zal dit via de luidsprekers proberen te corrigeren. De preset raakt vervormd, zonder dat het resultaat dit aangeeft.\n\nDe kalibratie duurt ongeveer een halve minuut en hoeft voor deze microfoon slechts één keer te worden uitgevoerd.</string>
     <string name="room_needs_mic_calibrate">Eerst kalibreren</string>
@@ -301,11 +302,7 @@ Globale standaard: %1$s</string>
     <string name="screensaver_note">Navigatie wordt nooit bedekt.</string>
     <string name="room_mic_spot_label">Waar de microfoon is</string>
     <string name="room_mic_spot_desc">Sleep de stip naar de plek waar de microfoon zich daadwerkelijk bevindt. Het verandert niets aan de meting - het vertelt ons hoe we het resultaat moeten lezen, en zonder dat lijkt een microfoon die op één luidspreker ligt precies op drie kapotte.</string>
-    <string name="room_root_title">Heb je root-toegang toegestaan?</string>
-    <string name="room_root_message">De meting kon zojuist geen root krijgen, dus we moeten het vragen.\n\nHet is nodig voor precies één actie: het stoppen van het achtergrondproces dat de microfoon openhoudt op 16 kHz. Het platform behoudt slechts één invoerstroom, dus zonder dit wordt onze opname daaraan gekoppeld en gaat de helft van de meting verloren - en niets in Android geeft het toe, de samplefrequentie geeft nog steeds 48000 aan.\n\nEr wordt niets uitgeschakeld of verwijderd; de assistent start vanzelf weer op.</string>
-    <string name="room_root_yes">Ja, het staat aan</string>
-    <string name="room_root_no">Nee</string>
-    <string name="room_root_blocked">Zet het dan eerst aan: open Magisk → Superuser, zoek wDSP en zet het op Toestaan (of Vragen, en sta het toe wanneer erom wordt gevraagd).\n\nDe meting is niet gestart. Voer het opnieuw uit zodra root is toegestaan.</string>
+    <string name="room_root_blocked">Magisk weigert wDSP root. Zo staat u het toe: open Magisk → Superuser, zoek wDSP en zet het op Toestaan (of Vragen, en sta het toe wanneer erom wordt gevraagd).</string>
     <string name="screensaver_info_h">Nummerstrook</string>
     <string name="room_mic_place_hint">Waar het zich in de cabine bevindt</string>
     <string name="room_mic_place_windscreen">Voorruit</string>
@@ -417,7 +414,7 @@ Globale standaard: %1$s</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Optioneel: neemt de volledige 48 kHz-microfoon terug van de spraakassistent zonder de autoradio te herstarten</string>
     <string name="room_measure_confirm_title">Cabin Acoustic Measurement</string>
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
@@ -430,7 +427,6 @@ Globale standaard: %1$s</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

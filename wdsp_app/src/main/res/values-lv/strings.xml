@@ -254,6 +254,7 @@ Globāli noklusējums: %1$s</string>
     <string name="debug_section_title">Diagnostika</string>
     <string name="room_measure_label">Salona mērījums</string>
     <string name="room_measure_desc">Pēc kārtas atskaņo sweep caur katru skaļruni un izmēra, kad skaņa pienāca un vai tā ir fazē. Aizņem apmēram pusminūti. Dzinējs izslēgts, durvis aizvērtas, parasts skaļums.</string>
+    <string name="room_no_root_note">Bez root: mērījumam mikrofonam jāpieder wDSP. wDSP to aizņem, magnetolai ieslēdzoties, bet, ja cita lietotne (balss asistents) to aizņēma pirmā — kā notiek tūlīt pēc wDSP instalēšanas vai atjaunināšanas —, mērījums nesāksies un jums lūgs restartēt magnetolu. Ar root wDSP pats atgūst mikrofonu, bez restartēšanas.</string>
     <string name="room_needs_mic_title">Mikrofons vēl nav kalibrēts</string>
     <string name="room_needs_mic_msg">Salona mērījums tiks veikts, taču tiks pieņemts, ka mikrofons ir pilnīgi lineārs: bez kalibrēšanas tā korekcijas līkne ir sešpadsmit nulles, tāpēc pašai kapsulai nekas netiek atskaitīts.\n\nViss, ko iekrāso pats mikrofons — tā basu kritums, augsto frekvenču kritums atverē, kur tas atrodas —, tiks piedēvēts automašīnai, un Auto-EQ mēģinās to labot caur skaļruņiem. Iestatījums sanāks sagrozīts, un nekas rezultātā par to neliecinās.\n\nKalibrēšana aizņem apmēram pusminūti un šim mikrofonam tiek veikta vienu reizi.</string>
     <string name="room_needs_mic_calibrate">Vispirms kalibrēt</string>
@@ -301,11 +302,7 @@ Globāli noklusējums: %1$s</string>
     <string name="screensaver_note">Navigācija netiek aizsegta.</string>
     <string name="room_mic_spot_label">Kur atrodas mikrofons</string>
     <string name="room_mic_spot_desc">Velciet punktu uz to vietu, kur faktiski atrodas mikrofons. Mērījumos tas neko nemaina - tas tikai norāda, kā nolasīt rezultātu, un bez tā mikrofons, kas uzlikts uz viena skaļruņa, izskatās tieši tāpat kā trīs bojāti.</string>
-    <string name="room_root_title">Vai esat atļāvis root piekļuvi?</string>
-    <string name="room_root_message">Mērījumam tikko neizdevās iegūt root tiesības, tāpēc mums ir jājautā.\n\nTas ir nepieciešams tieši vienai darbībai: fona procesa apturēšanai, kas uztur mikrofonu atvērtu 16 kHz frekvencē. Platforma uztur tikai vienu ievades straumi, tāpēc bez tā mūsu ieraksts tiek pievienots tam un puse mērījuma tiek izmesta - un Android to neatzīst, iztveršanas frekvence joprojām rāda 48000.\n\nNekas netiek atspējots vai atinstalēts; asistents pats ieslēdzas atpakaļ.</string>
-    <string name="room_root_yes">Jā, tas ir ieslēgts</string>
-    <string name="room_root_no">Nē</string>
-    <string name="room_root_blocked">Tad vispirms to ieslēdziet: atveriet Magisk → Superuser, atrodiet wDSP un iestatiet to uz Atļaut (vai Jautāt, un atļaujiet, kad tas jautā).\n\nMērījums netika sākts. Palaidiet to vēlreiz, kad root būs atļauts.</string>
+    <string name="room_root_blocked">Magisk liedz wDSP root piekļuvi. Lai to atļautu: atveriet Magisk → Superuser, atrodiet wDSP un iestatiet to uz Atļaut (vai Jautāt, un atļaujiet, kad tas jautā).</string>
     <string name="screensaver_info_h">Dziesmas josla</string>
     <string name="room_mic_place_hint">Kur tas atrodas salonā</string>
     <string name="room_mic_place_windscreen">Vējstikls</string>
@@ -417,7 +414,7 @@ Globāli noklusējums: %1$s</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Neobligāti: atgūst pilno 48 kHz mikrofonu no balss asistenta, nerestartējot magnetolu</string>
     <string name="room_measure_confirm_title">Cabin Acoustic Measurement</string>
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
@@ -430,7 +427,6 @@ Globāli noklusējums: %1$s</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

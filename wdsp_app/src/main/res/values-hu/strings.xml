@@ -254,6 +254,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="debug_section_title">Diagnosztika</string>
     <string name="room_measure_label">Utastér mérése</string>
     <string name="room_measure_desc">Sorra megszólaltat egy sweepet minden hangszórón, és megméri, mikor érkezett meg a hang, és fázisban van-e. Körülbelül fél percig tart. Motor leállítva, ajtók becsukva, szokásos hangerő.</string>
+    <string name="room_no_root_note">Root nélkül: a méréshez a mikrofonnak a wDSP-hez kell tartoznia. A wDSP az autórádió indulásakor lefoglalja, de ha egy másik alkalmazás (hangasszisztens) megelőzte — ahogy közvetlenül a wDSP telepítése vagy frissítése után történik —, a mérés nem indul el, és a wDSP az autórádió újraindítását kéri. Roottal a wDSP maga veszi vissza a mikrofont, újraindítás nélkül.</string>
     <string name="room_needs_mic_title">A mikrofon még nincs kalibrálva</string>
     <string name="room_needs_mic_msg">Az utastér mérése elindul, de feltételezi, hogy a mikrofon tökéletesen egyenes átvitelű: kalibrálás nélkül a korrekciós görbéje tizenhat nulla, így magáért a kapszuláért semmi sem kerül levonásra.\n\nBármit színez a mikrofon — a saját mélyhang-vágását, a beépítési nyílás okozta csillapítást —, azt az autónak tulajdonítja, és az Auto-EQ a hangszórókon keresztül próbálja korrigálni. A profil torzított lesz, és semmi sem jelzi ezt az eredményben.\n\nA kalibrálás körülbelül fél percet vesz igénybe, és ehhez a mikrofonhoz csak egyszer kell elvégezni.</string>
     <string name="room_needs_mic_calibrate">Először kalibrálás</string>
@@ -301,11 +302,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="screensaver_note">A navigációt sosem takarja el.</string>
     <string name="room_mic_spot_label">Hol van a mikrofon</string>
     <string name="room_mic_spot_desc">Húzd a pontot oda, ahol a mikrofon ténylegesen van. Magán a mérésen nem változtat semmit - csak megmondja, hogyan kell olvasni az eredményt, e nélkül egyetlen hangszórón lévő mikrofon pontosan úgy néz ki, mintha három rossz lenne.</string>
-    <string name="room_root_title">Engedélyezted a root hozzáférést?</string>
-    <string name="room_root_message">A mérés most nem kapott root jogot, ezért meg kell kérdeznünk.\n\nPontosan egy művelethez van rá szükség: annak a háttérfolyamatnak a leállításához, amely 16 kHz-en tartja nyitva a mikrofont. A platform csak egyetlen bemeneti streamet tart fenn, így e nélkül a felvételünk ehhez csatlakozik, és a mérés fele elvész - és az Androidban semmi sem ismeri ezt el, a mintavételezési frekvencia továbbra is 48000-et mutat.\n\nSemmi sincs letiltva vagy eltávolítva; az asszisztens magától visszakapcsol.</string>
-    <string name="room_root_yes">Igen, be van kapcsolva</string>
-    <string name="room_root_no">Nem</string>
-    <string name="room_root_blocked">Akkor először kapcsold be: nyisd meg a Magisk → Superuser menüt, keresd meg a wDSP-t, és állítsd Engedélyezésre (vagy Kérdezzen, és engedélyezd, amikor kéri).\n\nA mérés nem indult el. Futtasd újra, amint a root engedélyezve van.</string>
+    <string name="room_root_blocked">A Magisk megtagadja a rootot a wDSP-től. Engedélyezéshez: nyissa meg a Magisk → Superuser menüt, keresse meg a wDSP-t, és állítsa Engedélyezésre (vagy Kérdezzen, és engedélyezze, amikor kéri).</string>
     <string name="screensaver_info_h">Szám sávja</string>
     <string name="room_mic_place_hint">Hol található az utastérben</string>
     <string name="room_mic_place_windscreen">Szélvédő</string>
@@ -398,7 +395,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="perm_wizard_item_audio_title">Microphone (Audio Recording)</string>
     <string name="perm_wizard_item_audio_desc">Cabin acoustic calibration and FM Radio spectrum analyzer</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Opcionális: újraindítás nélkül visszaveszi a teljes 48 kHz-es mikrofont a hangasszisztenstől</string>
     <string name="toast_restore_is_preset_hint">This file is an individual EQ preset, not a full settings backup. To import it, use the \\"Import\\" button near the presets list on the main screen.</string>
     <string name="dialog_restore_title">Restore Settings</string>
     <string name="dialog_restore_presets_prompt">Do you want to restore EQ presets and player mappings from this backup as well?</string>
@@ -417,7 +414,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

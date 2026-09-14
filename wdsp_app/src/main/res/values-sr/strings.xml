@@ -254,6 +254,7 @@
     <string name="debug_section_title">Дијагностика</string>
     <string name="room_measure_label">Мерење кабине</string>
     <string name="room_measure_desc">Редом пушта sweep кроз сваки звучник и мери када је звук стигао и да ли је у фази. Траје око пола минута. Мотор угашен, врата затворена, уобичајена јачина.</string>
+    <string name="room_no_root_note">Без root-а: за мерење микрофон мора да припада wDSP-у. wDSP га заузима при покретању ауторадија, али ако га је прва заузела друга апликација (гласовни асистент) — као што се дешава одмах након инсталације или ажурирања wDSP-а — мерење се неће покренути и биће затражено да поново покренете ауторадио. Са root-ом wDSP сам враћа микрофон, без поновног покретања.</string>
     <string name="room_needs_mic_title">Микрофон још није калибрисан</string>
     <string name="room_needs_mic_msg">Мерење кабине ће се покренути, али ће претпоставити да је микрофон савршено раван: без калибрације његова крива корекције је шеснаест нула, па се за саму капсулу ништа не одузима.\n\nСве што микрофон обоји — сопствени пад баса, пад високих у отвору у којем се налази — биће приписано возилу, а Auto-EQ ће покушати да то исправи звучницима. Профил ће испасти изобличен, а у резултату то нигде неће бити наведено.\n\nКалибрација траје око пола минута и ради се једном за овај микрофон.</string>
     <string name="room_needs_mic_calibrate">Прво калибриши</string>
@@ -301,11 +302,7 @@
     <string name="screensaver_note">Navigacija se nikad ne prekriva.</string>
     <string name="room_mic_spot_label">Gde se nalazi mikrofon</string>
     <string name="room_mic_spot_desc">Prevucite tačku na mesto gde se mikrofon zapravo nalazi. To ne menja ništa u merenju - samo nam govori kako da pročitamo rezultat, a bez toga mikrofon postavljen na jedan zvučnik izgleda tačno kao tri pokvarena.</string>
-    <string name="room_root_title">Da li ste dozvolili root pristup?</string>
-    <string name="room_root_message">Merenje trenutno nije moglo da dobije root, pa moramo da pitamo.\n\nPotreban je za tačno jednu radnju: zaustavljanje pozadinskog procesa koji drži mikrofon otvorenim na 16 kHz. Platforma održava samo jedan ulazni tok, pa se bez toga naš zapis vezuje za njega i polovina merenja se baca - a ništa u Androidu to ne priznaje, brzina uzorkovanja i dalje pokazuje 48000.\n\nNišta nije onemogućeno ili deinstalirano; asistent se sam ponovo uključuje.</string>
-    <string name="room_root_yes">Da, uključen je</string>
-    <string name="room_root_no">Ne</string>
-    <string name="room_root_blocked">Onda ga prvo uključite: otvorite Magisk → Superuser, pronađite wDSP i podesite na Dozvoli (ili Pitaj, pa dozvolite kad pita).\n\nMerenje nije pokrenuto. Pokrenite ga ponovo kada root bude dozvoljen.</string>
+    <string name="room_root_blocked">Magisk одбија root за wDSP. Да бисте га дозволили: отворите Magisk → Superuser, пронађите wDSP и подесите на Дозволи (или Питај, па дозволите кад пита).</string>
     <string name="screensaver_info_h">Трака песме</string>
     <string name="room_mic_place_hint">Где је у кабини</string>
     <string name="room_mic_place_windscreen">Vetrobransko staklo</string>
@@ -417,7 +414,7 @@
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Опционо: враћа пун микрофон од 48 kHz од гласовног асистента без поновног покретања ауторадија</string>
     <string name="room_measure_confirm_title">Cabin Acoustic Measurement</string>
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
@@ -430,7 +427,6 @@
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

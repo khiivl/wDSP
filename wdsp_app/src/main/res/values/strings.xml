@@ -260,7 +260,7 @@
     <string name="perm_wizard_item_audio_title">Microphone (Audio Recording)</string>
     <string name="perm_wizard_item_audio_desc">Cabin acoustic calibration and FM Radio spectrum analyzer</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Optional: takes the full 48 kHz microphone back from a voice assistant without restarting the head unit</string>
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
@@ -309,13 +309,10 @@
     <string name="debug_section_title">Diagnostics</string>
     <string name="room_measure_label">Cabin measurement</string>
     <string name="room_measure_desc">Plays a sweep through each speaker in turn and measures when the sound arrives and whether it is in phase. Takes about half a minute. Engine off, doors shut, normal listening volume.</string>
+    <string name="room_no_root_note">Without root: a measurement needs the microphone to belong to wDSP. wDSP takes it when the head unit starts, but if another app (a voice assistant) got there first — as happens right after wDSP is installed or updated — the measurement will not start and you will be asked to restart the head unit. With root, wDSP takes the microphone back itself, without a restart.</string>
     <string name="room_mic_spot_label">Where the microphone is</string>
     <string name="room_mic_spot_desc">Drag the dot to where the microphone actually sits. It changes nothing about the sweep - it tells us how to read the result, and without it a microphone lying on one speaker looks exactly like three broken ones.</string>
-    <string name="room_root_title">Have you allowed root access?</string>
-    <string name="room_root_message">The measurement could not get root just now, so this has to be asked.\n\nIt is needed for exactly one action: stopping the background process that holds the microphone open at 16 kHz. The platform keeps only one input stream, so without it our recording is attached to that one and half the sweep is thrown away - and nothing in Android admits it, the sample rate still reads 48000.\n\nNothing is disabled or uninstalled; the assistant comes back on its own.</string>
-    <string name="room_root_yes">Yes, it is on</string>
-    <string name="room_root_no">No</string>
-    <string name="room_root_blocked">Then turn it on first: open Magisk → Superuser, find wDSP, and set it to Grant (or Prompt, and allow it when it asks).\n\nThe measurement was not started. Run it again once root is allowed.</string>
+    <string name="room_root_blocked">Magisk denies root to wDSP. To allow it: open Magisk → Superuser, find wDSP and set it to Grant (or Prompt, and allow it when it asks).</string>
     <string name="room_measure_confirm_title">Cabin Acoustic Measurement</string>
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
@@ -343,7 +340,6 @@
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_measure_nothing">No Auto-EQ presets created yet</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

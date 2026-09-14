@@ -234,6 +234,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (settingsColumn != null) {
                 SettingsAccordion.refresh(settingsColumn);
             }
+            showRoomRootNote();
         });
     }
 
@@ -1622,6 +1623,18 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButtons();
         showRoomStatus();
         showMicCalStatus();
+        showRoomRootNote();
+    }
+
+    /**
+     * The cabin section's note for a unit without root (owner, 14.09.2026): the section is no longer
+     * locked, so the person is told up front that a measurement needs the microphone to be ours and
+     * that, when another app got to it first, they will be asked to restart the head unit.
+     */
+    private void showRoomRootNote() {
+        View note = findViewById(R.id.desc_room_no_root);
+        if (note == null) return;
+        note.setVisibility(RootAccess.hasRoot(this) ? View.GONE : View.VISIBLE);
     }
 
     private void showRoomStatus() {
@@ -1935,32 +1948,10 @@ public class SettingsActivity extends AppCompatActivity {
             RoomMeasurement.setListeningDistanceCm(this, selectedDistance);
             RoomMeasurement.pauseMedia(this);
 
-            if (!RootAccess.hasRoot(this)) {
-                ThemedDialog.builder(this)
-                        .setTitle(R.string.room_root_title)
-                        .setMessage(R.string.room_root_message)
-                        .setPositiveButton(R.string.room_root_yes, (d, w) -> new Thread(() -> {
-                            RootAccess.Outcome outcome = RootAccess.request(this);
-                            runOnUiThread(() -> {
-                                if (outcome == RootAccess.Outcome.GRANTED) {
-                                    runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
-                                            tvProgressStage, tvProgressDetail, progressBar, tvPercent,
-                                            layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
-                                            btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
-                                } else {
-                                    ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                            getString(R.string.room_root_blocked));
-                                }
-                            });
-                        }, "root-request").start())
-                        .setNegativeButton(R.string.room_root_no, (d, w) ->
-                                ThemedDialog.notice(this, getString(R.string.room_root_title),
-                                        getString(R.string.room_root_blocked)))
-                        .setCancelable(false)
-                        .show();
-                return;
-            }
-
+            // No root question here any more (owner, 14.09.2026): without root the microphone is
+            // ours from start-up, and if another app got to it first the run stops before touching
+            // anything and says to restart the head unit (measurementFailureText). The section says
+            // that in advance, in desc_room_no_root.
             runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                     tvProgressStage, tvProgressDetail, progressBar, tvPercent,
                     layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
@@ -3145,7 +3136,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization,
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
-            R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_mic_spot, R.id.desc_system_report,
+            R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_no_root, R.id.desc_room_mic_spot,
+            R.id.desc_system_report,
             R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,

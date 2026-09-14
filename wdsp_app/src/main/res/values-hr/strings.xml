@@ -254,6 +254,7 @@ Globalno zadano: %1$s</string>
     <string name="debug_section_title">Dijagnostika</string>
     <string name="room_measure_label">Mjerenje kabine</string>
     <string name="room_measure_desc">Reproducira sweep kroz svaki zvučnik redom i mjeri kada je zvuk stigao i je li u fazi. Traje oko pola minute. Motor ugašen, vrata zatvorena, uobičajena glasnoća.</string>
+    <string name="room_no_root_note">Bez roota: za mjerenje mikrofon mora pripadati wDSP-u. wDSP ga zauzima pri pokretanju autoradija, ali ako ga je prva zauzela druga aplikacija (glasovni asistent) — kao što se događa odmah nakon instalacije ili ažuriranja wDSP-a — mjerenje se neće pokrenuti i od vas će se tražiti ponovno pokretanje autoradija. S rootom wDSP sam vraća mikrofon, bez ponovnog pokretanja.</string>
     <string name="room_needs_mic_title">Mikrofon još nije kalibriran</string>
     <string name="room_needs_mic_msg">Mjerenje kabine će se pokrenuti, ali će pretpostaviti da je mikrofon savršeno ravan: bez kalibracije njegova krivulja korekcije je šesnaest nula, pa se za samu kapsulu ništa ne oduzima.\n\nSve što mikrofon oboji — vlastiti pad basova, pad visokih u otvoru u kojem se nalazi — pripisat će se automobilu, a Auto-EQ će to pokušati ispraviti zvučnicima. Profil će ispasti izobličen, a u rezultatu to nigdje neće biti navedeno.\n\nKalibracija traje oko pola minute i radi se jednom za ovaj mikrofon.</string>
     <string name="room_needs_mic_calibrate">Prvo kalibriraj</string>
@@ -301,11 +302,7 @@ Globalno zadano: %1$s</string>
     <string name="screensaver_note">Navigacija se nikad ne prekriva.</string>
     <string name="room_mic_spot_label">Gdje je mikrofon</string>
     <string name="room_mic_spot_desc">Povucite točku na mjesto gdje se mikrofon zapravo nalazi. To ne mijenja ništa na samom mjerenju - govori nam kako očitati rezultat, a bez toga mikrofon postavljen na jedan zvučnik izgleda točno kao tri pokvarena.</string>
-    <string name="room_root_title">Jeste li omogućili root pristup?</string>
-    <string name="room_root_message">Mjerenje trenutno nije moglo dobiti root, pa moramo pitati.\n\nPotreban je za točno jednu radnju: zaustavljanje pozadinskog procesa koji drži mikrofon otvorenim na 16 kHz. Platforma održava samo jedan ulazni tok, pa se bez toga naš zapis veže za njega i pola mjerenja se baca - a ništa u Androidu to ne priznaje, brzina uzorkovanja i dalje pokazuje 48000.\n\nNišta nije onemogućeno ili deinstalirano; asistent se sam ponovno pokreće.</string>
-    <string name="room_root_yes">Da, uključen je</string>
-    <string name="room_root_no">Ne</string>
-    <string name="room_root_blocked">Onda ga prvo uključite: otvorite Magisk → Superuser, pronađite wDSP i postavite na Dopusti (ili Pitaj, pa dopustite kad pita).\n\nMjerenje nije pokrenuto. Pokrenite ga ponovno kada root bude dopušten.</string>
+    <string name="room_root_blocked">Magisk odbija root za wDSP. Da ga dopustite: otvorite Magisk → Superuser, pronađite wDSP i postavite na Dopusti (ili Pitaj, pa dopustite kad pita).</string>
     <string name="screensaver_info_h">Traka pjesme</string>
     <string name="room_mic_place_hint">Gdje se nalazi u kabini</string>
     <string name="room_mic_place_windscreen">Vjetrobransko staklo</string>
@@ -398,7 +395,7 @@ Globalno zadano: %1$s</string>
     <string name="perm_wizard_item_audio_title">Microphone (Audio Recording)</string>
     <string name="perm_wizard_item_audio_desc">Cabin acoustic calibration and FM Radio spectrum analyzer</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">Neobavezno: vraća puni mikrofon od 48 kHz od glasovnog asistenta bez ponovnog pokretanja autoradija</string>
     <string name="toast_restore_is_preset_hint">This file is an individual EQ preset, not a full settings backup. To import it, use the \\"Import\\" button near the presets list on the main screen.</string>
     <string name="dialog_restore_title">Restore Settings</string>
     <string name="dialog_restore_presets_prompt">Do you want to restore EQ presets and player mappings from this backup as well?</string>
@@ -417,7 +414,6 @@ Globalno zadano: %1$s</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>

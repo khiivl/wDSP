@@ -254,6 +254,7 @@ Genel Varsayılan: %1$s</string>
     <string name="debug_section_title">Tanılama</string>
     <string name="room_measure_label">Kabin ölçümü</string>
     <string name="room_measure_desc">Sırayla her hoparlörden bir süpürme sinyali çalar ve sesin ne zaman ulaştığını ve fazda olup olmadığını ölçer. Yaklaşık yarım dakika sürer. Motor kapalı, kapılar kapalı, normal ses seviyesi.</string>
+    <string name="room_no_root_note">Root olmadan: ölçüm için mikrofonun wDSP\'ye ait olması gerekir. wDSP mikrofonu teyp açılırken alır, ancak başka bir uygulama (sesli asistan) önce davrandıysa — wDSP kurulduktan veya güncellendikten hemen sonra olduğu gibi — ölçüm başlamaz ve teybi yeniden başlatmanız istenir. Root ile wDSP mikrofonu kendisi geri alır, yeniden başlatma gerekmez.</string>
     <string name="room_needs_mic_title">Mikrofon henüz kalibre edilmedi</string>
     <string name="room_needs_mic_msg">Kabin ölçümü çalıştırılacak, ancak mikrofonun tamamen doğrusal olduğu varsayılacak: kalibrasyon olmadan düzeltme eğrisi on altı sıfırdan oluşur, bu nedenle kapsülün kendisi için hiçbir şey düşülmez.\n\nMikrofonun renklendirdiği her şey — kendi bas düşüşü, bulunduğu açıklığın tiz kaybı — araca yüklenecek ve Auto-EQ bunu hoparlörlerden düzeltmeye çalışacaktır. Önayar çarpık çıkacak ve sonuçta bunu belirten hiçbir şey olmayacaktır.\n\nKalibrasyon yaklaşık yarım dakika sürer ve bu mikrofon için yalnızca bir kez yapılır.</string>
     <string name="room_needs_mic_calibrate">Önce kalibre et</string>
@@ -301,11 +302,7 @@ Genel Varsayılan: %1$s</string>
     <string name="screensaver_note">Navigasyon asla kapatılmaz.</string>
     <string name="room_mic_spot_label">Mikrofon nerede</string>
     <string name="room_mic_spot_desc">Noktayı mikrofonun gerçekte bulunduğu yere sürükleyin. Ölçümle ilgili hiçbir şeyi değiştirmez - bize sonucu nasıl okuyacağımızı söyler ve bu olmadan tek bir hoparlörün üzerinde duran bir mikrofon tamamen üç bozuk hoparlör gibi görünür.</string>
-    <string name="room_root_title">Root erişimine izin verdiniz mi?</string>
-    <string name="room_root_message">Ölçüm şu anda root alamadı, bu yüzden sormamız gerekiyor.\n\nTam olarak tek bir işlem için gereklidir: mikrofonu 16 kHz\'de açık tutan arka plan işlemini durdurmak. Platform yalnızca bir giriş akışı tutar, bu nedenle bu olmadan kaydımız ona eklenir ve ölçümün yarısı atılır - ve Android\'de hiçbir şey bunu kabul etmez, örnekleme hızı hala 48000 olarak görünür.\n\nHiçbir şey devre dışı bırakılmaz veya kaldırılmaz; asistan kendi kendine geri döner.</string>
-    <string name="room_root_yes">Evet, açık</string>
-    <string name="room_root_no">Hayır</string>
-    <string name="room_root_blocked">O zaman önce açın: Magisk → Superuser\'ı açın, wDSP\'yi bulun ve İzin Ver olarak ayarlayın (veya Sor\'a ayarlayın ve sorduğunda izin verin).\n\nÖlçüm başlatılmadı. Root izni verildiğinde tekrar çalıştırın.</string>
+    <string name="room_root_blocked">Magisk, wDSP\'ye root iznini reddediyor. İzin vermek için: Magisk → Superuser\'ı açın, wDSP\'yi bulun ve İzin Ver olarak ayarlayın (veya Sor\'a ayarlayın ve sorduğunda izin verin).</string>
     <string name="screensaver_info_h">Parça şeridi</string>
     <string name="room_mic_place_hint">Kabinde nerede bulunuyor</string>
     <string name="room_mic_place_windscreen">Ön cam</string>
@@ -417,7 +414,7 @@ Genel Varsayılan: %1$s</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
     <string name="pref_radio_mic_visualizer_desc">Acoustic spectrum analysis of cabin speakers via microphone for analogue FM radio</string>
     <string name="perm_wizard_item_root_title">Root Access (Magisk Superuser)</string>
-    <string name="perm_wizard_item_root_desc">Optional: frees full 48 kHz microphone from Google Assistant and enables cabin sweep</string>
+    <string name="perm_wizard_item_root_desc">İsteğe bağlı: teybi yeniden başlatmadan tam 48 kHz mikrofonu sesli asistandan geri alır</string>
     <string name="room_measure_confirm_title">Cabin Acoustic Measurement</string>
     <string name="room_measure_confirm_msg">Before starting the sweep measurement:\n\n1. Active media playback will be paused.\n2. Volume will be temporarily set to 16 units (~50%) for linear acoustic range. It will be loud!\n3. DSP EQ will be temporarily switched to Flat.\n4. A 1-second silence will measure ambient noise, followed by an acoustic sweep through each speaker in turn.\n5. Keep doors closed and engine off.\n\nAfter measurement finishes, the volume and your DSP preset will be automatically restored.</string>
     <string name="room_measure_confirm_start">Start</string>
@@ -430,7 +427,6 @@ Genel Varsayılan: %1$s</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
     <string name="telegram_link_copied">Link copied to clipboard: https://t.me/kostyamat_dev/92</string>
     <string name="room_section_title">Cabin Acoustic Calibration &amp; Auto-Presets</string>
-    <string name="room_root_required_toast">Root access required for acoustic calibration</string>
     <string name="debug_sweep_button">Diagnostic Sweep</string>
     <string name="debug_sweep_done">Diagnostic sweep finished. Ready to save/send archive.</string>
     <string name="debug_sweep_nothing">No diagnostic sweeps run yet</string>
