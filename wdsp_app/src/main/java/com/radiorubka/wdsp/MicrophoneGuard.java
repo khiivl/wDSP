@@ -156,18 +156,14 @@ public final class MicrophoneGuard {
         // next time the system starts it - onto our input, which is by then open at 48 kHz.
         if (RootAccess.hasRootNow(context)) {
             releaseHold();
-            PackageManager pm = context.getPackageManager();
-            for (String pkg : HOTWORD_PACKAGES) {
-                if (!isInstalled(pm, pkg)) continue;
-                if (forceStopAsRoot(pkg, ROOT_WAIT_DELIBERATE_S)) {
-                    outcome.usedRoot = true;
-                    outcome.stopped.add(pkg);
-                }
-            }
-            if (outcome.usedRoot) sleep(INPUT_CLOSE_MS);
+            // The holders as AudioFlinger lists them, not a list of suspects - and takeInputAsRoot
+            // waits for the input to close under them before we claim it.
+            outcome.stopped.addAll(takeInputAsRoot(context, ROOT_WAIT_DELIBERATE_S));
+            outcome.usedRoot = !outcome.stopped.isEmpty();
             holdOpen();
             outcome.rateAfter = heldDeviceRate(context);
             outcome.freed = outcome.rateAfter >= SAMPLE_RATE;
+            checkCameBackAsync(context, outcome.stopped);
         }
         outcome.needsRestart = !outcome.freed;
         if (outcome.needsRestart) {
@@ -340,20 +336,110 @@ public final class MicrophoneGuard {
     }
 
     /**
-     * Stops every known hotword listener through root - without the polite attempt first and
-     * without waiting afterwards. For the live capture only: the caller reopens its own stream the
-     * moment this returns, because the assistant comes back within two seconds and whoever opens
-     * the input first sets its rate for everybody (measured 11.09.2026).
+     * Stops whoever records from a microphone input right now, through root, and waits for the
+     * input to close under them - so that whoever opens next opens it fresh and first. For the live
+     * capture, which reopens the moment this returns: the assistant comes back within two seconds
+     * and whoever opens the input first sets it up for everybody (measured 11.09 and 14.09.2026).
+     * It replaces stopAssistantsAsRoot, which stopped a list of suspects without waiting.
      *
-     * @return how many packages were stopped
+     * <p>Owner, 14.09.2026: "якщо програма має доступ рут - то це прямий шлях до мікрофону, в любому
+     * випадку: знайти хто зайняв, зігнати, перевірити чи піднявся мікрофон та чи піднялася програма,
+     * що сиділа до нього". Found, not guessed: the packages behind AudioFlinger's active record
+     * tracks ({@link #inputHoldersAsRoot}); the known hotword listeners only when that cannot be
+     * read. Whether they came back is {@link #checkCameBackAsync}'s business; whether our own input is
+     * full band is the caller's.
+     *
+     * @return the packages that were stopped
      */
-    static int stopAssistantsAsRoot(Context context) {
-        PackageManager pm = context.getPackageManager();
-        int stopped = 0;
-        for (String pkg : HOTWORD_PACKAGES) {
-            if (isInstalled(pm, pkg) && forceStopAsRoot(pkg, ROOT_WAIT_LIVE_S)) stopped++;
+    static List<String> takeInputAsRoot(Context context) {
+        return takeInputAsRoot(context, ROOT_WAIT_LIVE_S);
+    }
+
+    /** @param timeoutSeconds per force-stop - see {@link #ROOT_WAIT_DELIBERATE_S} and {@link #ROOT_WAIT_LIVE_S} */
+    private static List<String> takeInputAsRoot(Context context, long timeoutSeconds) {
+        List<String> targets = inputHoldersAsRoot(context);
+        final boolean found = !targets.isEmpty();
+        if (!found) {
+            PackageManager pm = context.getPackageManager();
+            for (String pkg : HOTWORD_PACKAGES) {
+                if (isInstalled(pm, pkg)) targets.add(pkg);
+            }
         }
+        List<String> stopped = new ArrayList<>();
+        for (String pkg : targets) {
+            if (forceStopAsRoot(pkg, timeoutSeconds)) stopped.add(pkg);
+        }
+        Log.i(TAG, "input holders " + (found ? "read from AudioFlinger: " : "unreadable, known hotword listeners: ")
+                + targets + " - stopped " + stopped);
+        if (!stopped.isEmpty()) sleep(INPUT_CLOSE_MS);
         return stopped;
+    }
+
+    /**
+     * Installed packages other than ours whose recorders are active on a microphone input, read
+     * through root from AudioFlinger's record tracks (the client pid of every active one, and the
+     * process behind it). A call's recorder belongs to a native process, not a package, and is
+     * never among them. Empty when there is no root or nothing can be read.
+     */
+    static List<String> inputHoldersAsRoot(Context context) {
+        List<String> holders = new ArrayList<>();
+        // A record track's row starts with its Active flag; a playback track's starts with its id.
+        String out = runAsRoot("for p in $(dumpsys media.audio_flinger"
+                + " | grep -E '^ +yes +[0-9]+ +[0-9]+ +[0-9]+ ' | awk '{print $3}'); do"
+                + " echo \"$p $(tr '\\0' ' ' < /proc/$p/cmdline)\"; done");
+        if (out == null) return holders;
+        PackageManager pm = context.getPackageManager();
+        String own = context.getPackageName();
+        int ownPid = android.os.Process.myPid();
+        for (String line : out.split("\n")) {
+            String[] parts = line.trim().split("\\s+");
+            if (parts.length < 2) continue;
+            try {
+                if (Integer.parseInt(parts[0]) == ownPid) continue;
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            String pkg = parts[1].split(":")[0];
+            if (pkg.equals(own) || holders.contains(pkg) || !isInstalled(pm, pkg)) continue;
+            holders.add(pkg);
+        }
+        return holders;
+    }
+
+    /** How long a stopped package is given to be running again before that is reported. */
+    private static final long CAME_BACK_WAIT_MS = 15000;
+
+    /**
+     * Reports, off the caller's thread, whether each stopped package is running again - the second
+     * half of the owner's order. Nothing is started on anyone's behalf: the assistant restarts
+     * itself (about 1.9 s, measured 14.09.2026), and one that does not is told in the log.
+     */
+    static void checkCameBackAsync(Context context, List<String> packages) {
+        if (context == null || packages == null || packages.isEmpty()) return;
+        final List<String> watched = new ArrayList<>(packages);
+        new Thread(() -> {
+            final long from = android.os.SystemClock.elapsedRealtime();
+            for (String pkg : watched) {
+                boolean back = false;
+                while (android.os.SystemClock.elapsedRealtime() - from < CAME_BACK_WAIT_MS) {
+                    String count = runAsRoot("ps -A -o NAME | grep -cE '^" + pkg.replace(".", "\\.")
+                            + "(:.*)?$'");
+                    if (count != null && !count.trim().equals("0")) {
+                        back = true;
+                        break;
+                    }
+                    sleep(500);
+                }
+                long ms = android.os.SystemClock.elapsedRealtime() - from;
+                if (back) {
+                    Log.i(TAG, pkg + " is running again, " + ms + " ms after it was stopped"
+                            + (inputHoldersAsRoot(context).contains(pkg) ? ", and recording" : ""));
+                } else {
+                    Log.w(TAG, pkg + " has NOT come back within " + (CAME_BACK_WAIT_MS / 1000)
+                            + " s of being stopped");
+                }
+            }
+        }, "wDSP_MicCameBack").start();
     }
 
     /** Preferences that describe this unit rather than the owner's settings - backups leave them out. */

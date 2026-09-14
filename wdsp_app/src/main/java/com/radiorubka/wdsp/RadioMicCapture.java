@@ -94,7 +94,8 @@ public class RadioMicCapture {
         void onPcmChunk(short[] boosted, short[] raw, int count, float gain);
     }
 
-    private static final int SAMPLE_RATE = 48000;
+    /** The rate this capture asks for, and the rate its analyser is built at. */
+    static final int SAMPLE_RATE = 48000;
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
     private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     public static final int CHUNK_SIZE = 512;
@@ -160,6 +161,13 @@ public class RadioMicCapture {
     public int lastSessionId() {
         return lastSessionId;
     }
+
+    /**
+     * Recordings already active when our recorder was opened - taken just before it, so none of
+     * them is ours. Non-zero means we joined somebody else's input: whoever opened it set it up, and
+     * on 14.09.2026 that left our session with the echo canceller and noise suppressor active.
+     */
+    private volatile int othersOnInputAtOpen = 0;
     private AudioManager audioManager;
     private AudioManager.AudioRecordingCallback recordingCallback;
 
@@ -238,6 +246,8 @@ public class RadioMicCapture {
             // an hour on - gets its own attempt; a heal that did not take ends in "unavailable"
             // rather than in a loop of stopping the assistant.
             boolean healAttempted = false;
+            // One attempt per open to take a full-band input that somebody else opened first.
+            boolean takeoverAttempted = false;
             // One line a second, not one a chunk: at 512 samples of 48 kHz a chunk is 10.7 ms, and
             // ninety-four log lines a second would cost more than the analysis.
             int logTick = 0;
@@ -285,6 +295,7 @@ public class RadioMicCapture {
                 // "narrow", and with root denied the microphone was declared unavailable until
                 // restart, 0.8 s after it opened. The listen stays, for the log only.
                 String narrowBecause = null;
+                String takeoverBecause = null;
                 if (narrowReported) {
                     narrowReported = false;
                     narrowBecause = "the platform reports the input at " + reportedDeviceRate + " Hz";
@@ -303,6 +314,13 @@ public class RadioMicCapture {
                                 deviceRate > 0 ? deviceRate + " Hz" : "unknown"));
                         if (deviceRate > 0 && deviceRate < SAMPLE_RATE) {
                             narrowBecause = "input device at " + deviceRate + " Hz";
+                        } else if (deviceRate >= SAMPLE_RATE && othersOnInputAtOpen > 0
+                                && !takeoverAttempted && RootAccess.hasRootNow(appContext)) {
+                            // Full band, but not ours: somebody opened the input before us, and the
+                            // one who opens it sets it up (owner, 14.09.2026: with root, take it -
+                            // "в любому випадку"). Without root this is left alone; a unit without
+                            // root holds the microphone from start-up, so it is first anyway.
+                            takeoverBecause = othersOnInputAtOpen + " recording(s) were on the input before us";
                         } else if (deviceRate >= SAMPLE_RATE) {
                             healAttempted = false;
                             UnavailableListener l = unavailableListener;
@@ -327,6 +345,14 @@ public class RadioMicCapture {
                     UnavailableListener l = unavailableListener;
                     if (l != null) l.onMicrophoneUnavailable();
                     break;
+                }
+                if (takeoverBecause != null) {
+                    takeoverAttempted = true;
+                    Log.i(TAG, takeoverBecause + " - taking the input through root");
+                    if (!reopenAfterStoppingAssistant()) break;
+                    probed = 0;
+                    probing = true;   // our own input is judged by the next half second
+                    continue;
                 }
 
                 // Measured twice: the peak says how much gain would fit without clipping, the RMS
@@ -467,9 +493,13 @@ public class RadioMicCapture {
     }
 
     /**
-     * Our stream is narrow: the assistant holds the input at 16 kHz. Stop it and take the input
-     * back at once - it returns within two seconds, and whoever is there first decides the rate
-     * for both. Root only; the caller has checked. Runs on the capture thread.
+     * Somebody else holds the input - narrow, or first. Stop whoever it is and take the input back
+     * - they return within two seconds, and whoever is there first sets the input up for everybody.
+     * Root only; the caller has checked. Runs on the capture thread.
+     *
+     * <p>Then both halves of the owner's check: our input is judged by the next half-second probe,
+     * and whether the stopped app is running again is reported by
+     * {@link MicrophoneGuard#checkCameBackAsync}.
      *
      * @return false when capturing has to end
      */
@@ -482,13 +512,14 @@ public class RadioMicCapture {
             // Whatever the platform said so far was about the recorder just released.
             narrowReported = false;
         }
-        int stopped = MicrophoneGuard.stopAssistantsAsRoot(ctx);
+        java.util.List<String> stopped = MicrophoneGuard.takeInputAsRoot(ctx);
         synchronized (this) {
             if (!running) return false;
             boolean ok = openRecordLocked();
-            Log.i(TAG, "stopped " + stopped + " assistant(s) and reopened the microphone: "
-                    + (ok ? "ok" : "FAILED"));
+            Log.i(TAG, "stopped " + stopped + " and reopened the microphone: " + (ok ? "ok" : "FAILED")
+                    + (ok ? ", " + othersOnInputAtOpen + " other recording(s) on the input now" : ""));
             if (!ok) running = false;
+            MicrophoneGuard.checkCameBackAsync(ctx, stopped);
             return ok;
         }
     }
@@ -504,6 +535,7 @@ public class RadioMicCapture {
 
     /** Creates and starts the recorder. Its effects are left exactly as the platform set them. */
     private boolean openRecordLocked() {
+        othersOnInputAtOpen = activeRecordingsNow();
         AudioRecord rec;
         try {
             rec = new AudioRecord(
@@ -579,6 +611,18 @@ public class RadioMicCapture {
         } catch (Throwable ignored) {
         }
         recordingCallback = null;
+    }
+
+    /** Every active recording the platform lists, whoever's; 0 when it cannot be asked. */
+    private int activeRecordingsNow() {
+        Context ctx = appContext;
+        AudioManager am = ctx != null ? (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE) : null;
+        if (am == null) return 0;
+        try {
+            return am.getActiveRecordingConfigurations().size();
+        } catch (Throwable t) {
+            return 0;
+        }
     }
 
     /**

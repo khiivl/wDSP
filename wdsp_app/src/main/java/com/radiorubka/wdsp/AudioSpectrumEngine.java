@@ -402,18 +402,25 @@ public class AudioSpectrumEngine {
     /** Main thread. */
     private synchronized void onMicrophoneUnavailable() {
         micUnavailable = true;
-        if (appContext != null && !toldMicUnavailable) {
+        // A held microphone nobody was drawing is lost quietly: the spectrum on screen is the
+        // calculated one already, and there is nothing to fall back from.
+        final boolean wasAnalysed = analysingMicrophone();
+        if (appContext != null && !toldMicUnavailable && wasAnalysed) {
             toldMicUnavailable = true;
             // Daily use: the spectrum is decoration and an instrument, not a reason to restart the
             // car (owner, 14.09.2026). Calibration asks differently, and is not this path.
             Toaster.show(appContext, R.string.mic_busy_calculated);
         }
-        Log.w(TAG, "microphone unavailable - spectrum falls back to calculated until the input is free");
-        stopNativeCapture();
+        Log.w(TAG, "microphone unavailable - " + (wasAnalysed
+                ? "spectrum falls back to calculated until the input is free"
+                : "it was held, not drawn; waiting for the input to be free"));
         stopRadioMicCapture();
-        if (!listeners.isEmpty()) {
-            startInternal(currentSessionId);
-            requestResolve("microphone unavailable");
+        if (wasAnalysed) {
+            stopNativeCapture();
+            if (!listeners.isEmpty()) {
+                startInternal(currentSessionId);
+                requestResolve("microphone unavailable");
+            }
         }
         micInputWindow.watch(appContext, radioMicCapture::isRunning, radioMicCapture.lastSessionId(),
                 this::onMicrophoneInputFree);
@@ -430,9 +437,12 @@ public class AudioSpectrumEngine {
         if (!listeners.isEmpty() && !pausedForCall && wantsMicPipeline(isRadioSourceNow())) {
             Log.i(TAG, "input free - reopening the microphone pipeline");
             startInternal(currentSessionId);
+        } else if (holdMicrophone) {
+            Log.i(TAG, "input free - holding the microphone again");
+            ensureMicrophoneHeld();
         } else {
-            // Nothing wants the microphone at this moment. Holding the input for nobody is not ours
-            // to do; the next start opens it and is judged the same way.
+            // Nothing wants the microphone at this moment, and with root it is not held; the next
+            // start opens it, takes the input if somebody is on it, and is judged the same way.
             Log.i(TAG, "input free - nothing wants the microphone now; the next start will judge it");
         }
     }
@@ -921,6 +931,9 @@ public class AudioSpectrumEngine {
         this.sessionResolver = SessionResolver.getInstance(appContext);
         this.sessionResolver.start();
         loadDisplaySettings(appContext);
+        // At unlock, straight after audioserver is up: without root this is what makes us first on
+        // the input for the rest of the drive.
+        decideMicrophonePolicy();
         if (watchdogHandler == null) {
             watchdogHandler = new Handler(Looper.getMainLooper());
         }
@@ -998,7 +1011,7 @@ public class AudioSpectrumEngine {
                 checkSourceState();
                 long now = System.currentTimeMillis();
                 long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
-                boolean micActive = micModeInEffect() || isRadioCaptureActive();
+                boolean micActive = micModeInEffect() || isMicPipelineRunning();
                 if (!micActive && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && now - lastResolveTime > wait
                         && isMediaPlaybackActive()) {
@@ -1020,7 +1033,7 @@ public class AudioSpectrumEngine {
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
         if (appContext != null && (NowPlaying.getInstance(appContext).isRadioSource()
-                || micModeInEffect() || isRadioCaptureActive())) {
+                || micModeInEffect() || isMicPipelineRunning())) {
             return;
         }
         lastResolveTime = System.currentTimeMillis();
@@ -1536,7 +1549,7 @@ public class AudioSpectrumEngine {
             Log.i(TAG, "call in progress: analyser paused, capture and microphone kept");
         } else {
             Log.i(TAG, "call ended: analyser resumed");
-            if (!listeners.isEmpty() && visualizer == null && !isRadioCaptureActive()) start();
+            if (!listeners.isEmpty() && visualizer == null && !isMicPipelineRunning()) start();
         }
     }
 
@@ -1565,11 +1578,15 @@ public class AudioSpectrumEngine {
         // alone on the input for 164 ms - the only moment of the whole wake at which something else
         // could have set the input's rate (platform/05-AUDIO-PATH.md, "After hibernation...").
         //
-        // A capture that has died is not "reading": isRadioCaptureActive() asks whether its read
+        // A capture that has died is not "reading": isMicPipelineRunning() asks whether its read
         // loop is alive, so a dead stream still falls through and is opened again here, and by the
         // watchdog's checkSourceState(). That restart used to heal it by accident.
         if (isMicPipelineRunning() && wantsMicPipeline(isRadioSourceNow())) return;
         if (sessionResolver != null && sessionResolver.isResolving()) return;
+        // Nothing starts during a call (owner, 14.09.2026: no spectrum is wanted there at all) -
+        // least of all a microphone that would take the input off somebody. setCallActive(false)
+        // starts it when the call is over.
+        if (pausedForCall) return;
         attachKnownSessionOrResolve("capture started");
     }
 
@@ -1582,16 +1599,25 @@ public class AudioSpectrumEngine {
      * as a side effect; now that it no longer happens, forgetting them has to be said out loud.
      */
     public synchronized void onWake() {
-        if (!isMicPipelineRunning()) return;
+        // Root may have been granted or taken away while the unit slept.
+        decideMicrophonePolicy();
+        if (!radioMicCapture.isCapturing()) return;
         radioMicCapture.forgetNoiseFloor();
-        NativeAnalyzer analyzer = nativeAnalyzer;
-        if (analyzer != null) analyzer.forgetNoiseFloor();
+        if (analysingMicrophone()) nativeAnalyzer.forgetNoiseFloor();
         Log.i(TAG, "woke up with the microphone still open: capture kept, noise floors forgotten");
     }
 
-    /** A microphone capture whose read loop is alive, with its analyser and threads behind it. */
+    /**
+     * The microphone spectrum is running: an acoustic analyser with its threads, fed by a capture
+     * whose read loop is alive.
+     *
+     * <p>🔴 Not the same as the capture being open. Since the microphone is held without root, the
+     * capture is open in the calculated mode too, and every place that used "the capture is reading"
+     * to mean "the microphone spectrum is running" had to ask this instead - the watchdog, the
+     * resolver, the source check, the call's end.
+     */
     private boolean isMicPipelineRunning() {
-        return isRadioCaptureActive() && capturePolling && nativeAnalyzer != null;
+        return capturePolling && analysingMicrophone() && radioMicCapture.isCapturing();
     }
 
     private boolean isRadioSourceNow() {
@@ -1623,12 +1649,13 @@ public class AudioSpectrumEngine {
 
     private void startRadioMicPipeline() {
         stopNativeCapture();
-        stopRadioMicCapture();
+        // The capture is NOT closed and reopened here any more. A held microphone (no root) is
+        // simply analysed from now on; and closing it only to open it again was a moment in which
+        // somebody else could open the input first.
         if (appContext == null) return;
 
         final int captureSize = 1024;
-        final int sampleRate = 48000;
-        nativeAnalyzer = newAnalyzer(sampleRate, captureSize, true);
+        nativeAnalyzer = newAnalyzer(RadioMicCapture.SAMPLE_RATE, captureSize, true);
         if (!nativeAnalyzer.isValid()) {
             Log.w(TAG, "Native analyser did not initialise for Radio MIC");
             return;
@@ -1638,32 +1665,8 @@ public class AudioSpectrumEngine {
         // roll-off. Handed over by dispatchNativeFrame on the first frame, like every other curve.
         nativeCurveStale = true;
 
-        boolean started = radioMicCapture.start(appContext, (boosted, raw, len, captureGain) -> {
-            if (!capturePolling) return;
-            if (pausedForCall) return;   // the stream stays open; the samples go nowhere
-            noteMicSignal(boosted, len);
-            NativeAnalyzer analyzer = nativeAnalyzer;
-            if (analyzer != null) {
-                // The raw chunk, not the boosted one. The analyser learns its noise floor in
-                // linear power, and the capture side's automatic gain moves between 0.5x and 16x:
-                // every power value shifts underneath a floor that stays where it was learned. In
-                // a pause that gain climbs, the floor does not follow, and "power minus floor"
-                // turns cabin hiss into a full-height bar - which is exactly the fault reported
-                // from the car. The display still lifts quiet music, but through the analyser's
-                // own gain in getLevels(), which works in decibels and leaves the floor alone.
-                analyzer.pushPcm16(raw, len, 1.0f);
-            }
-            synchronized (waveformLock) {
-                // The waveform is a picture, so it keeps the boosted samples: at volume 2-4 the
-                // raw stream is a flat line on screen.
-                int copyLen = Math.min(len, latestWaveform.length);
-                for (int i = 0; i < copyLen; i++) {
-                    int val = (boosted[i] >> 8) + 128;
-                    latestWaveform[i] = (byte) Math.max(0, Math.min(255, val));
-                }
-                latestWaveformLen = copyLen;
-            }
-        });
+        boolean started = radioMicCapture.isCapturing()
+                || radioMicCapture.start(appContext, this::onMicChunk);
 
         if (!started) {
             Log.w(TAG, "RadioMicCapture failed to start");
@@ -1708,9 +1711,114 @@ public class AudioSpectrumEngine {
         Log.i(TAG, "Radio MIC analysis pipeline running with adaptive AGC");
     }
 
+    /**
+     * The one sink of the microphone capture, for as long as the capture lives - held or not, and
+     * whatever is analysing it. Capture thread.
+     */
+    private void onMicChunk(short[] boosted, short[] raw, int len, float captureGain) {
+        if (!capturePolling) return;
+        if (pausedForCall) return;   // the stream stays open; the samples go nowhere
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        // Held but not analysed: the samples go nowhere, and nothing downstream is told of them -
+        // signal from a microphone nobody is drawing must not look like playback to NowPlaying.
+        if (analyzer == null || !analyzer.isAcoustic()) return;
+        noteMicSignal(boosted, len);
+        // The raw chunk, not the boosted one. The analyser learns its noise floor in linear power,
+        // and the capture side's automatic gain moves between 0.5x and 16x: every power value shifts
+        // underneath a floor that stays where it was learned. In a pause that gain climbs, the floor
+        // does not follow, and "power minus floor" turns cabin hiss into a full-height bar - which is
+        // exactly the fault reported from the car. The display still lifts quiet music, but through
+        // the analyser's own gain in getLevels(), which works in decibels and leaves the floor alone.
+        analyzer.pushPcm16(raw, len, 1.0f);
+        synchronized (waveformLock) {
+            // The waveform is a picture, so it keeps the boosted samples: at volume 2-4 the raw
+            // stream is a flat line on screen.
+            int copyLen = Math.min(len, latestWaveform.length);
+            for (int i = 0; i < copyLen; i++) {
+                int val = (boosted[i] >> 8) + 128;
+                latestWaveform[i] = (byte) Math.max(0, Math.min(255, val));
+            }
+            latestWaveformLen = copyLen;
+        }
+    }
+
+    /**
+     * Lets the microphone go - unless it is held, in which case nothing is closed and only its
+     * analysis has stopped.
+     */
     private void stopRadioMicCapture() {
+        if (holdMicrophone && !micUnavailable) return;
         if (radioMicCapture.isRunning()) {
             radioMicCapture.stop();
+        }
+    }
+
+    /**
+     * Whether the microphone is held open from start-up for as long as the app runs.
+     *
+     * <p>🔴 Owner, 14.09.2026: "ми завантажилися, забрали мікрофон собі, і пішли всі лісом - хай
+     * сідають ресемплом" - and then: "якщо є рут, можна і 2, це чистіший шлях для системи". So two
+     * policies, chosen by root:
+     * <ul>
+     *   <li>no root - hold it. Whoever opens the input first sets it up for everybody, and without
+     *   root there is no taking it back; switching the spectrum to the calculated mode used to close
+     *   the capture, and on the return we joined the assistant's input instead (dumpsys 14.09.2026,
+     *   21:17). A held capture is analysed when wanted and read into nothing otherwise.</li>
+     *   <li>root - open it when it is wanted and close it when it is not; on opening, whoever is
+     *   already on the input is stopped through root and both are checked - our input full band,
+     *   the stopped app running again (RadioMicCapture, MicrophoneGuard.takeInputAsRoot).</li>
+     * </ul>
+     * Decided once a context is there, off the main thread (the root check may block), and again on
+     * every wake - root can be granted or taken away in Magisk in between.
+     */
+    private volatile boolean holdMicrophone;
+    private final Handler micHoldHandler = new Handler(Looper.getMainLooper());
+    /** Reopens a held capture that died - an audioserver restart, a read error. */
+    private static final long MIC_HOLD_CHECK_MS = 5000;
+    private final Runnable micHoldTick = new Runnable() {
+        @Override
+        public void run() {
+            ensureMicrophoneHeld();
+            if (holdMicrophone) micHoldHandler.postDelayed(this, MIC_HOLD_CHECK_MS);
+        }
+    };
+
+    /** Chooses the policy above; the second half runs on the main thread. */
+    private void decideMicrophonePolicy() {
+        final Context ctx = appContext;
+        if (ctx == null) return;
+        new Thread(() -> {
+            final boolean root = RootAccess.hasRootNow(ctx);
+            micHoldHandler.post(() -> {
+                boolean was = holdMicrophone;
+                holdMicrophone = !root;
+                if (was != holdMicrophone || !policyLogged) {
+                    policyLogged = true;
+                    Log.i(TAG, root
+                            ? "root: the microphone is opened when wanted, whoever is on the input is taken off it"
+                            : "no root: the microphone is held from start-up - whoever comes later joins our input");
+                }
+                micHoldHandler.removeCallbacks(micHoldTick);
+                if (holdMicrophone) {
+                    micHoldTick.run();
+                } else if (was) {
+                    // Root has appeared: a held capture nobody analyses is let go.
+                    synchronized (AudioSpectrumEngine.this) {
+                        if (!isMicPipelineRunning()) stopRadioMicCapture();
+                    }
+                }
+            });
+        }, "wDSP_MicPolicy").start();
+    }
+
+    private boolean policyLogged;
+
+    /** Opens the microphone if it is to be held and is not open. Main thread. */
+    private synchronized void ensureMicrophoneHeld() {
+        if (!holdMicrophone || appContext == null || micUnavailable || pausedForCall) return;
+        if (radioMicCapture.isCapturing()) return;
+        if (radioMicCapture.start(appContext, this::onMicChunk)) {
+            Log.i(TAG, "microphone held open (no root)");
         }
     }
 
@@ -1721,12 +1829,12 @@ public class AudioSpectrumEngine {
 
         if (isRadio) {
             if (wantsMicPipeline(true)) {
-                if (visualizer != null || !isRadioCaptureActive()) {
+                if (visualizer != null || !isMicPipelineRunning()) {
                     Log.i(TAG, "Source is Radio - switching to calibrated mic capture pipeline");
                     startInternal(currentSessionId);
                 }
             } else {
-                if (isRadioCaptureActive() || visualizer != null) {
+                if (isMicPipelineRunning() || visualizer != null) {
                     Log.i(TAG, "Source is Radio (mic uncalibrated / mode calc) - stopping active capture");
                     stopRadioMicCapture();
                     stopNativeCapture();
@@ -1741,12 +1849,12 @@ public class AudioSpectrumEngine {
             }
         } else {
             if (wantsMicPipeline(false)) {
-                if (!isRadioCaptureActive()) {
+                if (!isMicPipelineRunning()) {
                     Log.i(TAG, "Spectrum mode is MIC - switching to mic capture pipeline");
                     startInternal(currentSessionId);
                 }
             } else {
-                if (isRadioCaptureActive()) {
+                if (isMicPipelineRunning()) {
                     Log.i(TAG, "Source switched to AudioFlinger - restoring PCM capture");
                     attachKnownSessionOrResolve("source switched to audioflinger");
                 }
