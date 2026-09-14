@@ -192,7 +192,31 @@ int runPinkNoise() {
     }
     float spread16 = max16 - min16;
     printf("  spread across 31.5 Hz..20 kHz: %.1f dB  -> %s\n", spread16, spread16 < 4.0f ? "PASS" : "FAIL");
-    return (whole && spread < 6.0f && spread16 < 4.0f) ? 0 : 1;
+
+    // The dB fold for comparing two analysers is the same fold, and an offset moves every band by
+    // exactly itself - the microphone is drawn on the calculated spectrum's scale through these two.
+    float db16[wdsp::kHwBands];
+    analyzer.getLevelsDb16(db16);
+    float worstFold = 0.0f;
+    for (int i = 1; i < wdsp::kHwBands; i++) {
+        float viaLevels = l16[i] * range - range + config.refMaxDb;
+        if (viaLevels > -range + config.refMaxDb + 0.5f) {   // not clamped at the bottom
+            worstFold = std::max(worstFold, std::fabs(viaLevels - db16[i]));
+        }
+    }
+    const float offset = -7.5f;
+    analyzer.setLevelOffsetDb(0, offset);
+    float shifted32[wdsp::kBands], shifted16[wdsp::kHwBands];
+    analyzer.getLevels(0, shifted32, shifted16);
+    float worstShift = 0.0f;
+    for (int i = 1; i < wdsp::kHwBands; i++) {
+        float before = l16[i] * range, after = shifted16[i] * range;
+        if (before > 8.0f && after > 0.5f) worstShift = std::max(worstShift, std::fabs(after - before - offset));
+    }
+    bool foldOk = worstFold < 0.05f && worstShift < 0.05f;
+    printf("  dB fold vs levels: worst %.3f dB; offset %.1f dB moves bands by it, worst error %.3f dB -> %s\n",
+           worstFold, offset, worstShift, foldOk ? "PASS" : "FAIL");
+    return (whole && spread < 6.0f && spread16 < 4.0f && foldOk) ? 0 : 1;
 }
 
 int runTone(float freqHz, int expectedBand) {

@@ -144,6 +144,16 @@ public:
     void getLevels(int consumer, float* out32, float* out16);
     /** Fills the raw band levels in dB, before any normalisation. */
     void getLevelsDb(float* out32);
+    /**
+     * The same frame folded onto the 16 equaliser bands, in dB - through the one fold getLevels
+     * uses - without any consumer's offset or gain. For comparing two analysers on one scale.
+     */
+    void getLevelsDb16(float* out16);
+    /**
+     * A shift in dB added to every band before a consumer's levels are scaled - for drawing one
+     * analyser on another's scale (the microphone on the calculated spectrum's). 0 in a new analyser.
+     */
+    void setLevelOffsetDb(int consumer, float offsetDb);
 
     int discontinuities() const { return stitcher_.discontinuities(); }
     int framesProduced() const { return frameCount_; }
@@ -162,6 +172,7 @@ private:
     struct AgcState {
         AgcConfig config;
         float runningPeakDb = -60.0f;
+        float offsetDb = 0.0f;
     };
 
     void buildBandPlan();
@@ -169,6 +180,8 @@ private:
     void processFrame(bool haveLong);
     /** Body of getLevelsDb, for callers that already hold the lock. */
     void readDelayedFrame(float* out32) const;
+    /** 32 third-octave bands in dB onto the 16 equaliser bands in dB - the only fold there is. */
+    static void foldTo16Db(const float* db32, float* out16Db);
     void accumulate(const float* power, int binCount, float binWidth, bool longFft);
 
     int sampleRate_;

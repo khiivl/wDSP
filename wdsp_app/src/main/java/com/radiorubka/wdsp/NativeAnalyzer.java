@@ -139,6 +139,19 @@ public final class NativeAnalyzer {
         if (handle != 0) nativeGetLevelsDb(handle, out32);
     }
 
+    /**
+     * The same frame folded onto the 16 equaliser bands, in dB, through the one native fold - with no
+     * consumer's offset or gain. For putting two analysers on one scale.
+     */
+    public void getLevelsDb16(float[] out16) {
+        if (handle != 0) nativeGetLevelsDb16(handle, out16);
+    }
+
+    /** A shift in dB added to a consumer's bands before they are scaled; 0 in a new analyser. */
+    public void setLevelOffsetDb(int consumer, float offsetDb) {
+        if (handle != 0) nativeSetLevelOffsetDb(handle, consumer, offsetDb);
+    }
+
     /** Blocks that could not be aligned. A rising count means the poll rate is too low. */
     public int discontinuities() {
         return handle == 0 ? 0 : nativeDiscontinuities(handle);
@@ -210,6 +223,10 @@ public final class NativeAnalyzer {
                                                float[] out32, float[] out16);
 
     private static native void nativeGetLevelsDb(long handle, float[] out32);
+
+    private static native void nativeGetLevelsDb16(long handle, float[] out16);
+
+    private static native void nativeSetLevelOffsetDb(long handle, int consumer, float offsetDb);
 
     private static native int nativeDiscontinuities(long handle);
 

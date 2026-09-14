@@ -378,6 +378,40 @@ void Analyzer::readDelayedFrame(float* out32) const {
     for (int i = 0; i < kBands; i++) out32[i] = frame[static_cast<size_t>(i)];
 }
 
+void Analyzer::foldTo16Db(const float* db32, float* out16Db) {
+    for (int i = 0; i < kHwBands; i++) {
+        // A hardware band is two-thirds of an octave around its centre: the third-octave band on
+        // that centre (index 2i + 1) and the inner half of each neighbour. Half the neighbour's
+        // energy is exact for pink content - its two log-halves carry equal energy - and close
+        // for anything that does not change sharply inside one third of an octave.
+        //
+        // The top hardware band has no neighbour above 20 kHz on this grid (22.4-25.4 kHz is
+        // not a band). Its missing quarter is taken at the density of what was measured, x4/3,
+        // so a flat input reads level at 20 kHz instead of 1.25 dB low.
+        const int c = i * 2 + 1;
+        float centre = std::pow(10.0f, db32[c] / 10.0f);
+        float below = 0.5f * std::pow(10.0f, db32[c - 1] / 10.0f);
+        float sum = centre + below;
+        if (c + 1 < kBands) sum += 0.5f * std::pow(10.0f, db32[c + 1] / 10.0f);
+        else sum *= 4.0f / 3.0f;
+        out16Db[i] = toDb(sum);
+    }
+}
+
+void Analyzer::getLevelsDb16(float* out16) {
+    if (out16 == nullptr) return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    float db[kBands];
+    readDelayedFrame(db);
+    foldTo16Db(db, out16);
+}
+
+void Analyzer::setLevelOffsetDb(int consumer, float offsetDb) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (consumer < 0 || consumer > 1) return;
+    agc_[consumer].offsetDb = offsetDb;
+}
+
 void Analyzer::getLevels(int consumer, float* out32, float* out16) {
     if (consumer < 0 || consumer > 1) consumer = 0;
     std::lock_guard<std::mutex> lock(mutex_);
@@ -385,6 +419,7 @@ void Analyzer::getLevels(int consumer, float* out32, float* out16) {
     readDelayedFrame(db);
 
     AgcState& state = agc_[consumer];
+    for (int i = 0; i < kBands; i++) db[i] += state.offsetDb;
     float peak = -120.0f;
     for (int i = 0; i < kBands; i++) peak = std::max(peak, db[i]);
 
@@ -409,23 +444,10 @@ void Analyzer::getLevels(int consumer, float* out32, float* out16) {
     }
 
     if (out16 != nullptr) {
+        float db16[kHwBands];
+        foldTo16Db(db, db16);
         for (int i = 0; i < kHwBands; i++) {
-            // A hardware band is two-thirds of an octave around its centre: the third-octave band on
-            // that centre (index 2i + 1) and the inner half of each neighbour. Half the neighbour's
-            // energy is exact for pink content - its two log-halves carry equal energy - and close
-            // for anything that does not change sharply inside one third of an octave.
-            //
-            // The top hardware band has no neighbour above 20 kHz on this grid (22.4-25.4 kHz is
-            // not a band). Its missing quarter is taken at the density of what was measured, x4/3,
-            // so a flat input reads level at 20 kHz instead of 1.25 dB low.
-            const int c = i * 2 + 1;
-            float centre = std::pow(10.0f, db[c] / 10.0f);
-            float below = 0.5f * std::pow(10.0f, db[c - 1] / 10.0f);
-            float sum = centre + below;
-            if (c + 1 < kBands) sum += 0.5f * std::pow(10.0f, db[c + 1] / 10.0f);
-            else sum *= 4.0f / 3.0f;
-            float sumDb = toDb(sum);
-            float level = (sumDb - (reference - range)) / range;
+            float level = (db16[i] - (reference - range)) / range;
             out16[i] = std::min(1.0f, std::max(0.0f, level));
         }
     }

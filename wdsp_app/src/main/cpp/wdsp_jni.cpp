@@ -214,6 +214,26 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetLevelsDb(JNIEnv* env, jclass, j
     env->SetFloatArrayRegion(out32, 0, wdsp::kBands, db);
 }
 
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetLevelsDb16(JNIEnv* env, jclass, jlong handle,
+                                                            jfloatArray out16) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || out16 == nullptr) return;
+    if (env->GetArrayLength(out16) < wdsp::kHwBands) return;
+
+    float db[wdsp::kHwBands];
+    analyzer->getLevelsDb16(db);
+    env->SetFloatArrayRegion(out16, 0, wdsp::kHwBands, db);
+}
+
+JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetLevelOffsetDb(JNIEnv*, jclass, jlong handle,
+                                                               jint consumer, jfloat offsetDb) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr) return;
+    analyzer->setLevelOffsetDb(consumer, offsetDb);
+}
+
 JNIEXPORT jint JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeDiscontinuities(JNIEnv*, jclass, jlong handle) {
     auto* analyzer = asAnalyzer(handle);
