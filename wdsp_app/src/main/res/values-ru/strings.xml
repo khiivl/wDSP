@@ -97,7 +97,7 @@
     <string name="toast_exported">Экспортировано</string>
     <string name="toast_imported">Импортировано</string>
     <string name="toast_sub_comp_limit">Саб ограничен до 100 Гц</string>
-    <string name="mic_narrow_restart">Микрофон занят другим приложением и обрезан до 8 кГц. Перезагрузите магнитолу — после запуска wDSP захватит его первым.</string>
+    <string name="mic_narrow_restart">Микрофон занят другим приложением. Перезагрузите магнитолу, иначе микрофон недоступен.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Работа wDSP в фоне</string>

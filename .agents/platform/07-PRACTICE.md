@@ -143,6 +143,12 @@ Remember to kill the daemon afterwards (`pkill -f watch.sh; pkill logcat`). ⚠�
 the `su -c` itself - it kills its own shell (exit 143) and may stop before the rest runs. Check with
 `ps -A -o PID,ARGS | grep watch` afterwards.
 
+⚠️ **Our own once-a-second log gets our important lines pruned.** logd trims the chattiest uid
+first; with the capture's gate line every second, wDSP is that uid, and 40 seconds after an install
+its start-up lines ("started", "own stream", the heal) were already gone while system lines from the
+same second remained (14.09.2026). Read such events from `dumpsys audio` (`rec start/stop`) and from
+system tags (`ActivityManager: Force stopping`), or run the on-unit logger before the event.
+
 ⚠️ `dmesg` on this unit is useless for the suspend timeline: a vendor `system_rescue` process runs
 `ps` every 5 s and floods the ring with SELinux audit lines, so `PM: suspend entry/exit` has rolled
 out within minutes. `/d/suspend_stats` keeps the count.

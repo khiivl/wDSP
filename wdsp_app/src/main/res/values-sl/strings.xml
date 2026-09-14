@@ -97,7 +97,7 @@
     <string name="toast_exported">Izvoženo</string>
     <string name="toast_imported">Uvoženo</string>
     <string name="toast_sub_comp_limit">Kompenzacija nizkotonca omejena na 100 Hz</string>
-    <string name="mic_narrow_restart">Mikrofon zaseda druga aplikacija in je omejen na 8 kHz. Ponovno zaženite avtoradio — po zagonu ga wDSP prevzame prvi.</string>
+    <string name="mic_narrow_restart">Mikrofon zaseda druga aplikacija. Ponovno zaženite avtoradio, sicer mikrofon ni na voljo.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Ohrani wDSP zagnan</string>

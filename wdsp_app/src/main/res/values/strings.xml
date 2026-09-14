@@ -110,7 +110,7 @@
     <string name="toast_exported">Exported</string>
     <string name="toast_imported">Imported</string>
     <string name="toast_sub_comp_limit">Sub Comp limited to 100Hz</string>
-    <string name="mic_narrow_restart">The microphone is held by another app and cut off at 8 kHz. Restart the head unit — after start-up wDSP takes it first.</string>
+    <string name="mic_narrow_restart">The microphone is held by another app. Restart the head unit, otherwise the microphone is unavailable.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Keep wDSP Running</string>

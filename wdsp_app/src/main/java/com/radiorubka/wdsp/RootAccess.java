@@ -89,6 +89,30 @@ public final class RootAccess {
     }
 
     /**
+     * Like {@link #hasRoot}, but for a decision that cannot be taken back: a grant recorded before
+     * and not yet re-verified in this process is verified now, blocking for up to 1.5 s, instead of
+     * reading as "no root".
+     *
+     * <p>hasRoot() answers false in a fresh process until its background check returns. The
+     * microphone uses the answer to choose between healing the input and declaring the microphone
+     * unavailable until a restart - so right after boot, on a rooted unit, the quick answer would
+     * switch the spectrum off for the whole drive. Never raises a Magisk prompt: an app Magisk has
+     * no answer for reads false, as before. Call off the main thread.
+     */
+    public static boolean hasRootNow(Context context) {
+        if (sRootGranted != null) return sRootGranted;
+        if (context == null
+                || !ThemeManager.prefs(context).getBoolean(PREF_ROOT_GRANTED, false)) {
+            return false;
+        }
+        boolean granted = alreadyGranted();
+        sRootGranted = granted;
+        if (granted) sVerifiedAt = System.currentTimeMillis();
+        ThemeManager.prefs(context).edit().putBoolean(PREF_ROOT_GRANTED, granted).apply();
+        return granted;
+    }
+
+    /**
      * Checks in background if root is available and updates cache and preferences.
      * Always re-verifies via alreadyGranted() so that root revocation in Magisk is detected.
      */

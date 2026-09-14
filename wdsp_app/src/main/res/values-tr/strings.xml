@@ -97,7 +97,7 @@
     <string name="toast_exported">Dışa aktarıldı</string>
     <string name="toast_imported">İçe aktarıldı</string>
     <string name="toast_sub_comp_limit">Subwoofer dengelemesi 100 Hz ile sınırlandırıldı</string>
-    <string name="mic_narrow_restart">Mikrofon başka bir uygulama tarafından kullanılıyor ve 8 kHz\'de kesiliyor. Teybi yeniden başlatın — açılışın ardından mikrofonu ilk olarak wDSP alır.</string>
+    <string name="mic_narrow_restart">Mikrofon başka bir uygulama tarafından kullanılıyor. Teybi yeniden başlatın, aksi halde mikrofon kullanılamaz.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP\'yi Arka Planda Tut</string>

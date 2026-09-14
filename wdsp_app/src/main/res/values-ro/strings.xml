@@ -97,7 +97,7 @@
     <string name="toast_exported">Exportat</string>
     <string name="toast_imported">Importat</string>
     <string name="toast_sub_comp_limit">Comp. Sub limitată la 100 Hz</string>
-    <string name="mic_narrow_restart">Microfonul este utilizat de altă aplicație și limitat la 8 kHz. Reporniți sistemul audio — după pornire wDSP îl preia primul.</string>
+    <string name="mic_narrow_restart">Microfonul este utilizat de altă aplicație. Reporniți sistemul audio, altfel microfonul nu este disponibil.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Menține wDSP activ</string>

@@ -90,7 +90,7 @@
     <string name="toast_exported">Экспортированно</string>
     <string name="toast_imported">Импортированно</string>
     <string name="toast_sub_comp_limit">Сабвуфер ограничен 100Гц</string>
-    <string name="mic_narrow_restart">Микрофон занят другим приложением и обрезан до 8 кГц. Перезагрузите магнитолу — после запуска wDSP захватит его первым.</string>
+    <string name="mic_narrow_restart">Микрофон занят другим приложением. Перезагрузите магнитолу, иначе микрофон недоступен.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Оставить wDSP работать в фоне</string>

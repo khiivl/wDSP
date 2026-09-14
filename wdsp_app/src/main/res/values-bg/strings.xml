@@ -97,7 +97,7 @@
     <string name="toast_exported">Експортирано</string>
     <string name="toast_imported">Импортирано</string>
     <string name="toast_sub_comp_limit">Суб комп. ограничена до 100 Hz</string>
-    <string name="mic_narrow_restart">Микрофонът е зает от друго приложение и е ограничен до 8 kHz. Рестартирайте мултимедията — след стартиране wDSP го поема пръв.</string>
+    <string name="mic_narrow_restart">Микрофонът е зает от друго приложение. Рестартирайте мултимедията, иначе микрофонът е недостъпен.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Поддържане на wDSP активен</string>

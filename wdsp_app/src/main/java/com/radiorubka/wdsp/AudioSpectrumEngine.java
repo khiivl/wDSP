@@ -396,6 +396,47 @@ public class AudioSpectrumEngine {
         Arrays.fill(gains, 6);
         Arrays.fill(qNarrow, false);
         Arrays.fill(fmOffsets, 0f);
+        radioMicCapture.setUnavailableListener(() ->
+                new Handler(Looper.getMainLooper()).post(this::onMicrophoneUnavailable));
+    }
+
+    /**
+     * The microphone cannot be had at full band in this process: another app holds the input at
+     * 16 kHz and root did not take it back, or there is no root. Until the next start of the head
+     * unit - after which wDSP opens the input first.
+     *
+     * <p>Owner, 14.09.2026: "точно переходити на розрахунковий, і пофіг на радіо" - the spectrum
+     * goes to the calculated mode even where that mode has nothing to show (radio bypasses
+     * AudioFlinger), because a narrow microphone passed off as the cabin is worse than no picture.
+     * The stored choice is left alone: after a restart the microphone is available again and the
+     * person should not have to choose it a second time.
+     */
+    private volatile boolean micUnavailable;
+    /** One toast per process; the state it describes does not change until a restart. */
+    private volatile boolean toldMicUnavailable;
+
+    public boolean isMicrophoneUnavailable() {
+        return micUnavailable;
+    }
+
+    private synchronized void onMicrophoneUnavailable() {
+        micUnavailable = true;
+        if (appContext != null && !toldMicUnavailable) {
+            toldMicUnavailable = true;
+            Toaster.show(appContext, R.string.mic_narrow_restart);
+        }
+        Log.w(TAG, "microphone unavailable until restart - spectrum falls back to calculated");
+        stopNativeCapture();
+        stopRadioMicCapture();
+        if (!listeners.isEmpty()) {
+            startInternal(currentSessionId);
+            requestResolve("microphone unavailable");
+        }
+    }
+
+    /** Whether the microphone spectrum is what is actually in force, not merely what was chosen. */
+    private boolean micModeInEffect() {
+        return SPECTRUM_MODE_MIC.equals(spectrumMode) && canRunMic();
     }
 
     public synchronized void registerListener(OnSpectrumDataListener listener) {
@@ -562,7 +603,7 @@ public class AudioSpectrumEngine {
      *   hardware DSP curve from getDspCurve().
      */
     public float[] getEffectiveSpectrumCurve() {
-        if (isRadioCaptureActive() || SPECTRUM_MODE_MIC.equals(spectrumMode)) {
+        if (isRadioCaptureActive() || micModeInEffect()) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
         }
         // Calculated mode: the DSP's own response, plus what the car then does to it.
@@ -793,7 +834,7 @@ public class AudioSpectrumEngine {
                 checkSourceState();
                 long now = System.currentTimeMillis();
                 long wait = lastResolveFoundNothing ? RESOLVE_RETRY_MS : RESOLVE_COOLDOWN_MS;
-                boolean micActive = SPECTRUM_MODE_MIC.equals(spectrumMode) || isRadioCaptureActive();
+                boolean micActive = micModeInEffect() || isRadioCaptureActive();
                 if (!micActive && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && now - lastResolveTime > wait
                         && isMediaPlaybackActive()) {
@@ -815,7 +856,7 @@ public class AudioSpectrumEngine {
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
         if (appContext != null && (NowPlaying.getInstance(appContext).isRadioSource()
-                || SPECTRUM_MODE_MIC.equals(spectrumMode) || isRadioCaptureActive())) {
+                || micModeInEffect() || isRadioCaptureActive())) {
             return;
         }
         lastResolveTime = System.currentTimeMillis();
@@ -1315,7 +1356,7 @@ public class AudioSpectrumEngine {
      */
     private boolean wantsMicPipeline(boolean isRadio) {
         if (!canRunMic()) return false;
-        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        boolean micMode = micModeInEffect();
         return isRadio ? (micMode || radioMicVisualizerEnabled) : micMode;
     }
 
@@ -1475,7 +1516,7 @@ public class AudioSpectrumEngine {
      * startInternal, with identical code that would have drifted the first time one was edited.
      */
     private boolean canRunMic() {
-        return appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+        return !micUnavailable && appContext != null && RoomMeasurement.hasMicCompensation(appContext);
     }
 
     private void startInternal(int sessionId) {

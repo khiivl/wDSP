@@ -243,6 +243,36 @@ What this means:
   `UNPROCESSED`.
 - 📻 The capture itself stayed alive: samples kept flowing (the gate log at 1 s intervals, rms up to
   1919), and the status bar bars moved — with the top five of 32 bands flat, i.e. nothing above 8 kHz.
+
+#### Whose noise suppressor is acting: the last client to start — 14.09.2026
+
+📻 `/vendor/etc/audio_effects.xml` on the owner's unit attaches default pre-processing per source:
+`mic`, `voice_communication` and `voice_recognition` get **AEC + NS**; `unprocessed` and
+`camcorder` get nothing. But wDSP's `UNPROCESSED` capture is reported as `src:MIC` everywhere, and
+opened with **no effect handles of our own** (wDSP `6ba2839`+, 03:36) its session carried the
+platform's AEC and NS all the same. Read from the effect chains, same input, both clients at 48 kHz:
+
+```
+03:16 (after the audioserver restore; wDSP restored LAST)
+  wDSP      NS  Enabled y  Suspended n   <- acting
+  assistant AEC, NS  Enabled y  Suspended y
+03:36 (wDSP opened, root stopped the assistant, assistant came back 2 s LATER)
+  wDSP      AEC, NS  Enabled y  Suspended y
+  assistant NS  Enabled y  Suspended n   <- acting
+```
+
+So on a shared input exactly one session's chain acts, and here it was the client that started last
+(both are `MIC`, so priority does not separate them). 📚 Pre-processing effects are attached to the
+HAL input stream, so the acting chain processes what **every** client reads — AOSP design, not
+re-measured here. ⇒ Whether wDSP's spectrum is noise-suppressed is decided by the start order, not by
+wDSP: after a wake the assistant reopens after us, its NS acts, and the owner's observation that same
+night — a dip in the middle at volume 2 with the air conditioning on — fits exactly.
+
+🔴 Consequence, owner's decision 14.09.2026: **wDSP does not operate these effects at all.** Switching
+our own off, as the capture did until then, switched off the chain that happened to be acting — for
+the assistant too — and "did it work" became a function of who started last. Capture sits on the
+stream as the platform gives it. A cabin sweep, which does need a clean stream, is a separate
+question.
 - 📻 *(owner, the same night, before the restart)* After the sleep, at volume 2 with the air
   conditioning running on wake, the microphone spectrum read hot at both ends with a clear dip in
   the middle — his explanation: the noise suppressor pressing down the band the air conditioner

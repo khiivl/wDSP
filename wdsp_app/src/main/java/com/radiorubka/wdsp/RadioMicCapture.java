@@ -4,13 +4,18 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioRecordingConfiguration;
 import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -46,6 +51,24 @@ import java.util.Locale;
  * answers "Ok Google", and the input stays at 48 kHz even after we leave. So the capture listens
  * to its own first half second; if the top end is missing it stops the assistant once, through
  * root, and reopens at once - the assistant is back within two seconds and has to find us there.
+ *
+ * <p>The input can also be rebuilt underneath an open capture: an audioserver restart restores the
+ * record inside the same AudioRecord, with no error, at whatever rate the first client to come back
+ * asked for (measured 14.09.2026). So the platform's recording callback is listened to for the
+ * device rate. Without root, or when the heal does not take, the microphone is declared unavailable
+ * until the next restart and the spectrum goes to calculated (owner's decision, 14.09.2026) - a
+ * narrow stream is never shown as the cabin.
+ *
+ * <h2>Effects are not ours to operate</h2>
+ *
+ * <p>The capture opens {@code UNPROCESSED}, the source the platform attaches no pre-processing to
+ * (on this unit {@code /vendor/etc/audio_effects.xml} gives AEC and NS to {@code mic},
+ * {@code voice_communication} and {@code voice_recognition}, nothing to {@code unprocessed}), and
+ * then leaves the effects alone. It used to switch AEC and NS off on its session. On a shared
+ * input only one session's chain is applied - the dump of 14.09.2026 showed ours active and the
+ * assistant's AEC and NS suspended - so switching ours off switched them off for the assistant too.
+ * Owner, 14.09.2026: "ці ефекти важливі асистенту, дзвінкам. Ми маємо тупо сідати на потік без
+ * ефектів, а не оперувати ними".
  *
  * <p>Versions 0.4.9 to 0.4.9.6 did something else here: they set the assistant's RECORD_AUDIO
  * app-op to "ignore", permanently. That does not make it share - it makes it deaf, and the mode
@@ -104,8 +127,8 @@ public class RadioMicCapture {
      */
     private static final float NOISE_FLOOR_RISE = 0.0015f;
 
-    private AudioRecord audioRecord;
-    private MicProbe.Suspension suspension;
+    /** Volatile because the recording callback reads it on the main thread. */
+    private volatile AudioRecord audioRecord;
     /** Volatile because isCapturing() reads it from other threads, without the lock. */
     private volatile Thread captureThread;
     private volatile boolean running = false;
@@ -118,6 +141,15 @@ public class RadioMicCapture {
      * read-modify-write and could be undone by the chunk already in flight.
      */
     private volatile boolean forgetFloorRequested = false;
+
+    /**
+     * Set by the platform's recording callback when the device under our recorder runs below
+     * {@link #SAMPLE_RATE}; consumed by the capture thread, which alone decides what to do.
+     */
+    private volatile boolean narrowReported = false;
+    private volatile int reportedDeviceRate = 0;
+    private AudioManager audioManager;
+    private AudioManager.AudioRecordingCallback recordingCallback;
 
     /**
      * Forget the cabin's floor and the gain, as a fresh start would, without closing the stream.
@@ -174,6 +206,7 @@ public class RadioMicCapture {
         if (!openRecordLocked()) return false;
 
         running = true;
+        registerRecordingCallbackLocked();
         currentGain = 1.0f;
         // A fresh floor: the previous session may have ended in a different car, at a different
         // speed, or with the blower on. Carrying its number over would gate this one wrongly.
@@ -188,7 +221,11 @@ public class RadioMicCapture {
             float[] probe = new float[BANDWIDTH_PROBE_SAMPLES];
             int probed = 0;
             boolean probing = true;
-            boolean reopened = false;
+            // One attempt to take the input back through root per narrowing. Cleared once the
+            // stream is heard full band again, so a later narrowing - the next audioserver restart,
+            // an hour on - gets its own attempt; a heal that did not take ends in "unavailable"
+            // rather than in a loop of stopping the assistant.
+            boolean healAttempted = false;
             // One line a second, not one a chunk: at 512 samples of 48 kHz a chunk is 10.7 ms, and
             // ninety-four log lines a second would cost more than the analysis.
             int logTick = 0;
@@ -224,6 +261,16 @@ public class RadioMicCapture {
                     currentGain = 1.0f;
                 }
 
+                // Two witnesses to a narrow input, one decision. Our own ear hears the first half
+                // second of every open. The platform's recording callback reports the device's rate
+                // whenever the input is rebuilt underneath us - which after an audioserver restart
+                // happens with no error, the same AudioRecord and the same recording id, so the ear,
+                // having already listened, would never hear it (measured 14.09.2026).
+                String narrowBecause = null;
+                if (narrowReported) {
+                    narrowReported = false;
+                    narrowBecause = "the platform reports the input at " + reportedDeviceRate + " Hz";
+                }
                 if (probing) {
                     int n = Math.min(read, probe.length - probed);
                     for (int i = 0; i < n; i++) probe[probed + i] = shortChunk[i] / 32768f;
@@ -235,15 +282,31 @@ public class RadioMicCapture {
                             boolean narrow = bw < MicrophoneGuard.BANDWIDTH_OK_DB;
                             Log.i(TAG, String.format(Locale.US, "own stream: %.1f dB above 8 kHz - %s",
                                     bw, narrow ? "held at 16 kHz by another app" : "full band"));
-                            if (narrow && !reopened) {
-                                reopened = true;
-                                if (!reopenAfterStoppingAssistant()) break;
-                                probed = 0;
-                                probing = true;   // listen once more, for the log only
-                                continue;
+                            if (narrow) {
+                                narrowBecause = "own stream has nothing above 8 kHz";
+                            } else {
+                                healAttempted = false;
                             }
                         }
                     }
+                }
+                if (narrowBecause != null) {
+                    // Owner, 14.09.2026: with root, heal it on the fly; without root, the microphone
+                    // is not available - no narrow stream is shown as if it were the cabin.
+                    if (!healAttempted && RootAccess.hasRootNow(appContext)) {
+                        healAttempted = true;
+                        Log.i(TAG, "input narrow (" + narrowBecause + ") - taking it back through root");
+                        if (!reopenAfterStoppingAssistant()) break;
+                        probed = 0;
+                        probing = true;   // the heal is judged by the next half second
+                        continue;
+                    }
+                    Log.w(TAG, "input narrow (" + narrowBecause + ")"
+                            + (healAttempted ? " again after stopping the assistant" : ", no root")
+                            + " - microphone unavailable until restart");
+                    UnavailableListener l = unavailableListener;
+                    if (l != null) l.onMicrophoneUnavailable();
+                    break;
                 }
 
                 // Measured twice: the peak says how much gain would fit without clipping, the RMS
@@ -363,32 +426,35 @@ public class RadioMicCapture {
     }
 
     /**
-     * Our stream came up narrow: the assistant had opened the input first. Stop it and take the
-     * input back at once - it returns within two seconds, and whoever is there first decides the
-     * rate for both. Runs on the capture thread, at most once per start, never in a loop.
+     * Told when the microphone cannot be had at full band and root cannot fix it. The capture has
+     * already ended by the time this is called; what to show instead is the listener's business.
+     * Called on the capture thread.
+     */
+    public interface UnavailableListener {
+        void onMicrophoneUnavailable();
+    }
+
+    private volatile UnavailableListener unavailableListener;
+
+    public void setUnavailableListener(UnavailableListener listener) {
+        this.unavailableListener = listener;
+    }
+
+    /**
+     * Our stream is narrow: the assistant holds the input at 16 kHz. Stop it and take the input
+     * back at once - it returns within two seconds, and whoever is there first decides the rate
+     * for both. Root only; the caller has checked. Runs on the capture thread.
      *
      * @return false when capturing has to end
      */
-    /** Once per process: the restart advice is worth one toast, not one on every reopen. */
-    private static volatile boolean sToldToRestart;
-
     private boolean reopenAfterStoppingAssistant() {
         Context ctx = appContext;
-        if (ctx == null || !RootAccess.hasRoot(ctx)) {
-            Log.i(TAG, "microphone held at 16 kHz and no root to free it - staying on the narrow stream");
-            // Without root there is no fighting for the input, and there does not need to be: after
-            // a start-up wDSP opens the microphone first (measured 14.09.2026, 31 s ahead of the
-            // assistant). So the honest thing is to say how to get the full band back (owner's
-            // wording, 14.09.2026) - not to stop anyone, and not to stay silent about it.
-            if (ctx != null && !sToldToRestart) {
-                sToldToRestart = true;
-                Toaster.show(ctx, R.string.mic_narrow_restart);
-            }
-            return true;
-        }
+        if (ctx == null) return false;
         synchronized (this) {
             if (!running) return false;
             releaseRecordLocked();
+            // Whatever the platform said so far was about the recorder just released.
+            narrowReported = false;
         }
         int stopped = MicrophoneGuard.stopAssistantsAsRoot(ctx);
         synchronized (this) {
@@ -410,7 +476,7 @@ public class RadioMicCapture {
         return NativeSweep.bandwidthRatioDb(samples, n, SAMPLE_RATE);
     }
 
-    /** Creates and starts the recorder, with the platform's pre-processing switched off on it. */
+    /** Creates and starts the recorder. Its effects are left exactly as the platform set them. */
     private boolean openRecordLocked() {
         AudioRecord rec;
         try {
@@ -447,7 +513,6 @@ public class RadioMicCapture {
 
         audioRecord = rec;
         try {
-            suspension = MicProbe.suspendCapturePreprocessing(rec.getAudioSessionId(), TAG);
             rec.startRecording();
         } catch (Throwable t) {
             Log.e(TAG, "Failed to start recording: " + t);
@@ -457,8 +522,70 @@ public class RadioMicCapture {
         return true;
     }
 
+    /**
+     * Listens for the platform rebuilding the input under our recorder. Registered once per start;
+     * a reopen inside the capture keeps it, because it matches by the current recorder's session.
+     */
+    private void registerRecordingCallbackLocked() {
+        if (recordingCallback != null || appContext == null) return;
+        audioManager = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager == null) return;
+        recordingCallback = new AudioManager.AudioRecordingCallback() {
+            @Override
+            public void onRecordingConfigChanged(List<AudioRecordingConfiguration> configs) {
+                checkDeviceRate(configs);
+            }
+        };
+        try {
+            audioManager.registerAudioRecordingCallback(recordingCallback,
+                    new Handler(Looper.getMainLooper()));
+        } catch (Throwable t) {
+            Log.w(TAG, "recording callback unavailable: " + t);
+            recordingCallback = null;
+        }
+    }
+
+    private void unregisterRecordingCallbackLocked() {
+        if (recordingCallback == null || audioManager == null) return;
+        try {
+            audioManager.unregisterAudioRecordingCallback(recordingCallback);
+        } catch (Throwable ignored) {
+        }
+        recordingCallback = null;
+    }
+
+    /**
+     * Our own recording, found by session, as the platform describes it. getFormat() is the device
+     * side - after the 14.09.2026 audioserver restart it read 16000 Hz while everything the recorder
+     * says about itself still read 48000.
+     */
+    private void checkDeviceRate(List<AudioRecordingConfiguration> configs) {
+        AudioRecord rec = audioRecord;
+        if (!running || rec == null || configs == null) return;
+        final int session;
+        try {
+            session = rec.getAudioSessionId();
+        } catch (Throwable t) {
+            return;
+        }
+        for (AudioRecordingConfiguration config : configs) {
+            if (config.getClientAudioSessionId() != session) continue;
+            AudioFormat device = config.getFormat();
+            int rate = device != null ? device.getSampleRate() : 0;
+            if (rate > 0 && rate < SAMPLE_RATE) {
+                reportedDeviceRate = rate;
+                if (!narrowReported) {
+                    Log.w(TAG, "recording callback: the input under our recorder runs at " + rate + " Hz");
+                }
+                narrowReported = true;
+            }
+            return;
+        }
+    }
+
     public synchronized void stop() {
         running = false;
+        unregisterRecordingCallbackLocked();
         Thread t = captureThread;
         captureThread = null;
         if (t != null) {
@@ -474,14 +601,8 @@ public class RadioMicCapture {
         Log.i(TAG, "RadioMicCapture stopped");
     }
 
-    /** Hands the platform's pre-processing back as it was, then lets the recorder go. */
+    /** Lets the recorder go. There is no pre-processing state of ours to hand back any more. */
     private void releaseRecordLocked() {
-        if (suspension != null) {
-            try {
-                suspension.restore();
-            } catch (Throwable ignored) {}
-            suspension = null;
-        }
         safeReleaseRecord();
     }
 

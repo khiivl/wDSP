@@ -97,7 +97,7 @@
     <string name="toast_exported">Exportováno</string>
     <string name="toast_imported">Importováno</string>
     <string name="toast_sub_comp_limit">Komp. sub omezena na 100 Hz</string>
-    <string name="mic_narrow_restart">Mikrofon je obsazen jinou aplikací a oříznut na 8 kHz. Restartujte autorádio — po startu si jej wDSP vezme jako první.</string>
+    <string name="mic_narrow_restart">Mikrofon je obsazen jinou aplikací. Restartujte autorádio, jinak mikrofon není dostupný.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Udržet wDSP spuštěné</string>

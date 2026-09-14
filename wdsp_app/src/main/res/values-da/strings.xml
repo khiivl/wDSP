@@ -97,7 +97,7 @@
     <string name="toast_exported">Eksporteret</string>
     <string name="toast_imported">Importeret</string>
     <string name="toast_sub_comp_limit">Sub-komp. begrænset til 100 Hz</string>
-    <string name="mic_narrow_restart">Mikrofonen bruges af en anden app og er afskåret ved 8 kHz. Genstart autoradioen — efter start tager wDSP den først.</string>
+    <string name="mic_narrow_restart">Mikrofonen bruges af en anden app. Genstart autoradioen, ellers er mikrofonen ikke tilgængelig.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Hold wDSP kørende</string>
