@@ -983,8 +983,12 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /**
+     * Whether the microphone capture is actually reading - not merely whether it was started.
+     * A capture whose stream died is not active, so the watchdog and start() open it again.
+     */
     public boolean isRadioCaptureActive() {
-        return radioMicCapture != null && radioMicCapture.isRunning();
+        return radioMicCapture != null && radioMicCapture.isCapturing();
     }
 
     /** Pushes the current settings - ballistics, latency and both gain profiles - into native. */
@@ -1254,9 +1258,65 @@ public class AudioSpectrumEngine {
         // then noticed that the session was silent once music began, and the analyser sat on the
         // empty session 0 until the visualizer was switched off and on by hand.
         armWatchdog();
+        // 🔴 A microphone pipeline that is already reading is left alone.
+        //
+        // visualizer is null for the whole life of a microphone pipeline, so the check above never
+        // stopped a second start - and startRadioMicPipeline() begins by closing the capture. Every
+        // new listener therefore closed the microphone and reopened it: the status bar widget
+        // coming back on ACC_ON, the main screen opening (three times in half a second).
+        //
+        // Measured 14.09.2026 on a real sleep: the process, its threads and the open AudioRecord all
+        // survive suspend-to-RAM, and the pre-sleep capture delivered samples before ACC_ON was even
+        // broadcast. The restart on wake closed that live stream and left the Google assistant
+        // alone on the input for 164 ms - the only moment of the whole wake at which something else
+        // could have set the input's rate (platform/05-AUDIO-PATH.md, "After hibernation...").
+        //
+        // A capture that has died is not "reading": isRadioCaptureActive() asks whether its read
+        // loop is alive, so a dead stream still falls through and is opened again here, and by the
+        // watchdog's checkSourceState(). That restart used to heal it by accident.
+        if (isMicPipelineRunning() && wantsMicPipeline(isRadioSourceNow())) return;
         if (sessionResolver != null && sessionResolver.isResolving()) return;
         startInternal(currentSessionId);
         requestResolve("capture started");
+    }
+
+    /**
+     * The head unit has woken up (ACC_ON; also called at boot, where nothing is running yet).
+     *
+     * <p>What survives a sleep is kept - the stream, the analyser, their threads - but not what the
+     * two noise floors learned before it. The car has been parked and started since: engine, blower
+     * and road are not what they were. Closing and reopening the capture used to forget both floors
+     * as a side effect; now that it no longer happens, forgetting them has to be said out loud.
+     */
+    public synchronized void onWake() {
+        if (!isMicPipelineRunning()) return;
+        radioMicCapture.forgetNoiseFloor();
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        if (analyzer != null) analyzer.forgetNoiseFloor();
+        Log.i(TAG, "woke up with the microphone still open: capture kept, noise floors forgotten");
+    }
+
+    /** A microphone capture whose read loop is alive, with its analyser and threads behind it. */
+    private boolean isMicPipelineRunning() {
+        return isRadioCaptureActive() && capturePolling && nativeAnalyzer != null;
+    }
+
+    private boolean isRadioSourceNow() {
+        return appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
+    }
+
+    /**
+     * Whether the analyser should listen through the microphone rather than tap PCM.
+     *
+     * <p>One function for a decision that was written out twice - in startInternal and
+     * checkSourceState - and is now needed a third time in start, so that "already running what it
+     * should" and "what to start" cannot drift apart. On radio there is no PCM at all, so the widget alone is reason enough to use the
+     * microphone; on a PCM source only the chosen mode is.
+     */
+    private boolean wantsMicPipeline(boolean isRadio) {
+        if (!canRunMic()) return false;
+        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
+        return isRadio ? (micMode || radioMicVisualizerEnabled) : micMode;
     }
 
     /** Schedules the silence watchdog. Safe to call repeatedly; it never stacks. */
@@ -1364,12 +1424,9 @@ public class AudioSpectrumEngine {
         if (pausedForCall) return;
         if (listeners.isEmpty() || appContext == null) return;
         boolean isRadio = NowPlaying.getInstance(appContext).isRadioSource();
-        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
-        boolean canRunMic = canRunMic();
 
         if (isRadio) {
-            boolean shouldRunMic = (micMode || radioMicVisualizerEnabled) && canRunMic;
-            if (shouldRunMic) {
+            if (wantsMicPipeline(true)) {
                 if (visualizer != null || !isRadioCaptureActive()) {
                     Log.i(TAG, "Source is Radio - switching to calibrated mic capture pipeline");
                     startInternal(currentSessionId);
@@ -1389,7 +1446,7 @@ public class AudioSpectrumEngine {
                 }
             }
         } else {
-            if (micMode && canRunMic) {
+            if (wantsMicPipeline(false)) {
                 if (!isRadioCaptureActive()) {
                     Log.i(TAG, "Spectrum mode is MIC - switching to mic capture pipeline");
                     startInternal(currentSessionId);
@@ -1422,9 +1479,8 @@ public class AudioSpectrumEngine {
     }
 
     private void startInternal(int sessionId) {
-        boolean isRadio = appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
-        boolean micMode = SPECTRUM_MODE_MIC.equals(spectrumMode);
-        boolean canRunMic = canRunMic();
+        boolean isRadio = isRadioSourceNow();
+        boolean wantMic = wantsMicPipeline(isRadio);
 
         if (isRadio) {
             if (visualizer != null) {
@@ -1434,7 +1490,7 @@ public class AudioSpectrumEngine {
                 } catch (Throwable ignored) {}
                 visualizer = null;
             }
-            if ((micMode || radioMicVisualizerEnabled) && canRunMic) {
+            if (wantMic) {
                 startRadioMicPipeline();
             } else {
                 stopRadioMicCapture();
@@ -1443,7 +1499,7 @@ public class AudioSpectrumEngine {
             return;
         }
 
-        if (micMode && canRunMic) {
+        if (wantMic) {
             if (visualizer != null) {
                 try {
                     visualizer.setEnabled(false);

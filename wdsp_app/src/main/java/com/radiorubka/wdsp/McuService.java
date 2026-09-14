@@ -467,6 +467,9 @@ public class McuService extends Service implements LocationListener {
                         statusBarManager.setScreenState(true);
                         statusBarManager.evaluateVisibility();
                     }
+                    // The microphone capture outlives the sleep and is no longer reopened when the
+                    // widget comes back; only what it learned about the parked car is dropped.
+                    AudioSpectrumEngine.getInstance().onWake();
                     // 🔴 The cache goes first, and this is not belt-and-braces - it is the whole
                     // point of re-applying here.
                     //

@@ -143,6 +143,12 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetDspCurve(JNIEnv* env, jclass, j
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeForgetNoiseFloor(JNIEnv*, jclass, jlong handle) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer != nullptr) analyzer->forgetNoiseFloor();
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetLevels(JNIEnv* env, jclass, jlong handle,
                                                         jint consumer, jfloatArray out32,
                                                         jfloatArray out16) {

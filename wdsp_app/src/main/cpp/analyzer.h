@@ -62,6 +62,11 @@ public:
     void setAgcConfig(int consumer, const AgcConfig& config);
     /** Response the hardware DSP will add, in dB, on the 16 hardware bands. */
     void setDspCurve(const float* curve16);
+    /**
+     * Forgets the learned noise floor, as a new analyser would start, without dropping the stream.
+     * For waking up: the car was parked and started since the floor was learned.
+     */
+    void forgetNoiseFloor();
 
     // There used to be a setIsAcoustic(bool) here, documented in three places as disabling the
     // noise floor subtraction for microphone input so sub-bass could move freely. It disabled

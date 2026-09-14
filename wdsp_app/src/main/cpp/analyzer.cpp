@@ -127,6 +127,14 @@ void Analyzer::setDspCurve(const float* curve16) {
     }
 }
 
+void Analyzer::forgetNoiseFloor() {
+    // Same lock processFrame holds while it reads and teaches the floor.
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (int i = 0; i < kBands; i++) {
+        noiseFloor_[i] = 0.0f;
+    }
+}
+
 int Analyzer::pushWaveform(const uint8_t* block, int len) {
     int fresh;
     {

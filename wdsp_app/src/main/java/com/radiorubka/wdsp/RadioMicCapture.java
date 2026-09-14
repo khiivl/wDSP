@@ -106,11 +106,26 @@ public class RadioMicCapture {
 
     private AudioRecord audioRecord;
     private MicProbe.Suspension suspension;
-    private Thread captureThread;
+    /** Volatile because isCapturing() reads it from other threads, without the lock. */
+    private volatile Thread captureThread;
     private volatile boolean running = false;
     private float currentGain = 1.0f;
     /** The cabin's own level, in RMS counts, measured from the raw stream. 0 until the first chunk. */
     private volatile float noiseRms = 0f;
+    /**
+     * Set from outside, consumed by the capture thread before its next chunk. The floor and the gain
+     * are the capture thread's own; writing them from another thread would race its
+     * read-modify-write and could be undone by the chunk already in flight.
+     */
+    private volatile boolean forgetFloorRequested = false;
+
+    /**
+     * Forget the cabin's floor and the gain, as a fresh start would, without closing the stream.
+     * For waking up: the car was parked and started since the floor was learned.
+     */
+    public void forgetNoiseFloor() {
+        forgetFloorRequested = true;
+    }
 
     /**
      * Whether the application believes nothing is coming out of the speakers right now.
@@ -140,7 +155,10 @@ public class RadioMicCapture {
     private int bufferSize;
 
     public synchronized boolean start(Context context, PcmCallback callback) {
-        if (running) return true;
+        if (isCapturing()) return true;
+        // Started, but the read loop is gone: the stream died underneath us. Give its recorder back
+        // before opening a new one. This used to answer "already running" and do nothing.
+        if (running) stop();
         if (context == null || callback == null) return false;
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
@@ -160,8 +178,10 @@ public class RadioMicCapture {
         // A fresh floor: the previous session may have ended in a different car, at a different
         // speed, or with the blower on. Carrying its number over would gate this one wrongly.
         noiseRms = 0f;
+        forgetFloorRequested = false;
 
         captureThread = new Thread(() -> {
+          try {
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
             short[] shortChunk = new short[CHUNK_SIZE];
             short[] agcChunk = new short[CHUNK_SIZE];
@@ -182,7 +202,10 @@ public class RadioMicCapture {
 
                 int read = rec.read(shortChunk, 0, CHUNK_SIZE);
                 if (read <= 0) {
-                    if (read == AudioRecord.ERROR_INVALID_OPERATION || read == AudioRecord.ERROR_BAD_VALUE) {
+                    // Every negative value ends the loop. ERROR_DEAD_OBJECT (-6) - the recorder is
+                    // gone, e.g. audioserver restarted - used to fall through to the sleep below and
+                    // spin there for ever, a thread that looked alive over a stream that was not.
+                    if (read < 0) {
                         Log.w(TAG, "AudioRecord read error: " + read);
                         break;
                     }
@@ -193,6 +216,12 @@ public class RadioMicCapture {
                         break;
                     }
                     continue;
+                }
+
+                if (forgetFloorRequested) {
+                    forgetFloorRequested = false;
+                    noiseRms = 0f;
+                    currentGain = 1.0f;
                 }
 
                 if (probing) {
@@ -318,6 +347,13 @@ public class RadioMicCapture {
                     Log.w(TAG, "PCM callback exception: " + t);
                 }
             }
+          } finally {
+            // Nobody asked us to stop, yet the loop is over: from here isCapturing() says so, and
+            // the engine opens the microphone again on its next start or watchdog pass.
+            if (running && captureThread == Thread.currentThread()) {
+                Log.w(TAG, "capture loop ended by itself - the stream is dead until reopened");
+            }
+          }
         }, "wDSP_RadioMic");
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
@@ -461,7 +497,24 @@ public class RadioMicCapture {
         }
     }
 
+    /**
+     * Started and not yet stopped - that is, holding a recorder that stop() has to give back. Says
+     * nothing about whether anything is being read; that is {@link #isCapturing()}.
+     */
     public boolean isRunning() {
         return running;
+    }
+
+    /**
+     * Started, and the read loop is still alive.
+     *
+     * <p>Not the same as {@link #isRunning()}, and the difference is the point: the loop leaves on a
+     * read error while {@code running} stays true until someone calls stop(). Asked "is the
+     * microphone ours" with isRunning(), a dead stream answered yes indefinitely - hidden only
+     * because every new listener closed and reopened the capture anyway (measured 14.09.2026).
+     */
+    public boolean isCapturing() {
+        Thread t = captureThread;
+        return running && t != null && t.isAlive();
     }
 }

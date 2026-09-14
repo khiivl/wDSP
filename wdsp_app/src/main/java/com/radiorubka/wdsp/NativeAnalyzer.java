@@ -104,6 +104,11 @@ public final class NativeAnalyzer {
         if (handle != 0) nativeSetDspCurve(handle, curve16);
     }
 
+    /** Forgets the learned noise floor without dropping the stream - for waking up. */
+    public void forgetNoiseFloor() {
+        if (handle != 0) nativeForgetNoiseFloor(handle);
+    }
+
     /** Display levels, 0..1, for one consumer. out16 may be null. */
     public void getLevels(int consumer, float[] out32, float[] out16) {
         if (handle != 0) nativeGetLevels(handle, consumer, out32, out16);
@@ -157,6 +162,8 @@ public final class NativeAnalyzer {
                                             float strength, float minRefDb);
 
     private static native void nativeSetDspCurve(long handle, float[] curve16);
+
+    private static native void nativeForgetNoiseFloor(long handle);
 
     private static native void nativeGetLevels(long handle, int consumer,
                                                float[] out32, float[] out16);
