@@ -41,11 +41,25 @@ public final class NativeAnalyzer {
     }
 
     private long handle;
+    private final boolean acoustic;
 
-    public NativeAnalyzer(int sampleRate, int captureSize) {
+    /**
+     * @param acoustic whether the input is a microphone. Fixed for the life of the analyser: a
+     *                 noise floor is learned and taken off only for acoustic input, and everything
+     *                 the engine sets on an analyser - curve, gain, latency - follows this one fact
+     *                 rather than whatever the capture happens to be doing at that moment.
+     */
+    public NativeAnalyzer(int sampleRate, int captureSize, boolean acoustic) {
+        this.acoustic = acoustic;
         if (available) {
             handle = nativeCreate(sampleRate, captureSize);
+            setNoiseFloorEnabled(acoustic);
         }
+    }
+
+    /** Whether this analyser listens to a microphone - see the constructor. */
+    public boolean isAcoustic() {
+        return acoustic;
     }
 
     public boolean isValid() {
@@ -158,8 +172,8 @@ public final class NativeAnalyzer {
 
     private static native void nativeGetTermsDb(long handle, float[] power, float[] floor, float[] curve);
 
-    /** Noise floor learning and subtraction: for a microphone only. Off in a new analyser. */
-    public void setNoiseFloorEnabled(boolean enabled) {
+    /** Noise floor learning and subtraction: for a microphone only. Set once, by the constructor. */
+    private void setNoiseFloorEnabled(boolean enabled) {
         if (handle != 0) nativeSetNoiseFloorEnabled(handle, enabled);
     }
 

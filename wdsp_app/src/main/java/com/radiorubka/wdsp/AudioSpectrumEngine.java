@@ -209,7 +209,7 @@ public class AudioSpectrumEngine {
 
     /** The decorations' gain floor for whatever is being drawn now. */
     private float barFloorDb() {
-        return isRadioCaptureActive() ? barAgcFloorDb : BAR_AGC_FLOOR_DIGITAL_DB;
+        return analysingMicrophone() ? barAgcFloorDb : BAR_AGC_FLOOR_DIGITAL_DB;
     }
 
     private boolean radioMicVisualizerEnabled = true;
@@ -679,8 +679,8 @@ public class AudioSpectrumEngine {
                 // The EFFECTIVE gain, not the preference: in microphone mode the main consumer is
                 // normalised regardless of it, and a log that printed the preference had me reading
                 // "agcMain=false" while the analyser was normalising.
-                + " agcMain=" + (isRadioCaptureActive() || mainAgcEnabled)
-                + (isRadioCaptureActive() ? " (forced: mic mode)" : "")
+                + " agcMain=" + mainGainEnabled(analyzer)
+                + (analyzer.isAcoustic() ? " (forced: mic mode)" : "")
                 + " agcBar=" + barAgcEnabled);
     }
 
@@ -714,19 +714,19 @@ public class AudioSpectrumEngine {
     /**
      * Single Source of Truth for spectrum analyzer curve (DSP EQ vs Mic Compensation).
      *
-     * - In Microphone capture mode (isRadioCaptureActive()):
+     * - For an analyser listening to the microphone (analysingMicrophone()):
      *   Sound in the cabin has already passed through the hardware DSP (BU32107), power amp,
      *   and cabin speakers. The analyzer must NOT apply DSP EQ again.
      *   Instead, it applies the calibrated microphone inverse compensation curve from
      *   RoomMeasurement.getMicCompensationCurve(appContext) to restore hardware mic roll-off
      *   in the sub-bass (20–125 Hz) and upper treble.
      *
-     * - In Calculated capture mode (!isRadioCaptureActive()):
+     * - For an analyser on the Visualizer tap:
      *   Audio is captured from pre-DSP AudioFlinger. The analyzer applies the simulated
      *   hardware DSP curve from getDspCurve().
      */
     public float[] getEffectiveSpectrumCurve() {
-        if (isRadioCaptureActive() || micModeInEffect()) {
+        if (analysingMicrophone()) {
             return RoomMeasurement.getMicCompensationCurve(appContext);
         }
         // Calculated mode: the DSP's own response, and nothing about the car.
@@ -1048,9 +1048,28 @@ public class AudioSpectrumEngine {
      * carries no cabin noise, and a floor subtracted from it can only eat content.
      */
     private static NativeAnalyzer newAnalyzer(int sampleRate, int captureSize, boolean acoustic) {
-        NativeAnalyzer analyzer = new NativeAnalyzer(sampleRate, captureSize);
-        analyzer.setNoiseFloorEnabled(acoustic);
-        return analyzer;
+        return new NativeAnalyzer(sampleRate, captureSize, acoustic);
+    }
+
+    /**
+     * Whether the analyser that is running listens to a microphone.
+     *
+     * <p>🔴 The one question every setting pushed into an analyser depends on - the curve (the
+     * microphone's compensation or the DSP model), the main gain, the display latency, the decorations'
+     * gain floor, the frame rate - and it is answered by the analyser itself, which was told at
+     * creation what feeds it. Until 14.09.2026 each of those asked something else: whether the
+     * capture thread was alive, or which mode had been chosen - three answers to one question, which
+     * part company exactly when it matters. A microphone stream that dies ("capture loop ended by
+     * itself") leaves its acoustic analyser running until the watchdog reopens it, and every frame in
+     * between took the digital tap's gain floor, as would any settings push the digital latency and
+     * no gain. A mode that says microphone while the Visualizer's analyser still runs - after a call,
+     * until the watchdog switches - would hand that analyser the microphone's +30 dB bass
+     * compensation. Found reading the code, not seen on screen; owner: "це не дрібне, це не
+     * стабільна поведінка".
+     */
+    private boolean analysingMicrophone() {
+        NativeAnalyzer analyzer = nativeAnalyzer;
+        return analyzer != null && analyzer.isAcoustic();
     }
 
     /**
@@ -1206,7 +1225,8 @@ public class AudioSpectrumEngine {
     public void applyNativeSettings() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        boolean radioActive = isRadioCaptureActive();
+        // What this analyser is fed, as it was told when it was made - see analysingMicrophone().
+        boolean radioActive = analyzer.isAcoustic();
         float latency = radioActive ? 0f : nativeLatencyMs;
         analyzer.setConfig(nativeAttackMs, nativeReleaseMs, latency,
                 nativeRefMaxDb, nativeRangeDb);
@@ -1227,19 +1247,36 @@ public class AudioSpectrumEngine {
         // the car happens to be playing. So normalisation goes here, in the decibel domain, where it
         // cannot corrupt the floor - instead of in the capture, where it did. No new setting: the
         // owner's rule is that the default must already be right.
-        final boolean mainAgc = radioActive || mainAgcEnabled;
-        final float mainStrength = radioActive ? 1.0f : mainAgcStrength;
-        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainAgc, mainStrength, mainAgcFloorDb);
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainGainEnabled(analyzer),
+                mainGainStrength(analyzer), mainAgcFloorDb);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength, barFloorDb());
         // The curve is handed over by dispatchNativeFrame, the only place that does it.
         nativeCurveStale = true;
+    }
+
+    /**
+     * Whether the main consumer's gain is on for this analyser: always for a microphone (see
+     * applyNativeSettings for why), otherwise as the preference says.
+     *
+     * <p>🔴 One function because the answer was given in two places that disagreed.
+     * applyNativeSettings forced the gain on for a microphone, and dispatchNativeFrame then set it
+     * back from the preference on every frame - so the forcing lasted until the next frame, a few
+     * milliseconds, and the normalised microphone levels were never normalised by default.
+     */
+    private boolean mainGainEnabled(NativeAnalyzer analyzer) {
+        return analyzer.isAcoustic() || mainAgcEnabled;
+    }
+
+    /** The strength that goes with {@link #mainGainEnabled}: full for a microphone. */
+    private float mainGainStrength(NativeAnalyzer analyzer) {
+        return analyzer.isAcoustic() ? 1.0f : mainAgcStrength;
     }
 
     /** Picks the frame rate from who is actually watching. */
     private void applyAnalysisProfile() {
         NativeAnalyzer analyzer = nativeAnalyzer;
         if (analyzer == null || !analyzer.isValid()) return;
-        if (isRadioCaptureActive()) {
+        if (analyzer.isAcoustic()) {
             analyzer.setHop(HOP_ACTIVE);
         } else {
             analyzer.setHop(hasListenerFor(NativeAnalyzer.CONSUMER_MAIN) ? HOP_ACTIVE : HOP_IDLE);
@@ -1281,8 +1318,8 @@ public class AudioSpectrumEngine {
             // for the other. Two calls because the gain state is per consumer by design.
             analyzer.setAgc(consumer, false, 0f, 0f);
             analyzer.getLevels(consumer, f.level32, f.level16);
-            boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcEnabled : barAgcEnabled;
-            float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcStrength : barAgcStrength;
+            boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainEnabled(analyzer) : barAgcEnabled;
+            float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainStrength(analyzer) : barAgcStrength;
             float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barFloorDb();
             analyzer.setAgc(consumer, enabled, strength, floorDb);
             analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
