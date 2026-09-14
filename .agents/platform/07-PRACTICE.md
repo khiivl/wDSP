@@ -113,6 +113,15 @@ logcat buffer**, and adb over Wi-Fi drops while the unit sleeps. What does work:
 - **Shell daemons survive sleep.** A process started in the background from a shell - root or not -
   keeps running through ACC off and on, and it is **among the very first things to wake**, so it can
   write down anything from the first moments after wake-up. It does not survive a reboot.
+- 📻 **An app process survives it the same way, native code and open audio streams included**
+  (owner's suspicion, confirmed 14.09.2026). wDSP across ~15 minutes of sleep: the same pid, started
+  01:48:18 and still running at 02:33; its worker, render and GPU threads carry start times from
+  before the sleep; and the capture thread - an `AudioRecord` read loop - logged a sample at
+  02:26:50.090, **82 ms before the Google assistant opened anything and 364 ms before `ACC_ON` was
+  delivered**. Nothing was restarted; everything was frozen and thawed. It is a real
+  suspend-to-RAM, not a screen-off: `/sys/power/mem_sleep` is `s2idle [deep]` and
+  `/d/suspend_stats` counted 4 successful suspends since that boot. ⇒ Code that "restarts things on
+  ACC_ON so they come back" is restarting things that never went away.
 - So start the observer on the unit, detached, writing to the card, and read the files afterwards:
 
 ```sh
@@ -129,7 +138,14 @@ done
 logcat does not carry, snapshot it in the loop - e.g. `dumpsys media.audio_flinger` for the input
 sample rate and `dumpsys audio | grep 'rec '` for who opened the microphone. The recording event log
 in `dumpsys audio` itself lives in system_server and does not roll the way logcat does.
-Remember to kill the daemon afterwards (`pkill -f watch.sh; pkill logcat`).
+Remember to kill the daemon afterwards (`pkill -f watch.sh; pkill logcat`). ⚠️ Not as
+`adb shell "su -c 'pkill -f watch.sh; …'"`: `-f` matches the full command line, and that line is
+the `su -c` itself - it kills its own shell (exit 143) and may stop before the rest runs. Check with
+`ps -A -o PID,ARGS | grep watch` afterwards.
+
+⚠️ `dmesg` on this unit is useless for the suspend timeline: a vendor `system_rescue` process runs
+`ps` every 5 s and floods the ring with SELinux audit lines, so `PM: suspend entry/exit` has rolled
+out within minutes. `/d/suspend_stats` keeps the count.
 
 ## 8. Host tests for anything measured
 

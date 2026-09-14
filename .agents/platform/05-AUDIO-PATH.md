@@ -172,7 +172,7 @@ wakes before anything else (`07-PRACTICE.md` §7), plus `dumpsys audio`:
 ```
 
 So "who is first after sleep" is the wrong question on this unit: **the input does not close for
-sleep.** A capture that was open when the unit froze is still open when it thaws, and the
+sleep** — the process holding it is frozen and thawed whole, not restarted (`07-PRACTICE.md` §7). A capture that was open when the unit froze is still open when it thaws, and the
 assistant, which does reopen and does so before `ACC_ON` is even delivered, joins a 48 kHz input
 that already exists — the "shared, not taken" case above. The owner saw it independently on the
 screen: the 12.5 kHz and 20 kHz bars moving.
