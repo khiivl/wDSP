@@ -239,6 +239,9 @@ int main() {
     // What the app plays (RoomMeasurement: DEFAULT_SECONDS, SWEEP_START_HZ, SWEEP_END_HZ).
     SweepMeasurement app(kRate, 20.0f, 20000.0f, 6.0f);
     testFlatResponse(app, "the app's sweep, 6 s, 20 Hz - 20 kHz", 1.0f);
+    // The subwoofer's (RoomMeasurement.SUB_SWEEP_START_HZ, owner 15.09.2026).
+    SweepMeasurement appSub(kRate, 15.0f, 20000.0f, 6.0f);
+    testFlatResponse(appSub, "the app's subwoofer sweep, 6 s, 15 Hz - 20 kHz", 1.0f);
     testKnownFilter(m);
     testKnownHighPass(m);
     testNoiseTolerance(m);

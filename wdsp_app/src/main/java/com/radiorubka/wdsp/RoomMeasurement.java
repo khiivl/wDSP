@@ -93,8 +93,19 @@ public final class RoomMeasurement {
     private static final String TAG = "wDSP_RoomMeasure";
 
     private static final int SAMPLE_RATE = 48000;
-    /** 20 Hz is below anything a car door can reproduce, but the sweep costs nothing down there. */
+    /**
+     * Where the door channels' sweep starts. Owner, 15.09.2026: 20 Hz for the doors, 15 Hz for the
+     * subwoofer. The doors play without their high-pass during a measurement (the scratch preset sets
+     * it Through), and below 20 Hz their cones travel further for nothing a door can reproduce.
+     */
     private static final float SWEEP_START_HZ = 20f;
+    /**
+     * Where the subwoofer's sweep starts, so that its 20 Hz band (about 16-25 Hz) is excited whole
+     * rather than from its centre up. Same length as the doors' sweep: one pass, one period, and the
+     * arrival of a sweep's impulse does not depend on where the sweep starts, so the delays - which
+     * are differences between channels - stay exact.
+     */
+    private static final float SUB_SWEEP_START_HZ = 15f;
     private static final float SWEEP_END_HZ = 20000f;
     /**
      * Where the sweep stops when the microphone is stuck at 16 kHz.
@@ -1732,12 +1743,14 @@ public final class RoomMeasurement {
                 + " copied from " + preset + "; the user's selection is in " + PREF_RECOVERY
                 + " and is restored in the finally block and by restoreIfInterrupted()");
 
-        try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds)) {
-            if (!sweep.isValid()) {
+        try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds);
+             NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ, topHz, seconds)) {
+            if (!sweep.isValid() || !subSweep.isValid() || subSweep.length() != sweep.length()) {
                 result.error = "the sweep could not be built";
                 return result;
             }
-            runOnePass(app, prefs, SCRATCH_PRESET, sweep, amplitude, result, listener, isMicCalibrationOnly);
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, amplitude, result, listener,
+                    isMicCalibrationOnly);
 
             if (!isMicCalibrationOnly) {
                 if (listener != null) {
@@ -1811,9 +1824,13 @@ public final class RoomMeasurement {
      * The routing is switched during the silence between sweeps, which is also where the cabin is
      * given time to stop ringing.
      */
+    /**
+     * @param sweep    the doors' sweep ({@link #SWEEP_START_HZ})
+     * @param subSweep the subwoofer's ({@link #SUB_SWEEP_START_HZ}), the same length
+     */
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
-                                   NativeSweep sweep, float amplitude, Result result,
-                                   Listener listener, boolean isMicCalibrationOnly) {
+                                   NativeSweep sweep, NativeSweep subSweep, float amplitude,
+                                   Result result, Listener listener, boolean isMicCalibrationOnly) {
         final Channel[] channels = result.hasSubwoofer ? Channel.values() : new Channel[]{
                 Channel.REAR_LEFT, Channel.REAR_RIGHT, Channel.FRONT_LEFT, Channel.FRONT_RIGHT
         };
@@ -1826,14 +1843,17 @@ public final class RoomMeasurement {
 
         float[] mono = new float[sweepLen];
         sweep.generate(mono, amplitude);
+        float[] monoSub = new float[sweepLen];
+        subSweep.generate(monoSub, amplitude);
 
         // One long track: quiet, sweep, quiet, sweep, and so on.
         short[] stereo = new short[totalFrames * 2];
         for (int k = 0; k < channels.length; k++) {
             final int at = lead + k * period;
+            final float[] source = channels[k] == Channel.SUBWOOFER ? monoSub : mono;
             for (int i = 0; i < sweepLen; i++) {
                 short v = (short) Math.max(Short.MIN_VALUE,
-                        Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+                        Math.min(Short.MAX_VALUE, Math.round(source[i] * Short.MAX_VALUE)));
                 stereo[(at + i) * 2] = v;
                 stereo[(at + i) * 2 + 1] = v;
             }
@@ -2099,7 +2119,9 @@ public final class RoomMeasurement {
             cr.recordedPeak = windowPeak / 32768f;
             cr.recordedRms = (float) Math.sqrt(windowSum / len);
 
-            if (!sweep.analyse(window, len, analysis)) {
+            // Each sweep is taken apart with its own inverse filter.
+            final NativeSweep played = channels[k] == Channel.SUBWOOFER ? subSweep : sweep;
+            if (!played.analyse(window, len, analysis)) {
                 Log.w(TAG, cr.label + ": nothing in this part of the recording looked like the "
                         + "sweep");
                 continue;
@@ -2120,7 +2142,7 @@ public final class RoomMeasurement {
 
             // Deconvolve impulse response for GCC-PHAT
             float[] impBuf = new float[len];
-            int impLen = sweep.deconvolve(window, len, impBuf);
+            int impLen = played.deconvolve(window, len, impBuf);
             if (impLen > 0) {
                 channelImpulses[k] = new float[impLen];
                 System.arraycopy(impBuf, 0, channelImpulses[k], 0, impLen);
@@ -3502,6 +3524,8 @@ public final class RoomMeasurement {
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(amplitude)
                     .append(" sweep=").append(seconds).append(" s")
+                    .append(" from ").append((int) SWEEP_START_HZ).append(" Hz (subwoofer from ")
+                    .append((int) SUB_SWEEP_START_HZ).append(" Hz)")
                     .append(" up to ").append((int) result.sweepTopHz).append(" Hz\n");
             sb.append("soundstage: ").append(result.soundstageMode.title).append('\n');
             sb.append("cabin body: ").append(result.bodyType.title)
