@@ -283,6 +283,7 @@ public final class SystemDiagnostics {
         appendPcm(sb);
         appendSpectrum(sb);
         appendNowPlaying(sb, context);
+        appendScreensaver(sb, context);
 
         if (withMicrophoneProbe) {
             sb.append(microphoneProbe());
@@ -463,6 +464,16 @@ public final class SystemDiagnostics {
         float p = np.progress();
         sb.append(String.format(Locale.US, "  progress    = %s%n",
                 p < 0 ? "unknown" : String.format(Locale.US, "%.0f%%", p * 100f)));
+        sb.append('\n');
+    }
+
+    private static void appendScreensaver(StringBuilder sb, Context context) {
+        sb.append("SCREENSAVER - whether it may appear, and what held it back\n");
+        try {
+            sb.append(ScreensaverManager.getInstance(context).describeForReport());
+        } catch (Throwable t) {
+            sb.append("  could not be asked: ").append(t).append('\n');
+        }
         sb.append('\n');
     }
 

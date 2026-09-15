@@ -21,7 +21,10 @@ import android.widget.FrameLayout;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -159,6 +162,13 @@ public final class ScreensaverManager {
 
     private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
     private static final String PROP_NAVI_SPEAKING = "sys.qf.navi_state";
+    /**
+     * ❓ Read here as "the floating navigation bar is up" and "a floating video window is up". In the
+     * decompiled framework both are entries of {@code ConfigInfoConstant.SET_CHECKBOX_NAME_MAP}, the
+     * factory settings' checkboxes - so what they may say is that the feature is switched on, which
+     * would hold the screensaver back on that unit for good. Not changed until the owner decides;
+     * the report prints both, so a tester's unit can say which it is (15.09.2026).
+     */
     private static final String PROP_FLOAT_NAVI_BAR = "persist.sys.float_navi_bar";
     private static final String PROP_FLOAT_VIDEO = "persist.sys.has.float.video";
 
@@ -192,6 +202,26 @@ public final class ScreensaverManager {
     private boolean previewMode = false;
     private Boolean previewNight = null;
     private Integer previewStyle = null;
+
+    /*
+     * What the report says about why it did or did not appear (15.09.2026: testers write that it
+     * never appears, and nothing in their reports could say why). Written on the main thread by the
+     * tick and the touch watcher, read by the report from whatever thread builds it; each is one
+     * value, so volatile is enough.
+     */
+    /**
+     * Every reason it was held back, with how many ticks and when last. A map rather than one
+     * "last reason": the report is read from inside wDSP, where "wDSP itself is in front" is true on
+     * every tick and would overwrite whatever held it back before the person opened the app.
+     */
+    private final java.util.Map<String, long[]> heldBack = new java.util.LinkedHashMap<>();
+    private volatile String lastShownOver = "";
+    private volatile long lastShownAt = 0L;
+    private volatile long longestIdleMs = 0L;
+    private volatile int touches = 0;
+    private volatile long lastTouchAt = 0L;
+    private volatile int foregroundChanges = 0;
+    private volatile long lastForegroundChangeAt = 0L;
 
     /**
      * Hears every touch on the unit, so that idle means idle.
@@ -797,6 +827,47 @@ public final class ScreensaverManager {
      */
     private GestureDetector detector;
 
+    /*
+     * Where each touch landed and what it was taken for (owner, 15.09.2026: the firmwares of the
+     * vertical Tesla-style screens are not standard, and nobody knows how the zones come out on
+     * them). The zones are computed from the real screen size, the status bar height and the
+     * now-playing strip, while the touch arrives in the coordinates of whatever window the platform
+     * actually gave the overlay - if that window is not the whole screen, the two disagree, and only
+     * a record of both can show it. Kept in the report as well as the log, because a tester's unit
+     * sends a report and never a log.
+     */
+    private static final int TOUCHES_KEPT = 12;
+    private final java.util.ArrayDeque<String> recentTouches = new java.util.ArrayDeque<>();
+    private View gestureView;
+    private float downRawX, downRawY;
+
+    private void noteTouch(String what) {
+        Log.i(TAG, "touch: " + what);
+        String line = new SimpleDateFormat("HH:mm:ss", Locale.US).format(new Date()) + "  " + what;
+        synchronized (recentTouches) {
+            recentTouches.addLast(line);
+            while (recentTouches.size() > TOUCHES_KEPT) recentTouches.removeFirst();
+        }
+    }
+
+    /** The touch in both coordinate systems, and the numbers the zones were computed from. */
+    private String touchGeometry(float x, float y) {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        View v = gestureView;
+        int[] loc = new int[2];
+        int vw = -1, vh = -1;
+        if (v != null) {
+            v.getLocationOnScreen(loc);
+            vw = v.getWidth();
+            vh = v.getHeight();
+        }
+        return String.format(Locale.US,
+                "at %.0f,%.0f in the window (%.0f,%.0f on screen), window %dx%d at %d,%d;"
+                        + " zones from screen %dx%d, top bar %d, now-playing strip %d",
+                x, y, downRawX, downRawY, vw, vh, loc[0], loc[1],
+                strip.screenWidth(), strip.screenHeight(), strip.systemStatusBarHeight(), infoBarPx());
+    }
+
     private View.OnTouchListener gestures() {
         if (touchListener == null) {
             detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
@@ -823,6 +894,11 @@ public final class ScreensaverManager {
             });
             detector.setIsLongpressEnabled(false);
             touchListener = (view, event) -> {
+                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    gestureView = view;
+                    downRawX = event.getRawX();
+                    downRawY = event.getRawY();
+                }
                 detector.onTouchEvent(event);
                 int action = event.getActionMasked();
                 if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
@@ -839,6 +915,7 @@ public final class ScreensaverManager {
      */
     private void onTap(float x, float y) {
         if (previewMode) {
+            noteTouch("tap " + touchGeometry(x, y) + " -> put away (preview)");
             hide();
             return;
         }
@@ -851,9 +928,11 @@ public final class ScreensaverManager {
 
         // Lower half boundary: evenly distributed between the statusbar and the bottom stripe
         float midY = top + usableH * TRANSPORT_FROM;
+        String tap = "tap " + touchGeometry(x, y) + String.format(Locale.US, ", middle line y=%.0f", midY);
 
         // 1. Taps in upper area dismiss the screensaver
         if (y < midY) {
+            noteTouch(tap + " -> above it: put away");
             hide();
             return;
         }
@@ -866,6 +945,8 @@ public final class ScreensaverManager {
         float dx = x - btnCx;
         float dy = y - btnCy;
         if ((dx * dx + dy * dy) <= (btnHitRadius * btnHitRadius)) {
+            noteTouch(tap + String.format(Locale.US, " -> style button (centre %.0f,%.0f r %.0f)",
+                    btnCx, btnCy, btnHitRadius));
             cycleVisualizerStyle();
             resetIdleClock();
             return;
@@ -886,6 +967,7 @@ public final class ScreensaverManager {
                 try {
                     Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
                     if (launch != null) {
+                        noteTouch(tap + " -> cover: open " + pkg);
                         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(launch);
                         hide();
@@ -906,13 +988,18 @@ public final class ScreensaverManager {
 
         NowPlaying np = NowPlaying.getInstance(context);
         int glyph;
+        String zones = String.format(Locale.US, ", transport zones split at x=%.0f and x=%.0f",
+                leftBound + zoneW, leftBound + 2.0f * zoneW);
         if (x < leftBound + zoneW) {
+            noteTouch(tap + zones + " -> previous");
             np.skipToPrevious();
             glyph = StatusBarVisualizerView.GLYPH_PREVIOUS;
         } else if (x > leftBound + 2.0f * zoneW) {
+            noteTouch(tap + zones + " -> next");
             np.skipToNext();
             glyph = StatusBarVisualizerView.GLYPH_NEXT;
         } else {
+            noteTouch(tap + zones + " -> play/pause");
             boolean playing = np.isPlaying();
             np.playPause();
             glyph = playing ? StatusBarVisualizerView.GLYPH_PAUSE : StatusBarVisualizerView.GLYPH_PLAY;
@@ -982,6 +1069,9 @@ public final class ScreensaverManager {
                 grabbed = GRAB_BRIGHT;
                 grabValue = brightness();
             }
+            noteTouch("drag from " + touchGeometry(downX, downY) + String.format(Locale.US,
+                    "; to top %.2f, bottom %.2f, left %.2f, right %.2f of the usable screen, edge zone %.2f -> %s",
+                    toTop, toBottom, toLeft, toRight, EDGE_F, grabName(grabbed)));
         }
 
         // Up is more and right is more, whichever way the finger actually went.
@@ -1010,11 +1100,24 @@ public final class ScreensaverManager {
         }
     }
 
+    private static String grabName(int grab) {
+        switch (grab) {
+            case GRAB_HEIGHT: return "height";
+            case GRAB_WIDTH: return "width";
+            case GRAB_BRIGHT: return "brightness";
+            case GRAB_BACKDROP: return "backdrop";
+            case GRAB_UNDECIDED: return "undecided";
+            default: return "nothing";
+        }
+    }
+
     private void commitDrag() {
         if (grabbed == GRAB_UNDECIDED || grabbed == GRAB_NONE) {
             grabbed = GRAB_NONE;
             return;
         }
+        noteTouch(String.format(Locale.US, "drag released: %s, width %.2f, height %.2f, brightness %d, backdrop %d",
+                grabName(grabbed), liveWidthF, liveHeightF, liveBrightness, liveBackdrop));
         SharedPreferences.Editor editor = prefs.edit();
         if (liveWidthF > 0f) editor.putFloat(PREF_WIDTH_F, liveWidthF);
         if (liveHeightF > 0f) editor.putFloat(PREF_HEIGHT_F, liveHeightF);
@@ -1154,6 +1257,8 @@ public final class ScreensaverManager {
      */
     private void onTouchedSomewhere() {
         if (attached) return;
+        touches++;
+        lastTouchAt = System.currentTimeMillis();
         resetIdleClock();
     }
 
@@ -1185,6 +1290,7 @@ public final class ScreensaverManager {
     private void tick() {
         updatePlaybackBelief();
         if (CallState.isActive()) {
+            noteHeldBack("a call is in progress");
             onCallInProgress();
             return;
         }
@@ -1205,16 +1311,33 @@ public final class ScreensaverManager {
 
         if (!foreground.equals(lastForeground)) {
             lastForeground = foreground;
+            foregroundChanges++;
+            lastForegroundChangeAt = System.currentTimeMillis();
             resetIdleClock();
             return;
         }
 
-        if (!mayShowOver(foreground)) {
+        String reason = whyHeldBack(foreground);
+        if (reason != null) {
+            noteHeldBack(reason);
             resetIdleClock();
             return;
         }
 
+        if (idleMs > longestIdleMs) longestIdleMs = idleMs;
         if (idleMs >= delaySeconds() * 1000L) show();
+    }
+
+    private void noteHeldBack(String reason) {
+        synchronized (heldBack) {
+            long[] seen = heldBack.get(reason);
+            if (seen == null) {
+                seen = new long[2];
+                heldBack.put(reason, seen);
+            }
+            seen[0]++;
+            seen[1] = System.currentTimeMillis();
+        }
     }
 
     /**
@@ -1280,21 +1403,112 @@ public final class ScreensaverManager {
      * being wrong is not symmetric and neither is the test.
      */
     private boolean mayShowOver(String foreground) {
-        if (!isEnabled() || !screenOn || !canDrawOverlays()) return false;
-        if (CallState.isActive()) return false;
-        if (isTrue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))) return false;
-        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))) return false;
-        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) return false;
+        return whyHeldBack(foreground) == null;
+    }
+
+    /**
+     * Why the screensaver may not appear over what is in front right now, or null when it may.
+     *
+     * <p>The rules themselves live here and nowhere else: {@link #mayShowOver} asks this, and so
+     * does the report, so what a report says held it back is what did.
+     */
+    private String whyHeldBack(String foreground) {
+        if (!isEnabled()) return "switched off";
+        if (!screenOn) return "the screen is off (ACC_OFF)";
+        if (!canDrawOverlays()) return "no permission to draw over other apps";
+        if (CallState.isActive()) return "a call is in progress";
+        if (isTrue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))) {
+            return PROP_NAVI_SPEAKING + " is true - navigation is speaking";
+        }
+        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))) {
+            return PROP_FLOAT_NAVI_BAR + " is true";
+        }
+        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) {
+            return PROP_FLOAT_VIDEO + " is true";
+        }
         String pkg = packageOf(foreground);
-        if (pkg.isEmpty()) return false;
+        if (pkg.isEmpty()) {
+            return PROP_CURRENT_ACTIVITY + " is empty - the platform does not say what is in front";
+        }
         // Never over our own screens: somebody in there is adjusting the sound or this very
         // screensaver, and a curtain dropping over the equaliser mid-adjustment helps nobody.
         // Only Settings was excluded before; the main screen was not (owner, 11.09.2026). In code
         // rather than in the owner's list, which can be edited and travels with backups.
         if (pkg.equals(context.getPackageName())) {
-            return false;
+            return "wDSP itself is in front";
         }
-        return !blockedPackages().contains(pkg);
+        if (blockedPackages().contains(pkg)) {
+            return pkg + " is in the list of apps it never covers";
+        }
+        return null;
+    }
+
+    /**
+     * Everything needed to say, from a unit nobody here has seen, why the screensaver did or did
+     * not appear: each rule with the value it read, whether the idle clock ever got near the delay,
+     * and what last held it back.
+     */
+    public String describeForReport() {
+        long now = System.currentTimeMillis();
+        String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
+        String reasonNow = whyHeldBack(foreground);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(Locale.US, "  enabled            = %b, appears after %d s with no touch and no change of app%n",
+                isEnabled(), delaySeconds()));
+        sb.append(String.format(Locale.US, "  screen on          = %b%n", screenOn));
+        sb.append(String.format(Locale.US, "  overlay permission = %b%n", canDrawOverlays()));
+        sb.append(String.format(Locale.US, "  on screen now      = %b%s%n", attached, previewMode ? " (preview)" : ""));
+        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_CURRENT_ACTIVITY, orUnsetValue(foreground)));
+        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_NAVI_SPEAKING,
+                orUnsetValue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))));
+        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_FLOAT_NAVI_BAR,
+                orUnsetValue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))));
+        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_FLOAT_VIDEO,
+                orUnsetValue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))));
+        sb.append(String.format(Locale.US, "  call in progress   = %b%n", CallState.isActive()));
+        sb.append(String.format(Locale.US, "  never covers       = %s%n", blockedPackages()));
+        sb.append("  right now          = ")
+                .append(reasonNow == null ? "may appear" : "held back: " + reasonNow).append('\n');
+        sb.append(String.format(Locale.US, "  touch watcher      = %s, %d touches counted, last %s%n",
+                touchWatcher != null && touchWatcher.isRunning() ? "running" : "NOT running",
+                touches, ago(lastTouchAt, now)));
+        sb.append(String.format(Locale.US, "  changes of app     = %d, last %s%n",
+                foregroundChanges, ago(lastForegroundChangeAt, now)));
+        sb.append(String.format(Locale.US, "  longest idle       = %d s of the %d s needed%n",
+                longestIdleMs / 1000L, delaySeconds()));
+        synchronized (heldBack) {
+            if (heldBack.isEmpty()) {
+                sb.append("  held back by       = nothing so far\n");
+            } else {
+                sb.append("  held back by       (ticks every 2 s, since start)\n");
+                for (java.util.Map.Entry<String, long[]> e : heldBack.entrySet()) {
+                    sb.append(String.format(Locale.US, "    %5d x  %s, last %s%n",
+                            e.getValue()[0], e.getKey(), ago(e.getValue()[1], now)));
+                }
+            }
+        }
+        sb.append("  last shown         = ")
+                .append(lastShownAt == 0L ? "never" : "over " + lastShownOver + ", " + ago(lastShownAt, now))
+                .append('\n');
+        synchronized (recentTouches) {
+            if (recentTouches.isEmpty()) {
+                sb.append("  touches on it      = none since start\n");
+            } else {
+                sb.append("  touches on it      (last ").append(TOUCHES_KEPT).append(", -1 means not changed)\n");
+                for (String line : recentTouches) sb.append("    ").append(line).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String ago(long at, long now) {
+        if (at == 0L) return "never";
+        return new SimpleDateFormat("HH:mm:ss", Locale.US).format(new Date(at))
+                + " (" + Math.max(0L, (now - at) / 1000L) + " s ago)";
+    }
+
+    private static String orUnsetValue(String value) {
+        return value == null || value.isEmpty() ? "(unset)" : value;
     }
 
     /** {@code com.example/.MainActivity} -> {@code com.example} */
@@ -1338,6 +1552,8 @@ public final class ScreensaverManager {
                     lendStripOrBuildOwn();
                 }
                 attached = true;
+                lastShownAt = System.currentTimeMillis();
+                lastShownOver = previewMode ? "(preview)" : lastForeground;
                 announce(ACTION_SHOWN);
                 Log.i(TAG, "screensaver shown over " + lastForeground);
             } catch (Throwable t) {
