@@ -135,7 +135,7 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean isUpdatingStyleUi = false;
 
     // EQ Visualizer
-    private TextView btnEqVisToggle, btnVisNormalizationToggle;
+    private TextView btnEqVisToggle;
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
 
     // Permissions & Backup
@@ -539,7 +539,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         // EQ Spectrum Visualizer
         btnEqVisToggle = findViewById(R.id.btn_eq_vis_toggle);
-        btnVisNormalizationToggle = findViewById(R.id.btn_vis_normalization_toggle);
         btnEqVisSpectrum = findViewById(R.id.btn_eq_vis_spectrum);
         btnEqVisMonochrome = findViewById(R.id.btn_eq_vis_monochrome);
 
@@ -561,13 +560,6 @@ public class SettingsActivity extends AppCompatActivity {
                 boolean active = !sbm.getNormalizationForStyle(editingEffect);
                 sbm.setNormalizationForStyle(editingEffect, active);
                 styleOnOffButton(btnStatusBarNormalizationToggle, active);
-            });
-        }
-        if (btnVisNormalizationToggle != null) {
-            btnVisNormalizationToggle.setOnClickListener(v -> {
-                boolean active = !ThemeManager.prefs(this).getBoolean("pref_eq_visualizer_normalization", false);
-                ThemeManager.prefs(this).edit().putBoolean("pref_eq_visualizer_normalization", active).apply();
-                styleOnOffButton(btnVisNormalizationToggle, active);
             });
         }
 
@@ -1229,10 +1221,6 @@ public class SettingsActivity extends AppCompatActivity {
         int eqVisMode = p.getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
 
-        if (btnVisNormalizationToggle != null) {
-            styleOnOffButton(btnVisNormalizationToggle, p.getBoolean("pref_eq_visualizer_normalization", false));
-        }
-
         loadAnalyzerSettings(p);
         loadScreensaverSettings();
 
@@ -1254,9 +1242,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     // --- Точність аналізатора та синхронізація ---------------------------------------------------
 
-    private TextView btnAgcMainToggle, btnAgcBarToggle, btnRadioMicVisToggle;
-    private Slider seekAgcMainStrength, seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
-    private TextView tvAgcMainStrength, tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
+    // No main-analyser AGC controls any more (owner, 15.09.2026): the main spectrum is drawn relative
+    // to its own average, in the equaliser's dB, and a gain on it would change nothing that is shown.
+    private TextView btnAgcBarToggle, btnRadioMicVisToggle;
+    private Slider seekAgcBarStrength, seekLatencyTrim, seekRangeDb;
+    private TextView tvAgcBarStrength, tvLatencyTrim, tvRangeDb;
     private TextView tvSyncStatus;
     private TextView tvRoomStatus, tvRoomMicCalStatus;
     private TextView btnScreensaverToggle;
@@ -1279,25 +1269,14 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String PREF_ASKED_RECORD_AUDIO = "asked_record_audio";
 
     private void initAnalyzerControls() {
-        btnAgcMainToggle = findViewById(R.id.btn_agc_main_toggle);
         btnAgcBarToggle = findViewById(R.id.btn_agc_bar_toggle);
-        seekAgcMainStrength = findViewById(R.id.seek_agc_main_strength);
         seekAgcBarStrength = findViewById(R.id.seek_agc_bar_strength);
         seekLatencyTrim = findViewById(R.id.seek_latency_trim);
         seekRangeDb = findViewById(R.id.seek_range_db);
-        tvAgcMainStrength = findViewById(R.id.tv_agc_main_strength);
         tvAgcBarStrength = findViewById(R.id.tv_agc_bar_strength);
         tvLatencyTrim = findViewById(R.id.tv_latency_trim);
         tvRangeDb = findViewById(R.id.tv_range_db);
 
-        if (btnAgcMainToggle != null) {
-            btnAgcMainToggle.setOnClickListener(v -> {
-                SharedPreferences p = ThemeManager.prefs(this);
-                boolean active = !p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
-                saveAnalyzerPref(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, active);
-                styleOnOffButton(btnAgcMainToggle, active);
-            });
-        }
         if (btnAgcBarToggle != null) {
             btnAgcBarToggle.setOnClickListener(v -> {
                 SharedPreferences p = ThemeManager.prefs(this);
@@ -1317,8 +1296,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        bindAnalyzerSlider(seekAgcMainStrength, tvAgcMainStrength,
-                AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, getString(R.string.format_percent));
         bindAnalyzerSlider(seekAgcBarStrength, tvAgcBarStrength,
                 AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, getString(R.string.format_percent));
         bindAnalyzerSlider(seekLatencyTrim, tvLatencyTrim,
@@ -2667,27 +2644,18 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void loadAnalyzerSettings(SharedPreferences p) {
-        if (btnAgcMainToggle == null) return;
-        boolean agcMain = p.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false);
+        if (btnAgcBarToggle == null) return;
         boolean agcBar = p.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true);
         boolean radioMicVis = p.getBoolean(AudioSpectrumEngine.PREF_RADIO_MIC_VISUALIZER, true);
-        styleOnOffButton(btnAgcMainToggle, agcMain);
         styleOnOffButton(btnAgcBarToggle, agcBar);
         if (btnRadioMicVisToggle != null) {
             styleOnOffButton(btnRadioMicVisToggle, radioMicVis);
         }
 
-        int mainStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_MAIN_STRENGTH, 60);
         int barStrength = p.getInt(AudioSpectrumEngine.PREF_AGC_BAR_STRENGTH, 100);
         int latencyTrim = p.getInt(AudioSpectrumEngine.PREF_LATENCY_TRIM, 0);
         int rangeDb = p.getInt(AudioSpectrumEngine.PREF_RANGE_DB, 60);
 
-        if (seekAgcMainStrength != null) {
-            seekAgcMainStrength.setValue(mainStrength);
-            if (tvAgcMainStrength != null) {
-                tvAgcMainStrength.setText(String.format(java.util.Locale.US, getString(R.string.format_percent), mainStrength));
-            }
-        }
         if (seekAgcBarStrength != null) {
             seekAgcBarStrength.setValue(barStrength);
             if (tvAgcBarStrength != null) {
@@ -3110,7 +3078,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
             R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
             R.id.label_eq_vis_mode,
-            R.id.label_sb_vis_normalization, R.id.label_vis_normalization,
+            R.id.label_sb_vis_normalization,
             R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
             R.id.label_latency_trim, R.id.label_sync_measure,
             R.id.label_range_db,
@@ -3137,9 +3105,9 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_status_bar_height, R.id.label_status_bar_offset_y,
             R.id.label_status_bar_alpha, R.id.tv_status_bar_placement_hint,
             R.id.desc_sb_vis_peaks, R.id.desc_sb_vis_mirror,
-            R.id.desc_sb_vis_normalization, R.id.desc_vis_normalization,
+            R.id.desc_sb_vis_normalization,
             R.id.desc_vis_oscillo_persistence,
-            R.id.desc_agc_main, R.id.desc_agc_bar, R.id.desc_latency_trim,
+            R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_no_root, R.id.desc_room_mic_spot,
             R.id.desc_system_report,
             R.id.tv_system_report_status,
@@ -3162,7 +3130,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Parameter row labels for sliders (16sp normal for high visibility from 1m)
         int[] sliderLabels = {
-            R.id.label_agc_main_strength, R.id.label_agc_bar_strength
+            R.id.label_agc_bar_strength
         };
         for (int id : sliderLabels) {
             TextView tv = findViewById(id);
@@ -3186,12 +3154,6 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvSolidHueVal != null) tvSolidHueVal.setTextColor(valueColor);
         if (tvSolidValVal != null) tvSolidValVal.setTextColor(valueColor);
         // The analyzer fold's own values (16sp bold for clear 1m readability)
-        if (tvAgcMainStrength != null) {
-            tvAgcMainStrength.setTextColor(valueColor);
-            tvAgcMainStrength.setTypeface(null, Typeface.BOLD);
-            tvAgcMainStrength.getPaint().setFakeBoldText(true);
-            tvAgcMainStrength.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        }
         if (tvAgcBarStrength != null) {
             tvAgcBarStrength.setTextColor(valueColor);
             tvAgcBarStrength.setTypeface(null, Typeface.BOLD);
@@ -3241,7 +3203,6 @@ public class SettingsActivity extends AppCompatActivity {
         tintSlider(seekStatusBarAlpha, accent);
 
         // Tint analyzer Sliders
-        tintSlider(seekAgcMainStrength, accent);
         tintSlider(seekAgcBarStrength, accent);
         tintSlider(seekLatencyTrim, accent);
         tintSlider(seekRangeDb, accent);
@@ -3367,12 +3328,6 @@ public class SettingsActivity extends AppCompatActivity {
         }
         if (btnEqVisToggle != null) {
             styleOnOffButton(btnEqVisToggle, prefs.getBoolean("pref_eq_visualizer_enabled", true));
-        }
-        if (btnVisNormalizationToggle != null) {
-            styleOnOffButton(btnVisNormalizationToggle, prefs.getBoolean("pref_eq_visualizer_normalization", false));
-        }
-        if (btnAgcMainToggle != null) {
-            styleOnOffButton(btnAgcMainToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_MAIN_ENABLED, false));
         }
         if (btnAgcBarToggle != null) {
             styleOnOffButton(btnAgcBarToggle, prefs.getBoolean(AudioSpectrumEngine.PREF_AGC_BAR_ENABLED, true));

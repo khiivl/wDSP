@@ -227,8 +227,6 @@ Par défaut global : %1$s</string>
     <string name="vis_normalization_desc">Nivellement doux de la dynamique pour les morceaux discrets</string>
     <string name="status_bar_bands_count">Nombre de bandes :</string>
     <string name="analyzer_section_title">Précision de l\'analyseur et synchronisation</string>
-    <string name="agc_main_label">Gain automatique : analyseur principal</string>
-    <string name="agc_main_desc">Désactivé signifie niveaux absolus. Un instrument qui se remet à l\'échelle tout seul est illisible</string>
     <string name="agc_bar_label">Gain automatique : widget de la barre d\'état</string>
     <string name="agc_bar_desc">Ici c\'est de la décoration et non une mesure, le nivellement y est donc bienvenu</string>
     <string name="agc_strength_label">Intensité</string>

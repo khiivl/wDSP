@@ -227,8 +227,6 @@ Globálne predvolené: %1$s</string>
     <string name="vis_normalization_desc">Jemné vyrovnanie dynamického rozsahu pre tiché skladby</string>
     <string name="status_bar_bands_count">Počet pásiem:</string>
     <string name="analyzer_section_title">Presnosť analyzátora a synchronizácia</string>
-    <string name="agc_main_label">Automatické zosilnenie: hlavný analyzátor</string>
-    <string name="agc_main_desc">Vypnuté znamená absolútne úrovne. Prístroj, ktorý sa sám preškáluje, sa nedá čítať</string>
     <string name="agc_bar_label">Automatické zosilnenie: widget v stavovom riadku</string>
     <string name="agc_bar_desc">Tu ide o ozdobu, nie o meranie, takže vyrovnanie je zvyčajne vítané</string>
     <string name="agc_strength_label">Sila</string>

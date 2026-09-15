@@ -227,8 +227,6 @@ Global standard: %1$s</string>
     <string name="vis_normalization_desc">Blød udjævning af dynamikområdet for stille numre</string>
     <string name="status_bar_bands_count">Antal bånd:</string>
     <string name="analyzer_section_title">Analysatorens nøjagtighed og synkronisering</string>
-    <string name="agc_main_label">Automatisk forstærkning: hovedanalysator</string>
-    <string name="agc_main_desc">Slået fra betyder absolutte niveauer. Et instrument, der selv skalerer om, kan ikke aflæses</string>
     <string name="agc_bar_label">Automatisk forstærkning: widget i statuslinjen</string>
     <string name="agc_bar_desc">Her er det pynt og ikke måling, så udjævning er som regel velkommen</string>
     <string name="agc_strength_label">Styrke</string>

@@ -227,8 +227,6 @@
     <string name="vis_normalization_desc">Меко изравняване на динамичния обхват за тихи записи</string>
     <string name="status_bar_bands_count">Брой ленти:</string>
     <string name="analyzer_section_title">Точност на анализатора и синхронизация</string>
-    <string name="agc_main_label">Автоусилване: основен анализатор</string>
-    <string name="agc_main_desc">Изключено означава абсолютни нива. Уред, който сам се преоразмерява, не може да се чете</string>
     <string name="agc_bar_label">Автоусилване: джаджа в лентата на състоянието</string>
     <string name="agc_bar_desc">Тук е украса, а не измерване, затова изравняването обикновено е добре дошло</string>
     <string name="agc_strength_label">Сила</string>

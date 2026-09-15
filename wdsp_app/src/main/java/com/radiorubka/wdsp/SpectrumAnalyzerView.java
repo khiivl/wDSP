@@ -109,15 +109,30 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
                                    float[] displayLevels32, float[] displayLevels32Norm,
                                    float[] prevLevels32, float[] prevLevels32Norm,
                                    long lastCaptureTime, long captureIntervalMs) {
-        boolean norm = ThemeManager.prefs(getContext()).getBoolean("pref_eq_visualizer_normalization", false);
-        float[] srcDisplay = norm ? displayLevels16Norm : displayLevels16;
-        float[] srcPrev = norm ? prevLevels16Norm : prevLevels16;
-        System.arraycopy(srcPrev, 0, this.prevLevels, 0, AudioConfig.NUM_BANDS);
-        System.arraycopy(srcDisplay, 0, this.displayLevels, 0, AudioConfig.NUM_BANDS);
+        // Absolute levels only: the bars are drawn relative to their own average (onDraw), which
+        // takes any gain common to all bands away, so there is no normalised variant to choose.
+        System.arraycopy(prevLevels16, 0, this.prevLevels, 0, AudioConfig.NUM_BANDS);
+        System.arraycopy(displayLevels16, 0, this.displayLevels, 0, AudioConfig.NUM_BANDS);
         this.lastCaptureTime = lastCaptureTime;
         this.captureIntervalMs = captureIntervalMs;
     }
 
+    /** Below this a band is silent: it is not drawn and does not count toward the average. */
+    private static final float SILENT_LEVEL = 0.005f;
+    /** Fewer bands with sound than this and there is no average worth drawing against. */
+    private static final int MIN_BANDS_FOR_AVERAGE = 3;
+    /** The equaliser grid's range, ±12 dB, as EqVisualizerView draws it. */
+    private static final float GRID_HALF_RANGE_DB = 12f;
+
+    /**
+     * 🔴 Owner, 15.09.2026 (option В): the bars are drawn on the equaliser's grid in the equaliser's
+     * own decibels, relative to the frame's average. The top of a bar at "+4" means that band is 4 dB
+     * above the average of the bands that have sound - the slider under it would go to −4 to level
+     * it. Until then a bar's height was its absolute level over a 60 dB range, so the grid's "0" meant
+     * −30 dBFS and one grid dB meant 2.5 dB of signal: a −23 dBFS test tone stood at "+2" and read as
+     * two decibels of equaliser. The geometry is EqVisualizerView's, thumb inset included, so a bar
+     * and a slider at the same number are at the same height.
+     */
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         float w = getWidth();
@@ -133,9 +148,24 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         float leftMargin = 32 * density;
         float activeWidth = w - leftMargin;
 
-        float topArea = totalH * TOP_OFFSET_RATIO;
-        float drawHeight = totalH * DRAW_HEIGHT_RATIO;
-        float gridBottom = topArea + drawHeight;
+        float thumbInset = 10 * density;
+        float drawStartY = totalH * TOP_OFFSET_RATIO + thumbInset;
+        float drawHeight = totalH * DRAW_HEIGHT_RATIO - 2 * thumbInset;
+        float gridBottom = drawStartY + drawHeight;
+
+        // The average of the bands that have sound, in display-level units; a difference of levels
+        // times the display range is a difference in decibels.
+        float sum = 0f;
+        int active = 0;
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            if (renderLevels[i] > SILENT_LEVEL) {
+                sum += renderLevels[i];
+                active++;
+            }
+        }
+        if (active < MIN_BANDS_FOR_AVERAGE) return;
+        final float average = sum / active;
+        final float rangeDb = AudioSpectrumEngine.getInstance().getDisplayRangeDb();
 
         float stepX = activeWidth / (float) AudioConfig.NUM_BANDS;
         float barGap = stepX * 0.22f;
@@ -147,9 +177,12 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float level = renderLevels[i];
-            if (level <= 0.005f) continue; // Clean when idle
+            if (level <= SILENT_LEVEL) continue; // Clean when idle
 
-            float barHeight = Math.min(drawHeight, level * drawHeight);
+            float relativeDb = (level - average) * rangeDb;
+            float clamped = Math.max(-GRID_HALF_RANGE_DB, Math.min(GRID_HALF_RANGE_DB, relativeDb));
+            float barHeight = drawHeight * (0.5f + clamped / (2f * GRID_HALF_RANGE_DB));
+            if (barHeight <= 0.5f) continue;
             float left = leftMargin + i * stepX + barGap / 2f;
             float right = left + barWidth;
             float top = gridBottom - barHeight;

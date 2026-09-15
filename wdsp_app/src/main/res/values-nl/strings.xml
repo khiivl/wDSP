@@ -227,8 +227,6 @@ Globale standaard: %1$s</string>
     <string name="vis_normalization_desc">Zachte nivellering van het dynamisch bereik voor stille nummers</string>
     <string name="status_bar_bands_count">Aantal banden:</string>
     <string name="analyzer_section_title">Nauwkeurigheid van de analysator en synchronisatie</string>
-    <string name="agc_main_label">Automatisch niveau: hoofdanalysator</string>
-    <string name="agc_main_desc">Uit betekent absolute niveaus. Een instrument dat zichzelf herschaalt, is niet af te lezen</string>
     <string name="agc_bar_label">Automatisch niveau: widget in de statusbalk</string>
     <string name="agc_bar_desc">Hier gaat het om versiering en niet om meten, dus nivellering is meestal welkom</string>
     <string name="agc_strength_label">Sterkte</string>

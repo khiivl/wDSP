@@ -227,8 +227,6 @@
     <string name="vis_normalization_desc">Ήπια εξισορρόπηση δυναμικού εύρους για ήσυχα κομμάτια</string>
     <string name="status_bar_bands_count">Αριθμός ζωνών:</string>
     <string name="analyzer_section_title">Ακρίβεια αναλυτή και συγχρονισμός</string>
-    <string name="agc_main_label">Αυτόματη στάθμη: κύριος αναλυτής</string>
-    <string name="agc_main_desc">Απενεργοποιημένο σημαίνει απόλυτες στάθμες. Ένα όργανο που αναπροσαρμόζει μόνο του την κλίμακα δεν διαβάζεται</string>
     <string name="agc_bar_label">Αυτόματη στάθμη: γραφικό στοιχείο γραμμής κατάστασης</string>
     <string name="agc_bar_desc">Εδώ πρόκειται για διακόσμηση και όχι για μέτρηση, οπότε η εξισορρόπηση συνήθως βοηθά</string>
     <string name="agc_strength_label">Ένταση</string>

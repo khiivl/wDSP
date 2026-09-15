@@ -227,8 +227,6 @@ Globalno privzeto: %1$s</string>
     <string name="vis_normalization_desc">Nežno izravnavanje dinamičnega obsega za tihe posnetke</string>
     <string name="status_bar_bands_count">Število pasov:</string>
     <string name="analyzer_section_title">Natančnost analizatorja in sinhronizacija</string>
-    <string name="agc_main_label">Samodejna raven: glavni analizator</string>
-    <string name="agc_main_desc">Izklopljeno pomeni absolutne ravni. Instrumenta, ki se sam prilagaja, ni mogoče brati</string>
     <string name="agc_bar_label">Samodejna raven: pripomoček v vrstici stanja</string>
     <string name="agc_bar_desc">Tu gre za okras in ne za meritev, zato je izravnava običajno dobrodošla</string>
     <string name="agc_strength_label">Jakost</string>

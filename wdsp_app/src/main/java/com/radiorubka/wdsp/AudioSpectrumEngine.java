@@ -195,13 +195,10 @@ public class AudioSpectrumEngine {
 
     private final ConsumerFrames[] frames = {new ConsumerFrames(), new ConsumerFrames()};
 
-    // Display settings, read from preferences and pushed into native. Defaults are deliberately
-    // asymmetric: the main analyser starts with its automatic gain OFF, because a tool that
-    // silently rescales itself cannot be read, while the status bar widget starts with it ON,
-    // because there it is decoration and a flat line would just look broken.
-    public static final String PREF_AGC_MAIN_ENABLED = "spec_agc_main_enabled";
-    public static final String PREF_AGC_MAIN_STRENGTH = "spec_agc_main_strength";
-    public static final String PREF_AGC_MAIN_FLOOR = "spec_agc_main_floor_db";
+    // Display settings, read from preferences and pushed into native. Only the status bar widget has
+    // an automatic gain: there it is decoration and a flat line would just look broken. The main
+    // analyser has none (owner, 15.09.2026): SpectrumAnalyzerView draws its bands relative to their
+    // own average in the equaliser's dB, and a gain on every band moves nothing that is drawn.
     public static final String PREF_AGC_BAR_ENABLED = "spec_agc_bar_enabled";
     public static final String PREF_AGC_BAR_STRENGTH = "spec_agc_bar_strength";
     public static final String PREF_AGC_BAR_FLOOR = "spec_agc_bar_floor_db";
@@ -222,9 +219,6 @@ public class AudioSpectrumEngine {
     private float nativeRefMaxDb = 0f;
     private float nativeRangeDb = 60f;
 
-    private boolean mainAgcEnabled = false;
-    private float mainAgcStrength = 0.6f;
-    private float mainAgcFloorDb = -45f;
     private boolean barAgcEnabled = true;
     private float barAgcStrength = 1.0f;
     private float barAgcFloorDb = -50f;
@@ -298,9 +292,6 @@ public class AudioSpectrumEngine {
         if (context == null) return;
         android.content.SharedPreferences prefs =
                 com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(context.getApplicationContext());
-        mainAgcEnabled = prefs.getBoolean(PREF_AGC_MAIN_ENABLED, false);
-        mainAgcStrength = prefs.getInt(PREF_AGC_MAIN_STRENGTH, 60) / 100f;
-        mainAgcFloorDb = prefs.getInt(PREF_AGC_MAIN_FLOOR, -45);
         barAgcEnabled = prefs.getBoolean(PREF_AGC_BAR_ENABLED, true);
         barAgcStrength = prefs.getInt(PREF_AGC_BAR_STRENGTH, 100) / 100f;
         barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
@@ -316,6 +307,14 @@ public class AudioSpectrumEngine {
         if (oldRadioMic != radioMicVisualizerEnabled) {
             checkSourceState();
         }
+    }
+
+    /**
+     * How many dB the 0..1 display level spans: level = (dB - top + range) / range. The main view needs
+     * it to turn the difference between two bands' levels back into decibels.
+     */
+    public float getDisplayRangeDb() {
+        return nativeRangeDb;
     }
 
     public String getSpectrumMode() {
@@ -739,13 +738,11 @@ public class AudioSpectrumEngine {
         Log.i(TAG, "NATIVE frames=" + analyzer.frames()
                 + " discontinuities=" + analyzer.discontinuities()
                 + " latencyMs=" + nativeLatencyMs
-                // The EFFECTIVE gain, not the preference: in microphone mode the main consumer is
-                // normalised regardless of it, and a log that printed the preference had me reading
-                // "agcMain=false" while the analyser was normalising.
-                + " agcMain=" + mainGainEnabled(analyzer)
+                // The main consumer has no gain at all since 15.09.2026; the microphone's alignment
+                // is still reported, because it is still applied.
                 + (analyzer.isAcoustic() ? (micOffsetValid
                         ? String.format(java.util.Locale.US, " (mic aligned, offset %+.1f dB)", micOffsetDb)
-                        : " (forced: mic not aligned)") : "")
+                        : " (mic not aligned)") : "")
                 + " agcBar=" + barAgcEnabled);
     }
 
@@ -1436,52 +1433,19 @@ public class AudioSpectrumEngine {
         float latency = radioActive ? 0f : nativeLatencyMs;
         analyzer.setConfig(nativeAttackMs, nativeReleaseMs, latency,
                 nativeRefMaxDb, nativeRangeDb);
-        // In microphone mode the main analyser is normalised whatever the preference says, and the
-        // preference is not touched - it still governs the calculated mode, where it belongs.
-        //
-        // Why it has to differ by mode. The capture side's automatic gain no longer reaches the
-        // analyser: it moves between 0.5x and 16x, and a moving gain underneath a noise floor
-        // learned in linear power makes the floor describe the gain instead of the car - that is
-        // what turned cabin hiss into full-height bars in a pause. So the analyser is fed the raw
-        // stream. But the main consumer's gain is OFF by default, deliberately: for the CALCULATED
-        // spectrum the levels are absolute and an instrument that silently rescales itself cannot be
-        // read. Taking the capture gain away with nothing in its place left the microphone spectrum
-        // sitting far below the calculated one - the owner saw it at once ("до недавніх переробок
-        // розрахунковий і спектр мікрофона були значно ближчі між собою").
-        //
-        // For a microphone there is nothing absolute to preserve: the level depends on how loudly
-        // the car happens to be playing. So normalisation goes here, in the decibel domain, where it
-        // cannot corrupt the floor - instead of in the capture, where it did. No new setting: the
-        // owner's rule is that the default must already be right.
-        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, mainGainEnabled(analyzer),
-                mainGainStrength(analyzer), mainAgcFloorDb);
+        // The main consumer has no gain (owner, 15.09.2026). It used to be normalised for a microphone
+        // with nothing to align it to - a raw microphone sat far below the calculated spectrum - and
+        // on request for the calculated one. SpectrumAnalyzerView now draws every band relative to
+        // the frame's own average, so a level shift common to all bands, which is all either gain or
+        // the microphone's alignment amounts to, is not visible, and the gain only had ways to
+        // distort the differences that are. The capture's own gain still stays out of the analyser,
+        // for the reason it was taken out: a moving gain under a floor learned in linear power makes
+        // the floor describe the gain.
+        analyzer.setAgc(NativeAnalyzer.CONSUMER_MAIN, false, 0f, 0f);
         analyzer.setAgc(NativeAnalyzer.CONSUMER_STATUS_BAR, barAgcEnabled, barAgcStrength,
                 barFloorDb(analyzer));
         // The curve is handed over by dispatchNativeFrame, the only place that does it.
         if (analyzer.isAcoustic()) micCurveStale = true; else nativeCurveStale = true;
-    }
-
-    /**
-     * Whether the main consumer's gain is on for this analyser.
-     *
-     * <p>For a microphone: off once it is aligned to the calculated spectrum (option (b) - then it
-     * reads in the track's dBFS like the calculated one, and the preference governs both alike); on,
-     * at full strength, while there is nothing to align it to (radio, a silent track, the first
-     * moments) - see applyNativeSettings for why a raw microphone needs it. For the Visualizer's
-     * analyser: as the preference says.
-     *
-     * <p>🔴 One function because the answer was given in two places that disagreed.
-     * applyNativeSettings forced the gain on for a microphone, and dispatchNativeFrame then set it
-     * back from the preference on every frame - so the forcing lasted until the next frame, a few
-     * milliseconds, and the normalised microphone levels were never normalised by default.
-     */
-    private boolean mainGainEnabled(NativeAnalyzer analyzer) {
-        return (analyzer.isAcoustic() && !micOffsetValid) || mainAgcEnabled;
-    }
-
-    /** The strength that goes with {@link #mainGainEnabled}: full for an unaligned microphone. */
-    private float mainGainStrength(NativeAnalyzer analyzer) {
-        return analyzer.isAcoustic() && !micOffsetValid ? 1.0f : mainAgcStrength;
     }
 
     /** Picks the frame rate from who is actually watching. */
@@ -1541,14 +1505,17 @@ public class AudioSpectrumEngine {
                 if (!hasListenerFor(consumer)) continue;
                 ConsumerFrames f = frames[consumer];
                 // Absolute levels for the "no normalisation" view, and this consumer's gain profile
-                // for the other. Two calls because the gain state is per consumer by design.
+                // for the other. Two calls because the gain state is per consumer by design. The main
+                // consumer has no gain (15.09.2026), so its "normalised" copy is the same frame.
                 analyzer.setAgc(consumer, false, 0f, 0f);
                 analyzer.getLevels(consumer, f.level32, f.level16);
-                boolean enabled = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainEnabled(analyzer) : barAgcEnabled;
-                float strength = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainGainStrength(analyzer) : barAgcStrength;
-                float floorDb = consumer == NativeAnalyzer.CONSUMER_MAIN ? mainAgcFloorDb : barFloorDb(analyzer);
-                analyzer.setAgc(consumer, enabled, strength, floorDb);
-                analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
+                if (consumer == NativeAnalyzer.CONSUMER_MAIN) {
+                    System.arraycopy(f.level32, 0, f.level32Agc, 0, NUM_BANDS_32);
+                    System.arraycopy(f.level16, 0, f.level16Agc, 0, NUM_BANDS_16);
+                } else {
+                    analyzer.setAgc(consumer, barAgcEnabled, barAgcStrength, barFloorDb(analyzer));
+                    analyzer.getLevels(consumer, f.level32Agc, f.level16Agc);
+                }
 
                 System.arraycopy(f.display16, 0, f.prev16, 0, NUM_BANDS_16);
                 System.arraycopy(f.level16, 0, f.display16, 0, NUM_BANDS_16);

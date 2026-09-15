@@ -227,8 +227,6 @@ Globāli noklusējums: %1$s</string>
     <string name="vis_normalization_desc">Maiga dinamiskā diapazona izlīdzināšana klusiem ierakstiem</string>
     <string name="status_bar_bands_count">Joslu skaits:</string>
     <string name="analyzer_section_title">Analizatora precizitāte un sinhronizācija</string>
-    <string name="agc_main_label">Automātiskais līmenis: galvenais analizators</string>
-    <string name="agc_main_desc">Izslēgts nozīmē absolūtus līmeņus. Instrumentu, kas pats maina mērogu, nav iespējams nolasīt</string>
     <string name="agc_bar_label">Automātiskais līmenis: statusa joslas logrīks</string>
     <string name="agc_bar_desc">Šeit tas ir rotājums, nevis mērījums, tāpēc izlīdzināšana parasti ir noderīga</string>
     <string name="agc_strength_label">Intensitāte</string>

@@ -227,8 +227,6 @@
     <string name="vis_normalization_desc">Blago izjednačavanje dinamičkog opsega za tihe snimke</string>
     <string name="status_bar_bands_count">Broj opsega:</string>
     <string name="analyzer_section_title">Tačnost analizatora i sinhronizacija</string>
-    <string name="agc_main_label">Automatsko pojačanje: glavni analizator</string>
-    <string name="agc_main_desc">Isključeno znači apsolutne nivoe. Instrument koji sam menja razmeru ne može da se čita</string>
     <string name="agc_bar_label">Automatsko pojačanje: vidžet na statusnoj traci</string>
     <string name="agc_bar_desc">Ovde je reč o ukrasu, a ne o merenju, pa je izjednačavanje obično dobrodošlo</string>
     <string name="agc_strength_label">Jačina</string>

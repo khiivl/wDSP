@@ -227,8 +227,6 @@ Bendras numatytasis: %1$s</string>
     <string name="vis_normalization_desc">Švelnus dinaminio diapazono išlyginimas tyliems kūriniams</string>
     <string name="status_bar_bands_count">Juostų skaičius:</string>
     <string name="analyzer_section_title">Analizatoriaus tikslumas ir sinchronizavimas</string>
-    <string name="agc_main_label">Automatinis lygis: pagrindinis analizatorius</string>
-    <string name="agc_main_desc">Išjungta reiškia absoliučius lygius. Prietaiso, kuris pats keičia mastelį, perskaityti neįmanoma</string>
     <string name="agc_bar_label">Automatinis lygis: būsenos juostos valdiklis</string>
     <string name="agc_bar_desc">Čia tai puošmena, o ne matavimas, todėl išlyginimas dažniausiai pravartus</string>
     <string name="agc_strength_label">Stiprumas</string>

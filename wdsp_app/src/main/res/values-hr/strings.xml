@@ -227,8 +227,6 @@ Globalno zadano: %1$s</string>
     <string name="vis_normalization_desc">Blago izjednačavanje dinamičkog raspona za tihe snimke</string>
     <string name="status_bar_bands_count">Broj pojaseva:</string>
     <string name="analyzer_section_title">Točnost analizatora i sinkronizacija</string>
-    <string name="agc_main_label">Automatsko pojačanje: glavni analizator</string>
-    <string name="agc_main_desc">Isključeno znači apsolutne razine. Instrument koji se sam preskalira ne može se čitati</string>
     <string name="agc_bar_label">Automatsko pojačanje: widget u traci stanja</string>
     <string name="agc_bar_desc">Ovdje je riječ o ukrasu, a ne o mjerenju, pa je izjednačavanje obično dobrodošlo</string>
     <string name="agc_strength_label">Jačina</string>

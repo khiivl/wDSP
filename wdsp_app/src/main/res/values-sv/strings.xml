@@ -214,8 +214,6 @@
     <string name="vis_normalization_desc">Mjuk utjämning av dynamikomfånget för tysta spår</string>
     <string name="status_bar_bands_count">Antal band:</string>
     <string name="analyzer_section_title">Analysatorns noggrannhet och synkronisering</string>
-    <string name="agc_main_label">Automatisk nivå: huvudanalysator</string>
-    <string name="agc_main_desc">Av betyder absoluta nivåer. Ett instrument som skalar om sig självt går inte att läsa</string>
     <string name="agc_bar_label">Automatisk nivå: widget i statusfältet</string>
     <string name="agc_bar_desc">Här handlar det om dekoration och inte om mätning, så utjämning är oftast välkommen</string>
     <string name="agc_strength_label">Styrka</string>

@@ -215,8 +215,6 @@
     <string name="vis_normalization_desc">Nivelación suave del rango dinámico para pistas silenciosas</string>
     <string name="status_bar_bands_count">Número de bandas:</string>
     <string name="analyzer_section_title">Precisión del analizador y sincronización</string>
-    <string name="agc_main_label">Ganancia automática: analizador principal</string>
-    <string name="agc_main_desc">Desactivado significa niveles absolutos. Un instrumento que se reescala solo no se puede leer</string>
     <string name="agc_bar_label">Ganancia automática: widget de la barra de estado</string>
     <string name="agc_bar_desc">Aquí es decoración y no medición, así que la nivelación suele venir bien</string>
     <string name="agc_strength_label">Intensidad</string>

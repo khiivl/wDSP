@@ -227,8 +227,6 @@ Implicit global: %1$s</string>
     <string name="vis_normalization_desc">Nivelare blândă a gamei dinamice pentru piesele silențioase</string>
     <string name="status_bar_bands_count">Număr de benzi:</string>
     <string name="analyzer_section_title">Precizia analizorului și sincronizarea</string>
-    <string name="agc_main_label">Nivel automat: analizorul principal</string>
-    <string name="agc_main_desc">Oprit înseamnă niveluri absolute. Un instrument care se rescalează singur nu poate fi citit</string>
     <string name="agc_bar_label">Nivel automat: widget în bara de stare</string>
     <string name="agc_bar_desc">Aici este decor, nu măsurătoare, așa că nivelarea este de obicei binevenită</string>
     <string name="agc_strength_label">Intensitate</string>
