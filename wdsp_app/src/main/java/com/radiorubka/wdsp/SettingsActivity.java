@@ -608,6 +608,30 @@ public class SettingsActivity extends AppCompatActivity {
         btnRestoreSettings.setOnClickListener(v -> {
             restoreLauncher.launch(new String[]{"application/json", "*/*"});
         });
+
+        // Resuming the player (owner, 14.09.2026): two separate switches, one or the other or both.
+        bindPrefToggle(R.id.btn_resume_after_reboot_toggle, PlayerResume.PREF_AFTER_REBOOT);
+        bindPrefToggle(R.id.btn_resume_after_sleep_toggle, PlayerResume.PREF_AFTER_SLEEP);
+    }
+
+    /** An on/off pill for a boolean setting that defaults to off; painted again by {@link #paintPrefToggles}. */
+    private void bindPrefToggle(int id, String key) {
+        TextView btn = findViewById(id);
+        if (btn == null) return;
+        TouchGlow.attach(btn);
+        styleOnOffButton(btn, ThemeManager.prefs(this).getBoolean(key, false));
+        btn.setOnClickListener(v -> {
+            boolean active = !ThemeManager.prefs(this).getBoolean(key, false);
+            ThemeManager.prefs(this).edit().putBoolean(key, active).apply();
+            styleOnOffButton(btn, active);
+        });
+    }
+
+    private void paintPrefToggles() {
+        TextView reboot = findViewById(R.id.btn_resume_after_reboot_toggle);
+        if (reboot != null) styleOnOffButton(reboot, ThemeManager.prefs(this).getBoolean(PlayerResume.PREF_AFTER_REBOOT, false));
+        TextView sleep = findViewById(R.id.btn_resume_after_sleep_toggle);
+        if (sleep != null) styleOnOffButton(sleep, ThemeManager.prefs(this).getBoolean(PlayerResume.PREF_AFTER_SLEEP, false));
     }
 
     private void bindAccordion() {
@@ -3083,7 +3107,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_latency_trim, R.id.label_sync_measure,
             R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
-            R.id.label_screensaver_enable, R.id.label_screensaver_apps
+            R.id.label_screensaver_enable, R.id.label_screensaver_apps,
+            R.id.label_resume_after_reboot, R.id.label_resume_after_sleep
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -3112,6 +3137,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_system_report,
             R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
+            R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,
             R.id.label_screensaver_width, R.id.label_screensaver_height,
@@ -3338,6 +3364,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnScreensaverToggle != null) {
             styleOnOffButton(btnScreensaverToggle, ss.isEnabled());
         }
+        paintPrefToggles();
         styleActionButtons();
 
         // Repaint accordion headers last so open headers always remain highlighted in accent

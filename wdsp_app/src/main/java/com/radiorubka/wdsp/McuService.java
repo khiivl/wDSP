@@ -515,8 +515,17 @@ public class McuService extends Service implements LocationListener {
                         startPolling();
                         startGps();
                     }, 3000);
+                    // The player that was playing when the ignition went off, if that switch is on.
+                    // A boot's own ACC_ON is recognised there and left to the boot.
+                    PlayerResume.getInstance(McuService.this).onAccOn();
+                }
+                else if ("com.qf.action.READY_GO_SLEEP".equals(action)) {
+                    // Whichever of the two comes first takes the note; the second finds it taken.
+                    PlayerResume.getInstance(McuService.this).onAccOff();
                 }
                 else if ("com.qf.action.ACC_OFF".equals(action)) {
+                    // First, before the platform pauses and stops the players.
+                    PlayerResume.getInstance(McuService.this).onAccOff();
                     ScreensaverManager.getInstance(McuService.this).setScreenState(false);
                     if (statusBarManager != null) {
                         statusBarManager.setScreenState(false);
@@ -813,6 +822,8 @@ public class McuService extends Service implements LocationListener {
         isBootStart = false;
 
         presetsReady = true;
+        // Before the queued actions: a boot's own ACC_ON is among them and must see the boot handled.
+        PlayerResume.getInstance(this).onServiceReady();
         if (!beforeReady.isEmpty()) {
             Log.i(TAG, "boot: running " + beforeReady.size() + " action(s) that arrived before the presets were ready");
             for (Runnable r : beforeReady) r.run();
@@ -871,6 +882,10 @@ public class McuService extends Service implements LocationListener {
         IntentFilter controlFilter = new IntentFilter();
         controlFilter.addAction("com.qf.action.ACC_ON");
         controlFilter.addAction("com.qf.action.ACC_OFF");
+        // Sent before ACC_OFF, ahead of the platform stopping apps for sleep (Gemini's reading of
+        // QFSleepWakeup, references/18-MEDIA-SESSION-AND-SLEEP-RESUMPTION.md) - where PlayerResume
+        // takes its note of what was playing, if it comes first.
+        controlFilter.addAction("com.qf.action.READY_GO_SLEEP");
         controlFilter.addAction("android.intent.action.QUICKBOOT_POWERON");
         controlFilter.addAction(Intent.ACTION_BOOT_COMPLETED);
         controlFilter.addAction("com.radiorubka.wdsp.UI_ACTIVE");

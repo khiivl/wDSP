@@ -343,6 +343,27 @@ public final class NowPlaying {
         sendMediaKeyFallback(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
     }
 
+    /**
+     * Asks a particular player to play, if it has a live media session. False when it has none - its
+     * process is gone, or notification access is not granted - so the caller can start it another way.
+     */
+    public boolean playPackage(String pkg) {
+        if (pkg == null || pkg.isEmpty() || !canReadSessions()) return false;
+        try {
+            MediaSessionManager msm = (MediaSessionManager) context.getSystemService(Context.MEDIA_SESSION_SERVICE);
+            if (msm == null) return false;
+            for (MediaController c : msm.getActiveSessions(new ComponentName(context, NotificationAccess.class))) {
+                if (c != null && pkg.equals(c.getPackageName())) {
+                    c.getTransportControls().play();
+                    return true;
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "could not ask " + pkg + " to play through its session", t);
+        }
+        return false;
+    }
+
     public void sendMediaKeyFallback(int keyCode) {
         try {
             android.media.AudioManager am =
@@ -675,6 +696,7 @@ public final class NowPlaying {
                 art = null;
                 artKey = null;
             }
+            PlayerResume.getInstance(context).onPlaybackState("", false);
             return;
         }
         controllerCallback = new MediaController.Callback() {
@@ -754,6 +776,8 @@ public final class NowPlaying {
         if (state == null) return;
         boolean started;
         boolean stopped;
+        String pkg;
+        boolean nowPlaying;
         synchronized (this) {
             boolean was = playing;
             playing = state.getState() == PlaybackState.STATE_PLAYING;
@@ -761,7 +785,11 @@ public final class NowPlaying {
             positionTakenAt = System.currentTimeMillis();
             started = playing && !was;
             stopped = !playing && was;
+            pkg = playerPackage;
+            nowPlaying = playing;
         }
+        // What was playing, for starting it again after a restart or sleep.
+        PlayerResume.getInstance(context).onPlaybackState(pkg, nowPlaying);
         notifyMetadataChanged();
         if (started && onStarted != null) main.post(onStarted);
         if (stopped && onStopped != null) main.post(onStopped);
