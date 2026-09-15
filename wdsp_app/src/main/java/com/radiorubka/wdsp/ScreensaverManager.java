@@ -46,9 +46,9 @@ import java.util.TreeSet;
  * <h2>What keeps it out of the way</h2>
  *
  * <ul>
- *   <li><b>Navigation.</b> Never over a live map. The platform says whether navigation is speaking
- *       ({@code sys.qf.navi_state}) and whether the floating navigation bar or a floating video
- *       window is up; any of those and the screensaver stays down.</li>
+ *   <li><b>Navigation.</b> Never over the map: when the platform's default navigator
+ *       ({@code persist.sys.maps}) is the package in front, the screensaver stays down. See
+ *       {@link #PROP_DEFAULT_NAVIGATOR} for why that is the whole test.</li>
  *   <li><b>The owner's own list.</b> Whatever packages they choose are simply never covered.</li>
  *   <li><b>The screen being off</b>, and the overlay permission not being granted.</li>
  * </ul>
@@ -161,16 +161,28 @@ public final class ScreensaverManager {
     public static final String EXTRA_RADIO = "radio";
 
     private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
-    private static final String PROP_NAVI_SPEAKING = "sys.qf.navi_state";
     /**
-     * ❓ Read here as "the floating navigation bar is up" and "a floating video window is up". In the
-     * decompiled framework both are entries of {@code ConfigInfoConstant.SET_CHECKBOX_NAME_MAP}, the
-     * factory settings' checkboxes - so what they may say is that the feature is switched on, which
-     * would hold the screensaver back on that unit for good. Not changed until the owner decides;
-     * the report prints both, so a tester's unit can say which it is (15.09.2026).
+     * The package the platform treats as the navigator - the one it restores after sleep and starts
+     * on boot ({@code QFSleepWakeup}), set by the person in the factory settings.
+     *
+     * <h2>Why this is the whole navigation test (owner, 15.09.2026)</h2>
+     *
+     * Three properties used to hold the screensaver back instead, and none of them said what they
+     * were taken to say:
+     * <ul>
+     *   <li>{@code persist.sys.has.float.video} and {@code persist.sys.float_navi_bar} were read as
+     *       "a floating video / navigation window is up". They are the factory settings' checkboxes
+     *       ({@code ConfigInfoConstant.SET_CHECKBOX_NAME_MAP}). Proven on the unit for the first: the
+     *       box ticked, the property went true at once with no video window anywhere, and from that
+     *       second the screensaver never appeared again - on every unit with it ticked, for good.
+     *       Testers had been reporting exactly that.</li>
+     *   <li>{@code sys.qf.navi_state} - navigation speaking - held it back over any app at all while
+     *       a prompt played, and said nothing about whether the map is on screen.</li>
+     * </ul>
+     * What does say it is the foreground: the navigator's package is what the platform names in
+     * front, even when it is shown in the launcher's picture-in-picture window.
      */
-    private static final String PROP_FLOAT_NAVI_BAR = "persist.sys.float_navi_bar";
-    private static final String PROP_FLOAT_VIDEO = "persist.sys.has.float.video";
+    private static final String PROP_DEFAULT_NAVIGATOR = "persist.sys.maps";
 
     private final Context context;
     private final WindowManager windowManager;
@@ -1395,13 +1407,7 @@ public final class ScreensaverManager {
         return NowPlaying.getInstance(context);
     }
 
-    /**
-     * Whether the screensaver is allowed on top of what is currently in front.
-     *
-     * <p>The navigation checks are deliberately generous: three different properties, any one of
-     * which vetoes. Covering a map in traffic is the one failure that would matter, so the cost of
-     * being wrong is not symmetric and neither is the test.
-     */
+    /** Whether the screensaver is allowed on top of what is currently in front. */
     private boolean mayShowOver(String foreground) {
         return whyHeldBack(foreground) == null;
     }
@@ -1417,18 +1423,12 @@ public final class ScreensaverManager {
         if (!screenOn) return "the screen is off (ACC_OFF)";
         if (!canDrawOverlays()) return "no permission to draw over other apps";
         if (CallState.isActive()) return "a call is in progress";
-        if (isTrue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))) {
-            return PROP_NAVI_SPEAKING + " is true - navigation is speaking";
-        }
-        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))) {
-            return PROP_FLOAT_NAVI_BAR + " is true";
-        }
-        if (isTrue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))) {
-            return PROP_FLOAT_VIDEO + " is true";
-        }
         String pkg = packageOf(foreground);
         if (pkg.isEmpty()) {
             return PROP_CURRENT_ACTIVITY + " is empty - the platform does not say what is in front";
+        }
+        if (pkg.equals(defaultNavigator())) {
+            return "the navigator " + pkg + " is in front";
         }
         // Never over our own screens: somebody in there is adjusting the sound or this very
         // screensaver, and a curtain dropping over the equaliser mid-adjustment helps nobody.
@@ -1459,12 +1459,8 @@ public final class ScreensaverManager {
         sb.append(String.format(Locale.US, "  overlay permission = %b%n", canDrawOverlays()));
         sb.append(String.format(Locale.US, "  on screen now      = %b%s%n", attached, previewMode ? " (preview)" : ""));
         sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_CURRENT_ACTIVITY, orUnsetValue(foreground)));
-        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_NAVI_SPEAKING,
-                orUnsetValue(HardwareProfile.systemProperty(PROP_NAVI_SPEAKING))));
-        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_FLOAT_NAVI_BAR,
-                orUnsetValue(HardwareProfile.systemProperty(PROP_FLOAT_NAVI_BAR))));
-        sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_FLOAT_VIDEO,
-                orUnsetValue(HardwareProfile.systemProperty(PROP_FLOAT_VIDEO))));
+        sb.append(String.format(Locale.US, "  %-34s = %s  (never covered)%n", PROP_DEFAULT_NAVIGATOR,
+                orUnsetValue(HardwareProfile.systemProperty(PROP_DEFAULT_NAVIGATOR))));
         sb.append(String.format(Locale.US, "  call in progress   = %b%n", CallState.isActive()));
         sb.append(String.format(Locale.US, "  never covers       = %s%n", blockedPackages()));
         sb.append("  right now          = ")
@@ -1499,6 +1495,18 @@ public final class ScreensaverManager {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * The default navigator's package, or "" when none is set. The framework's own "not set" words
+     * ("nothing", "map_not_config") and a {@code package/class} form are both handled.
+     */
+    private static String defaultNavigator() {
+        String value = HardwareProfile.systemProperty(PROP_DEFAULT_NAVIGATOR);
+        if (value == null) return "";
+        String pkg = packageOf(value.trim());
+        if (pkg.equalsIgnoreCase("nothing") || pkg.equalsIgnoreCase("map_not_config")) return "";
+        return pkg;
     }
 
     private static String ago(long at, long now) {
@@ -1661,10 +1669,6 @@ public final class ScreensaverManager {
 
     private static String orEmpty(String s) {
         return s == null ? "" : s;
-    }
-
-    private static boolean isTrue(String s) {
-        return "true".equalsIgnoreCase(s) || "1".equals(s);
     }
 
     /** For the settings screen: the packages worth offering, newest-looking first. */
