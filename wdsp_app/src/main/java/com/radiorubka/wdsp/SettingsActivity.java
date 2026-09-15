@@ -612,6 +612,33 @@ public class SettingsActivity extends AppCompatActivity {
         // Resuming the player (owner, 14.09.2026): two separate switches, one or the other or both.
         bindPrefToggle(R.id.btn_resume_after_reboot_toggle, PlayerResume.PREF_AFTER_REBOOT);
         bindPrefToggle(R.id.btn_resume_after_sleep_toggle, PlayerResume.PREF_AFTER_SLEEP);
+        bindSleepWhitelistButton();
+    }
+
+    /**
+     * The platform's own screen for the sleep whitelist. Resuming after sleep needs wDSP to survive
+     * it, and an app not on that list is force-stopped at ACC_OFF; whether wDSP is on it cannot be
+     * read (system 0600, .agents/RESEARCH_SLEEP_WHITELIST.md), so the screen is offered rather than a
+     * verdict. The owner's rule (14.09.2026): send the person there, never add ourselves.
+     */
+    private void bindSleepWhitelistButton() {
+        TextView btn = findViewById(R.id.btn_open_sleep_whitelist);
+        if (btn == null) return;
+        final Intent open = new Intent(Intent.ACTION_VIEW)
+                .setComponent(new android.content.ComponentName("com.qf.carsettings",
+                        "com.qf.carsettings.activity.FactorySleepWhiteListActivity"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (open.resolveActivity(getPackageManager()) == null) return;   // not this platform
+        btn.setVisibility(View.VISIBLE);
+        TouchGlow.attach(btn);
+        btn.setOnClickListener(v -> {
+            try {
+                startActivity(open);
+            } catch (Throwable t) {
+                Log.w(TAG, "could not open the sleep whitelist screen: " + t);
+                Toaster.show(this, getString(R.string.resume_sleep_whitelist_unavailable));
+            }
+        });
     }
 
     /** An on/off pill for a boolean setting that defaults to off; painted again by {@link #paintPrefToggles}. */
@@ -3397,6 +3424,7 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_screen_topology));
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
+        styleActionButton(findViewById(R.id.btn_open_sleep_whitelist));
     }
 
     private void tintSlider(Slider s, int accent) {

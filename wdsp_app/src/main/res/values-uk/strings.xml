@@ -250,6 +250,8 @@
     <string name="resume_after_reboot_desc">Якщо музика грала, коли магнітолу вимкнули або вона втратила живлення, wDSP після старту знову запускає той самий плеєр. Радіо відновлюється саме, його не чіпаємо.</string>
     <string name="resume_after_sleep_label">Відновлювати плеєр після сну</string>
     <string name="resume_after_sleep_desc">Якщо музика грала, коли вимкнули запалювання, wDSP знову запускає той самий плеєр, щойно його ввімкнуть. Паузу, яку ви поставили самі, не знімаємо, і поверх того, що вже грає, нічого не запускаємо. Працює, лише якщо магнітола лишає wDSP живим під час сну.</string>
+    <string name="resume_open_sleep_whitelist">Дозволити wDSP жити під час сну</string>
+    <string name="resume_sleep_whitelist_unavailable">Магнітола не відкрила свій список сну.</string>
     <string name="toast_backup_success">Резервну копію збережено</string>
     <string name="toast_backup_failed">Помилка створення бекапу: %s</string>
     <string name="toast_restore_success">Налаштування успішно відновлено</string>

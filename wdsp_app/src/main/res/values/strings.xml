@@ -267,6 +267,8 @@
     <string name="resume_after_reboot_desc">If music was playing when the head unit was switched off or lost power, wDSP starts the same player again once it is up. Radio restores itself and is left alone.</string>
     <string name="resume_after_sleep_label">Resume the player after sleep</string>
     <string name="resume_after_sleep_desc">If music was playing when the ignition went off, wDSP starts the same player again when it comes back on. A pause you made yourself is kept, and nothing is started over something already playing. Works only if the head unit lets wDSP stay alive through sleep.</string>
+    <string name="resume_open_sleep_whitelist">Let wDSP stay alive through sleep</string>
+    <string name="resume_sleep_whitelist_unavailable">The head unit did not open its sleep list.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

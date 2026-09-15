@@ -2063,6 +2063,20 @@
                     android:lineSpacingExtra="2dp"
                     android:text="@string/resume_after_sleep_desc"
                     android:textSize="@dimen/settings_note_text" />
+
+                <!-- Екран білого списку сну (com.qf.carsettings); показується лише там, де він є.
+                     wDSP сам у список не пише (власник, 14.09.2026) - лише відкриває екран людині. -->
+                <TextView
+                    android:id="@+id/btn_open_sleep_whitelist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@null"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="@string/resume_open_sleep_whitelist"
+                    android:textSize="@dimen/text_size_dense_label"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
