@@ -46,9 +46,9 @@ import java.util.TreeSet;
  * <h2>What keeps it out of the way</h2>
  *
  * <ul>
- *   <li><b>Navigation.</b> Never over the map: when the platform's default navigator
- *       ({@code persist.sys.maps}) is the package in front, the screensaver stays down. See
- *       {@link #PROP_DEFAULT_NAVIGATOR} for why that is the whole test.</li>
+ *   <li><b>Navigation.</b> The platform's default navigator ({@code persist.sys.maps}) is put into
+ *       the owner's list once, at installation - so the map is not covered, and a person who would
+ *       rather watch the screensaver takes it out of the list. See {@link #PROP_DEFAULT_NAVIGATOR}.</li>
  *   <li><b>The owner's own list.</b> Whatever packages they choose are simply never covered.</li>
  *   <li><b>The screen being off</b>, and the overlay permission not being granted.</li>
  * </ul>
@@ -180,9 +180,19 @@ public final class ScreensaverManager {
      *       a prompt played, and said nothing about whether the map is on screen.</li>
      * </ul>
      * What does say it is the foreground: the navigator's package is what the platform names in
-     * front, even when it is shown in the launcher's picture-in-picture window.
+     * front, even when it is shown in the launcher's window (checked: {@code com.waze/.MainActivity}
+     * with both Waze and the launcher resumed).
+     *
+     * <p>So the navigator is not a rule in code but an entry in the owner's list, put there once per
+     * installation (owner, 15.09.2026: "при встановленні перевіряти, хто навігатор за замовчуванням,
+     * і додавати в чорний список; право юзера прибрати"). The note that it was put there lives with
+     * the unit's own state, which backups do not carry: a reinstall adds it again, an update over the
+     * top leaves a person's removal alone. See {@link #addNavigatorToListOnce()}.
      */
     private static final String PROP_DEFAULT_NAVIGATOR = "persist.sys.maps";
+    private static final String DEVICE_STATE_PREFS = "wdsp_device_state";
+    /** The navigator this installation put into the list, or absent while it has put none. */
+    private static final String KEY_NAVIGATOR_ADDED = "ss_navigator_added";
 
     private final Context context;
     private final WindowManager windowManager;
@@ -1216,6 +1226,7 @@ public final class ScreensaverManager {
     }
 
     public void start() {
+        addNavigatorToListOnce();
         resetIdleClock();
         NowPlaying.getInstance(context).setOnStarted(() -> {
             stoppedSince = 0L;
@@ -1238,6 +1249,25 @@ public final class ScreensaverManager {
 
     private void resetIdleClock() {
         foregroundSince = System.currentTimeMillis();
+    }
+
+    /**
+     * Puts the platform's default navigator into the list of packages never covered - once per
+     * installation. Until a navigator is set it tries again at every start; once it has put one in,
+     * it never touches the list again, so taking the navigator out is the person's to keep.
+     */
+    private void addNavigatorToListOnce() {
+        SharedPreferences state = context.getSharedPreferences(DEVICE_STATE_PREFS, Context.MODE_PRIVATE);
+        if (state.contains(KEY_NAVIGATOR_ADDED)) return;
+        String navigator = defaultNavigator();
+        if (navigator.isEmpty()) return;
+        Set<String> list = blockedPackages();
+        if (list.add(navigator)) {
+            prefs.edit().putStringSet(PREF_BLOCKED, new HashSet<>(list)).apply();
+        }
+        state.edit().putString(KEY_NAVIGATOR_ADDED, navigator).apply();
+        Log.i(TAG, "the default navigator " + navigator
+                + " is now in the list the screensaver never covers (once per installation)");
     }
 
     /**
@@ -1427,9 +1457,6 @@ public final class ScreensaverManager {
         if (pkg.isEmpty()) {
             return PROP_CURRENT_ACTIVITY + " is empty - the platform does not say what is in front";
         }
-        if (pkg.equals(defaultNavigator())) {
-            return "the navigator " + pkg + " is in front";
-        }
         // Never over our own screens: somebody in there is adjusting the sound or this very
         // screensaver, and a curtain dropping over the equaliser mid-adjustment helps nobody.
         // Only Settings was excluded before; the main screen was not (owner, 11.09.2026). In code
@@ -1459,8 +1486,10 @@ public final class ScreensaverManager {
         sb.append(String.format(Locale.US, "  overlay permission = %b%n", canDrawOverlays()));
         sb.append(String.format(Locale.US, "  on screen now      = %b%s%n", attached, previewMode ? " (preview)" : ""));
         sb.append(String.format(Locale.US, "  %-34s = %s%n", PROP_CURRENT_ACTIVITY, orUnsetValue(foreground)));
-        sb.append(String.format(Locale.US, "  %-34s = %s  (never covered)%n", PROP_DEFAULT_NAVIGATOR,
-                orUnsetValue(HardwareProfile.systemProperty(PROP_DEFAULT_NAVIGATOR))));
+        sb.append(String.format(Locale.US, "  %-34s = %s, put into the list at installation: %s%n",
+                PROP_DEFAULT_NAVIGATOR, orUnsetValue(HardwareProfile.systemProperty(PROP_DEFAULT_NAVIGATOR)),
+                orUnsetValue(context.getSharedPreferences(DEVICE_STATE_PREFS, Context.MODE_PRIVATE)
+                        .getString(KEY_NAVIGATOR_ADDED, null))));
         sb.append(String.format(Locale.US, "  call in progress   = %b%n", CallState.isActive()));
         sb.append(String.format(Locale.US, "  never covers       = %s%n", blockedPackages()));
         sb.append("  right now          = ")
