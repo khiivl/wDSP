@@ -202,6 +202,10 @@ Bendras numatytasis: %1$s</string>
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Tęsti grotuvo atkūrimą po perkrovimo</string>
+    <string name="resume_after_reboot_desc">Jei grojo muzika, kai magnetola buvo išjungta arba dingo maitinimas, wDSP po starto vėl paleidžia tą patį grotuvą. Radijas atsistato pats ir jo neliečiame.</string>
+    <string name="resume_after_sleep_label">Tęsti grotuvo atkūrimą po miego</string>
+    <string name="resume_after_sleep_desc">Jei grojo muzika, kai buvo išjungtas degimas, wDSP prabudus vėl paleidžia tą patį grotuvą. Rankinė pauzė išsaugoma ir niekas nepaleidžiama ant jau grojančio garso. Veikia tik tada, jei magnetola laiko wDSP aktyvų miego metu.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

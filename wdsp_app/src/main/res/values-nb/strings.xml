@@ -202,6 +202,10 @@ Global standard: %1$s</string>
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Gjenoppta spilleren etter omstart</string>
+    <string name="resume_after_reboot_desc">Hvis musikk spilte da autoradioen ble slått av eller mistet strømmen, starter wDSP den samme spilleren igjen etter oppstart. Radioen gjenopprettes av seg selv og røres ikke.</string>
+    <string name="resume_after_sleep_label">Gjenoppta spilleren etter dvale</string>
+    <string name="resume_after_sleep_desc">Hvis musikk spilte da tenningen ble slått av, starter wDSP den samme spilleren igjen ved oppvåkning. En manuell pause beholdes, og ingenting startes over pågående avspilling. Fungerer bare hvis autoradioen holder wDSP i live under dvale.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

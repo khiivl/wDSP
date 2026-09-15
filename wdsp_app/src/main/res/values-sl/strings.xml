@@ -202,6 +202,10 @@ Globalno privzeto: %1$s</string>
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Nadaljuj predvajalnik po vnovičnem zagonu</string>
+    <string name="resume_after_reboot_desc">Če je igrala glasba, ko je bil avtoradio izklopljen ali je izgubil napajanje, wDSP po zagonu znova zažene isti predvajalnik. Radio se obnovi sam in se ne spreminja.</string>
+    <string name="resume_after_sleep_label">Nadaljuj predvajalnik po spanju</string>
+    <string name="resume_after_sleep_desc">Če je igrala glasba ob izklopu kontakta, wDSP ob prebujanju znova zažene isti predvajalnik. Ročno nastavljena pavza se ohrani in nič se ne zažene prek že predvajanega zvoka. Deluje le, če avtoradio ohranja wDSP aktiven med spanjem.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

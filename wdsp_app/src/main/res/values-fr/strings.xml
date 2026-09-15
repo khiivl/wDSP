@@ -202,6 +202,10 @@ Par défaut global : %1$s</string>
 
     <string name="settings_backup_btn">Sauvegarder les paramètres</string>
     <string name="settings_restore_btn">Restaurer les paramètres</string>
+    <string name="resume_after_reboot_label">Reprendre la lecture après le redémarrage</string>
+    <string name="resume_after_reboot_desc">Si de la musique était en cours lorsque l\'autoradio s\'est éteint ou a perdu l\'alimentation, wDSP relance le même lecteur après le démarrage. La radio reprend d\'elle-même et reste intouchée.</string>
+    <string name="resume_after_sleep_label">Reprendre la lecture après la veille</string>
+    <string name="resume_after_sleep_desc">Si de la musique était en cours lorsque le contact a été coupé, wDSP relance le même lecteur au réveil. Une pause manuelle est conservée et rien n\'est lancé par-dessus une lecture active. Fonctionne uniquement si l\'autoradio maintient wDSP actif pendant la veille.</string>
     <string name="toast_backup_success">Paramètres sauvegardés avec succès</string>
     <string name="toast_backup_failed">Échec de la sauvegarde : %s</string>
     <string name="toast_restore_success">Paramètres restaurés avec succès</string>

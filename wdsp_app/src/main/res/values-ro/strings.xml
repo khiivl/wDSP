@@ -202,6 +202,10 @@ Implicit global: %1$s</string>
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Reluare redare după repornire</string>
+    <string name="resume_after_reboot_desc">Dacă se reda muzică atunci când sistemul audio a fost oprit sau a pierdut alimentarea, wDSP repornește același player după pornire. Radioul se restabilește singur și nu este modificat.</string>
+    <string name="resume_after_sleep_label">Reluare redare după repaus</string>
+    <string name="resume_after_sleep_desc">Dacă se reda muzică la decuplarea contactului, wDSP repornește același player la revenire. Pauza setată manual este păstrată și nimic nu pornește peste o redare activă. Funcționează doar dacă sistemul audio menține wDSP activ în modul de repaus.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

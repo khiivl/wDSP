@@ -189,6 +189,10 @@
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Återuppta spelaren efter omstart</string>
+    <string name="resume_after_reboot_desc">Om musik spelades när bilradion stängdes av eller förlorade strömmen startar wDSP samma spelare igen efter uppstart. Radion återställs av sig själv och lämnas ifred.</string>
+    <string name="resume_after_sleep_label">Återuppta spelaren efter viloläge</string>
+    <string name="resume_after_sleep_desc">Om musik spelades när tändningen slogs av startar wDSP samma spelare igen vid uppvaknande. En manuell paus behålls och ingenting startas över pågående uppspelning. Fungerar bara om bilradion håller wDSP aktivt under viloläget.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

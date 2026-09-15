@@ -202,6 +202,10 @@ Yleinen oletus: %1$s</string>
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Jatka toistoa uudelleenkäynnistyksen jälkeen</string>
+    <string name="resume_after_reboot_desc">Jos musiikki soi, kun autoradio sammutettiin tai menetti virran, wDSP käynnistää saman soittimen uudelleen käynnistyttyään. Radio palautuu itsestään eikä siihen kosketa.</string>
+    <string name="resume_after_sleep_label">Jatka toistoa lepotilan jälkeen</string>
+    <string name="resume_after_sleep_desc">Jos musiikki soi sytytysvirran katketessa, wDSP käynnistää saman soittimen herätessään. Käsin asetettu tauko säilytetään, eikä mitään aloiteta käynnissä olevan toiston päälle. Toimii vain, jos autoradio pitää wDSP:n käynnissä lepotilassa.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

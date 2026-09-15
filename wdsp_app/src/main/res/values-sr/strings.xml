@@ -202,6 +202,10 @@
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Настави плејер након поновног покретања</string>
+    <string name="resume_after_reboot_desc">Ако је музика свирала када је ауторадио искључен или је остао без напајања, wDSP након покретања поново покреће исти плејер. Радио се сам враћа и не дира се.</string>
+    <string name="resume_after_sleep_label">Настави плејер након спавања</string>
+    <string name="resume_after_sleep_desc">Ако је музика свирала при искључивању контакта, wDSP поново покреће исти плејер при буђењу. Ручно постављена пауза се чува и ништа се не покреће преко текуће репродукције. Ради само ако ауторадио држи wDSP активним током спавања.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

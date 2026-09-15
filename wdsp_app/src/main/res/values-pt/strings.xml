@@ -200,6 +200,10 @@
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Retomar leitor após reiniciar</string>
+    <string name="resume_after_reboot_desc">Se estava a tocar música quando o autorrádio foi desligado ou perdeu energia, o wDSP volta a iniciar o mesmo leitor após o arranque. O rádio restaura-se sozinho e não é alterado.</string>
+    <string name="resume_after_sleep_label">Retomar leitor após suspensão</string>
+    <string name="resume_after_sleep_desc">Se estava a tocar música quando a ignição foi desligada, o wDSP volta a iniciar o mesmo leitor ao acordar. A pausa manual é mantida e nada é iniciado sobre uma reprodução ativa. Só funciona se o autorrádio mantiver o wDSP ativo durante a suspensão.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

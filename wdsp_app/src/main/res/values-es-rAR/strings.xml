@@ -197,6 +197,10 @@
 
     <string name="settings_backup_btn">Backup All Settings</string>
     <string name="settings_restore_btn">Restore Settings</string>
+    <string name="resume_after_reboot_label">Reanudar reproductor tras reiniciar</string>
+    <string name="resume_after_reboot_desc">Si sonaba música cuando el estéreo se apagó o se quedó sin corriente, wDSP vuelve a iniciar el mismo reproductor al encender. La radio se restablece sola y no se toca.</string>
+    <string name="resume_after_sleep_label">Reanudar reproductor tras suspensión</string>
+    <string name="resume_after_sleep_desc">Si sonaba música al apagar el contacto, wDSP vuelve a iniciar el mismo reproductor al despertar. La pausa manual se mantiene y no se inicia nada sobre una reproducción activa. Solo funciona si el estéreo mantiene activo wDSP durante la suspensión.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

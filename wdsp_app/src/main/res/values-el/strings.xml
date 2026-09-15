@@ -202,6 +202,10 @@
 
     <string name="settings_backup_btn">Αντίγραφο ασφαλείας ρυθμίσεων</string>
     <string name="settings_restore_btn">Επαναφορά ρυθμίσεων</string>
+    <string name="resume_after_reboot_label">Συνέχιση αναπαραγωγής μετά την επανεκκίνηση</string>
+    <string name="resume_after_reboot_desc">Εάν έπαιζε μουσική όταν το ηχοσύστημα απενεργοποιήθηκε ή έχασε την τροφοδοσία, το wDSP ξεκινά ξανά την ίδια εφαρμογή αναπαραγωγής μετά την εκκίνηση. Το ραδιόφωνο επανέρχεται μόνο του και δεν επηρεάζεται.</string>
+    <string name="resume_after_sleep_label">Συνέχιση αναπαραγωγής μετά την αναστολή</string>
+    <string name="resume_after_sleep_desc">Εάν έπαιζε μουσική όταν έκλεισε η ανάφλεξη, το wDSP ξεκινά ξανά την ίδια εφαρμογή κατά την αφύπνιση. Μια χειροκίνητη παύση διατηρείται και τίποτα δεν ξεκινά πάνω από υπάρχουσα αναπαραγωγή. Λειτουργεί μόνο εάν το ηχοσύστημα διατηρεί το wDSP ενεργό κατά την αναστολή.</string>
     <string name="toast_backup_success">Το αντίγραφο ασφαλείας αποθηκεύτηκε</string>
     <string name="toast_backup_failed">Σφάλμα δημιουργίας αντιγράφου: %s</string>
     <string name="toast_restore_success">Οι ρυθμίσεις επαναφέρθηκαν επιτυχώς</string>
