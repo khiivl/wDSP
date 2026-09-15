@@ -253,10 +253,31 @@ start and the person is asked to restart the head unit; the section says so in `
 **On a PCM source the Visualizer's pipeline runs whatever the mode.** In the microphone mode it is the
 reference: the microphone's analyser runs beside it and is drawn shifted so that its 200–800 Hz middle
 (bands 5..8, mean dB, through the one native fold) equals the calculated spectrum's
-(`alignMicrophoneToCalculated`, 2 s smoothing). Aligned, the microphone reads in the track's dBFS with
-no gain, like the calculated spectrum; unaligned (radio, silence) it is normalised. One display thread
-draws `shownAnalyzer()`; `analyzerLock` guards both analysers' lifetime. Returning to the calculated
-mode only stops the microphone's analysis — no re-attach, no sweep.
+(`alignMicrophoneToCalculated`, 2 s smoothing). One display thread draws `shownAnalyzer()`;
+`analyzerLock` guards both analysers' lifetime. Returning to the calculated mode only stops the
+microphone's analysis — no re-attach, no sweep.
+
+**The main spectrum is relative, and the main analyser has no gain** (owner, 15.09.2026).
+`SpectrumAnalyzerView` draws each band's top on the equaliser grid in the grid's own dB, relative to the
+average of the bands that have sound: a bar at "+4" means that band is 4 dB above the average, the slider
+would go to −4. Fewer than three bands with sound draw nothing (a two-tone test shows no bars). The
+"Авторівень: головний аналізатор" and the EQ visualiser's "Динамічна нормалізація" are gone; the status bar
+widget keeps its own.
+
+**Player resume** (`PlayerResume`, owner 14–15.09.2026): two switches in Permissions and system. `NowPlaying`
+reports every session change; at `READY_GO_SLEEP`/`ACC_OFF` the class notes what was playing, and after a
+wake (`ACC_ON`) or a boot (presets ready within 3 min of the kernel start) it starts that player — session,
+then an explicit PLAY to its media button receiver, then its browser service. Radio, a person's pause,
+something already playing and the platform's five factory apps are left alone. It only works for a process
+that survives sleep: the platform's sleep whitelist cannot be read by an app, so Settings opens
+`com.qf.carsettings/.activity.FactorySleepWhiteListActivity` for the person — wDSP never writes the list.
+
+**The cabin sweep** (`RoomMeasurement`, `sweep.cpp`, 15.09.2026): door channels are averaged in **power**,
+not dB; the impulse window opens 100 ms before the arrival with a smooth rise (an abrupt cut 1.3 ms before the
+peak filled the doors' deepest bands); a band is averaged only over the bins the sweep excited at full height
+(the 20 Hz and 20 kHz edges now read flat); doors sweep from 20 Hz, the subwoofer from 15 Hz in the same
+pass. The top stays 20 kHz until a probe of the channel says more (factory I2S may be 44.1 kHz). Host
+harness: `test_sweep.cpp` (`test_sweep.cpp sweep.cpp analyzer.cpp fft.cpp stitcher.cpp`).
 
 Logs on the owner's unit: read the Magisk boot logger (`/data/local/tmp/bootlog/<latest>/10_boot.log`,
 `20_run.log*`), not `logcat`.
