@@ -206,6 +206,8 @@ Globalno zadano: %1$s</string>
     <string name="resume_after_reboot_desc">Ako je glazba svirala kad je autoradio isključen ili je ostao bez napajanja, wDSP nakon pokretanja ponovno pokreće isti player. Radio se sam vraća i ne dira se.</string>
     <string name="resume_after_sleep_label">Nastavi reprodukciju nakon mirovanja</string>
     <string name="resume_after_sleep_desc">Ako je glazba svirala pri gašenju kontakta, wDSP ponovno pokreće isti player pri buđenju. Ručno postavljena pauza se čuva i ništa se ne pokreće preko reprodukcije u tijeku. Radi samo ako autoradio drži wDSP aktivnim tijekom mirovanja.</string>
+    <string name="resume_open_sleep_whitelist">Dopusti wDSP-u rad u mirovanju</string>
+    <string name="resume_sleep_whitelist_unavailable">Autoradio nije otvorio svoj popis mirovanja.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

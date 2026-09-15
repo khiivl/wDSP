@@ -204,6 +204,8 @@
     <string name="resume_after_reboot_desc">Se estava tocando música quando a central multimídia foi desligada ou perdeu energia, o wDSP inicia o mesmo reprodutor novamente após ligar. O rádio se restaura sozinho e não é alterado.</string>
     <string name="resume_after_sleep_label">Retomar reprodutor após suspensão</string>
     <string name="resume_after_sleep_desc">Se estava tocando música quando a ignição foi desligada, o wDSP inicia o mesmo reprodutor ao despertar. A pausa manual é mantida e nada é iniciado por cima de uma reprodução ativa. Só funciona se a central multimídia mantiver o wDSP ativo na suspensão.</string>
+    <string name="resume_open_sleep_whitelist">Permitir wDSP ativo na suspensão</string>
+    <string name="resume_sleep_whitelist_unavailable">A central multimídia não abriu a lista de suspensão.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

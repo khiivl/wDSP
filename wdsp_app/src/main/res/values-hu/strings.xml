@@ -206,6 +206,8 @@ Globális alapértelmezett: %1$s</string>
     <string name="resume_after_reboot_desc">Ha szólt a zene, amikor az autórádió kikapcsolt vagy áramkimaradás történt, a wDSP az indulás után újraindítja ugyanazt a lejátszót. A rádió magától visszaáll és érintetlen marad.</string>
     <string name="resume_after_sleep_label">Lejátszó folytatása alvás után</string>
     <string name="resume_after_sleep_desc">Ha szólt a zene a gyújtás levételekor, a wDSP az ébredéskor újraindítja ugyanazt a lejátszót. A kézzel beállított szünet megmarad, és semmi sem indul el egy éppen futó lejátszásra. Csak akkor működik, ha az autórádió ébren tartja a wDSP-t alvás közben.</string>
+    <string name="resume_open_sleep_whitelist">wDSP engedélyezése alvás közben</string>
+    <string name="resume_sleep_whitelist_unavailable">Az autórádió nem nyitotta meg az alvási listáját.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

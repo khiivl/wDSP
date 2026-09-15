@@ -206,6 +206,8 @@ Globální výchozí: %1$s</string>
     <string name="resume_after_reboot_desc">Pokud hrála hudba, když bylo autorádio vypnuto nebo ztratilo napájení, wDSP po spuštění znovu spustí stejný přehrávač. Rádio se obnoví samo a zůstane beze změny.</string>
     <string name="resume_after_sleep_label">Obnovit přehrávač po probuzení</string>
     <string name="resume_after_sleep_desc">Pokud hrála hudba při vypnutí zapalování, wDSP po zapnutí opět spustí stejný přehrávač. Ručně nastavená pauza zůstane zachována a nic se nespustí přes již hrající přehrávání. Funguje pouze tehdy, pokud autorádio ponechá wDSP aktivní během spánku.</string>
+    <string name="resume_open_sleep_whitelist">Povolit wDSP běžet během spánku</string>
+    <string name="resume_sleep_whitelist_unavailable">Autorádio neotevřelo svůj seznam spánku.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

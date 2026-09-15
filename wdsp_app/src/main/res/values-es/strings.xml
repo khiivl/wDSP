@@ -194,6 +194,8 @@
     <string name="resume_after_reboot_desc">Si sonaba música cuando la radio se apagó o perdió corriente, wDSP vuelve a iniciar el mismo reproductor tras el encendido. La radio se restablece sola y no se toca.</string>
     <string name="resume_after_sleep_label">Reanudar reproductor tras suspensión</string>
     <string name="resume_after_sleep_desc">Si sonaba música al apagar el contacto, wDSP vuelve a iniciar el mismo reproductor al reactivarse. La pausa manual se mantiene y no se inicia nada sobre una reproducción activa. Solo funciona si la radio mantiene activo wDSP durante la suspensión.</string>
+    <string name="resume_open_sleep_whitelist">Permitir wDSP activo en suspensión</string>
+    <string name="resume_sleep_whitelist_unavailable">La radio no abrió su lista de suspensión.</string>
     <string name="toast_backup_success">Copia de seguridad guardada</string>
     <string name="toast_backup_failed">Error de copia de seguridad: %s</string>
     <string name="toast_restore_success">Ajustes restaurados con éxito</string>

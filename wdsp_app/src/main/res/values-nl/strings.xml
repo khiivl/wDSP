@@ -206,6 +206,8 @@ Globale standaard: %1$s</string>
     <string name="resume_after_reboot_desc">Als er muziek speelde toen de autoradio werd uitgeschakeld of de stroom uitviel, start wDSP na het opstarten dezelfde speler opnieuw. De radio herstelt zichzelf en wordt met rust gelaten.</string>
     <string name="resume_after_sleep_label">Speler hervatten na slaapstand</string>
     <string name="resume_after_sleep_desc">Als er muziek speelde toen het contact werd uitgeschakeld, start wDSP dezelfde speler opnieuw bij ontwaken. Een handmatige pauze blijft behouden en er wordt niets gestart over reeds spelende muziek. Werkt alleen als de autoradio wDSP actief houdt tijdens slaapstand.</string>
+    <string name="resume_open_sleep_whitelist">wDSP actief laten in slaapstand</string>
+    <string name="resume_sleep_whitelist_unavailable">De autoradio heeft zijn slaaplijst niet geopend.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

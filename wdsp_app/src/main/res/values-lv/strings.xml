@@ -206,6 +206,8 @@ Globāli noklusējums: %1$s</string>
     <string name="resume_after_reboot_desc">Ja skanēja mūzika, kad magnetola tika izslēgta vai zaudēja barošanu, wDSP pēc startēšanas atkal palaiž to pašu atskaņotāju. Radio atjaunojas pats un netiek aiztikts.</string>
     <string name="resume_after_sleep_label">Atsākt atskaņotāja darbību pēc miega</string>
     <string name="resume_after_sleep_desc">Ja skanēja mūzika, kad tika izslēgta aizdedze, wDSP pēc pamošanās atkal palaiž to pašu atskaņotāju. Manuāli iestatītā pauze saglabājas un nekas netiek palaists virs jau skanoša ieraksta. Darbojas tikai tad, ja magnetola saglabā wDSP aktīvu miega laikā.</string>
+    <string name="resume_open_sleep_whitelist">Atļaut wDSP darboties miega laikā</string>
+    <string name="resume_sleep_whitelist_unavailable">Magnetola neatvēra savu miega sarakstu.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

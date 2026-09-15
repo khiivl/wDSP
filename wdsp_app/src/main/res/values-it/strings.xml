@@ -206,6 +206,8 @@ Predefinito globale: %1$s</string>
     <string name="resume_after_reboot_desc">Se la musica era in riproduzione quando l\'autoradio si è spenta o ha perso alimentazione, wDSP riavvia lo stesso lettore dopo l\'avvio. La radio si ripristina da sola e non viene toccata.</string>
     <string name="resume_after_sleep_label">Riprendi il lettore dopo la sospensione</string>
     <string name="resume_after_sleep_desc">Se la musica era in riproduzione allo spegnimento del quadro, wDSP riavvia lo stesso lettore al risveglio. La pausa manuale viene mantenuta e nulla viene avviato sopra una riproduzione in corso. Funziona solo se l\'autoradio mantiene wDSP attivo in sospensione.</string>
+    <string name="resume_open_sleep_whitelist">Consenti a wDSP di restare attivo</string>
+    <string name="resume_sleep_whitelist_unavailable">L\'autoradio non ha aperto il proprio elenco di sospensione.</string>
     <string name="toast_backup_success">Backup salvato con successo</string>
     <string name="toast_backup_failed">Backup non riuscito: %s</string>
     <string name="toast_restore_success">Impostazioni ripristinate con successo</string>

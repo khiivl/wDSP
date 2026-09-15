@@ -194,6 +194,8 @@
     <string name="resume_after_reboot_desc">Jeśli muzyka grała, gdy radio samochodowe zostało wyłączone lub straciło zasilanie, wDSP po uruchomieniu ponownie włącza ten sam odtwarzacz. Radio przywraca się samo i nie jest modyfikowane.</string>
     <string name="resume_after_sleep_label">Wznów odtwarzacz po uśpieniu</string>
     <string name="resume_after_sleep_desc">Jeśli muzyka grała w momencie wyłączenia zapłonu, wDSP włącza ten sam odtwarzacz po wybudzeniu. Ręczna pauza zostaje zachowana i nic nie jest uruchamiane na aktualnie odtwarzanym dźwięku. Działa tylko wtedy, gdy radio samochodowe utrzymuje wDSP przy życiu podczas uśpienia.</string>
+    <string name="resume_open_sleep_whitelist">Pozwól wDSP działać w uśpieniu</string>
+    <string name="resume_sleep_whitelist_unavailable">Radio samochodowe nie otworzyło swojej listy uśpienia.</string>
     <string name="toast_backup_success">Kopia zapasowa została zapisana</string>
     <string name="toast_backup_failed">Błąd tworzenia kopii zapasowej: %s</string>
     <string name="toast_restore_success">Ustawienia zostały przywrócone</string>

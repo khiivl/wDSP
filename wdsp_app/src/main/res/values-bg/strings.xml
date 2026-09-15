@@ -206,6 +206,8 @@
     <string name="resume_after_reboot_desc">Ако е звучала музика, когато мултимедията е била изключена или е загубила захранване, wDSP след стартиране пуска отново същия плейър. Радиото се възстановява само и не се пипа.</string>
     <string name="resume_after_sleep_label">Възобновяване на плейъра след заспиване</string>
     <string name="resume_after_sleep_desc">Ако е звучала музика при изключване на контакта, wDSP отново пуска същия плейър при събуждане. Пауза, поставена от вас, се запазва и нищо не се пуска върху вече свирещ звук. Работи само ако мултимедията оставя wDSP активен по време на сън.</string>
+    <string name="resume_open_sleep_whitelist">Разрешаване на wDSP да работи в сън</string>
+    <string name="resume_sleep_whitelist_unavailable">Мултимедията не отвори своя списък за сън.</string>
     <string name="toast_backup_success">Резервното копие е запазено</string>
     <string name="toast_backup_failed">Грешка при създаване на бекъп: %s</string>
     <string name="toast_restore_success">Настройките са възстановени успешно</string>

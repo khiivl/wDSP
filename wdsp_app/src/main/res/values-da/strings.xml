@@ -206,6 +206,8 @@ Global standard: %1$s</string>
     <string name="resume_after_reboot_desc">Hvis der spillede musik, da autoradioen blev slukket eller mistede strøm, starter wDSP den samme afspiller igen efter opstart. Radioen gendannes af sig selv og lades være.</string>
     <string name="resume_after_sleep_label">Genoptag afspilleren efter dvale</string>
     <string name="resume_after_sleep_desc">Hvis der spillede musik, da tændingen blev slået fra, starter wDSP den samme afspiller igen ved opvågning. En pause sat af dig bevares, og intet startes oven i igangværende afspilning. Virker kun, hvis autoradioen holder wDSP i live under dvale.</string>
+    <string name="resume_open_sleep_whitelist">Tillad wDSP at køre under dvale</string>
+    <string name="resume_sleep_whitelist_unavailable">Autoradioen åbnede ikke sin dvaleliste.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>

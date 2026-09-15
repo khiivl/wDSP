@@ -194,6 +194,8 @@
     <string name="resume_after_reboot_desc">Wenn Musik lief, als das Autoradio ausgeschaltet wurde oder der Strom weg war, startet wDSP nach dem Hochfahren denselben Player erneut. Das Radio stellt sich selbst wieder her und bleibt unberührt.</string>
     <string name="resume_after_sleep_label">Player nach Standby fortsetzen</string>
     <string name="resume_after_sleep_desc">Wenn Musik lief, als die Zündung ausgeschaltet wurde, startet wDSP denselben Player beim Aufwachen erneut. Eine manuell gesetzte Pause bleibt erhalten und es wird nichts über eine laufende Wiedergabe gestartet. Funktioniert nur, wenn das Autoradio wDSP im Standby aktiv lässt.</string>
+    <string name="resume_open_sleep_whitelist">wDSP im Standby aktiv lassen</string>
+    <string name="resume_sleep_whitelist_unavailable">Das Autoradio hat seine Standby-Liste nicht geöffnet.</string>
     <string name="toast_backup_success">Einstellungen erfolgreich gesichert</string>
     <string name="toast_backup_failed">Sicherung fehlgeschlagen: %s</string>
     <string name="toast_restore_success">Einstellungen erfolgreich wiederhergestellt</string>

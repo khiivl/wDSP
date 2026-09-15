@@ -206,6 +206,8 @@ Genel Varsayılan: %1$s</string>
     <string name="resume_after_reboot_desc">Teyp kapatıldığında veya güç kesildiğinde müzik çalıyorsa wDSP açılış sonrası aynı oynatıcıyı yeniden başlatır. Radyo kendi kendine düzelir ve ellenmez.</string>
     <string name="resume_after_sleep_label">Uyku sonrası oynatıcıyı sürdür</string>
     <string name="resume_after_sleep_desc">Kontak kapatıldığında müzik çalıyorsa wDSP uyanma sırasında aynı oynatıcıyı yeniden başlatır. Manuel duraklatma korunur ve çalan bir şeyin üstüne başlatma yapılmaz. Yalnızca teyp uyku sırasında wDSP\'yi canlı tutarsa çalışır.</string>
+    <string name="resume_open_sleep_whitelist">wDSP\'nin uykuda çalışmasına izin ver</string>
+    <string name="resume_sleep_whitelist_unavailable">Teyp kendi uyku listesini açmadı.</string>
     <string name="toast_backup_success">Settings backed up successfully</string>
     <string name="toast_backup_failed">Backup failed: %s</string>
     <string name="toast_restore_success">Settings restored successfully</string>
