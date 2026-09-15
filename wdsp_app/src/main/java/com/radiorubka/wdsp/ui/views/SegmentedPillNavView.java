@@ -430,12 +430,49 @@ public class SegmentedPillNavView extends HorizontalScrollView {
                     - mContentContainer.getPaddingLeft() - mContentContainer.getPaddingRight()
                     - gaps;
             int per = Math.max(floor, Math.min(designed, room / n));
+            float textScale = captionScale(per, density);
+            float textPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, CAPTION_SP,
+                    getResources().getDisplayMetrics()) * textScale;
+            int padX = Math.round(ITEM_PAD_X_DP * density * textScale);
             for (NavItemViewHolder h : mHolders) {
                 if (h.itemView.getMinimumWidth() != per) {
                     h.itemView.setMinimumWidth(per);
                 }
+                if (Math.abs(h.textView.getTextSize() - textPx) > 0.5f) {
+                    h.textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textPx);
+                }
+                if (h.itemView.getPaddingLeft() != padX) {
+                    h.itemView.setPadding(padX, h.itemView.getPaddingTop(), padX, h.itemView.getPaddingBottom());
+                }
             }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    private static final float CAPTION_SP = 12f;
+    private static final float ITEM_PAD_X_DP = 8f;
+    /** Below this the captions stop being readable at a glance; the row scrolls instead. */
+    private static final float MIN_CAPTION_SCALE = 0.7f;
+
+    /**
+     * How much the captions and the tabs' side padding shrink so that the widest caption fits a tab
+     * {@code per} pixels wide. The tabs could narrow only down to their caption, so on a 640dp
+     * window "Налаштування" at 12sp made its tab wider than its share and the last tab was cut
+     * (15.09.2026). The owner's rule for such rows: shrink everything together rather than cut.
+     * Measured bold, because whichever tab is selected is drawn bold.
+     */
+    private float captionScale(int per, float density) {
+        android.graphics.Paint paint = new android.graphics.Paint();
+        paint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, CAPTION_SP,
+                getResources().getDisplayMetrics()));
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+        float widest = 0f;
+        for (NavItemViewHolder h : mHolders) {
+            CharSequence title = h.textView.getText();
+            if (title != null) widest = Math.max(widest, paint.measureText(title.toString()));
+        }
+        float need = widest + 2f * ITEM_PAD_X_DP * density;
+        if (need <= per) return 1f;
+        return Math.max(MIN_CAPTION_SCALE, per / need);
     }
 }
