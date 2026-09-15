@@ -1105,6 +1105,13 @@ public class MainActivity extends AppCompatActivity {
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);
         tvPowerDb = findViewById(R.id.tv_pwr_db);
+        // What RowFit cannot make fit scrolls, as the preset name does (owner, 15.09.2026).
+        com.radiorubka.wdsp.ui.views.TextScroller.attach(spinnerSubFreq);
+        // The equaliser's bottom row shrinks as a whole when the window is too narrow for it, and
+        // the slider keeps at least 64dp. See RowFit.
+        com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.layout_buttons), seekSubGain,
+                Math.round(64 * getResources().getDisplayMetrics().density),
+                findViewById(R.id.lbl_pwr), findViewById(R.id.lbl_sub), spinnerSubFreq);
         setupSpectrumModeToggle();
         setupNavigation();
     }

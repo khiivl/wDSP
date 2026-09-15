@@ -371,20 +371,21 @@
                 app:layout_constraintStart_toStartOf="parent">
 
                 <!-- 1. POWER VOLUME BLOCK
-                     Widest share of the row: it carries a caption, a number and two buttons, and
-                     the caption is the one thing here that may be cut. The extra weight came from
-                     the frequency dropdown and from the quick actions, which no longer stretch. -->
+                     Its own natural width, no weight (15.09.2026). With a weight of 2.2 it was given
+                     a share of the row, and the caption inside measured first and took all of its
+                     own width, so the buttons got whatever was left: measured by emulation, 222dp
+                     given against 281dp needed at 1024 (plus cut), 149 against 236 on a tester's
+                     768dp window (minus a sliver, plus gone), 101 at 640 (value and both buttons
+                     gone). Now the slider beside it takes the slack, and when the whole row does not
+                     fit, RowFit shrinks all of it together. -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2.2"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <!-- The caption gives way first: it takes a share of the row and ends in an
-                         ellipsis. With wrap_content it took all it wanted, and on a 640dp window
-                         and on the Tesla square it pushed both volume buttons out of the layout
-                         entirely - they were not in the dump at all. -->
+                    <!-- Natural width up to eq_caption_max, ellipsized beyond it. Its type is what
+                         RowFit shrinks hardest on a narrow window. -->
                     <TextView
                         android:id="@+id/lbl_pwr"
                         style="@style/TextLabel"
@@ -546,13 +547,17 @@
                     android:hint="@string/lbl_freq"
                     android:textColorHint="@color/text_theme_aware_2">
 
+                    <!-- singleLine, not maxLines: with maxLines="1" the value broke at its space and
+                         "Гц" went to a second line once RowFit narrowed the box (owner, 15.09.2026).
+                         One line that scrolls, like the preset name above; RowFit shrinks its type
+                         and its side padding with the box. No marquee - see the preset dropdown. -->
                     <AutoCompleteTextView
                         android:id="@+id/spinner_sub_freq"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
-                        android:maxLines="1"
-                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:scrollHorizontally="true"
                         android:paddingVertical="8dp"
                         android:textColor="@color/cyan_custom"
                         android:focusable="false"
