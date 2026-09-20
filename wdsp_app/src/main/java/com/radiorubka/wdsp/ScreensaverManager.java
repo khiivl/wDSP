@@ -112,6 +112,8 @@ public final class ScreensaverManager {
     public static final float MAX_INFO_H = 0.25f;
 
     private static final long POLL_MS = 2000L;
+    /** While the screensaver is on screen - it has to notice a change underneath quickly. */
+    private static final long ATTACHED_POLL_MS = 500L;
 
     /**
      * How long the music has to stay stopped before the clock takes over.
@@ -1326,7 +1328,10 @@ public final class ScreensaverManager {
             } catch (Throwable t) {
                 Log.w(TAG, "screensaver tick failed", t);
             }
-            if (isEnabled() && screenOn) handler.postDelayed(this, POLL_MS);
+            // Half a second while it is on screen: that tick is now what dismisses it when the
+            // person switches applications underneath, and two seconds of curtain after a key press
+            // reads as the key not working. One property read is all it costs.
+            if (isEnabled() && screenOn) handler.postDelayed(this, attached ? ATTACHED_POLL_MS : POLL_MS);
         }
     };
 
@@ -1343,6 +1348,19 @@ public final class ScreensaverManager {
                 + ", idleMs=" + idleMs + ", delayMs=" + (delaySeconds() * 1000L)
                 + ", mayShow=" + mayShowOver(foreground));
         if (attached) {
+            // 🔴 Anything changing underneath takes the screensaver down, not only a blocked app
+            // (owner, 20.09.2026). The Mode key walks the launcher's carousel from one application
+            // to the next and the recents button opens the task list - both happen behind the
+            // curtain, so a person presses a key and sees nothing move. What is in front is already
+            // being read on every tick; this simply believes it.
+            if (!previewMode && !foreground.isEmpty() && !foreground.equals(lastForeground)) {
+                Log.i(TAG, "screensaver removed: what is underneath changed to " + foreground);
+                lastForeground = foreground;
+                foregroundChanges++;
+                lastForegroundChangeAt = System.currentTimeMillis();
+                hide();
+                return;
+            }
             if (!previewMode && !foreground.isEmpty() && !mayShowOver(foreground)) {
                 Log.i(TAG, "Screensaver dismissed because foreground changed to blocked: " + foreground);
                 hide();
