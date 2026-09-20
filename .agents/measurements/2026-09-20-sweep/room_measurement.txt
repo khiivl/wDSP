@@ -1,0 +1,106 @@
+wDSP room measurement
+app 0.4.9.8 (vc25)
+MCU code=002121 (ST), sound processor=BU32107, tuner=TDA7708, path=I2S, capture effects the platform OFFERS (not what any given capture got): AEC=true NS=true AGC=false
+capture source: UNPROCESSED - the policy attaches no AEC/NS to this source
+board=uis7862s_1h10 platform=ums512 model=K706 android=13 (sdk 29)
+SCREEN & WINDOW TOPOLOGY
+  physical display (real) = 1280 x 720 px (rotation=0, hwrotation=90)
+  app viewport (display)  = 1280 x 720 px
+  display metrics (dm)    = 1280 x 720 px, density=1.00 (160 dpi), 1280 x 720 dp
+  configuration           = LANDSCAPE (w=1280dp, h=648dp, sw=720dp)
+  system dimensions (res) : status_bar=72 px, nav_bar_h=154 px, nav_bar_w=640 px
+  decor window on screen  : location=(0, 0), size=1280 x 720 px
+  visible display frame   : [0, 72 - 1280, 720] (size=1280 x 648 px)
+  window insets (system)  : top=72, bottom=0, left=0, right=0 px
+  window insets (stable)  : top=72, bottom=0, left=0, right=0 px
+  screensaver overlay cfg : bounds=1280 x 720 px, status_bar_used=65 px, offset_y=0 px
+  launcher                : none set, installed: com.android.launcher.black.blue|com.android.launcher.blueman|com.android.launcher.bustling.city|com.android.launcher.dark.tunnel|com.android.launcher.fantasy.purple|com.android.launcher.grassland|com.android.launcher.meet.again|com.android.launcher.morning.light|com.android.launcher.movablecell|com.android.launcher.plane|com.android.launcher.simple.blue|com.android.launcher.star.blue|com.android.launcher.swood.grain|com.android.launcher.undercurrent|com.android.launcher.dreamMountain|com.android.settings
+  shell wm size           : Physical size: 1280x720
+  dumpsys window displays :
+    DisplayFrames w=1280 h=720 r=0
+    mStable=[0,72][1280,720]
+    mDock=[0,72][1280,720]
+    mContent=[0,72][1280,720]
+    mContentFrame=Rect(0, 0 - 1280, 72)
+  dumpsys window frames   :
+    Window #0 Window{84f23ef u0 StatusBar}:
+    mFrame=[0,0][1280,72] last=[0,0][1280,72]
+    WindowStateAnimator{36bb952 StatusBar}:
+    mAnimationIsEntrance=true      mSurface=Surface(name=StatusBar)/@0x384e3c4
+    mFrame=[0,72][1,73] last=[0,72][1,73]
+    mFrame=[0,72][0,72] last=[0,0][0,0]
+    mFrame=[384,0][896,65] last=[384,0][896,65]
+    mFrame=[0,720][1280,720] last=[0,0][0,0]
+    mFrame=[0,0][0,0] last=[0,0][0,0]
+    mFrame=[220,72][1060,720] last=[220,72][1060,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+
+microphone was held by another app (input device at 48000 Hz, opened by it before us); stopped [com.google.android.googlequicksearchbox]; now 48000 Hz - released through root
+microphone placed: front centre  (lr -0.07, fr +0.82), on the head unit front panel, built in: behind a hole in a panel
+audio focus: granted
+preset=AutoEQ Harman (Центр) amplitude=0.25 sweep=6.0 s from 20 Hz (subwoofer from 15 Hz) up to 20000 Hz
+soundstage: По центру спереду
+cabin body: Далека посадка (Мінівен / Бус — 90 см), listening distance: 90 cm
+
+rear left    arrival  1719.28 ms  clarity   1.9 dB  prominence       35  polarity -1  peak   -9.3 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -84.3 -83.8 -70.1 -64.6 -65.0 -55.9 -47.4 -30.0 -32.2 -52.7 -63.1 -63.6 -46.8 -58.7 -68.2 -66.9
+             noise dB:    -81.1 -77.9 -74.1 -70.0 -69.4 -59.7 -37.7 -42.8 -43.6 -58.1 -63.4 -49.0 -47.1 -71.4 -69.2 -67.0
+             clean dB:    -96.3 -95.8 -72.3 -66.1 -66.9 -58.3 -59.4 -30.2 -32.5 -54.1 -74.6 -75.6 -58.6 -58.9 -74.8 -78.9
+             SNR dB:      -3.3 -5.9 4.0 5.4 4.5 3.8 -9.7 12.9 11.4 5.5 0.3 -14.6 0.3 12.7 1.1 0.2
+
+rear right   arrival  2522.20 ms  clarity   2.8 dB  prominence       33  polarity +1  peak  -24.5 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -80.4 -78.3 -74.6 -62.3 -63.4 -55.5 -50.4 -44.1 -38.5 -59.6 -63.8 -64.2 -48.8 -72.7 -83.7 -119.6
+             noise dB:    -80.8 -82.1 -73.3 -67.2 -65.3 -56.0 -50.7 -48.9 -43.9 -61.5 -64.5 -64.9 -51.7 -71.1 -68.9 -67.5
+             clean dB:    -90.6 -80.6 -86.6 -64.1 -68.0 -65.3 -61.6 -45.9 -40.0 -64.0 -72.3 -72.3 -51.9 -84.7 -95.7 -120.0
+             SNR dB:      0.4 3.8 -1.4 4.8 1.9 0.5 0.3 4.8 5.4 1.9 0.7 0.7 2.9 -1.6 -14.9 -52.2
+
+front left   arrival  1442.50 ms  clarity  10.6 dB  prominence     8416  polarity +1  peak   -8.3 dBFS   heard directly
+             suggested delay 0.0 ms (0 steps)
+             response dB: -56.9 -45.5 -36.9 -27.4 -25.5 -11.3 -6.9 -7.8 -9.0 -8.9 -14.3 -16.8 -15.0 -21.4 -36.7 -45.9
+             noise dB:    -73.8 -77.8 -71.6 -61.6 -59.4 -56.8 -47.3 -47.6 -33.3 -34.4 -41.2 -52.3 -49.0 -62.9 -63.3 -64.1
+             clean dB:    -57.0 -45.5 -36.9 -27.4 -25.5 -11.3 -6.9 -7.8 -9.0 -8.9 -14.3 -16.8 -15.0 -21.4 -36.7 -45.9
+             SNR dB:      16.9 32.3 34.7 34.2 33.9 45.5 40.4 39.8 24.4 25.5 26.9 35.5 34.0 41.5 26.6 18.2
+             GCC-PHAT:   +1.400 ms (1399.9 us, prominence 8415.7)
+
+front right  arrival  1441.10 ms  clarity  22.4 dB  prominence    38516  polarity +1  peak   -2.8 dBFS   heard directly
+             suggested delay 1.7 ms (3 steps)
+             response dB: -46.2 -36.6 -24.2 -15.7 -18.5 -7.0 -2.0 -6.8 -3.3 -4.3 -5.1 -5.0 -5.2 -5.7 -5.5 -5.5
+             noise dB:    -82.7 -78.9 -76.3 -65.3 -64.9 -58.9 -29.5 -27.2 -19.9 -21.8 -23.3 -23.4 -23.5 -23.5 -23.6 -23.8
+             clean dB:    -46.2 -36.6 -24.2 -15.7 -18.5 -7.0 -2.0 -6.9 -3.4 -4.3 -5.2 -5.1 -5.2 -5.8 -5.5 -5.5
+             SNR dB:      36.4 42.3 52.1 49.6 46.4 51.9 27.6 20.4 16.6 17.5 18.2 18.4 18.3 17.8 18.1 18.4
+             GCC-PHAT:   +0.000 ms (0.0 us, prominence 1000.0)
+
+subwoofer    arrival  1441.04 ms  clarity  21.1 dB  prominence    36027  polarity -1  peak   -2.9 dBFS   heard directly
+             suggested delay 3.4 ms (7 steps)
+             response dB: -51.6 -37.9 -30.5 -20.7 -17.2 -7.1 -0.7 -4.2 -4.9 -3.8 -4.4 -4.8 -4.8 -5.6 -5.4 -5.5
+             noise dB:    -59.3 -59.0 -56.4 -34.6 -29.1 -17.7 -13.3 -17.5 -21.1 -27.5 -24.0 -23.6 -23.5 -23.5 -23.6 -23.9
+             clean dB:    -52.4 -38.0 -30.5 -20.9 -17.4 -7.5 -0.9 -4.4 -5.0 -3.9 -4.4 -4.8 -4.9 -5.6 -5.5 -5.5
+             SNR dB:      7.7 21.1 25.9 13.9 12.0 10.6 12.6 13.4 16.2 23.7 19.6 18.8 18.7 17.9 18.1 18.4
+             GCC-PHAT:   -0.057 ms (-56.8 us, prominence 36026.9)
+
+Cabin silence dB:      -107.4 -93.3 -93.3 -82.1 -82.0 -75.8 -67.5 -69.8 -64.9 -74.6 -97.5 -100.8 -87.6 -112.1 -113.5 -115.3
+Deconv. noise (front right): -82.7 -78.9 -76.3 -65.3 -64.9 -58.9 -29.5 -27.2 -19.9 -21.8 -23.3 -23.4 -23.5 -23.5 -23.6 -23.8
+Mic compensation dB:   +52.8 +40.5 +24.1 +13.6 +5.0 +0.0 +0.0 +0.0 +0.0 +0.0 -1.5 -5.0 -1.0 +3.5 +7.0 +10.0
+Cabin response dB:     +6.6 +8.7 -0.1 -1.0 -9.5 -2.4 +2.5 -1.0 +0.9 +0.2 -2.9 -6.6 -2.5 +1.1 +4.7 +7.7
+LF slope 20-80 Hz:     -3.8 dB/oct measured  (an input RC high-pass alone would give +4.4 at fc=72 Hz, +5.5 at fc=154 Hz)
+Avg SNR dB:            26.6 37.3 43.4 41.9 40.2 48.7 34.0 30.1 20.5 21.5 22.5 26.9 26.2 29.6 22.4 18.3
+EQ trust (0..1):       1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+Headroom:              -2.8 dBFS peak - nothing clipped, no margin left.
+Mic calibrated:       yes
+
+WIRING: the main channels heard directly are in phase with each other. The subwoofer is not compared: it plays through a 12 dB/oct low-pass that turns its own phase, and plenty of them are wired inverted on purpose, so its sign here says nothing about anybody's wiring.
+Soundstage mode: По центру спереду
+Target sound curve: Harman Reference
+Midbass HPF: 100 Hz (idx 7)
+Subwoofer: Installed, LPF 100 Hz (idx 6), Gain +2 dB, Delay 3.4 ms (7 steps)
+Synthesized Auto-EQ (Harman Reference target), dB: +0 +0 +0 +0 +4 +2 -2 +2 +0 +0 +2 +4 +2 -2 -4 -4
+  same as hardware indices (6 = 0 dB, 2 dB a step): 6 6 6 6 8 7 5 7 6 6 7 8 7 5 4 4
+
+Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 8000 12500 20000 Hz
+The response includes the microphone's own curve and is NOT a calibration.

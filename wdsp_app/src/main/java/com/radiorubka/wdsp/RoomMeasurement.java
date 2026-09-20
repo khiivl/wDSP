@@ -169,6 +169,10 @@ public final class RoomMeasurement {
     /** Silence before the first sweep (ambient noise floor capture), and inside every window. */
     private static final float LEAD_SECONDS = 1.0f;
     public static final String PREF_MIC_COMPENSATION = "pref_mic_compensation";
+    /** Curves this unit had before the current one, newest first, one per line: "stamp v,v,...". */
+    public static final String PREF_MIC_COMPENSATION_HISTORY = "pref_mic_compensation_history";
+    /** How many past microphone curves are kept. Sixteen numbers each - the cost is nothing. */
+    private static final int KEEP_MIC_CURVES = 10;
     /**
      * What the car itself does to the sound, in dB relative to its own midband.
      *
@@ -374,6 +378,8 @@ public final class RoomMeasurement {
      * Telegram.
      */
     private static final String OUTPUT_DIR = "measurements";
+    /** The subfolder a run writes into while it is the latest one. */
+    private static final String CURRENT_RUN = "current";
 
     /**
       * The preset a measurement runs through.
@@ -1011,10 +1017,39 @@ public final class RoomMeasurement {
             if (i > 0) sb.append(",");
             sb.append(String.format(Locale.US, "%.2f", curve[i]));
         }
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // 🔴 The curve that is being replaced is kept (owner, 21.09.2026). One preference held the
+        // only copy, so every calibration destroyed the evidence of the one before it - and the
+        // whole argument about what this estimate should and should not do was made by comparing
+        // curves taken on different days. Sixteen numbers cost nothing to keep.
+        final String previous = prefs.getString(PREF_MIC_COMPENSATION, null);
+        String history = prefs.getString(PREF_MIC_COMPENSATION_HISTORY, "");
+        if (previous != null && !previous.equals(sb.toString())) {
+            final String stamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+                    .format(new java.util.Date());
+            final StringBuilder kept = new StringBuilder(stamp).append(' ').append(previous);
+            int lines = 1;
+            for (String line : history.split("\n")) {
+                if (line.trim().isEmpty() || lines >= KEEP_MIC_CURVES) continue;
+                kept.append('\n').append(line);
+                lines++;
+            }
+            history = kept.toString();
+        }
+        prefs.edit()
                 .putString(PREF_MIC_COMPENSATION, sb.toString())
+                .putString(PREF_MIC_COMPENSATION_HISTORY, history)
                 .apply();
         Log.i(TAG, "saved mic compensation curve to preferences: " + sb);
+    }
+
+    /** Every microphone curve this unit has had before the current one, newest first. */
+    public static String[] micCompensationHistory(Context context) {
+        if (context == null) return new String[0];
+        final String history = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_MIC_COMPENSATION_HISTORY, "");
+        if (history == null || history.trim().isEmpty()) return new String[0];
+        return history.split("\n");
     }
 
     /** True when a cabin measurement has left a response curve behind - see {@link #PREF_CABIN_RESPONSE}. */
@@ -1957,14 +1992,16 @@ public final class RoomMeasurement {
                         .apply();
                 sleep(ROUTING_SETTLE_MS);
             }
-            // 🔴 Everything from the previous measurement goes first, because the archive is
-            // built by sweeping this folder and it cannot tell an old file from a new one. The
-            // owner's archive of 26.08 proved the cost: it carried per-speaker recordings from
-            // the 20th, written by a version that still produced them, and a zip stamps every
-            // entry with the moment it was packed - so six-day-old recordings of a different
-            // measurement arrived looking exactly as fresh as the report beside them. Whoever
-            // reads that archive is diagnosing two cars at once without being told.
-            clearPreviousRun(context);
+            // 🔴 The previous measurement moves out of the way before this one starts writing,
+            // because the archive a tester sends is built by sweeping one folder and cannot tell
+            // an old file from a new one. The owner's archive of 26.08 proved the cost: it carried
+            // per-speaker recordings from the 20th, written by a version that still produced them,
+            // and a zip stamps every entry with the moment it was packed - so six-day-old
+            // recordings of a different measurement arrived looking exactly as fresh as the report
+            // beside them. Whoever reads that archive is diagnosing two cars at once.
+            // ⚠️ Moves out, not deleted: see archivePreviousRun. This used to destroy the last
+            // measurement on the unit, which for a program still being tested is a flaw of its own.
+            archivePreviousRun(context);
 
             // The first speaker is selected before anything starts, so its sweep is not the one
             // that has to wait for the routing to take effect.
@@ -3509,27 +3546,127 @@ public final class RoomMeasurement {
     // what the tester sends back
     // ---------------------------------------------------------------------------------------
 
-    /** The folder holding the last measurement, created if it is not there yet. */
     /**
-     * Empties the output folder so an archive can only ever describe one measurement.
+     * How many past runs keep their recording, and how many keep at least their report.
      *
-     * <p>Deliberately not selective about which names it knows: the folder has already collected
-     * files written by versions that no longer exist, and a list of names to delete would go stale
-     * the same way. Anything here belongs to a measurement that is being replaced.
+     * <p>A recording is about four megabytes and a report is eight kilobytes, so they deserve
+     * different lifetimes. External cache is reclaimable by the system anyway; these numbers are
+     * what this app promises not to delete itself.
      */
-    private static void clearPreviousRun(Context context) {
-        File[] files = outputDir(context).listFiles();
-        if (files == null) return;
-        for (File f : files) {
-            if (!f.isFile()) continue;
+    private static final int KEEP_RUNS_WITH_RECORDING = 5;
+    private static final int KEEP_RUN_REPORTS = 50;
+
+    /**
+     * Puts the previous measurement away instead of deleting it, and starts the next one on an
+     * empty folder.
+     *
+     * <p>🔴 It used to delete (owner, 21.09.2026: "if the program overwrites and does not keep
+     * these, while still being a test program, that is a big flaw" - and he is right). The reason
+     * for deleting was real and is kept: the archive a tester sends is built by sweeping one
+     * folder, and a zip stamps every entry with the moment it was packed, so a file left over from
+     * six days ago arrives looking as fresh as the report beside it. That is solved by giving each
+     * run a folder of its own rather than by destroying the last one - the sent archive still
+     * describes exactly one measurement, and the unit still carries the ones before it.
+     *
+     * <p>Runs are named by the time of the newest file in them, so the name comes from the
+     * measurement rather than from whenever it was later moved.
+     */
+    private static void archivePreviousRun(Context context) {
+        final File runs = runsDir(context);
+        // Files written by versions that kept everything loose in one folder - among them the
+        // owner's own 20.09 sweep, which is the measurement he asked not to lose. Move them into a
+        // run of their own before anything else touches this folder.
+        final File[] loose = runs.listFiles(File::isFile);
+        if (loose != null && loose.length > 0) {
+            final File rescued = new File(runs, runStampFor(loose));
             //noinspection ResultOfMethodCallIgnored
-            boolean gone = f.delete();
-            if (!gone) Log.w(TAG, "could not remove the previous " + f.getName());
+            rescued.mkdirs();
+            for (File f : loose) {
+                //noinspection ResultOfMethodCallIgnored
+                boolean moved = f.renameTo(new File(rescued, f.getName()));
+                if (!moved) Log.w(TAG, "could not put " + f.getName() + " away, leaving it where it is");
+            }
+            Log.i(TAG, "measurements from an older version were put away as " + rescued.getName());
+        }
+
+        final File current = outputDir(context);
+        final File[] files = current.listFiles(File::isFile);
+        if (files != null && files.length > 0) {
+            File dest = new File(runs, runStampFor(files));
+            for (int n = 2; dest.exists() && n < 100; n++) {
+                dest = new File(runs, runStampFor(files) + "_" + n);
+            }
+            if (current.renameTo(dest)) {
+                Log.i(TAG, "the previous measurement is kept as " + dest.getName());
+            } else {
+                // Renaming can fail across some vendor storage layers; a measurement that cannot
+                // be put away is still not worth losing, so copy what is cheap and leave the rest.
+                Log.w(TAG, "could not put the previous measurement away, deleting it instead");
+                for (File f : files) {
+                    //noinspection ResultOfMethodCallIgnored
+                    f.delete();
+                }
+            }
+            //noinspection ResultOfMethodCallIgnored
+            outputDir(context).mkdirs();
+        }
+        pruneRuns(context);
+    }
+
+    /** yyyyMMdd_HHmmss of the newest file in a run - the moment the measurement ended. */
+    private static String runStampFor(File[] files) {
+        long newest = 0L;
+        for (File f : files) newest = Math.max(newest, f.lastModified());
+        if (newest <= 0L) newest = System.currentTimeMillis();
+        return new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                .format(new java.util.Date(newest));
+    }
+
+    /**
+     * Drops the recordings of runs older than the newest few, and whole runs older than that.
+     *
+     * <p>The report is what anybody reads afterwards; the recording is what somebody re-analyses
+     * once. Keeping fifty reports costs less than one recording.
+     */
+    private static void pruneRuns(Context context) {
+        final File[] dirs = runsDir(context).listFiles(File::isDirectory);
+        if (dirs == null || dirs.length == 0) return;
+        java.util.Arrays.sort(dirs, (a, b) -> b.getName().compareTo(a.getName()));
+        int kept = 0;
+        for (File dir : dirs) {
+            if (dir.getName().equals(CURRENT_RUN)) continue;
+            kept++;
+            if (kept <= KEEP_RUNS_WITH_RECORDING) continue;
+            final File[] inside = dir.listFiles(File::isFile);
+            if (inside == null) continue;
+            if (kept > KEEP_RUN_REPORTS) {
+                for (File f : inside) {
+                    //noinspection ResultOfMethodCallIgnored
+                    f.delete();
+                }
+                //noinspection ResultOfMethodCallIgnored
+                dir.delete();
+                continue;
+            }
+            for (File f : inside) {
+                if (f.getName().endsWith(".txt")) continue;
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+            }
         }
     }
 
-    public static File outputDir(Context context) {
+    /** The folder every run lives under, one subfolder each. */
+    public static File runsDir(Context context) {
         File dir = new File(context.getExternalCacheDir(), OUTPUT_DIR);
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    /** The folder holding the measurement being taken, or the last one taken. */
+    public static File outputDir(Context context) {
+        File dir = new File(runsDir(context), CURRENT_RUN);
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         return dir;
@@ -3667,6 +3804,13 @@ public final class RoomMeasurement {
             // calibration measured and which it declined to invent.
             final String micCaveats = micBandCaveats(result.micBandStatus16);
             if (!micCaveats.isEmpty()) sb.append(micCaveats).append("\n");
+            // What this unit's microphone curve was before, so a reader can see it move. Two is
+            // enough here - the rest are in the preference, and the whole point is that they are
+            // no longer destroyed by the next calibration.
+            final String[] micHistory = micCompensationHistory(context);
+            for (int i = 0; i < micHistory.length && i < 2; i++) {
+                sb.append("Mic curve before:     ").append(micHistory[i]).append("\n");
+            }
             if (result.cabinResponseMeasured) {
             sb.append("Cabin response dB:    ");
             for (float band : result.cabinResponseDb16) {
