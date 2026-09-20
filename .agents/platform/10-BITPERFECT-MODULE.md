@@ -581,3 +581,38 @@ covered, i.e. ≈1 200 an hour, ≈29 000 a day - and during the first 25 s of b
 15. A snapshot of system_server after those 12 h - PSS 217 MB, Java heap 67 MB, 166 threads, 330 descriptors, 3.7 GB of
 5.8 GB free, no kills in the log - shows no leak by itself; a leak claim needs a slope, not a snapshot, and one is being
 sampled.
+
+
+## 11. 🔴 The volume keeper fights the platform's ducking — it watches a value, not a moment
+
+🔴 **The owner's verdict, 20.09.2026:** *"платформа пробує змінити проп на старті, і після сну, і з цим треба боротися,
+а під час життя, платформа може і буде змінювати це значення, наприклад для дакінгу, чи змішування, а ми цим
+заважаємо."* The keeper is right to defend the level at two moments and wrong to hold it for ever.
+
+Why it is not merely wasteful but actively wrong, from the module's own `service.sh`:
+
+```sh
+while true; do
+    sleep 3
+    NAVI_ACTIVE=$(getprop persist.sys.navi_state)
+    if [ "$NAVI_ACTIVE" != "true" ]; then
+        CURR_VOL=$(media volume --stream 3 --get ...)
+        if [ "$CURR_VOL" = "9" ]; then   # <- identifies the event by its VALUE
+            media volume --stream 3 --set 15
+```
+
+1. **Ducking on this platform is done by stepping that very index**, `15→14→…→9→8→7` and back
+   ([09-NAVIGATION-AND-BITPERFECT.md](09-NAVIGATION-AND-BITPERFECT.md) §4-ter, measured on two units). The ramp
+   **passes through 9**, which is exactly the value the keeper treats as "the platform stole my volume".
+2. **The guard never fires.** `persist.sys.navi_state` is empty on every unit we have: four surveys (`004121` haiwai,
+   `002121` jitu2, `004121` jitu2, `011021` 8581) and the owner's bench read live, `sys.qf.navi_state` empty as well.
+   Empty ≠ `true`, so the branch is always entered.
+3. The poll runs every 3 s and a prompt lasts a few seconds, so sooner or later a poll lands on the ramp and slams the
+   index back to 15 **in the middle of a spoken prompt** - then the platform's own restore puts it back, and the two
+   fight. The early-boot watchdog is stronger still: every 0.3 s for 25 s it restores on **any** value that is not 15.
+
+⇒ The shape the owner asks for: **act at the two moments, not continuously.** The platform stamps the level at boot and
+after a wake, so the keeper belongs on those events (`sys.boot_completed`, `com.qf.action.ACC_ON`, the wake the sleep
+module already sees) with a short window each, and silent for the rest of the drive. Whatever the platform does to that
+index while the unit is running - ducking, mixing, a source change - is the platform doing its job, and a keeper that
+cannot tell those apart must not guess: a value is not an event.
