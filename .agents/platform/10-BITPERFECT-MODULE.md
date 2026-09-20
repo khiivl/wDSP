@@ -550,3 +550,34 @@ weaker version of the same idea and would do as a second line.
 
 ⚠️ For us this is a cross-project note, not our code: wDSP owns the sound, and this is the register of what the sound is
 standing on. See also [[bitperfect-v53-pcm-busy-and-silent-tts]] in memory — v5.3's other two faults.
+
+
+## 10. Silent TTS — what has been ruled out (20.09.2026)
+
+The owner reports TTS dead on his own BU unit as well, and other owners say the same. Read on his unit today, with
+v5.3 installed (its `service.sh` is byte-identical to the distributed zip, md5 `0d895ff…`):
+
+- `dumpsys media.audio_policy` prints **`TTS output not available`** — and that is **factory**, not the module:
+  no `AUDIO_OUTPUT_FLAG_TTS` mix port exists in the factory `primary_audio_policy_configuration.xml` of either platform
+  (7862 and 8581 surveys), nor in either of the module's two profiles. The stream has never had a port here, so that
+  line proves nothing about BitPerfect;
+- the module's own `common/.../audio_policy_volumes.xml` gives `AUDIO_STREAM_TTS` **`FULL_SCALE`** on SPEAKER and
+  `SILENT` on HEADSET / EARPIECE / EXT_MEDIA. On this unit the policy's only available output is
+  `AUDIO_DEVICE_OUT_SPEAKER`, so the silent branches are not in play either;
+- the dedicated MMAP stream was **closed** and the run log carried no `cannot open '/dev/snd/pcmC0D3p'` at the time of
+  reading, so the unit was not in the stuck state of 14.09.
+
+⇒ What is left is the state, not the configuration: the 14.09 case, where the HAL held `pcm3p` in `SETUP` and everything
+routed there went nowhere ([[bitperfect-v53-pcm-busy-and-silent-tts]]). To pin it, the next capture has to be taken
+**while a prompt is silent**: `cat /proc/asound/card0/pcm3p/sub0/status`, who owns it, the HAL's errors and the live
+tracks — a snapshot afterwards says nothing.
+
+### What the volume keeper costs, measured
+
+The loop had been alive 12 h 52 min on the owner's unit. It starts a full ART runtime
+(`com.android.commands.media.Media`) **about every 3 s, for ever** — five starts in the twelve seconds the logger
+covered, i.e. ≈1 200 an hour, ≈29 000 a day - and during the first 25 s of boot it does the same **every 0.3 s**,
+≈80 more starts in the window where the unit is already busiest. All of it to read one volume index and put it back to
+15. A snapshot of system_server after those 12 h - PSS 217 MB, Java heap 67 MB, 166 threads, 330 descriptors, 3.7 GB of
+5.8 GB free, no kills in the log - shows no leak by itself; a leak claim needs a slope, not a snapshot, and one is being
+sampled.
