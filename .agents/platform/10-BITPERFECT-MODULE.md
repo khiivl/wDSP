@@ -515,3 +515,38 @@ instructions now insist on the reboot in capital letters.
   report opposite ducking behaviour, which `navi_remix_ratio` explains — it runs backwards, and the
   MCU computes `ducking_step = (100 - ratio) / 10`.
 - ❓ Whether the module should carry `codec.xml` at all, given the factory one stays in force.
+
+
+## 9. 🔴 v5.3 hangs the boot on a UIS8581 unit — the installer tests the chip, never the platform
+
+📻 Reported 20.09.2026: *"После установки QF_BitPerfect.module.v5.3-Universal.zip и перезагрузки устройство не
+загружается. Логотип загрузки и ничего больше не происходит."* The owner recovered the unit and then ran the survey, so
+we have the factory picture of it (`20260907_134329`) and the module's own installer (`QF_BitPerfect.module.v5.3-Universal.zip`).
+
+**The unit is not of the family the profiles were built from:**
+
+| | the fleet the module was built on | the unit that would not boot |
+|---|---|---|
+| `ro.board.platform` | `ums512` (UIS7862) | **`sp9863a` (UIS8581)** |
+| MCU string | `QF05.V02.13.20251124.00xxxx` | `QF30.V03.12.20250315.011021` |
+| processor / path | BU32107, I2S | BD37534, analogue (`use.i2s=false`) |
+| `/vendor/etc/audio_pcm.xml`, `audio_route.xml`, `audio_config.xml`, `qf_*route*.xml` | present | **absent** |
+| `/vendor/etc/audio_params/sprd/*.xml` | present (7 files) | **the directory does not exist** |
+| PCM devices under `card0` | `pcm0p`, `pcm3p`, `pcm10p`, `pcm12p`… | only `pcm0p`, `pcm1p`, `pcm4p`; media runs 44 100 S16_LE |
+
+**What the installer does about it: nothing.** `customize.sh` decides only between two profiles, from
+`${HW_CODE:1:1}` (sound processor), `${HW_CODE:3:1}` (path) and `persist.sys.qf.arm.use.i2s`. `011021` picks the safe
+analogue profile — the right *chip* answer — and then copies that profile's `system/vendor/etc/`: `audio_pcm.xml`,
+`audio_route.xml`, `audio_config.xml`, `primary_audio_policy_configuration.xml`, `qf_double_bt_audio_route_noi2s.xml`
+and seven `audio_params/sprd/*.xml`, **all taken from a ums512 vendor image**. On this unit those are not replacements,
+they are new files describing another SoC's audio hardware — including the AGDSP parameter set, which vendor init loads
+long before the launcher. A logo and nothing after it is exactly what that looks like.
+
+🔑 **The guard is not another property test.** The honest test is the shape of what is about to be overwritten: if the
+factory `/vendor/etc` has no `audio_pcm.xml` and no `audio_params/sprd/`, this module has nothing to say about that unit
+and must refuse to install, with the reason printed. `customize.sh` already mounts the vendor partition read-only for its
+snapshot, so the check costs nothing extra and runs before a single file is copied. A `ro.board.platform` whitelist is a
+weaker version of the same idea and would do as a second line.
+
+⚠️ For us this is a cross-project note, not our code: wDSP owns the sound, and this is the register of what the sound is
+standing on. See also [[bitperfect-v53-pcm-busy-and-silent-tts]] in memory — v5.3's other two faults.
