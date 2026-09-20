@@ -179,6 +179,77 @@ not yet seen.
 `ps` every 5 s and floods the ring with SELinux audit lines, so `PM: suspend entry/exit` has rolled
 out within minutes. `/d/suspend_stats` keeps the count.
 
+### 🪤 adbd writes every shell command into logcat — a grep over logcat finds itself
+
+📻 18.09.2026 (QFPlayer_fork). This unit's adbd logs the full text of each `adb shell` command:
+`I adbd : Tianyuan Current sh name:<the whole command line>`. So `logcat -d | grep "station dead"` run through
+`adb shell` always "finds" a match — its own command line. Filter by tag (`logcat -d -s MyTag:D`) or exclude
+`adbd`, never by a phrase that also appears in the command.
+
+### Is the app actually making sound? Read its AudioTrack in audio_flinger, not the app's own state
+
+📻 18.09.2026 (QFPlayer_fork). A player can report "playing" everywhere — its own events, `MediaSession`
+`state=3`, even stream metadata arriving — while producing no sound at all (there it was a seek on a live
+stream: LibVLC said `Playing` and created no audio output for 2 min 43 s). The honest instrument:
+
+```sh
+# every 0.2 s, as root on the unit; column 18 is "Server" (frames played, hex), 22 is "Underruns"
+dumpsys media.audio_flinger | grep -E "^ +[0-9]+ +(yes|no) +$(pidof <package>) "
+```
+
+- No line for the pid = no audio output exists. `Server` advancing ~48 000/s (at 48 kHz) = sound is really
+  being played; `Underruns` rising = the app is starving the track.
+- 📻 Works with the unit muted (the mute here is on the MCU side, after the mixer) — the track still plays.
+- 🔬 The same dump keeps a short history of track add/remove with wall-clock times (`AT::add`, `AT::remove`).
+
+### Cutting Wi-Fi for a network test without losing the unit
+
+📻 18.09.2026 (QFPlayer_fork, owner's order). adb here runs over Wi-Fi (`192.168.1.146:9876`), so a cut must be
+done by a script **on the unit**, detached from adb: `su -c "setsid nohup sh script.sh > /dev/null 2>&1 < /dev/null &"`,
+with `svc wifi disable/enable` inside and `log -t Mark "…"` marks so the bootlog module has them next to the app's
+lines. Measured on K706 (no SIM, so Wi-Fi is the only network):
+- `svc wifi enable` → IPv4 on `wlan0` in **7–8 s**, every time (5 runs); keep a fallback in the script (no IPv4 in
+  60 s → off/on again) — the WCN chip has crashed on this unit before.
+- 🔴 **`NET_CAPABILITY_VALIDATED` can arrive before `wlan0` has IPv4** (the network here is dual-stack; validation
+  evidently passes over IPv6 — 🧩): a connection to an IPv4-only host made at that instant fails with
+  `Network is unreachable`. A race — 3 reconnections out of 5.
+- A dropped Wi-Fi either resets an open TCP connection at once (end of stream within 0.5 s) or leaves it hanging
+  silently (no error for 10 s+); both were seen within minutes of each other.
+
+### A red crossed speaker in the status bar while `sys.mute.state` is false
+
+📻 18.09.2026. The status bar showed the red crossed speaker (no number) while `sys.mute.state=false`,
+`sys.media.vol=4` and every Android stream was unmuted. One `input keyevent 294` (knob one step down) brought the
+number back (`3`) and the sound with it. ❓ Where that mute lived (MCU or SystemUI's own flag) — not found.
+
+### 🔴 A flash drive is invisible while QF "USB debug" is on — the port stays in DEVICE mode
+
+📻 18.09.2026 (QFPlayer_fork, owner's SanDisk stick). With `persist.sys.qf.usb.debug=true` the musb controller sat in
+`b_idle`, `/sys/devices/platform/soc/soc:aon/5fff0000.usb/musb_mode` = `device`, `/sys/bus/usb/devices` held only the root
+hub `usb1`, `sm list-disks` was empty — **no filesystem question is even reached**: the kernel never sees the stick.
+- 🔬 `QFSleepWakeup.setUsbMode` (framework, `android/os/QFSleepWakeup.java:234–262`) switches the port to `host` on wake
+  (`:784`) and to `device` on sleep (`:822`), **but returns early when `persist.sys.qf.usb.debug` is true** — "is in usb debug
+  mode, NOT set usb mode". It also refuses `device` while ACC is on.
+- 🔬 The switch lives in QF_CarSettings `FactoryPasswordManager` (`onDevice`): it sets `persist.sys.qf.usb.debug`, turns developer
+  options on/off and writes `peripheral`/`device` or `host` into the mode node (8581 also `unisoc-usbswitch/usbswitch_state`).
+- 📻 After it was off (and a reboot, `reboot,adb`): mode `host`, the unit's internal hub `1a40:0101` (USB 2.0) on `1-1`, the stick
+  on `1-1.3` at 480 Mbit/s, `vold` mounted it within seconds.
+- 🔬 Kernel (`/proc/config.gz`): `CONFIG_MSDOS_PARTITION=y`, `CONFIG_EFI_PARTITION=y` (MBR and GPT), `CONFIG_VFAT_FS`,
+  `CONFIG_EXFAT_FS` ("exFAT Core 1.2.24" at boot), `CONFIG_NTFS_FS`, `CONFIG_FUSE_FS`, `CONFIG_USB_STORAGE=y`, no UAS;
+  userland `mount.exfat`, `fsck.exfat`, `ntfs-3g`, `mkntfs`. 📻 An NTFS stick mounts **read-write through ntfs-3g (fuse)** at
+  `/mnt/media_rw/<16-hex serial>` → `/storage/<serial>`, and QF adds the alias **`/storage/udisk1` → `<serial>`** (a symlink).
+
+So "the stick does not mount" on this platform first means: check `musb_mode` and `persist.sys.qf.usb.debug`, then `vold`.
+
+📻 Mount timing and what vold does (`sm unmount public:8,1` / `sm mount public:8,1`, 256 GB NTFS, 18.09 19:34): unmount
+0.5 s; mount **0.55 s** — `blkid` → **`ntfsfix -b` on every mount** (it writes to the volume: "un-mark the bad clusters", MFT
+check) → `ntfs3g` → FUSE → `mounted` broadcast; the QF scanner `carnetos.usbmedia` finished a 3-file folder 0.1 s later and the
+QF music player got `onUsbDiskMounted`. At boot the same stick was seen at 31 s but mounted only at 106 s (and remounted once at
+once) — 🧩 vold waits for the boot to finish, not the driver being slow.
+⚠️ The logcat `main` buffer here holds only ~2 minutes (flooded by `mcu_services`/`VolumeState`), and the bootlog module stopped
+writing `20_run.log` ~4 min into boot 0015 — for an event you will provoke, start your own filtered `logcat -T 1 | grep` capture
+on the unit first.
+
 ## 8. Host tests for anything measured
 
 Two C++ harnesses in `wdsp_app/src/main/cpp` build with plain `g++` and are deliberately not part

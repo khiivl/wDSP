@@ -18,6 +18,7 @@ delay lines at all, and a TSC4745 tuner runs on US de-emphasis with an adaptive 
 [.agents/platform/13-MCU-FIRMWARE-VARIANTS.md](.agents/platform/13-MCU-FIRMWARE-VARIANTS.md) §1-ter
 and [.agents/platform/06-TUNER.md](.agents/platform/06-TUNER.md) §7.
 Complete decompiled MCU code (`mcu_bd37534_decompiled.c`), binary `mcu.bin`, and official datasheets (ROHM BD37534FV, Silicon Labs AN332) live at `C:\MCU\MCU QF05 2.5.2024-BD37534,TSC4745\`.
+Standard automotive developer support component (`ShimmerBadgeLayout` + `SupportDialog`): [22-AUTOMOTIVE-DONATE-BADGE-AND-SUPPORT-DIALOG.md](file:///C:/Users/kosty/.gemini/config/skills/qf-platform-architecture/references/22-AUTOMOTIVE-DONATE-BADGE-AND-SUPPORT-DIALOG.md) or skill `automotive-support-badge`.
 
 ## Agreements with other applications live outside this repository
 
