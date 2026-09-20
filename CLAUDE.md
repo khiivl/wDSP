@@ -273,6 +273,16 @@ something already playing and the platform's five factory apps are left alone. I
 that survives sleep: the platform's sleep whitelist cannot be read by an app, so Settings opens
 `com.qf.carsettings/.activity.FactorySleepWhiteListActivity` for the person — wDSP never writes the list.
 
+**What the microphone is built into and where it sits** lives in exactly one class, `MicProfile`
+(21.09.2026, owner's rule: one fact, one function). It holds the person's answers (place, mounting,
+the dot on the plan), the one inference allowed (the head unit's fascia microphone is a pinhole),
+the mounting curves that used to sit in `sweep.cpp`, the single placement rule
+(`applyPlacementLimits`, the windscreen boundary), and the report's wording for all of it. The
+native side is handed the mounting curve and keeps no table; the calibration then keeps only what
+the sweep confirms - a shortfall against the best channel, an excess against the worst. Before this
+the same two facts were answered in four places and disagreed. See `.agents/ROOM_CALIBRATION.md`
+§24-quater.
+
 **The cabin sweep** (`RoomMeasurement`, `sweep.cpp`, 15.09.2026): door channels are averaged in **power**,
 not dB; the impulse window opens 100 ms before the arrival with a smooth rise (an abrupt cut 1.3 ms before the
 peak filled the doors' deepest bands); a band is averaged only over the bins the sweep excited at full height
