@@ -49,6 +49,13 @@ only is read by the other from memory, and a contract kept by both drifts within
 Rules of the folder: `C:\APPS_Contacts\README.md`. It also carries how the two sessions reach each
 other directly, because the shared board delivers Claude→Claude unreliably.
 
+## Audio mixing, volume and BitPerfect - the day's research
+
+[RESEARCH_AUDIO_MIXING_AND_BITPERFECT.md](RESEARCH_AUDIO_MIXING_AND_BITPERFECT.md) (20.09.2026): what the platform
+actually does while a navigation prompt speaks (a ladder off the default volume; ratio 90 or more means no ducking at
+all), why the same fault is reported as prompts both too loud and too quiet, what BitPerfect's volume keeper cancels,
+why v5.3 hangs the boot on a UIS8581 unit, and what is still missing - proof, options and open questions in one place.
+
 ## Host tests
 
 ```bash
