@@ -621,6 +621,25 @@ near side was not.
 
 ## The AK hub is in the software on every unit, and in the hardware on some
 
+🔴 **The fleet says nobody has one (20.09.2026).** Counted over all 21 system reports testers have sent since 23.08,
+from at least three different boards:
+
+| MCU code | processor | tuner | path | reports |
+|---|---|---|---|---|
+| `004121` | BU32107 | TEF6686 | I2S | 9 |
+| `002121` | BU32107 | TDA7708 | I2S | 7 |
+| `011021` | BD37534 / BD37544 | TSC4745 | analogue | 4 |
+
+Every report that carries the block says `hub = none`. **Not one AK7738 or AK7604 unit has ever been seen**, and the
+owner (20.09.2026) knows of none on this platform: *"я не маю таких тестерів, і не впевнений що це не сміття від
+попередніх версій апаратів, на цій платформі я знаю хіба BU32107, та BG37xxx"*. So the hub branches in the framework —
+including the in-chip ducking and the attenuation our power-amp message triggers (rows 5 and 9 above) — are to be treated
+as **leftovers from earlier hardware until a report shows otherwise**: worth knowing, not worth spending anything on.
+Note also what stands directly below: the i2c driver and the device-tree node exist on units that have no hub at all,
+so software presence proves nothing either way.
+
+
+
 📻 28.08.2026, on a unit whose MCU code is `002121` — that is, **no hub** according to the platform.
 Everything in software says the opposite:
 
