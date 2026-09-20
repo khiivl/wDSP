@@ -1752,12 +1752,36 @@ public class McuService extends Service implements LocationListener {
             // 6d. Apply the faded offset to the hardware
             int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
             if (currentAppliedOffset == 0) {
-                if (hardwareVol != baseStandstillVolume) {
-                    Log.v(TAG, "GALA idle: following the volume to " + hardwareVol
-                            + " (base was " + baseStandstillVolume + ")");
+                // 🔴 The offset is back to zero, and that is NOT the same as the volume being back
+                // where it started. Nothing lowers the hardware here - the branch below is the only
+                // place that sends a command - so after every accelerate-and-slow-down cycle the
+                // level GALA itself had raised was still on the amplifier, and this line adopted it
+                // as the new standstill base. One step per cycle, for ever: the owner's "+1 after
+                // every braking" (20.09.2026). It was not rounding; it was a raise nobody took off.
+                //
+                // So: take our own boost off first, and only follow the volume when it was somebody
+                // else who moved it. GALA knows which is which - lastAppliedVolume is what it last
+                // put there itself. A level that differs from that came from the person, the
+                // platform or a source change, and following it is right; a level that equals it is
+                // ours to undo.
+                boolean stillOurBoost = hardwareVol == lastAppliedVolume
+                        && hardwareVol != baseStandstillVolume;
+                if (!userAdjusting && stillOurBoost) {
+                    VolumeHelper.setVolume(baseStandstillVolume);
+                    lastAppliedVolume     = baseStandstillVolume;
+                    lastGalaCommandVol    = baseStandstillVolume;
+                    lastGalaCommandTimeMs = now;
+                    hardwareVol           = baseStandstillVolume;
+                    Log.v(TAG, "GALA back to base: vol=" + lastReadHardwareVol + " -> "
+                            + baseStandstillVolume + " (offset 0, our own boost removed)");
+                } else {
+                    if (hardwareVol != baseStandstillVolume) {
+                        Log.v(TAG, "GALA idle: following the volume to " + hardwareVol
+                                + " (base was " + baseStandstillVolume + ")");
+                    }
+                    baseStandstillVolume = hardwareVol;
+                    lastAppliedVolume    = hardwareVol;
                 }
-                baseStandstillVolume = hardwareVol;
-                lastAppliedVolume    = hardwareVol;
             } else if (!userAdjusting && hardwareVol != targetVol) {
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
