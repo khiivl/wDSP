@@ -131,13 +131,33 @@ public final class NativeSweep implements AutoCloseable {
      * less and bands below the ramp's floor not at all, so a unit whose bottom really does sink
      * under the converter's noise gets zeros from its own measurement rather than from a
      * hard-coded band index. May be null, which leaves the estimate ungated.
+     *
+     * <p>{@code outStatus16} says what happened to each band - {@link #MIC_BAND_MEASURED},
+     * {@link #MIC_BAND_UNKNOWN}, {@link #MIC_BAND_TRIMMED} - so the report can print a refusal as
+     * a refusal instead of letting it pass for a measurement. May be null.
      */
     public static void estimateMicCompensation(float[] envelope16, float[] snr16,
-                                               int micBody, float[] outCompensation16) {
+                                               int micBody, float[] outCompensation16,
+                                               int[] outStatus16) {
         if (isAvailable() && envelope16 != null && outCompensation16 != null) {
-            nativeEstimateMicCompensation(envelope16, snr16, micBody, outCompensation16);
+            nativeEstimateMicCompensation(envelope16, snr16, micBody, outCompensation16,
+                    outStatus16);
         }
     }
+
+    /** The band's compensation is what the calibration measured. */
+    public static final int MIC_BAND_MEASURED = 0;
+    /**
+     * The estimate ran into the bound of what the microphone INPUT could plausibly be doing, so
+     * the measured part was left out entirely: the microphone's share of that band is unknown,
+     * and the curve carries only what the mounting is known to do.
+     */
+    public static final int MIC_BAND_UNKNOWN = 1;
+    /**
+     * The mounting table wanted more treble boost than the sweep saw in every channel, so it was
+     * cut back to the part all channels confirm.
+     */
+    public static final int MIC_BAND_TRIMMED = 2;
 
     /**
      * Deconvolves one recording into its impulse response.
@@ -222,7 +242,8 @@ public final class NativeSweep implements AutoCloseable {
     private static native void nativeEstimateMicCompensation(float[] envelope16,
                                                             float[] snr16,
                                                             int micBody,
-                                                            float[] outCompensation16);
+                                                            float[] outCompensation16,
+                                                            int[] outStatus16);
 
     private static native int nativeDeconvolve(long handle, float[] recorded, int length,
                                                float[] outImpulse);

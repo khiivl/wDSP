@@ -600,8 +600,12 @@ static float pathMaxAttenDb(float freqHz) {
 }
 
 void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const float* snr16,
-                                               int micBody, float* outCompensation16) {
+                                               int micBody, float* outCompensation16,
+                                               int* outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
+    if (outStatus16 != nullptr) {
+        for (int b = 0; b < kHwBands; b++) outStatus16[b] = kMicBandMeasured;
+    }
     // The mounting is the starting point, not zero. It is the one part of this curve that is known
     // in advance from how the microphone is built in, and it is the only thing that speaks for
     // bands 5..12 - which a sweep cannot judge, because the midband is its own reference.
@@ -685,13 +689,36 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // confidence ramp the synthesis uses (kSnrNoneDb..kSnrFullDb) scales each band's correction,
     // so a unit whose bottom really does drown gets Gemini's zeros and this one gets its
     // measurement. One rule, applied to the evidence, rather than two rules chosen by hand.
+    //
+    // 🔴 A SATURATED estimate is now reported as unknown instead of being written down as the
+    // ceiling (owner's decision, 21.09.2026). The clamp above used to do double duty: it bounded
+    // an honest measurement, and it also produced a number when the measurement had run off the
+    // end of what the bound can describe. Those two look identical in the curve and mean opposite
+    // things. On the 20.09 pass every low band came back sitting exactly on its bound - +52.8 dB
+    // at 20 Hz against a ceiling of 52.8, +40.5 against 41.1 - and that is not "the microphone
+    // attenuates 20 Hz by 52.8 dB", it is "the deficit is larger than anything the input path can
+    // explain, and what is left over is the bench, the woofer, or both".
+    //
+    // Writing the ceiling down turns that into a fact the synthesis then acts on:
+    // m[b] = avgClean16[b] + micComp16[b], so a fabricated +52.8 makes the bottom look loud and
+    // the equaliser cuts real bass in reply - the exact failure that produced a Harman curve with
+    // no bass boost in it at all. Leaving the band at the mounting's own figure and saying so in
+    // the report is the honest answer: the microphone's share down there is UNKNOWN on this
+    // measurement, not zero and not 52.8.
     for (int b = 0; b < 5; b++) {
         const float freq = kHwCenters[b];
         // What a sealed cabin should be adding here, on top of the midband.
         const float expected = refMid + cabinGainDb(freq);
         const float deficit = expected - avgClean16[b];
         if (deficit <= 0.0f) continue;
-        float correction = std::min(deficit, pathMaxAttenDb(freq));
+        const float ceiling = pathMaxAttenDb(freq);
+        if (deficit >= ceiling) {
+            // The estimate hit the bound. Everything above the bound is somebody else's, and we
+            // cannot tell how much of what is below it was the microphone either.
+            if (outStatus16 != nullptr) outStatus16[b] = kMicBandUnknown;
+            continue;
+        }
+        float correction = deficit;
         if (snr16 != nullptr) {
             float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
             confidence = std::min(1.0f, std::max(0.0f, confidence));
@@ -721,6 +748,45 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // spectrum, where the doors' own roll-off was charged to the microphone. Tweeters roll off,
     // rooms absorb treble, and a sweep cannot tell any of that from a blocked port. What CAN be
     // known about the port is known in advance from the mounting, and is in the table above.
+    //
+    // 🔴 The mounting's TREBLE figures no longer stand alone: they are bounded by what the sweep
+    // confirms (owner's decision, 21.09.2026). The table adds +3.5 / +7.0 / +10.0 dB at 8, 12.5
+    // and 20 kHz for a pinhole, blind, on every unit. Until 15.09 nobody noticed, because the
+    // channels were averaged in decibels and a dead front-left tweeter (-31 dB at 12.5 kHz, -41
+    // at 20) dragged the top of the curve down by as much as the table pushed it up. Two errors
+    // cancelling is not two facts. With the average taken in power the top stopped collapsing,
+    // the table's boost became visible, and the synthesis read the cabin as bright and cut
+    // 8..20 kHz by 2..4 dB - the owner's "everything above 8 kHz buried by 4 dB".
+    //
+    // What confirms it: the envelope this function is handed is the BEST channel in each band,
+    // each channel measured against its own midband. So a shortfall that survives into the
+    // envelope is a shortfall EVERY channel had - which is precisely the reference document's
+    // test for telling the microphone from the room: a dip present in all channels is the
+    // capsule, a dip in one is the room. On this unit the right-hand channel comes back 5.5 dB
+    // below its own midband at 20 kHz, so 5.5 dB is confirmed and the table's 10 is not.
+    //
+    // This bounds from above and does not decide: part of a common treble shortfall is the
+    // diffuse field's own slope rather than the port. Replacing the table with a theoretical
+    // envelope is the next step and a separate one - see RESEARCH_AUDIO_MIXING_AND_BITPERFECT.md
+    // section 4. Until then the rule is: never invent more treble boost than the sweep saw.
+    for (int b = 13; b < kHwBands; b++) {
+        const float table = kBodyCompensationDb[body][b];
+        // Only the boosts are in question. A negative entry undoes a resonance the mounting ADDS
+        // (band 11, the pinhole's own 3150 Hz peak), and refusing to cut it would let Auto-EQ
+        // read the hole as the car and take the voices out of the music.
+        if (table <= 0.0f) continue;
+        float confirmed = refMid - avgClean16[b];
+        if (confirmed < 0.0f) confirmed = 0.0f;
+        if (snr16 != nullptr) {
+            float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
+            confidence = std::min(1.0f, std::max(0.0f, confidence));
+            confirmed *= confidence;
+        }
+        if (confirmed < table) {
+            outCompensation16[b] = confirmed;
+            if (outStatus16 != nullptr) outStatus16[b] = kMicBandTrimmed;
+        }
+    }
 }
 
 float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,

@@ -405,7 +405,8 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
                                                                    jfloatArray avgClean16,
                                                                    jfloatArray snr16,
                                                                    jint micBody,
-                                                                   jfloatArray outCompensation16) {
+                                                                   jfloatArray outCompensation16,
+                                                                   jintArray outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
     if (env->GetArrayLength(avgClean16) < wdsp::kHwBands ||
         env->GetArrayLength(outCompensation16) < wdsp::kHwBands) return;
@@ -421,11 +422,17 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     }
 
     float comp[wdsp::kHwBands];
-    wdsp::SweepMeasurement::estimateMicCompensation(avgData, snrData, micBody, comp);
+    int status[wdsp::kHwBands];
+    wdsp::SweepMeasurement::estimateMicCompensation(avgData, snrData, micBody, comp, status);
     env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
     if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
 
     env->SetFloatArrayRegion(outCompensation16, 0, wdsp::kHwBands, comp);
+    // Optional: a caller that does not care which bands were refused passes null and gets the
+    // curve alone, exactly as before.
+    if (outStatus16 != nullptr && env->GetArrayLength(outStatus16) >= wdsp::kHwBands) {
+        env->SetIntArrayRegion(outStatus16, 0, wdsp::kHwBands, status);
+    }
 }
 
 JNIEXPORT jint JNICALL

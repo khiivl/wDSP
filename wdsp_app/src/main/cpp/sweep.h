@@ -7,6 +7,18 @@
 namespace wdsp {
 
 /**
+ * What a microphone calibration was able to say about one band, for the report to print.
+ *
+ * A curve of sixteen numbers cannot distinguish "measured and it is +2.0" from "the estimate ran
+ * off the end of what the input path can explain, so this figure is a bound and not an answer".
+ * The two used to look the same and be acted on the same; they are separated here so the report
+ * can name the difference, and so nothing downstream mistakes a refusal for a measurement.
+ */
+constexpr int kMicBandMeasured = 0;  ///< the figure stands as computed
+constexpr int kMicBandUnknown  = 1;  ///< the estimate saturated its bound; the measured part was left out
+constexpr int kMicBandTrimmed  = 2;  ///< the mounting's boost cut back to what every channel confirms
+
+/**
  * Room measurement by exponential sine sweep.
  *
  * A sweep that rises exponentially spends the same time in every octave, which is what a room
@@ -120,9 +132,13 @@ public:
      * Estimates the 16-band microphone inverse compensation curve from the 4-channel average
      * clean response using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency
      * acoustic port roll-off correction.
+     *
+     * outStatus16 (optional) says what happened to each band, so the report can tell a figure
+     * that was measured from one that was refused: see kMicBand* above.
      */
     static void estimateMicCompensation(const float* avgClean16, const float* snr16,
-                                       int micBody, float* outCompensation16);
+                                       int micBody, float* outCompensation16,
+                                       int* outStatus16 = nullptr);
 
     /**
      * Time difference of arrival (TDOA) in fractional samples between a channel impulse response

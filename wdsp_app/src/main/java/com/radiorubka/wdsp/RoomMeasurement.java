@@ -1343,6 +1343,17 @@ public final class RoomMeasurement {
         /** 16-band microphone inverse compensation curve in dB. */
         public final float[] micCompensation16 = new float[NativeSweep.BAND_COUNT];
         /**
+         * What the calibration was able to say about each band of the curve above - one of the
+         * {@code NativeSweep.MIC_BAND_*} values - or {@code null} on a run that only loaded a
+         * saved curve instead of estimating one.
+         *
+         * <p>Kept because sixteen decibel figures cannot say which of them are measurements. A
+         * band whose estimate ran into the bound of what the microphone input can do, and a band
+         * that really is flat, both print as a number; one of them is an answer and the other is
+         * a refusal. The report prints this line so the reader is not left to guess which.
+         */
+        public int[] micBandStatus16;
+        /**
          * Whether the curve above was a calibrated one, or sixteen zeros standing in for it.
          *
          * <p>The run answers this itself, at the one line where it loads the curve, by asking the
@@ -1515,6 +1526,51 @@ public final class RoomMeasurement {
         for (float v : best) log.append(String.format(Locale.US, " %+.1f", v));
         Log.i(TAG, log.toString());
         return best;
+    }
+
+    /**
+     * The bands the calibration refused to answer for, in words, for the log and the report.
+     *
+     * <p>Sixteen decibel figures cannot say which of them are measurements: a band left at the
+     * mounting's own value because the estimate saturated prints exactly like a band that was
+     * measured and found flat. Both of this measurement's refusals are named here, with the
+     * frequency rather than the band number, because that is what the reader is looking at.
+     *
+     * <p>Empty when the calibration answered for every band, and empty on a cabin pass, which
+     * loads a saved curve and estimates nothing.
+     */
+    private static String micBandCaveats(int[] status16) {
+        if (status16 == null) return "";
+        final StringBuilder unknown = new StringBuilder();
+        final StringBuilder trimmed = new StringBuilder();
+        for (int b = 0; b < status16.length && b < BAND_CENTRES_HZ.length; b++) {
+            final StringBuilder into;
+            if (status16[b] == NativeSweep.MIC_BAND_UNKNOWN) into = unknown;
+            else if (status16[b] == NativeSweep.MIC_BAND_TRIMMED) into = trimmed;
+            else continue;
+            if (into.length() > 0) into.append(", ");
+            into.append(bandCentreLabel(b));
+        }
+        final StringBuilder out = new StringBuilder();
+        if (unknown.length() > 0) {
+            out.append("Mic response UNKNOWN at ").append(unknown).append(" Hz: the shortfall is "
+                    + "bigger than the microphone input's own high-pass could account for, so "
+                    + "none of it was charged to the capsule. What is left there is the "
+                    + "mounting's figure alone - the rest belongs to the speakers or the room.");
+        }
+        if (trimmed.length() > 0) {
+            if (out.length() > 0) out.append('\n');
+            out.append("Mounting treble TRIMMED at ").append(trimmed).append(" Hz: the table "
+                    + "asked for more boost than the sweep saw in every channel, and was cut "
+                    + "back to the part all channels confirm.");
+        }
+        return out.toString();
+    }
+
+    /** One band's centre frequency the way the report's "Band centres:" row prints it. */
+    private static String bandCentreLabel(int band) {
+        final float hz = BAND_CENTRES_HZ[band];
+        return hz == Math.rint(hz) ? String.valueOf((int) hz) : String.valueOf(hz);
     }
 
     public static void calibrateMicAsync(final Context context, final Listener listener) {
@@ -2279,8 +2335,9 @@ public final class RoomMeasurement {
             // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
             final float[] envelopeSnr16 = new float[NativeSweep.BAND_COUNT];
             final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16);
+            result.micBandStatus16 = new int[NativeSweep.BAND_COUNT];
             NativeSweep.estimateMicCompensation(bestClean16, envelopeSnr16,
-                    micBody(context), result.micCompensation16);
+                    micBody(context), result.micCompensation16, result.micBandStatus16);
             StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
             for (float v : envelopeSnr16) {
                 snrLog.append(String.format(Locale.US, " %.0f", v));
@@ -2294,6 +2351,8 @@ public final class RoomMeasurement {
                 mcLog.append(String.format(Locale.US, " %+.1f", v));
             }
             Log.i(TAG, mcLog.toString());
+            final String refused = micBandCaveats(result.micBandStatus16);
+            if (!refused.isEmpty()) Log.i(TAG, refused);
             AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
         } else {
             // Standard cabin Auto-EQ pass: load calibrated microphone compensation curve (Hardware constant, kept intact!)
@@ -3610,6 +3669,10 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %+.1f", band));
             }
             sb.append("\n");
+            // Directly under the numbers, because it is about those numbers: which of them the
+            // calibration measured and which it declined to invent.
+            final String micCaveats = micBandCaveats(result.micBandStatus16);
+            if (!micCaveats.isEmpty()) sb.append(micCaveats).append("\n");
             if (result.cabinResponseMeasured) {
             sb.append("Cabin response dB:    ");
             for (float band : result.cabinResponseDb16) {
