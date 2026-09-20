@@ -227,6 +227,26 @@ not move. That is the whole failure, and it is why owners of these units report 
 is, and the module has neutralised it. This confirms the guess left open in section 3, though not
 by the route guessed: it is not the missing hardware mixer, it is the flattened curve.
 
+📻 **A third unit, and the other half of the complaint (survey of 06.09.2026, delivered 20.09).** Same MCU `004121`,
+BU32107, TEF6686, I2S, `haiwai`, BitPerfect **v5.1**, with a Waze prompt captured while the radio played:
+
+```
+BEFORE   STREAM_MUSIC 15/15   STREAM_SYSTEM 14/15   sys.current.vol.type = (unset)
+DURING   STREAM_MUSIC  8/15   STREAM_SYSTEM 14/15   radio_type, sys.radio.vol = 5, main_volume = 6
+         card0/pcm3p RUNNING  S24_LE 48000 MMAP_INTERLEAVED      <- the prompt's own path
+         playback: com.waze + com.kostyamat.fmradio
+AFTER    STREAM_MUSIC 15/15
+```
+
+- the same eight steps down and back, and with the flat curve the same nothing in dB;
+- 🔴 and this is why the complaint has two halves: **the radio does not live on that index at all.** It has its own
+  source volume - here `sys.radio.vol = 5` while the module pins the Android index at 15 - so the prompt comes out beside
+  a quiet radio and is heard as *too loud*, and beside a software player pinned to full scale as *too quiet*. One flat
+  curve produces both complaints at once.
+- the module's own log in the same survey shows the platform's volume axe at work against it:
+  `Sleep/Wakeup volume drop to 9 detected! Restoring to 15...` over and over - see
+  [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) §6 row 1, where that reset lives.
+
 ### The fix, and why it costs nothing
 
 🔬 The factory speaker curve ends at `100,0` - **at the top index it already gives exactly 0 dB**.
