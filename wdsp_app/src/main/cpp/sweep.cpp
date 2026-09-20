@@ -527,15 +527,6 @@ constexpr float kSnrFullDb = 18.0f;
  * §24; what remains here is what this file is for - deciding how much of it the sweep confirms.
  */
 
-constexpr float kCabinTransitionHz = 80.0f;
-constexpr float kCabinGainDbPerOct = 6.0f;
-
-/** Expected cabin pressure gain at a frequency, in dB above the midband. Zero above transition. */
-static float cabinGainDb(float freqHz) {
-    if (freqHz <= 0.0f || freqHz >= kCabinTransitionHz) return 0.0f;
-    return kCabinGainDbPerOct * std::log2(kCabinTransitionHz / freqHz);
-}
-
 /**
  * The most a head unit's microphone INPUT could plausibly be attenuating at this frequency.
  *
@@ -565,6 +556,7 @@ static float pathMaxAttenDb(float freqHz) {
 }
 
 void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const float* worstClean16,
+                                               const float* meanClean16,
                                                const float* snr16,
                                                const float* mountingDb16,
                                                float* outCompensation16,
@@ -671,10 +663,27 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // no bass boost in it at all. Leaving the band at the mounting's own figure and saying so in
     // the report is the honest answer: the microphone's share down there is UNKNOWN on this
     // measurement, not zero and not 52.8.
+    // 🔴 The cabin-gain expectation is gone from this estimate (owner, 21.09.2026: "the microphone
+    // hears bass well even when it is not in a cabin, and the Harman comes out slightly
+    // bass-heavy - perhaps the microphone deserves a little more trust"). It used to expect the
+    // bottom to be LOUDER than the midband by 6 dB an octave below 80 Hz and to charge every
+    // missing decibel to the capsule. That expectation is only true in a SEALED cabin: this bench
+    // is an open space, a cabriolet is an open space, and a long bus is not the sedan the
+    // reference document describes. We do not ask which of those the person is in, so we cannot
+    // assume any of it - and an assumption in this direction invents microphone deficit out of a
+    // room that was never going to produce the rise.
+    //
+    // On his own 20.09 numbers it was eight decibels of the estimate at 31.5 Hz and four at 50.
+    // What remains is what the measurement itself shows below the midband, still bounded by what
+    // the input path could do and still refused when it saturates that bound.
+    //
+    // ⚠️ To bring it back properly the space has to be asked for, not guessed: closed or open, and
+    // how long - the document puts the transition at about 565 / (longest dimension in feet), with
+    // a slope that leaks away from the theoretical 12 dB per octave. We already ask for a body
+    // type, but it is a seating-distance question and says nothing about whether the roof is on.
     for (int b = 0; b < 5; b++) {
         const float freq = kHwCenters[b];
-        // What a sealed cabin should be adding here, on top of the midband.
-        const float expected = refMid + cabinGainDb(freq);
+        const float expected = refMid;
         const float deficit = expected - avgClean16[b];
         if (deficit <= 0.0f) continue;
         const float ceiling = pathMaxAttenDb(freq);
@@ -718,9 +727,12 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // 🔴 The mounting's TREBLE figures no longer stand alone: they are bounded by what the sweep
     // confirms (owner's decision, 21.09.2026). The table adds +3.5 / +7.0 / +10.0 dB at 8, 12.5
     // and 20 kHz for a pinhole, blind, on every unit. Until 15.09 nobody noticed, because the
-    // channels were averaged in decibels and a dead front-left tweeter (-31 dB at 12.5 kHz, -41
-    // at 20) dragged the top of the curve down by as much as the table pushed it up. Two errors
-    // cancelling is not two facts. With the average taken in power the top stopped collapsing,
+    // channels were averaged in decibels and the front-left channel (-31 dB at 12.5 kHz, -41 at 20)
+    // dragged the top of the curve down by as much as the table pushed it up. Two errors cancelling
+    // is not two facts. ⚠️ That channel is not a faulty tweeter, which is what this comment used to
+    // call it: the owner hears no difference between left and right, and what the sweep reads there
+    // is the angle between that speaker and a microphone behind the fascia, plus a reflector beside
+    // the bench. Treble is directional; the path is real and the speaker is fine. With the average taken in power the top stopped collapsing,
     // the table's boost became visible, and the synthesis read the cabin as bright and cut
     // 8..20 kHz by 2..4 dB - the owner's "everything above 8 kHz buried by 4 dB".
     //
@@ -735,58 +747,93 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // diffuse field's own slope rather than the port. Replacing the table with a theoretical
     // envelope is the next step and a separate one - see RESEARCH_AUDIO_MIXING_AND_BITPERFECT.md
     // section 4. Until then the rule is: never invent more treble boost than the sweep saw.
-    // 🔴 The rule runs in BOTH directions, and the second half of it has an author: the midband
-    // hump (owner, 21.09.2026). The table's cut at 3150 Hz exists to undo the pinhole's own
-    // Helmholtz peak, so that Auto-EQ does not read that peak as the car and take the voices out
-    // of the music. On this unit there is no peak to undo - the sweep reads 3150 Hz a decibel
-    // BELOW the midband, and the 13.09 pass said the same. Subtracting five decibels that were
-    // never there digs a hole the synthesis then fills: with bands 10..12 pushed down by
-    // -1.5 / -5.0 / -1.0, the cabin response read -2.9 / -6.6 / -2.5 and Auto-EQ answered with a
-    // boost across 2..5 kHz. That is the hump the owner heard in the new Harman curve, and it was
-    // made the same way as the buried treble - by a table speaking where the measurement did not.
+    // 🔴 Above the midband the capsule gets only what is NARROW and common to every channel
+    // (owner, 21.09.2026: "you are right" - and the document's own rule).
     //
-    // Which envelope can confirm which: a SHORTFALL common to every channel is what survives into
-    // the best-channel envelope (the best channel bounds the deficit from above), and an EXCESS
-    // common to every channel is what survives into the worst one. A peak in one channel is the
-    // room; a peak in all of them is the capsule. Without a second confident channel nothing can
-    // be common, so the table stands as written and says so in the log.
-    float refMidWorst = 0.0f;
-    bool haveWorst = worstClean16 != nullptr;
-    if (haveWorst) {
-        float sumWorst = 0.0f;
-        int countWorst = 0;
-        for (int b = 5; b <= 7; b++) {
-            if (std::isfinite(worstClean16[b]) && worstClean16[b] > -100.0f) {
-                sumWorst += worstClean16[b];
-                countWorst++;
-            }
+    // Every car loses treble: seats, carpet, clothing, the diffuse field itself, and a tweeter
+    // that rolls off. That is a broad, smooth fall and none of it is the microphone's doing. What
+    // IS the capsule is narrow and high-Q - the port's and the cavity's own resonances - and it
+    // stands still while everything else moves with the loudspeaker.
+    //
+    // So the expected shape is not a constant anybody had to invent: it is the measurement's own
+    // smooth part, a moving average across ±2 bands of the channels' dB mean. Anything broader
+    // than about an octave and a half is, by that definition, the room and the speakers. What
+    // sticks out of it is a candidate for the capsule, and becomes one only if EVERY channel shows
+    // it - a peak in one channel is a reflection, a peak in all of them is the capsule. Because
+    // best >= mean >= worst band by band, that test is simply: a dip all channels have is one the
+    // BEST channel still shows; a peak all channels have is one the WORST channel still shows.
+    //
+    // The mounting bounds the size: the person said what their microphone is built into, and this
+    // never invents more correction than the mounting is known to produce. Where the mounting has
+    // no opinion the measurement stands on its own, because a narrow resonance common to every
+    // channel is a fact about the capsule whatever anybody wrote in a table.
+    //
+    // 🔴 Why the channels are averaged in dB HERE and in power in the cabin response: two
+    // different questions. The cabin response is what a listener gets when everything plays
+    // together, and the ear sums power. This is the search for what is COMMON to every path - in
+    // decibels a shared factor is a shared offset, so a log mean keeps it and averages away each
+    // room's own ripple. Owner, 21.09.2026: no channel is thrown out of that mean. The front-left
+    // reading is not a broken speaker but the angle between it and a microphone behind the fascia,
+    // and this head unit has no per-channel equaliser to treat it with anyway.
+    const float* mean16 = meanClean16 != nullptr ? meanClean16 : avgClean16;
+    float smooth[kHwBands];
+    for (int b = 0; b < kHwBands; b++) {
+        float sum = 0.0f;
+        int count = 0;
+        for (int k = b - 2; k <= b + 2; k++) {
+            // The midband and up only: below it the physics is a high-pass and a cabin, not a
+            // diffuse field, and smoothing across that boundary would drag the top.
+            if (k < 5 || k >= kHwBands) continue;
+            sum += mean16[k];
+            count++;
         }
-        if (countWorst > 0) refMidWorst = sumWorst / countWorst;
-        else haveWorst = false;
+        smooth[b] = count > 0 ? (sum / static_cast<float>(count)) : mean16[b];
     }
 
     for (int b = 5; b < kHwBands; b++) {
         const float table = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
-        if (table == 0.0f) continue;
-        float confirmed;
-        if (table > 0.0f) {
-            confirmed = refMid - avgClean16[b];
-        } else if (haveWorst && std::isfinite(worstClean16[b])) {
-            confirmed = refMidWorst - worstClean16[b];
-            confirmed = -confirmed;  // an excess above the midband, not a shortfall below it
-        } else {
-            continue;
+        const float rBest = avgClean16[b] - smooth[b];
+        const bool haveWorst = worstClean16 != nullptr && std::isfinite(worstClean16[b]);
+        const float rWorst = haveWorst ? (worstClean16[b] - smooth[b]) : 0.0f;
+
+        // What every channel shows, as a correction: a common dip asks for a plus, a common peak
+        // for a minus, and anything the channels disagree about asks for nothing.
+        float measured = 0.0f;
+        if (rBest < 0.0f) {
+            measured = -rBest;                 // the shallowest dip any channel had
+        } else if (haveWorst && rWorst > 0.0f) {
+            measured = -rWorst;                // the smallest peak any channel had
         }
-        if (confirmed < 0.0f) confirmed = 0.0f;
         if (snr16 != nullptr) {
             float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
             confidence = std::min(1.0f, std::max(0.0f, confidence));
-            confirmed *= confidence;
+            measured *= confidence;
         }
-        if (confirmed < std::fabs(table)) {
-            outCompensation16[b] = table > 0.0f ? confirmed : -confirmed;
-            if (outStatus16 != nullptr) outStatus16[b] = kMicBandTrimmed;
+
+        // Where the mounting says nothing, the measurement speaks alone ONLY where a capsule
+        // plausibly can: sharp resonances of the port and the cavity, which the document places
+        // above 10 kHz. Lower down, "common to every channel" stops meaning "the microphone" -
+        // every loudspeaker shares the same room, so a room mode at the microphone's own position
+        // is common too, and charging it to the capsule would be the old mistake in a new coat.
+        // On the owner's 20.09 pass this rule is the difference between a clean curve and one
+        // carrying +2.1 dB at 200 Hz and -1.0 at 315, which are the bench, not the microphone.
+        const bool capsuleCanSpeakHere = kHwCenters[b] >= 10000.0f;
+        float value;
+        if (table == 0.0f) {
+            value = capsuleCanSpeakHere ? measured : 0.0f;
+        } else if ((table > 0.0f) == (measured > 0.0f) && measured != 0.0f) {
+            // Same direction: the mounting is confirmed, and bounds how much of it is applied.
+            value = std::fabs(measured) < std::fabs(table) ? measured : table;
+        } else {
+            // The measurement does not confirm the mounting here - not in that direction, or not
+            // at all. This is where a blind -5.0 dB at 3150 Hz used to dig a hole the synthesis
+            // then filled, which the owner heard as a hump across 2..5 kHz.
+            value = 0.0f;
         }
+        if (outStatus16 != nullptr && std::fabs(value - table) > 0.05f) {
+            outStatus16[b] = kMicBandTrimmed;
+        }
+        outCompensation16[b] = value;
     }
 }
 

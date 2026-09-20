@@ -404,6 +404,7 @@ JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, jclass,
                                                                    jfloatArray avgClean16,
                                                                    jfloatArray worstClean16,
+                                                                   jfloatArray meanClean16,
                                                                    jfloatArray snr16,
                                                                    jfloatArray mountingDb16,
                                                                    jfloatArray outCompensation16,
@@ -422,6 +423,10 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     if (snr16 != nullptr && env->GetArrayLength(snr16) >= wdsp::kHwBands) {
         snrData = env->GetFloatArrayElements(snr16, nullptr);
     }
+    jfloat* meanData = nullptr;
+    if (meanClean16 != nullptr && env->GetArrayLength(meanClean16) >= wdsp::kHwBands) {
+        meanData = env->GetFloatArrayElements(meanClean16, nullptr);
+    }
     jfloat* mountingData = nullptr;
     if (mountingDb16 != nullptr && env->GetArrayLength(mountingDb16) >= wdsp::kHwBands) {
         mountingData = env->GetFloatArrayElements(mountingDb16, nullptr);
@@ -433,11 +438,12 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
 
     float comp[wdsp::kHwBands];
     int status[wdsp::kHwBands];
-    wdsp::SweepMeasurement::estimateMicCompensation(avgData, worstData, snrData, mountingData,
-                                                    comp, status);
+    wdsp::SweepMeasurement::estimateMicCompensation(avgData, worstData, meanData, snrData,
+                                                    mountingData, comp, status);
     env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
     if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
     if (worstData != nullptr) env->ReleaseFloatArrayElements(worstClean16, worstData, JNI_ABORT);
+    if (meanData != nullptr) env->ReleaseFloatArrayElements(meanClean16, meanData, JNI_ABORT);
     if (mountingData != nullptr) {
         env->ReleaseFloatArrayElements(mountingDb16, mountingData, JNI_ABORT);
     }

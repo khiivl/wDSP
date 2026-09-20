@@ -133,21 +133,24 @@ public final class NativeSweep implements AutoCloseable {
      * under the converter's noise gets zeros from its own measurement rather than from a
      * hard-coded band index. May be null, which leaves the estimate ungated.
      *
-     * <p>{@code worstEnvelope16} is the same shape taken from the WORST channel per band, and it
-     * is what confirms the mounting table's cuts: a peak in one channel is the room, a peak in
-     * all of them is the capsule. May be null, which leaves those figures unchecked.
+     * <p>{@code worstEnvelope16} is the same shape taken from the WORST channel per band, and
+     * {@code meanEnvelope16} the dB mean of all of them. Together they answer the document's own
+     * question above the midband: the smooth part of the mean is the room and the loudspeakers
+     * falling away, which no microphone is responsible for, and only what sticks out of it in
+     * EVERY channel - a dip the best channel still has, a peak the worst channel still has - is
+     * the capsule. Both may be null, which leaves the mounting figures unchecked.
      *
      * <p>{@code outStatus16} says what happened to each band - {@link #MIC_BAND_MEASURED},
      * {@link #MIC_BAND_UNKNOWN}, {@link #MIC_BAND_TRIMMED} - so the report can print a refusal as
      * a refusal instead of letting it pass for a measurement. May be null.
      */
     public static void estimateMicCompensation(float[] envelope16, float[] worstEnvelope16,
-                                               float[] snr16,
+                                               float[] meanEnvelope16, float[] snr16,
                                                float[] mountingDb16, float[] outCompensation16,
                                                int[] outStatus16) {
         if (isAvailable() && envelope16 != null && outCompensation16 != null) {
-            nativeEstimateMicCompensation(envelope16, worstEnvelope16, snr16, mountingDb16,
-                    outCompensation16, outStatus16);
+            nativeEstimateMicCompensation(envelope16, worstEnvelope16, meanEnvelope16, snr16,
+                    mountingDb16, outCompensation16, outStatus16);
         }
     }
 
@@ -247,6 +250,7 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native void nativeEstimateMicCompensation(float[] envelope16,
                                                             float[] worstEnvelope16,
+                                                            float[] meanEnvelope16,
                                                             float[] snr16,
                                                             float[] mountingDb16,
                                                             float[] outCompensation16,

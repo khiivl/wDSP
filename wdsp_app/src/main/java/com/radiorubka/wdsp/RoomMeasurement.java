@@ -1261,7 +1261,7 @@ public final class RoomMeasurement {
      * shortfall being booked against the capsule.
      */
     private static float[] bestChannelEnvelope(Result result, int channelCount, float[] outSnr16,
-                                               float[] outWorst16) {
+                                               float[] outWorst16, float[] outMean16) {
         final float[] best = new float[NativeSweep.BAND_COUNT];
         java.util.Arrays.fill(best, Float.NEGATIVE_INFINITY);
         if (outSnr16 != null) java.util.Arrays.fill(outSnr16, 0f);
@@ -1272,6 +1272,15 @@ public final class RoomMeasurement {
         if (outWorst16 != null) java.util.Arrays.fill(outWorst16, Float.NaN);
         final float[] worst = new float[NativeSweep.BAND_COUNT];
         java.util.Arrays.fill(worst, Float.POSITIVE_INFINITY);
+        // The dB mean, which is what the document asks for and what the capsule lives in: a factor
+        // common to every path is an offset common to every channel once everything is in decibels.
+        // 🔴 Nothing is thrown out of it (owner, 21.09.2026). A channel that reads far down at the
+        // top is not a broken speaker - it is the angle between that speaker and this microphone,
+        // and treble is directional. There is no per-channel equaliser on this hardware to treat
+        // one channel with anyway.
+        final double[] sumMean = new double[NativeSweep.BAND_COUNT];
+        final int[] countMean = new int[NativeSweep.BAND_COUNT];
+        if (outMean16 != null) java.util.Arrays.fill(outMean16, Float.NaN);
         final StringBuilder who = new StringBuilder();
         int contributors = 0;
         for (int k = 0; k < channelCount && k < result.channels.length; k++) {
@@ -1298,6 +1307,8 @@ public final class RoomMeasurement {
                     }
                 }
                 if (shape < worst[b]) worst[b] = shape;
+                sumMean[b] += shape;
+                countMean[b]++;
             }
             if (who.length() > 0) who.append(", ");
             who.append(cr.label);
@@ -1312,6 +1323,15 @@ public final class RoomMeasurement {
                 .append(who).append("), dB re own midband:");
         for (float v : best) log.append(String.format(Locale.US, " %+.1f", v));
         Log.i(TAG, log.toString());
+        if (outMean16 != null) {
+            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                if (countMean[b] > 0) outMean16[b] = (float) (sumMean[b] / countMean[b]);
+            }
+            final StringBuilder mlog = new StringBuilder("the same, dB mean of every channel "
+                    + "(what they have in common), dB re own midband:");
+            for (float v : outMean16) mlog.append(String.format(Locale.US, " %+.1f", v));
+            Log.i(TAG, mlog.toString());
+        }
         if (outWorst16 != null && contributors >= 2) {
             System.arraycopy(worst, 0, outWorst16, 0, NativeSweep.BAND_COUNT);
             final StringBuilder wlog = new StringBuilder("the same, worst channel per band "
@@ -2134,16 +2154,17 @@ public final class RoomMeasurement {
             // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
             final float[] envelopeSnr16 = new float[NativeSweep.BAND_COUNT];
             final float[] worstClean16 = new float[NativeSweep.BAND_COUNT];
+            final float[] meanClean16 = new float[NativeSweep.BAND_COUNT];
             final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16,
-                    worstClean16);
+                    worstClean16, meanClean16);
             result.micBandStatus16 = new int[NativeSweep.BAND_COUNT];
             // The mounting's own curve comes from MicProfile - the one class that knows what the
             // person said their microphone is built into, and what that mounting does. The native
             // side used to keep its own copy of that table and be told an index; it now does the
             // arithmetic and nothing else. Two homes for one fact was how the report came to say
             // "behind a hole in a panel" while the calibration built the curve for a bare capsule.
-            NativeSweep.estimateMicCompensation(bestClean16, worstClean16, envelopeSnr16,
-                    MicProfile.mountingCurve(context),
+            NativeSweep.estimateMicCompensation(bestClean16, worstClean16, meanClean16,
+                    envelopeSnr16, MicProfile.mountingCurve(context),
                     result.micCompensation16, result.micBandStatus16);
             StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
             for (float v : envelopeSnr16) {
@@ -2628,12 +2649,20 @@ public final class RoomMeasurement {
         //
         // 🔴 The spectrum is averaged in POWER, not in dB (15.09.2026). A dB mean is "a typical
         // channel", and nobody listens to one: the ear and the microphone hear the doors together,
-        // and the loud one dominates. On the owner's unit the front left tweeter reads -32.7 / -50.5 dB
+        // and the loud one dominates. On the owner's unit the front left channel reads -32.7 / -50.5 dB
         // at 12.5 / 20 kHz against -5.5 / -9.3 on the right, and the dB mean put the car 10 and 17 dB
         // lower there than it sounds - the stored cabin curve disagreed with live pink noise by +11.4
         // and +19.1 dB. The same report in power leaves +1.4 and +2.1 (offline, the 13.09 report
-        // against the 14.09 pink-noise dumps; memory cabin-average-in-power-not-db). It also made the
-        // synthesis lift both bands for a dead tweeter, which raises them in the healthy channel.
+        // against the 14.09 pink-noise dumps; memory cabin-average-in-power-not-db).
+        //
+        // ⚠️ That left channel is NOT a fault, and calling it a dead tweeter was our guess, not a
+        // finding (owner, 21.09.2026 - he hears no difference between left and right). What the
+        // sweep sees there is geometry: the microphone sits behind the fascia, the left speaker is
+        // closer but at a far sharper angle, and treble is directional; on the bench a cabinet
+        // stands beside it and reflects. The number is true of that path and says nothing about
+        // that speaker - which is exactly why the power mean is right here: it is what reaches a
+        // listener when everything plays together, and this head unit has no per-channel equaliser
+        // to do anything else with.
         // The ratio stays a dB mean: it is a measure of trust, not a level.
         float[] avgClean = new float[NativeSweep.BAND_COUNT];
         double[] avgPower = new double[NativeSweep.BAND_COUNT];

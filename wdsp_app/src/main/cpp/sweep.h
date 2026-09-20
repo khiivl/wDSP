@@ -138,6 +138,9 @@ public:
      * common to every channel survives into the best, an excess common to every channel survives
      * into the worst, and only what is common to them all can be the microphone. worstClean16 may
      * be null (or hold non-finite bands), which leaves the mounting table unchecked there.
+     * meanClean16 is the dB mean of the same shapes - what the channels have in common, which is
+     * what the capsule is - and the smooth part of it is the expected room-and-speaker slope that
+     * no microphone is responsible for. Null falls back to the best-channel envelope.
      *
      * mountingDb16 is what the microphone's mounting is known to do, sixteen bands, supplied by
      * MicProfile on the Java side - this file keeps no table of its own (21.09.2026). May be null,
@@ -147,6 +150,7 @@ public:
      * that was measured from one that was refused: see kMicBand* above.
      */
     static void estimateMicCompensation(const float* avgClean16, const float* worstClean16,
+                                       const float* meanClean16,
                                        const float* snr16, const float* mountingDb16,
                                        float* outCompensation16,
                                        int* outStatus16 = nullptr);
