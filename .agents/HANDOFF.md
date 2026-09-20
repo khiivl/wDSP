@@ -2530,3 +2530,32 @@ FLOOR32 / CURVE32.
   `config/ConfigInfoConstant.java`, `os/QFSleepWakeup.java`, `keyevent/QFKeyEvent.java`).
 - Нова пам'ять: `daytime-sound-debt-15-09`, `narrow-row-shrinks-together`, `wdsp-next-release-notes-pending`,
   `state-15-09-wdsp-morning`; оновлено `name-the-thing-not-the-index`, `gemini-must-never-touch-git`, `open-debts-checklist`.
+
+## 20.09.2026 — два FYI Дж на дошці (#744, #745): що з них стосується wDSP
+
+Джерела: дошка, повний текст #745 — `C:eposgent-bridgegent_bridge_bodies\msg_0745.md`; довідники Дж
+`…\qf-platform-architectureeferences-RADIO-PACKAGE-IDENTITY-SPOOFING-AND-PROPERTIES.md` і
+`25-AUDIO-ARCHITECTURE-HARDWARE-CHANNELS-AND-PROPERTIES.md`. Це **його реверс**, не наш вимір — звірено з нашим кодом,
+на апараті не переміряно.
+
+1. **Радіо збирається підміняти `sys.qf.last_audio_src` на `com.android.fmradio.ext`** (щоб ожили крутилка й кнопки керма).
+   Наслідки для нас, перевірені грепом:
+   - `NowPlaying.RADIO_PACKAGES` — **префіксний** збіг, тож `…fmradio.ext` упізнається як радіо ✅;
+   - `NowPlaying.isRadioSource()` дивиться на канал 2 / `sys.qf.radio.status` / наявність сигналу — підміни не боїться ✅;
+   - 🪤 **автопресет за плеєром** (`McuService.checkPlayer` → `player_preset_map`) ключується рядком пропа: після підміни
+     мапа для `com.kostyamat.fmradio` перестане спрацьовувати, у списку плеєрів зʼявиться `com.android.fmradio.ext`;
+   - 🪤 два **точних** порівняння `"com.android.fmradio".equals(pkg)` — `NowPlaying.java:272` і `ScreensaverManager.java:982`
+     (тап по обкладинці заставки) — на `.ext` не спрацюють і поведуть у заводський пакет замість нашого радіо.
+2. **Приглушення навігації для аналогового радіо робиться в самому чіпі** (`AK7738VolumeManager.setMixAudio`, коефіцієнт
+   `persist.sys.navi_remix_ratio`/10), а не мікшером Android. Отже мікрофонний спектр і будь-який вимір під час підказки
+   навігатора недійсні; плюс платформа сама скидає приглушення, якщо фраза довша за 20 с.
+3. **Платформа має власну «сокиру» гучності**: `VolumeManager.resetDefValIfNeed(0)` піднімає канал із гучністю 0 до
+   `persist.sys.main_volume` (12) при виході із задньої камери й при прокиданні з ACC OFF. Наш `checkForBug()` (0 → 1) —
+   не єдиний, хто рухає гучність: стрибок на 12 своєму коду не приписувати.
+4. **Проп джерела пишеться лише на подіях аудіофокуса** (`MediaFocusControl.recordAudioSource`), `"nothing"` — на
+   abandon, на ACC OFF і на виході із задньої камери. Жодного демона, що його оновлює, немає — звідси й його «липкість».
+5. Для нас там же: аналогове радіо йде повз AudioFlinger, спектр із мікрофона `UNPROCESSED, 48000, MONO` — **це вже так і
+   зроблено**, нічого міняти не треба.
+
+**Борг із цього:** два точних порівняння зробити префіксними, і вирішити, чи зводити `…fmradio.ext` і
+`com.kostyamat.fmradio` до одного ключа автопресетів (рішення власника: одна мапа чи два записи).
