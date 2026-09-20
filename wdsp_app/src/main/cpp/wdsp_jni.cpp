@@ -403,6 +403,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSubtractNoise(JNIEnv* env, jclass,
 JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, jclass,
                                                                    jfloatArray avgClean16,
+                                                                   jfloatArray worstClean16,
                                                                    jfloatArray snr16,
                                                                    jint micBody,
                                                                    jfloatArray outCompensation16,
@@ -415,17 +416,24 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     if (avgData == nullptr) return;
 
     // Optional: a caller with no per-band SNR gets the estimate ungated, which is what the
-    // behaviour was before the ramp existed.
+    // behaviour was before the ramp existed. The same for the worst-channel envelope: without it
+    // the mounting table's own figures are taken on trust, as they were until 21.09.2026.
     jfloat* snrData = nullptr;
     if (snr16 != nullptr && env->GetArrayLength(snr16) >= wdsp::kHwBands) {
         snrData = env->GetFloatArrayElements(snr16, nullptr);
     }
+    jfloat* worstData = nullptr;
+    if (worstClean16 != nullptr && env->GetArrayLength(worstClean16) >= wdsp::kHwBands) {
+        worstData = env->GetFloatArrayElements(worstClean16, nullptr);
+    }
 
     float comp[wdsp::kHwBands];
     int status[wdsp::kHwBands];
-    wdsp::SweepMeasurement::estimateMicCompensation(avgData, snrData, micBody, comp, status);
+    wdsp::SweepMeasurement::estimateMicCompensation(avgData, worstData, snrData, micBody,
+                                                    comp, status);
     env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
     if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
+    if (worstData != nullptr) env->ReleaseFloatArrayElements(worstClean16, worstData, JNI_ABORT);
 
     env->SetFloatArrayRegion(outCompensation16, 0, wdsp::kHwBands, comp);
     // Optional: a caller that does not care which bands were refused passes null and gets the

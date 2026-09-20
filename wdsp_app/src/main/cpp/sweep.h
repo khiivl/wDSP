@@ -133,10 +133,17 @@ public:
      * clean response using the Cabin Gain Anchor (+12 dB/oct below 80 Hz) and high-frequency
      * acoustic port roll-off correction.
      *
+     * avgClean16 is the BEST channel per band and worstClean16 the WORST, both as shapes against
+     * each channel's own midband. They answer different halves of one question: a shortfall
+     * common to every channel survives into the best, an excess common to every channel survives
+     * into the worst, and only what is common to them all can be the microphone. worstClean16 may
+     * be null (or hold non-finite bands), which leaves the mounting table unchecked there.
+     *
      * outStatus16 (optional) says what happened to each band, so the report can tell a figure
      * that was measured from one that was refused: see kMicBand* above.
      */
-    static void estimateMicCompensation(const float* avgClean16, const float* snr16,
+    static void estimateMicCompensation(const float* avgClean16, const float* worstClean16,
+                                       const float* snr16,
                                        int micBody, float* outCompensation16,
                                        int* outStatus16 = nullptr);
 

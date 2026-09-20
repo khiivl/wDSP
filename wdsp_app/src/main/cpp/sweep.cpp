@@ -599,7 +599,8 @@ static float pathMaxAttenDb(float freqHz) {
     return first + second;
 }
 
-void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const float* snr16,
+void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const float* worstClean16,
+                                               const float* snr16,
                                                int micBody, float* outCompensation16,
                                                int* outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
@@ -769,21 +770,56 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // diffuse field's own slope rather than the port. Replacing the table with a theoretical
     // envelope is the next step and a separate one - see RESEARCH_AUDIO_MIXING_AND_BITPERFECT.md
     // section 4. Until then the rule is: never invent more treble boost than the sweep saw.
-    for (int b = 13; b < kHwBands; b++) {
+    // 🔴 The rule runs in BOTH directions, and the second half of it has an author: the midband
+    // hump (owner, 21.09.2026). The table's cut at 3150 Hz exists to undo the pinhole's own
+    // Helmholtz peak, so that Auto-EQ does not read that peak as the car and take the voices out
+    // of the music. On this unit there is no peak to undo - the sweep reads 3150 Hz a decibel
+    // BELOW the midband, and the 13.09 pass said the same. Subtracting five decibels that were
+    // never there digs a hole the synthesis then fills: with bands 10..12 pushed down by
+    // -1.5 / -5.0 / -1.0, the cabin response read -2.9 / -6.6 / -2.5 and Auto-EQ answered with a
+    // boost across 2..5 kHz. That is the hump the owner heard in the new Harman curve, and it was
+    // made the same way as the buried treble - by a table speaking where the measurement did not.
+    //
+    // Which envelope can confirm which: a SHORTFALL common to every channel is what survives into
+    // the best-channel envelope (the best channel bounds the deficit from above), and an EXCESS
+    // common to every channel is what survives into the worst one. A peak in one channel is the
+    // room; a peak in all of them is the capsule. Without a second confident channel nothing can
+    // be common, so the table stands as written and says so in the log.
+    float refMidWorst = 0.0f;
+    bool haveWorst = worstClean16 != nullptr;
+    if (haveWorst) {
+        float sumWorst = 0.0f;
+        int countWorst = 0;
+        for (int b = 5; b <= 7; b++) {
+            if (std::isfinite(worstClean16[b]) && worstClean16[b] > -100.0f) {
+                sumWorst += worstClean16[b];
+                countWorst++;
+            }
+        }
+        if (countWorst > 0) refMidWorst = sumWorst / countWorst;
+        else haveWorst = false;
+    }
+
+    for (int b = 5; b < kHwBands; b++) {
         const float table = kBodyCompensationDb[body][b];
-        // Only the boosts are in question. A negative entry undoes a resonance the mounting ADDS
-        // (band 11, the pinhole's own 3150 Hz peak), and refusing to cut it would let Auto-EQ
-        // read the hole as the car and take the voices out of the music.
-        if (table <= 0.0f) continue;
-        float confirmed = refMid - avgClean16[b];
+        if (table == 0.0f) continue;
+        float confirmed;
+        if (table > 0.0f) {
+            confirmed = refMid - avgClean16[b];
+        } else if (haveWorst && std::isfinite(worstClean16[b])) {
+            confirmed = refMidWorst - worstClean16[b];
+            confirmed = -confirmed;  // an excess above the midband, not a shortfall below it
+        } else {
+            continue;
+        }
         if (confirmed < 0.0f) confirmed = 0.0f;
         if (snr16 != nullptr) {
             float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
             confidence = std::min(1.0f, std::max(0.0f, confidence));
             confirmed *= confidence;
         }
-        if (confirmed < table) {
-            outCompensation16[b] = confirmed;
+        if (confirmed < std::fabs(table)) {
+            outCompensation16[b] = table > 0.0f ? confirmed : -confirmed;
             if (outStatus16 != nullptr) outStatus16[b] = kMicBandTrimmed;
         }
     }

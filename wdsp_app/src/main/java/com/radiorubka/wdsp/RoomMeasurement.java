@@ -1482,10 +1482,18 @@ public final class RoomMeasurement {
      * that has its own argument in sweep.cpp. It removes one specific lie: the doors' bass
      * shortfall being booked against the capsule.
      */
-    private static float[] bestChannelEnvelope(Result result, int channelCount, float[] outSnr16) {
+    private static float[] bestChannelEnvelope(Result result, int channelCount, float[] outSnr16,
+                                               float[] outWorst16) {
         final float[] best = new float[NativeSweep.BAND_COUNT];
         java.util.Arrays.fill(best, Float.NEGATIVE_INFINITY);
         if (outSnr16 != null) java.util.Arrays.fill(outSnr16, 0f);
+        // The other end of the same envelope, and the only thing that can confirm a PEAK belongs
+        // to the capsule: the best channel bounds a shortfall common to all of them, the worst
+        // bounds an excess common to all of them. NaN until two channels have spoken, because one
+        // channel cannot establish what is common - the native side reads that as "no opinion".
+        if (outWorst16 != null) java.util.Arrays.fill(outWorst16, Float.NaN);
+        final float[] worst = new float[NativeSweep.BAND_COUNT];
+        java.util.Arrays.fill(worst, Float.POSITIVE_INFINITY);
         final StringBuilder who = new StringBuilder();
         int contributors = 0;
         for (int k = 0; k < channelCount && k < result.channels.length; k++) {
@@ -1511,6 +1519,7 @@ public final class RoomMeasurement {
                         outSnr16[b] = cr.snrDb[b];
                     }
                 }
+                if (shape < worst[b]) worst[b] = shape;
             }
             if (who.length() > 0) who.append(", ");
             who.append(cr.label);
@@ -1525,6 +1534,16 @@ public final class RoomMeasurement {
                 .append(who).append("), dB re own midband:");
         for (float v : best) log.append(String.format(Locale.US, " %+.1f", v));
         Log.i(TAG, log.toString());
+        if (outWorst16 != null && contributors >= 2) {
+            System.arraycopy(worst, 0, outWorst16, 0, NativeSweep.BAND_COUNT);
+            final StringBuilder wlog = new StringBuilder("the same, worst channel per band "
+                    + "(what every channel had), dB re own midband:");
+            for (float v : outWorst16) wlog.append(String.format(Locale.US, " %+.1f", v));
+            Log.i(TAG, wlog.toString());
+        } else if (outWorst16 != null) {
+            Log.i(TAG, "only one channel was confident, so nothing is 'common to all': the "
+                    + "mounting table stands unchecked this time");
+        }
         return best;
     }
 
@@ -2334,10 +2353,17 @@ public final class RoomMeasurement {
         if (isMicCalibrationOnly) {
             // 3. Microphone calibration pass: estimate and persist hardware capsule response curve!
             final float[] envelopeSnr16 = new float[NativeSweep.BAND_COUNT];
-            final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16);
+            final float[] worstClean16 = new float[NativeSweep.BAND_COUNT];
+            final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16,
+                    worstClean16);
             result.micBandStatus16 = new int[NativeSweep.BAND_COUNT];
-            NativeSweep.estimateMicCompensation(bestClean16, envelopeSnr16,
-                    micBody(context), result.micCompensation16, result.micBandStatus16);
+            // Through effectiveMicBody, not the raw preference: the same question had two answers
+            // in this file - the report said "behind a hole in a panel (assumed from the place)"
+            // while the calibration, reading the preference directly, got -1 and built the curve
+            // for a bare capsule. One fact, one function; this is that function.
+            NativeSweep.estimateMicCompensation(bestClean16, worstClean16, envelopeSnr16,
+                    effectiveMicBody(micBody(context), micPlace(context)),
+                    result.micCompensation16, result.micBandStatus16);
             StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
             for (float v : envelopeSnr16) {
                 snrLog.append(String.format(Locale.US, " %.0f", v));
@@ -2976,55 +3002,23 @@ public final class RoomMeasurement {
         // did not.
         AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
 
-        // 5. Two corrections, from two different questions.
+        // 5. Placement. What used to stand here first - three branches patching the synthesized
+        //    gains according to the microphone's CONSTRUCTION - is gone (owner, 21.09.2026), and
+        //    the rule it broke is his: one fact, one function. The mounting was being treated in
+        //    two places at once. Since 13.09 the microphone's own curve carries it
+        //    (kBodyCompensationDb in sweep.cpp, keyed on the same micBody), and these branches
+        //    kept treating it again afterwards - the pinhole's cavity in bands 11-12, the
+        //    housing's and the lavalier's treble above 8 kHz, and a cap on bass boost for the
+        //    hole's own roll-off. Two cures for one illness, and neither could see the other.
         //
-        //    Construction first: what surrounds the capsule has a response of its own, and it is
-        //    the same response wherever that capsule is fitted. Until 12.09.2026 this was keyed on
-        //    the PLACE being "head unit", which meant an identical pinhole anywhere else got
-        //    nothing, and an open capsule sitting on the dash got a cavity correction it has no
-        //    cavity for. effectiveMicBody() still answers "pinhole" for the head unit's own
-        //    microphone, so nothing changes for a measurement already made on this unit.
-        final int micBodyEff = effectiveMicBody(result.micBody, result.micPlace);
-        if (micBodyEff == MIC_BODY_PINHOLE) {
-            // 🧩 A 1.5-2 mm hole in front of the capsule is a Helmholtz cavity: it lifts roughly
-            // 2.8-3.2 kHz by +4..+6 dB, so the synthesis reads that lift as the room and cuts it.
-            // Give the speech presence back in bands 11 and 12 (2.5 and 4 kHz).
-            // These are hardware indices, not decibels: index 6 is flat and one step is 2 dB. The
-            // comments here used to name dB figures that did not match the arithmetic - "+2" is two
-            // steps, which is 4 dB, and a cap at 8 is +4 dB rather than the +3 it claimed.
-            for (int b : new int[]{11, 12}) {
-                if (result.autoEqGains16[b] < 6) {
-                    result.autoEqGains16[b] = Math.min(6, result.autoEqGains16[b] + 2); // give back up to 4 dB
-                }
-            }
-            // And the same hole rolls the bottom off, which reads as a room that needs bass.
-            for (int b = 0; b < 4; b++) {
-                if (result.autoEqGains16[b] > 8) {
-                    result.autoEqGains16[b] = 8; // cap the boost at index 8 = +4 dB
-                }
-            }
-            Log.i(TAG, "Mic construction: pinhole - cavity lift returned to bands 11-12, sub-bass boost capped");
-        } else if (micBodyEff == MIC_BODY_HOUSING) {
-            // 🧩 A capsule recessed in a fitting - a dome light, a mirror pod - is shadowed rather
-            // than resonant: a broad loss at the top instead of a peak in the middle. Cap the
-            // treble boost so the synthesis does not try to correct the housing with the speakers.
-            for (int b = 13; b < NativeSweep.BAND_COUNT; b++) {
-                if (result.autoEqGains16[b] > 7) {
-                    result.autoEqGains16[b] = 7;
-                }
-            }
-            Log.i(TAG, "Mic construction: recessed in a housing - treble boost capped above 8 kHz");
-        } else if (micBodyEff == MIC_BODY_LAVALIER) {
-            // 🧩 Foam costs a little air and nothing else.
-            for (int b = 14; b < NativeSweep.BAND_COUNT; b++) {
-                if (result.autoEqGains16[b] > 7) {
-                    result.autoEqGains16[b] = 7;
-                }
-            }
-            Log.i(TAG, "Mic construction: foam-covered clip-on - top boost capped");
-        }
-
-        //    Placement second, and it is a different matter: glass beside the capsule is a boundary,
+        //    The 20.09 measurement is what settled it. The curve's own -5.0 dB at 3150 Hz, for a
+        //    Helmholtz peak that this unit does not have, dug a dip the synthesis then filled:
+        //    2..5 kHz came back lifted, which the owner heard as a hump in the middle of the new
+        //    Harman curve. The cure is at the source - the table now applies only what the sweep
+        //    confirms in every channel - and a second cure downstream would only hide whether the
+        //    first one worked.
+        //
+        //    Placement is a different question and stays: glass beside the capsule is a boundary,
         //    not a housing. This one stays keyed on the place, because that is what it is about.
         if (result.micPlace == 0) { // Windscreen
             for (int b = 10; b < NativeSweep.BAND_COUNT; b++) {
