@@ -247,6 +247,32 @@ AFTER    STREAM_MUSIC 15/15
   `Sleep/Wakeup volume drop to 9 detected! Restoring to 15...` over and over - see
   [08-VOLUME-AND-SOURCES.md](08-VOLUME-AND-SOURCES.md) §6 row 1, where that reset lives.
 
+### 🔴 v5.1 has already fixed the flat curve — three units side by side (surveys of 06.09.2026)
+
+Three surveys taken the same day, read 20.09.2026. This is the natural experiment the section above was missing: two
+BitPerfect versions and one unit with no module at all.
+
+| unit | module | `AUDIO_STREAM_MUSIC` on SPEAKER | TTS | the prompt's PCM | ducking during the prompt |
+|---|---|---|---|---|---|
+| `004121` haiwai, TEF6686 | **v5.1** | its own graded curve `0→−96, 20→−36, 40→−24, 60→−16, 80→−8, 100→0` | `FULL_SCALE` (as factory) | `pcm3p`, S24_LE, MMAP | 15→8, i.e. about **−19 dB** — it works again |
+| `002121` jitu2, TDA7708 | **v4.17** | `FULL_SCALE` — **flat** | squashed to `1→−4 … 100→0`, and NOTIFICATION with it | `pcm3p`, S24_LE, MMAP | 15→6→8→15 and **not one dB moves** |
+| `004121` jitu2, TEF6686 | none | factory `DEFAULT_DEVICE_CATEGORY_SPEAKER` | `FULL_SCALE` | `pcm0p`, **S16_LE** | — (radio was the source) |
+
+What that settles:
+
+1. **The "quiet prompt over a software player" complaint belongs to v4.17 and older.** Flat MUSIC plus a TTS curve
+   squashed to −4 dB: the music sits at 0 dB, the platform's eight steps do nothing, and the prompt has nowhere to rise
+   above it. **v5.1 restores both** — a graded MUSIC curve and TTS at full scale — so an owner reporting this is an owner
+   who has not updated the module.
+2. **"Too loud over the radio" is not the module's doing at all.** The tuner has its own source volume (`sys.radio.vol`
+   = 5 and 8 on these two units) and the prompt is on the Android side at ~0 dB. Turn the radio down and the prompt towers
+   over it - on any module version, and on the factory one.
+3. The prompt travels on **BitPerfect's own 24-bit MMAP path** (`card0/pcm3p`, S24_LE) on both module units, and on the
+   plain `pcm0p` S16_LE where there is no module. So the module does move navigation onto its dedicated path, as its
+   description claims.
+4. 🧩 The module's footprint is wider than the policy files: `/vendor/etc/audio_params/sprd/*` (pga, process, structure,
+   cvs, smartamp, vbc) are **byte-identical on the two module units and different on the factory one**.
+
 ### The fix, and why it costs nothing
 
 🔬 The factory speaker curve ends at `100,0` - **at the top index it already gives exactly 0 dB**.
