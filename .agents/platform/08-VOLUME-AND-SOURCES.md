@@ -760,3 +760,30 @@ dropping the root requirement from the microphone path: root exists here only to
 when our stream comes up narrow, and being first removes the need.
 ❓ Untested: the cold case, where the assistant opens first after a boot and we open second with the
 input not already at 48 kHz.
+
+
+## 6. The platform's own axes in the audio path — and why they are ours
+
+🔴 **The owner, 20.09.2026:** everything about the system's sounds, the audio path and the platform's axes is wDSP's
+business — *"саме ми є головною програмою в модифікованій системі, що має розуміти кожен звуковий подих системи, і
+виправляти китайські ідіотизми та сокири"*. So this list is not trivia about somebody else's code: it is the register of
+what wDSP watches for and, where it can, corrects.
+
+⚠️ Provenance: rows 1–6 come from Gemini's reverse of the decompiled framework and vendor apks (board #744/#745,
+20.09.2026; his own write-ups are `24-RADIO-PACKAGE-IDENTITY-SPOOFING-AND-PROPERTIES.md` and
+`25-AUDIO-ARCHITECTURE-HARDWARE-CHANNELS-AND-PROPERTIES.md` in his references). **Not measured on the wire by us** —
+before acting on a row, confirm it on the unit, the way everything else in this folder was confirmed.
+
+| # | what the platform does | where it lives | what it costs the sound | wDSP |
+|---|---|---|---|---|
+| 1 | a channel sitting at volume 0 is reset to `persist.sys.main_volume` (12) on leaving the rear camera and on waking from ACC OFF | `VolumeManager.resetDefValIfNeed(0)` (~:78) | the level jumps to 12 on its own | we already force 0 → 1 every 100 ms (`checkForBug`) for the subwoofer's sake; **a jump to 12 is the platform, never our code** |
+| 2 | the Bluetooth branch sets its mode to 5 and then switches the MCU to channel **4** | `MediaFocusControl` (~:838) | BT audio lands on the Android channel instead of the BT one | watch: our channel reading (`sys.qf.sound.channel`) can disagree with what is really connected |
+| 3 | a blind exact match on `"com.android.fmradio.ext"` decides whether BT music mutes the tuner | `TechBTService` (~:211) | a radio under any other package is not muted when BT music starts | ours only in so far as we must not assume the platform knows which app is the radio |
+| 4 | ducking is forcibly released if a navigation phrase runs longer than 20 s | `QFAudioService` (~:102) | music comes back over the end of a long prompt | candidate: we hear the prompt state and could hold the level ourselves |
+| 5 | for the analogue sources (tuner, AUX) navigation ducking is done **inside the DSP chip**, by `persist.sys.navi_remix_ratio`/10 | `AK7738VolumeManager.setMixAudio(1)` | the analogue gain physically drops while the navigator speaks | 🔴 any microphone measurement taken during a prompt is invalid — the cabin sweep and the microphone spectrum must not trust it |
+| 6 | `VolumeState`'s constants are named `PERSYS_*` although they write the runtime `sys.*.vol` | `VolumeState.java` | nothing by itself; it misleads whoever reads the code | note only |
+| 7 | `sys.qf.last_audio_src` is written **only** on audio-focus events, and set to `"nothing"` on abandon, on ACC OFF and on leaving the rear camera | `MediaFocusControl.recordAudioSource()` | the property is sticky: nothing refreshes it in between | this is why our 100 ms `checkPlayer` sees a stale name after a reboot — already known, now with the mechanism |
+| 8 | `sys.qf.call_state = true` freezes volume-type changes in the MCU service until the call ends | `McuManagerService.setVolType()` | during a call only `sys.call.vol` moves | our call handling already treats `btcall_type` as the one truth (`CallState`) |
+
+📌 Nothing here is fixed yet beyond what wDSP already does (rows 1 and 7-8). Rows 4 and 5 are the two that change what a
+person hears, so they are the first to confirm on the wire.
