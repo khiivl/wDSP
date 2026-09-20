@@ -139,12 +139,16 @@ public:
      * into the worst, and only what is common to them all can be the microphone. worstClean16 may
      * be null (or hold non-finite bands), which leaves the mounting table unchecked there.
      *
+     * mountingDb16 is what the microphone's mounting is known to do, sixteen bands, supplied by
+     * MicProfile on the Java side - this file keeps no table of its own (21.09.2026). May be null,
+     * which starts the estimate from zero.
+     *
      * outStatus16 (optional) says what happened to each band, so the report can tell a figure
      * that was measured from one that was refused: see kMicBand* above.
      */
     static void estimateMicCompensation(const float* avgClean16, const float* worstClean16,
-                                       const float* snr16,
-                                       int micBody, float* outCompensation16,
+                                       const float* snr16, const float* mountingDb16,
+                                       float* outCompensation16,
                                        int* outStatus16 = nullptr);
 
     /**

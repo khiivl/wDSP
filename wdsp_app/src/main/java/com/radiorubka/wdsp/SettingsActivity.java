@@ -1283,8 +1283,8 @@ public class SettingsActivity extends AppCompatActivity {
     private void refreshRoomMeasurementUi() {
         BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
         if (micSpot != null) {
-            micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
-                    RoomMeasurement.micSpotFrontRear(this));
+            micSpot.setBalance(MicProfile.spotLeftRight(this),
+                    MicProfile.spotFrontRear(this));
         }
         wireMicPlace();
         showRoomStatus();
@@ -1623,9 +1623,9 @@ public class SettingsActivity extends AppCompatActivity {
         // Where the microphone is, pointed at rather than typed.
         BalancePointerView micSpot = findViewById(R.id.room_mic_pointer);
         if (micSpot != null) {
-            micSpot.setBalance(RoomMeasurement.micSpotLeftRight(this),
-                    RoomMeasurement.micSpotFrontRear(this));
-            micSpot.setOnBalanceChangeListener((lr, fr) -> RoomMeasurement.setMicSpot(this, lr, fr));
+            micSpot.setBalance(MicProfile.spotLeftRight(this),
+                    MicProfile.spotFrontRear(this));
+            micSpot.setOnBalanceChangeListener((lr, fr) -> MicProfile.setSpot(this, lr, fr));
 
             wireMicPlace();
             wireMicBody();
@@ -2007,12 +2007,12 @@ public class SettingsActivity extends AppCompatActivity {
     private void wireMicPlace() {
         android.widget.AutoCompleteTextView spinner = findViewById(R.id.spinner_room_mic_place);
         if (spinner == null) return;
-        String[] names = RoomMeasurement.micPlaceNames(this);
+        String[] names = MicProfile.placeNames(this);
         spinner.setAdapter(new ThemeManager.ThemedDropdownAdapter<>(this, names));
-        int chosen = RoomMeasurement.micPlace(this);
+        int chosen = MicProfile.place(this);
         if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
         spinner.setOnItemClickListener((parent, view, position, id) ->
-                RoomMeasurement.setMicPlace(this, position));
+                MicProfile.setPlace(this, position));
     }
 
     /**
@@ -2025,12 +2025,12 @@ public class SettingsActivity extends AppCompatActivity {
     private void wireMicBody() {
         android.widget.AutoCompleteTextView spinner = findViewById(R.id.spinner_room_mic_body);
         if (spinner == null) return;
-        String[] names = RoomMeasurement.micBodyNames(this);
+        String[] names = MicProfile.bodyNames(this);
         spinner.setAdapter(new ThemeManager.ThemedDropdownAdapter<>(this, names));
-        int chosen = RoomMeasurement.micBody(this);
+        int chosen = MicProfile.statedBody(this);
         if (chosen >= 0 && chosen < names.length) spinner.setText(names[chosen], false);
         spinner.setOnItemClickListener((parent, view, position, id) ->
-                RoomMeasurement.setMicBody(this, position));
+                MicProfile.setBody(this, position));
     }
 
     /**
@@ -2091,9 +2091,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (button == null) return;
         TouchGlow.attach(button);
         button.setOnClickListener(v -> {
-            float lr = clampSpot(RoomMeasurement.micSpotLeftRight(this) + dLr);
-            float fr = clampSpot(RoomMeasurement.micSpotFrontRear(this) + dFr);
-            RoomMeasurement.setMicSpot(this, lr, fr);
+            float lr = clampSpot(MicProfile.spotLeftRight(this) + dLr);
+            float fr = clampSpot(MicProfile.spotFrontRear(this) + dFr);
+            MicProfile.setSpot(this, lr, fr);
             pointer.setBalance(lr, fr);
         });
     }

@@ -518,49 +518,14 @@ constexpr float kSnrFullDb = 18.0f;
  * reference" means.
  */
 /**
- * What the microphone's MOUNTING does to the sound before the capsule ever sees it.
+ * 🔴 The table of mounting curves that used to stand here is gone (owner, 21.09.2026).
  *
- * 🔴 These arrays were researched by Gemini (ROOM_CALIBRATION.md §24) and I refused them on
- * 13.09.2026, on the grounds that they are a model rather than our own measurement on this
- * hardware. The owner overruled that, and he is right on both counts.
- *
- * First, the physics is not in doubt. A 1.5..2 mm hole in a panel with a cavity behind it is a
- * Helmholtz resonator; that is a century of established acoustics, not a hypothesis awaiting our
- * confirmation. Demanding that we re-derive it from a sweep before it may enter the code is not
- * rigour, it is refusing to use what is already known.
- *
- * Second, nothing here could confirm it anyway. The bench these sweeps run on is a half-open
- * space with a cabinet on one side and a balcony on the other - it cannot measure a cabin, and
- * measurements taken there cannot arbitrate a model of a car.
- *
- * Third, the output is coarse. Sixteen bands, two decibels a step, a fixed Q of 2.2: this
- * hardware cannot realise a precise cut at a precise frequency even when told to. Chasing a
- * tighter number than +-2 dB is chasing resolution the equaliser does not have.
- *
- * The signs matter and are easy to get backwards. The synthesis computes pressure as
- * m[b] = measured[b] + compensation[b], so a mounting that ADDS a resonant peak is corrected by a
- * NEGATIVE entry (band 11, 3150 Hz, -5.0 dB for a pinhole - otherwise Auto-EQ reads the hole's
- * own resonance as a peak in the car and cuts the voice out of the music), while a mounting that
- * swallows treble is corrected by a POSITIVE one.
+ * It lives in MicProfile.java now, beside the person's own answers about their microphone, and
+ * this function is handed the curve rather than an index into a second copy of the table. The rule
+ * is the owner's: one fact, one function. The argument for trusting the table at all, and the
+ * three reasons he overruled the refusal to use it, are in that class and in ROOM_CALIBRATION.md
+ * §24; what remains here is what this file is for - deciding how much of it the sweep confirms.
  */
-static const float kBodyCompensationDb[4][kHwBands] = {
-    // MIC_BODY_OPEN - a bare capsule, flat to +-0.5 dB across its band by datasheet.
-    {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-     0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f},
-    // MIC_BODY_PINHOLE - 1.5..2 mm hole in a panel, cavity behind it. The owner's own case, and
-    // the commonest one in cars without an external microphone.
-    {0.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-     0.0f, 0.0f, -1.5f, -5.0f, -1.0f, 3.5f, 7.0f, 10.0f},
-    // MIC_BODY_HOUSING - recessed in a fitting: a shallower version of the same thing.
-    {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-     0.0f, 0.0f, 0.0f, -1.5f, -1.0f, 3.0f, 6.0f, 8.0f},
-    // MIC_BODY_LAVALIER - clip-on behind foam. No cavity and so no resonance to undo; a foam
-    // windscreen costs a little at the very top and nothing else. Deliberately the smallest of
-    // the four: §24 did not cover this mounting, and a mild tilt is the honest reading of a
-    // windscreen rather than an extrapolation of the pinhole numbers.
-    {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-     0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 3.0f},
-};
 
 constexpr float kCabinTransitionHz = 80.0f;
 constexpr float kCabinGainDbPerOct = 6.0f;
@@ -601,7 +566,8 @@ static float pathMaxAttenDb(float freqHz) {
 
 void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const float* worstClean16,
                                                const float* snr16,
-                                               int micBody, float* outCompensation16,
+                                               const float* mountingDb16,
+                                               float* outCompensation16,
                                                int* outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
     if (outStatus16 != nullptr) {
@@ -610,9 +576,8 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // The mounting is the starting point, not zero. It is the one part of this curve that is known
     // in advance from how the microphone is built in, and it is the only thing that speaks for
     // bands 5..12 - which a sweep cannot judge, because the midband is its own reference.
-    const int body = (micBody >= 0 && micBody < 4) ? micBody : 0;
     for (int b = 0; b < kHwBands; b++) {
-        outCompensation16[b] = kBodyCompensationDb[body][b];
+        outCompensation16[b] = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
     }
 
     // Mid-frequency cabin reference anchor (200 - 500 Hz: bands 5, 6, 7)
@@ -801,7 +766,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     }
 
     for (int b = 5; b < kHwBands; b++) {
-        const float table = kBodyCompensationDb[body][b];
+        const float table = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
         if (table == 0.0f) continue;
         float confirmed;
         if (table > 0.0f) {

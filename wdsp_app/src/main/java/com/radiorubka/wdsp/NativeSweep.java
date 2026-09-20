@@ -122,10 +122,11 @@ public final class NativeSweep implements AutoCloseable {
      * two-stage high-pass can do - is the path's attenuation. The high bands are read against
      * 5 kHz.
      *
-     * <p>{@code micBody} is how the capsule is built in - one of the {@code MIC_BODY_*} indices in
-     * {@link RoomMeasurement}. It seeds the curve with what that mounting is known to do, which is
-     * the only thing that speaks for the midband, since a sweep takes the midband as its own
-     * reference and can say nothing about it.
+     * <p>{@code mountingDb16} is what the microphone's mounting is known to do, from
+     * {@link MicProfile#mountingCurve}. It seeds the curve, which is the only thing that speaks
+     * for the midband, since a sweep takes the midband as its own reference and can say nothing
+     * about it - and it is a starting point, not a verdict: the estimate keeps only what the
+     * measurement confirms.
      *
      * <p>{@code snr16} gates it: bands measured close to the noise are corrected proportionally
      * less and bands below the ramp's floor not at all, so a unit whose bottom really does sink
@@ -142,10 +143,10 @@ public final class NativeSweep implements AutoCloseable {
      */
     public static void estimateMicCompensation(float[] envelope16, float[] worstEnvelope16,
                                                float[] snr16,
-                                               int micBody, float[] outCompensation16,
+                                               float[] mountingDb16, float[] outCompensation16,
                                                int[] outStatus16) {
         if (isAvailable() && envelope16 != null && outCompensation16 != null) {
-            nativeEstimateMicCompensation(envelope16, worstEnvelope16, snr16, micBody,
+            nativeEstimateMicCompensation(envelope16, worstEnvelope16, snr16, mountingDb16,
                     outCompensation16, outStatus16);
         }
     }
@@ -247,7 +248,7 @@ public final class NativeSweep implements AutoCloseable {
     private static native void nativeEstimateMicCompensation(float[] envelope16,
                                                             float[] worstEnvelope16,
                                                             float[] snr16,
-                                                            int micBody,
+                                                            float[] mountingDb16,
                                                             float[] outCompensation16,
                                                             int[] outStatus16);
 

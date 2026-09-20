@@ -493,110 +493,9 @@ public final class RoomMeasurement {
          }
      }
 
-    /**
-     * Where the owner says the microphone is, on the same −1..1 axes the balance control uses:
-     * left/right and rear/front, 0 being the middle of the car.
-     *
-     * <h2>Why the answer has to be asked for</h2>
-     *
-     * It changes nothing about the sweep. It changes everything about reading the result. Four
-     * measurements came back from testers before this existed; the two that failed were the two
-     * whose owner had said nothing about placement, and both turned out to have the microphone
-     * sitting on one speaker. From inside the numbers that looks exactly like three speakers that
-     * are not working — the only way to tell was to compare arrival times afterwards by hand and
-     * notice they fitted a corner. Asked once, with a finger, it is known.
-     */
-    private static final String PREF_MIC_LR = "room_mic_lr";
-    private static final String PREF_MIC_FR = "room_mic_fr";
-
-    /**
-     * What the microphone is fitted to, chosen from a list rather than described.
-     *
-     * <h2>Why a name and not just the dot</h2>
-     *
-     * The dot gives the spot on the floor plan, and that is enough for the delays - they are
-     * geometry in the horizontal plane. It says nothing about height, or about what sits a couple
-     * of centimetres away, and that is what decides whether the first arrival is the loudspeaker
-     * or a reflection. A sun visor and a dome light can be at almost the same point on the plan
-     * and behave nothing alike: one has a hard flap and the windscreen right beside the capsule,
-     * the other has the roof behind it and little else.
-     *
-     * <p>📻 Three of the first four reports from strangers came back reflection-dominated, and the
-     * arrival times could not say why. A name can: it carries the expected height and the nearest
-     * reflector, which is exactly what reading a clarity figure needs - and what an automatic
-     * version of this will need before it can decide anything on its own.
-     *
-     * <p>Stored as the index into this array, so the report and any later analysis agree on what
-     * the owner meant. Adding to the end is safe; reordering is not.
-     */
-    private static final int[] MIC_PLACES = {
-            R.string.room_mic_place_windscreen,
-            R.string.room_mic_place_visor,
-            R.string.room_mic_place_pillar_top,
-            R.string.room_mic_place_pillar_bottom,
-            R.string.room_mic_place_mirror,
-            R.string.room_mic_place_dome,
-            R.string.room_mic_place_wheel,
-            R.string.room_mic_place_dash,
-            R.string.room_mic_place_headunit,
-            R.string.room_mic_place_headrest,
-            R.string.room_mic_place_armrest,
-    };
-
-    private static final String PREF_MIC_PLACE = "room_mic_place";
-
-    /** The list as the owner sees it, in order. */
-    public static String[] micPlaceNames(Context context) {
-        String[] out = new String[MIC_PLACES.length];
-        for (int i = 0; i < MIC_PLACES.length; i++) out[i] = context.getString(MIC_PLACES[i]);
-        return out;
-    }
-
-    /** {@code -1} when nobody has said yet, which the report prints as "not stated". */
-    public static int micPlace(Context context) {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getInt(PREF_MIC_PLACE, -1);
-    }
-
-    public static void setMicPlace(Context context, int index) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-                .putInt(PREF_MIC_PLACE, index).apply();
-    }
-
     // =====================================================================================
     // Height, and what the microphone is built into - two axes the dot cannot carry
     // =====================================================================================
-
-    /**
-     * How high each place sits, in centimetres, **with zero on the listener's ear line**.
-     *
-     * <p>The scene is built for a head, not for a microphone, so the ear line is the natural
-     * origin: the one number that matters most is exact by construction and everything else is a
-     * deviation from it. A dome light is nearly half a metre above the ears and an armrest a
-     * quarter of a metre below them; treating both as the same point - which is what a flat plan
-     * does - throws away a real difference in path length and in what the first arrival even is.
-     *
-     * <p>🧩 **Reasoned, not measured.** Nobody is asked for centimetres and nobody should be: these
-     * are the ordinary heights of those fittings in an ordinary car, good to a few centimetres,
-     * which is the accuracy the rest of this model works at anyway. The index is
-     * {@link #MIC_PLACES}, and that array's order is frozen - see its own note.
-     */
-    private static final float[] MIC_PLACE_HEIGHT_CM = {
-            +25f,   //  0 windscreen        - high on the glass, above the eye line
-            +30f,   //  1 under the visor   - at the roof edge
-            +25f,   //  2 A-pillar, top
-            -10f,   //  3 A-pillar, bottom  - down by the dash corner
-            +30f,   //  4 rear-view mirror
-            +45f,   //  5 dome light        - the roof itself
-            -15f,   //  6 steering wheel    - below the ears, behind the rim
-            +5f,    //  7 dashboard
-            +5f,    //  8 built-in head unit mic
-            0f,     //  9 driver headrest   - ear level, by definition: the string says so
-            -25f,   // 10 centre armrest
-    };
-
-    /** Ear line is the origin, so this is what it is worth when nobody has said where the mic is. */
-    private static final float MIC_HEIGHT_UNKNOWN_CM = +5f;
 
     /**
      * Half the cabin width used to turn the dragged dot into centimetres: the door card is about
@@ -609,75 +508,6 @@ public final class RoomMeasurement {
     private static final float SPEAKER_Z_SUB_CM = -35f;
     /** A parcel shelf is about at window height, not down on the floor. */
     private static final float SPEAKER_Z_SHELF_CM = -5f;
-
-    /**
-     * What the microphone is built into - a different question from where it is.
-     *
-     * <p>The owner's words: open in the middle of the fascia and open inside a dome fitting are not
-     * the same thing. Neither is a capsule behind a 1.5 mm pinhole, which is a Helmholtz cavity
-     * with a resonance of its own. Place decides path length; construction decides the transfer
-     * function of the housing, and the two are independent - a pinhole exists on a dashboard and in
-     * a headrest alike.
-     *
-     * <p>Index-stable exactly like {@link #MIC_PLACES}: add at the end, never reorder.
-     */
-    private static final int[] MIC_BODIES = {
-            R.string.room_mic_body_open,
-            R.string.room_mic_body_pinhole,
-            R.string.room_mic_body_housing,
-            R.string.room_mic_body_lavalier,
-    };
-
-    public static final int MIC_BODY_OPEN = 0;
-    public static final int MIC_BODY_PINHOLE = 1;
-    public static final int MIC_BODY_HOUSING = 2;
-    public static final int MIC_BODY_LAVALIER = 3;
-
-    private static final String PREF_MIC_BODY = "room_mic_body";
-
-    public static String[] micBodyNames(Context context) {
-        String[] out = new String[MIC_BODIES.length];
-        for (int i = 0; i < MIC_BODIES.length; i++) out[i] = context.getString(MIC_BODIES[i]);
-        return out;
-    }
-
-    /** {@code -1} when nobody has said, which is not the same as "open". */
-    public static int micBody(Context context) {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getInt(PREF_MIC_BODY, -1);
-    }
-
-    public static void setMicBody(Context context, int index) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-                .putInt(PREF_MIC_BODY, index).apply();
-    }
-
-    /**
-     * The construction to work with, falling back on what the place implies when it was not asked.
-     *
-     * <p>Only one place implies its own construction beyond doubt: the head unit's own microphone
-     * is always behind a pinhole in the fascia. That inference keeps every measurement already made
-     * on this unit behaving as it did, instead of silently losing its cavity correction the day a
-     * second question appeared on the screen.
-     *
-     * <p>🔴 It carries more weight since 13.09.2026, because the place list no longer says it out
-     * loud. Place 8 used to read "Built-in head unit mic (front panel hole)" - a name that answered
-     * the construction question inside the place question, so the same fact was asked twice and the
-     * owner, whose microphone is exactly that, could not tell which list to answer and picked
-     * "Dashboard". The name is now "Head unit front panel": a place, and nothing but a place. This
-     * line is therefore the only remaining place that knows a fascia microphone sits behind a
-     * pinhole. Owner, 13.09.2026: this is the commonest configuration of all, the one every car
-     * without a separate microphone has.
-     *
-     * <p>⚠️ The index 8 is load-bearing and frozen: {@link #MIC_PLACES} and
-     * {@link #MIC_PLACE_HEIGHT_CM} are indexed by the same number and measurements already made
-     * store it. Renaming an entry is safe; reordering the list is not.
-     */
-    public static int effectiveMicBody(int micBody, int micPlace) {
-        if (micBody >= 0 && micBody < MIC_BODIES.length) return micBody;
-        if (micPlace == 8) return MIC_BODY_PINHOLE;
-        return -1;
-    }
 
     /**
      * Where the subwoofer is, which is a question about path length rather than about tone.
@@ -740,93 +570,6 @@ public final class RoomMeasurement {
         final double hi = 20.0 * Math.log10(toHz / Math.sqrt(toHz * toHz + cornerHz * cornerHz));
         final double octaves = Math.log(toHz / fromHz) / Math.log(2.0);
         return (float) ((hi - lo) / octaves);
-    }
-
-    /** Height of the microphone above the ear line, in centimetres. */
-    private static float micHeightCm(int micPlace) {
-        if (micPlace >= 0 && micPlace < MIC_PLACE_HEIGHT_CM.length) {
-            return MIC_PLACE_HEIGHT_CM[micPlace];
-        }
-        return MIC_HEIGHT_UNKNOWN_CM;
-    }
-
-    private static String micPlaceDescription(Context context) {
-        int i = micPlace(context);
-        if (i < 0 || i >= MIC_PLACES.length) return "not stated";
-        // In English regardless of the owner's language: the report is read by us, and a place
-        // name in a language nobody on this end reads is worse than no name at all.
-        return englishPlace(i);
-    }
-
-    private static String englishPlace(int i) {
-        switch (i) {
-            case 0: return "windscreen";
-            case 1: return "under the sun visor";
-            case 2: return "A-pillar, top";
-            case 3: return "A-pillar, bottom";
-            case 4: return "rear-view mirror";
-            case 5: return "dome light";
-            case 6: return "steering wheel";
-            case 7: return "dashboard";
-            case 8: return "head unit front panel";
-            case 9: return "driver headrest (ear level)";
-            case 10: return "centre armrest";
-            default: return "not stated";
-        }
-    }
-
-    public static float micSpotLeftRight(Context context) {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getFloat(PREF_MIC_LR, 0f);
-    }
-
-    public static float micSpotFrontRear(Context context) {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getFloat(PREF_MIC_FR, 0f);
-    }
-
-    public static void setMicSpot(Context context, float leftRight, float frontRear) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-                .putFloat(PREF_MIC_LR, leftRight)
-                .putFloat(PREF_MIC_FR, frontRear)
-                .apply();
-    }
-
-    /**
-     * What the microphone is built into, in words, for the report.
-     *
-     * <p>Reports the **effective** answer, and says when it was inferred rather than stated: a
-     * reader three weeks from now needs to know the difference between "the owner told us" and
-     * "we assumed, because it is the head unit's own microphone".
-     */
-    private static String micBodyDescription(Context context) {
-        int stated = micBody(context);
-        int eff = effectiveMicBody(stated, micPlace(context));
-        if (eff < 0) return "not stated";
-        String name = englishBody(eff);
-        return stated >= 0 ? name : name + " (assumed from the place)";
-    }
-
-    private static String englishBody(int i) {
-        switch (i) {
-            case MIC_BODY_OPEN: return "open capsule";
-            case MIC_BODY_PINHOLE: return "behind a hole in a panel";
-            case MIC_BODY_HOUSING: return "recessed in a housing";
-            case MIC_BODY_LAVALIER: return "clip-on with foam";
-            default: return "not stated";
-        }
-    }
-
-    /** The spot in words, for the report - "front right", "centre", and so on. */
-    private static String micSpotDescription(Context context) {
-        float lr = micSpotLeftRight(context);
-        float fr = micSpotFrontRear(context);
-        // A third of the way out counts as "that side"; nearer the middle than that is the middle,
-        // because nobody places a microphone to the centimetre and pretending otherwise would give
-        // the reader more confidence than the gesture deserves.
-        String frontRear = fr > 0.33f ? "front" : fr < -0.33f ? "rear" : "middle";
-        String leftRight = lr > 0.33f ? "right" : lr < -0.33f ? "left" : "centre";
-        return String.format(Locale.US, "%s %s  (lr %+.2f, fr %+.2f)", frontRear, leftRight, lr, fr);
     }
 
     public static final String PREF_ROOM_BODY_TYPE = "room_body_type";
@@ -1736,10 +1479,10 @@ public final class RoomMeasurement {
         result.channels = new ChannelResult[hasSubwoofer ? 5 : 4];
 
         Context app = context.getApplicationContext();
-        result.micSpotLr = micSpotLeftRight(app);
-        result.micSpotFr = micSpotFrontRear(app);
-        result.micPlace = micPlace(app);
-        result.micBody = micBody(app);
+        result.micSpotLr = MicProfile.spotLeftRight(app);
+        result.micSpotFr = MicProfile.spotFrontRear(app);
+        result.micPlace = MicProfile.place(app);
+        result.micBody = MicProfile.statedBody(app);
         result.subPlace = subPlace(app);
 
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -2394,12 +2137,13 @@ public final class RoomMeasurement {
             final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16,
                     worstClean16);
             result.micBandStatus16 = new int[NativeSweep.BAND_COUNT];
-            // Through effectiveMicBody, not the raw preference: the same question had two answers
-            // in this file - the report said "behind a hole in a panel (assumed from the place)"
-            // while the calibration, reading the preference directly, got -1 and built the curve
-            // for a bare capsule. One fact, one function; this is that function.
+            // The mounting's own curve comes from MicProfile - the one class that knows what the
+            // person said their microphone is built into, and what that mounting does. The native
+            // side used to keep its own copy of that table and be told an index; it now does the
+            // arithmetic and nothing else. Two homes for one fact was how the report came to say
+            // "behind a hole in a panel" while the calibration built the curve for a bare capsule.
             NativeSweep.estimateMicCompensation(bestClean16, worstClean16, envelopeSnr16,
-                    effectiveMicBody(micBody(context), micPlace(context)),
+                    MicProfile.mountingCurve(context),
                     result.micCompensation16, result.micBandStatus16);
             StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
             for (float v : envelopeSnr16) {
@@ -2677,7 +2421,7 @@ public final class RoomMeasurement {
             float fr = Math.max(-1f, Math.min(1f, result.micSpotFr));
             micX = lr * CABIN_HALF_WIDTH_CM;
             micY = (1f - fr) * 0.5f * (distListen + 95f);
-            micZ = micHeightCm(result.micPlace);
+            micZ = MicProfile.heightCm(result.micPlace);
         }
 
         // 2. Determine target listener listening position (Xt, Yt)
@@ -3039,32 +2783,12 @@ public final class RoomMeasurement {
         // did not.
         AudioSpectrumEngine.getInstance().onMeasuredCurvesChanged();
 
-        // 5. Placement. What used to stand here first - three branches patching the synthesized
-        //    gains according to the microphone's CONSTRUCTION - is gone (owner, 21.09.2026), and
-        //    the rule it broke is his: one fact, one function. The mounting was being treated in
-        //    two places at once. Since 13.09 the microphone's own curve carries it
-        //    (kBodyCompensationDb in sweep.cpp, keyed on the same micBody), and these branches
-        //    kept treating it again afterwards - the pinhole's cavity in bands 11-12, the
-        //    housing's and the lavalier's treble above 8 kHz, and a cap on bass boost for the
-        //    hole's own roll-off. Two cures for one illness, and neither could see the other.
-        //
-        //    The 20.09 measurement is what settled it. The curve's own -5.0 dB at 3150 Hz, for a
-        //    Helmholtz peak that this unit does not have, dug a dip the synthesis then filled:
-        //    2..5 kHz came back lifted, which the owner heard as a hump in the middle of the new
-        //    Harman curve. The cure is at the source - the table now applies only what the sweep
-        //    confirms in every channel - and a second cure downstream would only hide whether the
-        //    first one worked.
-        //
-        //    Placement is a different question and stays: glass beside the capsule is a boundary,
-        //    not a housing. This one stays keyed on the place, because that is what it is about.
-        if (result.micPlace == 0) { // Windscreen
-            for (int b = 10; b < NativeSweep.BAND_COUNT; b++) {
-                if (result.autoEqGains16[b] > 7) {
-                    result.autoEqGains16[b] = 7; // index 7 = +2 dB (the comment here said +1.5)
-                }
-            }
-            Log.i(TAG, "Mic placement: windscreen - boundary reflection limiting applied");
-        }
+        // 5. What the microphone's surroundings entitle the synthesis to do. One call, because
+        //    since 21.09.2026 one class answers everything about the microphone's construction and
+        //    placement - see MicProfile, and its note on why it exists. What used to stand here
+        //    was three branches keyed on the CONSTRUCTION, treating a second time what the
+        //    microphone's own curve had already treated.
+        MicProfile.applyPlacementLimits(context, result.autoEqGains16);
 
         Log.i(TAG, String.format(Locale.US,
                 "Auto-EQ (%s) synthesized: HPF cutoff %d Hz (idx %d), Sub LPF %d Hz (idx %d, gain %d), hasSub=%b",
@@ -3702,9 +3426,9 @@ public final class RoomMeasurement {
             sb.append(HardwareProfile.describeBoard()).append('\n');
             sb.append(HardwareProfile.screenDescription(context)).append('\n');
             if (result.microphone != null) sb.append(result.microphone).append('\n');
-            sb.append("microphone placed: ").append(micSpotDescription(context))
-                    .append(", on the ").append(micPlaceDescription(context))
-                    .append(", built in: ").append(micBodyDescription(context)).append('\n');
+            sb.append("microphone placed: ").append(MicProfile.spotDescription(context))
+                    .append(", on the ").append(MicProfile.placeDescription(context))
+                    .append(", built in: ").append(MicProfile.bodyDescription(context)).append('\n');
             if (result.focus != null) {
                 sb.append("audio focus: ").append(result.focus);
                 String lost = focusLostDuringPass;
