@@ -269,7 +269,11 @@ public final class NowPlaying {
      */
     public synchronized String playerPackage() {
         String pkg = currentPackage();
-        if ("com.android.fmradio".equals(pkg)) {
+        // Any name from the radio family, not the factory one spelled out: the radio is about to
+        // report itself to the platform as "com.android.fmradio.ext" so that the panel's knob and
+        // the wheel keys work (Gemini's reverse of MediaFocusControl / TunerKnobTurnMediaKeyPolicy,
+        // 20.09.2026), and an exact match would have sent everything here to the factory package.
+        if (isRadioPackage(pkg)) {
             try {
                 context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
                 return "com.kostyamat.fmradio";

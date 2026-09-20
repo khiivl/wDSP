@@ -979,7 +979,8 @@ public final class ScreensaverManager {
         if (y >= (screenH - infoH) && x <= Math.max(infoH * 2.0f, 120f * density)) {
             NowPlaying np = NowPlaying.getInstance(context);
             String pkg = np.playerPackage();
-            if (pkg == null || pkg.isEmpty() || "com.android.fmradio".equals(pkg)) {
+            // Whatever the radio calls itself to the platform - see NowPlaying.playerPackage().
+            if (pkg == null || pkg.isEmpty() || NowPlaying.isRadioPackage(pkg)) {
                 try {
                     context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
                     pkg = "com.kostyamat.fmradio";
