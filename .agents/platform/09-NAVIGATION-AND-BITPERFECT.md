@@ -382,3 +382,47 @@ per-package list can — which is what `NaviApp.ini` is for, and why it exists a
 `STRATEGY_TRANSMITTED_THROUGH_SPEAKER`, reached only by `AUDIO_FLAG_BEACON`. Its `FULL_SCALE` curve
 on the speaker is the AOSP default for that strategy, not somebody's edit. Aiming navigation fixes
 at it does nothing.
+
+
+## 10. 🔴 What the platform actually sets while a prompt speaks: a ladder, and at ratio ≥ 90 it is the DEFAULT volume
+
+Read in `QFAudioService` (decompiled framework), 20.09.2026, because the owner asked the right question: relative to
+what does the platform mix?
+
+```java
+int base = AudioSystem.getDefaultStreamVolume(3);          // the DEFAULT, not what the person set
+...
+int mapped = getVolumeMixMappedForArm(base, ratio);        // ratio = persist.sys.navi_remix_ratio
+adjustVolumeStepByStep(mapped, false);                     // prompt starts: step to `mapped`
+...                                                        // prompt ends:
+adjustVolumeStepByStep(base, false);                       // step back to the DEFAULT, not to the person's level
+```
+
+and the mapping itself:
+
+```java
+getVolumeMixMappedForArm(base, ratio):
+    if (internal BT A2DP enabled && connected) return base * ratio / 100;
+    if (ratio >= 90) return AudioSystem.getDefaultStreamVolume(3);   // ← no ducking at all
+    if (ratio >= 80) return 8;
+    if (ratio >= 70) return 7;
+    if (ratio >= 60) return 6;
+    if (ratio >= 50) return 5;   ... and so on down the ladder
+```
+
+Three things follow, and they explain complaints we have been treating as separate:
+
+1. **The target is a fixed ladder, not a proportion of what you are listening to.** At `navi_remix_ratio = 60` the
+   platform sets the media index to **6** while the prompt speaks, whatever the person had. 📻 The owner's own bench runs
+   `ratio = 90`, so on it the "mix" target is simply the **default volume** — the platform ducks nothing, and if the
+   person is listening below the default it *raises* the music for the duration of the prompt.
+2. **The base and the restore are the DEFAULT stream volume** (`persist.sys.main_volume` on this platform), not the
+   current one. So every prompt ends by putting the media index at the default: the level a person chose is overwritten
+   by every prompt.
+3. **The keeper's magic number is the platform's own mix target.** With `persist.sys.main_volume = 9` — the value on
+   most surveyed units — a prompt sets the index to 9; BitPerfect's watcher reads 9, calls it "sleep/wakeup volume drop"
+   and restores 15 within three seconds. What it cancels is the mixing itself, in the middle of the prompt. See
+   [10-BITPERFECT-MODULE.md](10-BITPERFECT-MODULE.md) §11.
+
+⇒ Practical, for anyone tuning this: **`navi_remix_ratio ≥ 90` switches navigation mixing off** by the platform's own
+arithmetic. To hear prompts over music, keep it at 80 or below - and do not pin the volume index or the default.
