@@ -780,10 +780,20 @@ before acting on a row, confirm it on the unit, the way everything else in this 
 | 2 | the Bluetooth branch sets its mode to 5 and then switches the MCU to channel **4** | `MediaFocusControl` (~:838) | BT audio lands on the Android channel instead of the BT one | watch: our channel reading (`sys.qf.sound.channel`) can disagree with what is really connected |
 | 3 | a blind exact match on `"com.android.fmradio.ext"` decides whether BT music mutes the tuner | `TechBTService` (~:211) | a radio under any other package is not muted when BT music starts | ours only in so far as we must not assume the platform knows which app is the radio |
 | 4 | ducking is forcibly released if a navigation phrase runs longer than 20 s | `QFAudioService` (~:102) | music comes back over the end of a long prompt | candidate: we hear the prompt state and could hold the level ourselves |
-| 5 | for the analogue sources (tuner, AUX) navigation ducking is done **inside the DSP chip**, by `persist.sys.navi_remix_ratio`/10 | `AK7738VolumeManager.setMixAudio(1)` | the analogue gain physically drops while the navigator speaks | 🔴 any microphone measurement taken during a prompt is invalid — the cabin sweep and the microphone spectrum must not trust it |
+| 5 | for the analogue sources navigation ducking is done **inside the hub chip** — but only on a unit whose DSP is AK7738 or AK7604, only while the current volume type is RADIO or AUX, and by `persist.sys.navi_remix_ratio`/10 into `DspJni.setMixerRatio(analog, digital)` | `AK7738VolumeManager.setMixAudio`, reached from `McuManagerService` when MCU command **`0x86`** carries the top bit | on such a unit the analogue gain physically drops while the navigator speaks | 🔴 a microphone measurement taken during a prompt is invalid there. **Not on a BU32107/BD37534 unit**: both chip flags are false and the call does nothing — our own bench (`…002121`, BU32107) can neither show it nor be harmed by it |
 | 6 | `VolumeState`'s constants are named `PERSYS_*` although they write the runtime `sys.*.vol` | `VolumeState.java` | nothing by itself; it misleads whoever reads the code | note only |
 | 7 | `sys.qf.last_audio_src` is written **only** on audio-focus events, and set to `"nothing"` on abandon, on ACC OFF and on leaving the rear camera | `MediaFocusControl.recordAudioSource()` | the property is sticky: nothing refreshes it in between | this is why our 100 ms `checkPlayer` sees a stale name after a reboot — already known, now with the mechanism |
 | 8 | `sys.qf.call_state = true` freezes volume-type changes in the MCU service until the call ends | `McuManagerService.setVolType()` | during a call only `sys.call.vol` moves | our call handling already treats `btcall_type` as the one truth (`CallState`) |
+| 9 | our own power-amp pre-volume is **also** a hub command: `McuManagerService` sees MCU message **24 with sub-id 2** and calls `AK7738VolumeManager.setPowerAttenuation(value)` → `DspJni.setPowerAttenuation` | `McuManagerService` (the same interception point as `0x86`) | on an AK7738/AK7604 unit the slider moves the hub's attenuation as well as the amplifier's pre-volume — two gains for one control | 🔴 ours outright: this is our command. Nothing to fix on a BU/BD unit; on a hub unit the step size of that slider is not what we think it is |
 
-📌 Nothing here is fixed yet beyond what wDSP already does (rows 1 and 7-8). Rows 4 and 5 are the two that change what a
-person hears, so they are the first to confirm on the wire.
+📌 Read in the decompiled sources by us, 20.09.2026 (not taken on trust):
+- row 4 is real and is a **watchdog**, not a fade: `QFAudioService` walks its navi list and, at `timeInMillis -
+  naviInfo.start_time > 20000`, logs *"voice sound play time>20s, consider navi/voice stopped"* and releases the ducking.
+  It is keyed on the **package** (`AudioStart(), is navi app, package_name=…`, list from `/system/config/NaviApp.ini`),
+  so nothing but a listed navigator can trigger or reproduce it;
+- row 5 and row 9 both live behind the hub flags (`IS_AK7738_DSP` / `IS_AK7604_DSP`, decided from
+  `persist.sys.qf.mcu.version`), so on the owner's bench — `QF05.V02.13.20251124.002121`, BU32107 — neither path runs.
+
+So the bench cannot show rows 4, 5 or 9 at all: 4 needs a listed navigator speaking for over 20 s (the road), 5 and 9 need
+a unit with the AK hub. What the bench **can** do is the software ducking on a BU unit: start a route, catch one short
+prompt with the radio playing, and watch what the level does and whether our microphone spectrum follows it.
