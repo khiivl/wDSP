@@ -92,6 +92,21 @@ public final class ScreensaverManager {
     public static final String PREF_BANDS  = "ss_bands";
     public static final String PREF_HUE    = "ss_hue";
     public static final String PREF_OSC_PERSISTENCE = "ss_osc_persistence";
+    /**
+     * Whether the screensaver is allowed over the system status bar.
+     *
+     * <p>🔴 Owner, 21.09.2026, through the board (#747): "tell Claude about the fault, and let him
+     * bring it down to a switch in the screensaver section - cover it or not. Let the user choose,
+     * the user knows better. I do not find the covering convenient: the network information is up
+     * there, and the recents button, which I press often. Somebody else will want a rest from all
+     * that information."
+     *
+     * <p>Default OFF - the screensaver stays below the bar. It used to cover it sometimes and not
+     * others, which is the part that reads as a fault: whether it covered depended on whether the
+     * strip was switched on (a borrowed window versus a new one) and on whether the player was the
+     * radio (a focusable overlay window is raised above the status bar by the window manager).
+     */
+    public static final String PREF_COVER_STATUS_BAR = "ss_cover_status_bar";
 
     public static final int DEFAULT_DELAY_S = 60;
     public static final int DEFAULT_BG_ALPHA = 85;
@@ -673,6 +688,16 @@ public final class ScreensaverManager {
         applyGeometry();
     }
 
+    /** Whether the screensaver may sit over the system status bar. See {@link #PREF_COVER_STATUS_BAR}. */
+    public boolean coversStatusBar() {
+        return prefs.getBoolean(PREF_COVER_STATUS_BAR, false);
+    }
+
+    public void setCoversStatusBar(boolean cover) {
+        prefs.edit().putBoolean(PREF_COVER_STATUS_BAR, cover).apply();
+        applyGeometry();
+    }
+
     /** Pixels the spectrum must keep clear at the bottom. */
     private int infoBarPx() {
         return Math.round(StatusBarVisualizerManager.getInstance(context).screenHeight()
@@ -1185,7 +1210,8 @@ public final class ScreensaverManager {
             int h = Math.max(1, Math.round(screenH * heightFraction()));
             if (strip.isLentToScreensaver()) {
                 strip.lendToScreensaver(widthFraction(), heightFraction(),
-                        backdropColor(), brightness(), infoBarPx(), believedStopped(), gestures(), this::hide);
+                        backdropColor(), brightness(), infoBarPx(), believedStopped(),
+                        coversStatusBar(), gestures(), this::hide);
                 return;
             }
             if (standIn == null) return;
@@ -1593,7 +1619,8 @@ public final class ScreensaverManager {
                     // backdrop itself. One window, and - the point of it - no detach, so the bars
                     // keep running instead of freezing while the audio session is found again.
                     strip.lendToScreensaver(widthFraction(), heightFraction(),
-                            backdropColor(), brightness(), infoBarPx(), !previewMode && believedStopped(), gestures(), this::hide);
+                            backdropColor(), brightness(), infoBarPx(), !previewMode && believedStopped(),
+                            coversStatusBar(), gestures(), this::hide);
                 } else {
                     buildOverlay();
                     try {
@@ -1703,15 +1730,24 @@ public final class ScreensaverManager {
         int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 : WindowManager.LayoutParams.TYPE_PHONE;
+        // Below the status bar unless the person asked for it to be covered: the window starts at
+        // the bar's height and is that much shorter, so the icons, the clock and the touch buttons
+        // up there stay visible AND clickable - an overlay cannot intercept what it does not cover.
+        final int top = coversStatusBar()
+                ? 0 : StatusBarVisualizerManager.getInstance(context).systemStatusBarHeight();
+        final int height = top > 0
+                ? Math.max(1, StatusBarVisualizerManager.getInstance(context).screenHeight() - top)
+                : WindowManager.LayoutParams.MATCH_PARENT;
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
+                height,
                 type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
         lp.gravity = Gravity.TOP | Gravity.START;
+        lp.y = top;
         return lp;
     }
 

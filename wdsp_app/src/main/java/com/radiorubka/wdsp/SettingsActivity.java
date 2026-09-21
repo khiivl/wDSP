@@ -1418,6 +1418,20 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
+        TextView coverSb = findViewById(R.id.btn_screensaver_cover_sb_toggle);
+        if (coverSb != null) {
+            // The person's own call, and the default is "do not cover" (owner, 21.09.2026): the
+            // clock, the network state and the recents button live up there, and he presses the
+            // last one often. Somebody who wants a rest from all that turns this on.
+            TouchGlow.attach(coverSb);
+            styleOnOffButton(coverSb, ss.coversStatusBar());
+            coverSb.setOnClickListener(v -> {
+                boolean cover = !ss.coversStatusBar();
+                ss.setCoversStatusBar(cover);
+                styleOnOffButton(coverSb, cover);
+            });
+        }
+
         if (seekScreensaverDelay != null) {
             seekScreensaverDelay.addOnChangeListener((slider, value, fromUser) -> {
                 int seconds = Math.round(value);
@@ -3135,7 +3149,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_latency_trim, R.id.label_sync_measure,
             R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
-            R.id.label_screensaver_enable, R.id.label_screensaver_apps,
+            R.id.label_screensaver_enable, R.id.label_screensaver_cover_sb, R.id.label_screensaver_apps,
             R.id.label_resume_after_reboot, R.id.label_resume_after_sleep
         };
         for (int id : primaryLabels) {
@@ -3164,7 +3178,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_no_root, R.id.desc_room_mic_spot,
             R.id.desc_system_report,
             R.id.tv_system_report_status,
-            R.id.desc_screensaver_enable, R.id.desc_screensaver_note,
+            R.id.desc_screensaver_enable, R.id.desc_screensaver_cover_sb, R.id.desc_screensaver_note,
             R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,

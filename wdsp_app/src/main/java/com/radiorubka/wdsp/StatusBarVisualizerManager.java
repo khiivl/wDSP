@@ -476,17 +476,26 @@ public class StatusBarVisualizerManager {
 
     public void lendToScreensaver(float widthFraction, float heightFraction, int backdrop,
                                  int alphaPercent, int bottomInset, boolean screensaverPaused,
+                                 boolean coverStatusBar,
                                  View.OnTouchListener touchHandler, Runnable onBack) {
         this.onBack = onBack;
         if (!isAttached()) {
             ensureViewAttached();
         }
         if (!isAttached()) return;
-        screensaverBounds = new int[]{screenWidth(), screenHeight(), 0, 0};
+        // 🔴 The borrowed window either covers the status bar or starts below it, and the person
+        // decides which (owner, 21.09.2026 - see ScreensaverManager.PREF_COVER_STATUS_BAR). Below
+        // it, the window itself is shorter, so the clock, the network icons and the recents button
+        // stay visible and clickable: an overlay cannot intercept a touch it does not cover.
+        final int top = coverStatusBar ? 0 : systemStatusBarHeight();
+        screensaverBounds = new int[]{screenWidth(), Math.max(1, screenHeight() - top), 0, top};
         visualizerView.setAlphaPercent(alphaPercent);
         visualizerView.setBackdrop(backdrop);
+        visualizerView.setBackdropCoversInsets(coverStatusBar);
         visualizerView.setBandFractions(widthFraction, heightFraction);
-        visualizerView.setInsets(systemStatusBarHeight(), bottomInset);
+        // Covering, the content still keeps the bar's height clear of bars and text; below the bar
+        // that height is already outside the window, so asking for it again would waste it twice.
+        visualizerView.setInsets(coverStatusBar ? systemStatusBarHeight() : 0, bottomInset);
         ScreensaverManager ssMgr = ScreensaverManager.getInstance(context);
         int ssStyle = ssMgr.style();
         visualizerView.setStyle(ssStyle);

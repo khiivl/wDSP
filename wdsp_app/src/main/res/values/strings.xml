@@ -423,6 +423,8 @@
     <string name="screensaver_section_title">Screensaver</string>
     <string name="screensaver_enable">Screensaver</string>
     <string name="screensaver_enable_desc">A full-screen visualiser after the head unit has been left alone. Any touch puts it away.</string>
+    <string name="screensaver_cover_sb">Cover the status bar</string>
+    <string name="screensaver_cover_sb_desc">Off, the screensaver starts below the status bar: the clock, the network and the recents button stay visible and can be tapped. On, it takes the whole screen.</string>
     <string name="screensaver_delay">Appears after</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Backdrop</string>

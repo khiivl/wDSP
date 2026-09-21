@@ -564,6 +564,8 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     }
 
     private int backdropColor = 0;
+    private boolean backdropCoversInsets = true;
+    private final Paint backdropPaint = new Paint();
     private float bandWidthF = 1f;
     private float bandHeightF = 1f;
     private int topInset = 0;
@@ -667,6 +669,20 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     public void setBackdrop(int color) {
         this.backdropColor = color;
+        invalidate();
+    }
+
+    /**
+     * Whether the backdrop is painted over the status bar's own height or starts below it.
+     *
+     * <p>🔴 It used to paint from y = 0 always, ignoring the top inset. On a launcher with a light
+     * background and dark icons that made the status bar look swallowed even when the window was
+     * technically under it: black paint behind black icons (Gemini's dump of the layers,
+     * 21.09.2026). Off, the paint starts where the usable area does and the bar stays readable.
+     */
+    public void setBackdropCoversInsets(boolean covers) {
+        if (this.backdropCoversInsets == covers) return;
+        this.backdropCoversInsets = covers;
         invalidate();
     }
 
@@ -791,9 +807,16 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         float viewW = getWidth();
         float viewH = getHeight();
         if (viewW <= 0 || viewH <= 0) return;
-        if (backdropColor != 0) canvas.drawColor(backdropColor);
-
         float usableTop = Math.min(topInset, viewH);
+        if (backdropColor != 0) {
+            if (backdropCoversInsets || usableTop <= 0f) {
+                canvas.drawColor(backdropColor);
+            } else {
+                backdropPaint.setColor(backdropColor);
+                canvas.drawRect(0f, usableTop, viewW, viewH, backdropPaint);
+            }
+        }
+
         float usableH = Math.max(1f, viewH - usableTop - Math.min(bottomInset, viewH - usableTop));
         float w = viewW * bandWidthF;
         float totalH = usableH * bandHeightF;

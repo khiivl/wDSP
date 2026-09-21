@@ -405,6 +405,8 @@
     <string name="screensaver_section_title">Заставка</string>
     <string name="screensaver_enable">Заставка</string>
     <string name="screensaver_enable_desc">Візуалізатор на весь екран при простої. Ховається від дотику.</string>
+    <string name="screensaver_cover_sb">Накривати статус-бар</string>
+    <string name="screensaver_cover_sb_desc">Вимкнено — заставка починається під статус-баром: годинник, мережа і кнопка «недавні» лишаються видимими й натискаються. Увімкнено — на весь екран.</string>
     <string name="screensaver_delay">Затримка</string>
     <string name="screensaver_delay_fmt">%1$d с</string>
     <string name="screensaver_bg_alpha">Фон</string>
