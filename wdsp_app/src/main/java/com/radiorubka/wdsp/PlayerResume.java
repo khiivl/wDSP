@@ -9,6 +9,9 @@ import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -20,6 +23,7 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Starts the player that was playing again, after a restart or after the car slept.
@@ -86,8 +90,18 @@ public final class PlayerResume {
     private static final long BROWSER_HOLD_MS = 10_000;
     /** How long each rung of the ladder is given before the next one is tried. */
     private static final long STEP_SETTLE_MS = 3000;
-    /** An app that has just been launched needs longer: it has a screen to build first. */
-    private static final long LAUNCH_SETTLE_MS = 5000;
+    /** How long a freshly opened player is given to build a screen and claim a session. */
+    private static final long LAUNCH_WAIT_MS = 15_000;
+    /** How often it is asked again while that window runs. */
+    private static final long PLAY_RETRY_MS = 1500;
+    /** How many PLAYs one rung sends before giving up on it. */
+    private static final int MAX_PLAY_TRIES = 5;
+    /** How long a player that streams is given to get a network before it is asked to play. */
+    private static final long NETWORK_WAIT_MS = 20_000;
+    private static final long NETWORK_POLL_MS = 2000;
+    /** The system is still starting while nothing real is in front - see waitForSystem. */
+    private static final long SYSTEM_READY_WAIT_MS = 60_000;
+    private static final long SYSTEM_POLL_MS = 1000;
 
     private static final String PLATFORM_RESTORE_LIST = "/system/config/RestoreAppsWhenWakeup.ini";
 
@@ -97,6 +111,8 @@ public final class PlayerResume {
     private final Handler main = new Handler(Looper.getMainLooper());
     private boolean readyHandled;
     private boolean bootHandled;
+    /** What was on screen when a resume started, so the screen can be put back afterwards. */
+    private String foregroundBefore = "";
 
     public static synchronized PlayerResume getInstance(Context context) {
         if (instance == null) instance = new PlayerResume(context.getApplicationContext());
@@ -259,7 +275,59 @@ public final class PlayerResume {
             Log.i(TAG, "after " + after + ": " + pkg + " is no longer installed");
             return;
         }
-        climb(pkg, after, 0);
+        // Whatever was on screen before we start opening things, so it can be put back.
+        foregroundBefore = foregroundPackage();
+        waitForSystem(pkg, after, SystemClock.elapsedRealtime() + SYSTEM_READY_WAIT_MS);
+    }
+
+    /**
+     * Waits for the machine to finish starting before asking anybody to play.
+     *
+     * <p>🔴 Taken from DefaultAppsChanger, which does this properly and does it with root (owner,
+     * 22.09.2026: "it does it perfectly, but for rooted units, and wDSP counts on units without
+     * root, so you can peek there"). Its {@code waitSystemReady} polls the foreground app until it
+     * is something real; the root-free equivalent is the platform's own
+     * {@code sys.qf.current.activity}, which the framework updates on every window focus change
+     * (Gemini's research, board #746). Until something real is in front, a launch lands in the
+     * boot animation and a PLAY lands nowhere.
+     */
+    private void waitForSystem(String pkg, String after, long deadline) {
+        final String fg = foregroundPackage();
+        final boolean ready = !fg.isEmpty()
+                && !fg.equals("android")
+                && !fg.equals("com.android.settings")   // FallbackHome, the boot placeholder
+                && !fg.equals(context.getPackageName());
+        if (ready || SystemClock.elapsedRealtime() > deadline) {
+            if (!ready) Log.i(TAG, "after " + after + ": the screen never settled - going ahead anyway");
+            else if (!fg.isEmpty()) foregroundBefore = fg;
+            waitForNetwork(pkg, after, SystemClock.elapsedRealtime() + NETWORK_WAIT_MS, false);
+            return;
+        }
+        main.postDelayed(() -> waitForSystem(pkg, after, deadline), SYSTEM_POLL_MS);
+    }
+
+    /**
+     * Gives a player that streams its network before asking it to play.
+     *
+     * <p>Also from DefaultAppsChanger, which pings and waits. A streaming player asked to play
+     * with no network does not queue the request - it fails, and the failure looks exactly like
+     * "the resume does not work". Only the players that need it wait; everything else goes
+     * straight on, and the wait ends the moment the network is usable.
+     */
+    private void waitForNetwork(String pkg, String after, long deadline, boolean announced) {
+        if (!needsNetwork(pkg) || hasUsableNetwork()) {
+            if (announced) Log.i(TAG, "after " + after + ": the network is up - asking " + pkg + " now");
+            climb(pkg, after, 0);
+            return;
+        }
+        if (SystemClock.elapsedRealtime() > deadline) {
+            Log.w(TAG, "after " + after + ": no network after " + (NETWORK_WAIT_MS / 1000)
+                    + " s - asking " + pkg + " anyway, it may refuse");
+            climb(pkg, after, 0);
+            return;
+        }
+        if (!announced) Log.i(TAG, "after " + after + ": " + pkg + " plays from the network - waiting for one");
+        main.postDelayed(() -> waitForNetwork(pkg, after, deadline, true), NETWORK_POLL_MS);
     }
 
     /**
@@ -294,7 +362,6 @@ public final class PlayerResume {
             return;
         }
         String how;
-        long settle = STEP_SETTLE_MS;
         switch (step) {
             case 0:
                 if (!now.playPackage(pkg)) { climb(pkg, after, 1); return; }
@@ -306,12 +373,16 @@ public final class PlayerResume {
                 break;
             case 2:
                 if (!launchApp(pkg)) { climb(pkg, after, 3); return; }
-                how = "opening the app itself";
-                settle = LAUNCH_SETTLE_MS;
-                break;
+                // Opening it is not the end of this rung: the app has a screen to build and a
+                // session to claim, and only then is there anybody to ask. DefaultAppsChanger
+                // watches for exactly that - the app in front, then an active session - and asks
+                // again every second and a half until the music is actually on. The same here,
+                // minus the root: the foreground comes from sys.qf.current.activity and the
+                // session from the one we are allowed to read.
+                Log.i(TAG, "after " + after + ": opened " + pkg + " - waiting for it to take a session");
+                pressPlayUntilItPlays(pkg, after, SystemClock.elapsedRealtime() + LAUNCH_WAIT_MS, 0);
+                return;
             case 3:
-                // A second go at the session: the app is open now, so it probably has one.
-                if (now.playPackage(pkg)) { how = "its media session, once it was open"; break; }
                 if (!sendPlayKey(pkg)) { climb(pkg, after, 4); return; }
                 how = "its media button receiver";
                 break;
@@ -329,7 +400,114 @@ public final class PlayerResume {
             }
             Log.i(TAG, "after " + after + ": " + how + " did not start " + pkg + " - trying further");
             climb(pkg, after, next);
-        }, settle);
+        }, STEP_SETTLE_MS);
+    }
+
+    /**
+     * Asks a just-opened player to play until it does, then puts the screen back as it was.
+     *
+     * <p>One ask was never enough: an app that has just started shows a splash, restores its own
+     * state and only then registers a session, and a PLAY sent before that is dropped without a
+     * word. So this asks again every {@link #PLAY_RETRY_MS} until the music is on, the tries run
+     * out or the window closes - which is what DefaultAppsChanger does with root, and what the log
+     * from boot 0034 was missing.
+     */
+    private void pressPlayUntilItPlays(String pkg, String after, long deadline, int tries) {
+        if (isPlaying(pkg)) {
+            Log.i(TAG, "after " + after + ": " + pkg + " is playing (opened and asked "
+                    + tries + (tries == 1 ? " time)" : " times)"));
+            restoreForeground(pkg);
+            return;
+        }
+        final boolean asked = NowPlaying.getInstance(context).playPackage(pkg);
+        final int nextTries = asked ? tries + 1 : tries;
+        if (nextTries >= MAX_PLAY_TRIES || SystemClock.elapsedRealtime() > deadline) {
+            Log.i(TAG, "after " + after + ": " + pkg + " was opened and asked " + nextTries
+                    + " times without playing - trying the media button");
+            restoreForeground(pkg);
+            climb(pkg, after, 3);
+            return;
+        }
+        main.postDelayed(() -> pressPlayUntilItPlays(pkg, after, deadline, nextTries), PLAY_RETRY_MS);
+    }
+
+    /**
+     * Puts back whatever was on screen before the player was opened.
+     *
+     * <p>Resuming the music is not a reason to change what the person is looking at - after a boot
+     * that is usually the launcher, and after a wake it is whatever they left. DefaultAppsChanger
+     * restores the previous app with root and falls back to the home screen; without root the home
+     * screen is the honest version of the same thing, and the previous app is re-launched only
+     * when there was a real one.
+     */
+    private void restoreForeground(String pkg) {
+        final String back = foregroundBefore;
+        foregroundBefore = "";
+        try {
+            if (!back.isEmpty() && !back.equals(pkg) && !back.equals(context.getPackageName())) {
+                Intent previous = context.getPackageManager().getLaunchIntentForPackage(back);
+                if (previous != null) {
+                    previous.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                    context.startActivity(previous);
+                    Log.i(TAG, "screen put back to " + back);
+                    return;
+                }
+            }
+            Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(home);
+            Log.i(TAG, "screen put back to the launcher");
+        } catch (Throwable t) {
+            Log.w(TAG, "could not put the screen back: " + t);
+        }
+    }
+
+    /** What is in front, without root: the property the framework updates on every focus change. */
+    private String foregroundPackage() {
+        final String activity = HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY);
+        if (activity == null || activity.isEmpty()) return "";
+        final int slash = activity.indexOf('/');
+        return slash > 0 ? activity.substring(0, slash) : activity;
+    }
+
+    private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
+
+    /**
+     * Players that have nothing to play until there is a network.
+     *
+     * <p>A list rather than a guess: nearly every app holds the INTERNET permission, so asking the
+     * package manager would delay a local player for nothing. WARNING: Spotify is in it and is
+     * still its own story - the owner, 22.09.2026: "the particulars of starting Spotify are a
+     * separate song". This gets it as far as a network and an open app; what it wants after that
+     * is a daytime question.
+     */
+    private static final String[] NEEDS_NETWORK = {
+            "com.spotify", "youtube.music", "com.google.android.apps.youtube",
+            "deezer", "tidal", "soundcloud", "yandex.music", "vk.music", "apple.music",
+            "com.aspiro", "podcast",
+    };
+
+    private boolean needsNetwork(String pkg) {
+        final String p = pkg.toLowerCase(Locale.US);
+        for (String mark : NEEDS_NETWORK) {
+            if (p.contains(mark)) return true;
+        }
+        return false;
+    }
+
+    private boolean hasUsableNetwork() {
+        try {
+            ConnectivityManager cm =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) return true;   // nothing we can see to wait for
+            Network active = cm.getActiveNetwork();
+            if (active == null) return false;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+            return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Throwable t) {
+            return true;
+        }
     }
 
     /** Playing, as anything outside this class can see it: our own session view or the mixer. */
