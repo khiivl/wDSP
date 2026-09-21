@@ -616,3 +616,61 @@ after a wake, so the keeper belongs on those events (`sys.boot_completed`, `com.
 module already sees) with a short window each, and silent for the rest of the drive. Whatever the platform does to that
 index while the unit is running - ducking, mixing, a source change - is the platform doing its job, and a keeper that
 cannot tell those apart must not guess: a value is not an event.
+
+## 12. 🔴 Прошивка UIS8581 прийшла — два дерева поруч, і здогади закриті (22.09.2026)
+
+Власник дав `D:\Release\8581_QF005` (QF005, UIS8581A2H10, 6.6 ГБ, vendor розпаковано). Порівняння з
+еталоном 7862 (`D:\Release\update(2)\vendor\vendor`) — **читанням файлів, не припущенням**.
+
+### 12.1 Набір аудіоконфігів різний, і це не дрібниця
+
+| файл у `/vendor/etc` | 7862 | 8581 |
+|---|---|---|
+| `audio_pcm.xml` | ✅ | ❌ |
+| `audio_route.xml` | ✅ | ❌ |
+| `audio_config.xml` | ✅ | ❌ |
+| `audio_params/sprd/` (тека) | ✅ | ❌ |
+| `qf_audio_route_has_i2s.xml`, `qf_audio_route_no_i2s.xml`, `qf_double_bt_audio_route_i2s.xml`, `qf_double_bt_audio_route_noi2s.xml` | ✅ | ❌ **жодного** |
+| `audio_hw.xml` (один файл, стиль sc8830: модем, voip, `i2s_switch_*`, `ext_codec`) | ❌ | ✅ 163 рядки |
+| `audio_para` (текст ~1 МБ, параметри AGDSP) | ❌ | ✅ |
+| `codec_pga.xml` | ❌ | ✅ |
+| HAL | `audio.primary.ums512.so` | `audio.primary.sp9863a.so` |
+
+⇒ **Підтверджено остаточно, чому v5.3 вішає завантаження на 8581:** інсталятор кладе набір ums512, а
+на 8581 такого набору немає взагалі — там інша генерація конфігурації HAL. І головне для задуму
+модуля: **на 8581 немає жодного `qf_*` route-файлу**, тобто перемикання «має I2S / не має I2S», на
+якому тримається вся 7862-гілка, там **нема чого перемикати**. Профіль під 8581 не може бути копією
+7862 — він мусить правити `audio_hw.xml` (і, можливо, `audio_para`).
+
+### 12.2 Заводський вихід у них різний — і це ламає саму тезу «завжди 24/48»
+
+`primary_audio_policy_configuration.xml`, mixPort **primary output**:
+
+| | формат | частота |
+|---|---|---|
+| **7862** | `AUDIO_FORMAT_PCM_8_24_BIT` | **48000** |
+| **8581** | `AUDIO_FORMAT_PCM_16_BIT` | **44100** |
+
+Те саме по всіх пристроях виводу (Speaker, Earpiece, Wired Headset): 48 000 проти 44 100.
+
+⇒ На 7862 **24/48 — це вже заводський стан**, і цінність модуля там не в ньому, а в маршрутах,
+мікрофоні й гейні. На 8581 завод дає **16 біт / 44.1 кГц**, і «зробити 24/48» там — справжня робота,
+яку скопійований профіль не зробить, бо посилається на неіснуючі файли.
+
+### 12.3 Чого на 8581 немає в первинній політиці
+
+- mixPort **`fast`** — немає (на 7862 є);
+- mixPort **`fm input`** і devicePort **`Fm Record Device`** — немає;
+- devicePort'ів **USB** (`USB Device In/Out`, `USB Headset In/Out`) у первинній політиці немає
+  (є окремий `usb_audio_policy_configuration.xml`).
+
+### 12.4 Що з цього випливає для wDSP (а не для модуля)
+
+1. **Частота виводу на 8581 — 44.1 кГц.** Наш аналізатор бере її з
+   `PROPERTY_OUTPUT_SAMPLE_RATE` (виправлено 14.09 після тесту тоном), тож він адаптується — але
+   урок «Visualizer каже 44.1, а мікшер 48» **стосується лише 7862**. На 8581 44.1 буде правдою.
+2. **Борг «проба каналу вище 22 кГц»** на 8581 безпредметний: 44.1 кГц дає стелю 22.05 кГц.
+   Свіп там має закінчуватися на 20 кГц і не вдавати більшого.
+3. **`Fm Record Device` на 8581 немає** — задум «мікрофон як джерело для радіо» там не має
+   заводського запису FM, і альтернатива лише мікрофон.
+4. Усе це — **читання дерева, не вимір на залізі**: 8581-апарата в нас немає, тестери є.
