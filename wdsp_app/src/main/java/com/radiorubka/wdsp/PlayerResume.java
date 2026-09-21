@@ -67,13 +67,27 @@ public final class PlayerResume {
 
     /** A pause this close before ACC_OFF is taken as the platform's, not the person's. */
     private static final long PAUSE_GRACE_MS = 5000;
+    /**
+     * A pause this long before the machine started is the shutdown's, not the person's.
+     *
+     * <p>🔴 Without this the boot path found nothing to resume, every time (owner, 21.09.2026:
+     * "you are reading the wrong thing, you are not recording it"). The last thing that ever
+     * happens before the power goes is the platform pausing the player, so "was it still playing?"
+     * is answered "no" by the time anybody asks. The pause is compared against the moment THIS
+     * machine started instead: a player that stopped within two minutes of it stopped because the
+     * unit was going down, and one that stopped an hour earlier was stopped by a person.
+     */
+    private static final long PAUSE_BEFORE_BOOT_MS = 120_000;
     /** A service that is ready this soon after the kernel started is a boot, not a wake. */
     private static final long BOOT_WINDOW_MS = 180_000;
     /** After our own ACC_ON work and the platform restoring its own apps. */
     private static final long AFTER_WAKE_DELAY_MS = 4000;
     private static final long AFTER_BOOT_DELAY_MS = 5000;
-    private static final long VERIFY_AFTER_MS = 6000;
     private static final long BROWSER_HOLD_MS = 10_000;
+    /** How long each rung of the ladder is given before the next one is tried. */
+    private static final long STEP_SETTLE_MS = 3000;
+    /** An app that has just been launched needs longer: it has a screen to build first. */
+    private static final long LAUNCH_SETTLE_MS = 5000;
 
     private static final String PLATFORM_RESTORE_LIST = "/system/config/RestoreAppsWhenWakeup.ini";
 
@@ -155,10 +169,31 @@ public final class PlayerResume {
         bootHandled = true;
         SharedPreferences s = state();
         boolean slept = s.getBoolean(KEY_ASLEEP, false);
-        // Slept and then lost power: what was playing when the ignition went off. Power lost while
-        // driving: whatever was playing last.
-        String target = slept ? s.getString(KEY_SNAPSHOT, "")
-                : (s.getBoolean(KEY_PLAYING, false) ? s.getString(KEY_PLAYER, "") : "");
+        // Slept and then lost power: what was playing when the ignition went off. Power lost or
+        // rebooted while driving: whatever was playing last - including a player the platform
+        // paused on its way down, which is what a shutdown looks like from here. See
+        // PAUSE_BEFORE_BOOT_MS; before it, this branch demanded that the player still be playing
+        // and so found nothing every single time.
+        String target;
+        if (slept) {
+            target = s.getString(KEY_SNAPSHOT, "");
+        } else {
+            final String last = s.getString(KEY_PLAYER, "");
+            final long stoppedAt = s.getLong(KEY_STOPPED_AT, 0L);
+            final long bootedAt = System.currentTimeMillis() - SystemClock.elapsedRealtime();
+            final boolean stoppedGoingDown = stoppedAt > 0
+                    && stoppedAt >= bootedAt - PAUSE_BEFORE_BOOT_MS;
+            if (s.getBoolean(KEY_PLAYING, false) || stoppedGoingDown) {
+                target = last;
+            } else {
+                target = "";
+                if (!last.isEmpty()) {
+                    Log.i(TAG, "boot: " + last + " was paused "
+                            + ((bootedAt - stoppedAt) / 1000) + " s before this machine started - "
+                            + "a person's pause, not the shutdown's");
+                }
+            }
+        }
         s.edit().putBoolean(KEY_ASLEEP, false).apply();
         if (!ThemeManager.prefs(context).getBoolean(PREF_AFTER_REBOOT, false)) {
             Log.i(TAG, "boot: resuming after a restart is off" + (target.isEmpty() ? "" : " (" + target + " was playing)"));
@@ -209,22 +244,106 @@ public final class PlayerResume {
             Log.i(TAG, "after " + after + ": " + pkg + " is no longer installed");
             return;
         }
-        String how;
-        if (now.playPackage(pkg)) {
-            how = "its media session";
-        } else if (sendPlayKey(pkg)) {
-            how = "its media button receiver";
-        } else if (playThroughBrowser(pkg)) {
-            how = "its media browser service";
-        } else {
-            Log.w(TAG, "after " + after + ": " + pkg + " has no session, media button receiver or browser service to start it by");
+        climb(pkg, after, 0);
+    }
+
+    /**
+     * Asks a player to play, and keeps asking differently until it does or the ways run out.
+     *
+     * <p>🔴 Rewritten 21.09.2026, and the owner named the fault before the log confirmed it: "you
+     * are launching it wrong - without context. Spotify will not start from a targeted intent
+     * either, like any other player, because if nobody has taken the media session yet, a plain
+     * input key flies into the void." The unit's own log from boot 0034 says exactly that:
+     * <pre>
+     *   asked app.morphe.android.apps.youtube.music to play through its media button receiver
+     *   app.morphe.android.apps.youtube.music is NOT playing 6000 ms later
+     * </pre>
+     * The old code took "a media button receiver exists" for success and stopped there, so the
+     * browser service - the one rung that can actually start a dead process - was never reached.
+     *
+     * <p>So the rungs go from the ones that give the player a context to the ones that need it to
+     * have one already, and every rung is CHECKED rather than assumed:
+     * <ol>
+     *   <li>its live session, if it still has one - nothing to start;</li>
+     *   <li>its media browser service: binds it, which starts the process without a screen, and
+     *       plays through the session it hands back;</li>
+     *   <li>launching the app itself: for a player with no browser service, that is the only way
+     *       its session is ever created;</li>
+     *   <li>the media button, last, because by now something is listening for it.</li>
+     * </ol>
+     */
+    private void climb(String pkg, String after, int step) {
+        final NowPlaying now = NowPlaying.getInstance(context);
+        if (isPlaying(pkg)) {
+            Log.i(TAG, "after " + after + ": " + pkg + " is playing");
             return;
         }
+        String how;
+        long settle = STEP_SETTLE_MS;
+        switch (step) {
+            case 0:
+                if (!now.playPackage(pkg)) { climb(pkg, after, 1); return; }
+                how = "its media session";
+                break;
+            case 1:
+                if (!playThroughBrowser(pkg)) { climb(pkg, after, 2); return; }
+                how = "its media browser service";
+                break;
+            case 2:
+                if (!launchApp(pkg)) { climb(pkg, after, 3); return; }
+                how = "opening the app itself";
+                settle = LAUNCH_SETTLE_MS;
+                break;
+            case 3:
+                // A second go at the session: the app is open now, so it probably has one.
+                if (now.playPackage(pkg)) { how = "its media session, once it was open"; break; }
+                if (!sendPlayKey(pkg)) { climb(pkg, after, 4); return; }
+                how = "its media button receiver";
+                break;
+            default:
+                Log.w(TAG, "after " + after + ": " + pkg + " would not start - session, browser "
+                        + "service, its own screen and the media button were all tried");
+                return;
+        }
+        final int next = step + 1;
         Log.i(TAG, "after " + after + ": asked " + pkg + " to play through " + how);
         main.postDelayed(() -> {
-            boolean ok = now.isPlaying() && pkg.equals(now.playerPackage());
-            Log.i(TAG, "after " + after + ": " + pkg + (ok ? " is playing" : " is NOT playing " + VERIFY_AFTER_MS + " ms later"));
-        }, VERIFY_AFTER_MS);
+            if (isPlaying(pkg)) {
+                Log.i(TAG, "after " + after + ": " + pkg + " is playing (" + how + ")");
+                return;
+            }
+            Log.i(TAG, "after " + after + ": " + how + " did not start " + pkg + " - trying further");
+            climb(pkg, after, next);
+        }, settle);
+    }
+
+    /** Playing, as anything outside this class can see it: our own session view or the mixer. */
+    private boolean isPlaying(String pkg) {
+        final NowPlaying now = NowPlaying.getInstance(context);
+        if (now.isPlaying() && pkg.equals(now.playerPackage())) return true;
+        final AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        // Without notification access there is no session to read, and the mixer is all we have.
+        return am != null && am.isMusicActive() && now.playerPackage().isEmpty();
+    }
+
+    /**
+     * Opens the player, which is how a player with no browser service gets a session at all.
+     *
+     * <p>Background activity starts are blocked on Android 10 for an app with nothing on screen -
+     * except one holding SYSTEM_ALERT_WINDOW, which this app does for the status bar visualizer.
+     * If that permission is ever lost this rung stops working and the log says so.
+     */
+    private boolean launchApp(String pkg) {
+        try {
+            Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
+            if (launch == null) return false;
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            context.startActivity(launch);
+            return true;
+        } catch (Throwable t) {
+            Log.w(TAG, "could not open " + pkg + ": " + t);
+            return false;
+        }
     }
 
     /** An explicit PLAY key to the player's own receiver - starts a player whose process is gone. */
