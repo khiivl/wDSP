@@ -5,6 +5,15 @@
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <!--
+        Lets the app stop a background hotword listener that is holding the microphone.
+        A normal permission, granted at install. Nothing is uninstalled or disabled: the
+        assistant restarts on its own the moment the system wants it again. Without this a
+        cabin measurement is made through a 16 kHz stream and half the sweep is missing,
+        with nothing in the API admitting it - see MicrophoneGuard.
+    -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -15,10 +24,50 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <!--
+        Storage. Declared, never requested at runtime - and on these head units that is the whole
+        mechanism: the grant arrives at install with no dialog. Measured on the owner's unit
+        13.09.2026 by comparing two apps with the same minSdk 29 / targetSdk 29 - QF Radio
+        (com.kostyamat.fmradio) shows both storage permissions `granted=true` with no USER_SET flag
+        among them, i.e. nobody ever tapped anything, plus RESTRICTION_INSTALLER_EXEMPT, which is an
+        installer-side decision rather than a user's. wDSP declared neither and had neither.
+
+        ⚠️ The permission alone is not the request. An app targeting API 29 gets scoped storage by
+        default, under which a raw /sdcard path is not the app's to open no matter which app created
+        the file - ownership lives in the MediaStore row, not in the folder. requestLegacyExternalStorage
+        below is what turns that off, and the radio carries it for the same reason.
+
+        ⚠️ And this stays a widening of what the app may do, not something it now depends on. Every
+        user-facing path still goes through the MediaStore (Downloads) or the system picker, both of
+        which need no permission at all, so on a unit whose firmware does NOT grant this the app
+        behaves exactly as it did before. Nothing here may become the only road to a file.
+    -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_MUSIC" />
+        </intent>
+        <package android:name="com.kostyamat.fmradio" />
+        <package android:name="com.android.fmradio" />
+        <package android:name="com.qf.musicplayer" />
+    </queries>
 
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
+        android:requestLegacyExternalStorage="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -28,6 +77,7 @@
         android:theme="@style/Theme.WDSP">
         <activity
             android:name="com.radiorubka.wdsp.MainActivity"
+            android:configChanges="uiMode"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,11 +85,47 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.radiorubka.wdsp.SettingsActivity"
+            android:configChanges="uiMode"
+            android:exported="false" />
+
+        <!-- Listed so that MediaSessionManager will answer "what is playing"; it overrides
+             nothing and reads no notifications. See NotificationAccess. -->
+        <service
+            android:name="com.radiorubka.wdsp.NotificationAccess"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <service
             android:name="com.radiorubka.wdsp.McuService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <!--
+            Reconnaissance for the recorder, and temporary. Exported so it can be aimed from a
+            terminal at one player at a time while we find out which of them hand their audio
+            over - a question no manifest or package dump answers, because the refusal is made at
+            runtime. See CaptureProbe, whose javadoc carries the command line: it names a package
+            with a string extra and a length with an int extra.
+        -->
+        <activity
+            android:name="com.radiorubka.wdsp.CaptureConsentActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name="com.radiorubka.wdsp.CaptureProbeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <receiver
             android:name="com.radiorubka.wdsp.BootReceiver"
@@ -52,6 +138,17 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+                <!--
+                    🔴 After the app updates itself, the platform kills the process and does NOT
+                    bring a foreground service back. Nothing else started it either: the only other
+                    starter is MainActivity.onCreate, and on this app the screen is opened perhaps
+                    twice a year. So an update left McuService dead until the next power cycle -
+                    no preset switching, no loudness curve, no GALA, no call preset, no volume sync,
+                    and the chip simply keeping whatever was last pushed into it.
+                    Found on 13.09.2026 the hard way: a test of the call fix reported a clean run
+                    with zero frames, and the service had not been running for any of it.
+                -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
@@ -64,6 +161,22 @@
                am broadcast -a com.radiorubka.wdsp.SUB_GAIN_DOWN
              Explicit-component targeting (-n .../.SubGainUpReceiver) no longer works;
              there's no manifest-declared receiver class for this anymore. -->
+
+        <!--
+            Hands the cabin measurement to whatever the tester wants to send it with. The archive
+            is written to external-cache/measurements, which is the only path declared in
+            file_paths.xml - an undeclared path makes getUriForFile throw, which is a configuration
+            mistake and not something to hide from the log.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.radiorubka.wdsp.logs"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

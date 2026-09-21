@@ -1,0 +1,418 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Platform notes
+
+`.agents/` holds what was learned about the head unit itself, as opposed to this app: how the audio
+path really behaves, how to reach the MCU, and what is and is not possible when measuring a car with
+an uncalibrated microphone. Everything there was measured on a device, because on this platform the
+documented behaviour and the actual behaviour differ often enough that only the wire settles it.
+Start at [.agents/INDEX.md](.agents/INDEX.md), and for anything that changes how loud something is
+— volume, source switching, the optional second DSP, or the vendor Bluetooth app disturbing the
+radio — [.agents/platform/08-VOLUME-AND-SOURCES.md](.agents/platform/08-VOLUME-AND-SOURCES.md)
+first: two units on the same firmware genuinely behave differently there, and the file says how to
+tell which one you have.
+Units that are not this one: a BD37534 board has three equaliser bands rather than sixteen and no
+delay lines at all, and a TSC4745 tuner runs on US de-emphasis with an adaptive treble cut left on —
+[.agents/platform/13-MCU-FIRMWARE-VARIANTS.md](.agents/platform/13-MCU-FIRMWARE-VARIANTS.md) §1-ter
+and [.agents/platform/06-TUNER.md](.agents/platform/06-TUNER.md) §7.
+Complete decompiled MCU code (`mcu_bd37534_decompiled.c`), binary `mcu.bin`, and official datasheets (ROHM BD37534FV, Silicon Labs AN332) live at `C:\MCU\MCU QF05 2.5.2024-BD37534,TSC4745\`.
+Standard automotive developer support component (`ShimmerBadgeLayout` + `SupportDialog`): [22-AUTOMOTIVE-DONATE-BADGE-AND-SUPPORT-DIALOG.md](file:///C:/Users/kosty/.gemini/config/skills/qf-platform-architecture/references/22-AUTOMOTIVE-DONATE-BADGE-AND-SUPPORT-DIALOG.md) or skill `automotive-support-badge`.
+
+## Agreements with other applications live outside this repository
+
+`C:\APPS_Contacts\` is the owner's shared folder for contracts **between applications** (created
+07.09.2026). For this project that is `C:\APPS_Contacts\wDSP--QFRadio\`: the audio-ownership
+contract with QF Radio and the screensaver/overlay one. The copies under `.agents/` are **mirrors**
+— edit the canonical copy there, then copy across, never the reverse.
+
+Each contract carries a ledger with **one column per application**: an item is closed only when
+both sides have marked it, and a mark names its evidence (a commit, a measurement, a log line)
+rather than an intention. Each side edits only its own column. Rules: `C:\APPS_Contacts\README.md`.
+
+## Repository location
+
+The repo lives at `C:\Users\kosty\AndroidStudioProjects\wDSP` (an *additional* working directory in
+this session — the primary cwd `qf_fmradio` is an empty leftover folder). Always use absolute paths
+into `wDSP`. Working branch: `kostyfmat_mod` — work only there. Upstream is https://github.com/khiivl/wDSP.
+
+`rules.md` and `agents.md` at the repo root **are tracked**, despite a `.gitignore` line that names
+them — an ignore rule does not un-track a file that is already committed, and this note used to
+claim the opposite. They reach anyone who clones the repo, so keep them correct. `agents.md` is a
+hand-written knowledge base of the app and is partly stale (see "Known discrepancies" below); the
+Java source is the source of truth for the app, and `.agents/platform/` for the machine.
+
+## Build
+
+Gradle 9.4 + AGP 9.0.1, Java 11 source/target, `compileSdk 36`.
+
+```bash
+./gradlew :wdsp_app:assembleRelease
+```
+
+```bash
+./gradlew :wdsp_app:assembleDebug
+```
+
+```bash
+./gradlew :wdsp_proxy:assembleRelease
+```
+
+APKs land in `wdsp_app/build/outputs/apk/<type>/`.
+
+There are **no unit or instrumented tests** in the repo (`src/test` / `src/androidTest` do not exist),
+despite `testInstrumentationRunner` being declared. `./gradlew test` is a no-op; do not claim test
+coverage.
+
+Signing: `wdsp_app/build.gradle` reads `keystore.file` / `keystore.password` / `key.alias` /
+`key.password` from `local.properties` (gitignored). **Both `release` and `debug` use the release
+signing config**, so debug and release APKs install over each other. `minifyEnabled false` for
+`wdsp_app` (R8 would break the hidden-API reflection); `wdsp_proxy` does minify, but it has no
+reflection.
+
+## Modules
+
+- **`:wdsp_app`** — the actual DSP app. `applicationId com.radiorubka.wdsp`, `minSdk 29`,
+  **`targetSdk 29` on purpose** (the QF framework and its hidden APIs behave as Android 10; do not
+  "modernize" the target SDK or add Android 11+ code paths).
+- **`:wdsp_proxy`** — a 20-line stub with `applicationId com.qf.soundeffect` and
+  `sharedUserId="android.uid.system"`, installed *as an update to the stock DSP app* (root +
+  PMPatch3 only). Its single translucent `SoundActivity` just launches `com.radiorubka.wdsp` and
+  finishes, so the head unit quick-settings DSP button opens wDSP.
+
+## Architecture
+
+### SharedPreferences is the bus
+
+There is no service binding, no observer interfaces, no repository layer. **The UI writes
+SharedPreferences; `McuService` listens via `OnSharedPreferenceChangeListener` and pushes bytes to the
+MCU.** Understanding the key naming scheme is the fastest way to understand the app.
+
+Two stores:
+
+| Store | Accessed via | Holds |
+|---|---|---|
+| `EqPresets` | `getSharedPreferences("EqPresets", MODE_PRIVATE)` | every preset's DSP values, `preset_names`, `last_selected_preset`, `player_preset_map`, GALA globals, `sb_vis_*` |
+| `com.radiorubka.wdsp_preferences` | `PreferenceManager.getDefaultSharedPreferences()` (via `ThemeManager.prefs()`) | theme mode, 4x2 day/night colors, wallpapers |
+
+Every DSP value is a **flat key prefixed with the preset name**: `<preset>_g0`..`<preset>_g15` (band
+gains 0..12), `_q0`..`_q15` (per-band Q booleans), `_sub_g` / `_sub_f`, `_bb_f` / `_bb_r` / `_bb_frq_f` /
+`_bb_frq_r` / `_bf_f` / `_bf_r`, `_f_lr` / `_f_fr` / `_loud`, `_d_en` / `_d_fl`..`_d_sub`, `_d1_en` /
+`_d1_fl`..`_d1_rr` / `_rsse_val`, `_fm_cal` / `_fm_str`, `_power_vol`, `_gala_*`.
+
+`McuService.prefListener` dispatches on **substring matches of the key** (`key.contains("_sub")`,
+`_g` && !`_gala`, `_d_`, `_d1_`/`_rsse_`, `_bb_`/`_bf_`, `_f_`/`_loud`, `_power_vol`) to decide which
+hardware command to re-send. Consequence: **naming a new preference is a wiring decision.** A new key
+containing e.g. `_f_` will silently re-trigger the fader command; a key that matches nothing is written
+but never reaches the MCU.
+
+Renaming/importing presets therefore means rewriting every prefixed key — that is what the prefix
+normalization in `MainActivity.loadPresetFromFile()` and the rename path (~`MainActivity.java:1554`) do.
+
+### `McuService` — the only thing that talks to hardware
+
+Foreground service (`foregroundServiceType="connectedDevice"`), started from `BootReceiver` and from
+`MainActivity.onCreate()`. All hardware work runs on a single `HandlerThread("wDSP_Worker")` at
+priority `-16` (THREAD_PRIORITY_AUDIO).
+
+Hidden-API access is entirely reflective, no root:
+
+- `android.os.ServiceManager.getService("mcu_service")` -> `android.qf.mcu.IMcuManager$Stub.asInterface()`
+  -> `RPC_SetEQData(byte[])` for DSP payloads and `RPC_SendMcuMsgData(byte, byte[], int)` for MCU messages.
+- `android.qf.os.VolumeManager` / `android.qf.os.VolumeState` (`VolumeHelper`) for hardware volume,
+  mute state, and the active player type (`media_type` / `radio_type` / `btcall_type` / `aux_type`).
+  The class name `android.qf.os.VolumeState` is Base64-obfuscated in source to survive Play Store
+  scanning — keep that pattern if you touch it.
+- `android.os.SystemProperties` for `sys.qf.last_audio_src` (active player package) and
+  `persist.sys.day_night` (illumination, read in `StatusBarVisualizerView`).
+
+**Actual command map (from the code, verified against `sendToHardware`/`apply*`):**
+
+| Cmd | Length | Meaning | Encoding |
+|---|---|---|---|
+| `0x80` | 12 | 16-band EQ | 8 packed bytes, 2 bands per byte (`idx2<<4 \| idx1`), gain index 0..12 = -12..+12 dB in 2 dB steps; then 2 Q-factor bit-mask bytes (bit set = 4.7, clear = 2.2); trailing `0x00` |
+| `0x8B` | 2 | Subwoofer | `(freqIdx << 4) \| gainIdx`, freqs `{25,32,40,50,63,80,100,125,160,200,250}` Hz, gain 0..12 |
+| `0x88` | 4 | Bass boost + high-pass, front & rear | `((boostFreqIdx+8)<<4) \| boostLevel` per channel, then `(hpfFront<<4) \| hpfRear` |
+| `0x81` | 4 | Fader / balance / loudness | L-R step, F-R step (12 = center), loudness flag |
+| `0x8C` | 6 | Positional time alignment | FL, FR, RL, RR, Sub — each stored value x5; all-zero payload when `_d_en` is off |
+| `0x89` | 6 | Surround / Haas + RSSE | `138 + (rsse-10)`, then FL, FR, RL, RR; all-zero payload when `_d1_en` is off |
+| msg `24` | 2 | Power-amp pre-volume | sub-ID `2` + value, sent through `RPC_SendMcuMsgData`, **not** `RPC_SetEQData` |
+
+> ⚠️ **Hardware constraint (0x8C vs 0x89)**: The physical DSP chip (ROHM BU32107 / AKM AK7604) has only
+> **one** register bank (`0400`..`0408`) for delays. In MCU firmware (`FUN_08005154`), surround (`0x89`) and
+> positional delays (`0x8C`) overwrite the exact same registers. They are mutually exclusive by hardware design.
+
+`sendToHardware()` de-duplicates per command byte via `mcuCache`, and EQ (`0x80`) and sub (`0x8B`)
+additionally go through a 500 ms throttle (`THROTTLE_MS`) with a trailing write, because dragging a
+slider would otherwise flood the MCU.
+
+### The 100 ms polling loop
+
+`pollingRunnable` re-posts itself every 100 ms and does three things:
+
+1. `checkVolumeAndGala()` — reads hardware volume; recomputes the Fletcher-Munson / fatigue EQ offsets
+   and the sub compensation whenever volume changed; runs GALA (speed-dependent volume) with a
+   hold-timer plus a +/-1-step fade, driven by GPS `LocationListener` speed or a simulated-speed broadcast.
+2. `checkPlayer()` — reads `sys.qf.last_audio_src` and the active volume type, auto-switches presets
+   through `player_preset_map` (with the special `Call` preset that remembers `presetBeforeCall`),
+   and gates the status-bar visualizer (channel 2 = hardware radio, so no PCM to visualize).
+3. `checkForBug()` — firmware workaround: volume 0 while *not* muted is forced to 1, because that
+   state can destroy the subwoofer on jitu/haiwai firmware. Do not remove this.
+
+### Broadcasts
+
+Service -> UI (all `setPackage(getPackageName())`): `VOLUME_CHANGED`, `PRESET_CHANGED`, `GALA_UPDATE`,
+`SUB_GAIN_CHANGED`. UI -> service: `UI_ACTIVE` / `UI_INACTIVE` (the service only broadcasts UI updates
+and suppresses toasts based on `isUiVisible`), `SIMULATE_SPEED`, `SET_POWER`, `SETTINGS_RESTORED`.
+System/vendor in: `com.qf.action.ACC_ON` / `ACC_OFF`, boot actions.
+
+External control (works without the Activity, receiver is registered dynamically — there is **no**
+manifest receiver class, so `-n .../.SubGainUpReceiver` will not work):
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.SUB_GAIN_UP
+adb shell am broadcast -a com.radiorubka.wdsp.RESET_AUDIO_MCU
+```
+
+Backup/restore can also be driven headlessly by starting `SettingsActivity` with
+`com.radiorubka.wdsp.ACTION_BACKUP` / `ACTION_RESTORE` and a `path` string extra. The backup JSON is
+`{version: 2, app, timestamp, default_preferences, eq_preferences}` — i.e. both stores — and restore
+ends with a `SETTINGS_RESTORED` broadcast that hot-reloads the UI and the service.
+
+### Measurement probes
+
+Three diagnostic classes, none of which run unless asked. They exist because every number this app
+used to trust about the audio path turned out to be a declaration rather than an observation.
+
+| class | answers | trigger |
+|---|---|---|
+| `SessionProbe` | which audio session, if any, we may tap | `PROBE_SESSION` |
+| `LatencyProbe` | how far the bars run ahead of the sound | `MEASURE_LATENCY` |
+| `MicProbe` | what the capture path actually delivers | `PROBE_MIC` |
+
+```bash
+adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_LATENCY --ei mic 1
+adb shell am broadcast -a com.radiorubka.wdsp.PROBE_MIC --ei src 6 --ei ms 15000
+```
+
+`LatencyProbe` plays eight quiet 2 kHz bursts on its own session and times them three ways:
+`AudioTrack.getTimestamp()` says when a frame reached the hardware, a `Visualizer` on the same
+session says when we saw it, and — with `mic 1` — `AudioRecord.getTimestamp()` says when it came
+back through the cabin. On this head unit that is **53 ms** from capture to ear, where
+`getOutputLatency()` claims 125 and the track dump says 558. The result is stored in
+`spec_latency_base_ms` and the ±250 ms trim slider now sits on top of a measurement instead of a
+guess. Settings has a **Synchronise** button that runs the same thing.
+
+Both probes that touch the microphone borrow it through `MicProbe.suspendCapturePreprocessing()`
+and **hand it back exactly as they found it**. Echo cancellation and noise suppression have to be
+off while measuring — one exists to remove the sound we are playing, the other to remove steady
+signals, which is what a test tone is — but on a unit with the BitPerfect module they are on
+deliberately, so that phone calls are intelligible.
+
+`HardwareProfile` reads `persist.sys.qf.mcu.version` and decodes the six-character hardware code in
+its last group **by position**: `[1]` is the sound processor (`0` BU32107, `1` BD37534, `2` AK7738,
+`3` AK7604), `[2]` the tuner, `[3]` analogue or I2S. The MCU speaks one command set to both ROHM
+chips and makes the lesser one look complete, so nothing else can tell them apart. ⚠️ The trailing
+pair — `21` on every firmware seen — is the control panel and the power flags and distinguishes
+nothing; this class tested it until 07.09.2026, and the same test in BitPerfect is why BD units got
+the I2S profile. The table is in `.agents/platform/13-MCU-FIRMWARE-VARIANTS.md` §1. It also reports
+whether the capture path carries voice processing, which is what separates a unit with custom
+audio policies from a factory one.
+
+### Planned: the microphone as a source for radio
+
+Radio goes past AudioFlinger entirely, so the analyser has nothing to show while it plays. The
+microphone could fill that in, with two rules that must not be forgotten:
+
+- in the status bar it is decoration and may stay unlabelled; on the main screen it has to say
+  plainly that this is not a measurement;
+- what the microphone hears has **already been through the DSP and the room**, so it must not be
+  passed through `DspResponse` the way the digital signal is. Doing that would apply the equaliser
+  curve twice.
+
+### The microphone: who holds it, and two analysers at once (14.09.2026)
+
+**Whoever opens the microphone input first sets it up for everybody; the rest join.** So the policy is
+chosen by root (`AudioSpectrumEngine.decideMicrophonePolicy`): without root the capture is **held open
+from start-up** and never closed by a mode switch; with root it is opened when wanted, and if somebody
+was on the input first, `MicrophoneGuard.takeInputAsRoot` stops whoever AudioFlinger lists, waits for
+the input to close, reopens, checks full band, and `checkCameBackAsync` reports whether the stopped app
+came back. Nothing starts during a call.
+
+**Root is one class and is never polled** (owner, 14–15.09.2026). `RootAccess.hasRoot()` is the answer this
+process last took — no preference holds it, no `su` runs to read it. Magisk is asked only at the start
+(`checkAtStart`, once per process, and only if Magisk has answered this installation before — the fact
+lives in `wdsp_device_state`, outside backups), at a person's first microphone switch-on in the process
+(`checkForMicrophone`: the spectrum's microphone mode, a measurement — Magisk's first prompt comes from
+this tap), and on the root card (`request`). Every `su` makes Magisk toast; a check on resume or on wake
+is exactly what not to add.
+
+The cabin section is open without root: when another app got to the microphone first, a sweep does not
+start and the person is asked to restart the head unit; the section says so in `desc_room_no_root`.
+
+**On a PCM source the Visualizer's pipeline runs whatever the mode.** In the microphone mode it is the
+reference: the microphone's analyser runs beside it and is drawn shifted so that its 200–800 Hz middle
+(bands 5..8, mean dB, through the one native fold) equals the calculated spectrum's
+(`alignMicrophoneToCalculated`, 2 s smoothing). One display thread draws `shownAnalyzer()`;
+`analyzerLock` guards both analysers' lifetime. Returning to the calculated mode only stops the
+microphone's analysis — no re-attach, no sweep.
+
+**The main spectrum is relative, and the main analyser has no gain** (owner, 15.09.2026).
+`SpectrumAnalyzerView` draws each band's top on the equaliser grid in the grid's own dB, relative to the
+average of the bands that have sound: a bar at "+4" means that band is 4 dB above the average, the slider
+would go to −4. Fewer than three bands with sound draw nothing (a two-tone test shows no bars). The
+"Авторівень: головний аналізатор" and the EQ visualiser's "Динамічна нормалізація" are gone; the status bar
+widget keeps its own.
+
+**Player resume** (`PlayerResume`, owner 14–15.09.2026): two switches in Permissions and system. `NowPlaying`
+reports every session change; at `READY_GO_SLEEP`/`ACC_OFF` the class notes what was playing, and after a
+wake (`ACC_ON`) or a boot (presets ready within 3 min of the kernel start) it starts that player — session,
+then an explicit PLAY to its media button receiver, then its browser service. Radio, a person's pause,
+something already playing and the platform's five factory apps are left alone. It only works for a process
+that survives sleep: the platform's sleep whitelist cannot be read by an app, so Settings opens
+`com.qf.carsettings/.activity.FactorySleepWhiteListActivity` for the person — wDSP never writes the list.
+
+**What the microphone is built into and where it sits** lives in exactly one class, `MicProfile`
+(21.09.2026, owner's rule: one fact, one function). It holds the person's answers (place, mounting,
+the dot on the plan), the one inference allowed (the head unit's fascia microphone is a pinhole),
+the mounting curves that used to sit in `sweep.cpp`, the single placement rule
+(`applyPlacementLimits`, the windscreen boundary), and the report's wording for all of it. The
+native side is handed the mounting curve and keeps no table; the calibration then keeps only what
+the sweep confirms - a shortfall against the best channel, an excess against the worst. Before this
+the same two facts were answered in four places and disagreed. See `.agents/ROOM_CALIBRATION.md`
+§24-quater.
+
+**The cabin sweep** (`RoomMeasurement`, `sweep.cpp`, 15.09.2026): door channels are averaged in **power**,
+not dB; the impulse window opens 100 ms before the arrival with a smooth rise (an abrupt cut 1.3 ms before the
+peak filled the doors' deepest bands); a band is averaged only over the bins the sweep excited at full height
+(the 20 Hz and 20 kHz edges now read flat); doors sweep from 20 Hz, the subwoofer from 15 Hz in the same
+pass. The top stays 20 kHz until a probe of the channel says more (factory I2S may be 44.1 kHz). Host
+harness: `test_sweep.cpp` (`test_sweep.cpp sweep.cpp analyzer.cpp fft.cpp stitcher.cpp`).
+
+Logs on the owner's unit: read the Magisk boot logger (`/data/local/tmp/bootlog/<latest>/10_boot.log`,
+`20_run.log*`), not `logcat`.
+
+### UI
+
+`MainActivity` (~2100 lines) is a single activity holding **five sections in one layout**
+(`layout_eq`, `layout_fm_curve`, `layout_delays`, `layout_filters`, `layout_gala`) toggled by
+visibility from `BottomNavigationView`. `SettingsActivity` reuses the same nav menu; picking a
+non-settings tab there routes back to `MainActivity` with that section open.
+
+`ThemeManager` is a static holder, not a theme resource system: colors are read from prefs per
+day/night (`*_day` / `*_night` key suffixes) and applied **imperatively** to views at runtime
+(`tintTextInputLayout`, nav bar tinting, label/value coloring). A new control is not themed until
+someone tints it explicitly — the XML colors are only the pre-theme defaults.
+
+`AudioSpectrumEngine` is a singleton over `android.media.audiofx.Visualizer`. All spectrum consumers
+(`SpectrumAnalyzerView`, `FmVisualizerView`, `StatusBarVisualizerView`) register as listeners on that
+one engine — **never open a second `Visualizer` session.** Which session it attaches to is decided by
+`SessionResolver`, not assumed; see below.
+
+### Native analyzer (`src/main/cpp`)
+
+The measurement chain is C++ (`libwdsp_native.so`, built by CMake, arm64 + armeabi-v7a). Java feeds
+it blocks and reads levels; everything else happens in native. Two things about it are load-bearing:
+
+**Capture is polled, not callback-driven.** `getMaxCaptureRate()` is 20 Hz on this platform and each
+callback carries 1024 samples — 21 ms of audio out of every 50, with the rest missing. `Stitcher`
+polls every 9 ms so consecutive reads overlap, then aligns them and appends only the new tail.
+Overlaps are bit-identical, so it first looks for an exact match nearest to what the clock predicts
+(time since the last read × rate) and falls back to normalised cross-correlation. The clock is not
+optional: a test tone with a whole-sample period matches at every period of shift including zero,
+and before 14.09.2026 the stitcher took "nothing new" on every poll and the spectrum froze.
+`discontinuities()` counts failures; a rising count means the poll rate is too low. Without this
+there is no continuous stream, and no transform below the block rate means anything.
+
+**The Visualizer's own sample rate is wrong.** `getSamplingRate()` reports 44.1 kHz; the samples are
+at the output's 48 kHz (measured with a test tone, 14.09.2026). `AudioSpectrumEngine.visualizerSampleRateHz()`
+is the one place the tap's rate comes from — `PROPERTY_OUTPUT_SAMPLE_RATE`.
+
+**32 third-octave bands are measured and folded down to 16, never interpolated up.** The bands sit
+on the standard grid, exact centres `1000·2^((i−18)/3)`, 16 Hz … 20 kHz, so every equaliser centre
+(20, 31.5 … 20000) is an odd band. A hardware band is folded as the band on its centre plus half of
+each neighbour — exact for pink content — and the 20 kHz band, which has no neighbour above, takes
+its missing quarter at the measured density. (Until 14.09.2026 the bands were the two halves of each
+hardware band, 17.8 … 22449 Hz; the top one was always empty.) Band energy is mean bin power times
+the number of bins the band *should* hold at that resolution — a plain sum biases narrow bands, an
+average per bin biases wide ones. Two window lengths run at once: 8192 below 800 Hz where resolution
+is needed, 1024 above where speed is. The native analyser is the only one: the Java twin that ran on
+Visualizer callbacks was removed, and without the library there is no spectrum.
+
+**The calculated spectrum is the target, the microphone spectrum is what is there** (owner,
+14.09.2026). Calculated = the Visualizer's PCM plus `DspResponse` — the preset as the chip applies
+it: EQ at Q 2.2 (the firmware forces it), doors through their high-pass, subwoofer through its
+low-pass — and nothing of the car. A noise floor is taken off only for the microphone.
+`PROBE_SESSION --ei wav <ms>` dumps the raw Visualizer blocks and the stitched stream, and
+`--ei dump 1` logs every band's power, floor and curve.
+
+`test_analyzer.cpp` is a host-side harness, excluded from the app build. Run it after touching the
+band plan, the transforms or the stitcher:
+
+```bash
+g++ -O2 -std=c++17 -o /tmp/wdsp_test test_analyzer.cpp fft.cpp stitcher.cpp analyzer.cpp && /tmp/wdsp_test
+```
+
+It checks that pink noise reads flat with an empty correction table, that tones land in the right
+band, and that the stitcher loses nothing.
+
+⚠️ Draw rate is not measurement rate. `StatusBarVisualizerView` drives its own redraws through
+`Choreographer`; left unthrottled it costs nearly three times as much CPU as the whole analyzer. `StatusBarVisualizerManager` puts `StatusBarVisualizerView` into a
+`TYPE_APPLICATION_OVERLAY` window (needs `SYSTEM_ALERT_WINDOW`) sized and positioned by the `sb_vis_*`
+prefs.
+
+## Working constraints (from `rules.md`, the project owner's rules)
+
+- Read a file before editing it; the on-disk version may be newer than what you remember.
+- Preserve existing code verbatim. Never stub out or empty a function you are not asked to change.
+- A change to a data type, signature, or dependency must be propagated to **every** call site in the
+  same change — no new functionality may break existing functionality.
+- The owner is the architect; ask when in doubt rather than inventing a design.
+
+## Known discrepancies and traps
+
+- **`agents.md` command IDs are wrong**: it lists fader `0x82`, positional delays `0x84`, surround
+  `0x85`. The code sends `0x81`, `0x8C`, and `0x89` respectively. Trust the code.
+- **Two divergent `TouchGlow` classes** exist and are both live: `ui/TouchGlow.java` (used by
+  `SettingsActivity`) and `ui/theme/TouchGlow.java` (used fully-qualified by `MainActivity`). Fixing
+  one does not fix the other.
+- **There is now only one copy of the main layout.** `layout-port/activity_main.xml` was deleted in
+  `34a9e9a` ("Drop the portrait copy of the main screen") and `layout-port/` is an empty directory;
+  every geometry inflates `layout/activity_main.xml`. This entry used to describe the second copy
+  and to tell you to diff the two, which sent at least one session looking for a file that is not
+  there — so keep it accurate rather than deleting it.
+
+  Why it existed matters, because it is the trap to avoid if a second copy is ever reintroduced: a
+  missing id costs a null check, but **the same id declared as a different widget type costs a crash
+  in `onCreate`** — `findViewById` returns whatever was inflated and the field it is assigned to has
+  the other type. Eight switches and six preset buttons had drifted apart exactly like that, and the
+  app died on every portrait and Tesla-shaped screen. `tools/layout_diff.py` still exists and is
+  what catches it; it currently has nothing to compare.
+
+- **Screen geometries**: the platform matrix lives in
+  `kostyamat_fmradio/.agents/SCREEN_MATRIX.md` — 132 panels, and the real set of UI geometries is
+  much smaller than the list of resolutions because density is only ever 160 or 320. Emulate with
+  `adb shell wm size WxH` + `wm density N`, and **always** `wm size reset` + `wm density reset`
+  afterwards. Known trouble: content overflows to the right below about 1100dp of width and
+  overlaps the bottom navigation below about 500dp of height. `values-h500dp` / `values-h580dp` /
+  `values-w1000dp` exist but 15 of their 20 dimens are dead leftovers from QFRadio — the main
+  screen still uses hardcoded dp and does not scale.
+- ⚠️ `uiautomator dump` returns nothing while the status bar visualizer is running: it waits for the
+  UI to go idle and that overlay animates continuously. Disable the widget first, or read real view
+  geometry from `adb shell dumpsys activity top -a`, which has no such limitation.
+- **Reproducing the boot path** matters, because it is not the same as launching the app: at boot
+  only `McuService` starts, with no `MainActivity` and therefore no views registering first. A bug
+  that only appears after a reboot lives there. Re-broadcasting `BOOT_COMPLETED` from the shell does
+  not work — the platform's power controller answers `Background execution not allowed` — but
+  starting the service directly does:
+
+```bash
+adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-service -n com.radiorubka.wdsp/.McuService
+```
+- 30 locale folders (`values-uk` ... `values-pt-rBR`). Any new user-visible string needs a `values/`
+  entry at minimum; some UI arrays (e.g. `SUB_FREQS` in `MainActivity`) are still hardcoded Ukrainian
+  strings rather than resources.
+- The stock DSP app (`com.qf.soundeffect`) overwrites the same hardware registers. Testing against a
+  unit where it can be launched will produce contradictory readings; it is normally disabled with
+  `adb shell pm disable com.qf.soundeffect`.
