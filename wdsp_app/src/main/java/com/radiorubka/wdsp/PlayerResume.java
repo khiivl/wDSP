@@ -120,6 +120,21 @@ public final class PlayerResume {
         SharedPreferences s = state();
         // Asleep, whatever changes is the platform stopping and killing things, not the person.
         if (s.getBoolean(KEY_ASLEEP, false)) return;
+        // 🔴 The radio is never the thing to resume, and this is the ONE place that decides it -
+        // proven the hard way at 04:41 on 22.09.2026, on a unit that had been rebooted for a
+        // different test: the boot path found the radio recorded as "the last player", opened its
+        // app and put it on air in the middle of the night. It restores itself, and the contract
+        // with QFRadio says a request from wDSP does not wake a stopped radio. Switching to the
+        // radio therefore clears what was remembered: the person chose the radio, so there is
+        // nothing of theirs left to bring back.
+        if (NowPlaying.isRadioPackage(pkg)) {
+            if (!s.getString(KEY_PLAYER, "").isEmpty()) {
+                Log.i(TAG, "the radio took over - nothing to resume any more; it restores itself");
+                s.edit().putString(KEY_PLAYER, "").putBoolean(KEY_PLAYING, false)
+                        .putLong(KEY_STOPPED_AT, System.currentTimeMillis()).apply();
+            }
+            return;
+        }
         String known = s.getString(KEY_PLAYER, "");
         if (playing && pkg != null && !pkg.isEmpty()) {
             if (!pkg.equals(known) || !s.getBoolean(KEY_PLAYING, false)) {
