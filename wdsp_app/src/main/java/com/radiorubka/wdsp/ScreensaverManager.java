@@ -1005,14 +1005,11 @@ public final class ScreensaverManager {
         float infoH = infoBarPx();
         if (y >= (screenH - infoH) && x <= Math.max(infoH * 2.0f, 120f * density)) {
             NowPlaying np = NowPlaying.getInstance(context);
+            // Already resolved: NowPlaying.radioPackageFor is the one place that decides which radio
+            // is which. This used to rewrite every radio to ours right here, and so opened our radio
+            // over the factory one while the factory one was playing (owner, board #757).
             String pkg = np.playerPackage();
-            // Whatever the radio calls itself to the platform - see NowPlaying.playerPackage().
-            if (pkg == null || pkg.isEmpty() || NowPlaying.isRadioPackage(pkg)) {
-                try {
-                    context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
-                    pkg = "com.kostyamat.fmradio";
-                } catch (Throwable ignored) {}
-            }
+            if ((pkg == null || pkg.isEmpty()) && np.isRadioSource()) pkg = np.radioPackageFor("");
             if (pkg != null && !pkg.isEmpty()) {
                 try {
                     Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);

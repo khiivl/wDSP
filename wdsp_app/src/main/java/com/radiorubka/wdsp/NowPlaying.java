@@ -269,18 +269,45 @@ public final class NowPlaying {
      */
     public synchronized String playerPackage() {
         String pkg = currentPackage();
-        // Any name from the radio family, not the factory one spelled out: the radio is about to
-        // report itself to the platform as "com.android.fmradio.ext" so that the panel's knob and
-        // the wheel keys work (Gemini's reverse of MediaFocusControl / TunerKnobTurnMediaKeyPolicy,
-        // 20.09.2026), and an exact match would have sent everything here to the factory package.
-        if (isRadioPackage(pkg)) {
-            try {
-                context.getPackageManager().getPackageInfo("com.kostyamat.fmradio", 0);
-                return "com.kostyamat.fmradio";
-            } catch (Throwable ignored) {
-            }
+        return isRadioPackage(pkg) ? radioPackageFor(pkg) : pkg;
+    }
+
+    /** Our own radio, the one fallback this class knows by name. */
+    private static final String OWN_RADIO = "com.kostyamat.fmradio";
+
+    /**
+     * Which radio application a reported package really is - the ONE place that decides it.
+     *
+     * <p>🔴 Rewritten 27.09.2026 after the owner's report through the board (#757): with the
+     * factory radio playing, the screensaver's cover opened OUR radio on top of it. Four places
+     * rewrote any radio-family name to {@code com.kostyamat.fmradio} unconditionally - this method,
+     * {@link #currentPackage()}, {@link #acceptRadioUpdate} and the screensaver's cover tap - on
+     * the reasoning of 20.09 that our radio reports itself to the platform under the factory name
+     * {@code com.android.fmradio.ext} so the panel knob and the wheel keys work (Gemini's reverse
+     * of MediaFocusControl / TunerKnobTurnMediaKeyPolicy). True, and still no licence to overrule
+     * the system when it names a radio that is actually there.
+     *
+     * <p>The rule now:
+     * <ol>
+     *   <li>the system named a radio that can be opened - that is the answer, whoever it is;</li>
+     *   <li>it named one that cannot be opened (not installed, disabled) - then it is our radio
+     *       speaking under the factory name, and ours is the answer if it is installed;</li>
+     *   <li>it named nothing while the MCU says the tuner is on - ours if installed, otherwise the
+     *       factory name, which is at least true of the hardware.</li>
+     * </ol>
+     */
+    public String radioPackageFor(String reported) {
+        if (notEmpty(reported) && isOpenable(reported)) return reported;
+        if (isOpenable(OWN_RADIO)) return OWN_RADIO;
+        return notEmpty(reported) ? reported : "com.android.fmradio.ext";
+    }
+
+    private boolean isOpenable(String pkg) {
+        try {
+            return context.getPackageManager().getLaunchIntentForPackage(pkg) != null;
+        } catch (Throwable t) {
+            return false;
         }
-        return pkg;
     }
 
     public void skipToPrevious() {
@@ -389,7 +416,7 @@ public final class NowPlaying {
         if (notEmpty(prop)) return prop;
         prop = HardwareProfile.systemProperty("persist.sys.qf.last_audio_src");
         if (notEmpty(prop)) return prop;
-        if (isRadioSource()) return "com.kostyamat.fmradio";
+        if (isRadioSource()) return radioPackageFor("");
         return "";
     }
 
@@ -524,7 +551,10 @@ public final class NowPlaying {
     private synchronized void acceptRadioUpdate(Intent intent) {
         String name = intent.getStringExtra("com.qf.radio.update_action_name_key");
         String freq = intent.getStringExtra("com.qf.radio.update_action_key");
-        playerPackage = "com.kostyamat.fmradio";
+        // The factory radio sends this broadcast too, and a broadcast does not say who sent it.
+        // What the platform recorded as the source does - so the name comes from there, resolved
+        // by the one method that decides which radio is which, instead of being assumed ours.
+        playerPackage = radioPackageFor(HardwareProfile.systemProperty(PROP_AUDIO_SRC));
         if (notEmpty(name)) artist = name;
         if (notEmpty(freq)) title = freq;
         playing = true;
