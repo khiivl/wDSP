@@ -801,3 +801,69 @@ cannot tell those apart must not guess: a value is not an event.
 `mv` блоби вбік, ребут, подивитися, чи з'явилися нові з тими самими датами. Якщо так, то правка XML
 плюс видалення блобів = чистий шлях тюнінгу без бінарного формату. Якщо ні — правити доведеться самі
 блоби або йти через сервер тюнінгу.
+
+### 12.8 Відповідь Дж на наш P0 (#751 → #753) — і що з неї ми перевірили самі (27.09.2026)
+
+Повний звіт Дж — `C:\repos\agent-bridge\agent_bridge_bodies\msg_0753.md`, канонічний документ у його
+базі — `C:\Users\kosty\.gemini\config\skills\qf-platform-architecture\references\26-AGDSP-AUDIO-PARAMS-ARCHITECTURE.md`.
+Нижче — суть, і біля кожного пункту позначено, **чиє** це знання.
+
+**Порядок читання (реверс Дж, адреси в `audio.primary.ums512.so`).**
+- `parse_audio_config()` @ `0x35b08`: `access("/data/vendor/local/media/audio_config.xml")` → є —
+  вантажить його; нема — `/vendor/etc/audio_config.xml`. 🔑 **Якщо файл із `/data` порожній або
+  битий, HAL сам відкочується на `/vendor`** (перевірка кореня @ `0x35b5a`). Тобто зіпсований файл у
+  `/data` не кладе звук — він просто ігнорується.
+- `init_sprd_xml()` @ `0x30b64`: так само для `audio_params/sprd/<name>.xml` — `/data` першим.
+
+**Компіляція блобів (реверс Дж).** Компілятор живе в самому HAL: `_init_sprd_audio_param_from_xml()`
+@ `0x30640` парсить XML (`offset/bits/t/id/val`), `save_audio_param_to_bin()` @ `0x2f098` пише
+24-байтний заголовок і тіло (`O_RDWR|O_CREAT|O_TRUNC`, 0644). Тригери: **файлів нема в `/data` →
+генерує з XML при старті audioserver**; або ПК-тюнер через TCP/DIAG — оновлює в пам'яті й записує без
+ребуту.
+- ✅ **Перевірено нами незалежно, 27.09:** стенд після обнулення має блоби з датою **1970-01-01** —
+  згенеровані на першому старті, ще до синхронізації годинника. Тобто регенерація «файлу нема → HAL
+  збирає з XML» — факт, а не лише дизасемблер. Звідси ж: **прибрати блоб = змусити HAL перезібрати
+  його з XML на наступному старті.**
+
+**Формат `audio_structure` (реверс Дж).** Заголовок 24 байти: 16 байт магії `"audio_profile"`,
+`uint32 num_mode = 0x3c` (60 режимів на QF; на телефонному BSP — 64), `uint32 struct_size = 0x2da`
+(730). Тіло `60 × 730 = 43 800`. Зсув поля: `24 + mode_index × 730 + field_offset`.
+- ✅ **Перевірено нами арифметикою:** `24 + 43 800 = 43 824` — рівно розмір `audio_structure` і на
+  старому стенді (29.08), і на обнуленому (1970).
+
+**Канал живого керування (реверс Дж).** FIFO `/data/vendor/local/media/mmi.audio.ctrl` (0666),
+диспетчер `ext_contrtol_process()` @ `0x508b0`, таблиця `ext_contrl_table` @ `0x5a418`. Команди:
+`AudioTester_enable=1` → TCP-сервер на **порту 9997** (протокол Unisoc DIAG, кадри `0x7E…0x7E`);
+`sprd_aec_on=0|1` — **AEC на льоту**; `bt_headset_nrec=0|1`; `loglevel=0..5`; `agdsp_reboot`;
+`FM_WITH_DSP=0|1`; `codec_mute=0|1`.
+- ✅ Сам FIFO бачили на стенді 21.09 (`prw-rw-rw-`). ⚠️ Але тека `/data/vendor/local/media` —
+  `drwxrwx--- audioserver system`: звичайний застосунок туди не пройде, тож для wDSP без рута цей
+  канал **закритий**; відкритий він для `system` (наш `wdsp_proxy` має `android.uid.system` — окреме
+  питання, не перевірене, і SELinux може сказати своє).
+
+**Карта полів у 730-байтному режимі (реверс Дж)** — те, за що крутити:
+| що | поле (зсув у режимі) |
+|---|---|
+| AEC | `aec_switch` `+0x08`, `aec_enable` `+0x60`, `pdelay` `+0x62`, `fir_taps` `+0x68`, `aec_ref_delay` `+0x86`, `aec_ul_delay` `+0x88` |
+| шумодав мікрофона | `ul_nr_modu1..3_switch` `+0x9a..+0x9e`, `ul_min_psne` `+0xa0`, `ul_max_psne` `+0xa2`, `ul_ns_factor` `+0xa6`, `ul_ns_limit` `+0xaa` |
+| EQ мікрофона (акцент на голосі) | `ul_EQ_switch` `+0x0a`, bass `+0x0c..+0x12`, treble `+0x14..+0x1a`, FIR `ul_fir_eq_coef00..32` `+0x1e..+0x5e` |
+| цифрові гейни | `ul_dgain_volume1..15` `+0xe2..+0xfe`, `dl_dgain_volume1..15` `+0x244..+0x260`, `Loopback_gain` (сайдтон) `+0x26a` |
+| аналоговий гейн мікрофона | `codec.xml`: `adcl/adcr_capture_volume` `+0x04/+0x08`, 0..7 = +0..+21 дБ; `audio_pga.xml`: `VBC ADC2 DG Set` |
+
+**Захист від битих даних (реверс Дж).** `init_sprd_audio_param_from_xml()` звіряє
+`struct_size × num_mode` із розібраним розміром і відкидає зіпсовані структури з
+`[Fatal error] … failed offset:0x%x`.
+
+**8581 (реверс Дж).** XML немає; `vb_effect_getpara()` @ `0x44edc` відкриває
+`/data/vendor/local/media/audio_para` першим, інакше `/vendor/etc/audio_para`; розбір через
+`libnvexchange.so` (`stringfile2nvstruct`); **режим важить 3360 байт** (`0xd20`) проти 730 у 7862.
+Тюнінг — сервіс `eng_vdiag` (`libaudioparamteser.so`) через пару FIFO `audiopara_tuning` /
+`audiopara_tuning_2`; `mmi.audio.ctrl` там лише для loopback і дампів.
+
+**Що це дає нам на практиці.**
+1. Налаштування AEC / NR / гейнів / EQ голосу **без оверлея `/vendor`**: правлений XML у
+   `/data/vendor/local/media/audio_params/sprd/` + видалений блоб → HAL сам перезбере на старті, а
+   якщо XML битий — відкотиться на заводський. Безпечніше не буває.
+2. Для виміру: `sprd_aec_on=0` через FIFO вимикає AEC **без ребуту** — але лише з правами `system` або
+   рутом. wDSP без рута цього не може; з рутом — може.
+3. ⚠️ Усе, крім двох «✅», — **дизасемблер Дж**, на нашому дроті не перевірене.
