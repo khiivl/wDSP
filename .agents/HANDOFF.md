@@ -18,10 +18,8 @@
 
 Документацію проєкту переведено на стандарт `~/.claude/CLAUDE.md`, правила англійською:
 
-- `AGENTS.md` 8.1 КБ, `ARCHITECTURE.md`, `DECISIONS.md`, `TODO.md`, `DEBT.md`; `HANDOFF.md` з
-  368 КБ до цього файла; `CLAUDE.md` 28.5 КБ → 706 Б; кореневий `agents.md` 89 КБ → 459 Б.
-- `.gitignore`: `rules.md`/`agents.md` прив'язано до кореня — без косої риски вони ловили
-  `.agents/AGENTS.md`, і `git add` мовчки не додавав нічого після нього.
+- `AGENTS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `TODO.md`, `DEBT.md`, цей зріз; `CLAUDE.md`
+  і кореневий `agents.md` зведено до посилань. Розміри — у комітах.
 - **`CALIBRATION_HISTORY.md`** — три заходи на математику мікрофона з комітами й діагноз, **чому
   профіль виходить пласким**. Читати перед правкою `estimateMicCompensation`.
 - **`MEASURED_FACTS.md`** — числа «не переміряти», врятовані зі зрізів пам'яті.
