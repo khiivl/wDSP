@@ -90,3 +90,25 @@ warned at all.
 
 Two claims in `ROOM_CALIBRATION.md` contradicted the code and nearly caused a non-bug to be "fixed"; the handoff spent
 ten days describing work as uncommitted that had been pushed.
+
+## Gemini and git: constructive yes, destructive no (owner, 29.09.2026)
+
+The rule used to be carried as "Gemini has no git rights". That was our over-reading. The owner:
+*«Я ніколи не забороняв ДЖ конструктивні права і інструменти гіт, навпаки настоюю на повному його
+праві, заборона стосується на комміти без пояснень, хардресети чи аменди. І коммітити в проекти,
+що ведеш ти»*.
+
+**Banned:** `reset --hard`, `clean`, `stash`, `checkout -- .`, `push --force`, `--amend`; a commit
+with no explanation; any commit into a project a Claude session leads.
+**His by right:** reading (`status`, `diff`, `log`, `show`), his own branch, `restore` on a single
+file he corrupted himself.
+
+**Why not wider.** On 02.09.2026 a `reset --hard` of his destroyed a day of uncommitted work in the
+radio project — but the cause was that he was guessing: he had corrupted a file through a
+PowerShell pipe and reached for the biggest hammer. Blindness is what produced the reset, so a ban
+on looking makes the next one more likely, not less. What actually protects a tree is committing
+before letting anyone in. Our own share of that day is recorded too: the risky instruction was
+written without the technique for carrying it out safely.
+
+**The sanctioned pattern for experiments:** when a Claude session is unavailable, the owner may put
+Gemini on experimental features — in a separate branch, ideally in a sandbox. It has worked.

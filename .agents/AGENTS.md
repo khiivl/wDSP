@@ -5,10 +5,9 @@
 
 ## Language (owner, 28.09.2026)
 
-Cyrillic costs about twice the tokens Latin does, so **everything an agent reads is written in English**: these rules,
-the knowledge files next to them, code comments, and the memory files. **Ukrainian is only for what the owner reads**:
-the conversation with him, commit messages, and the documents he opens — [TODO.md](TODO.md), [DEBT.md](DEBT.md),
-[HANDOFF.md](HANDOFF.md). Keep proper names and quoted owner decisions as they were said.
+**English** — everything an agent reads: these rules, the knowledge files, code comments, memory.
+**Ukrainian** — only what the owner reads: the conversation, commit messages, [TODO.md](TODO.md),
+[DEBT.md](DEBT.md), [HANDOFF.md](HANDOFF.md). His quoted decisions stay as he said them.
 
 An equaliser and cabin-measurement app for QF head units, driving the ROHM **BU32107** sound processor through the
 MCU. The owner's second application; the repository is shared with a friend who keeps `origin/master`.
@@ -61,7 +60,9 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
 - **Never install during a live test.** When the owner is at the unit: install, then be quiet — no `input tap`, no
   screenshots, no scripted runs. He will look.
 - **No sound tests at night** without permission.
-- Do not touch or commit anyone else's `.idea/*`. **Gemini has no git rights** in this repository.
+- Do not touch or commit anyone else's `.idea/*`. **Gemini does not commit here**, and destructive
+  git is banned to it everywhere; constructive git is its right — [DECISIONS.md](DECISIONS.md).
+  Commit before letting it into the tree.
 - Tester measurements go to the group <https://t.me/wDSPapp> (collection post <https://t.me/wDSPapp/79>) or a forum
   PM — **never** a direct message, where lone files get lost.
 
