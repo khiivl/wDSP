@@ -39,6 +39,46 @@ wDSP's spectrum sits on the same path and cannot be a witness about it.
 
 ---
 
+## Why v5.4.x exists at all — read this before reverting anything
+
+The owner, 29.09.2026. The recent versions are not polish; they are an attempt to reach two things
+at once, and the incoming session must not undo them by accident:
+
+1. 🎤 **An unprocessed microphone natively** — so that wDSP no longer has to hunt for the way round
+   it. Today the route is a fight: whoever opens the input first sets its format, the assistant
+   holds it at 16 kHz from boot, and `VOICE_RECOGNITION` does not lead where `audio_pcm.xml`
+   promises. v5.4 routes normal and recognition capture to the unprocessed ALSA device 0 without a
+   DSP lock. **If that holds on the wire, several of wDSP's workarounds become unnecessary** —
+   which is a reason to verify it rather than to assume it.
+2. 📞 **Compatibility with the calling experiment** — the head unit made to work as a phone, calls
+   over the network from the SIM. This bore fruit: the calls work.
+
+The owner's own summary of the cost: it worked, and *«довело мене до сказу, чому я затіяв всі ці
+чистки»*.
+
+**What the calling side actually consists of** (so nobody rediscovers it the hard way):
+
+- the dialer was taken from a Teclast tablet — a Google dialer — and the telecom part is Topway's.
+  🔴 The two are **not fully compatible**, the Google dialer especially;
+- the head unit's own notification shade **cannot display an incoming call** or offer a button to
+  accept it. A sketch project that restores the notification functions is being modified to cover
+  this;
+- along the way there was no ringtone at all until it was fixed.
+
+🔴 **That project is led by a Claude session too**, like the rest of the commercial work (the
+owner's ruling of 29.09.2026). Gemini is on support: it is given work, not ownership. The reason is
+named plainly — while it led this, it broke one thing after another, and **because it kept git badly
+it could not get back to a known state**. Not the breaking; the inability to return.
+
+⚠️ **This explains the overlay collision, and makes it worse than it looked.**
+`qf_cellular_calling_master` and BitPerfect both write
+`primary_audio_policy_configuration.xml`, and now it is clear they are not unrelated neighbours —
+**both serve the same feature**. Whichever mounts last wins, so the calling path and the
+bit-perfect path can silently cancel each other. Resolving this is item 3 of the ledger, and it is
+not cosmetic.
+
+---
+
 ## Who owns what
 
 | axis | BitPerfect | wDSP |
