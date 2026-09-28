@@ -228,6 +228,14 @@ day/night (`*_day` / `*_night` key suffixes) and applied **imperatively** to vie
 (`tintTextInputLayout`, nav bar tinting, label/value coloring). A new control is not themed until
 someone tints it explicitly — the XML colors are only the pre-theme defaults.
 
+Concretely, the labels are coloured by **walking arrays of ids**, not by styles:
+`SettingsActivity.applyTheme()` iterates `primaryLabels` and `secondaryLabels` (`SettingsActivity`
+~:3140 and ~:3166), and `MainActivity` keeps a `secondaryLabels` list of its own (~:837). An id that
+is not in the list keeps whatever colour the layout gave it, so the failure is silent: the build
+passes, `findViewById` works, the click works, and only the eye on the unit sees a washed-out label.
+Caught twice this way; a whole collapsible block of the analyser and diagnostics was unthemed from
+birth. Add the id to the list in the same change that adds the control.
+
 `AudioSpectrumEngine` is a singleton over `android.media.audiofx.Visualizer`. All spectrum consumers
 (`SpectrumAnalyzerView`, `FmVisualizerView`, `StatusBarVisualizerView`) register as listeners on that
 one engine — **never open a second `Visualizer` session.** Which session it attaches to is decided by
