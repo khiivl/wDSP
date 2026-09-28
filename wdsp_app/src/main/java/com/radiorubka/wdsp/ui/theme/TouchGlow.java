@@ -118,6 +118,12 @@ public final class TouchGlow {
                     tv.setTag(R.id.tag_glow_color, null);
                 }
             }
+            return;
         }
+
+        // Everything else - a SeekBar, a card, a whole row - has no colour of its own to flash,
+        // so it dims instead. Without this the Settings screen loses touch feedback entirely on
+        // those views: they are neither MaterialButton, ImageView nor TextView.
+        v.setAlpha(on ? 0.55f : 1f);
     }
 }

@@ -63,7 +63,7 @@ import com.google.gson.JsonPrimitive;
 import com.radiorubka.wdsp.ui.ThemedDialog;
 import com.radiorubka.wdsp.ui.PermissionsWizard;
 import com.radiorubka.wdsp.ui.SettingsAccordion;
-import com.radiorubka.wdsp.ui.TouchGlow;
+import com.radiorubka.wdsp.ui.theme.TouchGlow;
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 import com.radiorubka.wdsp.ui.views.HueWheelView;
 
