@@ -24,6 +24,8 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 | [TODO.md](TODO.md) · [DEBT.md](DEBT.md) | the queue, and the defects that are still open (symptom, where in the code, why deferred). In Ukrainian: the owner reads them |
 | [DECISIONS.md](DECISIONS.md) | why each rule in AGENTS.md exists — the episode that produced it and what it cost |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | how the app is put together: the SharedPreferences bus, `McuService`, the 100 ms loop, broadcasts, the measurement probes, who holds the microphone, the UI, the native analyser |
+| [CALIBRATION_HISTORY.md](CALIBRATION_HISTORY.md) | 🔴 **read before touching `estimateMicCompensation`** — the microphone maths has been redone three times and each attempt gave a different answer: what was tried, which commits hold it, why each turn was made, and why the profile currently comes out flat. In Ukrainian: it is decision material for the owner |
+| [MEASURED_FACTS.md](MEASURED_FACTS.md) | numbers taken on the unit and marked "do not measure again" — the capture chain, the platform around us, and one git trap |
 | [BUILDING.md](BUILDING.md) | how a fresh clone builds itself, what is committed on purpose, and why R8 must stay off |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | the cabin measurement: sweep, deconvolution, what it can and cannot honestly tell a user, and where it is going |
 | [RESEARCH_REQUEST_DYNAMIC_BASS.md](RESEARCH_REQUEST_DYNAMIC_BASS.md) | 🔬 research request (14.09.2026): should bass compensation and the midbass high-pass track listening level, expressed in the hardware's own coarse steps |
