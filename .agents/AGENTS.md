@@ -111,6 +111,11 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
 | wDSP → radio | screensaver | [SCREENSAVER_RADIO_CONTRACT.md](SCREENSAVER_RADIO_CONTRACT.md) |
 | wDSP → Magisk modules | BitPerfect, `qf_cellular_calling_master` | both overlay `primary_audio_policy_configuration.xml`; the Gemini session leads them |
 
+`C:\APPS_Contacts\wDSP--QFRadio\` is canonical; the copies here are **mirrors** — edit there, then copy across, never
+the reverse. Each contract carries a ledger with **one column per application**: you edit only your own column, an item
+closes only when both sides have marked it, and a mark names its evidence (a commit, a measurement, a log line) rather
+than an intention.
+
 **wDSP owns the system audio path** — the register of platform "axes" is in `platform/08-VOLUME-AND-SOURCES.md`,
 section "own axes". Change a contract → update the file in `C:\APPS_Contacts\` and write to the dependent project's
 line by address, not by broadcast.

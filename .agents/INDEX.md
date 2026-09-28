@@ -19,7 +19,11 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 
 | file | what |
 |---|---|
-| [HANDOFF.md](HANDOFF.md) | **read first after a compaction, and first of all on a new machine** — opens with a cold-start section written for a session that has none of this history: which build is where, what is deliberate and must not be "fixed", which of our own conclusions were wrong. Then — where things stand, what is uncommitted, what is open, and the rules that cost something when forgotten |
+| [AGENTS.md](AGENTS.md) | **read first** — the rules in force: what this project is, how it builds, how it is verified on the unit, the prohibitions, how to work with the owner, and the dependencies |
+| [HANDOFF.md](HANDOFF.md) | one current snapshot, overwritten each session: where things stand, what is in flight with its exact next step, questions for the owner. No history — that is in git |
+| [TODO.md](TODO.md) · [DEBT.md](DEBT.md) | the queue, and the defects that are still open (symptom, where in the code, why deferred). In Ukrainian: the owner reads them |
+| [DECISIONS.md](DECISIONS.md) | why each rule in AGENTS.md exists — the episode that produced it and what it cost |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | how the app is put together: the SharedPreferences bus, `McuService`, the 100 ms loop, broadcasts, the measurement probes, who holds the microphone, the UI, the native analyser |
 | [BUILDING.md](BUILDING.md) | how a fresh clone builds itself, what is committed on purpose, and why R8 must stay off |
 | [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md) | the cabin measurement: sweep, deconvolution, what it can and cannot honestly tell a user, and where it is going |
 | [RESEARCH_REQUEST_DYNAMIC_BASS.md](RESEARCH_REQUEST_DYNAMIC_BASS.md) | 🔬 research request (14.09.2026): should bass compensation and the midbass high-pass track listening level, expressed in the hardware's own coarse steps |
@@ -30,7 +34,8 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 | [SCREEN_MATRIX.md](SCREEN_MATRIX.md) | ЕКРАНИ ПЛАТФОРМИ QF — заводська матриця 132 панелей («屏参描述对照表»), реальні UI-геометрії в dp, поведінка статусбару QF та правила адаптації розмітки |
 | [AUDIO_OWNERSHIP_CONTRACT.md](AUDIO_OWNERSHIP_CONTRACT.md) | who owns the volume, the channel and the EQ when radio and wDSP share one MCU path — the signal that ends the race, and why `volume` in it is advisory. **Agreed 26.08.2026; both sides implemented and jointly tested 26–31.08, wDSP's half committed** |
 
-Read [../CLAUDE.md](../CLAUDE.md) first for how the app is put together.
+The standard automotive developer-support component (`ShimmerBadgeLayout` + `SupportDialog`) is documented in the
+`automotive-support-badge` skill, not here.
 
 ## Agreements with other applications → `C:\APPS_Contacts\`
 
