@@ -13,8 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
-rules.md
-agents.md
+/rules.md
+/agents.md
 
 # Native build intermediates
 wdsp_app/.cxx/
