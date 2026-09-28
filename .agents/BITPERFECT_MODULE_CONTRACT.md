@@ -153,7 +153,7 @@ names its evidence — a commit, a measurement, a line in a log.
 
 | # | item | BitPerfect | wDSP |
 |---|---|---|---|
-| 1 | Handover accepted; the incoming session has announced itself on the board | ❌ | ⏳ this file, 29.09.2026 |
+| 1 | Handover accepted; the incoming session has announced itself on the board | ❌ | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
 | 2 | `module.prop` and the built zip agree on a version | ❌ | ⚪ |
 | 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ❌ | ❌ recorded in `DEBT.md` |
 | 4 | Every claim about the module in either tree carries wire evidence | ❌ | ⏳ rule stated above |
