@@ -8,7 +8,7 @@
 
 | side | what it is | who leads it |
 |---|---|---|
-| **BitPerfect** | the Magisk module `BitPerfect.module` — a radically changed audio path — and the still-empty control app `com.radiorubka.bitperfect` | the BitPerfect Control session (announcing itself on the board 29.09.2026) |
+| **BitPerfect** | the Magisk module `BitPerfect.module` — a radically changed audio path — and the still-empty control app `com.radiorubka.bitperfect` | the BitPerfect Control session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` — **both** the module and the app, ruled by the owner 29.09.2026 |
 | **wDSP** | `com.radiorubka.wdsp` — the equaliser and cabin measurement, and the owner of the system audio path | the Claude wDSP session |
 | *affected third party* | `kostyamat_fmradio` — the radio | the Claude Main (Radio Dev) session |
 
@@ -153,12 +153,12 @@ names its evidence — a commit, a measurement, a line in a log.
 
 | # | item | BitPerfect | wDSP |
 |---|---|---|---|
-| 1 | Handover accepted; the incoming session has announced itself on the board | ❌ | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
+| 1 | Handover accepted; the incoming session has announced itself on the board | ✅ accepted 29.09 — the owner ruled in chat that this session leads **both** the module and the app ("так, це ти і модуль твій"); announced in board #853 | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
 | 2 | `module.prop` and the built zip agree on a version | ❌ | ⚪ |
 | 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ❌ | ❌ recorded in `DEBT.md` |
 | 4 | Every claim about the module in either tree carries wire evidence | ❌ | ⏳ rule stated above |
 | 5 | The zone boundary for the control app (routing and muting) is put to the owner and answered | ❌ | ❌ |
-| 6 | The radio line is told what changes for it | ❌ | ❌ |
+| 6 | The radio line is told what changes for it | ❌ | ✅ board #859 — the overlay collision, why v5.4.x exists, and the stale skill copies |
 
 ---
 
