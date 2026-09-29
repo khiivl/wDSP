@@ -344,6 +344,35 @@ therefore keeps `qf_double_bt_audio_route_i2s.xml` from the BU set, carrying **`
 I2S bus that BD hardware does not use. 🧩 That is the most likely source of the digital rasp people
 report on BD units — not "wrong profile", but a stale file the HAL is entitled to load.
 
+✅ **Closed — this describes the mechanism and its history, not current behaviour.** Re-read
+30.09.2026 by the session that owns the module, because the passage above reads as a live defect and
+was passed on as one. `customize.sh` carries `drop_route()`, which removes the wrong route from
+**both** `$MODPATH` and the live `/data/adb/modules/BitPerfect.module/system/vendor/etc` — the
+second path matters because Magisk unpacks an upgrade into `modules_update/<id>` while the installed
+directory keeps what an older version put there.
+
+🔬 Traced through the whole file set for a BD unit: every file pre-seeded from the BU variant is
+either overwritten by `profiles/bd37544_noi2s/`, overwritten by `common/`, or explicitly dropped.
+Nothing survives. 📻 Confirmed on the bench — the live module directory and the shipped set match
+exactly, in both directions, no residue.
+
+🔴 **But the design is safe only by an unenforced list, and that is the real finding.** `drop_route`
+names exactly two files per branch. Add a third route file, or any per-profile file that exists in
+the pre-seeded `system/` and has no counterpart in the other profile, and the leftover returns —
+nothing forces anyone to extend the list. The owner's ruling, 30.09.2026:
+
+> *«модуль має при встановленні визначати архітектуру, і створювати папку що магіск своїм тимчасовим
+> оверлеєм накладе на системну, але заборонено в принципі на пряму монтувати системні розділи рв і
+> писати на пряму»*
+
+⇒ Build `system/` **from empty** at install time from the detected architecture, instead of
+pre-seeding one variant and patching it by name. Then there is nothing to leave behind and no list
+to maintain. ⚠️ The rebuild has to cover the **live** directory too, not only the staging one, or a
+file dropped between versions survives on the unit for good.
+
+✅ The ban itself is respected today: no `mount -o rw`, no `remount`, no write into `/system` or
+`/vendor`. The only system path touched is a `md5sum` read of the factory `audio_params`.
+
 ### 🪤 "Identical to factory" does not mean "redundant"
 
 An audit of every shipped file against the factory copy shows two in the BD profile that are
