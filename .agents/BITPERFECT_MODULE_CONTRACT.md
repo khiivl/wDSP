@@ -65,10 +65,23 @@ The owner's own summary of the cost: it worked, and *«довело мене д�
   this;
 - along the way there was no ringtone at all until it was fixed.
 
-🔴 **That project is led by a Claude session too**, like the rest of the commercial work (the
-owner's ruling of 29.09.2026). Gemini is on support: it is given work, not ownership. The reason is
-named plainly — while it led this, it broke one thing after another, and **because it kept git badly
-it could not get back to a known state**. Not the breaking; the inability to return.
+🔴 **Who leads what here is narrower than this file first said, and one part is still the
+owner's to settle.** What he said on 29.09 was about **the sketch project that restores the
+notification functions**: *«цей проект також буде вести сесія клауде, як і решту комерційних
+проектів»*. Written here first as "the calling work is Claude-led", which was wider than the
+sentence — corrected 30.09 by wDSP after session `3827b401` spotted the conflict.
+
+❓ **Open:** on 30.09 the owner told `3827b401` to *«узгодите з ДЖ, що веде дзвінки»*, which
+points at Gemini for the calling feature itself. Neither side edits this into a rule: the owner
+names the line, and then it is written down.
+
+What is **not** in doubt: Gemini does not own the commercial projects and is on support until it
+proves it can keep the code of practice. The reason is named plainly — while it led this work it
+broke one thing after another, and **because it kept git badly it could not get back to a known
+state**. Not the breaking; the inability to return. ⚠️ That verdict is about the episode
+the owner described, not about every repository Gemini touches: in the module's own tree the
+history of 27.09 is kept well — experiment, revert and fix stand as separate dated commits
+(established by `3827b401`, board #861).
 
 ⚠️ **This explains the overlay collision, and makes it worse than it looked.**
 `qf_cellular_calling_master` and BitPerfect both write
@@ -154,11 +167,51 @@ names its evidence — a commit, a measurement, a line in a log.
 | # | item | BitPerfect | wDSP |
 |---|---|---|---|
 | 1 | Handover accepted; the incoming session has announced itself on the board | ✅ accepted 29.09 — the owner ruled in chat that this session leads **both** the module and the app ("так, це ти і модуль твій"); announced in board #853 | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
-| 2 | `module.prop` and the built zip agree on a version | ❌ | ⚪ |
+| 2 | `module.prop` and the built zip agree on a version | ⏳ diagnosed 29.09, **not** a lost-work incident — see §"The two v5.4 builds" below. Nothing is fixed yet: the owner's word is "change nothing, a calling test module is on the unit"; settle it with the calling line first | ⚪ |
 | 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ❌ | ❌ recorded in `DEBT.md` |
 | 4 | Every claim about the module in either tree carries wire evidence | ❌ | ⏳ rule stated above |
 | 5 | The zone boundary for the control app (routing and muting) is put to the owner and answered | ❌ | ❌ |
 | 6 | The radio line is told what changes for it | ❌ | ✅ board #859 — the overlay collision, why v5.4.x exists, and the stale skill copies |
+
+---
+
+## The two v5.4 builds — measured 29.09.2026, nothing changed
+
+Ledger item 2 looked like a lost-work incident. It is not. Measured on disk, read-only:
+
+📻 **No build declares anything but 504.** Both `QF_BitPerfect.module.v5.4-Universal.zip` and
+`QF_BitPerfect.module.v5.4.1-Universal.zip` carry `version=v5.4-Universal`, `versionCode=504` in
+`module.prop`. **"5.4.1" exists only in the file name.**
+
+📻 **Of the 15 files that differ byte-for-byte between the two, 12 differ only in line endings** —
+v5.4 is CRLF, v5.4.1 is LF; after normalising, zero differing lines. The byte delta of each file is
+exactly its line count, which is what gave it away. ⚠️ Anyone comparing these builds by size or by a
+plain `diff` will read line endings as content; normalise first.
+
+📻 **Three files differ in substance**, all of them `primary_audio_policy_configuration.xml` (root
+and both profiles). v5.4.1 adds an `Earpiece` devicePort and a `mix` route from `primary
+output,fast`, a `PCM_16_BIT` Speaker profile, and widens the input to `8000…48000`.
+
+🔬 **The timeline explains it, and git here is clean, not badly kept:**
+
+```
+27.09 18:10  v5.4 zip built
+27.09 20:42  4ef23c2  add 16-bit Speaker profile and restore Earpiece for calls
+27.09 20:43  v5.4.1 zip built          ← one minute after that commit
+27.09 21:20  f1bc3df  revert the Earpiece and 16-bit Speaker additions
+27.09 21:38  1fa3ed0  restore Built-In Back Mic          ← HEAD, tree clean
+```
+
+⇒ `v5.4.1` is **the calling experiment**, built from `4ef23c2` and reverted an hour later. The
+working tree equals the `v5.4` zip. Nothing is uncommitted and nothing was lost.
+
+🔴 **The real defect is the one that remains:** two payloads that route audio differently — one
+sending `primary output,fast` to an `Earpiece` sink, one not — both answer `504`. Neither Magisk,
+nor its manager, nor anything on the unit can say which is installed. That is why "which version is
+on this unit" had no answer.
+
+⚠️ **The unit carries the calling test build, by the owner's word (29.09).** So the unit is not
+evidence of what the module releases, and its files must not be read as such.
 
 ---
 
