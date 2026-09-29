@@ -71,9 +71,25 @@ notification functions**: *«цей проект також буде вести 
 проектів»*. Written here first as "the calling work is Claude-led", which was wider than the
 sentence — corrected 30.09 by wDSP after session `3827b401` spotted the conflict.
 
-❓ **Open:** on 30.09 the owner told `3827b401` to *«узгодите з ДЖ, що веде дзвінки»*, which
-points at Gemini for the calling feature itself. Neither side edits this into a rule: the owner
-names the line, and then it is written down.
+✅ **Settled by the owner, 30.09.2026** — he drew the line through the middle of the feature, not
+around it:
+
+> *«дзвінки веде ДЖ, запиши так у контракт, поки що, але саме програму, а бітперфект під дзвінки ти»*
+
+| part of the calling feature | who |
+|---|---|
+| the calling **application** (caller + voice-assistant bridge) | **Gemini**, session `d739c765-beb2-4061-8350-6cb59b39859c` |
+| **BitPerfect under calls** — the module, the audio policy, the route | **BitPerfect Control**, session `3827b401` |
+
+⚠️ Both are marked *«поки що»* by the owner. His stated intent: if Gemini stops erring once the
+skills and the code of practice are optimised *(«поки що тьфу-тьфу»)* it keeps the application;
+either way he will eventually put a Claude session on it to carry it to production. Do not write
+either assignment down as permanent.
+
+🔴 **The mode this session works in, in the owner's words:** *«Збирай інформацію і забирай модуль,
+поки що в режимі спостерігача і контролера, можливо порадника.»* So: take the module, gather what
+is known, observe and check — and do not rebuild or reshape it while the migration to the new
+documentation standard is still running and sessions are being shuffled.
 
 What is **not** in doubt: Gemini does not own the commercial projects and is on support until it
 proves it can keep the code of practice. The reason is named plainly — while it led this work it
@@ -168,7 +184,7 @@ names its evidence — a commit, a measurement, a line in a log.
 |---|---|---|---|
 | 1 | Handover accepted; the incoming session has announced itself on the board | ✅ accepted 29.09 — the owner ruled in chat that this session leads **both** the module and the app ("так, це ти і модуль твій"); announced in board #853 | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
 | 2 | `module.prop` and the built zip agree on a version | ⏳ diagnosed 29.09, **not** a lost-work incident — see §"The two v5.4 builds" below. Nothing is fixed yet: the owner's word is "change nothing, a calling test module is on the unit"; settle it with the calling line first | ⚪ |
-| 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ❌ | ❌ recorded in `DEBT.md` |
+| 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ⏳ unblocked 30.09 — the owner named the lines, so the counterpart is Gemini `d739c765` (calling app) while the module side is this session. Not touched yet: the unit carries the calling test build and the owner's word is "change nothing" | ❌ recorded in `DEBT.md` |
 | 4 | Every claim about the module in either tree carries wire evidence | ❌ | ⏳ rule stated above |
 | 5 | The zone boundary for the control app (routing and muting) is put to the owner and answered | ❌ | ❌ |
 | 6 | The radio line is told what changes for it | ❌ | ✅ board #859 — the overlay collision, why v5.4.x exists, and the stale skill copies |
