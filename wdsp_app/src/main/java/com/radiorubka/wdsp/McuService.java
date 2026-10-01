@@ -1141,11 +1141,19 @@ public class McuService extends Service implements LocationListener {
      *
      * <h2>Why this lives here rather than in the radio</h2>
      *
-     * The platform only broadcasts {@code VOLUME_CHANGED} when the <b>channel</b> changes, not when
-     * a level does, and the radio's receiver is not even alive while a player is in front. So the
-     * radio can never see the volume being turned while music plays - which is the entire "media to
-     * radio does not follow" complaint. This service polls, so it sees every change on any source.
-     * That, and not being long-lived, is the real reason the job belongs here.
+     * The radio's receiver is not even alive while a player is in front, so the radio can never see
+     * the volume being turned while music plays - which is the entire "media to radio does not
+     * follow" complaint. This service is long-lived and polls, so it sees every change on any
+     * source. Being long-lived is the real reason the job belongs here.
+     *
+     * 📻 Corrected 01.10.2026 by measurement on the unit: this comment used to claim the platform
+     * broadcasts {@code VOLUME_CHANGED} only on a <b>channel</b> change and not on a level change.
+     * It does broadcast on every level change - one per encoder step, with the new value - so that
+     * was never the reason. Two encoder steps with nothing playing gave
+     * {@code pushed=4 type=media_type media=4} and then {@code pushed=3 ... media=3}. The
+     * conclusion above still holds for the other reason; the premise was wrong. Whether this job
+     * could listen instead of polling is now an open option rather than an impossibility - see
+     * {@code .agents/DEBT.md}.
      *
      * <h2>🔴 The base, never the live level</h2>
      *
