@@ -238,11 +238,24 @@ Measured by the BitPerfect line on the bench and recorded by our own `wDSP_Diagn
 - transaction numbers of the MCU service used for this: `RPC_GetChannel` is **14**,
   `RPC_SetChannel` is **15** (`service call mcu_service 15 i32 <channel>`).
 
-🪤 **Re-selecting the channel the MCU is already on proves nothing about `sys.current.vol.type`.**
-That call cannot distinguish "the type is never set here" from "it is set only when the channel
-actually changes", and §2 above was written from reading the service, which may describe the
-changed-channel branch. To settle it: switch to a **different** channel and read the type between
-the switches. Until then neither statement is proven.
+✅ **Settled 01.10.2026 - both readings are true, each under its own condition.** Measured on the
+unit (operator `2495fea2`, one adb channel), switching away and back:
+
+```
+channel 4, type ""            <- start
+service call mcu_service 15 i32 2  ->  channel 2, type radio_type
+service call mcu_service 15 i32 4  ->  channel 4, type media_type
+```
+
+- a **real** change of channel does set `sys.current.vol.type`, exactly as §2 says;
+- re-selecting the channel the MCU is **already on** leaves the type untouched, while still pushing
+  the level and broadcasting - which is why two earlier readings on an unchanged channel looked like
+  a refutation of §2 and were not. An experiment that cannot fail cannot confirm either.
+
+📻 And the level does travel on its own event: **`com.qf.action.VOLUME_CHANGED` fires on every
+level change**, one per encoder step, carrying the new value - two steps with nothing playing gave
+`pushed=4 … media=4` then `pushed=3 … media=3`. A comment in `McuService` claimed the opposite
+and was corrected by this measurement.
 
 ### 🎚️ Reproducing a real knob turn from adb — `keyevent 293` / `294`
 
