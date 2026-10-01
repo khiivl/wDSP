@@ -356,6 +356,14 @@ public class McuService extends Service implements LocationListener {
     private boolean isBootStart = true;
     private String presetBeforeCall;
     /** Whether the previous checkPlayer poll saw a call - so its start is acted on once. Worker thread. */
+    /**
+     * Set by the vendor broadcast {@code com.qf.action.PHONE_CALL_START} and cleared by
+     * {@code _END}. Written on the main thread, read by the polling thread, hence volatile. It
+     * only ever <b>adds</b> to the type check below: a call announced by a broadcast is a call,
+     * and so is one seen as {@code btcall_type} without any broadcast.
+     */
+    private volatile boolean callAnnounced = false;
+
     private boolean callSeenLastPoll;
 
     /**
@@ -479,6 +487,38 @@ public class McuService extends Service implements LocationListener {
             runWhenReady(() -> {
                 String action = intent.getAction();
                 Log.d(TAG, "Received broadcast: " + action);
+                // 🔴 The call preset must be on the chip before the first words, not 100 ms later.
+                //
+                // Until now a call was noticed only by the poll, from sys.current.vol.type ==
+                // btcall_type. That is a sound criterion - the type is set by whoever really
+                // switches the path - but it is seen up to one tick late, and the whole purpose of
+                // this preset is a neutral path for the other side's echo canceller. The first
+                // syllables going through the owner's equaliser is exactly what it exists to
+                // prevent.
+                //
+                // 🔬 com.qf.action.PHONE_CALL_START / _END is the vendor's own contract, and all
+                // three places a call can come from announce it: the factory Bluetooth app
+                // (PhoneCallDialog.show()/hide()), the SIM dialer, and the Zlink/CarPlay
+                // projection. Verified in the decompiled QF_Bluetooth, board 01.10.2026.
+                //
+                // The type check stays as the fallback in the poll: a call that never announces
+                // itself is still caught, one tick late, exactly as before.
+                if ("com.qf.action.PHONE_CALL_START".equals(action)) {
+                    callAnnounced = true;
+                    // The switch touches currentPresetName, presetBeforeCall and the MCU queue,
+                    // all owned by the polling thread. Announce here, act there.
+                    backgroundHandler.post(() -> {
+                        lastPlayerSource = "Call";
+                        processPlayerSwitch("Call");
+                    });
+                    return;
+                }
+                if ("com.qf.action.PHONE_CALL_END".equals(action)) {
+                    // Only the flag. Restoring the previous preset is the poll's existing chain,
+                    // and being one tick late on the way out costs nothing - nobody is talking.
+                    callAnnounced = false;
+                    return;
+                }
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
@@ -882,6 +922,8 @@ public class McuService extends Service implements LocationListener {
         IntentFilter controlFilter = new IntentFilter();
         controlFilter.addAction("com.qf.action.ACC_ON");
         controlFilter.addAction("com.qf.action.ACC_OFF");
+        controlFilter.addAction("com.qf.action.PHONE_CALL_START");
+        controlFilter.addAction("com.qf.action.PHONE_CALL_END");
         // Sent before ACC_OFF, ahead of the platform stopping apps for sleep (Gemini's reading of
         // QFSleepWakeup, references/18-MEDIA-SESSION-AND-SLEEP-RESUMPTION.md) - where PlayerResume
         // takes its note of what was playing, if it comes first.
@@ -1897,7 +1939,7 @@ public class McuService extends Service implements LocationListener {
         }
         // One reading of "is there a call" for this whole poll: the preset switch below and the
         // analyser pause here must never disagree about it.
-        boolean inCall = CallState.isCallType(activeType);
+        boolean inCall = callAnnounced || CallState.isCallType(activeType);
         AudioSpectrumEngine.getInstance().setCallActive(inCall);
         AudioSpectrumEngine.getInstance().checkSourceState();
         // The screensaver's own tick looks every two seconds; this poll sees the call within 100 ms,
