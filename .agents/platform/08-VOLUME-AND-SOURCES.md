@@ -225,6 +225,35 @@ volume. Nothing re-applies it later.
 📻 The broadcast is useful: it marks the exact instant a source changed and carries the value that
 was pushed. wDSP's diagnostic timeline listens for it.
 
+### 🔴📻 ACC OFF overwrites the level a person chose with the persist value (01.10.2026)
+
+Reported by the owner from his own use, and it is the decisive observation on this axis:
+
+> *«коли персист 10, я виставив 18 і погасив асс офф хоча б на 1 секунду, зразу після асс он
+> маю 10»*
+
+**One second of ACC OFF is enough.** So two different things happen at the two events, and they must
+not be confused:
+
+| event | what the chip ends up at | what it means |
+|---|---|---|
+| cold boot | the level it came up with, until something publishes `sys.current.vol.type` | the "whisper until the first touch" |
+| ACC OFF → ON | `persist.sys.*_volume`, **audibly** | the person's chosen level is actively discarded |
+
+⇒ **The suspicion that sleep repeats the cold-boot case is disproven.** After a wake the level does
+reach the chip - the owner hears it - so the type is published and the push happens. What is lost is
+not audibility but the person's choice.
+
+⚠️ **Consequence for any boot/wake action that re-pushes from the property:** after a wake the
+property already holds the persist value, so re-pushing it **reinforces** the reset instead of curing
+anything. Harmless, pointless, and an argument for not keeping such an action on the wake event.
+
+❓ Open, and it is the owner's call rather than ours: whether to remember the live level before
+sleep and restore it after ACC ON (a visible change to his car's daily behaviour), or to treat the
+reset as intended - the start-volume slider exists precisely so the car does not wake up loud. If it
+is cured, the cure must distinguish **waking** from a genuine **cold boot**, where the start slider
+must still win.
+
 ### 📻 After a cold boot the MCU takes `persist.sys.main_volume`, not a source level (01.10.2026)
 
 Measured by the BitPerfect line on the bench and recorded by our own `wDSP_Diagnostics`:
