@@ -42,8 +42,9 @@ Gradle 9.4 + AGP 9.0.1, Java 11, `compileSdk 36`. Build **on Windows** — WSL h
 adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-service -n com.radiorubka.wdsp/.McuService
 ```
 
-- Read the **boot-logger module** (`bootlog/<latest>/10_boot.log`, `20_run.log*`), not `logcat` after the fact: the
-  buffer here rotates within a minute, so a warning is gone before you grep for it. **`logcat -c` never.**
+- `logcat` is usable after the fact since 01.10.2026: every buffer is 16 MiB and persisted
+  (`persist.logd.size`). Only the **boot-logger module** (`bootlog/<latest>/`) spans a reboot.
+  **`logcat -c` never** - it now destroys far more.
 - `uiautomator dump` returns nothing while the status-bar visualiser runs (it waits for an idle UI and that overlay
   animates). Disable the widget, or read geometry from `adb shell dumpsys activity top -a`.
 - The stock `com.qf.soundeffect` writes the same hardware registers. For measurements it is disabled (`pm disable`) or
