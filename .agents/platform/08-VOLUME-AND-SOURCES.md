@@ -225,6 +225,35 @@ volume. Nothing re-applies it later.
 📻 The broadcast is useful: it marks the exact instant a source changed and carries the value that
 was pushed. wDSP's diagnostic timeline listens for it.
 
+### 📻 An application silent after a wake is **not** an axis fault - the negative is measured (01.10.2026)
+
+The assistant was inaudible after a wake, at a volume the owner had raised to 10, and the whole axis
+was suspected. Everything was then read in that exact state, before anything was touched:
+
+```
+sys.media.vol  10        STREAM_MUSIC  15/15, not muted
+channel        4         sys.mute.state false
+type           media_type
+PCM            closed    no out_write / cannot open pcm / busy in the log
+```
+
+Nothing was at zero, the type was published, the path was free. ⇒ **The silence had nothing to do
+with volume**, neither the MCU side nor the Android mixer.
+
+🔑 **And one line in that set answers it: `PCM closed`.** Had the application been handing over
+samples, the device would have been **open** at that moment. Closed, at full volumes, does not mean
+"the sound did not get through" - it means **there was no sound**. The application never spoke.
+
+**How to use this next time somebody reports "no sound after sleep":** read `PCM status` first.
+`closed` with non-zero volumes moves the conversation from the audio path to the application in one
+step, and saves the hours we spent here. An open device with full volumes is the opposite case and
+points back at the path.
+
+⚠️ Worth remembering about this bench specifically: wDSP in normal operation presses 0 → 1 every
+100 ms for the subwoofer's sake, so a zero level is partly masked while the app runs. During this
+measurement the app was not running and had no permissions - which is why the raw platform behaviour
+was visible at all.
+
 ### 🔴📻 ACC OFF overwrites the level a person chose with the persist value (01.10.2026)
 
 Reported by the owner from his own use, and it is the decisive observation on this axis:
