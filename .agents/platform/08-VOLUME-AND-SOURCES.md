@@ -151,6 +151,57 @@ been abandoned; it just keeps returning its last value.
 
 ---
 
+## 1-bis. 🔴 The `persist.sys.*` volume properties are a DERIVATIVE, not the store
+
+📻 Proven on the bench 30.09.2026, one reboot.
+
+🔬 `ConfigInfoManagerService` starts with two calls in a row:
+
+```java
+parseConfigInfo(context);                   // reads /great/protect_dir/car.config
+setConfigInfoToSystemProperties(context);   // and writes EVERY item into its property
+```
+
+The file lives on the **protected custom partition**, not in `/data`, so it survives a factory
+reset. Each entry carries `default`, `current`, `values`, `visible`, `restore`, `reset`:
+
+```
+name=navi_remix_ratio,  default=60, current=60, values=0 100, visible=1, ...
+name=navi_volume,       default=9,  current=9,  values=0 15,  visible=1, ...
+name=music_volume,      default=9,  current=9,  values=0 15,  visible=0, ...   ← hidden
+name=phone_volume,      default=12, current=13, values=0 32,  visible=1, ...
+```
+
+📻 **The experiment:** `setprop persist.sys.navi_remix_ratio 40` (the file said 60), reboot, read
+back → **60**. The property was overwritten and `car.config` was not touched.
+
+⇒ **Writing `persist.sys.*` directly does not survive a reboot.** It looks like it works — the value
+reads back correctly all session — and then quietly reverts. Anything that must persist has to go
+through `android.qf.config.ConfigInfoManager.updateConfigItemInfo(name, value)`, the AIDL service
+registered as **`config_service`** (`android.qf.config.IConfigInfoManager`), which is what
+CarSettings itself calls alongside its own `SystemProperties.set`.
+
+⚠️ `music_volume` is **`visible=0`** — hidden from the settings UI, so the person has no lever on it
+at all. And the same item drives a second property:
+
+```java
+if (info3.getConfigName().equals("music_volume"))
+    SystemProperties.set("persist.qf.arm.default.volume", value4);
+```
+
+📻 On the bench that one **disagrees**: `car.config` says 9, the property reads **15**, because
+BitPerfect pins it after the config service has run. Every other item matched its property exactly.
+So this is the one place where a module currently overrides the platform's own stored value — worth
+knowing before blaming a drifting volume on the platform.
+
+🧩 Taken together with `resetDefValIfNeed` (a source at 0 becomes `persist.sys.main_volume`), the
+unset-property fallback (§1), and the post-prompt restore to `getDefaultStreamVolume(3)`
+([09](09-NAVIGATION-AND-BITPERFECT.md)), this is the fourth independent mechanism that pulls a
+volume back to a default. None of them is a bug report on its own; together they are why a level
+here feels like rubber.
+
+---
+
 ## 2. Source switching: `RPC_SetChannel`
 
 🔬 Everything above is driven from one method in the MCU service.

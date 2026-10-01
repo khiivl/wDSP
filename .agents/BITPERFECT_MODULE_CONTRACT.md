@@ -172,6 +172,31 @@ the duty to report what it sees on the wire — including when it is the module'
   `primary_audio_policy_configuration.xml`. Whichever mounts last wins. Open in wDSP's `DEBT.md`.
 - 🔴 **Read the boot-logger module, not `logcat`** — the buffer here rotates within a minute, and a
   retry storm evicts all five rotation files in about 20 s. `logcat -c` is forbidden.
+- ✅ 📻 **Restarting `audioserver` does not break the path — measured 30.09.2026, both cases.** This
+  matters because "apply the parameters" in BitPerfect Control is exactly that restart, and the
+  platform's history made it look dangerous.
+  - *Idle:* `setprop ctl.restart audioserver` → pid changed, `pcm3p`/`pcm0p` stayed `closed`, two
+    output threads as before, and **`sys.media.vol` and `sys.current.vol.type` survived** — a
+    restart does not cost the person their volume or their source.
+  - *During playback* (wDSP playing, owner listening): the stream was **torn down and reopened by
+    the new server**, not stranded — `pcm3p` stayed `RUNNING` with a **new `owner_pid`** (4348 →
+    5108) and a fresh `trigger_time`; `hw_ptr` kept advancing; `AudioOut_D` came back at 48 kHz,
+    `Standby: no`. The owner confirmed audio by ear.
+  - ⚠️ Scope: verified on the v5.4 payload with one player, awake. It does **not** retroactively
+    excuse the v5.3 fault, which was a different mechanism — a second HAL instance holding
+    `pcmC0D3p` in `SETUP` — nor the after-sleep case, which is untested.
+- 🔇 📻 **A volume ceiling does not survive a reboot, so it is set immediately before a sound test,
+  never once per evening.** Measured 30.09.2026 on the bench: after a reboot `sys.media.vol`,
+  `sys.radio.vol`, `sys.call.vol` and `sys.aux.vol` were all **empty**, and an empty one reads back
+  as its `persist.sys.*_volume` default on every call — here 9 for media and 12 for the call
+  channel, while the agent that had set 3 before the reboot reported the unit as "fixed at 3". Set
+  it with the platform's own keys (`input keyevent 293` / `294`, the codes `hid_daemon.sh` feeds
+  when the encoder turns), then confirm `sys.media.vol` is no longer empty. ⚠️ Android's `24`/`25`
+  move `STREAM_MUSIC` inside Android only — the platform never learns, and the test returns a
+  convincing false result.
+- 🪤 📻 **After `adb reboot`, wait on `uptime`, not `sys.boot_completed`.** `adbd` outlives the
+  reboot request by a moment, so the first poll reads the *previous* boot's `1` and reports the unit
+  up in seconds. Measured 30.09.2026 — a waiter claimed "up in ~10 s" for a boot that took a minute.
 
 ---
 
@@ -184,7 +209,7 @@ names its evidence — a commit, a measurement, a line in a log.
 |---|---|---|---|
 | 1 | Handover accepted; the incoming session has announced itself on the board | ✅ accepted 29.09 — the owner ruled in chat that this session leads **both** the module and the app ("так, це ти і модуль твій"); announced in board #853 | ✅ board #853 — session `3827b401-ee38-4390-8b5a-8b5a12ad49b7` announced itself 29.09; handed over in #856 |
 | 2 | `module.prop` and the built zip agree on a version | ⏳ diagnosed 29.09, **not** a lost-work incident — see §"The two v5.4 builds" below. Nothing is fixed yet: the owner's word is "change nothing, a calling test module is on the unit"; settle it with the calling line first | ⚪ |
-| 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ⏳ unblocked 30.09 — the owner named the lines, so the counterpart is Gemini `d739c765` (calling app) while the module side is this session. Not touched yet: the unit carries the calling test build and the owner's word is "change nothing" | ❌ recorded in `DEBT.md` |
+| 3 | The two-module overlay collision on `primary_audio_policy_configuration.xml` is resolved or accepted with a named reason | ✅ **resolved 30.09, proven across a reboot.** `qf_cellular_calling_master` no longer ships `system/vendor` (Gemini `d739c765` removed it, live and staged); after the reboot the live file is BitPerfect's (`md5 ae5a14c3…`, 8402 B) and nothing else provides it. BitPerfect is the single source for audio policy; the calling line asks, this session writes | ❌ recorded in `DEBT.md` |
 | 4 | Every claim about the module in either tree carries wire evidence | ❌ | ⏳ rule stated above |
 | 5 | The zone boundary for the control app (routing and muting) is put to the owner and answered | ❌ | ❌ |
 | 6 | The radio line is told what changes for it | ❌ | ✅ board #859 — the overlay collision, why v5.4.x exists, and the stale skill copies |

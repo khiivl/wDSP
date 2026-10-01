@@ -314,6 +314,68 @@ takes the choice away.
 
 ---
 
+## §13. The whole ducking chain, measured end to end (30.09.2026)
+
+📻 First wire measurement of what §3 and §4 describe. Waze on a real route, a 440 Hz tone as the
+music, `persist.sys.audio.debug=true` so the platform prints its own numbers.
+
+### The curve is exact
+
+`G db` read off the music track in `dumpsys media.audio_flinger` while stepping the index:
+
+| index | 15 | 12 | 9 | 6 | 3 | 1 |
+|---|---|---|---|---|---|---|
+| **measured** | **0** | **−8** | **−16** | **−24** | **−36** | **−78** |
+
+Matches the shipped curve (`0,-9600 · 20,-3600 · 40,-2400 · 60,-1600 · 80,-800 · 100,0`) at every
+point. ⚠️ `FULL_SCALE` is **gone** — §4 describes early versions, not the current module.
+
+### What a prompt actually does
+
+```
+MapAudioStart,  naviconfigs.size()=62
+2navi start, orignal volume=15, is_call_start=false
+setOtherStreamVolume, base=15, mix=60, mapped=6
+2adjustVolumeStepByStep, maxMusicVolume=15, currentVolume=15, target index=6
+navi[0]: session=81, start_time=…, pkg=com.waze
+   …
+2navi stop, orignal volume=15
+navi stop, resume music volume to 15
+```
+
+Music steps 15 → 6 (0 → **−24 dB**) and back. The prompt itself rides `navi_volume`=9 on the
+`system` curve (`0,-4800 · 33,-2400 · 66,-800 · 100,0`) ≈ **−11 dB**, so it sits **+13 dB above the
+ducked music** — and would sit 11 dB *below* it without ducking. The chain is healthy.
+
+### 🔑 The base is `persist.qf.arm.default.volume`, and the pin is load-bearing
+
+🔬 `services/com/android/server/audio/AudioService.java:527`, **in the constructor**:
+
+```java
+int defaultVolume = SystemProperties.getInt("persist.qf.arm.default.volume", 9);
+AudioSystem.DEFAULT_STREAM_VOLUME[streamType2] = defaultVolume;   // loop over EVERY stream
+```
+
+- ❌ **Not** `persist.sys.main_volume` — an earlier note said so; measured 12 while the base was 15.
+- 🪤 **Read once at boot.** Changing the property at runtime does nothing: set to 10, the next prompt
+  still logged `orignal volume=15`. A runtime test of this value is not a test.
+- 🔴 BitPerfect pins it to **15**, and that is what makes "resume" mean **return to 0 dB**. Remove the
+  pin and the base falls to the fallback 9 — after the first prompt the digital path would sit at
+  **−16 dB permanently**, and bit-perfect would die silently. The owner's reason, 30.09: *«я хочу щоб
+  флінжер видав на вихід на ДСП весь звук до останнього кванта»*.
+
+### 🔑 The person's own level is never touched
+
+📻 45 samples across a prompt: `sys.media.vol` stayed at 8 throughout, while the Android index went
+15 → 6 → 15. **The duck lives entirely in the digital domain**; the MCU level the person actually
+turns is not involved.
+
+⇒ Therefore "the platform restores a default instead of the person's level" is **not a defect under
+this design** — under BitPerfect nobody sets the Android index by hand, so there is no other level to
+restore. It only bites if something moves that index behind the person's back.
+
+---
+
 ## 6. What to ask a stranger for
 
 wDSP's system report (**Settings → Diagnostics → Collect**) carries all of the above without root:
