@@ -225,6 +225,25 @@ volume. Nothing re-applies it later.
 📻 The broadcast is useful: it marks the exact instant a source changed and carries the value that
 was pushed. wDSP's diagnostic timeline listens for it.
 
+### 📻 After a cold boot the MCU takes `persist.sys.main_volume`, not a source level (01.10.2026)
+
+Measured by the BitPerfect line on the bench and recorded by our own `wDSP_Diagnostics`:
+
+- after a reboot `sys.media.vol` **does not exist yet**, so a re-push on the current channel sends
+  `persist.sys.main_volume` — on the bench `pushed=3`. The action delivers what the property holds;
+  it cannot make the unit louder than the person's start-volume slider, and must not try to.
+- the encoder afterwards moves it normally and **without a jump**: `keyevent 293` -> `pushed=4`,
+  `294` -> `pushed=3`. A jump there would have meant the actor set something the framework did not
+  know about.
+- transaction numbers of the MCU service used for this: `RPC_GetChannel` is **14**,
+  `RPC_SetChannel` is **15** (`service call mcu_service 15 i32 <channel>`).
+
+🪤 **Re-selecting the channel the MCU is already on proves nothing about `sys.current.vol.type`.**
+That call cannot distinguish "the type is never set here" from "it is set only when the channel
+actually changes", and §2 above was written from reading the service, which may describe the
+changed-channel branch. To settle it: switch to a **different** channel and read the type between
+the switches. Until then neither statement is proven.
+
 ### 🎚️ Reproducing a real knob turn from adb — `keyevent 293` / `294`
 
 📻 Measured 27–29.08.2026. This closes a hole that had blocked testing on both projects: anything
