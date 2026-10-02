@@ -27,7 +27,6 @@
 
 
     <dimen name="settings_pad">18dp</dimen>
-    <dimen name="settings_row_gap">20dp</dimen>
     <dimen name="settings_row_text">15sp</dimen>
     <dimen name="settings_note_text">14sp</dimen>
     <!-- 600: блок 252dp при доступних ~328dp. -->

@@ -23,8 +23,6 @@
     <dimen name="eq_small_text">9sp</dimen>
     <!-- Section titles inside the cards. -->
     <dimen name="card_title_text">18sp</dimen>
-    <!-- Padding inside the rows of the equaliser card. -->
-    <dimen name="eq_pad">4dp</dimen>
     <!-- Height of the boxed visualizers on the loudness tab. -->
     <dimen name="visualizer_height">96dp</dimen>
 </resources>

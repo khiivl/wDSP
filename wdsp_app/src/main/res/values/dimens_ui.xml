@@ -72,7 +72,6 @@
          weightSum=4, тобто на 800dp кожному дістається (800-2*pad)/4. Зменшений падінг тут
          віддає колесам ~16dp кожному — на вузьких панелях це помітно. -->
     <dimen name="settings_pad">12dp</dimen>
-    <dimen name="settings_row_gap">14dp</dimen>
     <dimen name="settings_row_text">18sp</dimen>
     <dimen name="settings_subtitle_text">18sp</dimen>
     <dimen name="settings_note_text">14sp</dimen>
