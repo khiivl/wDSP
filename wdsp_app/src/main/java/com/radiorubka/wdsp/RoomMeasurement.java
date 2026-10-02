@@ -18,8 +18,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -416,15 +418,24 @@ public final class RoomMeasurement {
      // SUB_FREQS_HZ), as the chip has them. The copies here called the high-pass's code 0 "20 Hz";
      // it is Through - no filter (15.09.2026).
 
+     /**
+      * The title is for the report; the wizard shows its own {@code room_wizard_stage_*} strings.
+      *
+      * <p>🔴 The tag is part of the preset's NAME, and the name is the key every band of the
+      * preset is stored under - so it is fixed English, exactly like {@link TargetCurve#presetName},
+      * and never comes from resources. A translated tag would make the next measurement after a
+      * language change save a second preset beside the first instead of replacing it (owner,
+      * 02.10.2026: "перший" - a fixed tag over a translated one).
+      */
      public enum SoundstageMode {
-         DRIVER(0, "Водій", "Водій"),
-         FRONT_CENTER(1, "По центру спереду", "Центр"),
-         CABIN_CENTER(2, "По центру салону", "Всі"),
-         OFF(3, "Без затримок", "Вимкн");
+         DRIVER(0, "Driver focus", "Driver"),
+         FRONT_CENTER(1, "Front center", "Center"),
+         CABIN_CENTER(2, "Cabin center", "Cabin"),
+         OFF(3, "No delays", "Off");
 
          public final int id;
          public final String title;
-         public final String shortTag;
+         private final String shortTag;
 
          SoundstageMode(int id, String title, String shortTag) {
              this.id = id;
@@ -469,11 +480,12 @@ public final class RoomMeasurement {
          }
      }
 
+     /** The title is for the report; the wizard shows its own {@code room_wizard_body_*} strings. */
      public enum CarBodyType {
-         HATCHBACK(0, "Близька посадка (Хетчбек — 60 см)", 60),
-         SEDAN(1, "Середня посадка (Седан / SUV — 75 см)", 75),
-         MINIVAN(2, "Далека посадка (Мінівен / Бус — 90 см)", 90),
-         CUSTOM(3, "Користувацька", 75);
+         HATCHBACK(0, "close seating (hatchback, 60 cm)", 60),
+         SEDAN(1, "medium seating (sedan / SUV, 75 cm)", 75),
+         MINIVAN(2, "far seating (minivan / bus, 90 cm)", 90),
+         CUSTOM(3, "custom", 75);
 
          public final int id;
          public final String title;
@@ -934,20 +946,24 @@ public final class RoomMeasurement {
      * back. The arrival times themselves were never affected, only the labels on them.
      */
     private enum Channel {
-        REAR_LEFT("rear left", FADER_MIN, FADER_MIN),
-        REAR_RIGHT("rear right", FADER_MAX, FADER_MIN),
-        FRONT_LEFT("front left", FADER_MIN, FADER_MAX),
-        FRONT_RIGHT("front right", FADER_MAX, FADER_MAX),
-        SUBWOOFER("subwoofer", FADER_CENTRE, FADER_CENTRE);
+        REAR_LEFT("rear left", R.string.rear_left, FADER_MIN, FADER_MIN),
+        REAR_RIGHT("rear right", R.string.rear_right, FADER_MAX, FADER_MIN),
+        FRONT_LEFT("front left", R.string.front_left, FADER_MIN, FADER_MAX),
+        FRONT_RIGHT("front right", R.string.front_right, FADER_MAX, FADER_MAX),
+        SUBWOOFER("subwoofer", R.string.subwoofer, FADER_CENTRE, FADER_CENTRE);
 
+        /** For the log and the report. */
         final String label;
+        /** For the screen. */
+        final int nameRes;
         /** Balance: the value written to {@code <preset>_f_lr}. */
         final int leftRight;
         /** Fader: the value written to {@code <preset>_f_fr}. */
         final int frontRear;
 
-        Channel(String label, int leftRight, int frontRear) {
+        Channel(String label, int nameRes, int leftRight, int frontRear) {
             this.label = label;
+            this.nameRes = nameRes;
             this.leftRight = leftRight;
             this.frontRear = frontRear;
         }
@@ -955,7 +971,10 @@ public final class RoomMeasurement {
 
     /** What one speaker's measurement found. */
     public static final class ChannelResult {
+        /** For the log and the report. */
         public String label;
+        /** For the screen. */
+        public int nameRes;
         /** Sample at which the sound arrived, counted from the start of the recording. */
         public int arrivalSamples;
         /**
@@ -1142,13 +1161,27 @@ public final class RoomMeasurement {
          * left no trace anywhere in the result.
          */
         public boolean micCalibrated;
-        public String error;
         /**
-         * The microphone is held narrow by another app and could not be taken back, so the run did
-         * not start: the screen tells the person to restart the head unit (owner, 14.09.2026: a
-         * sweep without root is made only after a restart).
+         * Set when the run failed: in English for the log and the report. An exception sets it
+         * alone; a known failure goes through {@link #fail}, which also keeps what the dialog says.
          */
-        public boolean needsRestart;
+        public String error;
+        /** The known reason behind {@link #error}, or null; see {@link #failureText}. */
+        MeasurementFailure failure;
+        private Object[] failureArgs = new Object[0];
+
+        void fail(MeasurementFailure why, Object... args) {
+            failure = why;
+            failureArgs = args;
+            error = why.english(args);
+        }
+
+        /** What the dialog says about a failed run, in the person's language where we know why. */
+        public String failureText(Context context) {
+            if (failure != null) return failure.localized(context, failureArgs);
+            return context.getString(R.string.room_err_unexpected, error != null ? error : "?");
+        }
+
         public String reportPath;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
@@ -1174,7 +1207,16 @@ public final class RoomMeasurement {
         public int suggestedSubDelaySteps = 0;
         public float suggestedSubDelayMs = 0f;
         public final int[] autoEqGains16 = new int[NativeSweep.BAND_COUNT];
+        /**
+         * Polarity among the main channels heard directly, all filled by {@link #judgePolarity}
+         * and only read elsewhere: the screen's warning and the report's verdict used to
+         * count it each on its own.
+         */
+        public int polarityInPhase, polarityInverted;
+        public final List<ChannelResult> invertedChannels = new ArrayList<>();
+        /** Some main channels read inverted and others do not: a crossed wire. */
         public boolean hasPolarityInversion = false;
+        /** What the screen says about it, in the person's language. */
         public String wiringWarning = null;
 
         // Microphone placement & cavity awareness
@@ -1508,18 +1550,19 @@ public final class RoomMeasurement {
         SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String preset = prefs.getString("last_selected_preset", null);
         if (preset == null) {
-            result.error = "no preset is selected, so there is nothing to measure through";
+            result.fail(MeasurementFailure.NO_PRESET);
             Log.e(TAG, result.error);
             return result;
         }
         if (!NativeSweep.isAvailable()) {
-            result.error = "the native library is not loaded";
+            result.fail(MeasurementFailure.NO_NATIVE_LIBRARY);
             Log.e(TAG, result.error);
             return result;
         }
 
         if (listener != null) {
-            listener.onProgress(1, 5, "Замір фону тиші", "Вимір фонового шуму в тиші та фіксація гучності (16 од.)...", 5);
+            listener.onProgress(1, 5, app.getString(R.string.room_stage_noise),
+                    app.getString(R.string.room_stage_noise_detail), 5);
         }
 
         Log.i(TAG, "=== room measurement starting ===");
@@ -1539,10 +1582,8 @@ public final class RoomMeasurement {
         // 15.09.2026: the same for an input another app opened before us at full band - it set the
         // input up, and its effects reach our recording (MicrophoneGuard.Outcome.setUpByAnother).
         if (mic.needsRestart) {
-            result.needsRestart = true;
-            result.error = "the microphone is held by another app (input at " + mic.rateAfter + " Hz"
-                    + (mic.setUpByAnother ? ", opened by it before us" : "") + ") and could not be "
-                    + "taken back - restart the head unit";
+            result.fail(MeasurementFailure.MIC_HELD_BY_ANOTHER, mic.rateAfter,
+                    mic.setUpByAnother ? ", opened by it before us" : "");
             Log.w(TAG, result.error);
             return result;
         }
@@ -1619,20 +1660,23 @@ public final class RoomMeasurement {
         try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds);
              NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ, topHz, seconds)) {
             if (!sweep.isValid() || !subSweep.isValid() || subSweep.length() != sweep.length()) {
-                result.error = "the sweep could not be built";
+                result.fail(MeasurementFailure.SWEEP_NOT_BUILT);
                 return result;
             }
             runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, amplitude, result, listener,
                     isMicCalibrationOnly);
+            judgePolarity(app, result);
 
             if (!isMicCalibrationOnly) {
                 if (listener != null) {
-                    listener.onProgress(3, 5, "Аналіз затримок", "Розрахунок часового вирівнювання (GCC-PHAT)...", 85);
+                    listener.onProgress(3, 5, app.getString(R.string.room_stage_delays),
+                            app.getString(R.string.room_stage_delays_detail), 85);
                 }
                 computeDelays(result, result.soundstageMode);
 
                 if (listener != null) {
-                    listener.onProgress(4, 5, "Синтез Auto-EQ", "Аналіз спаду мідбасів, сабвуфера та 16 смуг...", 92);
+                    listener.onProgress(4, 5, app.getString(R.string.room_stage_autoeq),
+                            app.getString(R.string.room_stage_autoeq_detail), 92);
                 }
                 analyzeAcousticsAndSynthesize(app, result);
 
@@ -1640,14 +1684,16 @@ public final class RoomMeasurement {
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
 
                 if (listener != null) {
-                    listener.onProgress(5, 5, "Готово", "Калібрування завершено успішно", 100);
+                    listener.onProgress(5, 5, app.getString(R.string.room_stage_done),
+                            app.getString(R.string.room_stage_done_detail), 100);
                 }
             } else {
                 result.sweepTopHz = topHz;
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
 
                 if (listener != null) {
-                    listener.onProgress(5, 5, "Готово", "Калібрування мікрофона успішно завершено", 100);
+                    listener.onProgress(5, 5, app.getString(R.string.room_stage_done),
+                            app.getString(R.string.room_stage_mic_done_detail), 100);
                 }
             }
         } finally {
@@ -1800,7 +1846,7 @@ public final class RoomMeasurement {
             MicrophoneGuard.releaseHold();
             result.captureSource = describeCaptureSource(record);
             if (record == null) {
-                result.error = "the microphone could not be opened";
+                result.fail(MeasurementFailure.MIC_NOT_OPENED);
                 Log.e(TAG, result.error);
                 return;
             }
@@ -1808,7 +1854,7 @@ public final class RoomMeasurement {
 
             track = openTrack(stereo.length);
             if (track == null) {
-                result.error = "the output could not be opened";
+                result.fail(MeasurementFailure.OUTPUT_NOT_OPENED);
                 Log.e(TAG, result.error);
                 return;
             }
@@ -1847,13 +1893,17 @@ public final class RoomMeasurement {
                     if (waitMs > 0) sleep(waitMs);
                     int pct = 15 + (k * 65) / channels.length;
                     if (listener != null) {
-                        listener.onProgress(2, 5, "Замір динаміків", "Відтворення свіпу: " + channels[k].label, pct);
+                        listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
+                                context.getString(R.string.room_stage_speakers_detail,
+                                        context.getString(channels[k].nameRes)), pct);
                     }
                     applyRouting(prefs, preset, channels[k]);
                 }
             }, "wDSP_RoomRouting");
             if (listener != null) {
-                listener.onProgress(2, 5, "Замір динаміків", "Відтворення свіпу: " + channels[0].label, 15);
+                listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
+                        context.getString(R.string.room_stage_speakers_detail,
+                                context.getString(channels[0].nameRes)), 15);
             }
 
             router.start();
@@ -1971,6 +2021,7 @@ public final class RoomMeasurement {
         for (int k = 0; k < channels.length; k++) {
             ChannelResult cr = new ChannelResult();
             cr.label = channels[k].label;
+            cr.nameRes = channels[k].nameRes;
             cr.recordedPeak = passPeak;
             cr.recordedRms = passRms;
             cr.bandwidthDb = passBandwidth;
@@ -2347,8 +2398,7 @@ public final class RoomMeasurement {
             if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
         }
         if (anchor == null) {
-            result.error = "no speaker was heard at all - check the volume and that the "
-                    + "microphone is not covered";
+            result.fail(MeasurementFailure.NOTHING_HEARD);
             Log.w(TAG, result.error);
             return;
         }
@@ -2390,7 +2440,7 @@ public final class RoomMeasurement {
             if (c != null && c.ok) heard++;
         }
         if (heard < 2) {
-            result.error = "only " + heard + " speaker(s) were heard - nothing to align against";
+            result.fail(MeasurementFailure.TOO_FEW_HEARD, heard);
             Log.w(TAG, result.error);
             return;
         }
@@ -2622,25 +2672,7 @@ public final class RoomMeasurement {
     }
 
     private static void analyzeAcousticsAndSynthesize(Context context, Result result) {
-        // 1. Check wiring polarity
-        int positive = 0, negative = 0;
-        StringBuilder inverted = new StringBuilder();
-        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
-            ChannelResult c = result.channels[i];
-            if (c == null || !c.ok || !c.confident) continue;
-            if (c.polarity < 0) {
-                negative++;
-                if (inverted.length() > 0) inverted.append(", ");
-                inverted.append(c.label);
-            } else {
-                positive++;
-            }
-        }
-        if (positive > 0 && negative > 0) {
-            result.hasPolarityInversion = true;
-            result.wiringWarning = "На динаміку (" + inverted + ") виявлено переплутану полярність (+/-)! Динамік підключений у протифазі та гасить баси в салоні. Рекомендуємо перевірити дроти на клемах акустики.";
-            Log.w(TAG, "POLARITY WARNING: " + result.wiringWarning);
-        }
+        // 1. Polarity was judged right after the pass (judgePolarity).
 
         // 2. Average clean spectrum of confident channels (Front Left & Front Right prioritized),
         //    and the signal-to-noise ratio alongside it. The ratio decides how far the synthesis is
@@ -2827,15 +2859,22 @@ public final class RoomMeasurement {
     }
 
     /**
+     * The name a measurement's preset is saved under - the target curve and the stage, both fixed
+     * English (see {@link SoundstageMode}), so measuring the same stage again replaces it. The one
+     * place that builds it: the wizard's button and the default below used to build it each.
+     */
+    public static String autoEqPresetName(Result result) {
+        TargetCurve curve = result.targetCurve != null ? result.targetCurve : TargetCurve.HARMAN;
+        SoundstageMode stage = result.soundstageMode != null ? result.soundstageMode : SoundstageMode.DRIVER;
+        return curve.presetName + " " + stage.getTag();
+    }
+
+    /**
      * Applies the synthesized Auto-EQ preset directly to SharedPreferences and broadcasts to McuService.
      */
     public static void applyAutoEqPreset(Context context, Result result, String presetName) {
         if (context == null || result == null) return;
-        if (presetName == null || presetName.trim().isEmpty()) {
-            String base = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
-            String tag = result.soundstageMode != null ? result.soundstageMode.getTag() : "(Водій)";
-            presetName = base + " " + tag;
-        }
+        if (presetName == null || presetName.trim().isEmpty()) presetName = autoEqPresetName(result);
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor e = prefs.edit();
 
@@ -3211,6 +3250,44 @@ public final class RoomMeasurement {
     }
 
     /**
+     * The one place polarity is read off the channels; see {@link #wiringVerdict} for why only the
+     * main channels heard directly take part. The screen and the report only read what it stores.
+     */
+    private static void judgePolarity(Context context, Result result) {
+        result.polarityInPhase = 0;
+        result.polarityInverted = 0;
+        result.invertedChannels.clear();
+        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
+            ChannelResult c = result.channels[i];
+            if (c == null || !c.ok || !c.confident) continue;
+            if (c.polarity < 0) {
+                result.polarityInverted++;
+                result.invertedChannels.add(c);
+            } else {
+                result.polarityInPhase++;
+            }
+        }
+        result.hasPolarityInversion = result.polarityInPhase > 0 && result.polarityInverted > 0;
+        if (!result.hasPolarityInversion) return;
+        StringBuilder shown = new StringBuilder();
+        for (ChannelResult c : result.invertedChannels) {
+            if (shown.length() > 0) shown.append(", ");
+            shown.append(context.getString(c.nameRes));
+        }
+        result.wiringWarning = context.getString(R.string.room_polarity_warning, shown);
+        Log.w(TAG, "POLARITY WARNING: inverted on " + invertedLabels(result));
+    }
+
+    private static String invertedLabels(Result result) {
+        StringBuilder sb = new StringBuilder();
+        for (ChannelResult c : result.invertedChannels) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(c.label);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Says out loud when a speaker looks wired backwards - and stays quiet when it cannot tell.
      *
      * <h2>Why this is worth printing and why it is fenced</h2>
@@ -3226,20 +3303,9 @@ public final class RoomMeasurement {
      * least two of them to disagree.
      */
     private static String wiringVerdict(Result result) {
-        int positive = 0;
-        int negative = 0;
-        StringBuilder inverted = new StringBuilder();
-        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
-            ChannelResult c = result.channels[i];
-            if (c == null || !c.ok || !c.confident) continue;
-            if (c.polarity < 0) {
-                negative++;
-                if (inverted.length() > 0) inverted.append(", ");
-                inverted.append(c.label);
-            } else {
-                positive++;
-            }
-        }
+        int positive = result.polarityInPhase;
+        int negative = result.polarityInverted;
+        String inverted = invertedLabels(result);
         if (positive + negative < 2) {
             return "";
         }
@@ -3619,10 +3685,6 @@ public final class RoomMeasurement {
                       : "NO - curve above is zeros, the capsule was taken to be flat and its own "
                         + "colouring was charged to the car")
               .append("\n\n");
-            if (result.hasPolarityInversion && result.wiringWarning != null) {
-                sb.append("⚠️ УВАГА: ПОЛЯРНІСТЬ ДИНАМІКІВ!\n");
-                sb.append(result.wiringWarning).append("\n\n");
-            }
             sb.append(wiringVerdict(result));
             sb.append("Soundstage mode: ").append(result.soundstageMode != null ? result.soundstageMode.title : "Default").append("\n");
             sb.append("Target sound curve: ").append(result.targetCurve != null ? result.targetCurve.title : "Harman Reference").append("\n");

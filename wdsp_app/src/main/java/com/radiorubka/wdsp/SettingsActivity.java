@@ -2141,7 +2141,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
-                    tvProgressStage.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s", step, totalSteps, stageTitle));
+                    tvProgressStage.setText(getString(R.string.room_stage_progress, step, totalSteps, stageTitle));
                     tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
                     progressBar.setProgress(percent);
                     tvPercent.setText(percent + "%");
@@ -2194,14 +2194,13 @@ public class SettingsActivity extends AppCompatActivity {
                     }
 
                     // 3. Delays
-                    String delaysStr = String.format(Locale.US,
-                            "ПЛ: %4.1f мс (%2d кр)  |  ПП: %4.1f мс (%2d кр)\nЗЛ: %4.1f мс (%2d кр)  |  ЗП: %4.1f мс (%2d кр)",
+                    String delaysStr = getString(R.string.room_wizard_delays_format,
                             result.suggestedDelayMs[2], result.suggestedDelaySteps[2],
                             result.suggestedDelayMs[3], result.suggestedDelaySteps[3],
                             result.suggestedDelayMs[0], result.suggestedDelaySteps[0],
                             result.suggestedDelayMs[1], result.suggestedDelaySteps[1]);
                     if (result.hasSubwoofer) {
-                        delaysStr += String.format(Locale.US, "\nСабвуфер: %4.1f мс (%2d кр)",
+                        delaysStr += "\n" + getString(R.string.room_wizard_delays_sub,
                                 result.suggestedSubDelayMs, result.suggestedSubDelaySteps);
                     }
                     tvDelays.setText(delaysStr);
@@ -2226,9 +2225,7 @@ public class SettingsActivity extends AppCompatActivity {
 
                     // 5. Apply button
                     btnApply.setOnClickListener(v -> {
-                        final String baseName = result.targetCurve != null ? result.targetCurve.presetName : "AutoEQ Harman";
-                        final String stageTag = result.soundstageMode != null ? result.soundstageMode.getTag() : "(Водій)";
-                        final String presetName = baseName + " " + stageTag;
+                        final String presetName = RoomMeasurement.autoEqPresetName(result);
                         RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, presetName);
                         Toast.makeText(SettingsActivity.this, getString(R.string.room_wizard_applied_toast, presetName), Toast.LENGTH_LONG).show();
                         showRoomStatus();
@@ -2317,8 +2314,8 @@ public class SettingsActivity extends AppCompatActivity {
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
                     progressBar.setProgress(percent);
-                    tvMsg.setText(String.format(Locale.getDefault(), "Етап %d/%d: %s\n%s (%d%%)",
-                            step, totalSteps, stageTitle, stageDetail != null ? stageDetail : "", percent));
+                    tvMsg.setText(getString(R.string.room_stage_progress, step, totalSteps, stageTitle)
+                            + "\n" + (stageDetail != null ? stageDetail : "") + " (" + percent + "%)");
                     if (tvRoomMicCalStatus != null) {
                         tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, stageTitle));
                     }
@@ -2348,13 +2345,11 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * What a failed room measurement or microphone calibration tells the person. A microphone held
-     * narrow by another app is the one failure they can fix themselves, so it gets its own words
-     * (owner, 14.09.2026: without root, a sweep only after a restart) instead of the run's log line.
+     * What a failed room measurement or microphone calibration tells the person - in their
+     * language, from {@link MeasurementFailure}, instead of the run's English log line.
      */
     private String measurementFailureText(RoomMeasurement.Result result) {
-        if (result != null && result.needsRestart) return getString(R.string.mic_narrow_restart);
-        return result != null && result.error != null ? result.error : "Unknown error";
+        return result != null ? result.failureText(this) : getString(R.string.room_err_unknown);
     }
 
     /**
