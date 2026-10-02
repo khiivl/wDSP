@@ -1506,14 +1506,8 @@ public class MainActivity extends AppCompatActivity {
                 frontBassFreqIdx(), getIntSlider(seekBassBoostFront),
                 resolveBassBoostFreqIndex(spinnerBassFreqRear.getText().toString()), getIntSlider(seekBassBoostRear));
         eqVisualizer.setBassShaping(
-                DspResponse.doorHpfHz(getIntSlider(seekBassFilterFront)), shelfHz(shelf.freqIdxFront), shelf.gainFront,
-                DspResponse.doorHpfHz(getIntSlider(seekBassFilterRear)), shelfHz(shelf.freqIdxRear), shelf.gainRear);
-    }
-
-    /** A shelf frequency index as Hz for drawing; 0 (off) draws no shelf. */
-    private static float shelfHz(int freqIdx) {
-        return freqIdx >= 1 && freqIdx <= AudioConfig.BASS_BOOST_FREQS_HZ.length
-                ? AudioConfig.BASS_BOOST_FREQS_HZ[freqIdx - 1] : 0f;
+                DspResponse.doorHpfHz(getIntSlider(seekBassFilterFront)), shelf.frontHz(), shelf.gainFront,
+                DspResponse.doorHpfHz(getIntSlider(seekBassFilterRear)), shelf.rearHz(), shelf.gainRear);
     }
 
     private void updateDbLabel(int i, int p) {

@@ -94,6 +94,8 @@ public class McuService extends Service implements LocationListener {
 
     private boolean cachedSubComp, cachedFmEn, cachedFatEn;
     private int cachedFmCal, cachedFmStr, cachedFatStartVol;
+    /** The bass shelf last sent to the chip (0x88), for the spectrum model; null until then. */
+    private LoudnessCurve.BassShelf effectiveBassShelf;
     /** Ultra Bass (the author's 0.5): the subwoofer's gain ramp with volume, apart from loudness. */
     private boolean cachedUltraBassEn;
     private int cachedUltraBassStartVol, cachedUltraBassMaxDb;
@@ -2248,7 +2250,7 @@ public class McuService extends Service implements LocationListener {
         int hpfRear = presetPrefs().getInt(currentPresetName + "_bf_r", 0);
         int subFreq = RoomMeasurement.hasSubwoofer(this) ? cachedSubFreq : -1;
         AudioSpectrumEngine.getInstance().setDspState(
-                effectiveGainIdx, q, subFreq, effectiveSubGainIdx, hpfFront, hpfRear);
+                effectiveGainIdx, q, subFreq, effectiveSubGainIdx, hpfFront, hpfRear, effectiveBassShelf);
     }
 
     private void updateFmOffsets(int vol) {
@@ -2282,6 +2284,7 @@ public class McuService extends Service implements LocationListener {
     private void applyBassBoost(int currentVol) {
         LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr,
                 cachedFmEn, cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR);
+        effectiveBassShelf = shelf;   // what the spectrum model draws the doors with
         byte[] bbData = new byte[]{(byte) 0x88,
                 (byte) (((shelf.freqIdxFront + 8) << 4) | (shelf.gainFront & 0x0F)),
                 (byte) (((shelf.freqIdxRear + 8) << 4) | (shelf.gainRear & 0x0F)),

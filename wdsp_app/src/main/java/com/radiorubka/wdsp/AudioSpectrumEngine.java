@@ -46,6 +46,7 @@ public class AudioSpectrumEngine {
     /** Door high-pass codes as sent in 0x88 byte 3; 0 is Through. See DspResponse.DOOR_HPF_HZ. */
     private int dspHpfFrontCode = 0;
     private int dspHpfRearCode = 0;
+    private LoudnessCurve.BassShelf dspShelf = null;
     private boolean hasServiceDspState = false;
 
     private final float[] dspCurveDb = new float[NUM_BANDS_16];
@@ -566,7 +567,7 @@ public class AudioSpectrumEngine {
      * visualizer stays correct while the UI is closed.
      */
     public void setDspState(int[] gainIdx, boolean[] qNarrow, int subFreqIdx, int subGainIdx,
-                            int hpfFrontCode, int hpfRearCode) {
+                            int hpfFrontCode, int hpfRearCode, LoudnessCurve.BassShelf shelf) {
         synchronized (dspGainIdx) {
             if (gainIdx != null) {
                 System.arraycopy(gainIdx, 0, dspGainIdx, 0, Math.min(gainIdx.length, NUM_BANDS_16));
@@ -578,6 +579,7 @@ public class AudioSpectrumEngine {
             dspSubGainIdx = subGainIdx;
             dspHpfFrontCode = hpfFrontCode;
             dspHpfRearCode = hpfRearCode;
+            dspShelf = shelf;
             hasServiceDspState = true;
             markDspCurveChanged();
         }
@@ -756,7 +758,7 @@ public class AudioSpectrumEngine {
                 if (hasServiceDspState) {
                     DspResponse.compute(dspGainIdx, dspQNarrow, null,
                             dspSubFreqIdx, dspSubGainIdx, dspHpfFrontCode, dspHpfRearCode,
-                            dspCurveDb);
+                            dspShelf, dspCurveDb);
                 } else {
                     // No service state yet: fall back to the raw sliders, and since the curve is
                     // not baked into them here, add the Fletcher-Munson offsets explicitly.
@@ -764,7 +766,7 @@ public class AudioSpectrumEngine {
                         synchronized (qNarrow) {
                             synchronized (fmOffsets) {
                                 DspResponse.compute(gains, qNarrow, fmOffsets,
-                                        -1, 0, 0, 0, dspCurveDb);
+                                        -1, 0, 0, 0, null, dspCurveDb);
                             }
                         }
                     }

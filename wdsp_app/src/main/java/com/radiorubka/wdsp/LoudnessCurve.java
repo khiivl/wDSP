@@ -166,6 +166,20 @@ public final class LoudnessCurve {
             this.freqIdxRear = freqIdxRear;
             this.gainRear = gainRear;
         }
+
+        /** The front shelf's frequency in Hz, 0 when off - for the models that draw it. */
+        public float frontHz() {
+            return hzOf(freqIdxFront);
+        }
+
+        public float rearHz() {
+            return hzOf(freqIdxRear);
+        }
+
+        private static float hzOf(int freqIdx) {
+            return freqIdx >= 1 && freqIdx <= AudioConfig.BASS_BOOST_FREQS_HZ.length
+                    ? AudioConfig.BASS_BOOST_FREQS_HZ[freqIdx - 1] : 0f;
+        }
     }
 
     /**

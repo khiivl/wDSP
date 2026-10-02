@@ -100,11 +100,16 @@ public final class DspResponse {
      * @param subGainIdx   subwoofer gain 0..12, in dB
      * @param hpfFrontCode door high-pass code for the front pair, see {@link #DOOR_HPF_HZ}
      * @param hpfRearCode  the same for the rear pair
+     * @param shelf        the doors' bass shelf as the chip gets it (LoudnessCurve.bassShelf, the
+     *                     person's own boost and loudness's share), or null for none. Until
+     *                     02.10.2026 the model had no shelf at all, so once loudness started
+     *                     carrying up to +10 dB of bass on it the calculated bars under-read the
+     *                     bass by as much, while the main curve above them already showed it.
      * @param out          16-element destination
      */
     public static void compute(int[] gains, boolean[] qNarrow, float[] fmOffsets,
                                int subFreqIdx, int subGainIdx, int hpfFrontCode, int hpfRearCode,
-                               float[] out) {
+                               LoudnessCurve.BassShelf shelf, float[] out) {
         final int bands = AudioConfig.NUM_BANDS;
         if (out == null || out.length < bands) return;
 
@@ -122,9 +127,12 @@ public final class DspResponse {
                 eqDb += fmOffsets[i];
             }
 
-            // 2. Doors: front and rear through their own high-pass, averaged as power.
-            double front = Math.pow(10.0, highPass2Db(probeHz, frontHz) / 10.0);
-            double rear = Math.pow(10.0, highPass2Db(probeHz, rearHz) / 10.0);
+            // 2. Doors: front and rear through their own high-pass and bass shelf (the author's
+            //    model, AudioConfig.bassShapingResponseDb), averaged as power.
+            double front = Math.pow(10.0, doorDb(probeHz, frontHz,
+                    shelf != null ? shelf.frontHz() : 0f, shelf != null ? shelf.gainFront : 0) / 10.0);
+            double rear = Math.pow(10.0, doorDb(probeHz, rearHz,
+                    shelf != null ? shelf.rearHz() : 0f, shelf != null ? shelf.gainRear : 0) / 10.0);
             float doorsDb = eqDb + (float) (10.0 * Math.log10((front + rear) / 2.0));
 
             // 3. Subwoofer: the same equalised signal, at its gain, through its low-pass.
@@ -137,6 +145,11 @@ public final class DspResponse {
             }
             out[i] = doorsDb;
         }
+    }
+
+    /** One door pair: its high-pass (0 = through) and its bass shelf (0 Hz = off). */
+    private static float doorDb(float freqHz, float hpfHz, float shelfHz, float shelfDb) {
+        return AudioConfig.bassShapingResponseDb(freqHz, hpfHz > 0 ? hpfHz : 0f, shelfHz, shelfDb);
     }
 
     /** Hz for a door high-pass code; 0 for Through or an unknown code. */
