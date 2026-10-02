@@ -81,15 +81,30 @@ public final class TouchGlow {
             MaterialButton mb = (MaterialButton) v;
             int onAccent = ThemeManager.onAccent(v.getContext());
             if (on) {
-                mb.setBackgroundTintList(ColorStateList.valueOf(accent));
-                mb.setIconTint(ColorStateList.valueOf(onAccent));
-                mb.setTextColor(onAccent);
-                mb.setStrokeColor(ColorStateList.valueOf(accent));
+                if (!(mb.getTag(R.id.tag_glow_color) instanceof ButtonLook)) {
+                    mb.setTag(R.id.tag_glow_color, new ButtonLook(mb));
+                }
+                ButtonLook look = (ButtonLook) mb.getTag(R.id.tag_glow_color);
+                look.glowBackground = ColorStateList.valueOf(accent);
+                look.glowIcon = ColorStateList.valueOf(onAccent);
+                look.glowText = ColorStateList.valueOf(onAccent);
+                look.glowStroke = ColorStateList.valueOf(accent);
+                mb.setBackgroundTintList(look.glowBackground);
+                mb.setIconTint(look.glowIcon);
+                mb.setTextColor(look.glowText);
+                mb.setStrokeColor(look.glowStroke);
             } else {
-                mb.setBackgroundTintList(ColorStateList.valueOf(android.graphics.Color.parseColor("#20121820")));
-                mb.setIconTint(ColorStateList.valueOf(accent));
-                mb.setTextColor(accent);
-                mb.setStrokeColor(ColorStateList.valueOf(border));
+                // Back to exactly what the theme painted, the way the TextView branch below does
+                // it. The release used to paint its own colours - a fixed dark #20121820 behind,
+                // the accent on the text and icon - so on a light theme every button sank into
+                // dark after a touch, and a checked button lost its checked look.
+                Object saved = mb.getTag(R.id.tag_glow_color);
+                if (saved instanceof ButtonLook) {
+                    ((ButtonLook) saved).restore(mb);
+                    mb.setTag(R.id.tag_glow_color, null);
+                } else {
+                    mb.setStrokeColor(ColorStateList.valueOf(border));
+                }
             }
             return;
         }
@@ -125,5 +140,29 @@ public final class TouchGlow {
         // so it dims instead. Without this the Settings screen loses touch feedback entirely on
         // those views: they are neither MaterialButton, ImageView nor TextView.
         v.setAlpha(on ? 0.55f : 1f);
+    }
+
+    /**
+     * A button's own colours, kept from the press to the release, and the glow's, so the release
+     * gives back only what is still the glow's. The click runs between the two: a handler that
+     * restyles the button there (it became the active one) must not be undone 150 ms later.
+     */
+    private static final class ButtonLook {
+        final ColorStateList background, icon, text, stroke;
+        ColorStateList glowBackground, glowIcon, glowText, glowStroke;
+
+        ButtonLook(MaterialButton mb) {
+            background = mb.getBackgroundTintList();
+            icon = mb.getIconTint();
+            text = mb.getTextColors();
+            stroke = mb.getStrokeColor();
+        }
+
+        void restore(MaterialButton mb) {
+            if (mb.getBackgroundTintList() == glowBackground) mb.setBackgroundTintList(background);
+            if (mb.getIconTint() == glowIcon) mb.setIconTint(icon);
+            if (mb.getTextColors() == glowText && text != null) mb.setTextColor(text);
+            if (mb.getStrokeColor() == glowStroke) mb.setStrokeColor(stroke);
+        }
     }
 }
