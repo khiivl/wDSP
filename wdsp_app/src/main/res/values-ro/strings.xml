@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Redu sub cu:</string>
     <string name="lbl_calibration_point">Punct de calibrare (volum peste care curba nu acționează):</string>
     <string name="lbl_correction_strength">Putere corecție:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Volum de pornire atenuare înalte:</string>
+    <string name="lbl_ultra_bass_start_vol">Volum de pornire Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Amplificare maximă Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Aliniere temporală difuzoare (Întârzieri)</string>

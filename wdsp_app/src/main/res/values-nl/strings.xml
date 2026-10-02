@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Verlaag sub met:</string>
     <string name="lbl_calibration_point">Kalibratiepunt (volume waarboven de curve niet meer werkt):</string>
     <string name="lbl_correction_strength">Correctiesterkte:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Startvolume hoge tonen dempen:</string>
+    <string name="lbl_ultra_bass_start_vol">Startvolume Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maximale versterking Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Luidspreker Tijdsuitlijning (Vertragingen)</string>

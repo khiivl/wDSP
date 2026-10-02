@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Senk sub med:</string>
     <string name="lbl_calibration_point">Kalibreringspunkt (volum over hvilket kurven ikke virker):</string>
     <string name="lbl_correction_strength">Korreksjonsstyrke:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Startvolum for demping av diskant:</string>
+    <string name="lbl_ultra_bass_start_vol">Startvolum for Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maksimal forsterkning for Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Høyttaler Tidsjustering (Forsinkelser)</string>

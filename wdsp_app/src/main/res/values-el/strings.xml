@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Μείωση sub κατά:</string>
     <string name="lbl_calibration_point">Σημείο βαθμονόμησης (ένταση πάνω από την οποία η καμπύλη παύει να δρα):</string>
     <string name="lbl_correction_strength">Ισχύς διόρθωσης:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Ένταση εκκίνησης περικοπής πρίμων:</string>
+    <string name="lbl_ultra_bass_start_vol">Ένταση εκκίνησης Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Μέγιστη ενίσχυση Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Χρονική ευθυγράμμιση ηχείων (Καθυστερήσεις)</string>

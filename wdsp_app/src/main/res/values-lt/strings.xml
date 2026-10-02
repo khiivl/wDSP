@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Sumažinti žemus dažnius:</string>
     <string name="lbl_calibration_point">Kalibravimo taškas (garsumas, virš kurio kreivė neveikia):</string>
     <string name="lbl_correction_strength">Korekcijos stiprumas:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Aukštų dažnių apkarpymo pradinis garsumas:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bass pradinis garsumas:</string>
+    <string name="lbl_ultra_bass_max_db">Maksimalus Ultra Bass stiprinimas:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Garsiakalbių laiko suderinimas (Vėlinimai)</string>

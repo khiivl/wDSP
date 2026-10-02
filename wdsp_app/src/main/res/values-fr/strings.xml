@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Réduire le caisson de :</string>
     <string name="lbl_calibration_point">Point de calibrage (volume au-dessus duquel la courbe n\'agit pas) :</string>
     <string name="lbl_correction_strength">Intensité de correction :</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Volume de départ de l\'atténuation des aigus :</string>
+    <string name="lbl_ultra_bass_start_vol">Volume de départ d\'Ultra Bass :</string>
+    <string name="lbl_ultra_bass_max_db">Amplification maximale d\'Ultra Bass :</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Alignement temporel des haut-parleurs (Délais)</string>

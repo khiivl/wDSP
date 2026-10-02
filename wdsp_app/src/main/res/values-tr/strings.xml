@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Subwoofer\'ı düşür:</string>
     <string name="lbl_calibration_point">Kalibrasyon noktası (üstünde eğrinin etki etmediği ses seviyesi):</string>
     <string name="lbl_correction_strength">Düzeltme Gücü:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Tizleri kırpma başlangıç ses seviyesi:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bass başlangıç ses seviyesi:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bass maksimum güçlendirme:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Hoparlör Zaman Hizalama (Gecikmeler)</string>

@@ -25,6 +25,10 @@
     <string name="lbl_lower_sub_by">Sub absenken um:</string>
     <string name="lbl_calibration_point">Kalibrationspunkt (Lautstärke, oberhalb der die Kurve nicht wirkt):</string>
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Startlautstärke Höhenreduzierung:</string>
+    <string name="lbl_ultra_bass_start_vol">Startlautstärke Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maximale Anhebung Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Laufzeitkorrektur (Delays)</string>

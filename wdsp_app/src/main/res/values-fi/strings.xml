@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Vaimenna subia:</string>
     <string name="lbl_calibration_point">Kalibrointipiste (äänenvoimakkuus, jonka yläpuolella käyrä ei toimi):</string>
     <string name="lbl_correction_strength">Korjauksen voimakkuus:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Diskantin vaimennuksen aloitusäänenvoimakkuus:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bassin aloitusäänenvoimakkuus:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bassin enimmäisvahvistus:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Kaiuttimien aikaviiveet (Delays)</string>

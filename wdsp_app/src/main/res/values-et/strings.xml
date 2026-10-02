@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Vähenda bassi:</string>
     <string name="lbl_calibration_point">Kalibreerimispunkt (helitugevus, millest kõrgemal kõver ei toimi):</string>
     <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Kõrgete helide kärpimise alghelitugevus:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bassi alghelitugevus:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bassi maksimaalne võimendus:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Kõlarite ajaline joondus (Viivitused)</string>

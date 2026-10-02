@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Riduci sub di:</string>
     <string name="lbl_calibration_point">Punto di calibrazione (volume oltre il quale la curva non agisce):</string>
     <string name="lbl_correction_strength">Intensità correzione:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Volume iniziale taglio alti:</string>
+    <string name="lbl_ultra_bass_start_vol">Volume iniziale Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Incremento massimo Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Allineamento Temporale Altoparlanti (Ritardi)</string>

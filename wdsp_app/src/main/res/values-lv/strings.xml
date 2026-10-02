@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Samazināt basu par:</string>
     <string name="lbl_calibration_point">Kalibrēšanas punkts (skaļums, virs kura līkne nedarbojas):</string>
     <string name="lbl_correction_strength">Korekcijas stiprums:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Augsto frekvenču apgriešanas sākuma skaļums:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bass sākuma skaļums:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bass maksimālais pastiprinājums:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Skaļruņu laika salāgošana (Aiztures)</string>

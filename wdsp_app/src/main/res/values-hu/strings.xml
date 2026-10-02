@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Mélynyomó csökkentése:</string>
     <string name="lbl_calibration_point">Kalibrációs pont (hangerő, amely felett a görbe nem hat):</string>
     <string name="lbl_correction_strength">Korrekció erőssége:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Magashang-vágás kezdő hangereje:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bass kezdő hangereje:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bass maximális kiemelése:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Hangszóró időkésleltetés (Delays)</string>

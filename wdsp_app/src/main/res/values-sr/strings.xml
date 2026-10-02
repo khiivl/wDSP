@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Смањи суб за:</string>
     <string name="lbl_calibration_point">Тачка калибрације (јачина звука изнад које крива не делује):</string>
     <string name="lbl_correction_strength">Снага корекције:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Почетна јачина звука подрезивања високих:</string>
+    <string name="lbl_ultra_bass_start_vol">Почетна јачина звука Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Максимално појачање Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Временска кашњења звучника (Delays)</string>

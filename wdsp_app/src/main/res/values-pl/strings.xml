@@ -26,6 +26,10 @@
     <string name="lbl_lower_sub_by">Obniż poziom subwoofera o:</string>
     <string name="lbl_calibration_point">Punkt kalibracji (głośność, powyżej której krzywa nie działa):</string>
     <string name="lbl_correction_strength">Siła korekcji:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Głośność startowa ograniczenia wysokich tonów:</string>
+    <string name="lbl_ultra_bass_start_vol">Głośność startowa Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maksymalne wzmocnienie Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Korekcja czasowa (Opóźnienia)</string>

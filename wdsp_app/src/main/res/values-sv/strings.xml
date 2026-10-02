@@ -26,6 +26,10 @@
     <string name="lbl_lower_sub_by">Sänk sub med:</string>
     <string name="lbl_calibration_point">Kalibreringspunkt (volym över vilken kurvan inte verkar):</string>
     <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Startvolym för dämpning av diskant:</string>
+    <string name="lbl_ultra_bass_start_vol">Startvolym för Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maximal förstärkning för Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Tidskorrigering (Delays)</string>

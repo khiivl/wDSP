@@ -28,6 +28,10 @@
     <string name="lbl_lower_sub_by">Znížiť subwoofer o:</string>
     <string name="lbl_calibration_point">Kalibračný bod (hlasitosť, nad ktorou krivka nepôsobí):</string>
     <string name="lbl_correction_strength">Sila korekcie:</string>
+    <string name="ultra_bass">Ultra Bass</string>
+    <string name="lbl_trim_highs_start_vol">Počiatočná hlasitosť orezania výšok:</string>
+    <string name="lbl_ultra_bass_start_vol">Počiatočná hlasitosť Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Maximálne zosilnenie Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Časové oneskorenie reproduktorov (Delays)</string>
