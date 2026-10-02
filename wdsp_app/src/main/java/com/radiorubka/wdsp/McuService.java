@@ -996,7 +996,7 @@ public class McuService extends Service implements LocationListener {
         }
         cachedQByte1 = calculateQByte(preset, 0);
         cachedQByte2 = calculateQByte(preset, 8);
-        cachedSubFreq = presetPrefs().getInt(preset + "_sub_f", 5);
+        cachedSubFreq = presetPrefs().getInt(preset + "_sub_f", DspResponse.SUB_LPF_DEFAULT_IDX);
         cachedSubGain = presetPrefs().getInt(preset + "_sub_g", 0);
         cachedSubComp = presetPrefs().getBoolean(preset + "_sub_comp", false);
         cachedFmEn = presetPrefs().getBoolean(preset + "_fm_en", false);

@@ -511,15 +511,15 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeGccPhatDelay(JNIEnv* env, jclass,
     return delay;
 }
 
-JNIEXPORT jint JNICALL
-Java_com_radiorubka_wdsp_NativeSweep_nativeDetectMidbassRollOff(JNIEnv* env, jclass,
-                                                               jfloatArray avgClean16) {
-    if (avgClean16 == nullptr || env->GetArrayLength(avgClean16) < wdsp::kHwBands) return 5;
+JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeDetectMidbassRollOffHz(JNIEnv* env, jclass,
+                                                                 jfloatArray avgClean16) {
+    if (avgClean16 == nullptr || env->GetArrayLength(avgClean16) < wdsp::kHwBands) return 63.0f;
     jfloat* data = env->GetFloatArrayElements(avgClean16, nullptr);
-    if (data == nullptr) return 5;
-    int idx = wdsp::SweepMeasurement::detectMidbassRollOff(data);
+    if (data == nullptr) return 63.0f;
+    float hz = wdsp::SweepMeasurement::detectMidbassRollOffHz(data);
     env->ReleaseFloatArrayElements(avgClean16, data, JNI_ABORT);
-    return idx;
+    return hz;
 }
 
 JNIEXPORT void JNICALL
@@ -527,11 +527,11 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(JNIEnv* env, jclas
                                                               jfloatArray avgClean16,
                                                               jfloatArray micComp16,
                                                               jfloatArray snr16,
-                                                              jint hpfCutoffIdx,
+                                                              jfloat doorHpfHz,
                                                               jboolean hasSub,
                                                               jint targetCurveType,
                                                               jintArray outGains16,
-                                                              jintArray outSubSettings2) {
+                                                              jfloatArray outSub2) {
     if (avgClean16 == nullptr || outGains16 == nullptr) return;
     if (env->GetArrayLength(avgClean16) < wdsp::kHwBands ||
         env->GetArrayLength(outGains16) < wdsp::kHwBands) return;
@@ -548,11 +548,11 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(JNIEnv* env, jclas
     }
 
     int gains[wdsp::kHwBands];
-    int subLpfIdx = 5;
-    int subGain = 8;
+    float subLpfHz = 0.0f;
+    int subGain = 0;
     wdsp::SweepMeasurement::synthesizeAutoEq16(cleanData, compData, snrData,
-                                               hpfCutoffIdx, hasSub, targetCurveType,
-                                               gains, subLpfIdx, subGain);
+                                               doorHpfHz, hasSub, targetCurveType,
+                                               gains, subLpfHz, subGain);
 
     env->ReleaseFloatArrayElements(avgClean16, cleanData, JNI_ABORT);
     if (compData != nullptr) env->ReleaseFloatArrayElements(micComp16, compData, JNI_ABORT);
@@ -560,25 +560,11 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(JNIEnv* env, jclas
 
     env->SetIntArrayRegion(outGains16, 0, wdsp::kHwBands, gains);
 
-    if (outSubSettings2 != nullptr && env->GetArrayLength(outSubSettings2) >= 2) {
-        int sub[2] = { subLpfIdx, subGain };
-        env->SetIntArrayRegion(outSubSettings2, 0, 2, sub);
+    // {sub low-pass in Hz (0 = no sub), sub gain in dB}
+    if (outSub2 != nullptr && env->GetArrayLength(outSub2) >= 2) {
+        jfloat sub[2] = { subLpfHz, static_cast<jfloat>(subGain) };
+        env->SetFloatArrayRegion(outSub2, 0, 2, sub);
     }
-}
-
-JNIEXPORT void JNICALL
-Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeHarmanEq16(JNIEnv* env, jclass clazz,
-                                                               jfloatArray avgClean16,
-                                                               jfloatArray micComp16,
-                                                               jfloatArray snr16,
-                                                               jint hpfCutoffIdx,
-                                                               jboolean hasSub,
-                                                               jintArray outGains16,
-                                                               jintArray outSubSettings2) {
-    Java_com_radiorubka_wdsp_NativeSweep_nativeSynthesizeAutoEq16(env, clazz, avgClean16, micComp16,
-                                                                 snr16,
-                                                                 hpfCutoffIdx, hasSub, 0 /* TARGET_HARMAN */,
-                                                                 outGains16, outSubSettings2);
 }
 
 } // extern "C"

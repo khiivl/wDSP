@@ -915,22 +915,12 @@ float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,
     return static_cast<float>(intDelay) + delta;
 }
 
-// 12 hardware frequencies for Bass Filter (HPF):
-// 20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
-constexpr int kBassFilterBands = 12;
-constexpr float kBassFilterFreqs[kBassFilterBands] = {
-    20.0f, 25.0f, 31.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
-};
+// The chip's high-pass and low-pass tables are not kept here: this file speaks hertz, and the codes
+// belong to DspResponse on the Java side. Until 02.10.2026 there was a copy here that called the
+// high-pass's code 0 "20 Hz" (it is Through) and code 2 "31 Hz" (31.5).
 
-// 11 hardware frequencies for Subwoofer Filter (LPF):
-// 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250 Hz
-constexpr int kSubBands = 11;
-constexpr float kSubFreqs[kSubBands] = {
-    25.0f, 32.0f, 40.0f, 50.0f, 63.0f, 80.0f, 100.0f, 125.0f, 160.0f, 200.0f, 250.0f
-};
-
-int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
-    if (avgClean16 == nullptr) return 5; // Default 63 Hz (index 5)
+float SweepMeasurement::detectMidbassRollOffHz(const float* avgClean16) {
+    if (avgClean16 == nullptr) return 63.0f;
 
     // Midrange reference level: bands 5, 6, 7, 8 (200, 315, 500, 800 Hz)
     const float refMid = 0.25f * (avgClean16[5] + avgClean16[6] + avgClean16[7] + avgClean16[8]);
@@ -940,52 +930,45 @@ int SweepMeasurement::detectMidbassRollOff(const float* avgClean16) {
     const float drop80 = refMid - avgClean16[3];
     const float drop50 = refMid - avgClean16[2];
 
-    // If 50 Hz is within 3.5 dB of midrange, the speaker has strong deep bass -> 50 Hz HPF (index 4)
+    // If 50 Hz is within 3.5 dB of midrange, the speaker has strong deep bass -> 50 Hz HPF
     if (drop50 <= 3.5f) {
-        return 4; // 50 Hz
+        return 50.0f;
     }
     // If 80 Hz is solid (within 3 dB), but 50 Hz drops -> 63 Hz HPF
     if (drop80 <= 3.0f) {
-        return 5; // 63 Hz
+        return 63.0f;
     }
     if (drop80 <= 6.0f) {
-        return 6; // 80 Hz
+        return 80.0f;
     }
-    // If 80 Hz is already weak -> 100 Hz HPF (index 7)
-    return 7; // 100 Hz
+    // If 80 Hz is already weak -> 100 Hz HPF
+    return 100.0f;
 }
 
 
 void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
                                          const float* snr16,
-                                         int hpfCutoffIdx, bool hasSub, int targetCurveType,
-                                         int* outGains16, int& outSubLpfIdx, int& outSubGain) {
+                                         float doorHpfHz, bool hasSub, int targetCurveType,
+                                         int* outGains16, float& outSubLpfHz, int& outSubGain) {
     if (outGains16 == nullptr) return;
 
     // Default Flat gains (index 6 = 0 dB)
     for (int b = 0; b < kHwBands; b++) {
         outGains16[b] = 6;
     }
-    outSubLpfIdx = 5; // default 80 Hz
-    outSubGain = 2;   // default +2 dB (wDSP slider is 0..12, 0 is 0 dB)
+    // No sub, or nothing to synthesise from: no low-pass to recommend; the reader keeps its default.
+    outSubLpfHz = 0.0f;
+    outSubGain = 0;   // the sub gain slider is 0..12 dB, 0 is 0 dB
 
     if (avgClean16 == nullptr) return;
 
-    const float cutoffHz = (hpfCutoffIdx >= 0 && hpfCutoffIdx < kBassFilterBands)
-            ? kBassFilterFreqs[hpfCutoffIdx] : 63.0f;
+    // 0 = Through: no door high-pass, so no EQ band sits below it.
+    const float cutoffHz = doorHpfHz > 0.0f ? doorHpfHz : 0.0f;
 
-    // Map HPF cutoff frequency to Subwoofer LPF index (kSubFreqs)
+    // The sub takes over where the doors stop: its low-pass at the same frequency. The Java side
+    // picks the chip's nearest code (DspResponse.nearestSubLpfIndex).
     if (hasSub) {
-        int bestSubIdx = 5; // 80 Hz default
-        float minDiff = 1e6f;
-        for (int i = 0; i < kSubBands; i++) {
-            float diff = std::fabs(kSubFreqs[i] - cutoffHz);
-            if (diff < minDiff) {
-                minDiff = diff;
-                bestSubIdx = i;
-            }
-        }
-        outSubLpfIdx = bestSubIdx;
+        outSubLpfHz = cutoffHz;
         // In wDSP seekSubGain has range 0..12 (+0 dB .. +12 dB).
         // Since low bands on the 16-band EQ are kept Flat (0 dB), sub gain only needs modest lift.
         if (targetCurveType == TARGET_DOLBY_ATMOS) {

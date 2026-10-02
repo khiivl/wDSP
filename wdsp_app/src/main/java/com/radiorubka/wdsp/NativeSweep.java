@@ -186,10 +186,11 @@ public final class NativeSweep implements AutoCloseable {
     }
 
     /**
-     * Detects midbass roll-off index (into kBassFilterFreqs: 0..11) from 16-band clean response.
+     * Where the door speakers stop delivering bass, in Hz (50, 63, 80 or 100) - the chip's code for
+     * it is {@link DspResponse#doorHpfIndexOf}.
      */
-    public static int detectMidbassRollOff(float[] avgClean16) {
-        return isAvailable() && avgClean16 != null ? nativeDetectMidbassRollOff(avgClean16) : 5;
+    public static float detectMidbassRollOffHz(float[] avgClean16) {
+        return isAvailable() && avgClean16 != null ? nativeDetectMidbassRollOffHz(avgClean16) : 63f;
     }
 
     public static final int TARGET_HARMAN = 0;
@@ -200,24 +201,18 @@ public final class NativeSweep implements AutoCloseable {
 
     /**
      * Synthesizes 16-band Auto-EQ gains and subwoofer settings matching the chosen TargetCurve.
+     *
+     * @param doorHpfHz the door high-pass in Hz, 0 for Through
+     * @param outSub2   receives {sub low-pass in Hz (0 = no sub), sub gain in dB}; the chip's code
+     *                  for the low-pass is {@link DspResponse#nearestSubLpfIndex}
      */
     public static void synthesizeAutoEq16(float[] avgClean16, float[] micComp16, float[] snr16,
-                                          int hpfCutoffIdx, boolean hasSub, int targetCurveType,
-                                          int[] outGains16, int[] outSubSettings2) {
+                                          float doorHpfHz, boolean hasSub, int targetCurveType,
+                                          int[] outGains16, float[] outSub2) {
         if (isAvailable() && avgClean16 != null && outGains16 != null) {
-            nativeSynthesizeAutoEq16(avgClean16, micComp16, snr16, hpfCutoffIdx, hasSub,
-                    targetCurveType, outGains16, outSubSettings2);
+            nativeSynthesizeAutoEq16(avgClean16, micComp16, snr16, doorHpfHz, hasSub,
+                    targetCurveType, outGains16, outSub2);
         }
-    }
-
-    /**
-     * Synthesizes 16-band Harman Auto-EQ gains and subwoofer settings.
-     */
-    public static void synthesizeHarmanEq16(float[] avgClean16, float[] micComp16, float[] snr16,
-                                            int hpfCutoffIdx, boolean hasSub,
-                                            int[] outGains16, int[] outSubSettings2) {
-        synthesizeAutoEq16(avgClean16, micComp16, snr16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
-                outGains16, outSubSettings2);
     }
 
     @Override
@@ -262,16 +257,12 @@ public final class NativeSweep implements AutoCloseable {
     private static native float nativeGccPhatDelay(float[] hRef, int refLen, float[] hCh,
                                                    int chLen, float[] outProminence1);
 
-    private static native int nativeDetectMidbassRollOff(float[] avgClean16);
+    private static native float nativeDetectMidbassRollOffHz(float[] avgClean16);
 
     private static native void nativeSynthesizeAutoEq16(float[] avgClean16, float[] micComp16,
                                                         float[] snr16,
-                                                        int hpfCutoffIdx, boolean hasSub, int targetCurveType,
-                                                        int[] outGains16, int[] outSubSettings2);
+                                                        float doorHpfHz, boolean hasSub, int targetCurveType,
+                                                        int[] outGains16, float[] outSub2);
 
-    private static native void nativeSynthesizeHarmanEq16(float[] avgClean16, float[] micComp16,
-                                                          float[] snr16,
-                                                          int hpfCutoffIdx, boolean hasSub,
-                                                          int[] outGains16, int[] outSubSettings2);
 }
 

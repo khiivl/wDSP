@@ -36,6 +36,44 @@ public final class DspResponse {
     public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
 
     /**
+     * The crossover a preset has before anybody chose one: 80 Hz. One constant - the screen, the
+     * service and the measurement each had their own literal, and the measurement's said 63 Hz.
+     */
+    public static final int SUB_LPF_DEFAULT_IDX = 5;
+
+    /** The chip's code for the subwoofer low-pass nearest to {@code hz}. */
+    public static int nearestSubLpfIndex(float hz) {
+        int best = SUB_LPF_DEFAULT_IDX;
+        float bestDiff = Float.MAX_VALUE;
+        for (int i = 0; i < SUB_FREQS_HZ.length; i++) {
+            float diff = Math.abs(SUB_FREQS_HZ[i] - hz);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * The chip's code for the door high-pass nearest to {@code hz}; 0 Hz is code 0, Through. The
+     * native analysis speaks hertz and keeps no copy of this table (until 02.10.2026 it had one that
+     * called code 0 "20 Hz" and code 2 "31").
+     */
+    public static int doorHpfIndexOf(float hz) {
+        int best = 0;
+        float bestDiff = Float.MAX_VALUE;
+        for (int i = 0; i < DOOR_HPF_HZ.length; i++) {
+            float diff = Math.abs(DOOR_HPF_HZ[i] - hz);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    /**
      * Door high-pass cut-offs by the code the chip receives in {@code 0x88} byte 3 (front high nibble,
      * rear low nibble), registers {@code 0703}/{@code 0704}; code 0 is Through - no filter at all.
      * Second order, 12 dB/octave: the MCU writes the order bit as 0. Read from the datasheet and the

@@ -168,9 +168,11 @@ public:
     /**
      * Estimates the natural acoustic roll-off frequency of midbass speakers
      * by comparing the clean 16-band energy spectrum to the midrange reference (200..800 Hz).
-     * Returns the index into kBassFilterFreqs (0..11, matching BU32107 HPF frequencies).
+     * Returns the frequency in Hz - 50, 63, 80 or 100, all values the door high-pass offers. The
+     * chip's code for it is the Java side's to look up (DspResponse.DOOR_HPF_HZ): this file keeps
+     * no copy of the chip's tables (until 02.10.2026 it had one that disagreed with the chip).
      */
-    static int detectMidbassRollOff(const float* avgClean16);
+    static float detectMidbassRollOffHz(const float* avgClean16);
 
     enum TargetCurve {
         TARGET_HARMAN = 0,
@@ -184,7 +186,10 @@ public:
      * Synthesizes the 16-band Auto-EQ gains (indices 0..12, 6=0 dB, 2 dB/step) matching the chosen
      * TargetCurve profile (Harman, Dolby Atmos, Bass Heavy, Vocal, Flat), accounting for fixed Q=2.2
      * bandwidth and asymmetric boost/cut limits.
-     * Also outputs recommended subwoofer LPF index and gain (if hasSub is true).
+     * Also outputs the recommended subwoofer low-pass, in Hz (the handover frequency - the Java side
+     * picks the chip's nearest code), and the sub gain in dB; with no sub the low-pass is 0.
+     *
+     * @param doorHpfHz the door high-pass in Hz, 0 for Through.
      */
     /**
      * @param snr16 per-band signal-to-noise ratio in dB from subtractNoise, or nullptr to trust
@@ -195,17 +200,8 @@ public:
      */
     static void synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
                                    const float* snr16,
-                                   int hpfCutoffIdx, bool hasSub, int targetCurveType,
-                                   int* outGains16, int& outSubLpfIdx, int& outSubGain);
-
-    /** Backward-compatibility wrapper defaulting to TARGET_HARMAN. */
-    static void synthesizeHarmanEq16(const float* avgClean16, const float* micComp16,
-                                     const float* snr16,
-                                     int hpfCutoffIdx, bool hasSub,
-                                     int* outGains16, int& outSubLpfIdx, int& outSubGain) {
-        synthesizeAutoEq16(avgClean16, micComp16, snr16, hpfCutoffIdx, hasSub, TARGET_HARMAN,
-                           outGains16, outSubLpfIdx, outSubGain);
-    }
+                                   float doorHpfHz, bool hasSub, int targetCurveType,
+                                   int* outGains16, float& outSubLpfHz, int& outSubGain);
 
 private:
     int sampleRate_;

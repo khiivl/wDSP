@@ -131,14 +131,15 @@ public class MainActivity extends AppCompatActivity {
      * that was empty or did not parse came back as 0 and was written over the stored level.
      */
     private Integer powerVol;
-    private final String[] SUB_FREQS_RAW = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     /**
-     * Built at runtime from SUB_FREQS_RAW and the localised hertz unit. It used to be a literal
+     * Built at runtime from {@link DspResponse#SUB_FREQS_HZ} and the localised hertz unit. The numbers
+     * themselves used to be a second table here, as strings ({@code SUB_FREQS_RAW}), parsed back into
+     * hertz wherever one was needed; since 02.10.2026 the chip's table is the only one. It used to be a literal
      * array of Ukrainian strings, which meant the subwoofer dropdown stayed Ukrainian in all
      * thirty locales - and worse, the parsing code compares the spinner's text against these
      * entries, so a translated build would have failed to match at all.
      */
-    private final String[] SUB_FREQS = new String[SUB_FREQS_RAW.length];
+    private final String[] SUB_FREQS = new String[DspResponse.SUB_FREQS_HZ.length];
 
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
@@ -297,8 +298,8 @@ public class MainActivity extends AppCompatActivity {
         // Arming twice is a no-op.
         SystemDiagnostics.arm(this);
 
-        for (int i = 0; i < SUB_FREQS_RAW.length; i++) {
-            SUB_FREQS[i] = getString(R.string.unit_hz, SUB_FREQS_RAW[i]);
+        for (int i = 0; i < DspResponse.SUB_FREQS_HZ.length; i++) {
+            SUB_FREQS[i] = getString(R.string.unit_hz, String.valueOf(DspResponse.SUB_FREQS_HZ[i]));
         }
         // Index 0 is the "no boost" entry rather than a frequency, so it is a word, translated.
         BASS_BOOST_FREQS_SHOWN[0] = getString(R.string.freq_off);
@@ -1525,8 +1526,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Set the initial text (replaces setSelection)
         // 'false' is critical here to prevent the dropdown from opening or filtering
-        spinnerSubFreq.setText(SUB_FREQS[5], false);
-        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[5]);
+        spinnerSubFreq.setText(SUB_FREQS[DspResponse.SUB_LPF_DEFAULT_IDX], false);
+        Globals.currentSubFreqHz = DspResponse.SUB_FREQS_HZ[DspResponse.SUB_LPF_DEFAULT_IDX];
 
         // 3. Change OnItemSelectedListener to OnItemClickListener
         spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
@@ -1547,7 +1548,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Update the global value for other calculations
-            Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[pos]);
+            Globals.currentSubFreqHz = DspResponse.SUB_FREQS_HZ[pos];
         });
 
         // 4. Seek Gain logic remains largely the same
@@ -1733,7 +1734,7 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
                 int idx = java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString());
-                if (idx < 0) idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(spinnerSubFreq.getText().toString());
+                if (idx < 0) idx = resolveSubFreqIndex(spinnerSubFreq.getText().toString());
                 // 🔴 Switching compensation on no longer touches the crossover (owner, 14.09.2026:
                 // "прибери переписування"). It used to set anything above 80 Hz to 80 and save -
                 // added in this mod's 0.4.2, not in the original - and pressed on the owner's
@@ -2190,12 +2191,12 @@ public class MainActivity extends AppCompatActivity {
         String trimmed = text.trim();
         int idx = java.util.Arrays.asList(SUB_FREQS).indexOf(trimmed);
         if (idx >= 0) return idx;
-        idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(trimmed);
-        if (idx >= 0) return idx;
+        // A bare number - what a preset saved before the unit was added.
         String digits = trimmed.replaceAll("[^0-9]", "");
         if (!digits.isEmpty()) {
-            idx = java.util.Arrays.asList(SUB_FREQS_RAW).indexOf(digits);
-            if (idx >= 0) return idx;
+            for (int i = 0; i < DspResponse.SUB_FREQS_HZ.length; i++) {
+                if (String.valueOf(DspResponse.SUB_FREQS_HZ[i]).equals(digits)) return i;
+            }
         }
         return -1;
     }
@@ -2337,12 +2338,12 @@ public class MainActivity extends AppCompatActivity {
         String subText = "+" + sg;
         tvSubDb.setText(subText);
 
-        int subFreqIdx = p.getInt(name + "_sub_f", 5);
+        int subFreqIdx = p.getInt(name + "_sub_f", DspResponse.SUB_LPF_DEFAULT_IDX);
         if (subFreqIdx < 0 || subFreqIdx >= SUB_FREQS.length) {
-            subFreqIdx = 5;
+            subFreqIdx = DspResponse.SUB_LPF_DEFAULT_IDX;
         }
         spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
-        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[subFreqIdx]);
+        Globals.currentSubFreqHz = DspResponse.SUB_FREQS_HZ[subFreqIdx];
 
         // Power Volume
         showPowerVol(p.getInt(name + "_power_vol", 0));
@@ -3141,7 +3142,7 @@ public class MainActivity extends AppCompatActivity {
     private void resetUiInternal() {
         isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false);
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[DspResponse.SUB_LPF_DEFAULT_IDX], false);
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);

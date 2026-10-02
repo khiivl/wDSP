@@ -72,16 +72,17 @@ int main() {
     for (int b = 0; b < 16; b++) printf(" %6s", status[b] == 1 ? "UNKN" : status[b] == 2 ? "trim" : "-");
     printf("\n\n");
 
-    // The preset each curve produces. HPF 100 Hz is index 7, which is what the report says.
-    int gains[16], subLpf = 0, subGain = 0;
-    SweepMeasurement::synthesizeAutoEq16(kAvgClean, kOldCurve, kAvgSnr, 7, true,
-                                         SweepMeasurement::TARGET_HARMAN, gains, subLpf, subGain);
+    // The preset each curve produces, with the door high-pass at 100 Hz, which is what the report says.
+    int gains[16], subGain = 0;
+    float subLpfHz = 0.0f;
+    SweepMeasurement::synthesizeAutoEq16(kAvgClean, kOldCurve, kAvgSnr, 100.0f, true,
+                                         SweepMeasurement::TARGET_HARMAN, gains, subLpfHz, subGain);
     printGains("preset, old curve", gains);
     printGains("preset, as reported", kOldGains);
     printf("%-22s sub gain %+d dB\n", "", subGain);
 
-    SweepMeasurement::synthesizeAutoEq16(kAvgClean, comp, kAvgSnr, 7, true,
-                                         SweepMeasurement::TARGET_HARMAN, gains, subLpf, subGain);
+    SweepMeasurement::synthesizeAutoEq16(kAvgClean, comp, kAvgSnr, 100.0f, true,
+                                         SweepMeasurement::TARGET_HARMAN, gains, subLpfHz, subGain);
     printf("\n");
     printGains("preset, curve now", gains);
     printf("%-22s sub gain %+d dB (a constant per target curve, not measured)\n", "", subGain);

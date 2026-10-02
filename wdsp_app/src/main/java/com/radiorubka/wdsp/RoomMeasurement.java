@@ -1190,8 +1190,10 @@ public final class RoomMeasurement {
         public int listeningDistanceCm = DEFAULT_LISTENING_DIST_CM;
         public int midbassHpfIdx = 0; // default Through
         public int midbassHpfFreqHz = 0;
-        public int subLpfIdx = 4; // default 63 Hz
-        public int subLpfFreqHz = 63;
+        // The app's default crossover until the synthesis says otherwise (DspResponse - it used to
+        // be 63 Hz here while the screen and the service defaulted to 80).
+        public int subLpfIdx = DspResponse.SUB_LPF_DEFAULT_IDX;
+        public int subLpfFreqHz = DspResponse.SUB_FREQS_HZ[DspResponse.SUB_LPF_DEFAULT_IDX];
         public int subGain = 2; // default +2 dB (slider 0..12, 0 is 0 dB)
         public int suggestedSubDelaySteps = 0;
         public float suggestedSubDelayMs = 0f;
@@ -2737,16 +2739,11 @@ public final class RoomMeasurement {
         System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
 
 
-        // 3. Detect midbass roll-off HPF cutoff index
+        // 3. Detect midbass roll-off: the native side answers in Hz, the chip's code is ours.
         if (result.hasSubwoofer) {
-            result.midbassHpfIdx = NativeSweep.detectMidbassRollOff(avgClean);
-            if (result.midbassHpfIdx >= 0 && result.midbassHpfIdx < DspResponse.DOOR_HPF_HZ.length) {
-                // 0 for code 0: Through, which is how the no-subwoofer branch below says it too.
-                result.midbassHpfFreqHz = Math.round(DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx]);
-            } else {
-                result.midbassHpfIdx = 5;
-                result.midbassHpfFreqHz = 63;
-            }
+            result.midbassHpfIdx = DspResponse.doorHpfIndexOf(NativeSweep.detectMidbassRollOffHz(avgClean));
+            // 0 for code 0: Through, which is how the no-subwoofer branch below says it too.
+            result.midbassHpfFreqHz = Math.round(DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx]);
         } else {
             // No subwoofer installed: keep door speakers full-range (Through / 20 Hz, idx 0)
             result.midbassHpfIdx = 0;
@@ -2754,20 +2751,16 @@ public final class RoomMeasurement {
         }
 
         // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
-        int[] subSettings = new int[2];
+        float[] subOut = new float[2];
         NativeSweep.synthesizeAutoEq16(avgClean, result.micCompensation16, avgSnr,
-                result.midbassHpfIdx, result.hasSubwoofer,
+                DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx], result.hasSubwoofer,
                 result.targetCurve != null ? result.targetCurve.id : NativeSweep.TARGET_HARMAN,
-                result.autoEqGains16, subSettings);
+                result.autoEqGains16, subOut);
 
-        result.subLpfIdx = subSettings[0];
-        if (result.subLpfIdx >= 0 && result.subLpfIdx < DspResponse.SUB_FREQS_HZ.length) {
-            result.subLpfFreqHz = DspResponse.SUB_FREQS_HZ[result.subLpfIdx];
-        } else {
-            result.subLpfIdx = 4;
-            result.subLpfFreqHz = 63;
-        }
-        result.subGain = subSettings[1];
+        result.subLpfIdx = result.hasSubwoofer
+                ? DspResponse.nearestSubLpfIndex(subOut[0]) : DspResponse.SUB_LPF_DEFAULT_IDX;
+        result.subLpfFreqHz = DspResponse.SUB_FREQS_HZ[result.subLpfIdx];
+        result.subGain = Math.round(subOut[1]);
 
         // 4-bis. What the car does to the sound, kept for the spectrum analyser.
         //
