@@ -637,21 +637,36 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
     }
 
     // The screensaver's style button, in one place: the drawing below and the screensaver's hit
-    // test both read these, so the two cannot drift apart. The disc is 1.5 times the area it had
-    // (owner, 02.10.2026), the radius sqrt(1.5) times 22dp; the gap to the right edge and to the
-    // bottom edge is one number, so the button sits the same distance from both.
+    // test both read these, so the two cannot drift apart (owner, 02.10.2026):
+    // - its centre sits on the horizontal axis of the now-playing strip along the bottom - the
+    //   screensaver's own status bar - and the same distance in from the right edge;
+    // - the disc is 1.5 times the area it had, the radius sqrt(1.5) times 22dp, but never more
+    //   than the strip leaves, so a narrow strip shrinks it rather than letting it stick out.
     private static final float STYLE_BTN_RADIUS_DP = 27f;
-    private static final float STYLE_BTN_EDGE_GAP_DP = 10f;
+    private static final float STYLE_BTN_MIN_GAP_DP = 4f;
+    /** With no strip at all the button keeps its old place, this far in from both edges. */
+    private static final float STYLE_BTN_NO_STRIP_INSET_DP = 32f;
     /** The touch target reaches past the disc: a target nobody can see in the dark must be generous. */
-    private static final float STYLE_BTN_HIT_RADIUS_DP = 46f;
+    private static final float STYLE_BTN_HIT_GROW = 46f / 27f;
 
-    /** Distance of the button's centre from the right edge and from the bottom edge, in px. */
-    public static float styleButtonInset(float density) {
-        return (STYLE_BTN_EDGE_GAP_DP + STYLE_BTN_RADIUS_DP) * density;
+    /**
+     * Distance of the button's centre from the right edge and from the bottom edge, in px: half
+     * the now-playing strip, so the centre is on the strip's axis.
+     *
+     * @param stripPx the strip's height - the view's bottom inset, {@code ScreensaverManager.infoBarPx()}
+     */
+    public static float styleButtonInset(float density, float stripPx) {
+        return stripPx > 0f ? stripPx / 2f : STYLE_BTN_NO_STRIP_INSET_DP * density;
     }
 
-    public static float styleButtonHitRadius(float density) {
-        return STYLE_BTN_HIT_RADIUS_DP * density;
+    public static float styleButtonRadius(float density, float stripPx) {
+        float r = STYLE_BTN_RADIUS_DP * density;
+        if (stripPx > 0f) r = Math.min(r, stripPx / 2f - STYLE_BTN_MIN_GAP_DP * density);
+        return Math.max(8f * density, r);
+    }
+
+    public static float styleButtonHitRadius(float density, float stripPx) {
+        return styleButtonRadius(density, stripPx) * STYLE_BTN_HIT_GROW;
     }
 
     public void setInsets(int top, int bottom) {
@@ -1287,9 +1302,9 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     private void drawStyleCycleButton(Canvas canvas, float viewW, float viewH) {
         float density = getResources().getDisplayMetrics().density;
-        float radius = STYLE_BTN_RADIUS_DP * density;
-        float cx = viewW - styleButtonInset(density);
-        float cy = viewH - styleButtonInset(density);
+        float radius = styleButtonRadius(density, bottomInset);
+        float cx = viewW - styleButtonInset(density, bottomInset);
+        float cy = viewH - styleButtonInset(density, bottomInset);
 
         // Background disc
         btnBgPaint.setColor(0x44000000);
@@ -1308,7 +1323,7 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         btnIconPaint.setStrokeCap(Paint.Cap.ROUND);
         btnIconPaint.setStrokeJoin(Paint.Join.ROUND);
         // The wave keeps its proportion to the disc (it was 24 by 7 inside 22).
-        float grow = STYLE_BTN_RADIUS_DP / 22f;
+        float grow = radius / (22f * density);
         btnIconPaint.setStrokeWidth(2.2f * grow * density);
 
         sineIconPath.reset();
@@ -1374,6 +1389,12 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         }
         if (line == null) line = "";
         float right = viewW - pad;
+        if (screensaverMode) {
+            // The style button sits on this strip's axis now; the text stops short of it.
+            float density = getResources().getDisplayMetrics().density;
+            right = viewW - styleButtonInset(density, bottomInset)
+                    - styleButtonRadius(density, bottomInset) - pad;
+        }
         if (line != null && right > x) {
             infoPaint.setTextSize(h * 0.38f);
             infoPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);

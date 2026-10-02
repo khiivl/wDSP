@@ -968,8 +968,8 @@ public final class ScreensaverManager {
     private boolean onStyleButton(float x, float y) {
         TouchArea area = touchArea();
         float density = context.getResources().getDisplayMetrics().density;
-        float inset = StatusBarVisualizerView.styleButtonInset(density);
-        float r = StatusBarVisualizerView.styleButtonHitRadius(density);
+        float inset = StatusBarVisualizerView.styleButtonInset(density, infoBarPx());
+        float r = StatusBarVisualizerView.styleButtonHitRadius(density, infoBarPx());
         float dx = x - (area.w - inset);
         float dy = y - (area.h - inset);
         return dx * dx + dy * dy <= r * r;
@@ -1073,8 +1073,8 @@ public final class ScreensaverManager {
         float density = context.getResources().getDisplayMetrics().density;
         if (onStyleButton(x, y)) {
             noteTouch(tap + String.format(Locale.US, " -> style button (inset %.0f, r %.0f)",
-                    StatusBarVisualizerView.styleButtonInset(density),
-                    StatusBarVisualizerView.styleButtonHitRadius(density)));
+                    StatusBarVisualizerView.styleButtonInset(density, infoBarPx()),
+                    StatusBarVisualizerView.styleButtonHitRadius(density, infoBarPx())));
             cycleVisualizerStyle();
             resetIdleClock();
             return;
