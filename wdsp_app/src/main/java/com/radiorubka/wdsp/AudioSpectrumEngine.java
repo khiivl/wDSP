@@ -1073,6 +1073,7 @@ public class AudioSpectrumEngine {
             // one place that can answer it: radio bypasses AudioFlinger, so an empty session list is
             // not silence, and isMediaPlaybackActive() already knows that.
             publishPlaybackSilence();
+            updateIdlePause();
             if (!listeners.isEmpty()) {
                 // The session is carrying this player right now: remember it, so a return from the
                 // microphone does not have to sweep for it again.
@@ -1260,7 +1261,7 @@ public class AudioSpectrumEngine {
                 Visualizer v = visualizer;
                 if (v == null) break;
                 try {
-                    if (!pausedForCall && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
+                    if (!analysisPaused() && v.getWaveForm(buffer) == Visualizer.SUCCESS) {
                         long readAt = System.nanoTime();
                         noteSignal(buffer);
                         int fresh = created.push(buffer, size, readAt);
@@ -1297,8 +1298,9 @@ public class AudioSpectrumEngine {
         analysisThread = new Thread(() -> {
             while (capturePolling) {
                 try {
-                    if (pausedForCall) {
-                        Thread.sleep(50);   // interruption on stop lands in the catch below
+                    if (analysisPaused()) {
+                        // interruption on stop lands in the catch below
+                        Thread.sleep(pausedForIdle ? 250 : 50);
                         continue;
                     }
                     created.process(20);
@@ -1472,7 +1474,7 @@ public class AudioSpectrumEngine {
     }
 
     private void dispatchNativeFrame() {
-        if (pausedForCall || listeners.isEmpty()) return;
+        if (analysisPaused() || listeners.isEmpty()) return;
         synchronized (analyzerLock) {
             NativeAnalyzer tap = nativeAnalyzer;
             NativeAnalyzer mic = micAnalysing ? micAnalyzer : null;
@@ -1728,6 +1730,75 @@ public class AudioSpectrumEngine {
      */
     private volatile boolean pausedForCall;
 
+    /**
+     * 🔴 Nothing is audible - no radio playing, no PCM player started, no AUX - so there is nothing
+     * to draw. The analysis sleeps and no frames go out; the microphone stays open and held, exactly
+     * as during a call (the owner's input, taken from boot). Measured 02.10.2026 on the bench with
+     * nothing playing and the output in standby: wDSP held ~25% of a core (capture + analysis) and
+     * surfaceflinger 41% redrawing the overlay with cabin noise. The owner: «маємо читати стан чи
+     * щось грає чи ні, чи активний зараз профіль радіо, і чи ввімкнено відмальовувати розрахункову,
+     * чи мікрофон. І динамічно перемикати». Decided by the watchdog, from {@link #isAnythingAudible()}.
+     */
+    private volatile boolean pausedForIdle;
+
+    /** The analysers do no work: a call is on, or nothing is audible. The capture stays open. */
+    private boolean analysisPaused() {
+        return pausedForCall || pausedForIdle;
+    }
+
+    /**
+     * Something a person can hear right now. Not {@link #isMediaPlaybackActive()}: that answers yes
+     * whenever sys.qf.last_audio_src names a player, and that property names the LAST player, still
+     * there long after it stopped - on the bench it called a silent car "media plays" for hours.
+     */
+    private boolean isAnythingAudible() {
+        if (appContext == null) return true;
+        NowPlaying now = NowPlaying.getInstance(appContext);
+        if (now.isRadioSource()) return now.isPlaying();
+        if ("aux_type".equals(VolumeHelper.getActivePlayerType())) return true;   // analogue, no PCM
+        if (audioManager == null) return true;
+        try {
+            if (audioManager.isMusicActive()) return true;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                List<AudioPlaybackConfiguration> configs = audioManager.getActivePlaybackConfigurations();
+                if (configs != null) {
+                    for (AudioPlaybackConfiguration config : configs) {
+                        if (isConfigActive(config)) return true;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            return true;   // cannot tell - keep drawing rather than go blind
+        }
+        return false;
+    }
+
+    /** Watchdog thread. Pauses or resumes the analysis as the car falls silent or starts playing. */
+    private void updateIdlePause() {
+        boolean idle = !isAnythingAudible();
+        if (idle == pausedForIdle) return;
+        pausedForIdle = idle;
+        if (idle) {
+            Log.i(TAG, "nothing audible: analysis paused, microphone kept, bars dropped");
+            dispatchSilenceFrame();
+        } else {
+            Log.i(TAG, "playback: analysis resumed");
+        }
+    }
+
+    /** One frame of zeros, so the bars fall instead of freezing where the last frame left them. */
+    private void dispatchSilenceFrame() {
+        float[] z16 = new float[16];
+        float[] z32 = new float[32];
+        long now = System.currentTimeMillis();
+        for (OnSpectrumDataListener l : listeners) {
+            try {
+                l.onSpectrumCapture(z16, z16, z16, z16, z32, z32, z32, z32, now, 50);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     public synchronized void setCallActive(boolean active) {
         if (active == pausedForCall) return;
         pausedForCall = active;
@@ -1876,8 +1947,9 @@ public class AudioSpectrumEngine {
         micAnalysisThread = new Thread(() -> {
             while (micAnalysing) {
                 try {
-                    if (pausedForCall) {
-                        Thread.sleep(50);   // interruption on stop lands in the catch below
+                    if (analysisPaused()) {
+                        // interruption on stop lands in the catch below
+                        Thread.sleep(pausedForIdle ? 250 : 50);
                         continue;
                     }
                     created.process(20);
@@ -1902,7 +1974,7 @@ public class AudioSpectrumEngine {
         // Held but not analysed: the samples go nowhere, and nothing downstream is told of them -
         // signal from a microphone nobody is drawing must not look like playback to NowPlaying.
         if (!micAnalysing) return;
-        if (pausedForCall) return;   // the stream stays open; the samples go nowhere
+        if (analysisPaused()) return;   // the stream stays open; the samples go nowhere
         synchronized (analyzerLock) {
             NativeAnalyzer analyzer = micAnalyzer;
             if (analyzer == null) return;
