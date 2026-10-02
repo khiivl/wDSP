@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
     // F-M Curve
     private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass;
+    private MaterialButton switchShowLoudnessMain;
     private Slider seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol, seekUltraBassMaxDb;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
     private TextView tvFatStartVolVal, tvUltraBassStartVolVal, tvUltraBassMaxDbVal;
@@ -777,6 +778,7 @@ public class MainActivity extends AppCompatActivity {
             if (switchFatigueEnable == null) switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
             if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
             if (switchUltraBass == null) switchUltraBass = findViewById(R.id.switch_ultra_bass);
+            if (switchShowLoudnessMain == null) switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
             if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
             if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
 
@@ -788,6 +790,7 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFatigueEnable);
             updateToggleStyle(switchFmSubComp);
             updateToggleStyle(switchUltraBass);
+            updateToggleStyle(switchShowLoudnessMain);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
 
@@ -1242,6 +1245,7 @@ public class MainActivity extends AppCompatActivity {
         seekFmStrength = findViewById(R.id.seek_fm_strength);
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
         switchUltraBass = findViewById(R.id.switch_ultra_bass);
+        switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
         seekFatStartVol = findViewById(R.id.seek_fat_start_vol);
         tvFatStartVolVal = findViewById(R.id.tv_fat_start_vol_val);
         seekUltraBassStartVol = findViewById(R.id.seek_ultra_bass_start_vol);
@@ -1268,11 +1272,13 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchShowLoudnessMain);
         // The loudness toggles share their row by weight; five of them wrapped their captions on
         // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
         // included (owner, 02.10.2026: «навчи RowFit стискати ряд без повзунка»).
         com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.layout_fm_toggles), null, 0,
-                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp, switchUltraBass);
+                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp, switchShowLoudnessMain,
+                switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
@@ -1453,10 +1459,59 @@ public class MainActivity extends AppCompatActivity {
         }
         eqVisualizer.setGains(gs);
         float[] offs = calculateFmOffsets();
+        updateMainOverlays(gs, offs);
         AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
         engine.setGains(gs);
         engine.setQFactors(qn);
         engine.setFmOffsets(offs);
+    }
+
+    /** App-wide, not per preset: whether the main EQ curve shows what loudness is doing (author's 0.5). */
+    private static final String PREF_SHOW_LOUDNESS_ON_MAIN = "show_loudness_on_main";
+
+    private boolean showLoudnessOnMain() {
+        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, false);
+    }
+
+    /**
+     * The main curve's overlays, from the same functions the service sends with - so the picture
+     * is what the chip gets. "Show on main" (the author's 0.5) decides whether loudness's part -
+     * the EQ drive, the subwoofer's compensation, the bass shelf's share - is drawn; Ultra Bass is
+     * a real effect of its own and always is.
+     */
+    private void updateMainOverlays(int[] gs, float[] offs) {
+        if (eqVisualizer == null || !isFullyInitialized || seekSubGain == null) return;
+        boolean showOnMain = showLoudnessOnMain();
+        boolean fmOn = switchFmEnable != null && switchFmEnable.isChecked();
+
+        boolean hasCorrection = false;
+        for (float o : offs) if (o != 0f) { hasCorrection = true; break; }
+        float[] drive = LoudnessCurve.eqDriveDb(gs, offs);
+        float[] driveIdx = new float[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) driveIdx[i] = LoudnessCurve.gainIndex(drive[i]);
+        eqVisualizer.setLoudnessCorrection(driveIdx, showOnMain && hasCorrection);
+
+        float subDb = getIntSlider(seekSubGain) + currentUltraBassOffset
+                + (showOnMain && switchFmSubComp != null && switchFmSubComp.isChecked() ? currentFmSubOffset : 0f);
+        subDb = Math.max(0, Math.min(12, Math.round(subDb)));
+        float subHz = RoomMeasurement.hasSubwoofer(this) ? Globals.currentSubFreqHz : 0f;
+        eqVisualizer.setSubFilter(subHz, subDb);
+
+        int vol = Math.max(LoudnessCurve.VOL_MIN,
+                (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
+        LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(vol, getIntSlider(seekFmCalVol),
+                getIntSlider(seekFmStrength), showOnMain && fmOn,
+                frontBassFreqIdx(), getIntSlider(seekBassBoostFront),
+                resolveBassBoostFreqIndex(spinnerBassFreqRear.getText().toString()), getIntSlider(seekBassBoostRear));
+        eqVisualizer.setBassShaping(
+                DspResponse.doorHpfHz(getIntSlider(seekBassFilterFront)), shelfHz(shelf.freqIdxFront), shelf.gainFront,
+                DspResponse.doorHpfHz(getIntSlider(seekBassFilterRear)), shelfHz(shelf.freqIdxRear), shelf.gainRear);
+    }
+
+    /** A shelf frequency index as Hz for drawing; 0 (off) draws no shelf. */
+    private static float shelfHz(int freqIdx) {
+        return freqIdx >= 1 && freqIdx <= AudioConfig.BASS_BOOST_FREQS_HZ.length
+                ? AudioConfig.BASS_BOOST_FREQS_HZ[freqIdx - 1] : 0f;
     }
 
     private void updateDbLabel(int i, int p) {
@@ -1570,6 +1625,7 @@ public class MainActivity extends AppCompatActivity {
             tvSubDb.setText(text);
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
+                updateVisualizer();   // the subwoofer line on the main curve
             }
         });
     }
@@ -1584,7 +1640,7 @@ public class MainActivity extends AppCompatActivity {
         AdapterView.OnItemClickListener itemClickListener = (parent, view, pos, id) -> {
             if (!isUpdatingUi) {
                 autoSaveCurrent();
-                // updateBassMcu(); // Uncomment if you use this
+                updateVisualizer();   // the bass shelf on the main curve
             }
         };
 
@@ -1599,7 +1655,7 @@ public class MainActivity extends AppCompatActivity {
             else if (slider == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
-//                    updateBassMcu();
+                updateVisualizer();   // the bass stage on the main curve
             }
         };
         seekBassFilterFront.addOnChangeListener(bl); seekBassBoostFront.addOnChangeListener(bl);
@@ -1757,6 +1813,15 @@ public class MainActivity extends AppCompatActivity {
                 updateFmVisualizer();
             }
         });
+        // App-wide, not per preset (the author's 0.5): a display choice for the main curve only.
+        switchShowLoudnessMain.setChecked(showLoudnessOnMain());
+        updateToggleStyle(switchShowLoudnessMain);
+        switchShowLoudnessMain.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                    .putBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, checked).apply();
+            updateVisualizer();
+        });
         updateToggleStyle(switchUltraBass);
         switchUltraBass.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
@@ -1843,6 +1908,8 @@ public class MainActivity extends AppCompatActivity {
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
         updateLoudnessCheck();
+        // Loudness moved (volume, a switch, a slider): the main curve's overlays follow it.
+        updateVisualizer();   // gs above is the curve alone; updateVisualizer reads the sliders
     }
 
     /**
