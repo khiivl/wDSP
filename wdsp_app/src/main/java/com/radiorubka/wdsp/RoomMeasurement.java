@@ -2944,7 +2944,9 @@ public final class RoomMeasurement {
                 result.autoEqGains16,
                 result.hasSubwoofer ? result.subGain : 0,
                 result.hasSubwoofer ? result.subLpfIdx : 5,
-                false);
+                false,
+                0, 0); // the bass shelf this preset gets: switched off just below
+
         e.putBoolean(presetName + "_fm_en", false);
         e.putBoolean(presetName + "_fat_en", false);
         e.putInt(presetName + "_fm_cal", MEASURE_VOLUME);

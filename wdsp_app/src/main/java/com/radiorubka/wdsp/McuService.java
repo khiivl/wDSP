@@ -93,7 +93,9 @@ public class McuService extends Service implements LocationListener {
     private int cachedSubFreq, cachedSubGain;
 
     private boolean cachedSubComp, cachedFmEn, cachedFatEn;
-    private int cachedFmCal, cachedFmStr;
+    private int cachedFmCal, cachedFmStr, cachedFatStartVol;
+    /** The person's own bass shelf, front and rear: frequency index and gain ("_bb_frq_f" ...). */
+    private int cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR;
 
     // GALA settings
     private boolean cachedGalaEn;
@@ -310,6 +312,9 @@ public class McuService extends Service implements LocationListener {
     private long lastSubWriteTime = 0;
     private byte[] pendingSubData = null;
     private boolean subUpdatePending = false;
+    private long lastBassBoostWriteTime = 0;
+    private byte[] pendingBassBoostData = null;
+    private boolean bassBoostUpdatePending = false;
     private static final long THROTTLE_MS = 500; // 2 commands per second
 
     private LocationManager locationManager;
@@ -451,9 +456,17 @@ public class McuService extends Service implements LocationListener {
                 if (key.contains("_sub")) {
                     updateSubwoofer(VolumeHelper.getVolume());
                 }
-                // 2. Then check for EQ bands or FM settings (less specific)
-                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm")) {
+                // 2. Then check for EQ bands or FM settings (less specific). Trim Highs ("_fat_")
+                //    used to fall through every branch here, so its switch and start volume took
+                //    effect only at the next volume change.
+                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm") || key.contains("_fat_")) {
                     updateEqWithFm(VolumeHelper.getVolume());
+                    // Calibration, strength and the loudness switch also move the subwoofer's
+                    // compensation and the bass shelf's share (the author's 0.5).
+                    if (key.contains("_fm")) {
+                        updateSubwoofer(VolumeHelper.getVolume());
+                        applyBassBoost(VolumeHelper.getVolume());
+                    }
                 }
                 else if (key.contains("_power_vol")) {
                     setPowerAmpVol();
@@ -465,7 +478,9 @@ public class McuService extends Service implements LocationListener {
                     applySurroundDelays();
                 }
                 else if (key.contains("_bb_") || key.contains("_bf_")) {
-                    applyBassBoost();
+                    applyBassBoost(VolumeHelper.getVolume());
+                    // The front shelf frequency picks the equaliser's residual row (the author's 0.5).
+                    updateEqWithFm(VolumeHelper.getVolume());
                 }
                 else if (key.contains("_f_") || key.contains("_loud")) {
                     applyFaderLoud();
@@ -1003,6 +1018,11 @@ public class McuService extends Service implements LocationListener {
         cachedFatEn = presetPrefs().getBoolean(preset + "_fat_en", false);
         cachedFmCal = presetPrefs().getInt(preset + "_fm_cal", 25);
         cachedFmStr = presetPrefs().getInt(preset + "_fm_str", 100);
+        cachedFatStartVol = presetPrefs().getInt(preset + "_fat_start_vol", LoudnessCurve.FATIGUE_START_DEFAULT);
+        cachedBassFreqF = presetPrefs().getInt(preset + "_bb_frq_f", 0);
+        cachedBassGainF = presetPrefs().getInt(preset + "_bb_f", 0);
+        cachedBassFreqR = presetPrefs().getInt(preset + "_bb_frq_r", 0);
+        cachedBassGainR = presetPrefs().getInt(preset + "_bb_r", 0);
 
         // GALA. Global mode takes the whole set out of the preset, so read it from the same place
         // the screen writes it - otherwise the service goes on computing with the preset's numbers
@@ -2078,31 +2098,23 @@ public class McuService extends Service implements LocationListener {
     private void applyVolumeDependentSettings(int currentVol) {
         updateEqWithFm(currentVol);
         updateSubwoofer(currentVol);
+        applyBassBoost(currentVol);
     }
 
     private void updateEqWithFm(int currentVol) {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
 
-        // The author's EQ pre-warp (0.5): while loudness or fatigue adds an offset, the sliders' dB
-        // and the offset are pre-warped together (AudioConfig.prewarpEq), so the 16 overlapping
-        // Q 2.2 bells sum to the target at every band centre instead of overshooting where
-        // neighbours leak into each other. With no offset the drive is the sliders, byte for byte
-        // as before.
-        boolean hasOffset = false;
-        float[] targetDb = new float[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            targetDb[i] = (cachedGains[i] - 6) * 2 + fmOffsets[i];
-            if (fmOffsets[i] != 0f) hasOffset = true;
-        }
-        float[] driveDb = hasOffset ? AudioConfig.prewarpEq(targetDb) : targetDb;
+        // The sliders plus the curve, pre-warped together while the curve acts (the author's 0.5,
+        // see LoudnessCurve.eqDriveDb); with no curve the sliders go out byte for byte as before.
+        float[] driveDb = LoudnessCurve.eqDriveDb(cachedGains, fmOffsets);
 
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
-            int idx1 = Math.max(0, Math.min(12, Math.round((driveDb[b1] / 2.0f) + 6)));
+            int idx1 = LoudnessCurve.gainIndex(driveDb[b1]);
 
             int b2 = i * 2 + 1;
-            int idx2 = Math.max(0, Math.min(12, Math.round((driveDb[b2] / 2.0f) + 6)));
+            int idx2 = LoudnessCurve.gainIndex(driveDb[b2]);
 
             effectiveGainIdx[b1] = idx1;
             effectiveGainIdx[b2] = idx2;
@@ -2141,7 +2153,8 @@ public class McuService extends Service implements LocationListener {
     }
 
     private void updateFmOffsets(int vol) {
-        LoudnessCurve.offsets(vol, cachedFmCal, cachedFmStr, cachedFmEn, cachedFatEn, fmOffsets);
+        LoudnessCurve.offsets(vol, cachedFmCal, cachedFmStr, cachedFmEn, cachedFatEn,
+                cachedFatStartVol, cachedBassFreqF, fmOffsets);
     }
 
     private void updateSubwoofer(int currentVol) {
@@ -2156,10 +2169,17 @@ public class McuService extends Service implements LocationListener {
         publishDspStateToSpectrum();
     }
 
-    private void applyBassBoost() {
-        sendToHardware(new byte[]{(byte) 0x88,
-                (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
-                (byte) (((presetPrefs().getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (presetPrefs().getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
+    /**
+     * The doors' bass shelf and high-pass (0x88). Since the author's 0.5 it follows the volume:
+     * with loudness on, the shelf carries part of the curve (LoudnessCurve.bassShelf), so it is
+     * resent on volume changes and goes through its own throttle like the EQ and the subwoofer.
+     */
+    private void applyBassBoost(int currentVol) {
+        LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr,
+                cachedFmEn, cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR);
+        sendBassBoostThrottled(new byte[]{(byte) 0x88,
+                (byte) (((shelf.freqIdxFront + 8) << 4) | (shelf.gainFront & 0x0F)),
+                (byte) (((shelf.freqIdxRear + 8) << 4) | (shelf.gainRear & 0x0F)),
                 (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
         // The door high-pass is part of the spectrum model; a change of it must reach the analyser
         // as a change of the EQ does.
@@ -2208,7 +2228,8 @@ public class McuService extends Service implements LocationListener {
     private void applyStaticSettings() {
         if (currentPresetName == null) return;
 
-        applyBassBoost();
+        // The bass shelf is no longer static: applyVolumeDependentSettings, which runs just
+        // before this, sends it with the volume it depends on.
 
         applyFaderLoud();
 
@@ -2287,6 +2308,31 @@ public class McuService extends Service implements LocationListener {
             lastSubWriteTime = System.currentTimeMillis();
         }
         subUpdatePending = false;
+    }
+
+    // The bass shelf's throttle, the author's 0.5: it used to fire only on rare taps, and now
+    // follows every volume change while loudness carries part of the curve on it.
+    private void sendBassBoostThrottled(byte[] data) {
+        pendingBassBoostData = data.clone();
+        if (bassBoostUpdatePending) return;
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - lastBassBoostWriteTime;
+
+        if (elapsed >= THROTTLE_MS) {
+            executeBassBoostWrite();
+        } else {
+            bassBoostUpdatePending = true;
+            backgroundHandler.postDelayed(this::executeBassBoostWrite, THROTTLE_MS - elapsed);
+        }
+    }
+
+    private void executeBassBoostWrite() {
+        if (pendingBassBoostData != null) {
+            sendToHardware(pendingBassBoostData);
+            lastBassBoostWriteTime = System.currentTimeMillis();
+        }
+        bassBoostUpdatePending = false;
     }
 
     synchronized private void sendToHardware(byte[] data) {

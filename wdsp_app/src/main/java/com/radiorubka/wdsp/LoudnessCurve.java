@@ -13,13 +13,13 @@ import java.util.Arrays;
  * a picture that was consistently one volume step ahead of the curve they got, and at volume 1 the
  * preview showed the full offsets while the chip received {@code (cal-2)/(cal-1)} of them.
  *
- * <p>Which of the two was right is not a matter of taste: the constants themselves say so.
- * {@code ISO_MAX_OFFSETS} is documented as the offset <em>at volume 1</em> and
- * {@code FATIGUE_MAX_OFFSETS} as the offset <em>at volume 32</em>. Only the preview's formula
- * actually reaches those values at those volumes, so the preview's formula is the one kept here and
- * the service now follows it. The chip therefore receives up to
- * {@code ISO_MAX_OFFSETS[i] / (cal - 1)} more than before - half a decibel at the default
- * calibration point of 25, three decibels if somebody has set it to 5.
+ * <p>Which of the two was right is not a matter of taste: the constants themselves say so. The
+ * loudness table was documented as the offset <em>at volume 1</em> and the fatigue table as the
+ * offset <em>at volume 32</em> - and the author's 0.5 tables that replaced them
+ * ({@code AudioConfig.ISO_RAW_TARGET_BY_FREQ}, {@code FATIGUE_RAW_TARGET}) say the same. Only the
+ * preview's formula actually reaches those values at those volumes, so it is the one kept here: his
+ * 0.5 service still gates on {@code vol < cal - 1} and stops at {@code (cal-2)/(cal-1)} of the curve
+ * at volume 1, which these ratios do not copy.
  *
  * <p>Nothing in here reads preferences or touches hardware: it is arithmetic, so that
  * {@link LoudnessCheck} can ask what the curve would do at a volume nobody is currently playing at.
@@ -49,22 +49,44 @@ public final class LoudnessCurve {
         return r < 0f ? 0f : (r > 1f ? 1f : r);
     }
 
-    /** The same for the fatigue trim, which lives above the calibration point instead of below. */
-    public static float fatigueRatio(int vol, int cal) {
-        if (cal >= VOL_MAX || vol <= cal) return 0f;
-        float r = (float) (vol - cal) / (float) (VOL_MAX - cal);
+    /**
+     * The same for the fatigue trim (Trim Highs), which lives above its own start volume. Since the
+     * author's 0.5 that is the preset's {@code _fat_start_vol}, no longer the calibration point.
+     */
+    public static float fatigueRatio(int vol, int startVol) {
+        if (startVol >= VOL_MAX || vol <= startVol) return 0f;
+        float r = (float) (vol - startVol) / (float) (VOL_MAX - startVol);
         return r < 0f ? 0f : (r > 1f ? 1f : r);
     }
 
+    /** Where Trim Highs starts in a preset that never chose: the author's 0.5 default. */
+    public static final int FATIGUE_START_DEFAULT = 25;
+
     /**
-     * Fills {@code out} with the 16 band offsets in dB. The two curves cannot both act at one
-     * volume - one lives below the calibration point and the other above it - so this is a choice,
-     * not a sum.
+     * Fills {@code out} with the 16 band offsets in dB - the target, before the pre-warp
+     * ({@link #eqDriveDb}).
      *
-     * @param out 16 floats, overwritten in full
+     * <p><b>Loudness</b>, the author's 0.5: below the calibration point the ISO 226 boost is split
+     * between the equaliser and the doors' bass shelf ({@link #bassShelf}). The equaliser gets the
+     * residual row for the shelf frequency the front pair is on
+     * ({@link AudioConfig#isoRawTargetForFreqIdx}), the shelf the rest; both grow by the same ratio,
+     * so together they make the whole curve at every volume.
+     *
+     * <p><b>Trim Highs</b>, his 0.5 too: above its own start volume, a dip at 3.15-5 kHz
+     * ({@link AudioConfig#FATIGUE_RAW_TARGET}), where the ear is most sensitive and where loud
+     * listening tires it - in place of the old cut that deepened towards 20 kHz, the band the ear
+     * hears least.
+     *
+     * <p>Loudness wins where both could act - a start volume set below the calibration point - as
+     * in his.
+     *
+     * @param fatigueStartVol  the preset's {@code _fat_start_vol}
+     * @param bassFreqIdxFront the front shelf frequency the preset chose, {@code _bb_frq_f}, 0 = off
+     * @param out              16 floats, overwritten in full
      */
-    public static void offsets(int vol, int cal, int strengthPct,
-                               boolean fmEnabled, boolean fatigueEnabled, float[] out) {
+    public static void offsets(int vol, int cal, int strengthPct, boolean fmEnabled,
+                               boolean fatigueEnabled, int fatigueStartVol, int bassFreqIdxFront,
+                               float[] out) {
         Arrays.fill(out, 0f);
         if (out.length < AudioConfig.NUM_BANDS) return;
         float str = strength(strengthPct);
@@ -73,20 +95,95 @@ public final class LoudnessCurve {
         if (fmEnabled) {
             float r = loudnessRatio(vol, cal);
             if (r > 0f) {
+                float[] row = AudioConfig.isoRawTargetForFreqIdx(shelfFreqIdx(bassFreqIdxFront));
                 for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-                    out[i] = AudioConfig.ISO_MAX_OFFSETS[i] * r * str;
+                    out[i] = row[i] * r * str;
                 }
                 return;
             }
         }
         if (fatigueEnabled) {
-            float r = fatigueRatio(vol, cal);
+            float r = fatigueRatio(vol, fatigueStartVol);
             if (r > 0f) {
                 for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-                    out[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * r * str;
+                    out[i] = AudioConfig.FATIGUE_RAW_TARGET[i] * r * str;
                 }
             }
         }
+    }
+
+    /**
+     * What the equaliser is driven with, per band in dB, before the chip's 2 dB rounding and
+     * +/-12 dB clamp ({@link #gainIndex}): the sliders plus the offsets, pre-warped together while
+     * an offset is active ({@link AudioConfig#prewarpEq}, the author's 0.5), so the 16 overlapping
+     * bells sum to that target at every band centre. With no offset it is the sliders, exactly.
+     * The one place this is computed: the service sends it, {@link LoudnessCheck} measures its
+     * headroom.
+     *
+     * @param gains   16 stored gain indices, 6 = flat
+     * @param offsets {@link #offsets} in dB, or null
+     */
+    public static float[] eqDriveDb(int[] gains, float[] offsets) {
+        float[] target = new float[AudioConfig.NUM_BANDS];
+        boolean hasOffset = false;
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            float off = offsets != null && i < offsets.length ? offsets[i] : 0f;
+            target[i] = (gains[i] - 6) * 2f + off;
+            if (off != 0f) hasOffset = true;
+        }
+        return hasOffset ? AudioConfig.prewarpEq(target) : target;
+    }
+
+    /** The chip's gain index for a drive in dB: 2 dB steps around index 6, clamped to 0..12. */
+    public static int gainIndex(float driveDb) {
+        return Math.max(0, Math.min(12, Math.round(driveDb / 2f + 6f)));
+    }
+
+    /** The doors' bass shelf (command 0x88, the P2Bass stage) at one moment: front and rear. */
+    public static final class BassShelf {
+        /** Index into the shelf frequencies, 0 = off, 1.. = {@link AudioConfig#BASS_BOOST_FREQS_HZ}. */
+        public final int freqIdxFront, freqIdxRear;
+        /** Gain 0..12, as the low nibble of the command carries it. */
+        public final int gainFront, gainRear;
+
+        BassShelf(int freqIdxFront, int gainFront, int freqIdxRear, int gainRear) {
+            this.freqIdxFront = freqIdxFront;
+            this.gainFront = gainFront;
+            this.freqIdxRear = freqIdxRear;
+            this.gainRear = gainRear;
+        }
+    }
+
+    /**
+     * The shelf as the author's 0.5 sends it. With loudness off: the person's own front and rear
+     * settings, untouched. With loudness on: the front shelf carries its share of the curve -
+     * {@link AudioConfig#LOUDNESS_BASS_SHELF_MAX_DB} at volume 1, grown by the same ratio as the
+     * equaliser's share - at the frequency the person chose and on top of the person's own gain; with
+     * the shelf off, at the tuned 86 Hz and without a manual gain. The assist tops out at 10 so a
+     * manual boost still adds something below the shelf's 12. The rear pair follows the front for
+     * as long as loudness is on, because the equaliser's residual is solved against the front's
+     * frequency only; the rear's own settings stay stored and come back when loudness goes off.
+     */
+    public static BassShelf bassShelf(int vol, int cal, int strengthPct, boolean fmEnabled,
+                                      int freqIdxFront, int gainFront, int freqIdxRear, int gainRear) {
+        if (!fmEnabled) return new BassShelf(freqIdxFront, gainFront, freqIdxRear, gainRear);
+        float assist = AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB * loudnessRatio(vol, cal)
+                * strength(strengthPct);
+        int freq = shelfFreqIdx(freqIdxFront);
+        int manual = freq == freqIdxFront ? gainFront : 0;
+        int gain = Math.max(0, Math.min(12, Math.round(assist + manual)));
+        return new BassShelf(freq, gain, freq, gain);
+    }
+
+    /**
+     * The shelf frequency loudness works with: the one the person chose, or the tuned default when
+     * the shelf is off - or set to an index the author's 0.5 no longer offers (172 and 214 Hz,
+     * dropped), which his code answered with the 86 Hz residual under a shelf still at 172. Here the
+     * shelf and the residual always name the same frequency.
+     */
+    private static int shelfFreqIdx(int chosenIdx) {
+        return chosenIdx >= 1 && chosenIdx <= AudioConfig.BASS_BOOST_FREQS_HZ.length
+                ? chosenIdx : AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
     }
 
     /**

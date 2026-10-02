@@ -11,21 +11,6 @@ public class AudioConfig {
     // Index-to-MCU Gain value mapping
     public static final int[] GAIN_MAP = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-    // TEMPORARY (mod): the author's 0.5 removed these two; LoudnessCurve and LoudnessCheck read
-    // them until his loudness is ported (.agents/UPSTREAM_0_5.md #2/#3), which deletes them again
-    // so this file ends byte-identical to his.
-    // ISO 226 Max Offsets (dB) at Volume 1 relative to calibration point
-    public static final float[] ISO_MAX_OFFSETS = {
-            12.0f, 10.0f, 8.0f, 6.0f, 4.0f, 2.0f, 1.0f, 0.5f,
-            0.0f, 0.5f, 1.0f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f
-    };
-
-    // Fatigue Trim Max Offsets (dB) at Volume 32 relative to calibration point
-    public static final float[] FATIGUE_MAX_OFFSETS = {
-            0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f, -1.0f, -2.0f, -3.0f, -3.5f
-    };
-
     // Loudness compensation's bass-shelf assist: below the calibration volume, part of the ISO
     // 226 bass boost is delivered through the front/rear "Bass Boost" hardware shelf (see
     // McuService.applyBassBoost()/AudioConfig.bassShapingResponseDb()) instead of the 16-band EQ

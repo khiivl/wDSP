@@ -43,7 +43,7 @@ public final class LoudnessCheck {
         CAL_TOO_LOW,
         /** Strength is zero: the switch is on and the curve is multiplied away. */
         STRENGTH_ZERO,
-        /** Fatigue trim is on but the calibration point leaves no room above it. */
+        /** Fatigue trim is on but its start volume leaves no room above it. */
         FATIGUE_NO_ROOM,
         /** The preset plus the curve exceeds what the equaliser can deliver; the shape collapses. */
         CEILING_CLIPS,
@@ -100,14 +100,19 @@ public final class LoudnessCheck {
      * @param subGainIdx   subwoofer gain index 0..12
      * @param subFreqIdx   index into {@link DspResponse#SUB_FREQS_HZ}
      * @param bassBoost    the larger of the front and rear bass boost levels, 0 when unused
+     * @param fatigueStartVol  where Trim Highs starts, the preset's {@code _fat_start_vol}
+     * @param bassFreqIdxFront the front bass shelf frequency, {@code _bb_frq_f}, 0 = off
+     * @param bassGainFront    the front bass shelf's own gain, {@code _bb_f}
      * @param carMeasured  whether this car has an auto-EQ measurement at all
      */
     public static Result inspect(int[] gains, int subGainIdx, int subFreqIdx, int bassBoost,
                                  boolean fmEnabled, boolean fatigueEnabled, boolean subComp,
-                                 int cal, int strengthPct, boolean carMeasured) {
+                                 int cal, int strengthPct, int fatigueStartVol,
+                                 int bassFreqIdxFront, int bassGainFront, boolean carMeasured) {
         Result r = new Result();
         r.recommendedCal = carMeasured ? RoomMeasurement.MEASURE_VOLUME : 0;
-        r.recommendedStrength = maxDeliverableStrength(gains, subGainIdx, subFreqIdx, subComp);
+        r.recommendedStrength = maxDeliverableStrength(gains, subGainIdx, subFreqIdx, subComp,
+                bassFreqIdxFront, bassGainFront);
 
         // 1. The curve cannot act, whatever the switch says.
         //
@@ -139,16 +144,18 @@ public final class LoudnessCheck {
         // worth saying when something is actually switched on.
         if (!fmEnabled && !fatigueEnabled) return r;
 
-        if (fatigueEnabled && cal >= LoudnessCurve.VOL_MAX) {
-            r.findings.add(new Finding(Code.FATIGUE_NO_ROOM, Level.WARN, cal));
+        if (fatigueEnabled && fatigueStartVol >= LoudnessCurve.VOL_MAX) {
+            r.findings.add(new Finding(Code.FATIGUE_NO_ROOM, Level.WARN, fatigueStartVol));
         }
 
         // 2. The ceiling. The equaliser clamps each band to +/-12 dB, so a preset that already
         //    raises the bottom leaves the curve nowhere to go: the low bands pin flat against the
         //    rail while the ones with headroom keep rising, and what reaches the ear is a shelf
-        //    with a step in it rather than the shape that was asked for.
+        //    with a step in it rather than the shape that was asked for. Measured on the drive the
+        //    chip actually gets - sliders and curve pre-warped together (the author's 0.5) - not on
+        //    their plain sum.
         if (fmEnabled && !calDead && !strDead) {
-            Clipping c = firstClipping(gains, cal, strengthPct);
+            Clipping c = firstClipping(gains, cal, strengthPct, bassFreqIdxFront);
             if (c != null) {
                 r.findings.add(new Finding(Code.CEILING_CLIPS, Level.WARN,
                         c.volume, c.bandsAtMin, Math.round(c.worstOverflowDb)));
@@ -184,16 +191,24 @@ public final class LoudnessCheck {
         float worstOverflowDb;
     }
 
-    private static Clipping firstClipping(int[] gains, int cal, int strengthPct) {
+    /**
+     * Where a drive stops being delivered. The chip rounds to 2 dB steps, so a drive less than
+     * 1 dB above the +12 dB top still lands on the top step; past that a step is lost.
+     */
+    private static final float RAIL_DB = LoudnessCurve.CEILING_DB + 1f;
+
+    private static Clipping firstClipping(int[] gains, int cal, int strengthPct,
+                                          int bassFreqIdxFront) {
         float[] offs = new float[AudioConfig.NUM_BANDS];
         Clipping found = null;
         for (int vol = cal - 1; vol >= LoudnessCurve.VOL_MIN; vol--) {
-            LoudnessCurve.offsets(vol, cal, strengthPct, true, false, offs);
+            LoudnessCurve.offsets(vol, cal, strengthPct, true, false,
+                    LoudnessCurve.VOL_MAX, bassFreqIdxFront, offs);
+            float[] drive = LoudnessCurve.eqDriveDb(gains, offs);
             int bands = 0;
             float worst = 0f;
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-                float total = bandDb(gains, i) + offs[i];
-                float over = total - LoudnessCurve.CEILING_DB;
+                float over = drive[i] - RAIL_DB;
                 if (over > 0.001f) {
                     bands++;
                     if (over > worst) worst = over;
@@ -213,18 +228,44 @@ public final class LoudnessCheck {
 
     /**
      * The strongest curve these band gains leave room for. The worst case is always volume
-     * {@link LoudnessCurve#VOL_MIN}, where the ratio is 1, so one pass over the bands settles it -
-     * and the subwoofer is included when it is being compensated, because it shares the ceiling.
+     * {@link LoudnessCurve#VOL_MIN}, where the ratio is 1, so one pass settles it. Since the
+     * author's 0.5 three things carry the curve, each under its own top:
+     * <ul>
+     *   <li>the equaliser, driven with the sliders and the residual row pre-warped together. The
+     *       pre-warp is linear, so at strength s the drive is {@code a + s*b} - {@code a} the
+     *       pre-warped sliders, {@code b} the pre-warped row - and each band's limit is where that
+     *       line meets the rail;</li>
+     *   <li>the front bass shelf, whose share at strength s is {@code s * 10} on top of the
+     *       person's own gain, under the shelf's 12;</li>
+     *   <li>the subwoofer, when it is being compensated.</li>
+     * </ul>
      */
     public static int maxDeliverableStrength(int[] gains, int subGainIdx, int subFreqIdx,
-                                             boolean subComp) {
+                                             boolean subComp, int bassFreqIdxFront,
+                                             int bassGainFront) {
         float limit = 1f;
+        float[] sliders = new float[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) sliders[i] = bandDb(gains, i);
+        float[] a = AudioConfig.prewarpEq(sliders);
+        float[] row = new float[AudioConfig.NUM_BANDS];
+        LoudnessCurve.offsets(LoudnessCurve.VOL_MIN, LoudnessCurve.VOL_MAX, 100, true, false,
+                LoudnessCurve.VOL_MAX, bassFreqIdxFront, row);
+        float[] b = AudioConfig.prewarpEq(row);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float iso = AudioConfig.ISO_MAX_OFFSETS[i];
-            if (iso <= 0f) continue;
-            float headroom = LoudnessCurve.CEILING_DB - bandDb(gains, i);
-            limit = Math.min(limit, headroom <= 0f ? 0f : headroom / iso);
+            if (b[i] > 0.01f) {
+                float headroom = RAIL_DB - a[i];
+                limit = Math.min(limit, headroom <= 0f ? 0f : headroom / b[i]);
+            } else if (b[i] < -0.01f) {
+                float headroom = a[i] + RAIL_DB;
+                limit = Math.min(limit, headroom <= 0f ? 0f : headroom / -b[i]);
+            }
         }
+        // The shelf with no curve on it is the person's own setting, as the service would send it.
+        LoudnessCurve.BassShelf own = LoudnessCurve.bassShelf(LoudnessCurve.VOL_MAX,
+                LoudnessCurve.VOL_MAX, 100, true, bassFreqIdxFront, bassGainFront, 0, 0);
+        float shelfRoom = 12f - own.gainFront;
+        limit = Math.min(limit, shelfRoom <= 0f ? 0f
+                : shelfRoom / AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB);
         if (subComp) {
             float iso = LoudnessCurve.maxSubBoost(subFreqIdx);
             if (iso > 0f) {

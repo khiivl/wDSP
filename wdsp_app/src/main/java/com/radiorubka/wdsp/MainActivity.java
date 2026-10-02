@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         final String text = hz == Math.round(hz) ? String.valueOf(Math.round(hz)) : String.valueOf(hz);
         return getString(R.string.lbl_hz_fmt, text);
     }
-    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
+    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134"}; // 172 and 214 Hz dropped, as in the author's 0.5
     /**
      * What the bass-boost dropdowns actually show: the same frequencies with the hertz unit on
      * them, built at runtime like {@link #SUB_FREQS}.
@@ -201,6 +201,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
+    /** Trim Highs' start volume of the loaded preset ("_fat_start_vol", the author's 0.5). */
+    private int currentFatStartVol = LoudnessCurve.FATIGUE_START_DEFAULT;
     private int currentEffectiveVolume = -1;
 
     private ArrayAdapter<String> presetAdapter;
@@ -1824,11 +1826,18 @@ public class MainActivity extends AppCompatActivity {
         int cal = getIntSlider(seekFmCalVol);
         int str = getIntSlider(seekFmStrength);
         LoudnessCurve.offsets(vol, cal, str,
-                switchFmEnable.isChecked(), switchFatigueEnable.isChecked(), offs);
+                switchFmEnable.isChecked(), switchFatigueEnable.isChecked(), currentFatStartVol,
+                frontBassFreqIdx(), offs);
         currentFmSubOffset = LoudnessCurve.subOffset(vol, cal, str, switchFmEnable.isChecked(),
                 switchFmSubComp != null && switchFmSubComp.isChecked(),
                 subFreqIndexOf(Globals.currentSubFreqHz));
         return offs;
+    }
+
+    /** The front bass shelf frequency on screen, as the index "_bb_frq_f" stores (0 = off). */
+    private int frontBassFreqIdx() {
+        return spinnerBassFreqFront == null ? 0
+                : resolveBassBoostFreqIndex(spinnerBassFreqFront.getText().toString());
     }
 
     /** The crossover the subwoofer spinner is on, as an index into {@link DspResponse#SUB_FREQS_HZ}. */
@@ -1865,6 +1874,9 @@ public class MainActivity extends AppCompatActivity {
                 switchFmSubComp != null && switchFmSubComp.isChecked(),
                 getIntSlider(seekFmCalVol),
                 getIntSlider(seekFmStrength),
+                currentFatStartVol,
+                frontBassFreqIdx(),
+                seekBassBoostFront != null ? getIntSlider(seekBassBoostFront) : 0,
                 carMeasured);
         lastLoudnessResult = r;
 
@@ -1908,7 +1920,7 @@ public class MainActivity extends AppCompatActivity {
             case CURVE_INERT:         return getString(R.string.loud_check_inert);
             case CAL_TOO_LOW:         return getString(R.string.loud_check_cal_low);
             case STRENGTH_ZERO:       return getString(R.string.loud_check_strength_zero);
-            case FATIGUE_NO_ROOM:     return getString(R.string.loud_check_fatigue_no_room);
+            case FATIGUE_NO_ROOM:     return getString(R.string.loud_check_fatigue_start_no_room);
             case CEILING_CLIPS:       return getString(R.string.loud_check_ceiling, f.args[0], f.args[1]);
             case BASS_BOOST_STACKS:   return getString(R.string.loud_check_bass_stacks);
             case CAL_NOT_AT_MEASURED: return getString(R.string.loud_check_cal_not_measured, f.args[0], f.args[1]);
@@ -2095,7 +2107,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_fat_start_vol", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -2362,6 +2374,7 @@ public class MainActivity extends AppCompatActivity {
             String calText = "" + getIntSlider(seekFmCalVol);
             tvFmCalVolVal.setText(calText);
             seekFmStrength.setValue((float) p.getInt(name + "_fm_str", 100));
+            currentFatStartVol = p.getInt(name + "_fat_start_vol", LoudnessCurve.FATIGUE_START_DEFAULT);
             String strText = "" + getIntSlider(seekFmStrength);
             tvFmStrengthVal.setText(strText);
             seekDelayFl.setValue((float) p.getInt(name + "_d_fl", 0));

@@ -66,7 +66,8 @@ public final class PresetsDatabaseValidator {
     public static final int BASS_BOOST_DEFAULT = 0;
 
     public static final int BASS_BOOST_FREQ_MIN = 0;
-    public static final int BASS_BOOST_FREQ_MAX = 7;
+    /** 0 = off, then the author's 0.5 shelf frequencies; 172 and 214 Hz (7) are gone with his 0.5. */
+    public static final int BASS_BOOST_FREQ_MAX = AudioConfig.BASS_BOOST_FREQS_HZ.length;
     public static final int BASS_BOOST_FREQ_DEFAULT = 0;
 
     public static final int FADER_MIN = 0;
@@ -76,6 +77,10 @@ public final class PresetsDatabaseValidator {
     public static final int FM_CAL_VOL_MIN = 0;
     public static final int FM_CAL_VOL_MAX = 32;
     public static final int FM_CAL_VOL_DEFAULT = 25;
+
+    /** Trim Highs' own start volume (the author's 0.5): the slider's 0..32, default 25. */
+    public static final int FAT_START_VOL_MIN = 0;
+    public static final int FAT_START_VOL_MAX = 32;
 
     public static final int FM_STRENGTH_MIN = 0;
     public static final int FM_STRENGTH_MAX = 100;
@@ -304,6 +309,8 @@ public final class PresetsDatabaseValidator {
         ensureBoolean(editor, prefs, pName + "_fat_en", false, res);
         clampInt(editor, prefs, pName + "_fm_cal", FM_CAL_VOL_MIN, FM_CAL_VOL_MAX, FM_CAL_VOL_DEFAULT, res);
         clampInt(editor, prefs, pName + "_fm_str", FM_STRENGTH_MIN, FM_STRENGTH_MAX, FM_STRENGTH_DEFAULT, res);
+        clampInt(editor, prefs, pName + "_fat_start_vol", FAT_START_VOL_MIN, FAT_START_VOL_MAX,
+                LoudnessCurve.FATIGUE_START_DEFAULT, res);
 
         // 8. Time Alignment (Precise Delays)
         ensureBoolean(editor, prefs, pName + "_d_en", false, res);
