@@ -30,8 +30,7 @@ Gradle 9.4 + AGP 9.0.1, Java 11, `compileSdk 36`. Build **on Windows** — WSL h
 - Modules: **`:wdsp_app`** (`com.radiorubka.wdsp`, `minSdk 29`, **`targetSdk 29` on purpose** — the QF framework behaves
   as Android 10; do not "modernise" it) and **`:wdsp_proxy`** (`com.qf.soundeffect`, `sharedUserId=android.uid.system`,
   installed as an update to the stock DSP app with root + PMPatch3, so the quick-settings DSP button opens wDSP).
-- `rules.md` and `agents.md` in the repo root **are tracked** despite a `.gitignore` line naming them: an ignore rule
-  does not untrack what is already committed. They reach everyone who clones.
+- `rules.md` and `agents.md` in the root **are tracked** despite `.gitignore` (ignoring does not untrack).
 
 ## Verifying on the unit
 
@@ -65,14 +64,13 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
 - Do not touch or commit anyone else's `.idea/*`. **Gemini does not commit here**, and destructive
   git is banned to it everywhere; constructive git is its right — [DECISIONS.md](DECISIONS.md).
   Commit before letting it into the tree.
-- Tester measurements go to the group <https://t.me/wDSPapp> (collection post <https://t.me/wDSPapp/79>) or a forum
-  PM — **never** a direct message, where lone files get lost.
+- Tester measurements: the group <https://t.me/wDSPapp> (post <https://t.me/wDSPapp/79>) or a forum PM — **never**
+  a direct message, where lone files get lost.
 
 ## Working with the owner
 
 - **Argue before obeying** when there is evidence against a request, and say so first.
-- **Name the thing, not the index.** "Debt #4" tells the reader nothing; the same goes for a commit hash, a version
-  code or a path offered without a sentence saying what is in it.
+- **Name the thing, not the index**: a number, hash or path needs a sentence saying what it is.
 - **Verify on the wire yourself** when the owner is away.
 - **The owner's bench is not a cabin**: open shelving to the left, a balcony to the right, glass 1.35 m away, a lamp in
   front of the left speaker. Draw no acoustic conclusion from it — take only what does not depend on the room (converter
@@ -93,6 +91,8 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
   prior knowledge, not hypotheses awaiting our confirmation. And do not chase precision the hardware lacks: 16 bands,
   2 dB a step, a fixed `Q = 2.2`.
 - **A stale document is worse than none.** If the code moves, move the file.
+- **A new control is done only when the theme reaches it**: the theme is applied by id lists
+  ([ARCHITECTURE.md](ARCHITECTURE.md), "UI"); add the ids in the same commit, look in both themes.
 - Read a file before editing it; preserve existing code verbatim; propagate a signature change to **every** call site
   in the same change. The owner is the architect — ask rather than invent a design.
 
