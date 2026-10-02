@@ -288,7 +288,9 @@ public class McuService extends Service implements LocationListener {
      * offset still belongs to the source being announced.
      *
      * <p>{@code currentAppliedOffset} is not cleared when sources switch, so for a short while
-     * after one it holds a figure earned on the source we just left.
+     * after one it holds a figure earned on the source we just left - unless the poll has already
+     * written base + boost to the new source (02.10.2026), which makes the boost the new source's
+     * too; it then sets this back to 0, "no recent change to distrust".
      */
     private long lastSourceChangeMs = 0;
 
@@ -1592,16 +1594,30 @@ public class McuService extends Service implements LocationListener {
             // per-source figures above are held in this process and no property reset can touch
             // them. So the level is simply written back. The owner hears a step at the moment of
             // switching, where the sound is changing anyway, instead of losing the level they set.
+            //
+            // 🔀 With GALA's boost on top, from the author's 0.5 (owner, 02.10.2026: «краще з двох
+            // світів»). The boost comes from the speed, not from the source, so the new source gets
+            // base + the boost already running - not base alone with the boost faded in again a
+            // second and a half later, which is what this did until then. Written as GALA's own
+            // command, so the next poll does not take the hardware's lag for a hand on the knob,
+            // and the poll ends here to let the hardware take it, as in his.
             if (baseStandstillVolume >= 0 && !VolumeHelper.isHardwareMuted()) {
                 int live = VolumeHelper.getVolume();
-                if (live != baseStandstillVolume) {
-                    VolumeHelper.setVolume(baseStandstillVolume);
-                    lastAppliedVolume = baseStandstillVolume;
-                    lastReadHardwareVol = baseStandstillVolume;
-                    currentAppliedOffset = 0;
-                    pendingTargetOffset = 0;
+                int boost = Math.max(0, currentAppliedOffset);
+                int target = Math.min(32, baseStandstillVolume + boost);
+                // The boost now belongs to this source: the announce handler may trust it at once.
+                lastSourceChangeMs = 0;
+                if (live != target) {
+                    long now = System.currentTimeMillis();
+                    VolumeHelper.setVolume(target);
+                    lastAppliedVolume = target;
+                    lastReadHardwareVol = target;
+                    lastGalaCommandVol = target;
+                    lastGalaCommandTimeMs = now;
                     Log.i(TAG, "source now " + galavoltype + ": platform left " + live
-                            + ", restored our base " + baseStandstillVolume);
+                            + ", restored our base " + baseStandstillVolume + " + boost " + boost);
+                    galavoltype_last = galavoltype;
+                    return;
                 }
             }
         }
