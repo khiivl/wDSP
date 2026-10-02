@@ -222,7 +222,6 @@
     <string name="loud_check_inert">See kõver on seadistatud mitte midagi tegema: kalibreerimispunkt või kompensatsiooni tugevus on nullis. Loudnessi sisselülitamine ei muuda heli enne, kui need on määratud.</string>
     <string name="loud_check_cal_low">Kalibreerimispunkt on liiga madal — selle all pole helitugevust, milles kõver saaks toimida.</string>
     <string name="loud_check_strength_zero">Kompensatsiooni tugevus on null, mistõttu kõver korrutatakse nulliga.</string>
-    <string name="loud_check_fatigue_no_room">Kõrgete helide kärpimine on sees, kuid kalibreerimispunktist kõrgemal pole helitugevust, kus see saaks toimida.</string>
     <string name="loud_check_ceiling">Helitugevusest %1$d allpool saab kõveral varu otsa: %2$d sagedusriba ei tõuse enam ja kõvera asemel tekib riiul.</string>
     <string name="loud_check_bass_stacks">Sisse on lülitatud ka eraldi bassivõimendus. See on kaks bassiregulaatorit ühe kõvera all.</string>
     <string name="loud_check_cal_not_measured">Kõver on seotud helitugevusega %1$d, kuid autot mõõdeti tasemel %2$d. Profiil on täpne mõõdetud helitugevusel, seega peaks kõver lõppema just seal.</string>
