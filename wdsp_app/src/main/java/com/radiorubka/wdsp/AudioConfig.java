@@ -43,10 +43,12 @@ public class AudioConfig {
     // the shelf is carrying the low end at right now: each row is ISO_FULL_TARGET_DB (itself
     // already snapped to EVEN integers, since gain is stored as an index 0..12 where each step
     // is 2dB) minus that row's shelf response (bassShapingResponseDb's boost term,
-    // LOUDNESS_BASS_SHELF_MAX_DB at that frequency), re-snapped to even dB. 108Hz/134Hz carry a
-    // real (not a rounding artifact) dip around 80-315Hz since their wider shelf reach
-    // overshoots the flat target there - see isoRawTargetForFreqHz()'s doc for how a row is
-    // picked.
+    // LOUDNESS_BASS_SHELF_MAX_DB at that frequency), re-snapped to even dB. The dip around
+    // 80-315Hz (a real, not a rounding artifact) widens and deepens as the shelf frequency
+    // climbs, since a higher shelf's reach overshoots the flat target further up into the
+    // midrange - 214Hz's -4dB dip is the most extreme of these, and the EQ ripple that comes
+    // with correcting it is an accepted tradeoff for users who want that frequency specifically,
+    // not an oversight - see isoRawTargetForFreqHz()'s doc for how a row is picked.
     //
     // This feeds prewarpEq() below (combined with whatever the manual sliders are set to,
     // see calculateFmOffsets()/McuService.updateFmOffsets()) rather than being driven to
@@ -67,17 +69,20 @@ public class AudioConfig {
             {2f, 0f, 0f, 0f, 0f, 0f, -2f, 0f, 0f, 0f, 0f, 2f, 4f, 4f, 6f, 8f},
             // 134 Hz
             {2f, 0f, 0f, -2f, -2f, -2f, -2f, 0f, 0f, 0f, 0f, 2f, 4f, 4f, 6f, 8f},
+            // 172 Hz
+            {2f, 0f, -2f, -2f, -2f, -2f, -2f, -2f, 0f, 0f, 0f, 2f, 4f, 4f, 6f, 8f},
+            // 214 Hz
+            {2f, 0f, -2f, -2f, -4f, -4f, -4f, -2f, 0f, 0f, 0f, 2f, 4f, 4f, 6f, 8f},
     };
 
     // The Bass Boost shelf frequencies a user can actually pick manually (MainActivity's
     // BASS_BOOST_FREQS[0] is "off"; indices 1.. map 1:1 to this array). Single source of truth
     // for index<->Hz conversion so McuService (which only has the saved pref index) and
     // MainActivity (which reads Hz off the spinner text) agree on what each index means.
-    public static final float[] BASS_BOOST_FREQS_HZ = {54f, 68f, 86f, 108f, 134f};
+    public static final float[] BASS_BOOST_FREQS_HZ = {54f, 68f, 86f, 108f, 134f, 172f, 214f};
 
-    /** BASS_BOOST_FREQS[0] ("off") or any index outside BASS_BOOST_FREQS_HZ (including a stale
-     * saved index from before 172/214 were removed as options) falls back to the tuned
-     * default/most-optimal frequency, LOUDNESS_BASS_SHELF_FREQ_HZ. */
+    /** BASS_BOOST_FREQS[0] ("off") or any index outside BASS_BOOST_FREQS_HZ falls back to the
+     * tuned default/most-optimal frequency, LOUDNESS_BASS_SHELF_FREQ_HZ. */
     public static float bassBoostFreqHzForIdx(int bassBoostFreqIdx) {
         int i = bassBoostFreqIdx - 1;
         return (i >= 0 && i < BASS_BOOST_FREQS_HZ.length) ? BASS_BOOST_FREQS_HZ[i] : LOUDNESS_BASS_SHELF_FREQ_HZ;

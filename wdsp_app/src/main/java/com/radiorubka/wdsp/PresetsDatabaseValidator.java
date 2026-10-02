@@ -66,7 +66,7 @@ public final class PresetsDatabaseValidator {
     public static final int BASS_BOOST_DEFAULT = 0;
 
     public static final int BASS_BOOST_FREQ_MIN = 0;
-    /** 0 = off, then the author's 0.5 shelf frequencies; 172 and 214 Hz (7) are gone with his 0.5. */
+    /** 0 = off, then the author's shelf frequencies, 54..214 Hz (7 since his c64e6fc). */
     public static final int BASS_BOOST_FREQ_MAX = AudioConfig.BASS_BOOST_FREQS_HZ.length;
     public static final int BASS_BOOST_FREQ_DEFAULT = 0;
 

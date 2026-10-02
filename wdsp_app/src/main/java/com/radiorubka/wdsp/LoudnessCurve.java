@@ -205,9 +205,8 @@ public final class LoudnessCurve {
 
     /**
      * The shelf frequency loudness works with: the one the person chose, or the tuned default when
-     * the shelf is off - or set to an index the author's 0.5 no longer offers (172 and 214 Hz,
-     * dropped), which his code answered with the 86 Hz residual under a shelf still at 172. Here the
-     * shelf and the residual always name the same frequency.
+     * the shelf is off or holds an index outside AudioConfig.BASS_BOOST_FREQS_HZ (a stale or
+     * corrupt preset). The shelf and the residual always name the same frequency.
      */
     private static int shelfFreqIdx(int chosenIdx) {
         return chosenIdx >= 1 && chosenIdx <= AudioConfig.BASS_BOOST_FREQS_HZ.length

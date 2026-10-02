@@ -155,7 +155,10 @@ public class MainActivity extends AppCompatActivity {
         final String text = hz == Math.round(hz) ? String.valueOf(Math.round(hz)) : String.valueOf(hz);
         return getString(R.string.lbl_hz_fmt, text);
     }
-    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134"}; // 172 and 214 Hz dropped, as in the author's 0.5
+    // Indices 1.. follow AudioConfig.BASS_BOOST_FREQS_HZ: 172 and 214 Hz are back, each with its own
+    // tuned loudness row (the author, c64e6fc, verified on hardware - a deeper dip at 80-315 Hz is
+    // the accepted price of those shelves).
+    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
     /**
      * What the bass-boost dropdowns actually show: the same frequencies with the hertz unit on
      * them, built at runtime like {@link #SUB_FREQS}.
