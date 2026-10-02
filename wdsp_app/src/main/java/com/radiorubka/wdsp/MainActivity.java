@@ -1268,6 +1268,11 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
+        // The loudness toggles share their row by weight; five of them wrapped their captions on
+        // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
+        // included (owner, 02.10.2026: «навчи RowFit стискати ряд без повзунка»).
+        com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.layout_fm_toggles), null, 0,
+                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp, switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
         seekGalaInc = findViewById(R.id.seek_gala_increment);

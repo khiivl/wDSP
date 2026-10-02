@@ -32,7 +32,8 @@ import java.util.List;
  * when that is wider than the room, every fixed width, horizontal margin and text size in it is
  * multiplied by one factor, and the measurement is repeated until it fits. One view is left out and
  * stretches: the slider, whose length is not a size anybody designed. It keeps at least
- * {@code flexibleMinPx}.
+ * {@code flexibleMinPx}. A row with no slider - buttons sharing the width by weight - is fitted by
+ * its longest caption per unit of weight instead, since an equal share is what each button gets.
  *
  * <p>Only the row's own linear blocks are walked into. A {@link TextInputLayout} is scaled by its
  * width and its text, never by its insides - the end icon and the box padding belong to Material.
@@ -100,8 +101,13 @@ public final class RowFit implements View.OnLayoutChangeListener {
         }
     }
 
+    /**
+     * @param flexible the view that stretches (a slider), or null for a row with none - a row of
+     *                 buttons sharing the width by weight, such as the loudness toggles (owner,
+     *                 02.10.2026: «навчи RowFit стискати ряд без повзунка»)
+     */
     public static RowFit attach(LinearLayout row, View flexible, int flexibleMinPx, View... captions) {
-        if (row == null || flexible == null) return null;
+        if (row == null) return null;
         RowFit fit = new RowFit(row, flexible, flexibleMinPx, captions);
         row.addOnLayoutChangeListener(fit);
         return fit;
@@ -186,8 +192,39 @@ public final class RowFit implements View.OnLayoutChangeListener {
     private int naturalWidth() {
         int unlimited = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         row.measure(unlimited, unlimited);
+        if (flexible == null) return weightedNeed();
         return row.getMeasuredWidth() - row.getPaddingLeft() - row.getPaddingRight()
                 - flexible.getMeasuredWidth() + flexibleMinPx;
+    }
+
+    /**
+     * The width a row with no stretching view needs. Children with a weight split the room by it,
+     * so the sum of their natural widths says nothing: five equal buttons fit only when every one of
+     * them gets its own text from a fifth. The longest caption per unit of weight decides; children
+     * without a weight and all margins come on top. Measured unconstrained, a weighted child of
+     * width 0 reports its natural width (LinearLayout measures it as wrap_content).
+     */
+    private int weightedNeed() {
+        int fixed = 0;
+        float weights = 0f;
+        float perWeight = 0f;
+        for (int i = 0; i < row.getChildCount(); i++) {
+            View child = row.getChildAt(i);
+            if (child.getVisibility() == View.GONE) continue;
+            ViewGroup.LayoutParams lp = child.getLayoutParams();
+            if (lp instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) lp;
+                fixed += mlp.getMarginStart() + mlp.getMarginEnd();
+            }
+            float weight = lp instanceof LinearLayout.LayoutParams ? ((LinearLayout.LayoutParams) lp).weight : 0f;
+            if (weight > 0f) {
+                weights += weight;
+                perWeight = Math.max(perWeight, child.getMeasuredWidth() / weight);
+            } else {
+                fixed += child.getMeasuredWidth();
+            }
+        }
+        return fixed + Math.round(perWeight * weights);
     }
 
     private void apply(float s) {
