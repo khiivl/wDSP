@@ -40,9 +40,11 @@
     <string name="lbl_correction_strength">Correction Strength:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Show on Main</string>
-    <string name="sync_delay_front">Sync Front L/R</string>
-    <string name="sync_delay_rear">Sync Rear L/R</string>
-    <string name="sync_bass_fr">Sync Front/Rear Bass</string>
+    <string name="sync_delay_front">Move fronts together</string>
+    <string name="sync_delay_rear">Move rears together</string>
+    <string name="sync_bass_fr">Same as front</string>
+    <string name="hint_sync_delay_front">Front left and right now move together; the difference between them is kept.</string>
+    <string name="hint_sync_delay_rear">Rear left and right now move together; the difference between them is kept.</string>
     <string name="toast_loudness_sync_bass">Loudness active. Bass boost F/R frequencies and levels synchronised. For best results, set the front Bass Boost to 86Hz.</string>
     <string name="lbl_trim_highs_start_vol">Trim Highs Start Volume:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bass Start Volume:</string>
