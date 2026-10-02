@@ -127,7 +127,7 @@ public class SpectrumAnalyzerView extends View {
     // --- Easter egg: radiation icon when the bass level goes nuts ---
     // Fades in near the bass frequencies whenever the loudest bass sample rises past
     private static final float BASS_NUKE_CUTOFF_HZ = 100f; // samples below this count as "bass" for this check
-    private static final float BASS_NUKE_THRESHOLD = 1.25f;
+    private static final float BASS_NUKE_THRESHOLD = 1.5f;
     private static final float BASS_NUKE_ALPHA_RISE = 0.3f;
     private static final float BASS_NUKE_ALPHA_FALL = 0.05f;
     private int bassNukeSampleEnd; // last curve sample index under BASS_NUKE_CUTOFF_HZ, computed once in init()

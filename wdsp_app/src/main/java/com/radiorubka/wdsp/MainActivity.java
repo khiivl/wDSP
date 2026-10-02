@@ -120,10 +120,10 @@ public class MainActivity extends AppCompatActivity {
     private String rearBassFreqManualText = null;
     private int rearBassGainManualValue = -1;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
-    // Capped at 134Hz - anything higher stops reading as "bass" and only adds more
-    // AudioConfig.ISO_RAW_TARGET_BY_FREQ rows to maintain. Indices 1.. must stay in sync with
-    // AudioConfig.BASS_BOOST_FREQS_HZ.
-    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134"};
+    // Indices 1.. must stay in sync with AudioConfig.BASS_BOOST_FREQS_HZ/ISO_RAW_TARGET_BY_FREQ -
+    // every one of these has its own tuned loudness-correction row, including 172/214Hz's
+    // deeper EQ dip/ripple (an accepted tradeoff for users who want that shelf frequency).
+    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
 
     // Fader & Delays
     private Slider seekFaderLr;
@@ -1864,10 +1864,20 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront));
             e.putInt(name + "_bb_f", getIntSlider(seekBassBoostFront));
             e.putInt(name + "_bf_r", getIntSlider(seekBassFilterRear));
-            e.putInt(name + "_bb_r", getIntSlider(seekBassBoostRear));
+            // Rear's Boost (gain+freq) always persists rearBassGainManualValue/rearBassFreqManualText
+            // - the user's own last manual choice - never whatever's currently showing on the
+            // widgets, which while Loudness is on is forcibly mirrored to front's value (see
+            // updateBassVisualizer()'s doc). Saving the mirrored value instead would permanently
+            // clobber rear's real setting with front's the moment any autosave fires while Loudness
+            // is active - McuService.applyBassBoost() already relies on rear's saved prefs staying
+            // untouched while Loudness is on ("never touched, just not used"), so this keeps that
+            // invariant true on the UI/save side too.
+            e.putInt(name + "_bb_r", rearBassGainManualValue >= 0 ? rearBassGainManualValue : getIntSlider(seekBassBoostRear));
 
             int frontFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqFront.getText().toString());
-            int rearFreqIdx = java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqRear.getText().toString());
+            int rearFreqIdx = rearBassFreqManualText != null
+                    ? java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(rearBassFreqManualText)
+                    : java.util.Arrays.asList(BASS_BOOST_FREQS).indexOf(spinnerBassFreqRear.getText().toString());
             e.putInt(name + "_bb_frq_f", Math.max(0, frontFreqIdx));
             e.putInt(name + "_bb_frq_r", Math.max(0, rearFreqIdx));
 
@@ -1959,8 +1969,8 @@ public class MainActivity extends AppCompatActivity {
             // Replace .setSelection(int) with .setText(String, false)
             int frontIdx = p.getInt(name + "_bb_frq_f", 0);
             int rearIdx = p.getInt(name + "_bb_frq_r", 0);
-            // Safety fallback - a preset saved before the 172/214Hz options were removed could
-            // still have one of those stale indices (6/7) on disk, same hazard as subFreqIdx above.
+            // Safety fallback - same hazard as subFreqIdx above (a stale/corrupt out-of-range
+            // index on disk).
             if (frontIdx < 0 || frontIdx >= BASS_BOOST_FREQS.length) frontIdx = AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
             if (rearIdx < 0 || rearIdx >= BASS_BOOST_FREQS.length) rearIdx = AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
 
