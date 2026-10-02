@@ -1315,6 +1315,66 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <!-- Pair locks for the delays, on the title line (no height of their own; the author's 0.5) -->
+            <LinearLayout
+                android:id="@+id/row_sync_delays"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/margin_standard"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_delays_title"
+                app:layout_constraintBottom_toBottomOf="@id/tv_delays_title">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/switch_sync_delay_front"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/toggle_height"
+                    android:layout_marginStart="8dp"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="10dp"
+                    app:strokeWidth="1.2dp"
+                    app:strokeColor="@color/panel_border_theme_aware"
+                    android:backgroundTint="@color/card_bg_theme_aware"
+                    android:text="@string/sync_delay_front"
+                    android:textAllCaps="false"
+                    android:textSize="@dimen/eq_value_text"
+                    android:textStyle="bold"
+                    android:checkable="true" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/switch_sync_delay_rear"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/toggle_height"
+                    android:layout_marginStart="8dp"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="10dp"
+                    app:strokeWidth="1.2dp"
+                    app:strokeColor="@color/panel_border_theme_aware"
+                    android:backgroundTint="@color/card_bg_theme_aware"
+                    android:text="@string/sync_delay_rear"
+                    android:textAllCaps="false"
+                    android:textSize="@dimen/eq_value_text"
+                    android:textStyle="bold"
+                    android:checkable="true" />
+            </LinearLayout>
+
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -2087,14 +2147,47 @@
 
                         </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/tv_rear_bass_title"
-                            style="@style/TextHeader"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="24dp"
-                            android:layout_marginBottom="@dimen/margin_small"
-                            android:text="@string/rear_speaker_bass" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_rear_bass_title"
+                                style="@style/TextHeader"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                                            android:layout_marginBottom="@dimen/margin_small"
+                                android:text="@string/rear_speaker_bass" />
+
+                            <!-- Front/rear lock for the bass stage (the author's 0.5), on the title line -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_sync_bass"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/sync_bass_fr"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+                        </LinearLayout>
 
                         <!-- Rear Filter Row -->
                         <androidx.constraintlayout.widget.ConstraintLayout
