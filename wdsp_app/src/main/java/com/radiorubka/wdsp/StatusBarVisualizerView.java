@@ -636,25 +636,22 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         return screensaverMode;
     }
 
-    public boolean isPointInStyleCycleButton(float x, float y) {
-        if (!screensaverMode) return false;
-        float density = getResources().getDisplayMetrics().density;
-        float cx = getWidth() - 32f * density;
-        float cy = getHeight() - 32f * density;
-        float hitRadius = 38f * density;
-        float dx = x - cx;
-        float dy = y - cy;
-        return (dx * dx + dy * dy) <= (hitRadius * hitRadius);
+    // The screensaver's style button, in one place: the drawing below and the screensaver's hit
+    // test both read these, so the two cannot drift apart. The disc is 1.5 times the area it had
+    // (owner, 02.10.2026), the radius sqrt(1.5) times 22dp; the gap to the right edge and to the
+    // bottom edge is one number, so the button sits the same distance from both.
+    private static final float STYLE_BTN_RADIUS_DP = 27f;
+    private static final float STYLE_BTN_EDGE_GAP_DP = 10f;
+    /** The touch target reaches past the disc: a target nobody can see in the dark must be generous. */
+    private static final float STYLE_BTN_HIT_RADIUS_DP = 46f;
+
+    /** Distance of the button's centre from the right edge and from the bottom edge, in px. */
+    public static float styleButtonInset(float density) {
+        return (STYLE_BTN_EDGE_GAP_DP + STYLE_BTN_RADIUS_DP) * density;
     }
 
-    public boolean isPointInNowPlayingArt(float x, float y) {
-        if (nowPlaying == null) return false;
-        float h = bottomInset;
-        if (h <= 8) return false;
-        float top = getHeight() - h;
-        if (y < top - h * 0.5f || y > getHeight()) return false;
-        float artRightBound = h * 2.8f;
-        return x >= 0 && x <= artRightBound;
+    public static float styleButtonHitRadius(float density) {
+        return STYLE_BTN_HIT_RADIUS_DP * density;
     }
 
     public void setInsets(int top, int bottom) {
@@ -1290,9 +1287,9 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
 
     private void drawStyleCycleButton(Canvas canvas, float viewW, float viewH) {
         float density = getResources().getDisplayMetrics().density;
-        float radius = 22f * density;
-        float cx = viewW - 32f * density;
-        float cy = viewH - 32f * density;
+        float radius = STYLE_BTN_RADIUS_DP * density;
+        float cx = viewW - styleButtonInset(density);
+        float cy = viewH - styleButtonInset(density);
 
         // Background disc
         btnBgPaint.setColor(0x44000000);
@@ -1310,11 +1307,13 @@ public class StatusBarVisualizerView extends View implements AudioSpectrumEngine
         btnIconPaint.setStyle(Paint.Style.STROKE);
         btnIconPaint.setStrokeCap(Paint.Cap.ROUND);
         btnIconPaint.setStrokeJoin(Paint.Join.ROUND);
-        btnIconPaint.setStrokeWidth(2.2f * density);
+        // The wave keeps its proportion to the disc (it was 24 by 7 inside 22).
+        float grow = STYLE_BTN_RADIUS_DP / 22f;
+        btnIconPaint.setStrokeWidth(2.2f * grow * density);
 
         sineIconPath.reset();
-        float w = 24f * density;
-        float amp = 7f * density;
+        float w = 24f * grow * density;
+        float amp = 7f * grow * density;
         float startX = cx - w / 2f;
         sineIconPath.moveTo(startX, cy);
         sineIconPath.cubicTo(

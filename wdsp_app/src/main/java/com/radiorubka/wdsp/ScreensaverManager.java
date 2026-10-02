@@ -803,9 +803,9 @@ public final class ScreensaverManager {
     // -------------------------------------------------------------------------------------------
     // resizing it by hand, with nothing drawn to show for it
     //
-    // Drag anywhere. Up and down is height, left and right is width, and the direction of the
-    // first few millimetres decides which. There is no track, no thumb and no zone, because there
-    // is nothing drawn on a screensaver to aim at - and an invisible target is one you miss.
+    // Drag from an edge: top is the backdrop, bottom the width, left the height, right the
+    // brightness; from the middle it is the volume (owner, 02.10.2026). The edge the finger starts
+    // nearest decides, so there is no track and no thumb - nothing is drawn to aim at.
     //
     // The first attempt did use zones, a strip down the left and one along the bottom, and it was
     // unusable for two compounding reasons. The strips were sized in dp, and this head unit
@@ -854,12 +854,15 @@ public final class ScreensaverManager {
     private static final int GRAB_UNDECIDED = 3;
     private static final int GRAB_BRIGHT = 4;
     private static final int GRAB_BACKDROP = 5;
+    private static final int GRAB_VOLUME = 6;
 
     private int grabbed = GRAB_NONE;
     private float grabValue;
     private float liveWidthF = -1f, liveHeightF = -1f;
     private int liveBrightness = -1;
     private int liveBackdrop = -1;
+    /** The volume last sent during a drag, so it is sent only when it changes; -1 for none. */
+    private int liveVolume = -1;
     private View.OnTouchListener touchListener;
 
     /**
@@ -940,6 +943,38 @@ public final class ScreensaverManager {
         }
     }
 
+    private boolean longPressFired;
+
+    /**
+     * A long press on the style button opens the equaliser (owner, 02.10.2026): the screensaver's
+     * one way back to wDSP itself, where a short tap only cycles the picture.
+     */
+    private final Runnable styleButtonLongPress = this::openEqualiserFromStyleButton;
+
+    private void openEqualiserFromStyleButton() {
+        longPressFired = true;
+        noteTouch("long press on the style button -> open the equaliser");
+        try {
+            Intent open = new Intent(context, MainActivity.class);
+            open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            context.startActivity(open);
+            hide();
+        } catch (Throwable t) {
+            Log.w(TAG, "could not open the equaliser", t);
+        }
+    }
+
+    /** Whether a point, in the window's coordinates, is on the style button as it is drawn. */
+    private boolean onStyleButton(float x, float y) {
+        TouchArea area = touchArea();
+        float density = context.getResources().getDisplayMetrics().density;
+        float inset = StatusBarVisualizerView.styleButtonInset(density);
+        float r = StatusBarVisualizerView.styleButtonHitRadius(density);
+        float dx = x - (area.w - inset);
+        float dy = y - (area.h - inset);
+        return dx * dx + dy * dy <= r * r;
+    }
+
     private TouchArea touchArea() {
         StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
         boolean covers = coversStatusBar();
@@ -963,6 +998,7 @@ public final class ScreensaverManager {
 
                 @Override
                 public boolean onSingleTapUp(MotionEvent e) {
+                    if (longPressFired) return true;
                     onTap(e.getX(), e.getY());
                     return true;
                 }
@@ -976,16 +1012,26 @@ public final class ScreensaverManager {
                     return true;
                 }
             });
+            // The detector's own long press stays off: with it on, a finger held still before a
+            // drag would swallow the drag. The one long press there is - on the style button - is
+            // timed here instead, and any drag cancels it.
             detector.setIsLongpressEnabled(false);
             touchListener = (view, event) -> {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN) {
                     gestureView = view;
                     downRawX = event.getRawX();
                     downRawY = event.getRawY();
+                    longPressFired = false;
+                    handler.removeCallbacks(styleButtonLongPress);
+                    if (!previewMode && onStyleButton(event.getX(), event.getY())) {
+                        handler.postDelayed(styleButtonLongPress,
+                                ViewConfiguration.getLongPressTimeout());
+                    }
                 }
                 detector.onTouchEvent(event);
-                int action = event.getActionMasked();
                 if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    handler.removeCallbacks(styleButtonLongPress);
                     commitDrag();
                 }
                 return true;
@@ -1022,16 +1068,13 @@ public final class ScreensaverManager {
             return;
         }
 
-        // 2. Hit-test bottom-right style cycle button (visible sine wave icon)
+        // 2. The style button, bottom right: a short tap cycles the style (a long one opened the
+        // equaliser already, from the touch listener, and is not a tap).
         float density = context.getResources().getDisplayMetrics().density;
-        float btnHitRadius = 38f * density;
-        float btnCx = screenW - 32f * density;
-        float btnCy = screenH - 32f * density;
-        float dx = x - btnCx;
-        float dy = y - btnCy;
-        if ((dx * dx + dy * dy) <= (btnHitRadius * btnHitRadius)) {
-            noteTouch(tap + String.format(Locale.US, " -> style button (centre %.0f,%.0f r %.0f)",
-                    btnCx, btnCy, btnHitRadius));
+        if (onStyleButton(x, y)) {
+            noteTouch(tap + String.format(Locale.US, " -> style button (inset %.0f, r %.0f)",
+                    StatusBarVisualizerView.styleButtonInset(density),
+                    StatusBarVisualizerView.styleButtonHitRadius(density)));
             cycleVisualizerStyle();
             resetIdleClock();
             return;
@@ -1130,16 +1173,15 @@ public final class ScreensaverManager {
             float toRight = (area.w - downX) / area.w;
             float nearest = Math.min(Math.min(toTop, toBottom), Math.min(toLeft, toRight));
 
+            handler.removeCallbacks(styleButtonLongPress);
             if (nearest > EDGE_F) {
-                // Nowhere near an edge. The middle keeps the obvious meanings, so a drag that
-                // starts nowhere in particular still does something sensible.
-                if (Math.abs(dy) >= Math.abs(dx)) {
-                    grabbed = GRAB_HEIGHT;
-                    grabValue = heightFraction();
-                } else {
-                    grabbed = GRAB_WIDTH;
-                    grabValue = widthFraction();
-                }
+                // Nowhere near an edge: the volume, one action whichever way the finger goes - up
+                // or right is louder - with the factory banner showing the level as the encoder
+                // does (owner, 02.10.2026). Height and width already have their edges.
+                VolumeHelper.ensureInit(context);
+                grabbed = GRAB_VOLUME;
+                grabValue = VolumeHelper.getVolume();
+                liveVolume = -1;
             } else if (nearest == toTop) {
                 grabbed = GRAB_BACKDROP;
                 grabValue = backgroundAlpha();
@@ -1179,6 +1221,18 @@ public final class ScreensaverManager {
                 liveBackdrop = clampPercent(Math.round(grabValue + amount * 100f), 0);
                 applyBackdrop();
                 break;
+            case GRAB_VOLUME: {
+                // The whole screen is the whole scale, so a step is about twenty pixels; the level
+                // goes to the unit only when it changes, not on every finger movement.
+                int level = Math.max(0, Math.min(VolumeHelper.MAX_LEVEL,
+                        Math.round(grabValue + amount * VolumeHelper.MAX_LEVEL)));
+                if (level != liveVolume) {
+                    liveVolume = level;
+                    VolumeHelper.setVolumeShown(context, level);
+                }
+                resetIdleClock();
+                break;
+            }
             default:
                 break;
         }
@@ -1190,6 +1244,7 @@ public final class ScreensaverManager {
             case GRAB_WIDTH: return "width";
             case GRAB_BRIGHT: return "brightness";
             case GRAB_BACKDROP: return "backdrop";
+            case GRAB_VOLUME: return "volume";
             case GRAB_UNDECIDED: return "undecided";
             default: return "nothing";
         }
@@ -1200,8 +1255,9 @@ public final class ScreensaverManager {
             grabbed = GRAB_NONE;
             return;
         }
-        noteTouch(String.format(Locale.US, "drag released: %s, width %.2f, height %.2f, brightness %d, backdrop %d",
-                grabName(grabbed), liveWidthF, liveHeightF, liveBrightness, liveBackdrop));
+        noteTouch(String.format(Locale.US, "drag released: %s, width %.2f, height %.2f, brightness %d, backdrop %d, volume %d",
+                grabName(grabbed), liveWidthF, liveHeightF, liveBrightness, liveBackdrop, liveVolume));
+        liveVolume = -1;
         SharedPreferences.Editor editor = prefs.edit();
         if (liveWidthF > 0f) editor.putFloat(PREF_WIDTH_F, liveWidthF);
         if (liveHeightF > 0f) editor.putFloat(PREF_HEIGHT_F, liveHeightF);

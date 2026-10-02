@@ -120,6 +120,34 @@ public class VolumeHelper {
         return (audioManager != null) ? audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) : 0;
     }
 
+    /** For callers that may run before anything called {@link #init} (the screensaver). */
+    public static void ensureInit(Context context) {
+        if (audioManager == null && mVolumeManager == null) init(context);
+    }
+
+    /** The top of the platform's volume scale: {@code VolumeState.setVolumeVal} refuses above it. */
+    public static final int MAX_LEVEL = 32;
+
+    /**
+     * Sets the person's own volume - the level of the source playing now, the one the encoder
+     * turns - and shows the factory volume banner, as the encoder does.
+     *
+     * <p>The banner comes from an open broadcast: {@code QF_CarSettings} (VolAction) sends
+     * {@code com.xl.action.canset.vol}, and {@code MiscService} answers it by showing its
+     * VolumeView for three seconds. {@code com.qf.action.VOLUME_CHANGED} would be the obvious one,
+     * but it is a protected broadcast and an ordinary app gets a SecurityException. Learnt from
+     * RokoAi ({@code BridgeCommandDispatcher.setVolume}), which does the same without root.
+     */
+    public static void setVolumeShown(Context context, int val) {
+        ensureInit(context);
+        setVolume(Math.max(0, Math.min(MAX_LEVEL, val)));
+        try {
+            context.sendBroadcast(new android.content.Intent("com.xl.action.canset.vol"));
+        } catch (Exception e) {
+            Log.w(TAG, "could not show the volume banner", e);
+        }
+    }
+
     public static void setVolume(int val) {
         boolean success = false;
         Object activeState = getActiveVolumeInstance();
