@@ -1290,8 +1290,8 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayFront);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayRear);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncBass);
-        bindAppToggle(switchSyncDelayFront, "sync_delay_front");
-        bindAppToggle(switchSyncDelayRear, "sync_delay_rear");
+        bindAppToggle(switchSyncDelayFront, "sync_delay_front", R.string.hint_sync_delay_front);
+        bindAppToggle(switchSyncDelayRear, "sync_delay_rear", R.string.hint_sync_delay_rear);
         bindAppToggle(switchSyncBass, "sync_bass_fr");
         // The loudness toggles share their row by weight; five of them wrapped their captions on
         // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
@@ -1713,12 +1713,22 @@ public class MainActivity extends AppCompatActivity {
 
     /** An app-wide toggle stored under {@code key} in the presets file, not in any preset. */
     private void bindAppToggle(MaterialButton b, String key) {
+        bindAppToggle(b, key, 0);
+    }
+
+    /**
+     * {@code hintRes}, when not 0, is said once each time the toggle is switched on: a short label
+     * on a title line cannot say what it locks, and a line under it costs height the tab lacks
+     * (owner, 02.10.2026: «бери ці назви з поясненням при ввімкненні»).
+     */
+    private void bindAppToggle(MaterialButton b, String key, int hintRes) {
         if (b == null) return;
         b.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(key, false));
         updateToggleStyle(b);
         b.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(key, checked).apply();
+            if (checked && hintRes != 0) Toaster.show(MainActivity.this, getString(hintRes));
         });
     }
 
