@@ -7,7 +7,11 @@ re-read them, read this:
 - `research/blind-calibration-reference.md` — "Joint blind calibration of an uncalibrated
   microphone and car acoustics … on Unisoc UIS7862" (the owner's reference, Ukrainian);
 - `research/RESEARCH_REQUEST_DYNAMIC_BASS.md` + `research/RESEARCH_RESULT_DYNAMIC_BASS.md`
-  (Gemini deep research on level-dependent bass, 14.09, with our check of 15.09).
+  (Gemini deep research on level-dependent bass, 14.09, with our check of 15.09);
+- `research/RESEARCH_REQUEST_CABIN_MODEL.md` + `research/RESEARCH_RESULT_CABIN_MODEL.md` (cabin
+  dimensions, cabin gain, modes, door resonances, defect signatures, 02.10). ⚠️ Its numbers are
+  embedded formula images, several cropped at export; the values are transcribed in §14 — read them
+  there, never decode the file again.
 
 How the maths got here, attempt by attempt, with the commits: `CALIBRATION_HISTORY.md` (Ukrainian,
 decision material for the owner). The measurement pipeline itself (sweep, deconvolution, capture,
@@ -62,7 +66,7 @@ Everything the person tells us about the car and the microphone. One class owns 
 | parameter | values | default | owner |
 |---|---|---|---|
 | speaker layout | front pair / rear pair / sub — any combination with at least one pair: 2 front, 2 rear, 2 + sub, 4, 4 + sub | 4 + sub | 📋 `CabinProfile` (today only `room_has_subwoofer`) |
-| cabin length × width × height (floor to roof), cm | sliders around the car picture | **standard D-class sedan**: ~200 × 145 × 120 (owner 02.10: *«за основу по дефолту береш стандартний седан класу D, решту повзунками людина виставляє під себе»*) | 📋 `CabinProfile` |
+| cabin length × width × height (floor to roof), cm | sliders around the car picture | **standard D-class sedan**: 290 × 150 × 120 — the acoustic length runs into the boot (§14) (owner 02.10: *«за основу по дефолту береш стандартний седан класу D, решту повзунками людина виставляє під себе»*) | 📋 `CabinProfile` |
 | space | closed cabin / open (bench, cabriolet roof down) | closed (a sedan); the owner's bench is set to open | 📋 `CabinProfile` |
 | microphone construction | open / pinhole / housing / lavalier | unknown → head-unit place implies pinhole | ✅ `MicProfile.effectiveBody` |
 | microphone place + spot | 11 named places, a dot on the car plan | — | ✅ `MicProfile` |
@@ -81,8 +85,10 @@ Settled physics is prior knowledge, not a hypothesis to re-measure (`AGENTS.md`)
 cabin dimension, a sealed cabin stops behaving as a room and becomes a pressure vessel: pressure rises
 towards low frequencies. Transition `f_t = c / (2·L)` — the reference's `565 / L_feet` is the same
 formula in feet. Ideal slope **12 dB/oct below `f_t`**; real cabins leak (panels, glass, vents) and
-rarely reach it, and measured roll-on often starts higher, 70–90 Hz. D-sedan default: `L = 2.0 m →
-f_t ≈ 86 Hz`.
+rarely reach it, and measured roll-on often starts higher, 70–90 Hz. **Which length**: the acoustic
+one — a sedan's boot couples through the rear seat, a hatchback/SUV counts to the tailgate (§14).
+D-sedan default `L = 2.9 m → f_t ≈ 59 Hz` by the formula, onset measured 70–90 Hz in practice; sealed
+total gain at 20–30 Hz ≈ 20–24 dB; leaks (window, sunroof) halve the slope to ~6 dB/oct.
 - **Open space** (bench, cabriolet roof down): no pressure zone, no rise. The owner's bench is
   half-open (cabinet one side, balcony the other) — never anchor against it.
 - Use: the expected low-band rise in the microphone estimate (§6) and the line between "bass deficit
@@ -92,9 +98,11 @@ f_t ≈ 86 Hz`.
   whether the cabin is closed or how long it is. The parameters of §3 are that question.
 
 **4.2 Axial modes.** Standing waves at `f = n · c / (2·d)` for each dimension `d` (L, W, H). With the
-D-sedan default: length 86 / 172 Hz, width 118 / 237 Hz, height 143 / 286 Hz. A narrow peak or dip
-below ~300 Hz that sits on one of these is the cabin, not a speaker — report it as "cabin mode, not
-treatable", not as a speaker defect. 📋
+D-sedan default: length 59 / 118 / 177 Hz, width 114 / 229 Hz, height 143 Hz. In a furnished cabin they
+are **heavily damped** (Q 4–8, ±4–8 dB humps, discernible only 20–200 Hz; above 200 Hz a diffuse field
+— §14). Q 4–8 is narrower than the EQ's Q 2.2 (≈0.65 octave): a mode is reported, not corrected. The
+test that matters is **the same frequency for every speaker = the cabin; one speaker only = that
+door** (§8). 📋
 
 **4.3 Comb filtering.** A reflection with path difference `d` cancels at `f_null = c / (2·d)` and its
 odd harmonics (tweeter 5 cm from glass → 3.4 kHz, 10 kHz, 17 kHz; door speaker off the floor, 15 cm →
@@ -198,9 +206,12 @@ us stays as it is.
 | defect | how it is found | status |
 |---|---|---|
 | a channel wired inverted | sign of the direct arrival, only among confident direct channels, only when some read in phase and some not (all inverted = a convention, not a fault; the sub is never compared — its low-pass turns its phase) | ✅ `judgePolarity` / `wiringVerdict` → 📋 into the list |
-| a tweeter inverted against its own woofer | deep narrow dip at the passive crossover (2.5–5 kHz) in one channel and not in its mirror, plus a sign change of the impulse below/above | 📋 (`TODO.md` §5–6) |
-| mismatch inside a pair | left vs right per band beyond ~3 dB over ≥ 2 bands: weak/dead tweeter, a woofer quieter by N dB; front vs rear differences are **normal** and are said to be | 📋 |
-| resonance | narrow peak (Q > 3) below ~300 Hz; on an axial mode (§4.2) → cabin mode, not treatable; off every mode → panel/door resonance, check fixings | 📋 |
+| a tweeter inverted against its own woofer | 6–12 dB dip in the 2 or 3.15 kHz band (passive crossovers sit at 2–5 kHz) in one channel and not in its mirror; the direct arrival of the high-passed impulse goes negative first; **no** secondary spike 0.6–1.2 ms later (a windscreen reflection, 20–40 cm extra path, has one) | 📋 (`TODO.md` §5–6) |
+| dead or weak tweeter | > 10 dB drop over 5 k / 8 k / 12.5 k / 20 k on one channel where its mirror is within ~4 dB of the expected geometric difference; the sharp attack missing from the impulse | 📋 |
+| blocked or damaged woofer | 6–10 dB broad drop over 80–315 Hz on one channel against its mirror, timing normal | 📋 |
+| mismatch inside a pair (general) | beyond the **geometric** difference computed from the microphone spot and the cabin size (§14: a driver-side mic hears the near side 3–6 dB louder below 500 Hz, 2–4 dB above); front ↔ rear 4–8 dB lower plus 3–6 dB more above 2 kHz is **normal** and is said to be | 📋 |
+| resonance | narrow peak/dip below ~200 Hz. **The same frequency for every speaker** → cabin mode (Q 4–8), not treatable, not a defect; **one speaker only**, with a long ringing tail in that channel's impulse → door panel or mounting (adapter ring ~40 Hz, panel ~80 Hz, Q 10–40, 6–10 dB) — add damping, check the fixings | 📋 |
+| channels swapped / mic blocked | arrival order or broadband level contradicting the geometry from the microphone spot (not a fixed "left-hand drive" rule — right-hand-drive cars and a centre-console microphone exist) | 📋 |
 | layout mismatch | stated not heard; heard not stated; arrival order contradicting the geometry → channels swapped | 📋 |
 | midbass roll-off | where the doors stop delivering (→ door high-pass) | ✅ `detectMidbassRollOff` |
 | sub | polarity / phase at the crossover, delay | 🟡 |
@@ -266,3 +277,55 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 | the car (layout, dimensions, space) | 📋 `CabinProfile.java` |
 | loudness and sub compensation | `LoudnessCurve.java`, `LoudnessCheck.java`, `McuService.applyVolumeDependentSettings` |
 | offline replay of the owner's 20.09 report | `cpp/test_miccal.cpp` (build: `g++ -O2 -std=c++17 -o miccal test_miccal.cpp sweep.cpp analyzer.cpp fft.cpp stitcher.cpp`) |
+
+## 14. Numbers from the cabin research (02.10.2026) — transcribed, with verdicts
+
+The research file stores every number as an image and several were cropped at export; these are the
+values, read off the images and, where cropped, off the surrounding text. Trust: **M** measured in
+cars in the sources (modal-analysis papers, a car transfer-function measurement), **D** official
+dimension data, **R** rule of thumb from car-audio retail blogs — usable as a starting threshold,
+not as fact. Sources the research leaned on for vans (used-truck sale sites) and front/rear (an EBU
+room-listening guide) are not car measurements.
+
+**Interior acoustic dimensions, cm** (length footwell → boot bulkhead for a sedan, → tailgate for
+hatchback/SUV; width at shoulder height; height floor → headliner):
+
+| body | length | width | height | trust |
+|---|---|---|---|---|
+| D sedan (Passat) | 280–300 | 150.6 | 115–125 | D/R |
+| C hatchback (Golf) | 250–270 | 140–150 | 115–125 | R |
+| B hatchback (Polo) | 230–250 | 135–145 | 110–120 | R |
+| compact SUV | 260–280 | 145–155 | 125–135 | R |
+| minivan (Touran) | 270–290 | 150–160 | 134 | D/R |
+| panel van / minibus | 300–350 | 162 | 141.5 | R (poor sources) |
+
+**Cabin gain**: onset 70–90 Hz (M); predictor `f_t = c / (2·L)` (theory); sealed slope 12 dB/oct (M);
+total at 20–30 Hz 20–24 dB (R); leaks halve it to ~6 dB/oct (R); cabriolet roof down 0 dB (theory).
+**Modes**: discernible 20–200 Hz, Q 4–8, damping 5–20 %, ±4–8 dB (M). **Door/mounting**: adapter ring
+~40 Hz, panel ~80 Hz, Q 10–40, 6–10 dB (R). **Crossover**: passive 2–5 kHz, inverted-tweeter notch
+6–12 dB (R/M); reflection path 20–40 cm → 0.6–1.2 ms (theory). **Left/right** (driver-position mic,
+left-hand drive): tweeter distances 18–24 in vs 36–50 in, arrival difference 1.5–2.0 ms, near side
+louder by 3–6 dB below 500 Hz and 2–4 dB above, defect beyond ~10 dB (R). **Front/rear** at the fascia:
+rear 4–8 dB lower broadband, a further 3–6 dB above 2 kHz (R).
+
+**"Harman in-car target"** at our band centres (R — a blog's reading, not Harman's published curve):
+20 Hz 0 · 31.5 +1.5 · 50 +2.5 · 80 +3.0 · 125 +2.0 · 200 +0.8 · 315 +0.1 · 500 +0.5 · 800 +1.5 · 1250
++1.5 · 2 k +1.25 · 3.15 k 0 · 5 k −1 · 8 k −2 · 12.5 k −3.5 · 20 k −5 dB; open space — flatten below
+100 Hz. ⚠️ Not adopted: its bass shelf (+3 dB) is far smaller than published in-car targets and our
+synthesis's own; kept only as a data point.
+
+**Verdicts — how the model uses this:**
+- ✅ default dimensions: D sedan **290 × 150 × 120 cm**, the acoustic length including the boot;
+  the slider hint says so.
+- ✅ cabin gain: 12 dB/oct below `f_t`, closed space only; `f_t` from the person's length, but never
+  above the measured onset band of 80 Hz (the predictor gives ~59 Hz for a sedan, real cars start
+  higher).
+- ✅ modes are reported, not corrected; the cabin-vs-door test is "same frequency in every channel".
+- ✅ thresholds for the defect list as written in §8 — starting values, to be tightened on real cars.
+- ✅ left/right "normal" difference is **computed** from the microphone spot and the cabin size
+  (inverse-square below 500 Hz) instead of the research's fixed left-hand-drive table.
+- ❌ "the left door must always arrive first, absolute confidence" — wrong for right-hand drive and
+  for a centre microphone; replaced by the geometric expectation.
+- ❌ "a rattling panel shows as a cancellation dip" as the only signature — a rattle can also be a
+  peak; the deciding sign is the long ringing tail confined to one channel.
+

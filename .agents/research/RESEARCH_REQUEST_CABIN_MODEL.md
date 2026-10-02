@@ -1,3 +1,6 @@
+> 📦 Answered 02.10.2026 — result `RESEARCH_RESULT_CABIN_MODEL.md`, digested into
+> [`../CABIN_MODEL.md`](../CABIN_MODEL.md) §14.
+
 # Research request: car-cabin acoustics for a defect-finding auto-EQ with one built-in microphone
 
 **Answer in English. Tables with numbers first, prose second. Every number needs a source and a mark:
