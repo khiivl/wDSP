@@ -885,6 +885,32 @@
                             android:textSize="@dimen/eq_value_text"
                             android:textStyle="bold"
                             android:checkable="true" />
+
+                        <!-- Ultra Bass (the author's 0.5): the subwoofer's gain grows with the volume -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_ultra_bass"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="@color/card_bg_theme_aware"
+                            android:text="@string/ultra_bass"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- FR Graph for FM Curve (Visualizer Card) -->
@@ -960,7 +986,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             app:barrierDirection="end"
-                            app:constraint_referenced_ids="lbl_cal_vol,lbl_strength" />
+                            app:constraint_referenced_ids="lbl_cal_vol,lbl_strength,lbl_fat_start_vol,lbl_ultra_bass_start_vol,lbl_ultra_bass_max_db" />
 
                         <!-- Slider 1: Calibration Volume -->
                         <com.google.android.material.slider.Slider
@@ -1044,6 +1070,158 @@
                             app:layout_constraintTop_toTopOf="@id/lbl_strength"
                             app:layout_constraintBottom_toBottomOf="@id/lbl_strength" />
 
+                        <!-- Rows 3-5, the author's 0.5: where Trim Highs starts, where Ultra Bass
+                             starts and how far it goes. Same pattern as the two rows above. -->
+                        <TextView
+                            android:id="@+id/lbl_fat_start_vol"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="@string/lbl_trim_highs_start_vol"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fm_strength"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_fat_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="25"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="0dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:labelBehavior="gone"
+                            app:layout_constraintStart_toEndOf="@id/barrier_fm_labels"
+                            app:layout_constraintEnd_toStartOf="@id/tv_fat_start_vol_val"
+                            app:layout_constraintTop_toTopOf="@id/lbl_fat_start_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_fat_start_vol" />
+
+                        <TextView
+                            android:id="@+id/tv_fat_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="40dp"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/lbl_fat_start_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_fat_start_vol" />
+
+                        <TextView
+                            android:id="@+id/lbl_ultra_bass_start_vol"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="@string/lbl_ultra_bass_start_vol"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fat_start_vol"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_ultra_bass_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="16"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="0dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:labelBehavior="gone"
+                            app:layout_constraintStart_toEndOf="@id/barrier_fm_labels"
+                            app:layout_constraintEnd_toStartOf="@id/tv_ultra_bass_start_vol_val"
+                            app:layout_constraintTop_toTopOf="@id/lbl_ultra_bass_start_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_ultra_bass_start_vol" />
+
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="40dp"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/lbl_ultra_bass_start_vol"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_ultra_bass_start_vol" />
+
+                        <TextView
+                            android:id="@+id/lbl_ultra_bass_max_db"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="@string/lbl_ultra_bass_max_db"
+                            app:layout_constraintTop_toBottomOf="@id/seek_ultra_bass_start_vol"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_ultra_bass_max_db"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:valueFrom="1"
+                            android:valueTo="12"
+                            android:stepSize="1"
+                            android:value="6"
+                            app:thumbHeight="20dp"
+                            app:thumbWidth="20dp"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="0dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/transparent"
+                            app:tickColorInactive="@color/transparent"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="5dp"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:labelBehavior="gone"
+                            app:layout_constraintStart_toEndOf="@id/barrier_fm_labels"
+                            app:layout_constraintEnd_toStartOf="@id/tv_ultra_bass_max_db_val"
+                            app:layout_constraintTop_toTopOf="@id/lbl_ultra_bass_max_db"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_ultra_bass_max_db" />
+
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_max_db_val"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="40dp"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/lbl_ultra_bass_max_db"
+                            app:layout_constraintBottom_toBottomOf="@id/lbl_ultra_bass_max_db" />
+
                         <!--
                             The verdict on the curve. These two sliders are the only numbers in the
                             app a person is asked to choose with no reference of any kind, so the
@@ -1058,7 +1236,7 @@
                             android:layout_marginTop="14dp"
                             android:lineSpacingExtra="2dp"
                             android:text="@string/loud_check_ok"
-                            app:layout_constraintTop_toBottomOf="@id/seek_fm_strength"
+                            app:layout_constraintTop_toBottomOf="@id/seek_ultra_bass_max_db"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
 
