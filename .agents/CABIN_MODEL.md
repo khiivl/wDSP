@@ -232,7 +232,7 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 | meaning | what it is | owner / where |
 |---|---|---|
 | **loudness** (тонкомпенсація) | EQ raised by volume step below the calibration step (ISO 226 shape), applied after the knob stops | ✅ `LoudnessCurve`, `McuService.applyVolumeDependentSettings`; prefs `_fm_en/_fm_cal/_fm_str` |
-| **"Компенсація саба"** | the sub gain raised by the loudness offset of the band at the crossover, only with loudness on | ✅ `LoudnessCurve.subOffset/maxSubBoost`; pref `_sub_comp`. Keep as is (owner 15.09: switched on deliberately when bass is short) |
+| **"Компенсація саба"** | the sub gain raised by the loudness offset of the highest band the sub plays alone (one below the crossover band; the author's 0.5 table, carried on to 250 Hz — 02.10), only with loudness on | ✅ `LoudnessCurve.subOffset/maxSubBoost`; pref `_sub_comp`. Kept by the owner (15.09: switched on deliberately when bass is short) although the research says "EQ only" (§11) |
 | **low end of the microphone curve** | bands 0–4 of `estimateMicCompensation` (§6) | ✅ / 📋 cabin gain |
 | **sub in the auto-EQ** | handover below the door high-pass, sub gain constants (§9) | ✅ `synthesizeAutoEq16` |
 

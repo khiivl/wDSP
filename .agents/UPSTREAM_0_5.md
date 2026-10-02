@@ -12,7 +12,10 @@ And, the same day: *«ми від нього на голову далі, але 
 - **the branch must stay mergeable into his `master`**: after the features are ported, finish with
   a real `git merge origin/master` whose conflicts are resolved to "ours + his features", so a PR
   from `kostyfmat_mod` to `master` applies without conflicts;
-- **questions to the owner one at a time**, never a list.
+- **questions to the owner one at a time**, never a list;
+- **where his numbers and ours disagree, his stand** — owner 02.10: *«суть, автор має обладнання
+  для замірів, ми ні.»* Keep his values, extend them by his own rule where they stop; a value of
+  ours that is only derived (research, ISO, a model) does not replace one of his.
 
 Source: `origin/master` (author khiivl) since our split at `fd447a9` (20.08):
 `8c71b6a` (17.08, pink-noise tilt), `59c542c` (02.10, "huge commit for 0.5", +3224/−637 in 24
@@ -35,7 +38,7 @@ Read the author's code with `git show origin/master:<path>`; line numbers below 
 | 2 | **Loudness through the bass shelf**: part of the ISO bass boost goes to the front/rear P2Bass shelf (1 dB steps, one filter) instead of the EQ alone; EQ gets the residual row for the shelf frequency (`ISO_RAW_TARGET_BY_FREQ`, rows 54/68/86/108/134 Hz, default 86 Hz, shelf max 10 dB) | `AudioConfig` (`LOUDNESS_BASS_SHELF_*`, `ISO_FULL_TARGET_DB`, `ISO_RAW_TARGET_BY_FREQ`, `BASS_BOOST_FREQS_HZ`, `isoRawTargetForFreqIdx`); `McuService.updateFmOffsets`, `applyBassBoost(vol)` (rear synced to front while loudness is on) | `LoudnessCurve` (tables + offsets), `McuService.applyBassBoost` | absorb; then `LoudnessCheck` must test the pre-warped drive (the chip clips that), not the target, and drop `ISO_MAX_OFFSETS` | 📋 |
 | 3 | **Trim Highs (fatigue)**: own start volume `_fat_start_vol` (default 25) instead of the loudness calibration point; new target — a dip at 3.15–5 kHz (`FATIGUE_RAW_TARGET`) instead of a high shelf | `McuService.updateFmOffsets`, `AudioConfig.FATIGUE_RAW_TARGET`; UI `seek_fat_start_vol` | `LoudnessCurve`, prefs, UI | absorb | 📋 |
 | 4 | **Ultra Bass**: sub gain ramp, 0 at `_ultra_bass_start_vol` (16) up to `_ultra_bass_max_db` (6) at volume 32, independent of loudness | `McuService.updateSubwoofer`; UI `switch_ultra_bass`, `seek_ultra_bass_*` | `LoudnessCurve` (one place for every volume-dependent offset), `McuService.updateSubwoofer`, UI | absorb | 📋 |
-| 5 | **Sub-comp boost table** from `ISO_FULL_TARGET_DB` (80 Hz 8, 50/63 10, 25–40 12, ≥100 0) | `McuService.getMaxBassBoost` | `LoudnessCurve.maxSubBoost` | ❓ conflicts with the owner's 14.09 decision (100 Hz allowed, ours 6/8/10/12) — ask | ❓ |
+| 5 | **Sub-comp boost table** from `ISO_FULL_TARGET_DB` (80 Hz 8, 50/63 10, 25–40 12, ≥100 0) | `McuService.getMaxBassBoost` | `LoudnessCurve.maxSubBoost` | **his table, carried on by his rule** (the band below the crossover band): 25–80 Hz his 12 12 12 10 10 8, then 100–250 Hz 8 6 6 4 4 — owner 02.10: *«тобто, це буде його, але доповнена нами таблиця?»* | ✅ `e2d9b7e` |
 | 6 | **Dedupe of computed packets** (`lastComputed*`) before the throttle; pref listener matches `preset + "_"` (a preset "Music" no longer reacts to "Music2_*"); `_fm*` changes resend sub and bass boost; `_bb_/_bf_` resend EQ | `McuService` listener and `update*` | `McuService` | absorb | 📋 |
 | 7 | **Polling split** 100 ms → primary (volume/GALA) + secondary (player/bug) at 200 ms | `McuService.primaryRunnable/secondaryRunnable` | — | ❓ our loop also carries the Call preset and the audio contract; check before touching | ❓ |
 | 8 | **GALA fixes** (shutdown state, standstill fallback, push on source change) | `McuService.checkVolumeAndGala` | a GALA strategy beside ours, chosen by a switch | **both, switchable** — owner 02.10: *«Гала - зробиш перемикач - оригінал\наш варіант.»* His GALA ported whole as the "original" option, ours stays the other | 📋 |
@@ -55,8 +58,8 @@ Each lands as its own commit, verified by build and, where it changes what reach
 
 Last step: `git merge origin/master` with every conflict resolved to the ported result (above).
 
-Open questions for the owner — **one at a time, in this order**: #5 (sub-comp table vs his 14.09
-decision), #7 (polling). #8 is decided (a switch), and goes after #6 in the order.
+Open questions for the owner — **one at a time**: #7 (polling) is the only one left. #5 is decided
+(his table, extended) and #8 too (a switch, after #6 in the order).
 
 **`AudioConfig` is his file, taken verbatim**: ours never changed it after the split, so his version
 merges with no conflict. Our models reuse his tables instead of keeping copies; `ISO_MAX_OFFSETS` and
