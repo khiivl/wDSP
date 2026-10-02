@@ -508,5 +508,29 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_sub_place_boot">Csomagtartóban</string>
     <string name="room_sub_place_shelf">Kalaptartón</string>
     <string name="room_sub_place_underseat">Ülés alatt</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">%1$d/%2$d. lépés: %3$s</string>
+    <string name="room_stage_noise">Háttérzaj</string>
+    <string name="room_stage_noise_detail">Az utastér mérése csendben és a hangerő rögzítése (16)…</string>
+    <string name="room_stage_speakers">Hangszórók</string>
+    <string name="room_stage_speakers_detail">Sweep lejátszása: %1$s</string>
+    <string name="room_stage_delays">Késleltetések</string>
+    <string name="room_stage_delays_detail">Időbeli igazítás kiszámítása (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Mélyközép és mélynyomó letörés, valamint a 16 sáv elemzése…</string>
+    <string name="room_stage_done">Kész</string>
+    <string name="room_stage_done_detail">A kalibrálás sikeresen befejeződött</string>
+    <string name="room_stage_mic_done_detail">A mikrofon kalibrálása sikeresen befejeződött</string>
+    <string name="room_err_no_preset">Nincs kiválasztva profil a méréshez. Válasszon egy profilt, majd próbálja újra.</string>
+    <string name="room_err_no_native">A mérési függvénytár nem töltődött be. Telepítse újra az alkalmazást.</string>
+    <string name="room_err_sweep">A tesztjelet nem sikerült létrehozni.</string>
+    <string name="room_err_mic_open">A mikrofont nem sikerült megnyitni.</string>
+    <string name="room_err_output_open">A hangkimenetet nem sikerült megnyitni.</string>
+    <string name="room_err_nothing_heard">Egyetlen hangszóró sem észlelhető. Ellenőrizze a hangerőt és a mikrofon rálátását.</string>
+    <string name="room_err_too_few_heard">Csak %1$d hangszóró észlelve — nincs mihez igazítani. Ellenőrizze a hangerőt és a mikrofon helyét.</string>
+    <string name="room_err_unexpected">Váratlan hiba: %1$s</string>
+    <string name="room_err_unknown">Ismeretlen hiba</string>
+    <string name="room_polarity_warning">Fordított polaritás (+/-) itt: %1$s. A hangszóró ellenfázisban van bekötve és kioltja a mélyhangokat. Ellenőrizze a csatlakozókat.</string>
+    <string name="room_wizard_delays_sub">Mélynyomó: %1$.1f ms (%2$d)</string>
 </resources>
 

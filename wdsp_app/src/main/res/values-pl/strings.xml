@@ -504,4 +504,28 @@
     <string name="room_sub_place_boot">W bagażniku</string>
     <string name="room_sub_place_shelf">Na tylnej półce</string>
     <string name="room_sub_place_underseat">Pod fotelem</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Krok %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Szum tła</string>
+    <string name="room_stage_noise_detail">Pomiar szumu tła w ciszy i blokada głośności (16)…</string>
+    <string name="room_stage_speakers">Głośniki</string>
+    <string name="room_stage_speakers_detail">Odtwarzanie sygnału sweep: %1$s</string>
+    <string name="room_stage_delays">Opóźnienia</string>
+    <string name="room_stage_delays_detail">Obliczanie wyrównania czasowego (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analiza spadku midbasów, subwoofera i 16 pasm…</string>
+    <string name="room_stage_done">Gotowe</string>
+    <string name="room_stage_done_detail">Kalibracja zakończona pomyślnie</string>
+    <string name="room_stage_mic_done_detail">Kalibracja mikrofonu zakończona pomyślnie</string>
+    <string name="room_err_no_preset">Nie wybrano profilu do pomiaru. Wybierz profil i spróbuj ponownie.</string>
+    <string name="room_err_no_native">Biblioteka pomiarowa nie została załadowana. Zainstaluj ponownie aplikację.</string>
+    <string name="room_err_sweep">Nie udało się wygenerować sygnału testowego.</string>
+    <string name="room_err_mic_open">Nie udało się otworzyć mikrofonu.</string>
+    <string name="room_err_output_open">Nie udało się otworzyć wyjścia audio.</string>
+    <string name="room_err_nothing_heard">Nie wykryto żadnego głośnika. Sprawdź głośność i upewnij się, że mikrofon nie jest zasłonięty.</string>
+    <string name="room_err_too_few_heard">Wykryto tylko %1$d głośnik(ów) — brak punktu odniesienia do wyrównania. Sprawdź głośność i położenie mikrofonu.</string>
+    <string name="room_err_unexpected">Nieoczekiwany błąd: %1$s</string>
+    <string name="room_err_unknown">Nieznany błąd</string>
+    <string name="room_polarity_warning">Odwrócona polaryzacja (+/-) na: %1$s. Głośnik jest podłączony w przeciwfazie i wygasza basy w kabinie. Sprawdź przewody na jego złączach.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

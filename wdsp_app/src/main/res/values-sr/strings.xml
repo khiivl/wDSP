@@ -508,4 +508,28 @@
     <string name="room_sub_place_boot">У пртљажнику</string>
     <string name="room_sub_place_shelf">На задњој полици</string>
     <string name="room_sub_place_underseat">Испод седишта</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Корак %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Позадинска бука</string>
+    <string name="room_stage_noise_detail">Мерење кабине у тишини и фиксирање јачине звука (16)…</string>
+    <string name="room_stage_speakers">Звучници</string>
+    <string name="room_stage_speakers_detail">Пуштање свип сигнала: %1$s</string>
+    <string name="room_stage_delays">Кашњења</string>
+    <string name="room_stage_delays_detail">Прорачун временског поравнања (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Анализа пада мидбасова, субвуфера и 16 опсега…</string>
+    <string name="room_stage_done">Готово</string>
+    <string name="room_stage_done_detail">Калибрација је успешно завршена</string>
+    <string name="room_stage_mic_done_detail">Калибрација микрофона је успешно завршена</string>
+    <string name="room_err_no_preset">Није изабран профил за мерење. Изаберите профил и покушајте поново.</string>
+    <string name="room_err_no_native">Библиотека за мерење није учитана. Поново инсталирајте апликацију.</string>
+    <string name="room_err_sweep">Тест сигнал није могао бити креиран.</string>
+    <string name="room_err_mic_open">Микрофон није могао бити отворен.</string>
+    <string name="room_err_output_open">Аудио излаз није могао бити отворен.</string>
+    <string name="room_err_nothing_heard">Ниједан звучник се није чуо. Проверите јачину звука и да микрофон није покривен.</string>
+    <string name="room_err_too_few_heard">Чуло се само %1$d звучник(а) — недовољно за поравнање. Проверите јачину звука и положај микрофона.</string>
+    <string name="room_err_unexpected">Неочекивана грешка: %1$s</string>
+    <string name="room_err_unknown">Непозната грешка</string>
+    <string name="room_polarity_warning">Обрнут поларитет (+/-) на: %1$s. Звучник је повезан у противфази и поништава бас у кабини. Проверите жице на клемама.</string>
+    <string name="room_wizard_delays_sub">Субвуфер: %1$.1f ms (%2$d)</string>
 </resources>

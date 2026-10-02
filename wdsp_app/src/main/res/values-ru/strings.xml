@@ -506,4 +506,28 @@
     <string name="room_sub_place_boot">В багажнике</string>
     <string name="room_sub_place_shelf">На задней полке</string>
     <string name="room_sub_place_underseat">Под сиденьем</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Этап %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Замер фонового шума</string>
+    <string name="room_stage_noise_detail">Замер фонового шума в тишине и фиксация громкости (16)…</string>
+    <string name="room_stage_speakers">Замер динамиков</string>
+    <string name="room_stage_speakers_detail">Воспроизведение свип-тона: %1$s</string>
+    <string name="room_stage_delays">Анализ задержек</string>
+    <string name="room_stage_delays_detail">Расчет временного выравнивания (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Синтез Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Анализ спада мидбасов, сабвуфера и 16 полос…</string>
+    <string name="room_stage_done">Готово</string>
+    <string name="room_stage_done_detail">Калибровка завершена успешно</string>
+    <string name="room_stage_mic_done_detail">Калибровка микрофона успешно завершена</string>
+    <string name="room_err_no_preset">Не выбран пресет для калибровки. Выберите пресет и повторите попытку.</string>
+    <string name="room_err_no_native">Библиотека измерений не загрузилась. Переустановите приложение.</string>
+    <string name="room_err_sweep">Не удалось сгенерировать тестовый сигнал.</string>
+    <string name="room_err_mic_open">Не удалось открыть микрофон.</string>
+    <string name="room_err_output_open">Не удалось открыть аудиовыход.</string>
+    <string name="room_err_nothing_heard">Ни один динамик не был услышан. Проверьте громкость и убедитесь, что микрофон не закрыт.</string>
+    <string name="room_err_too_few_heard">Услышано динамиков: %1$d — недостаточно для выравнивания. Проверьте громкость и расположение микрофона.</string>
+    <string name="room_err_unexpected">Непредвиденная ошибка: %1$s</string>
+    <string name="room_err_unknown">Неизвестная ошибка</string>
+    <string name="room_polarity_warning">Перепутана полярность (+/-): %1$s. Динамик подключен в противофазе и гасит бас в салоне. Проверьте провода на его клеммах.</string>
+    <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
 </resources>

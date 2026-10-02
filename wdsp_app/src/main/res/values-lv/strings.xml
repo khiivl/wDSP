@@ -508,4 +508,28 @@ Globāli noklusējums: %1$s</string>
     <string name="room_sub_place_boot">Bagāžniekā</string>
     <string name="room_sub_place_shelf">Uz aizmugurējā plaukta</string>
     <string name="room_sub_place_underseat">Zem sēdekļa</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">%1$d./%2$d. solis: %3$s</string>
+    <string name="room_stage_noise">Fona troksnis</string>
+    <string name="room_stage_noise_detail">Salona mērīšana klusumā un skaļuma fiksēšana (16)…</string>
+    <string name="room_stage_speakers">Skaļruņi</string>
+    <string name="room_stage_speakers_detail">Signāla atskaņošana: %1$s</string>
+    <string name="room_stage_delays">Aiztures</string>
+    <string name="room_stage_delays_detail">Laika salāgošanas aprēķināšana (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Vidējo zemo un zemfrekvences skaļruņa krituma un 16 joslu analīze…</string>
+    <string name="room_stage_done">Gatavs</string>
+    <string name="room_stage_done_detail">Kalibrēšana veiksmīgi pabeigta</string>
+    <string name="room_stage_mic_done_detail">Mikrofona kalibrēšana veiksmīgi pabeigta</string>
+    <string name="room_err_no_preset">Mērīšanai nav atlasīts neviens profils. Atlasiet profilu un mēģiniet vēlreiz.</string>
+    <string name="room_err_no_native">Mērījumu bibliotēka netika ielādēta. Pārinstalējiet lietotni.</string>
+    <string name="room_err_sweep">Neizdevās izveidot testa signālu.</string>
+    <string name="room_err_mic_open">Neizdevās atvērt mikrofonu.</string>
+    <string name="room_err_output_open">Neizdevās atvērt audio izvadi.</string>
+    <string name="room_err_nothing_heard">Netika konstatēts neviens skaļrunis. Pārbaudiet skaļumu un pārliecinieties, ka mikrofons nav aizsegts.</string>
+    <string name="room_err_too_few_heard">Konstatēti tikai %1$d skaļruņi — nav atsauces salāgošanai. Pārbaudiet skaļumu un mikrofona novietojumu.</string>
+    <string name="room_err_unexpected">Negaidīta kļūda: %1$s</string>
+    <string name="room_err_unknown">Nezināma kļūda</string>
+    <string name="room_polarity_warning">Apgriezta polaritāte (+/-) uz: %1$s. Skaļrunis ir pievienots pretfāzē un slāpē basus salonā. Pārbaudiet spaiļu vadus.</string>
+    <string name="room_wizard_delays_sub">Zemfrekvences skaļrunis: %1$.1f ms (%2$d)</string>
 </resources>

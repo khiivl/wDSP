@@ -508,4 +508,28 @@ Global standard: %1$s</string>
     <string name="room_sub_place_boot">I bagasjerommet</string>
     <string name="room_sub_place_shelf">På hattehyllen</string>
     <string name="room_sub_place_underseat">Under setet</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Trinn %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Bakgrunnsstøy</string>
+    <string name="room_stage_noise_detail">Måler kupeen i stillhet og låser volumet (16)…</string>
+    <string name="room_stage_speakers">Høyttalere</string>
+    <string name="room_stage_speakers_detail">Spiller av sweep: %1$s</string>
+    <string name="room_stage_delays">Forsinkelser</string>
+    <string name="room_stage_delays_detail">Beregner tidskorrigering (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analyserer avrulling for midbass og subwoofer samt de 16 båndene…</string>
+    <string name="room_stage_done">Ferdig</string>
+    <string name="room_stage_done_detail">Kalibreringen er fullført</string>
+    <string name="room_stage_mic_done_detail">Mikrofonkalibreringen er fullført</string>
+    <string name="room_err_no_preset">Ingen profil er valgt for måling. Velg en profil og prøv igjen.</string>
+    <string name="room_err_no_native">Målebiblioteket ble ikke lastet inn. Installer appen på nytt.</string>
+    <string name="room_err_sweep">Testsignalet kunne ikke genereres.</string>
+    <string name="room_err_mic_open">Mikrofonen kunne ikke åpnes.</string>
+    <string name="room_err_output_open">Lydutgangen kunne ikke åpnes.</string>
+    <string name="room_err_nothing_heard">Ingen høyttaler ble hørt. Sjekk volumet og at mikrofonen ikke er tildekket.</string>
+    <string name="room_err_too_few_heard">Kun %1$d høyttaler(e) ble hørt — ingenting å justere mot. Sjekk volum og mikrofonplassering.</string>
+    <string name="room_err_unexpected">Uventet feil: %1$s</string>
+    <string name="room_err_unknown">Ukjent feil</string>
+    <string name="room_polarity_warning">Omvendt polaritet (+/-) på: %1$s. Høyttaleren er koblet i motfase og utligner bassen i kupeen. Sjekk ledningene på terminalene.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

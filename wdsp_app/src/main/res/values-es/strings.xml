@@ -505,4 +505,28 @@
     <string name="room_sub_place_boot">En el maletero</string>
     <string name="room_sub_place_shelf">En la bandeja trasera</string>
     <string name="room_sub_place_underseat">Bajo el asiento</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Paso %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Ruido de fondo</string>
+    <string name="room_stage_noise_detail">Midiendo el habitáculo en silencio y fijando el volumen (16)…</string>
+    <string name="room_stage_speakers">Altavoces</string>
+    <string name="room_stage_speakers_detail">Reproduciendo sweep: %1$s</string>
+    <string name="room_stage_delays">Retardos</string>
+    <string name="room_stage_delays_detail">Calculando alineación temporal (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analizando caída de medios-graves, subwoofer y 16 bandas…</string>
+    <string name="room_stage_done">Listo</string>
+    <string name="room_stage_done_detail">Calibración completada con éxito</string>
+    <string name="room_stage_mic_done_detail">Calibración del micrófono completada con éxito</string>
+    <string name="room_err_no_preset">No hay ningún perfil seleccionado para la medición. Seleccione un perfil y vuelva a intentarlo.</string>
+    <string name="room_err_no_native">La biblioteca de medición no se pudo cargar. Reinstale la aplicación.</string>
+    <string name="room_err_sweep">No se pudo generar la señal de prueba.</string>
+    <string name="room_err_mic_open">No se pudo abrir el micrófono.</string>
+    <string name="room_err_output_open">No se pudo abrir la salida de audio.</string>
+    <string name="room_err_nothing_heard">No se detectó ningún altavoz. Compruebe el volumen y que el micrófono no esté cubierto.</string>
+    <string name="room_err_too_few_heard">Solo se detectaron %1$d altavoz(ces) - nada con qué alinear. Compruebe el volumen y la ubicación del micrófono.</string>
+    <string name="room_err_unexpected">Error inesperado: %1$s</string>
+    <string name="room_err_unknown">Error desconocido</string>
+    <string name="room_polarity_warning">Polaridad invertida (+/-) en: %1$s. El altavoz está conectado en antifase y cancela los graves en el habitáculo. Revise los terminales.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

@@ -508,4 +508,28 @@ Implicit global: %1$s</string>
     <string name="room_sub_place_boot">În portbagaj</string>
     <string name="room_sub_place_shelf">Pe polița din spate</string>
     <string name="room_sub_place_underseat">Sub scaun</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Pasul %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Zgomot de fundal</string>
+    <string name="room_stage_noise_detail">Măsurarea cabinei în liniște și fixarea volumului (16)…</string>
+    <string name="room_stage_speakers">Difuzoare</string>
+    <string name="room_stage_speakers_detail">Redare sweep: %1$s</string>
+    <string name="room_stage_delays">Întârzieri</string>
+    <string name="room_stage_delays_detail">Calcularea alinierii temporale (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analiza atenuării mediilor joase, a subwooferului și a celor 16 benzi…</string>
+    <string name="room_stage_done">Finalizat</string>
+    <string name="room_stage_done_detail">Calibrare finalizată cu succes</string>
+    <string name="room_stage_mic_done_detail">Calibrarea microfonului a fost finalizată cu succes</string>
+    <string name="room_err_no_preset">Niciun profil selectat pentru măsurare. Selectați un profil și încercați din nou.</string>
+    <string name="room_err_no_native">Biblioteca de măsurare nu s-a încărcat. Reinstalați aplicația.</string>
+    <string name="room_err_sweep">Semnalul de test nu a putut fi generat.</string>
+    <string name="room_err_mic_open">Microfonul nu a putut fi deschis.</string>
+    <string name="room_err_output_open">Ieșirea audio nu a putut fi deschisă.</string>
+    <string name="room_err_nothing_heard">Nu s-a auzit niciun difuzor. Verificați volumul și asigurați-vă că microfonul nu este acoperit.</string>
+    <string name="room_err_too_few_heard">S-au auzit doar %1$d difuzor/difuzoare - nu există referință pentru aliniere. Verificați volumul și poziția microfonului.</string>
+    <string name="room_err_unexpected">Eroare neașteptată: %1$s</string>
+    <string name="room_err_unknown">Eroare necunoscută</string>
+    <string name="room_polarity_warning">Polaritate inversată (+/-) la: %1$s. Difuzorul este conectat în antifază și anulează basul în cabină. Verificați firele la terminale.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

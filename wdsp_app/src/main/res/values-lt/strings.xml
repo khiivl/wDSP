@@ -508,4 +508,28 @@ Bendras numatytasis: %1$s</string>
     <string name="room_sub_place_boot">Bagažinėje</string>
     <string name="room_sub_place_shelf">Ant galinės palangės</string>
     <string name="room_sub_place_underseat">Po sėdyne</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">%1$d/%2$d veiksmas: %3$s</string>
+    <string name="room_stage_noise">Fono triukšmas</string>
+    <string name="room_stage_noise_detail">Salono matavimas tyloje ir garsumo fiksavimas (16)…</string>
+    <string name="room_stage_speakers">Garsiakalbiai</string>
+    <string name="room_stage_speakers_detail">Signalo atkūrimas: %1$s</string>
+    <string name="room_stage_delays">Vėlinimai</string>
+    <string name="room_stage_delays_detail">Laiko išlyginimo skaičiavimas (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Žemų dažnių, žemadažnio nuolydžio ir 16 juostų analizė…</string>
+    <string name="room_stage_done">Atlikta</string>
+    <string name="room_stage_done_detail">Kalibravimas sėkmingai baigtas</string>
+    <string name="room_stage_mic_done_detail">Mikrofono kalibravimas sėkmingai baigtas</string>
+    <string name="room_err_no_preset">Matavimui nepasirinktas išankstinis nustatymas. Pasirinkite profilį ir bandykite dar kartą.</string>
+    <string name="room_err_no_native">Matavimo biblioteka nebuvo įkelta. Iš naujo įdiekite programėlę.</string>
+    <string name="room_err_sweep">Nepavyko sukurti bandomojo signalo.</string>
+    <string name="room_err_mic_open">Nepavyko atidaryti mikrofono.</string>
+    <string name="room_err_output_open">Nepavyko atidaryti garso išvesties.</string>
+    <string name="room_err_nothing_heard">Neaptiktas nė vienas garsiakalbis. Patikrinkite garsumą ir ar mikrofonas neuždengtas.</string>
+    <string name="room_err_too_few_heard">Aptikta tik %1$d garsiakalbių — nėra pagal ką lyginti. Patikrinkite garsumą ir mikrofono padėtį.</string>
+    <string name="room_err_unexpected">Netikėta klaida: %1$s</string>
+    <string name="room_err_unknown">Nežinoma klaida</string>
+    <string name="room_polarity_warning">Sukeistas poliškumas (+/-): %1$s. Garsiakalbis prijungtas priešfaze ir slopina žemus dažnius salone. Patikrinkite laidų gnybtus.</string>
+    <string name="room_wizard_delays_sub">Žemų dažnių garsiakalbis: %1$.1f ms (%2$d)</string>
 </resources>

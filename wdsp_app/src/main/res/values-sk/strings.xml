@@ -508,4 +508,28 @@ Globálne predvolené: %1$s</string>
     <string name="room_sub_place_boot">V kufri</string>
     <string name="room_sub_place_shelf">Na zadnom plate</string>
     <string name="room_sub_place_underseat">Pod sedadlom</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Krok %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Hluk pozadia</string>
+    <string name="room_stage_noise_detail">Meranie kabíny v tichu a fixácia hlasitosti (16)…</string>
+    <string name="room_stage_speakers">Reproduktory</string>
+    <string name="room_stage_speakers_detail">Prehrávanie sweepu: %1$s</string>
+    <string name="room_stage_delays">Oneskorenia</string>
+    <string name="room_stage_delays_detail">Výpočet časového vyrovnania (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analýza poklesu stredobasov, subwoofera a 16 pásiem…</string>
+    <string name="room_stage_done">Hotovo</string>
+    <string name="room_stage_done_detail">Kalibrácia bola úspešne dokončená</string>
+    <string name="room_stage_mic_done_detail">Kalibrácia mikrofónu bola úspešne dokončená</string>
+    <string name="room_err_no_preset">Nie je vybraný žiadny profil na meranie. Vyberte profil a skúste to znova.</string>
+    <string name="room_err_no_native">Knižnica na meranie sa nenačítala. Preinštalujte aplikáciu.</string>
+    <string name="room_err_sweep">Testovací signál sa nepodarilo vytvoriť.</string>
+    <string name="room_err_mic_open">Mikrofón sa nepodarilo otvoriť.</string>
+    <string name="room_err_output_open">Zvukový výstup sa nepodarilo otvoriť.</string>
+    <string name="room_err_nothing_heard">Nebol detegovaný žiadny reproduktor. Skontrolujte hlasitosť a uistite sa, že mikrofón nie je zakrytý.</string>
+    <string name="room_err_too_few_heard">Detegovaných iba %1$d reproduktorov — nie je voči čomu vyrovnať. Skontrolujte hlasitosť a umiestnenie mikrofónu.</string>
+    <string name="room_err_unexpected">Neočakávaná chyba: %1$s</string>
+    <string name="room_err_unknown">Neznáma chyba</string>
+    <string name="room_polarity_warning">Obrátená polarita (+/-) na: %1$s. Reproduktor je zapojený v protifáze a tlmí basy v kabíne. Skontrolujte vodiče na svorkách.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

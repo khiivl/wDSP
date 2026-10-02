@@ -508,4 +508,28 @@
     <string name="room_sub_place_boot">Pagasiruumis</string>
     <string name="room_sub_place_shelf">Tagariiulil</string>
     <string name="room_sub_place_underseat">Istme all</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Samm %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Taustamüra</string>
+    <string name="room_stage_noise_detail">Salongi mõõtmine vaikuses ja helitugevuse fikseerimine (16)…</string>
+    <string name="room_stage_speakers">Kõlarid</string>
+    <string name="room_stage_speakers_detail">Testsignaali esitamine: %1$s</string>
+    <string name="room_stage_delays">Viivitused</string>
+    <string name="room_stage_delays_detail">Ajastuse joondamise arvutamine (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Midbassi ja bassikõlari languse ning 16 sagedusriba analüüs…</string>
+    <string name="room_stage_done">Valmis</string>
+    <string name="room_stage_done_detail">Kalibreerimine edukalt lõpule viidud</string>
+    <string name="room_stage_mic_done_detail">Mikrofoni kalibreerimine edukalt lõpule viidud</string>
+    <string name="room_err_no_preset">Mõõtmiseks pole eelseadistust valitud. Vali eelseadistus ja proovi uuesti.</string>
+    <string name="room_err_no_native">Mõõtmisteek ei laaditud. Paigalda rakendus uuesti.</string>
+    <string name="room_err_sweep">Testsignaali ei õnnestunud luua.</string>
+    <string name="room_err_mic_open">Mikrofoni ei õnnestunud avada.</string>
+    <string name="room_err_output_open">Heliväljundit ei õnnestunud avada.</string>
+    <string name="room_err_nothing_heard">Ühtegi kõlarit ei tuvastatud. Kontrolli helitugevust ja veendu, et mikrofon poleks kaetud.</string>
+    <string name="room_err_too_few_heard">Tuvastati ainult %1$d kõlar(it) — joondamiseks ebapiisav. Kontrolli helitugevust ja mikrofoni asukohta.</string>
+    <string name="room_err_unexpected">Ootamatu viga: %1$s</string>
+    <string name="room_err_unknown">Tundmatu viga</string>
+    <string name="room_polarity_warning">Polaarsus (+/-) vahetuses kõlaril: %1$s. Kõlar on ühendatud vastasfaasis ja summutab salongi bassi. Kontrolli klemme.</string>
+    <string name="room_wizard_delays_sub">Bassikõlar: %1$.1f ms (%2$d)</string>
 </resources>

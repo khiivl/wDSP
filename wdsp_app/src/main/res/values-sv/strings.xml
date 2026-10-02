@@ -504,4 +504,28 @@
     <string name="room_sub_place_boot">I bagageutrymmet</string>
     <string name="room_sub_place_shelf">På hatthyllan</string>
     <string name="room_sub_place_underseat">Under sätet</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Steg %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Bakgrundsbuller</string>
+    <string name="room_stage_noise_detail">Mäter kupén i tystnad och låser volymen (16)…</string>
+    <string name="room_stage_speakers">Högtalare</string>
+    <string name="room_stage_speakers_detail">Spelar upp sweep: %1$s</string>
+    <string name="room_stage_delays">Fördröjningar</string>
+    <string name="room_stage_delays_detail">Beräknar tidskorrigering (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analyserar avrullning för midbas och subwoofer samt de 16 banden…</string>
+    <string name="room_stage_done">Klart</string>
+    <string name="room_stage_done_detail">Kalibreringen slutfördes framgångsrikt</string>
+    <string name="room_stage_mic_done_detail">Mikrofonkalibreringen slutfördes framgångsrikt</string>
+    <string name="room_err_no_preset">Ingen profil är vald för mätning. Välj en profil och försök igen.</string>
+    <string name="room_err_no_native">Mätbiblioteket kunde inte laddas. Installera om appen.</string>
+    <string name="room_err_sweep">Testsignalen kunde inte skapas.</string>
+    <string name="room_err_mic_open">Mikrofonen kunde inte öppnas.</string>
+    <string name="room_err_output_open">Ljudutgången kunde inte öppnas.</string>
+    <string name="room_err_nothing_heard">Ingen högtalare hördes alls. Kontrollera volymen och att mikrofonen inte är övertäckt.</string>
+    <string name="room_err_too_few_heard">Endast %1$d högtalare hördes — inget att justera mot. Kontrollera volym och mikrofonplacering.</string>
+    <string name="room_err_unexpected">Oväntat fel: %1$s</string>
+    <string name="room_err_unknown">Okänt fel</string>
+    <string name="room_polarity_warning">Omvänd polaritet (+/-) på: %1$s. Högtalaren är ansluten i motfas och släcker ut basen i kupén. Kontrollera kablarna vid terminalerna.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

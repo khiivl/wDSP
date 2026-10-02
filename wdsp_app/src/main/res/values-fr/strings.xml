@@ -508,4 +508,28 @@ Par défaut global : %1$s</string>
     <string name="room_sub_place_boot">Dans le coffre</string>
     <string name="room_sub_place_shelf">Sur la plage arrière</string>
     <string name="room_sub_place_underseat">Sous le siège</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Étape %1$d/%2$d : %3$s</string>
+    <string name="room_stage_noise">Bruit de fond</string>
+    <string name="room_stage_noise_detail">Mesure de l\'habitacle en silence et fixation du volume (16)…</string>
+    <string name="room_stage_speakers">Haut-parleurs</string>
+    <string name="room_stage_speakers_detail">Lecture du sweep : %1$s</string>
+    <string name="room_stage_delays">Délais</string>
+    <string name="room_stage_delays_detail">Calcul de l\'alignement temporel (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analyse de l\'atténuation des médiums, du caisson et des 16 bandes…</string>
+    <string name="room_stage_done">Terminé</string>
+    <string name="room_stage_done_detail">Étalonnage terminé avec succès</string>
+    <string name="room_stage_mic_done_detail">Étalonnage du microphone terminé avec succès</string>
+    <string name="room_err_no_preset">Aucun préréglage sélectionné pour la mesure. Sélectionnez un préréglage et réessayez.</string>
+    <string name="room_err_no_native">La bibliothèque de mesure ne s\'est pas chargée. Réinstallez l\'application.</string>
+    <string name="room_err_sweep">Impossible de générer le signal de test.</string>
+    <string name="room_err_mic_open">Impossible d\'ouvrir le microphone.</string>
+    <string name="room_err_output_open">Impossible d\'ouvrir la sortie audio.</string>
+    <string name="room_err_nothing_heard">Aucun haut-parleur n\'a été détecté. Vérifiez le volume et assurez-vous que le micro n\'est pas obstrué.</string>
+    <string name="room_err_too_few_heard">Seulement %1$d haut-parleur(s) détecté(s) - impossible d\'aligner. Vérifiez le volume et l\'emplacement du micro.</string>
+    <string name="room_err_unexpected">Erreur inattendue : %1$s</string>
+    <string name="room_err_unknown">Erreur inconnue</string>
+    <string name="room_polarity_warning">Polarité inversée (+/-) sur : %1$s. Le haut-parleur est câblé en opposition de phase et annule les basses dans l\'habitacle. Vérifiez ses bornes.</string>
+    <string name="room_wizard_delays_sub">Caisson de basses : %1$.1f ms (%2$d)</string>
 </resources>

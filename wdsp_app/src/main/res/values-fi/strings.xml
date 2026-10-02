@@ -508,4 +508,28 @@ Yleinen oletus: %1$s</string>
     <string name="room_sub_place_boot">Tavaratilassa</string>
     <string name="room_sub_place_shelf">Hattuhyllyllä</string>
     <string name="room_sub_place_underseat">Istuimen alla</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Vaihe %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Taustamelu</string>
+    <string name="room_stage_noise_detail">Mitataan matkustamoa hiljaisuudessa ja lukitaan äänenvoimakkuus (16)…</string>
+    <string name="room_stage_speakers">Kaiuttimet</string>
+    <string name="room_stage_speakers_detail">Toistetaan pyyhkäisyä: %1$s</string>
+    <string name="room_stage_delays">Viiveet</string>
+    <string name="room_stage_delays_detail">Lasketaan aikakohdistusta (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analysoidaan midbasson ja subwooferin vaimentumaa sekä 16 kaistaa…</string>
+    <string name="room_stage_done">Valmis</string>
+    <string name="room_stage_done_detail">Kalibrointi suoritettu onnistuneesti</string>
+    <string name="room_stage_mic_done_detail">Mikrofonin kalibrointi suoritettu onnistuneesti</string>
+    <string name="room_err_no_preset">Ei valittua esiasetusta mittausta varten. Valitse esiasetus ja yritä uudelleen.</string>
+    <string name="room_err_no_native">Mittauskirjasto ei latautunut. Asenna sovellus uudelleen.</string>
+    <string name="room_err_sweep">Testisignaalia ei voitu luoda.</string>
+    <string name="room_err_mic_open">Mikrofonia ei voitu avata.</string>
+    <string name="room_err_output_open">Äänilähtöä ei voitu avata.</string>
+    <string name="room_err_nothing_heard">Yhtäkään kaiutinta ei kuultu. Tarkista äänenvoimakkuus ja että mikrofoni ei ole peitetty.</string>
+    <string name="room_err_too_few_heard">Vain %1$d kaiutin(ta) kuultiin — ei vertailukohtaa kohdistukselle. Tarkista äänenvoimakkuus ja mikrofonin sijainti.</string>
+    <string name="room_err_unexpected">Odottamaton virhe: %1$s</string>
+    <string name="room_err_unknown">Tuntematon virhe</string>
+    <string name="room_polarity_warning">Käänteinen napaisuus (+/-) kaiuttimessa: %1$s. Kaiutin on kytketty vastavaiheeseen ja se vaimentaa bassoa matkustamossa. Tarkista liitännät.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

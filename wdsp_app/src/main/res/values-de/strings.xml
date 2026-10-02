@@ -504,4 +504,28 @@
     <string name="room_sub_place_boot">Im Kofferraum</string>
     <string name="room_sub_place_shelf">Auf der Hutablage</string>
     <string name="room_sub_place_underseat">Unter dem Sitz</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Schritt %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Hintergrundgeräusch</string>
+    <string name="room_stage_noise_detail">Messung der Kabine bei Stille und Fixierung der Lautstärke (16)…</string>
+    <string name="room_stage_speakers">Lautsprecher</string>
+    <string name="room_stage_speakers_detail">Sweep-Wiedergabe: %1$s</string>
+    <string name="room_stage_delays">Laufzeiten</string>
+    <string name="room_stage_delays_detail">Berechnung der Laufzeitkorrektur (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analyse des Tiefmittelton- und Subwoofer-Abfalls sowie der 16 Bänder…</string>
+    <string name="room_stage_done">Fertig</string>
+    <string name="room_stage_done_detail">Kalibrierung erfolgreich abgeschlossen</string>
+    <string name="room_stage_mic_done_detail">Mikrofonkalibrierung erfolgreich abgeschlossen</string>
+    <string name="room_err_no_preset">Kein Profil ausgewählt, über das gemessen werden kann. Wählen Sie ein Profil und versuchen Sie es erneut.</string>
+    <string name="room_err_no_native">Die Messbibliothek wurde nicht geladen. Installieren Sie die App neu.</string>
+    <string name="room_err_sweep">Das Testsignal konnte nicht erstellt werden.</string>
+    <string name="room_err_mic_open">Das Mikrofon konnte nicht geöffnet werden.</string>
+    <string name="room_err_output_open">Die Audioausgabe konnte nicht geöffnet werden.</string>
+    <string name="room_err_nothing_heard">Es wurde kein Lautsprecher gehört. Prüfen Sie die Lautstärke und stellen Sie sicher, dass das Mikrofon nicht verdeckt ist.</string>
+    <string name="room_err_too_few_heard">Nur %1$d Lautsprecher gehört — keine Basis für den Abgleich. Prüfen Sie Lautstärke und Mikrofonposition.</string>
+    <string name="room_err_unexpected">Unerwarteter Fehler: %1$s</string>
+    <string name="room_err_unknown">Unbekannter Fehler</string>
+    <string name="room_polarity_warning">Verpolung (+/-) bei: %1$s. Der Lautsprecher ist gegenphasig angeschlossen und löscht den Bass im Innenraum aus. Prüfen Sie die Anschlüsse.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

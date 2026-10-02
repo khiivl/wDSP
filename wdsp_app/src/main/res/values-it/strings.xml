@@ -508,4 +508,28 @@ Predefinito globale: %1$s</string>
     <string name="room_sub_place_boot">Nel bagagliaio</string>
     <string name="room_sub_place_shelf">Sulla cappelliera posteriore</string>
     <string name="room_sub_place_underseat">Sotto il sedile</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Passaggio %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Rumore di fondo</string>
+    <string name="room_stage_noise_detail">Misurazione dell\'abitacolo in silenzio e blocco del volume (16)…</string>
+    <string name="room_stage_speakers">Altoparlanti</string>
+    <string name="room_stage_speakers_detail">Riproduzione sweep: %1$s</string>
+    <string name="room_stage_delays">Ritardi</string>
+    <string name="room_stage_delays_detail">Calcolo dell\'allineamento temporale (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analisi del decadimento di midbass, subwoofer e 16 bande…</string>
+    <string name="room_stage_done">Fatto</string>
+    <string name="room_stage_done_detail">Calibrazione completata con successo</string>
+    <string name="room_stage_mic_done_detail">Calibrazione del microfono completata con successo</string>
+    <string name="room_err_no_preset">Nessun preset selezionato attraverso cui misurare. Seleziona un preset e riprova.</string>
+    <string name="room_err_no_native">La libreria di misurazione non è stata caricata. Reinstalla l\'applicazione.</string>
+    <string name="room_err_sweep">Impossibile generare il segnale di test.</string>
+    <string name="room_err_mic_open">Impossibile aprire il microfono.</string>
+    <string name="room_err_output_open">Impossibile aprire l\'uscita audio.</string>
+    <string name="room_err_nothing_heard">Nessun altoparlante rilevato. Controlla il volume e verifica che il microfono non sia coperto.</string>
+    <string name="room_err_too_few_heard">Rilevati solo %1$d altoparlante/i - nessun riferimento per l\'allineamento. Controlla volume e posizione del microfono.</string>
+    <string name="room_err_unexpected">Errore imprevisto: %1$s</string>
+    <string name="room_err_unknown">Errore sconosciuto</string>
+    <string name="room_polarity_warning">Polarità invertita (+/-) su: %1$s. L\'altoparlante è collegato in controfase e cancella i bassi nell\'abitacolo. Controlla i cavi ai terminali.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

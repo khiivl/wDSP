@@ -508,4 +508,28 @@
     <string name="room_sub_place_boot">Στο πορτμπαγκάζ</string>
     <string name="room_sub_place_shelf">Στην πίσω εταζέρα</string>
     <string name="room_sub_place_underseat">Κάτω από το κάθισμα</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Βήμα %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Θόρυβος παρασκηνίου</string>
+    <string name="room_stage_noise_detail">Μέτρηση καμπίνας σε ησυχία και κλείδωμα έντασης (16)…</string>
+    <string name="room_stage_speakers">Ηχεία</string>
+    <string name="room_stage_speakers_detail">Αναπαραγωγή sweep: %1$s</string>
+    <string name="room_stage_delays">Καθυστερήσεις</string>
+    <string name="room_stage_delays_detail">Υπολογισμός χρονικής ευθυγράμμισης (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Ανάλυση αποκοπής midbass, subwoofer και των 16 ζωνών…</string>
+    <string name="room_stage_done">Ολοκληρώθηκε</string>
+    <string name="room_stage_done_detail">Η βαθμονόμηση ολοκληρώθηκε με επιτυχία</string>
+    <string name="room_stage_mic_done_detail">Η βαθμονόμηση μικροφώνου ολοκληρώθηκε με επιτυχία</string>
+    <string name="room_err_no_preset">Δεν έχει επιλεγεί προφίλ για μέτρηση. Επιλέξτε ένα προφίλ και δοκιμάστε ξανά.</string>
+    <string name="room_err_no_native">Η βιβλιοθήκη μετρήσεων δεν φορτώθηκε. Επανεγκαταστήστε την εφαρμογή.</string>
+    <string name="room_err_sweep">Δεν ήταν δυνατή η δημιουργία του δοκιμαστικού σήματος.</string>
+    <string name="room_err_mic_open">Δεν ήταν δυνατό το άνοιγμα του μικροφώνου.</string>
+    <string name="room_err_output_open">Δεν ήταν δυνατό το άνοιγμα της εξόδου ήχου.</string>
+    <string name="room_err_nothing_heard">Δεν ακούστηκε κανένα ηχείο. Ελέγξτε την ένταση και βεβαιωθείτε ότι το μικρόφωνο δεν είναι καλυμμένο.</string>
+    <string name="room_err_too_few_heard">Ακούστηκαν μόνο %1$d ηχεία — ανεπαρκή για ευθυγράμμιση. Ελέγξτε την ένταση και τη θέση του μικροφώνου.</string>
+    <string name="room_err_unexpected">Μη αναμενόμενο σφάλμα: %1$s</string>
+    <string name="room_err_unknown">Άγνωστο σφάλμα</string>
+    <string name="room_polarity_warning">Αντίστροφη πολικότητα (+/-) σε: %1$s. Το ηχείο είναι συνδεδεμένο σε αντίθετη φάση και ακυρώνει τα μπάσα στην καμπίνα. Ελέγξτε τα καλώδια στους ακροδέκτες.</string>
+    <string name="room_wizard_delays_sub">Υπογούφερ: %1$.1f ms (%2$d)</string>
 </resources>

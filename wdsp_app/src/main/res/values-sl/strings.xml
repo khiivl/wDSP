@@ -508,4 +508,28 @@ Globalno privzeto: %1$s</string>
     <string name="room_sub_place_boot">V prtljažniku</string>
     <string name="room_sub_place_shelf">Na zadnji polici</string>
     <string name="room_sub_place_underseat">Pod sedežem</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Korak %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Hrup v ozadju</string>
+    <string name="room_stage_noise_detail">Merjenje kabine v tišini in zaklepanje glasnosti (16)…</string>
+    <string name="room_stage_speakers">Zvočniki</string>
+    <string name="room_stage_speakers_detail">Predvajanje sweep signala: %1$s</string>
+    <string name="room_stage_delays">Zakasnitve</string>
+    <string name="room_stage_delays_detail">Izračun časovne poravnave (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analiza padca nizkih srednjih tonov, nizkotonca in 16 pasov…</string>
+    <string name="room_stage_done">Končano</string>
+    <string name="room_stage_done_detail">Umerjanje je bilo uspešno zaključeno</string>
+    <string name="room_stage_mic_done_detail">Umerjanje mikrofona je bilo uspešno zaključeno</string>
+    <string name="room_err_no_preset">Za merjenje ni izbran noben profil. Izberite profil in poskusite znova.</string>
+    <string name="room_err_no_native">Knjižnica za merjenje se ni naložila. Ponovno namestite aplikacijo.</string>
+    <string name="room_err_sweep">Preizkusnega signala ni bilo mogoče ustvariti.</string>
+    <string name="room_err_mic_open">Mikrofona ni bilo mogoče odpreti.</string>
+    <string name="room_err_output_open">Zvočnega izhoda ni bilo mogoče odpreti.</string>
+    <string name="room_err_nothing_heard">Nobenega zvočnika ni bilo slišati. Preverite glasnost in poskrbite, da mikrofon ni pokrit.</string>
+    <string name="room_err_too_few_heard">Zaznanih je bilo le %1$d zvočnikov — premalo za poravnavo. Preverite glasnost in položaj mikrofona.</string>
+    <string name="room_err_unexpected">Nepričakovana napaka: %1$s</string>
+    <string name="room_err_unknown">Neznana napaka</string>
+    <string name="room_polarity_warning">Obrnjena polarnost (+/-) na: %1$s. Zvočnik je priključen v protifazi in zaduši nizke tone v kabini. Preverite kable na sponkah.</string>
+    <string name="room_wizard_delays_sub">Nizkotonec: %1$.1f ms (%2$d)</string>
 </resources>

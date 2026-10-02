@@ -506,4 +506,28 @@
     <string name="room_sub_place_boot">No porta-malas</string>
     <string name="room_sub_place_shelf">No tampão traseiro</string>
     <string name="room_sub_place_underseat">Embaixo do banco</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Passo %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Ruído de fundo</string>
+    <string name="room_stage_noise_detail">Medindo a cabine em silêncio e fixando o volume (16)…</string>
+    <string name="room_stage_speakers">Alto-falantes</string>
+    <string name="room_stage_speakers_detail">Reproduzindo o sweep: %1$s</string>
+    <string name="room_stage_delays">Atrasos</string>
+    <string name="room_stage_delays_detail">Calculando o alinhamento temporal (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Análise de atenuação de médios-graves, subwoofer e 16 bandas…</string>
+    <string name="room_stage_done">Concluído</string>
+    <string name="room_stage_done_detail">Calibração concluída com sucesso</string>
+    <string name="room_stage_mic_done_detail">Calibração do microfone concluída com sucesso</string>
+    <string name="room_err_no_preset">Nenhum perfil selecionado para medição. Selecione um perfil e tente novamente.</string>
+    <string name="room_err_no_native">A biblioteca de medição não foi carregada. Reinstale o aplicativo.</string>
+    <string name="room_err_sweep">Não foi possível gerar o sinal de teste.</string>
+    <string name="room_err_mic_open">Não foi possível abrir o microfone.</string>
+    <string name="room_err_output_open">Não foi possível abrir a saída de áudio.</string>
+    <string name="room_err_nothing_heard">Nenhum alto-falante foi detectado. Verifique o volume e certifique-se de que o microfone não está coberto.</string>
+    <string name="room_err_too_few_heard">Apenas %1$d alto-falante(s) detectado(s) - nada para alinhar. Verifique o volume e a posição do microfone.</string>
+    <string name="room_err_unexpected">Erro inesperado: %1$s</string>
+    <string name="room_err_unknown">Erro desconhecido</string>
+    <string name="room_polarity_warning">Polaridade invertida (+/-) em: %1$s. O alto-falante está ligado em antifase e cancela os graves na cabine. Verifique os fios nos terminais.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

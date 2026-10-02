@@ -508,4 +508,28 @@ Globale standaard: %1$s</string>
     <string name="room_sub_place_boot">In de kofferbak</string>
     <string name="room_sub_place_shelf">Op de hoedenplank</string>
     <string name="room_sub_place_underseat">Onder de stoel</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Stap %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Achtergrondgeluid</string>
+    <string name="room_stage_noise_detail">Meting van de cabine in stilte en vastzetten van het volume (16)…</string>
+    <string name="room_stage_speakers">Luidsprekers</string>
+    <string name="room_stage_speakers_detail">Sweep afspelen: %1$s</string>
+    <string name="room_stage_delays">Vertragingen</string>
+    <string name="room_stage_delays_detail">Berekening van tijdsuitlijning (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analyse van afval van midbass, subwoofer en de 16 banden…</string>
+    <string name="room_stage_done">Gereed</string>
+    <string name="room_stage_done_detail">Kalibratie succesvol voltooid</string>
+    <string name="room_stage_mic_done_detail">Microfoonkalibratie succesvol voltooid</string>
+    <string name="room_err_no_preset">Geen voorinstelling geselecteerd om door te meten. Selecteer een voorinstelling en probeer opnieuw.</string>
+    <string name="room_err_no_native">De meetbibliotheek kon niet worden geladen. Installeer de app opnieuw.</string>
+    <string name="room_err_sweep">Het testsignaal kon niet worden gegenereerd.</string>
+    <string name="room_err_mic_open">De microfoon kon niet worden geopend.</string>
+    <string name="room_err_output_open">De audio-uitgang kon niet worden geopend.</string>
+    <string name="room_err_nothing_heard">Er is geen enkele luidspreker waargenomen. Controleer het volume en of de microfoon niet is bedekt.</string>
+    <string name="room_err_too_few_heard">Slechts %1$d luidspreker(s) waargenomen - niets om op uit te lijnen. Controleer volume en microfoonpositie.</string>
+    <string name="room_err_unexpected">Onverwachte fout: %1$s</string>
+    <string name="room_err_unknown">Onbekende fout</string>
+    <string name="room_polarity_warning">Omgekeerde polariteit (+/-) op: %1$s. De luidspreker is in tegenfase aangesloten en dooft de bas in de cabine uit. Controleer de bedrading op de aansluitingen.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>

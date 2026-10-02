@@ -508,4 +508,28 @@
     <string name="room_sub_place_boot">В багажника</string>
     <string name="room_sub_place_shelf">На задната кора</string>
     <string name="room_sub_place_underseat">Под седалката</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Стъпка %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Фонов шум</string>
+    <string name="room_stage_noise_detail">Измерване на купето в тишина и фиксиране на силата на звука (16)…</string>
+    <string name="room_stage_speakers">Високоговорители</string>
+    <string name="room_stage_speakers_detail">Възпроизвеждане на суийп: %1$s</string>
+    <string name="room_stage_delays">Закъснения</string>
+    <string name="room_stage_delays_detail">Изчисляване на времевото подравняване (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Анализ на спада на мидбасите, субуфера и 16-те ленти…</string>
+    <string name="room_stage_done">Готово</string>
+    <string name="room_stage_done_detail">Калибрирането завърши успешно</string>
+    <string name="room_stage_mic_done_detail">Калибрирането на микрофона завърши успешно</string>
+    <string name="room_err_no_preset">Не е избран профил за измерване. Изберете профил и опитайте отново.</string>
+    <string name="room_err_no_native">Библиотеката за измерване не се зареди. Преинсталирайте приложението.</string>
+    <string name="room_err_sweep">Тестовият сигнал не можа да бъде генериран.</string>
+    <string name="room_err_mic_open">Микрофонът не можа да бъде отворен.</string>
+    <string name="room_err_output_open">Аудио изходът не можа да бъде отворен.</string>
+    <string name="room_err_nothing_heard">Не беше чут нито един високоговорител. Проверете силата на звука и дали микрофонът не е покрит.</string>
+    <string name="room_err_too_few_heard">Чуха се само %1$d високоговорител(я) — няма база за подравняване. Проверете силата на звука и позицията на микрофона.</string>
+    <string name="room_err_unexpected">Неочаквана грешка: %1$s</string>
+    <string name="room_err_unknown">Неизвестна грешка</string>
+    <string name="room_polarity_warning">Обърната полярност (+/-) на: %1$s. Високоговорителят е свързан в противофаза и заглушава баса в купето. Проверете кабелите на клемите.</string>
+    <string name="room_wizard_delays_sub">Субуфер: %1$.1f ms (%2$d)</string>
 </resources>

@@ -508,5 +508,29 @@ Globalno zadano: %1$s</string>
     <string name="room_sub_place_boot">U prtljažniku</string>
     <string name="room_sub_place_shelf">Na stražnjoj polici</string>
     <string name="room_sub_place_underseat">Ispod sjedala</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Korak %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Pozadinska buka</string>
+    <string name="room_stage_noise_detail">Mjerenje kabine u tišini i zaključavanje glasnoće (16)…</string>
+    <string name="room_stage_speakers">Zvučnici</string>
+    <string name="room_stage_speakers_detail">Reprodukcija sweep signala: %1$s</string>
+    <string name="room_stage_delays">Odgode</string>
+    <string name="room_stage_delays_detail">Izračun vremenskog poravnanja (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analiza pada midbasa, subwoofera i 16 pojaseva…</string>
+    <string name="room_stage_done">Gotovo</string>
+    <string name="room_stage_done_detail">Kalibracija je uspješno završena</string>
+    <string name="room_stage_mic_done_detail">Kalibracija mikrofona je uspješno završena</string>
+    <string name="room_err_no_preset">Nije odabran profil za mjerenje. Odaberite profil i pokušajte ponovno.</string>
+    <string name="room_err_no_native">Biblioteka za mjerenje nije učitana. Ponovno instalirajte aplikaciju.</string>
+    <string name="room_err_sweep">Testni signal nije se mogao generirati.</string>
+    <string name="room_err_mic_open">Mikrofon se nije mogao otvoriti.</string>
+    <string name="room_err_output_open">Audio izlaz se nije mogao otvoriti.</string>
+    <string name="room_err_nothing_heard">Nijedan zvučnik nije detektiran. Provjerite glasnoću i pazite da mikrofon nije pokriven.</string>
+    <string name="room_err_too_few_heard">Detektirano je samo %1$d zvučnik(a) — premalo za poravnanje. Provjerite glasnoću i položaj mikrofona.</string>
+    <string name="room_err_unexpected">Neočekivana pogreška: %1$s</string>
+    <string name="room_err_unknown">Nepoznata pogreška</string>
+    <string name="room_polarity_warning">Obrnuti polaritet (+/-) na: %1$s. Zvučnik je spojen u protufazi i poništava bas u kabini. Provjerite žice na priključcima.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>
 
