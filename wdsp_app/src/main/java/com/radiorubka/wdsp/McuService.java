@@ -612,6 +612,10 @@ public class McuService extends Service implements LocationListener {
                     stopPolling();
                     stopGps();
                 }
+                else if ("com.qf.action.VOLUME_CHANGED".equals(action)
+                        || "com.qf.action.MUTE_EQ".equals(action)) {
+                    wakePoll();
+                }
                 else if ("com.radiorubka.wdsp.UI_ACTIVE".equals(action)) {
                     isUiVisible = true;
                     forceUiUpdate();
@@ -625,6 +629,7 @@ public class McuService extends Service implements LocationListener {
                     // thing worth knowing is whether the value ever arrived at the service at all.
                     Log.i(TAG, "SIMULATE_SPEED: " + simulatedSpeedKmh + " km/h"
                             + (simulatedSpeedKmh > 0 ? "" : " (off, back to GPS)"));
+                    wakePoll(); // the pace follows the speed - see needsFastPoll()
                 }
                 else if (ACTION_AUDIO_STATE_STABLE.equals(action)) {
                     onAudioStateStable(intent);
@@ -965,6 +970,10 @@ public class McuService extends Service implements LocationListener {
     private static IntentFilter getIntentFilter() {
         IntentFilter controlFilter = new IntentFilter();
         controlFilter.addAction("com.qf.action.ACC_ON");
+        // One per volume command to the MCU, whoever sent it, and the mute toggle - they wake the
+        // poll instead of the poll looking ten times a second (see pollingRunnable).
+        controlFilter.addAction("com.qf.action.VOLUME_CHANGED");
+        controlFilter.addAction("com.qf.action.MUTE_EQ");
         controlFilter.addAction("com.qf.action.ACC_OFF");
         controlFilter.addAction("com.qf.action.PHONE_CALL_START");
         controlFilter.addAction("com.qf.action.PHONE_CALL_END");
@@ -1124,6 +1133,23 @@ public class McuService extends Service implements LocationListener {
         backgroundHandler.removeCallbacks(pollingRunnable);
     }
 
+    /** While GALA is actually working - see {@link #needsFastPoll()}. */
+    private static final long POLL_FAST_MS = 100;
+    /** Otherwise: enough for a player switch, and a safety net under the volume broadcast. */
+    private static final long POLL_IDLE_MS = 1000;
+
+    /**
+     * 🔴 The poll used to run ten times a second, always. Every pass reads the volume state through
+     * the QF framework, which logs a line per call: over 21 000 lines and a stream of binder calls
+     * into system_server during the five-minute boot of 02.10.2026 (Antigravity, board #1243).
+     *
+     * <p>The logic is untouched - checkVolumeAndGala and its per-source memory, the platform's own
+     * re-sync on a source change, the radio contract, GALA (owner, 02.10.2026: «там все дуже
+     * складно… код автора… вже все це враховує»). Only WHEN it runs changes: the platform raises
+     * com.qf.action.VOLUME_CHANGED after every volume command to the MCU, whoever sent it (one
+     * broadcast per RPC_SetVolume, measured 02.10), and MUTE_EQ on mute - those wake the poll at
+     * once ({@link #wakePoll()}). The fast pace is kept only while GALA has something in flight.
+     */
     private final Runnable pollingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -1131,9 +1157,31 @@ public class McuService extends Service implements LocationListener {
             checkVolumeAndGala();
             checkPlayer();
             checkForBug();
-            backgroundHandler.postDelayed(this, 100);
+            backgroundHandler.postDelayed(this, needsFastPoll() ? POLL_FAST_MS : POLL_IDLE_MS);
         }
     };
+
+    /** Runs the poll now instead of at its next tick. Called on the background thread. */
+    private void wakePoll() {
+        if (!isPolling) return;
+        backgroundHandler.removeCallbacks(pollingRunnable);
+        backgroundHandler.post(pollingRunnable);
+    }
+
+    /**
+     * GALA works in time - the hold timer, one fade step per tick, the hardware's echo of our own
+     * command, a hand still on the knob - and those need the fast pace. A parked car with GALA
+     * settled needs none of it.
+     */
+    private boolean needsFastPoll() {
+        long now = System.currentTimeMillis();
+        boolean moving = (simulatedSpeedKmh > 0f ? simulatedSpeedKmh : currentSpeedKmh) > 0f;
+        return (isGalaEnabled() && moving)
+                || currentAppliedOffset > 0
+                || pendingTargetOffset != currentAppliedOffset
+                || lastGalaCommandVol != -1
+                || now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS;
+    }
 
 
     // This is used to check for the bug in the jitu (maybe also haiwai) f/w
@@ -2516,7 +2564,12 @@ public class McuService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        backgroundHandler.post(() -> currentSpeedKmh = location.getSpeed() * 3.6f);
+        backgroundHandler.post(() -> {
+            boolean wasMoving = currentSpeedKmh > 0f;
+            currentSpeedKmh = location.getSpeed() * 3.6f;
+            // Pulling away is when GALA needs the fast pace again - do not wait for the idle tick.
+            if (!wasMoving && currentSpeedKmh > 0f && isGalaEnabled()) wakePoll();
+        });
     }
 
     @Override public void onProviderEnabled(@NonNull String provider) {}
