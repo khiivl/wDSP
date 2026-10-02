@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// Release signing credentials: one place for both modules (signing.gradle).
+apply from: rootProject.file('signing.gradle')
+
 android {
     namespace 'com.radiorubka.wdsp'
     compileSdk 36
@@ -41,31 +44,25 @@ android {
         }
     }
 
-    def localProperties = new Properties()
-    def localPropertiesFile = rootProject.file('local.properties')
-    if (localPropertiesFile.exists()) {
-        localPropertiesFile.withReader('UTF-8') { reader ->
-            localProperties.load(reader)
-        }
-    }
-
     signingConfigs {
         release {
-            storeFile file(localProperties.getProperty('keystore.file', ''))
-            storePassword localProperties.getProperty('keystore.password', '')
-            keyAlias localProperties.getProperty('key.alias', '')
-            keyPassword localProperties.getProperty('key.password', '')
+            if (wdspSigning != null) {
+                storeFile wdspSigning.storeFile
+                storePassword wdspSigning.storePassword
+                keyAlias wdspSigning.keyAlias
+                keyPassword wdspSigning.keyPassword
+            }
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
+            if (wdspSigning != null) signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            signingConfig signingConfigs.release
+            if (wdspSigning != null) signingConfig signingConfigs.release
         }
     }
     compileOptions {

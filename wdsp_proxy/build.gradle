@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// Release signing credentials: one place for both modules (signing.gradle).
+apply from: rootProject.file('signing.gradle')
+
 android {
     namespace 'com.qf.soundeffect'
     compileSdk 36
@@ -20,26 +23,23 @@ android {
         resConfigs "en"
     }
 
-    // The same release key as wdsp_app (local.properties, never in git). The stock QF_DSP is
+    // The same release key as wdsp_app (signing.gradle, never in git). The stock QF_DSP is
     // platform-signed; installing this over it as an update needs signature checks disabled
     // (PMPatch3 on the unit).
-    def localProperties = new Properties()
-    def localPropertiesFile = rootProject.file('local.properties')
-    if (localPropertiesFile.exists()) {
-        localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
-    }
     signingConfigs {
         release {
-            storeFile file(localProperties.getProperty('keystore.file', ''))
-            storePassword localProperties.getProperty('keystore.password', '')
-            keyAlias localProperties.getProperty('key.alias', '')
-            keyPassword localProperties.getProperty('key.password', '')
+            if (wdspSigning != null) {
+                storeFile wdspSigning.storeFile
+                storePassword wdspSigning.storePassword
+                keyAlias wdspSigning.keyAlias
+                keyPassword wdspSigning.keyPassword
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (wdspSigning != null) signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

@@ -27,3 +27,9 @@ wdsp_app/release/
 # creates tools/__pycache__, which then sits in `git status` looking like work.
 __pycache__/
 *.pyc
+
+# Release signing - never commit the keystore or its credentials (the author, 26b8d14)
+/keystore.properties
+/keystore/
+*.keystore
+*.jks
