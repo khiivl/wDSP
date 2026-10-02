@@ -324,6 +324,25 @@ public class McuService extends Service implements LocationListener {
     private Map<String, String> playerMap = new HashMap<>();
     private final Map<Byte, byte[]> mcuCache = new HashMap<>();
 
+    // The last packet each volume-dependent writer computed (the author's 0.5): an unchanged
+    // packet skips the throttle, its logging and the spectrum update, not only the RPC that
+    // mcuCache already skips. Forgotten together with mcuCache - see forgetChipState().
+    private byte[] lastComputedEqData = null;
+    private byte[] lastComputedSubData = null;
+    private byte[] lastComputedBassBoostData = null;
+
+    /**
+     * Forget what we think the chip holds, so the next apply says all of it again. Both memories
+     * go together: clearing mcuCache alone, with the computed packets still remembered, would let
+     * the re-apply after ACC_ON stop at "same packet as last time" and never reach the chip.
+     */
+    private void forgetChipState() {
+        mcuCache.clear();
+        lastComputedEqData = null;
+        lastComputedSubData = null;
+        lastComputedBassBoostData = null;
+    }
+
     private static volatile McuService instance;
 
     public static McuService getInstance() {
@@ -448,7 +467,7 @@ public class McuService extends Service implements LocationListener {
                 galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
                 if (currentPresetName != null) loadPresetData(currentPresetName);
             }
-            else if (currentPresetName != null && key.startsWith(currentPresetName)) {
+            else if (currentPresetName != null && key.startsWith(currentPresetName + "_")) {
 
                 // Reload the data first
                 loadPresetData(currentPresetName);
@@ -567,7 +586,7 @@ public class McuService extends Service implements LocationListener {
                     //
                     // ACC_ON is the platform's own statement that the MCU link exists. Forget what
                     // we think the chip holds and say all of it again.
-                    mcuCache.clear();
+                    forgetChipState();
                     applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
@@ -616,7 +635,7 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.RESET_AUDIO_MCU".equals(action)) {
                     Log.i(TAG, "RESET_AUDIO_MCU received: clearing cache and reapplying preset settings");
-                    mcuCache.clear();
+                    forgetChipState();
                     syncPreset(false);
                 }
                 else if ("com.radiorubka.wdsp.PROBE_SESSION".equals(action)) {
@@ -2130,7 +2149,12 @@ public class McuService extends Service implements LocationListener {
         eqData[9] = cachedQByte1;
         eqData[10] = cachedQByte2;
         eqData[11] = 0x00;
-        sendEqThrottled(eqData);
+        if (lastComputedEqData == null || !Arrays.equals(lastComputedEqData, eqData)) {
+            lastComputedEqData = eqData.clone();
+            sendEqThrottled(eqData);
+        }
+        // Not skipped with the send: the model also reads things the packet does not carry
+        // (whether the car has a subwoofer at all).
         publishDspStateToSpectrum();
     }
 
@@ -2174,7 +2198,10 @@ public class McuService extends Service implements LocationListener {
         int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
         effectiveSubGainIdx = finalGainIdx;
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
-        sendSubThrottled(subData);
+        if (lastComputedSubData == null || !Arrays.equals(lastComputedSubData, subData)) {
+            lastComputedSubData = subData.clone();
+            sendSubThrottled(subData);
+        }
         publishDspStateToSpectrum();
     }
 
@@ -2186,10 +2213,14 @@ public class McuService extends Service implements LocationListener {
     private void applyBassBoost(int currentVol) {
         LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr,
                 cachedFmEn, cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR);
-        sendBassBoostThrottled(new byte[]{(byte) 0x88,
+        byte[] bbData = new byte[]{(byte) 0x88,
                 (byte) (((shelf.freqIdxFront + 8) << 4) | (shelf.gainFront & 0x0F)),
                 (byte) (((shelf.freqIdxRear + 8) << 4) | (shelf.gainRear & 0x0F)),
-                (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+                (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))};
+        if (lastComputedBassBoostData == null || !Arrays.equals(lastComputedBassBoostData, bbData)) {
+            lastComputedBassBoostData = bbData;
+            sendBassBoostThrottled(bbData);
+        }
         // The door high-pass is part of the spectrum model; a change of it must reach the analyser
         // as a change of the EQ does.
         publishDspStateToSpectrum();
