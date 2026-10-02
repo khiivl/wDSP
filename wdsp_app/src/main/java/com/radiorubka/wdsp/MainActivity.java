@@ -1502,7 +1502,6 @@ public class MainActivity extends AppCompatActivity {
     private void updateMainOverlays(int[] gs, float[] offs) {
         if (eqVisualizer == null || !isFullyInitialized || seekSubGain == null) return;
         boolean showOnMain = showLoudnessOnMain();
-        boolean fmOn = switchFmEnable != null && switchFmEnable.isChecked();
 
         boolean hasCorrection = false;
         for (float o : offs) if (o != 0f) { hasCorrection = true; break; }
@@ -1511,21 +1510,39 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) driveIdx[i] = LoudnessCurve.gainIndex(drive[i]);
         eqVisualizer.setLoudnessCorrection(driveIdx, showOnMain && hasCorrection);
 
-        float subDb = getIntSlider(seekSubGain) + currentUltraBassOffset
-                + (showOnMain && switchFmSubComp != null && switchFmSubComp.isChecked() ? currentFmSubOffset : 0f);
-        subDb = Math.max(0, Math.min(12, Math.round(subDb)));
-        float subHz = RoomMeasurement.hasSubwoofer(this) ? Globals.currentSubFreqHz : 0f;
-        eqVisualizer.setSubFilter(subHz, subDb);
+        eqVisualizer.setSubFilter(subFilterHz(), sentSubGainDb(showOnMain));
 
-        int vol = Math.max(LoudnessCurve.VOL_MIN,
-                (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
-        LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(vol, getIntSlider(seekFmCalVol),
-                getIntSlider(seekFmStrength), showOnMain && fmOn,
-                frontBassFreqIdx(), getIntSlider(seekBassBoostFront),
-                resolveBassBoostFreqIndex(spinnerBassFreqRear.getText().toString()), getIntSlider(seekBassBoostRear));
+        LoudnessCurve.BassShelf shelf = sentBassShelf(showOnMain);
         eqVisualizer.setBassShaping(
                 DspResponse.doorHpfHz(getIntSlider(seekBassFilterFront)), shelf.frontHz(), shelf.gainFront,
                 DspResponse.doorHpfHz(getIntSlider(seekBassFilterRear)), shelf.rearHz(), shelf.gainRear);
+    }
+
+    /** The subwoofer's low-pass for drawing; 0 when there is no subwoofer, and nothing is drawn. */
+    private float subFilterHz() {
+        return RoomMeasurement.hasSubwoofer(this) ? Globals.currentSubFreqHz : 0f;
+    }
+
+    /**
+     * The subwoofer gain as McuService sends it - the slider, Ultra Bass, and loudness's sub
+     * compensation when {@code withLoudness} - rounded and clamped like the register. One place for
+     * both curves: the main one passes "show on main", the loudness tab always shows it.
+     */
+    private float sentSubGainDb(boolean withLoudness) {
+        float db = getIntSlider(seekSubGain) + currentUltraBassOffset
+                + (withLoudness && switchFmSubComp != null && switchFmSubComp.isChecked() ? currentFmSubOffset : 0f);
+        return Math.max(0, Math.min(12, Math.round(db)));
+    }
+
+    /** The doors' bass shelf as McuService sends it; loudness's share only when {@code withLoudness}. */
+    private LoudnessCurve.BassShelf sentBassShelf(boolean withLoudness) {
+        boolean fmOn = switchFmEnable != null && switchFmEnable.isChecked();
+        int vol = Math.max(LoudnessCurve.VOL_MIN,
+                (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
+        return LoudnessCurve.bassShelf(vol, getIntSlider(seekFmCalVol),
+                getIntSlider(seekFmStrength), withLoudness && fmOn,
+                frontBassFreqIdx(), getIntSlider(seekBassBoostFront),
+                resolveBassBoostFreqIndex(spinnerBassFreqRear.getText().toString()), getIntSlider(seekBassBoostRear));
     }
 
     private void updateDbLabel(int i, int p) {
@@ -1974,14 +1991,22 @@ public class MainActivity extends AppCompatActivity {
         int[] gs = new int[AudioConfig.NUM_BANDS]; float[] actual = new float[AudioConfig.NUM_BANDS]; float[] warns = new float[AudioConfig.NUM_BANDS];
         int vol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume(); 
         tvSysVolumeVal.setText(String.valueOf(vol));
+        // The author's 0.5: this tab shows what the chip is sent - the sliders and the correction
+        // pre-warped together and rounded to the 2 dB step (LoudnessCurve, as McuService sends),
+        // and above each band the change that survives the rounding, not the raw offset.
+        int[] sliders = new int[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) sliders[i] = getIntSlider(gainSliders.get(i));
+        float[] drive = LoudnessCurve.eqDriveDb(sliders, offs);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float total = offs[i];
-            actual[i] = total;
-            float pot = getIntSlider(gainSliders.get(i)) + (total / 2f);
+            float pot = drive[i] / 2f + 6f;
             float wOffset = (pot - 12f) * 2; warns[i] = (pot > 12.025f && wOffset > 0.999f) ? wOffset : 0f;
-            gs[i] = Math.round(Math.max(0, Math.min(12, 6f + (total / 2f))));
+            gs[i] = LoudnessCurve.gainIndex(drive[i]);
+            actual[i] = (gs[i] - sliders[i]) * 2f;
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
+        fmVisualizer.setSubFilter(subFilterHz(), sentSubGainDb(true));
+        LoudnessCurve.BassShelf shelf = sentBassShelf(true);
+        fmVisualizer.setBassShaping(DspResponse.doorHpfHz(getIntSlider(seekBassFilterFront)), shelf.frontHz(), shelf.gainFront);
         // Sub compensation and Ultra Bass both add to the subwoofer gain (the author's 0.5): the
         // service sends round(gain + both), so the preview and its warning show the same sum.
         if (switchFmSubComp.isChecked() || (switchUltraBass != null && switchUltraBass.isChecked())) {
@@ -1993,7 +2018,7 @@ public class MainActivity extends AppCompatActivity {
         fmVisualizer.invalidate();
         updateLoudnessCheck();
         // Loudness moved (volume, a switch, a slider): the main curve's overlays follow it.
-        updateVisualizer();   // gs above is the curve alone; updateVisualizer reads the sliders
+        updateVisualizer();   // reads the sliders itself and draws the main overlays
     }
 
     /**

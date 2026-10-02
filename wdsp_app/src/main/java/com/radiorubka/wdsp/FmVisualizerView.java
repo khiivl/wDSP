@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ComposeShader;
+import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -16,6 +17,8 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+
+import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.util.Locale;
 
@@ -57,6 +60,15 @@ public class FmVisualizerView extends View {
     private final Path fullPath = new Path();
     private final Path fillPath = new Path();
     private final Path bgPath = new Path();
+    private final Path subPath = new Path();
+
+    // The author's 0.5: this tab shows what the chip is sent - the composite response of the 16
+    // Q = 2.2 bells at the indices sent, the front bass shelf as the service sends it, and the
+    // subwoofer's low-pass dashed - the same functions as EqVisualizerView, so the two curves agree.
+    private static final int CURVE_SAMPLES = 160;
+    private Paint subLinePaint;
+    private float subCutoffHz = 0f, subGainDb = 0f;
+    private float frontBassFilterHz = 0f, frontBassBoostHz = 0f, frontBassBoostDb = 0f;
 
     @SuppressWarnings("FieldCanBeLocal")
     private final float TOP_OFFSET_RATIO = 0.23f;
@@ -123,10 +135,34 @@ public class FmVisualizerView extends View {
         warningPaint.setFakeBoldText(true);
 
         warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
+
+        subLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        subLinePaint.setStrokeWidth(2f * density);
+        subLinePaint.setStyle(Paint.Style.STROKE);
+        subLinePaint.setStrokeCap(Paint.Cap.ROUND);
+        subLinePaint.setPathEffect(new DashPathEffect(new float[]{10f * density, 6f * density}, 0f));
     }
 
+    /** The EQ indices 0..12 as sent to the chip (slider plus correction, pre-warped and rounded). */
     public void setGains(int[] newGains) {
         System.arraycopy(newGains, 0, this.gains, 0, AudioConfig.NUM_BANDS);
+        invalidate();
+    }
+
+    /** The subwoofer's low-pass in Hz (0 = no subwoofer, nothing drawn) and its gain in dB. */
+    public void setSubFilter(float cutoffHz, float gainDb) {
+        if (cutoffHz == subCutoffHz && gainDb == subGainDb) return;
+        subCutoffHz = cutoffHz;
+        subGainDb = gainDb;
+        invalidate();
+    }
+
+    /** The front doors' high-pass and bass shelf, as AudioConfig.bassShapingResponseDb takes them. */
+    public void setBassShaping(float filterHz, float boostHz, float boostDb) {
+        if (filterHz == frontBassFilterHz && boostHz == frontBassBoostHz && boostDb == frontBassBoostDb) return;
+        frontBassFilterHz = filterHz;
+        frontBassBoostHz = boostHz;
+        frontBassBoostDb = boostDb;
         invalidate();
     }
 
@@ -185,8 +221,8 @@ public class FmVisualizerView extends View {
         float bgBottom = totalH - shiftUp;
 
         // 3. Draw Background with Rounded Corners
+        canvas.save(); // paired with the unconditional restore at the end (the author's 0.5 fix)
         if (customBackground != null) {
-            canvas.save();
             // Create a rounded path for the background
             bgPath.reset();
             bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
@@ -209,17 +245,27 @@ public class FmVisualizerView extends View {
         }
         // ------------------------------------
 
-        // 4. Update EQ Line to start and end at the NEW background edges
+        // 4. The curves, sampled on the bands' own log-frequency axis (extrapolated into the
+        //    padding, so the edges keep the real roll-off instead of a flat shelf)
         fullPath.reset();
-        fullPath.moveTo(bgLeft, yCoords[0]); // Start at the wide edge
-        fullPath.lineTo(xCoords[0], yCoords[0]); // Draw to first slider center
-
-        for (int i = 1; i < AudioConfig.NUM_BANDS; i++) {
-            float cp1x = xCoords[i-1] + (xCoords[i] - xCoords[i-1]) / 2f;
-            fullPath.cubicTo(cp1x, yCoords[i-1], cp1x, yCoords[i], xCoords[i], yCoords[i]);
+        subPath.reset();
+        boolean drawSub = subCutoffHz > 0f;
+        float spanStart = xCoords[0];
+        float spanEnd = xCoords[AudioConfig.NUM_BANDS - 1];
+        for (int s = 0; s <= CURVE_SAMPLES; s++) {
+            float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
+            float t = (x - spanStart) / (spanEnd - spanStart) * (AudioConfig.NUM_BANDS - 1);
+            float hz = AudioConfig.frequencyAt(t);
+            float db = AudioConfig.compositeResponseDb(gains, hz)
+                    + AudioConfig.bassShapingResponseDb(hz, frontBassFilterHz, frontBassBoostHz, frontBassBoostDb);
+            float y = yOfDb(db, drawStartY, drawHeight, MAX_GAIN);
+            if (s == 0) fullPath.moveTo(x, y); else fullPath.lineTo(x, y);
+            if (drawSub) {
+                float subDb = AudioConfig.subFilterResponseDb(hz, subCutoffHz, AudioConfig.SUB_FILTER_ORDER, subGainDb);
+                float ys = yOfDb(Math.min(subDb, MAX_GAIN), drawStartY, drawHeight, MAX_GAIN);
+                if (s == 0) subPath.moveTo(x, ys); else subPath.lineTo(x, ys);
+            }
         }
-
-        fullPath.lineTo(bgRight, yCoords[AudioConfig.NUM_BANDS - 1]); // End at the wide edge
 
         // 5. Prepare Fill Path (Aligned to wide edges)
         fillPath.set(fullPath);
@@ -264,8 +310,19 @@ public class FmVisualizerView extends View {
             lastGridBottom = gridBottom;
         }
 
+        // Clipped to the plot: a curve leaving it exits at the edge instead of drawing past it.
+        canvas.save();
+        canvas.clipRect(bgLeft, drawStartY, bgRight, gridBottom);
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
+        if (drawSub) {
+            boolean isNight = ThemeManager.isNight(getContext());
+            int subColor = ThemeManager.contrastText(ThemeManager.textSecondary(getContext(), isNight),
+                    isNight ? 0xFF12161B : 0xFFFFFFFF);
+            subLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(subColor, 210));
+            canvas.drawPath(subPath, subLinePaint);
+        }
+        canvas.restore();
 
         // 8. Draw Text/Warnings (unchanged)
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
@@ -286,5 +343,10 @@ public class FmVisualizerView extends View {
             }
         }
         canvas.restore();
+    }
+
+    /** dB to the plot's y on the slider scale, 0..12 with 6 at 0 dB. */
+    private static float yOfDb(float db, float drawStartY, float drawHeight, float maxGain) {
+        return drawStartY + drawHeight - ((6f + db / 2f) / maxGain) * drawHeight;
     }
 }
