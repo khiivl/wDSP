@@ -853,7 +853,8 @@ public class MainActivity extends AppCompatActivity {
 
             // 3. Secondary Labels / Elements below (16sp NORMAL - без болду, комфортно для очей)
             int[] secondaryLabels = {
-                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength
+                R.id.lbl_pwr, R.id.lbl_sub, R.id.lbl_cal_vol, R.id.lbl_strength,
+                R.id.lbl_fat_start_vol, R.id.lbl_ultra_bass_start_vol, R.id.lbl_ultra_bass_max_db
             };
             for (int id : secondaryLabels) {
                 TextView tv = findViewById(id);
@@ -870,6 +871,7 @@ public class MainActivity extends AppCompatActivity {
             int[] dataValues = {
                 R.id.tv_pwr_db, R.id.tv_sub_db,
                 R.id.tv_fm_cal_vol_val, R.id.tv_fm_strength_val, R.id.tv_sys_volume_val, R.id.tv_sub_offset_val, R.id.tv_sub_offset_warn,
+                R.id.tv_fat_start_vol_val, R.id.tv_ultra_bass_start_vol_val, R.id.tv_ultra_bass_max_db_val,
                 R.id.tv_delay_fl_val, R.id.tv_delay_fr_val, R.id.tv_delay_rl_val, R.id.tv_delay_rr_val, R.id.tv_delay_sub_val,
                 R.id.tv_delay1_fl_val, R.id.tv_delay1_fr_val, R.id.tv_delay1_rl_val, R.id.tv_delay1_rr_val, R.id.tv_delay1_rsse_val,
                 R.id.tv_bass_filter_front_db, R.id.tv_bass_boost_front_db, R.id.tv_bass_filter_rear_db, R.id.tv_bass_boost_rear_db,
