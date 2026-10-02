@@ -19,6 +19,8 @@
     <string name="enable_loudness">Habilitar Compensación de Loudness</string>
     <string name="trim_highs">Recorte de Agudos</string>
     <string name="sub_tweaking">Calibración de Subwoofer</string>
+    <string name="show_loudness_on_main">Mostrar en Principal</string>
+    <string name="true_22_display">Pantalla 2.2 Real</string>
     <string name="fm_visualizer_label">Vista Previa de la Compensación en Tiempo Real</string>
     <string name="lbl_volume">Volumen:</string>
     <string name="lbl_sub_offset">Compensación de Subwoofer:</string>
@@ -28,6 +30,8 @@
 
     <!-- Delays Tab -->
     <string name="delays_title">Alineación Temporal de Altavoces (Retardos)</string>
+    <string name="sync_delay_front">Sincr. Delante I/D</string>
+    <string name="sync_delay_rear">Sincr. Detrás I/D</string>
     <string name="spatial_correction">Corrección Espacial</string>
     <string name="surround_mode">Modo Surround</string>
     <string name="front_left">Frontal Izquierdo</string>
@@ -40,6 +44,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Loudness Integrado (HEREDADO)</string>
+    <string name="sync_bass_fr">Sincr. Bajos Delante/Detrás</string>
     <string name="speaker_bass_controls">Control de Graves de Altavoces</string>
     <string name="front_speaker_bass">Graves Altavoces Frontales</string>
     <string name="rear_speaker_bass">Graves Altavoces Traseros</string>
@@ -129,7 +134,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">Curva F-M</string>
+    <string name="FMtab">Corrección</string>
     <string name="DLtab">Retardos</string>
     <string name="OTtab">Otros</string>
     <string name="GLtab">Velocidad</string>

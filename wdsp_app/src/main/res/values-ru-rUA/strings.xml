@@ -19,6 +19,8 @@
     <string name="enable_loudness">Тонкомпенс.</string>
     <string name="trim_highs">Уменьш. ВЧ</string>
     <string name="sub_tweaking">Автом. Саб</string>
+    <string name="show_loudness_on_main">На главном экране</string>
+    <string name="true_22_display">Точный 2.2</string>
     <string name="fm_visualizer_label">Предпросмотр компенсации</string>
     <string name="lbl_volume">Громкость:</string>
     <string name="lbl_sub_offset">Смещение Sub:</string>
@@ -28,6 +30,8 @@
 
     <!-- Delays Tab -->
     <string name="delays_title">Корр.врем.воспр. (Задержки)</string>
+    <string name="sync_delay_front">Синхр. перед Л/П</string>
+    <string name="sync_delay_rear">Синхр. зад Л/П</string>
     <string name="spatial_correction">Пространст. коррекция</string>
     <string name="surround_mode">Объёмное звучание</string>
     <string name="front_left">Перед. лев.</string>
@@ -40,6 +44,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Встроен. тонкомп Loud (устар.)</string>
+    <string name="sync_bass_fr">Синхр. баса перед/зад</string>
     <string name="speaker_bass_controls">Регулят. НЧ динам.</string>
     <string name="front_speaker_bass">Передние НЧ</string>
     <string name="rear_speaker_bass">Задние НЧ</string>
@@ -129,7 +134,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">Тонкомп.</string>
+    <string name="FMtab">Коррекция</string>
     <string name="DLtab">Задержки</string>
     <string name="OTtab">Прочее</string>
     <string name="GLtab">Скорость</string>

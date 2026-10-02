@@ -20,6 +20,8 @@
     <string name="enable_loudness">Aktivera Loudness</string>
     <string name="trim_highs">Dämpa diskant</string>
     <string name="sub_tweaking">Sub-justering</string>
+    <string name="show_loudness_on_main">Visa på huvudsidan</string>
+    <string name="true_22_display">Äkta 2.2-vy</string>
     <string name="fm_visualizer_label">Realtidsvy korrigering</string>
     <string name="lbl_volume">Volym:</string>
     <string name="lbl_sub_offset">Sub-offset:</string>
@@ -29,6 +31,8 @@
 
     <!-- Delays Tab -->
     <string name="delays_title">Tidskorrigering (Delays)</string>
+    <string name="sync_delay_front">Synka fram V/H</string>
+    <string name="sync_delay_rear">Synka bak V/H</string>
     <string name="spatial_correction">Rumslig korrigering</string>
     <string name="surround_mode">Surroundläge</string>
     <string name="front_left">Vänster fram</string>
@@ -41,6 +45,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Inbyggd Loudness (LEGACY)</string>
+    <string name="sync_bass_fr">Synka bas fram/bak</string>
     <string name="speaker_bass_controls">Basinställningar högtalare</string>
     <string name="front_speaker_bass">Frontbas</string>
     <string name="rear_speaker_bass">Bakbas</string>
@@ -128,7 +133,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">Loudness</string>
+    <string name="FMtab">Korrigering</string>
     <string name="DLtab">Delays</string>
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>

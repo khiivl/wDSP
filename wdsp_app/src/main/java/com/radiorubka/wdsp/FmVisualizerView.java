@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ComposeShader;
+import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -33,6 +34,20 @@ public class FmVisualizerView extends View {
     private float[] xCoords;
     private float[] yCoords;
 
+    // Same real-composite-response curve technique as EqVisualizerView (see its onDraw() step 4
+    // for the full rationale) instead of a generic spline through the 16 band points - so this
+    // loudness-curve preview shows bands bleeding into their neighbors the same way the real
+    // hardware Q=2.2 filters (and the main EQ screen's curve) do, not an idealized per-band shape.
+    private static final int CURVE_SAMPLES = 160;
+    private static final float PLATEAU_BLEND_THRESHOLD_DB = 4f;
+    // Per-SEGMENT (not per-band) flatness - see EqVisualizerView.flatness's declaration for the
+    // full rationale (fixes a flat pair of bands displaying too high when the band on the OTHER
+    // side of one of them differs). NUM_BANDS-1 entries, one per gap between consecutive bands.
+    private final float[] flatness = new float[AudioConfig.NUM_BANDS - 1];
+
+    // "True 2.2 Display" toggle - see EqVisualizerView.setTrueQDisplay()'s identical field/method.
+    private boolean trueQDisplay = false;
+
     // Same band grouping as EqVisualizerView, since this view plots the same 16 bands
     private final int[][] GROUP_RANGES = {{0,2}, {3,4}, {5,6}, {7,9}, {10,12}, {13,15}};
     private int[] GROUP_COLORS;
@@ -42,6 +57,20 @@ public class FmVisualizerView extends View {
     private final Path fillPath = new Path();
 
     private final Path bgPath = new Path();
+
+    // Sub LPF overlay curve - same as EqVisualizerView's (see its setSubFilter()/onDraw() step 4b
+    // for the full rationale), so the loudness screen shows the same sub-filter preview as the
+    // front page.
+    private Paint subLinePaint;
+    private final Path subPath = new Path();
+    private float subCutoffHz = 80f;
+    private float subGainDb = 0f;
+
+    // Front "Bass Boost" stage (see AudioConfig.bassShapingResponseDb()) - baked straight into
+    // the main curve below, same as EqVisualizerView's front bass shaping on the main screen (no
+    // rear overlay here, this view only ever shows one curve). Not animated/glided like
+    // EqVisualizerView's - this view snaps straight to new values like it always has for gains[].
+    private float frontBassFilterHz = 20f, frontBassBoostFreqHz = 0f, frontBassBoostGainDb = 0f;
 
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -120,10 +149,42 @@ public class FmVisualizerView extends View {
         warningPaint.setFakeBoldText(true);
 
         warningPaint.setTypeface(ResourcesCompat.getFont(getContext(), R.font.main_font));
+
+        subLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        subLinePaint.setColor(Color.WHITE);
+        subLinePaint.setAlpha(140);
+        subLinePaint.setStrokeWidth(2f * density);
+        subLinePaint.setStyle(Paint.Style.STROKE);
+        subLinePaint.setStrokeCap(Paint.Cap.ROUND);
+        subLinePaint.setPathEffect(new DashPathEffect(new float[]{10f * density, 6f * density}, 0f));
     }
 
     public void setGains(int[] newGains) {
         System.arraycopy(newGains, 0, this.gains, 0, AudioConfig.NUM_BANDS);
+        invalidate();
+    }
+
+    /** "True 2.2 Display" - see EqVisualizerView.setTrueQDisplay(). */
+    public void setTrueQDisplay(boolean enabled) {
+        if (enabled == trueQDisplay) return;
+        trueQDisplay = enabled;
+        invalidate();
+    }
+
+    /** Feeds the sub output's current cutoff (Hz) and gain (dB, 0..+12) into the overlay curve. */
+    public void setSubFilter(float cutoffHz, float gainDb) {
+        if (cutoffHz == subCutoffHz && gainDb == subGainDb) return;
+        subCutoffHz = cutoffHz;
+        subGainDb = gainDb;
+        invalidate();
+    }
+
+    /** Front "Bass Boost" stage - see frontBassFilterHz's declaration. */
+    public void setBassShaping(float filterHz, float boostFreqHz, float boostGainDb) {
+        if (filterHz == frontBassFilterHz && boostFreqHz == frontBassBoostFreqHz && boostGainDb == frontBassBoostGainDb) return;
+        frontBassFilterHz = filterHz;
+        frontBassBoostFreqHz = boostFreqHz;
+        frontBassBoostGainDb = boostGainDb;
         invalidate();
     }
 
@@ -145,6 +206,14 @@ public class FmVisualizerView extends View {
             System.arraycopy(newWarnings, 0, this.warnings, 0, AudioConfig.NUM_BANDS);
         }
         invalidate();
+    }
+
+    /** Same as EqVisualizerView.computeFlatnessInto() - see there for the full rationale. */
+    private void computeFlatness() {
+        for (int s = 0; s < AudioConfig.NUM_BANDS - 1; s++) {
+            float diffDb = Math.abs(gains[s + 1] - gains[s]) * 2f;
+            flatness[s] = Math.max(0f, 1f - diffDb / PLATEAU_BLEND_THRESHOLD_DB);
+        }
     }
 
     @Override
@@ -182,8 +251,8 @@ public class FmVisualizerView extends View {
         float bgBottom = totalH - shiftUp;
 
         // 3. Draw Background with Rounded Corners
+        canvas.save(); // always paired with the unconditional canvas.restore() at the end of this method
         if (customBackground != null) {
-            canvas.save();
             // Create a rounded path for the background
             bgPath.reset();
             bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
@@ -206,17 +275,86 @@ public class FmVisualizerView extends View {
         }
         // ------------------------------------
 
-        // 4. Update EQ Line to start and end at the NEW background edges
+        // 4. Build the curve from the actual composite response of 16 overlapping Q=2.2 peaking
+        // filters, exactly like EqVisualizerView's onDraw() step 4 - see its comment there for the
+        // full rationale. `gains[]` here already has the loudness/Sub Comp offset baked in per
+        // band (see MainActivity.updateFmVisualizer()), so this reads as "what the real EQ curve
+        // would look like with the loudness curve applied," not an idealized per-band shape.
+        computeFlatness();
         fullPath.reset();
-        fullPath.moveTo(bgLeft, yCoords[0]); // Start at the wide edge
-        fullPath.lineTo(xCoords[0], yCoords[0]); // Draw to first slider center
+        for (int s = 0; s <= CURVE_SAMPLES; s++) {
+            float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
 
-        for (int i = 1; i < AudioConfig.NUM_BANDS; i++) {
-            float cp1x = xCoords[i-1] + (xCoords[i] - xCoords[i-1]) / 2f;
-            fullPath.cubicTo(cp1x, yCoords[i-1], cp1x, yCoords[i], xCoords[i], yCoords[i]);
+            // Unclamped (used to hold t at 0/NUM_BANDS-1 outside the band span, which pinned the
+            // curve flat across the padded lead-in/lead-out - looked like a shelf at the very top
+            // and bottom of the frequency range instead of the real Q=2.2 rolloff/rise continuing
+            // into it) - see EqVisualizerView.sampleBellCurve()'s identical fix. AudioConfig.
+            // frequencyAt() extrapolates the same log-frequency spacing for t outside
+            // [0, NUM_BANDS-1], so the composite response below just keeps following the real
+            // math into the padding instead of flattening there.
+            float t = (x - xCoords[0]) / (xCoords[AudioConfig.NUM_BANDS - 1] - xCoords[0]) * (AudioConfig.NUM_BANDS - 1);
+            boolean inBandSpan = t >= 0f && t <= AudioConfig.NUM_BANDS - 1;
+
+            int lo = Math.max(0, Math.min(AudioConfig.NUM_BANDS - 1, (int) Math.floor(t)));
+            int hi = Math.min(AudioConfig.NUM_BANDS - 1, lo + 1);
+            float frac = t - lo; // 0 at band lo, 1 at band hi
+            float easedFrac = 0.5f - 0.5f * (float) Math.cos(Math.PI * frac);
+            float loDb = (gains[lo] - 6) * 2f;
+            float hiDb = (gains[hi] - 6) * 2f;
+
+            float freqHz = AudioConfig.frequencyAt(t);
+            float bellDb = AudioConfig.compositeResponseDb(gains, freqHz);
+
+            float db;
+            if (trueQDisplay || !inBandSpan) {
+                // "True 2.2 Display" - see EqVisualizerView.sampleBellCurve()'s identical branch.
+                // Also always used outside the band span - the flatness blend only means something
+                // strictly between two real bands, so past the first/last one the true bell
+                // response is the only sensible thing to draw.
+                db = bellDb;
+            } else {
+                float flatDb = loDb + (hiDb - loDb) * easedFrac;
+
+                // Blend weight: exactly 1 at both of this segment's own band endpoints, dipping
+                // toward flatness[]'s own segment score only in the middle - see
+                // EqVisualizerView.sampleBellCurve()'s identical technique for the full rationale
+                // (guarantees accuracy at every band position by construction instead of averaging
+                // with a neighboring segment, which let a plateau's edge band read slightly high).
+                int segIdx = Math.min(AudioConfig.NUM_BANDS - 2, lo);
+                float dip = 0.5f - 0.5f * (float) Math.cos(2.0 * Math.PI * frac);
+                float blendToFlat = 1f - (1f - flatness[segIdx]) * dip;
+                db = bellDb + (flatDb - bellDb) * blendToFlat;
+            }
+
+            // Front "Bass Boost" stage - a real, always-on filter on top of the 16-band curve, not
+            // an alternate view of the same data like trueQDisplay above, so it's added regardless
+            // of which branch just ran - see EqVisualizerView.sampleBellCurve()'s identical logic.
+            db += AudioConfig.bassShapingResponseDb(freqHz, frontBassFilterHz, frontBassBoostFreqHz, frontBassBoostGainDb);
+
+            float value = Math.max(0f, Math.min(MAX_GAIN, 6f + db / 2f)); // dB -> slider-value scale
+            float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
+
+            if (s == 0) fullPath.moveTo(x, y); else fullPath.lineTo(x, y);
         }
 
-        fullPath.lineTo(bgRight, yCoords[AudioConfig.NUM_BANDS - 1]); // End at the wide edge
+        // 4b. Sub LPF overlay curve (see AudioConfig.subFilterResponseDb()) - same x/frequency
+        // sampling as the main curve above, drawn as a separate dashed line.
+        subPath.reset();
+        for (int s = 0; s <= CURVE_SAMPLES; s++) {
+            float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
+            // See the main curve loop's own t comment above - unclamped so frequencyAt() can
+            // extrapolate past the first/last band instead of this pinning flat at the edges.
+            float t = (x - xCoords[0]) / (xCoords[AudioConfig.NUM_BANDS - 1] - xCoords[0]) * (AudioConfig.NUM_BANDS - 1);
+
+            float freqHz = AudioConfig.frequencyAt(t);
+            float db = AudioConfig.subFilterResponseDb(freqHz, subCutoffHz, AudioConfig.SUB_FILTER_ORDER, subGainDb);
+            // Only the top is clamped - let a fully rolled-off point keep going down and get
+            // clipped by the plot rect below instead of pinning flat along the bottom grid line.
+            float value = Math.min(MAX_GAIN, 6f + db / 2f);
+            float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
+
+            if (s == 0) subPath.moveTo(x, y); else subPath.lineTo(x, y);
+        }
 
         // 5. Prepare Fill Path (Aligned to wide edges)
         fillPath.set(fullPath);
@@ -266,6 +404,13 @@ public class FmVisualizerView extends View {
 
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
+
+        // Sub curve's path geometry can extend below gridBottom now (see the value calc above) -
+        // clip to the plot rect so it cleanly exits at the bottom edge instead of drawing past it.
+        canvas.save();
+        canvas.clipRect(bgLeft, drawStartY, bgRight, gridBottom);
+        canvas.drawPath(subPath, subLinePaint);
+        canvas.restore();
 
         // 8. Draw Text/Warnings (unchanged)
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {

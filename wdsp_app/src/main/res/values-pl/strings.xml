@@ -20,6 +20,8 @@
     <string name="enable_loudness">Włącz Loudness</string>
     <string name="trim_highs">Ogranicz wysokie tony</string>
     <string name="sub_tweaking">Dostrajanie subwoofera</string>
+    <string name="show_loudness_on_main">Pokaż na głównym</string>
+    <string name="true_22_display">Prawdziwe 2.2</string>
     <string name="fm_visualizer_label">Podgląd korekcji w czasie rzeczywistym</string>
     <string name="lbl_volume">Głośność:</string>
     <string name="lbl_sub_offset">Przesunięcie subwoofera:</string>
@@ -29,6 +31,8 @@
 
     <!-- Delays Tab -->
     <string name="delays_title">Korekcja czasowa (Opóźnienia)</string>
+    <string name="sync_delay_front">Synchr. przód L/P</string>
+    <string name="sync_delay_rear">Synchr. tył L/P</string>
     <string name="spatial_correction">Korekcja przestrzenna</string>
     <string name="surround_mode">Tryb Surround</string>
     <string name="front_left">Przód Lewy</string>
@@ -41,6 +45,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Wbudowany Loudness (PRZESTARZAŁE)</string>
+    <string name="sync_bass_fr">Synchr. basów przód/tył</string>
     <string name="speaker_bass_controls">Ustawienia basu głośników</string>
     <string name="front_speaker_bass">Bas - przód</string>
     <string name="rear_speaker_bass">Bas - tył</string>
@@ -128,7 +133,7 @@
 
     <!-- Menu -->
     <string name="EQtab">Equalizer</string>
-    <string name="FMtab">Loudness</string>
+    <string name="FMtab">Korekcja</string>
     <string name="DLtab">Opóźnienia</string>
     <string name="OTtab">Inne</string>
     <string name="GLtab">GALA</string>

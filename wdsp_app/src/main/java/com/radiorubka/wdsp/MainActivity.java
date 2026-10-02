@@ -31,6 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import android.widget.Toast;
 
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
@@ -103,8 +104,18 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
     private TextView tvBassFilterFrontVal, tvBassBoostFrontDb, tvBassFilterRearVal, tvBassBoostRearDb;
     private AutoCompleteTextView spinnerBassFreqFront, spinnerBassFreqRear;
+    // Rear's own last manually-picked Bass Boost frequency/gain - updateBassVisualizer()
+    // overwrites spinnerBassFreqRear/seekBassBoostRear's displayed values to follow front
+    // whenever Loudness is enabled (see its own doc), so these are what that override reverts
+    // back to once Loudness is switched off. Kept in sync with the widgets themselves (tap/drag,
+    // Sync Front/Rear Bass mirroring, preset load) - unset until the first of those happens.
+    private String rearBassFreqManualText = null;
+    private int rearBassGainManualValue = -1;
     private final String[] BASS_FILTER_FREQS = {"20", "25", "31", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
-    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134", "172", "214"};
+    // Capped at 134Hz - anything higher stops reading as "bass" and only adds more
+    // AudioConfig.ISO_RAW_TARGET_BY_FREQ rows to maintain. Indices 1.. must stay in sync with
+    // AudioConfig.BASS_BOOST_FREQS_HZ.
+    private final String[] BASS_BOOST_FREQS = {"off", "54", "68", "86", "108", "134"};
 
     // Fader & Delays
     private Slider seekFaderLr;
@@ -112,16 +123,18 @@ public class MainActivity extends AppCompatActivity {
     private BalancePointerView balancePointer;
     private TextView tvFaderLrLeftVal, tvFaderLrRightVal, tvFaderFrFrontVal, tvFaderFrRearVal;
     private SwitchCompat switchLoud;
+    private SwitchCompat switchSyncBass;
     private Slider seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub;
     private Slider seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE;
     private SwitchCompat switchPreciseEnable, switchLegacyEnable;
+    private SwitchCompat switchSyncDelayFront, switchSyncDelayRear;
     private TextView tvDelayFlVal, tvDelayFrVal, tvDelayRlVal, tvDelayRrVal, tvDelaySubVal;
     private TextView tvDelay1FlVal, tvDelay1FrVal, tvDelay1RlVal, tvDelay1RrVal, tvDelay1RSSEVal;
 
     // F-M Curve
-    private SwitchCompat switchFmEnable, switchFatigueEnable, switchFmSubComp;
-    private Slider seekFmCalVol, seekFmStrength;
-    private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
+    private SwitchCompat switchFmEnable, switchFatigueEnable, switchFmSubComp, switchShowLoudnessMain, switchUltraBass;
+    private Slider seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol, seekUltraBassMaxDb;
+    private TextView tvFmCalVolVal, tvFmStrengthVal, tvFatStartVolVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn, tvUltraBassStartVolVal, tvUltraBassMaxDbVal;
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
@@ -136,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
+    private float currentFmBassShelfOffset = 0f;
     private int currentEffectiveVolume = -1;
 
     private ArrayAdapter<String> presetAdapter;
@@ -144,9 +158,21 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUpdatingUi = false;
     private boolean isFullyInitialized = false;
 
+    // Head unit's own backlight RGB, re-captured every time setButtonRgbCyan() runs (app open /
+    // resume) so onStop() can restore whatever it actually was, not a stale first-launch value.
+    private byte defaultBacklightR, defaultBacklightG, defaultBacklightB;
+    private boolean backlightDefaultCaptured = false;
+
     private String defaultPreset;
 
     private Method getPropMethod;
+
+    // Newer MCU firmware (dated after this) doesn't support positive amp power - see
+    // checkAmpPositiveGate()/setPowerVolume()/loadPreset() for where this is enforced. The date
+    // is the 4th dot-separated segment of persist.sys.qf.mcu.version (e.g. "20260703" here).
+    private static final String AMP_POSITIVE_GATE_VERSION = "QF05.V02.14.20260703.002121";
+    private boolean ampPositiveDisabled = false;
+
     public static class Globals {
         public static int currentSubFreqHz = 0;
     }
@@ -173,16 +199,25 @@ public class MainActivity extends AppCompatActivity {
             }
             else if ("com.radiorubka.wdsp.VOLUME_CHANGED".equals(action)) {
                 currentEffectiveVolume = intent.getIntExtra("volume", -1);
-                if (isFullyInitialized && findViewById(R.id.layout_fm_curve).getVisibility() == View.VISIBLE) {
-                    updateFmVisualizer();
+                if (isFullyInitialized) {
+                    if (findViewById(R.id.layout_fm_curve).getVisibility() == View.VISIBLE) {
+                        updateFmVisualizer(); // also refreshes the main screen via its own hook
+                    } else {
+                        // The Loudness tab isn't visible, so skip its own (currently unseen) UI
+                        // work, but the main-screen loudness preview (switchShowLoudnessMain)
+                        // still needs to track volume changes live even when that tab isn't active.
+                        updateVisualizer();
+                    }
                 }
             }
             else if ("com.radiorubka.wdsp.GALA_UPDATE".equals(action)) {
 //                Log.e("MainActivity", "RECEIVED GALA UPDATE INTENT");
                 float speed = intent.getFloatExtra("speed", 0.0f);
                 int offset = intent.getIntExtra("waveOffset", 0);
+                int base = intent.getIntExtra("base", 0);
                 if (tvGalaSpeed != null) tvGalaSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", speed));
-                if (tvGalaOffset != null) tvGalaOffset.setText(String.format(Locale.getDefault(), "+%d", offset));
+                String tvgalaformat = "[" + base + "] +" + offset;
+                if (tvGalaOffset != null) tvGalaOffset.setText(tvgalaformat);
             }
             // Sub gain was adjusted by McuService (e.g. via an external HID key daemon
             // broadcast, handled even while this Activity/app isn't running). Reflect it
@@ -261,6 +296,8 @@ public class MainActivity extends AppCompatActivity {
             sendUiSignal(true);
             requestBatteryOptimization();
             initReflection();
+            checkAmpPositiveGate();
+            setButtonRgbCyan();
             ensureCallPresetExists();
             startMcuService();
             refreshAllUiValues();
@@ -373,6 +410,7 @@ public class MainActivity extends AppCompatActivity {
         if (isFullyInitialized) {
             refreshAllUiValues();
             SelectTab();
+            setButtonRgbCyan();
         }
         // Force the UI to match the saved preference
         if (isFullyInitialized && presetNames != null) {
@@ -522,6 +560,7 @@ public class MainActivity extends AppCompatActivity {
         tvFaderFrFrontVal = findViewById(R.id.tv_fader_fr_front_val);
         tvFaderFrRearVal = findViewById(R.id.tv_fader_fr_rear_val);
         switchLoud = findViewById(R.id.switch_loud);
+        switchSyncBass = findViewById(R.id.switch_sync_bass);
         seekDelayFl = findViewById(R.id.seek_delay_fl);
         seekDelayFr = findViewById(R.id.seek_delay_fr);
         seekDelayRl = findViewById(R.id.seek_delay_rl);
@@ -533,6 +572,8 @@ public class MainActivity extends AppCompatActivity {
         tvDelayRrVal = findViewById(R.id.tv_delay_rr_val);
         tvDelaySubVal = findViewById(R.id.tv_delay_sub_val);
         switchPreciseEnable = findViewById(R.id.switch_precise_enable);
+        switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
+        switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
         seekDelay1Fl = findViewById(R.id.seek_delay1_fl);
         seekDelay1Fr = findViewById(R.id.seek_delay1_fr);
         seekDelay1Rl = findViewById(R.id.seek_delay1_rl);
@@ -547,10 +588,18 @@ public class MainActivity extends AppCompatActivity {
         switchFmEnable = findViewById(R.id.switch_fm_enable);
         switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
         switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
+        switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
+        switchUltraBass = findViewById(R.id.switch_ultra_bass);
         seekFmCalVol = findViewById(R.id.seek_fm_cal_vol);
         tvFmCalVolVal = findViewById(R.id.tv_fm_cal_vol_val);
         seekFmStrength = findViewById(R.id.seek_fm_strength);
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
+        seekFatStartVol = findViewById(R.id.seek_fat_start_vol);
+        tvFatStartVolVal = findViewById(R.id.tv_fat_start_vol_val);
+        seekUltraBassStartVol = findViewById(R.id.seek_ultra_bass_start_vol);
+        tvUltraBassStartVolVal = findViewById(R.id.tv_ultra_bass_start_vol_val);
+        seekUltraBassMaxDb = findViewById(R.id.seek_ultra_bass_max_db);
+        tvUltraBassMaxDbVal = findViewById(R.id.tv_ultra_bass_max_db_val);
         fmVisualizer = findViewById(R.id.fm_visualizer);
         tvSysVolumeVal = findViewById(R.id.tv_sys_volume_val);
         tvSubOffsetVal = findViewById(R.id.tv_sub_offset_val);
@@ -586,6 +635,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         sendUiSignal(false);
+        restoreDefaultBacklight();
     }
 
     private void sendUiSignal(boolean active) {
@@ -639,6 +689,14 @@ public class MainActivity extends AppCompatActivity {
             q.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize);
             q.setPadding(0, 0, 0, 0); q.setMinimumHeight(0); q.setMinimumWidth(0);
             q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+            // Q-logic is non-functional on real hardware until the MCU firmware is updated -
+            // hidden for now, but left fully wired (state still saved/loaded per band) so it
+            // comes back for free once that firmware update ships. GONE reclaims this row's
+            // weighted slot for the slider below it; syncVisualizerGeometry() (called once this
+            // loop finishes) re-measures the real layout afterward so EqVisualizerView/
+            // SpectrumAnalyzerView's overlay stays aligned with wherever the sliders actually
+            // end up, instead of assuming a fixed row count.
+            q.setVisibility(View.GONE);
             q.setOnCheckedChangeListener((bv, checked) -> {
                 if (!isUpdatingUi) {
                     updateVisualizer();
@@ -719,14 +777,246 @@ public class MainActivity extends AppCompatActivity {
             container.addView(layout);
             updateDbLabel(i, 6);
         }
+
+        // Re-measure on every layout pass (not just once) so eq_container's real geometry -
+        // whichever rows are visible, whatever the screen size/orientation - is always the
+        // source of truth for where EqVisualizerView/SpectrumAnalyzerView draw their overlay,
+        // instead of a hardcoded guess that silently goes stale the next time this layout changes.
+        container.getViewTreeObserver().addOnGlobalLayoutListener(() -> syncVisualizerGeometry(container));
+    }
+
+    /**
+     * Measures where the real Slider track sits within eq_container (using band 0's column as
+     * the reference - every column is laid out identically) and pushes that as a fraction of
+     * the container's height to the views that draw an overlay on top of it, so their curve/
+     * grid/bars always line up with the actual sliders. See EqVisualizerView.setSliderBounds().
+     */
+    private void syncVisualizerGeometry(LinearLayout container) {
+        int containerHeight = container.getHeight();
+        if (containerHeight <= 0 || container.getChildCount() == 0) return;
+
+        View bandColumn = container.getChildAt(0);
+        if (!(bandColumn instanceof LinearLayout)) return;
+        LinearLayout column = (LinearLayout) bandColumn;
+
+        // Children added in order: q (0), dB label (1), freq label (2), seekBox (3) - see the
+        // addView() calls just above. seekBox is the one real sliders actually travel within.
+        if (column.getChildCount() <= 3) return;
+        View seekBox = column.getChildAt(3);
+        if (seekBox.getHeight() <= 0) return;
+
+        float topRatio = seekBox.getTop() / (float) containerHeight;
+        float heightRatio = seekBox.getHeight() / (float) containerHeight;
+
+        if (eqVisualizer != null) eqVisualizer.setSliderBounds(topRatio, heightRatio);
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setSliderBounds(topRatio, heightRatio);
     }
 
     private void updateVisualizer() {
         if (eqVisualizer == null) return;
+        // The real/raw EQ curve always reflects the actual sliders, exactly like before this
+        // whole loudness-preview feature existed - the correction is a separate overlay (see
+        // setLoudnessCorrection() below), never blended into this.
         int[] gs = new int[AudioConfig.NUM_BANDS];
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gs[i] = getIntSlider(gainSliders.get(i));
         eqVisualizer.setGains(gs);
-        if (spectrumAnalyzer != null) spectrumAnalyzer.setGains(gs);
+
+        // Loudness correction/sub level data is now always computed (not gated on
+        // switchShowLoudnessMain) - the RTA's own reactive shift (see
+        // SpectrumAnalyzerView.setLoudnessReactive(), currently off by default, no UI switch yet)
+        // is an independent, separately-togglable thing from the main screen's dotted-overlay
+        // preview, so it needs this data regardless of whether that overlay is currently shown.
+        // Gated on isFullyInitialized: updateVisualizer() gets called during early preset-load
+        // bootstrap (setupPresets() -> loadPreset()), before setupFmControls() has initialized
+        // seekFmCalVol/seekFmStrength - calculateFmOffsets() would NPE on those if called then.
+        boolean hasCorrection = false;
+        float[] correctionGains = new float[AudioConfig.NUM_BANDS];
+        // subGainDbBase never includes Sub Tweaking's dynamic offset; subGainDbDynamic does -
+        // the main screen shows the base (static) one unless Show on Main opts into the dynamic
+        // one too (see showOnMain below), while the RTA always gets the dynamic one regardless,
+        // same as hasCorrection/correctionGains already did before this.
+        float subGainDbBase = getIntSlider(seekSubGain);
+        float subGainDbDynamic = subGainDbBase;
+        // Ultra Bass is independent of Loudness/Show on Main entirely - it's a real, always-active
+        // effect when enabled (not a loudness-preview artifact), so it's added into BOTH variables
+        // equally rather than only the "dynamic" one, which makes it show up on the main curve
+        // regardless of which of the two showOnMain picks below.
+        int ultraBassVol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume();
+        float ultraBassOffsetDb = calculateUltraBassOffset(ultraBassVol);
+        subGainDbBase += ultraBassOffsetDb;
+        subGainDbDynamic += ultraBassOffsetDb;
+        if (isFullyInitialized) {
+            float[] offs = calculateFmOffsets(); // also refreshes currentFmSubOffset as a side effect
+            float[] targetDb = new float[AudioConfig.NUM_BANDS];
+            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+                if (offs[i] != 0f) hasCorrection = true;
+                targetDb[i] = (gs[i] - 6) * 2 + offs[i];
+            }
+            // Jointly pre-warped the same way McuService.updateEqWithFm() pre-warps the real
+            // hardware send (see AudioConfig.prewarpEq()'s doc) - this preview shows the real
+            // achieved curve, slider ripple and loudness ripple cross-talk-cancelled together,
+            // not the pre-pre-warp additive approximation. With no correction, driveDb equals
+            // targetDb exactly, same as before this existed.
+            float[] driveDb = hasCorrection ? AudioConfig.prewarpEq(targetDb) : targetDb;
+            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+                // Rounded to the nearest achievable gain step exactly the way
+                // McuService.updateEqWithFm() rounds it for the actual hardware
+                // (round(driveDb[i]/2+6)), clamped [0,12] for both a boost and a cut.
+                correctionGains[i] = Math.max(0, Math.min(12, Math.round(driveDb[i] / 2f + 6)));
+            }
+            if (switchFmSubComp != null && switchFmSubComp.isChecked()) subGainDbDynamic += currentFmSubOffset;
+        } else {
+            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) correctionGains[i] = gs[i]; // no correction until fully initialized - just the real slider gain
+        }
+        // Rounded to the nearest achievable gain step and clamped [0,12] exactly the way
+        // McuService.updateSubwoofer() rounds the real hardware register
+        // (round(cachedSubGain + subOffset + ultraBassOffset)) - without this, Ultra Bass's
+        // continuous ratio (and Sub Tweaking's own continuous offset) made the dashed line show
+        // smooth sub-1dB steps that don't exist on the actual 1dB-stepped hardware register.
+        subGainDbBase = Math.max(0, Math.min(12, Math.round(subGainDbBase)));
+        subGainDbDynamic = Math.max(0, Math.min(12, Math.round(subGainDbDynamic)));
+
+        // Show on Main is the single master toggle for every loudness-driven addition on the
+        // main screen (EQ correction overlay, Sub Tweaking's dynamic offset below, and
+        // updateBassVisualizer()'s bass-shelf assist) - the RTA below gets the dynamic data
+        // unconditionally regardless, gated only by its own separate reactive-shift flags.
+        boolean showOnMain = switchShowLoudnessMain != null && switchShowLoudnessMain.isChecked();
+        eqVisualizer.setLoudnessCorrection(correctionGains, showOnMain && hasCorrection);
+        eqVisualizer.setSubFilter(Globals.currentSubFreqHz, showOnMain ? subGainDbDynamic : subGainDbBase);
+
+        if (spectrumAnalyzer != null) {
+            spectrumAnalyzer.setGains(gs);
+            spectrumAnalyzer.setLoudnessCorrection(correctionGains, hasCorrection);
+            spectrumAnalyzer.setSubLevel(Globals.currentSubFreqHz, subGainDbDynamic);
+        }
+
+        updateBassVisualizer();
+    }
+
+    /**
+     * Feeds the front/rear "Bass Boost" sliders+spinners (Other tab, see
+     * AudioConfig.bassShapingResponseDb()) into the main screen's curve - front is always baked
+     * into the curve itself, rear only shows as its own overlay line when it's actually set
+     * differently from front (see EqVisualizerView.setBassShaping()). Called from the bass
+     * sliders'/spinners' own listeners and from updateVisualizer() (covers preset load/bootstrap,
+     * same as every other overlay it feeds).
+     */
+    private void updateBassVisualizer() {
+        if (eqVisualizer == null && fmVisualizer == null && spectrumAnalyzer == null) return;
+        // Gated on isFullyInitialized: updateVisualizer() (which calls this) runs during early
+        // preset-load bootstrap, before initSecondaryViews()/setupFilterControls() have bound
+        // the bass sliders/spinners - same ordering hazard as calculateFmOffsets() above.
+        if (!isFullyInitialized) {
+            if (eqVisualizer != null) eqVisualizer.setBassShaping(20f, 0f, 0f, 20f, 0f, 0f);
+            if (fmVisualizer != null) fmVisualizer.setBassShaping(20f, 0f, 0f);
+            if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(20f, 0f, 0f);
+            return;
+        }
+        float frontFilterHz = Float.parseFloat(BASS_FILTER_FREQS[getIntSlider(seekBassFilterFront)]);
+        float frontBoostHz = parseBassBoostFreqHz(spinnerBassFreqFront);
+        float frontBoostDb = getIntSlider(seekBassBoostFront);
+        float rearFilterHz = Float.parseFloat(BASS_FILTER_FREQS[getIntSlider(seekBassFilterRear)]);
+
+        // Visually sync rear's frequency spinner AND Boost gain slider to front's whenever
+        // Loudness is enabled (the switch itself, not just while the assist currently has
+        // nonzero magnitude) - mirrors McuService.applyBassBoost()'s identical widened gate for
+        // the real hardware write, so the widgets, this preview, and the real output all agree.
+        // Reverts to rear's own last manually-set frequency/gain (rearBassFreqManualText/
+        // rearBassGainManualValue) once Loudness is switched off.
+        boolean loudnessEnabled = switchFmEnable != null && switchFmEnable.isChecked();
+        String frontSpinnerText = spinnerBassFreqFront.getText().toString();
+        if (loudnessEnabled) {
+            if (!frontSpinnerText.contentEquals(spinnerBassFreqRear.getText())) {
+                spinnerBassFreqRear.setText(frontSpinnerText, false);
+            }
+            int frontBoostVal = getIntSlider(seekBassBoostFront);
+            if (getIntSlider(seekBassBoostRear) != frontBoostVal) {
+                seekBassBoostRear.setValue((float) frontBoostVal);
+                // setValue() only fires the label-updating listener when the value actually
+                // changes - true here by construction (the guard above), but set it explicitly
+                // anyway rather than depend on that, same reasoning as loadPreset()'s fix.
+                tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, frontBoostVal));
+            }
+        } else {
+            if (rearBassFreqManualText != null && !rearBassFreqManualText.contentEquals(spinnerBassFreqRear.getText())) {
+                spinnerBassFreqRear.setText(rearBassFreqManualText, false);
+            }
+            if (rearBassGainManualValue >= 0 && getIntSlider(seekBassBoostRear) != rearBassGainManualValue) {
+                seekBassBoostRear.setValue((float) rearBassGainManualValue);
+                tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, rearBassGainManualValue));
+            }
+        }
+
+        float rearBoostHz = parseBassBoostFreqHz(spinnerBassFreqRear);
+        float rearBoostDb = getIntSlider(seekBassBoostRear);
+        // currentFmBassShelfOffset (see calculateFmOffsets()) is loudness compensation's own
+        // bass-shelf assist, added on top of whatever's manually set here - see
+        // combineBassShelf()'s doc for how the two combine on the one real shelf frequency slot.
+        float effFrontBoostHz = combineBassShelfFreq(frontBoostHz);
+        float effFrontBoostDb = combineBassShelfDb(frontBoostHz, frontBoostDb);
+        // Rear's Boost (gain+freq) syncs to front's own whenever Loudness is enabled - keeps
+        // rear's shelf matching the shared EQ curve, which is solved against front's frequency
+        // only (see calculateFmOffsets()'s doc). The separate Bass Filter (HPF) above stays
+        // independent always - only Boost syncs here. Mirrors McuService.applyBassBoost()'s
+        // identical logic for the real hardware write. Falls back to rear's own manual setting,
+        // unchanged, whenever Loudness isn't enabled (combineBassShelf* already no-ops then).
+        float effRearBoostHz = loudnessEnabled ? effFrontBoostHz : combineBassShelfFreq(rearBoostHz);
+        float effRearBoostDb = loudnessEnabled ? effFrontBoostDb : combineBassShelfDb(rearBoostHz, rearBoostDb);
+        if (eqVisualizer != null) {
+            // Same Show on Main gating as updateVisualizer()'s EQ correction overlay/Sub Tweaking
+            // offset - the main screen only bakes the assist into its curve when that's on;
+            // otherwise it shows the plain manual Boost settings, same as if loudness weren't
+            // running at all. fmVisualizer/spectrumAnalyzer below are unaffected - the Correction
+            // tab is the dedicated loudness-preview page, and the RTA has its own separate gate.
+            boolean showOnMain = switchShowLoudnessMain != null && switchShowLoudnessMain.isChecked();
+            eqVisualizer.setBassShaping(
+                    frontFilterHz, showOnMain ? effFrontBoostHz : frontBoostHz, showOnMain ? effFrontBoostDb : frontBoostDb,
+                    rearFilterHz, showOnMain ? effRearBoostHz : rearBoostHz, showOnMain ? effRearBoostDb : rearBoostDb);
+        }
+        // Front only for now - see EqVisualizerView's own front/rear split for why rear would need
+        // its own overlay line rather than being baked into this single curve.
+        if (fmVisualizer != null) fmVisualizer.setBassShaping(frontFilterHz, effFrontBoostHz, effFrontBoostDb);
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(frontFilterHz, effFrontBoostHz, effFrontBoostDb);
+    }
+
+    /**
+     * Combines a channel's own manually-set "Bass Boost" frequency/gain with loudness
+     * compensation's bass-shelf assist (currentFmBassShelfOffset, see calculateFmOffsets() and
+     * AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB's doc) - there's only one real shelf filter per
+     * channel, but it now follows the user's own manually-chosen frequency rather than forcing a
+     * fixed one, so the manual gain always adds on top (see McuService.applyBassBoost()'s
+     * identical logic for the real hardware write). "off" (manualBoostHz == 0) has no frequency
+     * of its own to contribute, so the assist falls back to the tuned default/most-optimal
+     * frequency and no manual gain applies. The manual setting itself is never overwritten -
+     * these two methods gate on the Loudness switch itself (matching updateBassVisualizer()'s
+     * loudnessEnabled and McuService.applyBassBoost()'s cachedFmEn), not on whether the assist
+     * happens to be nonzero at the current volume - currentFmBassShelfOffset can still be 0 here
+     * (e.g. volume above the calibration point) and just adds in as a no-op, same result as
+     * before this gate was unified.
+     */
+    private float combineBassShelfFreq(float manualBoostHz) {
+        if (!(switchFmEnable != null && switchFmEnable.isChecked())) return manualBoostHz;
+        return manualBoostHz > 0f ? manualBoostHz : AudioConfig.LOUDNESS_BASS_SHELF_FREQ_HZ;
+    }
+
+    private float combineBassShelfDb(float manualBoostHz, float manualBoostDb) {
+        if (!(switchFmEnable != null && switchFmEnable.isChecked())) return manualBoostDb;
+        // Clamped to [0, 12] - matches McuService.applyBassBoost()'s identical clamp on the real
+        // hardware write. The shelf is a single 0..12 gain register, so the manual gain and the
+        // assist can't actually stack past 12 on the real channel, even though nothing here
+        // stopped their sum from being computed (and previewed) past it.
+        return Math.max(0f, Math.min(12f, currentFmBassShelfOffset + (manualBoostHz > 0f ? manualBoostDb : 0f)));
+    }
+
+    /** BASS_BOOST_FREQS[0] is "off" - everything else is a plain Hz string. */
+    private float parseBassBoostFreqHz(AutoCompleteTextView spinner) {
+        String text = spinner.getText().toString();
+        if (text.isEmpty() || text.equalsIgnoreCase(BASS_BOOST_FREQS[0])) return 0f;
+        try {
+            return Float.parseFloat(text);
+        } catch (NumberFormatException e) {
+            return 0f;
+        }
     }
 
     private void updateDbLabel(int i, int p) {
@@ -776,7 +1066,9 @@ public class MainActivity extends AppCompatActivity {
         int currentVal = prefs.getInt(key, 0);
 
         if (control == 102) {
-            currentVal = Math.max(-3, currentVal - 1); // Example range -15 to +15
+            // Floor is 0 (no positive amp power) instead of -3 once ampPositiveDisabled - see its
+            // declaration.
+            currentVal = Math.max(ampPositiveDisabled ? 0 : -3, currentVal - 1);
         }
         else if (control == 101) {
             currentVal = Math.min(9, currentVal + 1);
@@ -818,14 +1110,17 @@ public class MainActivity extends AppCompatActivity {
 
         // 3. Change OnItemSelectedListener to OnItemClickListener
         spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
-            // Logic for Sub Comp limit (if FM Sub Comp is on, limit to 80Hz/Index 5)
-            if (isFullyInitialized && switchFmSubComp.isChecked() && pos > 5) {
+            // Logic for Sub Comp limit (if FM Sub Comp is on AND loudness is actually active, limit
+            // to 80Hz/Index 5 - Sub Comp's offset is only ever computed while loudness is on, see
+            // calculateFmOffsets(), so this restriction shouldn't apply while loudness is off)
+            if (isFullyInitialized && switchFmSubComp.isChecked() && switchFmEnable.isChecked() && pos > 5) {
                 // Revert the text back to 80Hz (Index 5)
                 spinnerSubFreq.setText(SUB_FREQS[5], false);
                 Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
 
                 // Re-sync Global just in case
                 Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                updateVisualizer();
                 return;
             }
 
@@ -836,6 +1131,7 @@ public class MainActivity extends AppCompatActivity {
             // Update the global value for other calculations
             String freqString = SUB_FREQS[pos];
             Globals.currentSubFreqHz = Integer.parseInt(freqString);
+            updateVisualizer();
         });
 
         // 4. Seek Gain logic remains largely the same
@@ -843,6 +1139,7 @@ public class MainActivity extends AppCompatActivity {
             int p = (int) value;
             String text = "+" + p;
             tvSubDb.setText(text);
+            updateVisualizer();
             if (fromUser && !isUpdatingUi) {
                 autoSaveCurrent();
             }
@@ -856,16 +1153,43 @@ public class MainActivity extends AppCompatActivity {
         spinnerBassFreqFront.setAdapter(bbAdapter);
         spinnerBassFreqRear.setAdapter(bbAdapter);
 
-        // Replaced the old OnItemSelectedListener with OnItemClickListener
-        AdapterView.OnItemClickListener itemClickListener = (parent, view, pos, id) -> {
+        // Replaced the old OnItemSelectedListener with OnItemClickListener. Two separate
+        // listeners (not one shared instance like before) since AutoCompleteTextView's callback
+        // hands back the dropdown's internal ListView as `parent`, not the AutoCompleteTextView
+        // itself - there's no way to tell which of the two spinners fired from inside a shared
+        // listener, and Sync Front/Rear Bass now needs to know that to mirror the selection.
+        // setText(..., false) doesn't re-trigger this listener (only a real user tap on the
+        // dropdown does), so no fromUser-style reentrancy guard is needed here.
+        spinnerBassFreqFront.setOnItemClickListener((parent, view, pos, id) -> {
             if (!isUpdatingUi) {
+                if (switchSyncBass != null && switchSyncBass.isChecked()) {
+                    spinnerBassFreqRear.setText(BASS_BOOST_FREQS[pos], false);
+                    rearBassFreqManualText = BASS_BOOST_FREQS[pos];
+                }
                 autoSaveCurrent();
-                // updateBassMcu(); // Uncomment if you use this
+                updateBassVisualizer();
+                // Front's frequency picks the AudioConfig.ISO_RAW_TARGET_BY_FREQ row (see
+                // calculateFmOffsets()), so the main-screen loudness curve itself needs a
+                // redraw too, not just the bass-shaping overlay.
+                updateVisualizer();
             }
-        };
-
-        spinnerBassFreqFront.setOnItemClickListener(itemClickListener);
-        spinnerBassFreqRear.setOnItemClickListener(itemClickListener);
+        });
+        spinnerBassFreqRear.setOnItemClickListener((parent, view, pos, id) -> {
+            if (!isUpdatingUi) {
+                rearBassFreqManualText = BASS_BOOST_FREQS[pos];
+                boolean synced = switchSyncBass != null && switchSyncBass.isChecked();
+                if (synced) {
+                    spinnerBassFreqFront.setText(BASS_BOOST_FREQS[pos], false);
+                }
+                autoSaveCurrent();
+                updateBassVisualizer();
+                // setText(..., false) above doesn't re-trigger spinnerBassFreqFront's own
+                // listener, so when synced this rear change also just changed front's effective
+                // frequency - the main-screen loudness curve (keyed off front, see
+                // calculateFmOffsets()) needs its own redraw in that case too.
+                if (synced) updateVisualizer();
+            }
+        });
 
         Slider.OnChangeListener bl = (slider, value, fromUser) -> {
             int p = (int) value;
@@ -874,12 +1198,37 @@ public class MainActivity extends AppCompatActivity {
             else if (slider == seekBassFilterRear) tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[p]));
             else if (slider == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
             if (fromUser && !isUpdatingUi) {
+                // Sync Front/Rear Bass: mirror this slider's new value onto its opposite-side
+                // counterpart. Only fires on a genuine user drag (fromUser) - the mirrored
+                // slider's own setValue() call below re-enters this listener with fromUser=false,
+                // so it just updates that slider's label without recursing or double-saving.
+                if (switchSyncBass != null && switchSyncBass.isChecked()) {
+                    if (slider == seekBassFilterFront) seekBassFilterRear.setValue(value);
+                    else if (slider == seekBassFilterRear) seekBassFilterFront.setValue(value);
+                    else if (slider == seekBassBoostFront) seekBassBoostRear.setValue(value);
+                    else if (slider == seekBassBoostRear) seekBassBoostFront.setValue(value);
+                }
+                // Track rear's own last manually-set Boost gain (user's own drag, or Sync
+                // Front/Rear Bass mirroring front's drag onto it) - see rearBassGainManualValue's
+                // own doc for why.
+                if (slider == seekBassBoostRear || (slider == seekBassBoostFront && switchSyncBass != null && switchSyncBass.isChecked())) {
+                    rearBassGainManualValue = p;
+                }
                 autoSaveCurrent();
+                updateBassVisualizer();
 //                    updateBassMcu();
             }
         };
         seekBassFilterFront.addOnChangeListener(bl); seekBassBoostFront.addOnChangeListener(bl);
         seekBassFilterRear.addOnChangeListener(bl); seekBassBoostRear.addOnChangeListener(bl);
+
+        // Standalone app preference (not preset-tied), same pattern as switchShowLoudnessMain -
+        // this is a UI convenience toggle, not a DSP setting of its own.
+        switchSyncBass.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("sync_bass_fr", false));
+        switchSyncBass.jumpDrawablesToCurrentState();
+        switchSyncBass.setOnCheckedChangeListener((bv, checked) -> {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean("sync_bass_fr", checked).apply();
+        });
 
         seekFaderLr.addOnChangeListener((slider, value, fromUser) -> {
             updateFaderLabels();
@@ -921,7 +1270,21 @@ public class MainActivity extends AppCompatActivity {
             if (slider == seekDelayFl) tvDelayFlVal.setText(val); else if (slider == seekDelayFr) tvDelayFrVal.setText(val);
             else if (slider == seekDelayRl) tvDelayRlVal.setText(val); else if (slider == seekDelayRr) tvDelayRrVal.setText(val);
             else if (slider == seekDelaySub) tvDelaySubVal.setText(val);
-            if (fromUser && !isUpdatingUi) autoSaveCurrent();
+            if (fromUser && !isUpdatingUi) {
+                // Sync Front/Rear L-R: mirror this slider's new value onto its opposite-side
+                // counterpart, same pattern as the Other tab's "Sync Front/Rear Bass" - only on a
+                // genuine user drag, the mirrored slider's own setValue() re-enters this listener
+                // with fromUser=false so it just updates its label without recursing.
+                if (switchSyncDelayFront != null && switchSyncDelayFront.isChecked()) {
+                    if (slider == seekDelayFl) seekDelayFr.setValue(value);
+                    else if (slider == seekDelayFr) seekDelayFl.setValue(value);
+                }
+                if (switchSyncDelayRear != null && switchSyncDelayRear.isChecked()) {
+                    if (slider == seekDelayRl) seekDelayRr.setValue(value);
+                    else if (slider == seekDelayRr) seekDelayRl.setValue(value);
+                }
+                autoSaveCurrent();
+            }
         };
         seekDelayFl.addOnChangeListener(dl); seekDelayFr.addOnChangeListener(dl);
         seekDelayRl.addOnChangeListener(dl); seekDelayRr.addOnChangeListener(dl); seekDelaySub.addOnChangeListener(dl);
@@ -933,6 +1296,19 @@ public class MainActivity extends AppCompatActivity {
                 autoSaveCurrent();
             }
         });
+
+        // Standalone app preferences (not preset-tied), same pattern as switchShowLoudnessMain /
+        // switchSyncBass - UI convenience toggles, not DSP settings of their own. Shared by both
+        // delay systems (this group and setupDelay1Controls()'s legacy/RSSE group below).
+        switchSyncDelayFront.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("sync_delay_front", false));
+        switchSyncDelayFront.jumpDrawablesToCurrentState();
+        switchSyncDelayFront.setOnCheckedChangeListener((bv, checked) ->
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean("sync_delay_front", checked).apply());
+
+        switchSyncDelayRear.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("sync_delay_rear", false));
+        switchSyncDelayRear.jumpDrawablesToCurrentState();
+        switchSyncDelayRear.setOnCheckedChangeListener((bv, checked) ->
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean("sync_delay_rear", checked).apply());
     }
 
     private void setupDelay1Controls() {
@@ -947,7 +1323,19 @@ public class MainActivity extends AppCompatActivity {
                 if (slider == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (slider == seekDelay1Fr) tvDelay1FrVal.setText(val);
                 else if (slider == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (slider == seekDelay1Rr) tvDelay1RrVal.setText(val);
             }
-            if (fromUser && !isUpdatingUi) autoSaveCurrent();
+            if (fromUser && !isUpdatingUi) {
+                // Same "Sync Front/Rear L-R" toggles as the precise delay group above - shared
+                // preference, applies to this (legacy/RSSE) delay slider pair too.
+                if (switchSyncDelayFront != null && switchSyncDelayFront.isChecked()) {
+                    if (slider == seekDelay1Fl) seekDelay1Fr.setValue(value);
+                    else if (slider == seekDelay1Fr) seekDelay1Fl.setValue(value);
+                }
+                if (switchSyncDelayRear != null && switchSyncDelayRear.isChecked()) {
+                    if (slider == seekDelay1Rl) seekDelay1Rr.setValue(value);
+                    else if (slider == seekDelay1Rr) seekDelay1Rl.setValue(value);
+                }
+                autoSaveCurrent();
+            }
         };
         seekDelay1Fl.addOnChangeListener(dl); seekDelay1Fr.addOnChangeListener(dl);
         seekDelay1Rl.addOnChangeListener(dl); seekDelay1Rr.addOnChangeListener(dl); seekDelay1RSSE.addOnChangeListener(dl);
@@ -965,6 +1353,7 @@ public class MainActivity extends AppCompatActivity {
         switchFmEnable.jumpDrawablesToCurrentState();
         switchFmEnable.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
+                if (checked) Toaster.show(this, getString(R.string.toast_loudness_sync_bass), Toast.LENGTH_LONG);
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
@@ -980,20 +1369,59 @@ public class MainActivity extends AppCompatActivity {
         switchFmSubComp.jumpDrawablesToCurrentState();
         switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
-                if (checked && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) spinnerSubFreq.setText(SUB_FREQS[5], false);
+                if (checked && switchFmEnable.isChecked() && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) {
+                    spinnerSubFreq.setText(SUB_FREQS[5], false);
+                    Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                }
+                autoSaveCurrent();
+                updateFmVisualizer();
+            }
+        });
+        // Standalone app preference (not per-preset, not gated on isUpdatingUi) - purely a display
+        // choice for the main EQ/spectrum visualizers, doesn't touch the real EQ sliders or MCU
+        // data at all - see updateVisualizer().
+        switchShowLoudnessMain.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("show_loudness_on_main", false));
+        switchShowLoudnessMain.jumpDrawablesToCurrentState();
+        switchShowLoudnessMain.setOnCheckedChangeListener((bv, checked) -> {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean("show_loudness_on_main", checked).apply();
+            updateVisualizer();
+        });
+        // True 2.2 Display is no longer a user toggle - always show the real composite Q=2.2
+        // response (bypassing the flatness blend) on both curve views.
+        if (eqVisualizer != null) eqVisualizer.setTrueQDisplay(true);
+        if (fmVisualizer != null) fmVisualizer.setTrueQDisplay(true);
+        // "Ultra Bass" - per-preset, like switchFmEnable/switchFatigueEnable above (loaded via
+        // loadPreset(), not a standalone SharedPreferences flag), and fully independent of them -
+        // see McuService.updateSubwoofer()'s identical calc for the real hardware write.
+        switchUltraBass.jumpDrawablesToCurrentState();
+        switchUltraBass.setOnCheckedChangeListener((bv, checked) -> {
+            if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
         });
         Slider.OnChangeListener fml = (slider, value, fromUser) -> {
             int p = (int) value;
-            if (slider == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
+            if (slider == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p));
+            else if (slider == seekFatStartVol) tvFatStartVolVal.setText(String.valueOf(p));
+            else tvFmStrengthVal.setText(String.valueOf(p));
             if (fromUser && !isUpdatingUi) {
                 updateFmVisualizer();
                 autoSaveCurrent();
             }
         };
-        seekFmCalVol.addOnChangeListener(fml); seekFmStrength.addOnChangeListener(fml);
+        seekFmCalVol.addOnChangeListener(fml); seekFmStrength.addOnChangeListener(fml); seekFatStartVol.addOnChangeListener(fml);
+
+        Slider.OnChangeListener ubl = (slider, value, fromUser) -> {
+            int p = (int) value;
+            if (slider == seekUltraBassStartVol) tvUltraBassStartVolVal.setText(String.valueOf(p));
+            else tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, p));
+            if (fromUser && !isUpdatingUi) {
+                updateFmVisualizer();
+                autoSaveCurrent();
+            }
+        };
+        seekUltraBassStartVol.addOnChangeListener(ubl); seekUltraBassMaxDb.addOnChangeListener(ubl);
     }
 
     private void updateFmVisualizer() {
@@ -1002,12 +1430,35 @@ public class MainActivity extends AppCompatActivity {
         int[] gs = new int[AudioConfig.NUM_BANDS]; float[] actual = new float[AudioConfig.NUM_BANDS]; float[] warns = new float[AudioConfig.NUM_BANDS];
         int vol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume(); 
         tvSysVolumeVal.setText(String.valueOf(vol));
+        boolean hasCorrection = false;
+        int[] sliderVals = new int[AudioConfig.NUM_BANDS];
+        float[] targetDb = new float[AudioConfig.NUM_BANDS];
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float total = offs[i];
-            actual[i] = total;
-            float pot = getIntSlider(gainSliders.get(i)) + (total / 2f);
+            if (offs[i] != 0f) hasCorrection = true;
+            sliderVals[i] = getIntSlider(gainSliders.get(i));
+            targetDb[i] = (sliderVals[i] - 6) * 2 + offs[i];
+        }
+        // Jointly pre-warped the same way McuService.updateEqWithFm() pre-warps the real
+        // hardware send (see AudioConfig.prewarpEq()'s doc) - this curve shows the real
+        // achieved value, slider ripple and loudness ripple cross-talk-cancelled together, not
+        // the pre-pre-warp additive approximation. With no correction, driveDb equals targetDb
+        // exactly, same as before this existed.
+        float[] driveDb = hasCorrection ? AudioConfig.prewarpEq(targetDb) : targetDb;
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            float pot = driveDb[i] / 2f + 6;
             float wOffset = (pot - 12f) * 2; warns[i] = (pot > 12.025f && wOffset > 0.999f) ? wOffset : 0f;
-            gs[i] = Math.round(Math.max(0, Math.min(12, 6f + (total / 2f))));
+            // pot is exactly what McuService.updateEqWithFm() rounds for the real hardware -
+            // round and clamp it the same way here so this curve shows the actual value that
+            // would be sent, not an offset-from-neutral value that rounds against a different
+            // (and usually wrong) step boundary than whatever the real slider is already
+            // sitting at.
+            gs[i] = Math.max(0, Math.min(12, Math.round(pot)));
+            // The number drawn above each point (see FmVisualizerView's "val" label) should match
+            // gs[i] exactly - the REAL achieved change once rounded to a real 2dB step and clamped,
+            // not the raw theoretical "total" offset before rounding/clamping. Otherwise a band
+            // that rounds away to nothing (or gets ceiling-clipped) would still show a misleading
+            // non-zero number next to a point that visibly didn't move.
+            actual[i] = (gs[i] - sliderVals[i]) * 2f;
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
         if (switchFmSubComp.isChecked()) {
@@ -1015,28 +1466,89 @@ public class MainActivity extends AppCompatActivity {
             float subPot = currentFmSubOffset + seekSubGain.getValue();
             tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : "OK");
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
+        // Same total (base + loudness-compensated + Ultra Bass) sub gain as the subPot warning
+        // check above, rounded and clamped [0,12] exactly the way McuService.updateSubwoofer()
+        // rounds the real hardware register - without this, Ultra Bass's continuous ratio made
+        // this curve show smooth sub-1dB steps that don't exist on the actual hardware.
+        // Ultra Bass is independent of Loudness/switchFmSubComp - added unconditionally.
+        float subGainDb = Math.max(0, Math.min(12, Math.round(seekSubGain.getValue() + (switchFmSubComp.isChecked() ? currentFmSubOffset : 0f) + calculateUltraBassOffset(vol))));
+        fmVisualizer.setSubFilter(Globals.currentSubFreqHz, subGainDb);
         fmVisualizer.invalidate();
+        // Every place that refreshes this preview should also keep the main screen's optional
+        // loudness-correction preview (see switchShowLoudnessMain) in sync, rather than hunting
+        // down each individual call site (volume changes, switch toggles, cal/strength sliders,
+        // nav to this tab, preset loads) - updateVisualizer() itself is a cheap no-op when the
+        // main-screen toggle is off.
+        updateVisualizer();
     }
 
     private float[] calculateFmOffsets() {
-        float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
-        int vol = Math.max(1, (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume());
+        float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f; currentFmBassShelfOffset = 0f;
+        // No Math.max(1, ...) floor here - McuService.updateFmOffsets()/updateSubwoofer()/
+        // applyBassBoost() all use the raw volume with no such clamp, so keeping it here made
+        // this preview compute a very slightly weaker ratio than hardware at volume exactly 0.
+        int vol = (currentEffectiveVolume != -1) ? currentEffectiveVolume : getSystemVolume();
         int cal = getIntSlider(seekFmCalVol); float str = getIntSlider(seekFmStrength) / 100f;
-        if (vol < cal && switchFmEnable.isChecked()) {
-            float ratio = (float)(cal - vol) / (float)(cal - 1);
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * str;
+        // Deadzone must match McuService.updateFmOffsets() exactly, or this preview
+        // won't match what's actually sent to the MCU.
+        int deadzone = 1;
+        if (vol < (cal - deadzone) && switchFmEnable.isChecked()) {
+            float range = Math.max(1, cal - deadzone);
+            float ratio = (range - vol) / range;
+            // Matches McuService.updateFmOffsets()'s own row selection - the EQ's residual job
+            // depends on which frequency the front Bass Boost shelf is actually carrying the low
+            // end at right now (see AudioConfig.isoRawTargetForFreqHz()'s doc). This is the RAW
+            // (not pre-warped) target - updateVisualizer()/updateFmVisualizer() jointly pre-warp
+            // it together with the slider's own dB via AudioConfig.prewarpEq(), so don't
+            // pre-warp it again here.
+            float[] isoRawTarget = AudioConfig.isoRawTargetForFreqHz(parseBassBoostFreqHz(spinnerBassFreqFront));
+            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = isoRawTarget[i] * ratio * str;
+            // Bass-shelf assist (see AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB's doc) - part of the
+            // core loudness curve now, not gated behind the optional "Sub Tweaking" toggle like
+            // currentFmSubOffset below is.
+            currentFmBassShelfOffset = AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB * ratio * str;
             if (switchFmSubComp.isChecked()) {
+                // Kept in sync with McuService.getMaxBassBoost() - see its comment for why this
+                // references the next lower EQ band's offset instead of the matching band.
+                // ISO_FULL_TARGET_DB, not ISO_MAX_OFFSETS - the sub channel is a separate hardware
+                // output from the 16-band EQ/bass-shelf split, so it targets the real intended
+                // boost, not the EQ's own (now much smaller) residual share of it.
                 int currentSubFreq = Globals.currentSubFreqHz;
-                if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[3] * ratio * str;
-                else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[2] * ratio * str;
-                else if (currentSubFreq == 40 || currentSubFreq == 32) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[1] * ratio * str;
-                else if (currentSubFreq == 25) currentFmSubOffset = AudioConfig.ISO_MAX_OFFSETS[0] * ratio * str;
+                if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[2] * ratio * str;
+                else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[1] * ratio * str;
+                else if (currentSubFreq == 40 || currentSubFreq == 32) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[0] * ratio * str;
+                else if (currentSubFreq == 25) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[0] * ratio * str;
             }
-        } else if (vol > cal && switchFatigueEnable.isChecked()) {
-            float ratio = (float)(vol - cal) / ((32 - cal) > 0 ? (float)(32 - cal) : 1f);
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * ratio * str;
+        } else if (switchFatigueEnable.isChecked()) {
+            // Trim Highs' own threshold - decoupled from cal (Loudness' Calibration Point, used
+            // by the ISO branch above only). Matches McuService.updateFmOffsets()'s identical swap.
+            int fatStartVol = getIntSlider(seekFatStartVol);
+            if (vol > (fatStartVol + deadzone)) {
+                float range = Math.max(1, 32 - (fatStartVol + deadzone));
+                float ratio = (vol - (fatStartVol + deadzone)) / range;
+                for (int i = 0; i < AudioConfig.NUM_BANDS; i++) offs[i] = AudioConfig.FATIGUE_RAW_TARGET[i] * ratio * str;
+            }
         }
         return offs;
+    }
+
+    /**
+     * "Ultra Bass" preview - plain linear ramp with volume, 0 at the Start Volume slider up to
+     * the Max Boost slider's value at volume 32, completely independent of Loudness/Fatigue (no
+     * calibration point, no switchFmEnable check) - see McuService.updateSubwoofer()'s identical
+     * calc for the real hardware write. Null-guarded (not isFullyInitialized-gated like
+     * calculateFmOffsets()) since this is meant to be callable from updateVisualizer() even during
+     * early bootstrap, before setupFmControls() has bound these views.
+     */
+    private float calculateUltraBassOffset(int vol) {
+        if (switchUltraBass == null || seekUltraBassStartVol == null || seekUltraBassMaxDb == null) return 0f;
+        if (!switchUltraBass.isChecked()) return 0f;
+        int startVol = getIntSlider(seekUltraBassStartVol);
+        int maxDb = getIntSlider(seekUltraBassMaxDb);
+        if (vol <= startVol) return 0f;
+        float range = Math.max(1, 32 - startVol);
+        float ratio = Math.min(1f, (vol - startVol) / range);
+        return maxDb * ratio;
     }
 
     private void setupPresets() {
@@ -1082,6 +1594,7 @@ public class MainActivity extends AppCompatActivity {
         if (!presetNames.contains("Call")) {
             presetNames.add("Call");
             Collections.sort(presetNames);
+            savePresetList();
             presetAdapter.notifyDataSetChanged();
         }
     }
@@ -1289,6 +1802,10 @@ public class MainActivity extends AppCompatActivity {
             e.putBoolean(name + "_sub_comp", switchFmSubComp.isChecked());
             e.putInt(name + "_fm_cal", getIntSlider(seekFmCalVol));
             e.putInt(name + "_fm_str", getIntSlider(seekFmStrength));
+            e.putInt(name + "_fat_start_vol", getIntSlider(seekFatStartVol));
+            e.putBoolean(name + "_ultra_bass_en", switchUltraBass.isChecked());
+            e.putInt(name + "_ultra_bass_start_vol", getIntSlider(seekUltraBassStartVol));
+            e.putInt(name + "_ultra_bass_max_db", getIntSlider(seekUltraBassMaxDb));
             e.putInt(name + "_d_fl", getIntSlider(seekDelayFl));
             e.putInt(name + "_d_fr", getIntSlider(seekDelayFr));
             e.putInt(name + "_d_rl", getIntSlider(seekDelayRl));
@@ -1337,19 +1854,43 @@ public class MainActivity extends AppCompatActivity {
             subFreqIdx = 5; // Safety fallback
         }
         spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
+        // setText(..., false) doesn't trigger the spinner's own OnItemClickListener - which is
+        // the only other place Globals.currentSubFreqHz gets updated - so without this, the sub
+        // overlay curve stays stuck on whatever frequency was last manually tapped instead of
+        // following the frequency each preset actually loads.
+        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[subFreqIdx]);
         if (isFullyInitialized) {
-            seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
-            seekBassBoostFront.setValue((float) p.getInt(name + "_bb_f", 0));
-            seekBassFilterRear.setValue((float) p.getInt(name + "_bf_r", 0));
-            seekBassBoostRear.setValue((float) p.getInt(name + "_bb_r", 0));
+            // Slider.setValue() only fires the OnChangeListener (which is what normally updates
+            // these labels, see the "bl" listener in setupFilterControls()) when the new value
+            // actually differs from the slider's current one - a loaded value that happens to
+            // match left the label stuck on its XML placeholder ("Not set") forever. Setting the
+            // label explicitly here, same as gainSliders/seekSubGain already do a few lines up,
+            // makes this not depend on that listener firing at all.
+            int bfF = p.getInt(name + "_bf_f", 0);
+            seekBassFilterFront.setValue((float) bfF);
+            tvBassFilterFrontVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[bfF]));
+            int bbF = p.getInt(name + "_bb_f", 0);
+            seekBassBoostFront.setValue((float) bbF);
+            tvBassBoostFrontDb.setText(getString(R.string.lbl_db_fmt, bbF));
+            int bfR = p.getInt(name + "_bf_r", 0);
+            seekBassFilterRear.setValue((float) bfR);
+            tvBassFilterRearVal.setText(getString(R.string.lbl_hz_fmt, BASS_FILTER_FREQS[bfR]));
+            rearBassGainManualValue = p.getInt(name + "_bb_r", 0);
+            seekBassBoostRear.setValue((float) rearBassGainManualValue);
+            tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, rearBassGainManualValue));
 
             // Replace .setSelection(int) with .setText(String, false)
             int frontIdx = p.getInt(name + "_bb_frq_f", 0);
             int rearIdx = p.getInt(name + "_bb_frq_r", 0);
+            // Safety fallback - a preset saved before the 172/214Hz options were removed could
+            // still have one of those stale indices (6/7) on disk, same hazard as subFreqIdx above.
+            if (frontIdx < 0 || frontIdx >= BASS_BOOST_FREQS.length) frontIdx = AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
+            if (rearIdx < 0 || rearIdx >= BASS_BOOST_FREQS.length) rearIdx = AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
 
             // Use false to prevent the dropdown from popping up while loading
             spinnerBassFreqFront.setText(BASS_BOOST_FREQS[frontIdx], false);
             spinnerBassFreqRear.setText(BASS_BOOST_FREQS[rearIdx], false);
+            rearBassFreqManualText = BASS_BOOST_FREQS[rearIdx];
 
             seekFaderLr.setValue((float) p.getInt(name + "_f_lr", 12));
             seekFaderFr.setValue((float) p.getInt(name + "_f_fr", 12));
@@ -1363,6 +1904,16 @@ public class MainActivity extends AppCompatActivity {
             seekFmStrength.setValue((float) p.getInt(name + "_fm_str", 100));
             String strText = "" + getIntSlider(seekFmStrength);
             tvFmStrengthVal.setText(strText);
+            int fatStartVol = p.getInt(name + "_fat_start_vol", 25);
+            seekFatStartVol.setValue((float) fatStartVol);
+            tvFatStartVolVal.setText(String.valueOf(fatStartVol));
+            switchUltraBass.setChecked(p.getBoolean(name + "_ultra_bass_en", false));
+            int ultraBassStartVol = p.getInt(name + "_ultra_bass_start_vol", 16);
+            seekUltraBassStartVol.setValue((float) ultraBassStartVol);
+            tvUltraBassStartVolVal.setText(String.valueOf(ultraBassStartVol));
+            int ultraBassMaxDb = p.getInt(name + "_ultra_bass_max_db", 6);
+            seekUltraBassMaxDb.setValue((float) ultraBassMaxDb);
+            tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, ultraBassMaxDb));
             seekDelayFl.setValue((float) p.getInt(name + "_d_fl", 0));
             seekDelayFr.setValue((float) p.getInt(name + "_d_fr", 0));
             seekDelayRl.setValue((float) p.getInt(name + "_d_rl", 0));
@@ -1391,8 +1942,17 @@ public class MainActivity extends AppCompatActivity {
             seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));   // Changed from 3000ms
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
 
-            // Power
-            tvPowerDb.setText(String.valueOf(-p.getInt(name + "_power_vol", 0)));
+            // Power - if a preset was saved with positive amp power before the MCU firmware
+            // stopped supporting it, clamp and re-persist it now rather than just hiding the
+            // stale value in the display (see ampPositiveDisabled/setPowerVolume()), otherwise the
+            // stepper's "+1" branch could let it creep back into positive territory later since it
+            // only floors on the other direction.
+            int powerVal = p.getInt(name + "_power_vol", 0);
+            if (ampPositiveDisabled && powerVal < 0) {
+                powerVal = 0;
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(name + "_power_vol", 0).apply();
+            }
+            tvPowerDb.setText(String.valueOf(-powerVal));
         }
         isUpdatingUi = false; updateVisualizer();
         updateFmVisualizer();
@@ -1470,17 +2030,128 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String getSystemProperty() {
+    private String getSystemProperty(String key, String def) {
         try {
             if (getPropMethod != null) {
-                return (String) getPropMethod.invoke(null, "sys.qf.last_audio_src", "Unknown");
+                return (String) getPropMethod.invoke(null, key, def);
             }
         } catch (Exception ignored) {}
-        return "Unknown";
+        return def;
+    }
+
+    /**
+     * Reads persist.sys.qf.mcu.version and sets ampPositiveDisabled if its date is at or past
+     * AMP_POSITIVE_GATE_VERSION's own date (inclusive - that constant is itself the first
+     * firmware this applies to). Fails open (leaves the gate
+     * off) if the property is missing or either version string doesn't parse, rather than
+     * guessing. Call once, after initReflection(), before anything reads ampPositiveDisabled.
+     */
+    private void checkAmpPositiveGate() {
+        String version = getSystemProperty("persist.sys.qf.mcu.version", "");
+        int deviceDate = parseVersionDate(version);
+        int gateDate = parseVersionDate(AMP_POSITIVE_GATE_VERSION);
+        ampPositiveDisabled = deviceDate > 0 && gateDate > 0 && deviceDate >= gateDate;
+        Log.i(TAG, "MCU version=" + version + " ampPositiveDisabled=" + ampPositiveDisabled);
+    }
+
+    /** Extracts the YYYYMMDD date segment from a "QF05.V02.14.20260703.002121"-style version string. */
+    private static int parseVersionDate(String version) {
+        try {
+            String[] parts = version.split("\\.");
+            if (parts.length < 4) return -1;
+            return Integer.parseInt(parts[3]);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Sets the head unit's button/backlight RGB to wDSP's accent color (accentColor,
+     * R.color.cyan_custom), scaled to the same perceptual luminance (standard
+     * 0.299R+0.587G+0.114B luma weights, not just the raw peak channel) as whatever the user
+     * currently has set via persist.sys.color.light.value (a packed ARGB int; see
+     * C:\Users\v\Downloads\QF_RGB_control.md for the full protocol writeup this mirrors). If
+     * that property can't be read or doesn't parse, this leaves the backlight alone entirely -
+     * no guessed fallback color - rather than touching something it has no real reading for.
+     * Re-captures that prop's raw RGB into defaultBacklightR/G/B every successful call, so
+     * onStop() can restore whatever the head unit actually had, freshly read each time the
+     * activity opens or resumes - not a stale value from first launch (if a call's read fails,
+     * the previous successful capture - if any - is left in place rather than cleared). Static
+     * mode (no cycling). Best-effort: silently no-ops on any failure (non-QF ROM, no root/
+     * signature permission, service not present, etc.) rather than crashing - same defensive
+     * style as the rest of this app's MCU reflection (see McuService.ensureMcuManager()), since
+     * this is
+     * purely cosmetic.
+     */
+    private void setButtonRgbCyan() {
+        String raw = getSystemProperty("persist.sys.color.light.value", "");
+        if (raw.isEmpty()) return; // can't read the current color - leave the backlight alone
+
+        int r, g, b;
+        try {
+            int packed = Integer.parseInt(raw);
+            r = (packed >> 16) & 0xFF;
+            g = (packed >> 8) & 0xFF;
+            b = packed & 0xFF;
+        } catch (NumberFormatException e) {
+            return; // malformed property - same as unreadable, leave the backlight alone
+        }
+
+        defaultBacklightR = (byte) r;
+        defaultBacklightG = (byte) g;
+        defaultBacklightB = (byte) b;
+        backlightDefaultCaptured = true;
+
+        int accentR = Color.red(accentColor);
+        int accentG = Color.green(accentColor);
+        int accentB = Color.blue(accentColor);
+        // Standard luma weights - matches perceived brightness far better than the raw peak
+        // channel would, since accentColor's hue (teal/cyan) differs from whatever hue the
+        // system's own light color happens to be.
+        float systemLuminance = 0.299f * r + 0.587f * g + 0.114f * b;
+        float accentLuminance = 0.299f * accentR + 0.587f * accentG + 0.114f * accentB;
+        float scale = accentLuminance > 0f ? systemLuminance / accentLuminance : 0f;
+        byte payloadR = (byte) Math.round(Math.max(0, Math.min(255, accentR * scale)));
+        byte payloadG = (byte) Math.round(Math.max(0, Math.min(255, accentG * scale)));
+        byte payloadB = (byte) Math.round(Math.max(0, Math.min(255, accentB * scale)));
+
+        sendButtonRgb(payloadR, payloadG, payloadB);
+        Log.i(TAG, "Button RGB set to accent color at luminance " + systemLuminance);
+    }
+
+    /**
+     * [0x09, R, G, B, mode] - sub-command 0x09 = button/backlight RGB, mode 0 = static color.
+     * Best-effort, see setButtonRgbCyan()'s javadoc.
+     */
+    private void sendButtonRgb(byte r, byte g, byte b) {
+        try {
+            Class<?> serviceManagerClass = Class.forName("android.os.ServiceManager");
+            Method getServiceMethod = serviceManagerClass.getMethod("getService", String.class);
+            Object binder = getServiceMethod.invoke(null, "mcu_service");
+            if (binder == null) return;
+
+            Class<?> iBinderClass = Class.forName("android.os.IBinder");
+            Class<?> stubClass = Class.forName("android.qf.mcu.IMcuManager$Stub");
+            Method asInterface = stubClass.getMethod("asInterface", iBinderClass);
+            Object mcuManager = asInterface.invoke(null, binder);
+            if (mcuManager == null) return;
+
+            Method rpc = mcuManager.getClass().getMethod("RPC_SendMcuMsgData", byte.class, byte[].class, int.class);
+            byte[] payload = {0x09, r, g, b, 0};
+            rpc.invoke(mcuManager, (byte) 24, payload, payload.length);
+        } catch (Exception e) {
+            Log.w(TAG, "sendButtonRgb failed (non-fatal): " + e);
+        }
+    }
+
+    /** Restores the head unit's own backlight, captured by the last setButtonRgbCyan() call. */
+    private void restoreDefaultBacklight() {
+        if (!backlightDefaultCaptured) return;
+        sendButtonRgb(defaultBacklightR, defaultBacklightG, defaultBacklightB);
     }
 
     private void showAutoPresetDialog() {
-        String ass = getSystemProperty();
+        String ass = getSystemProperty("sys.qf.last_audio_src", "Unknown");
         if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
             ass = "Call";
         }
@@ -1532,14 +2203,24 @@ public class MainActivity extends AppCompatActivity {
         switchGalaGlobal.setOnCheckedChangeListener((bv, checked) -> {
             if (isUpdatingUi) return;
             galaGlobalMode = checked;
-            SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                    .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
+            SharedPreferences galaModePrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor ed = galaModePrefs.edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
             if (checked) {
                 // Seed the global value from whatever's on screen right now, so flipping
                 // this on doesn't silently reset GALA to off.
                 ed.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
+                ed.apply();
+            } else {
+                ed.apply();
+                // Turning global mode off: reflect this preset's own saved GALA state
+                // on screen instead of leaving whatever the global switch showed. Guard
+                // with isUpdatingUi so this doesn't itself trigger an autoSaveCurrent().
+                String currentPreset = spinnerPresets.getText().toString();
+                boolean presetGalaEnabled = galaModePrefs.getBoolean(currentPreset + "_gala_enabled", false);
+                isUpdatingUi = true;
+                switchGalaEnable.setChecked(presetGalaEnabled);
+                isUpdatingUi = false;
             }
-            ed.apply();
         });
 
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
@@ -1713,11 +2394,15 @@ public class MainActivity extends AppCompatActivity {
     private void resetUiInternal() {
         isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false);
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false); Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);
-            
+            seekFatStartVol.setValue(25); tvFatStartVolVal.setText(String.valueOf(25));
+            switchUltraBass.setChecked(false);
+            seekUltraBassStartVol.setValue(16); tvUltraBassStartVolVal.setText(String.valueOf(16));
+            seekUltraBassMaxDb.setValue(6); tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, 6));
+
             // GALA reset
             switchGalaEnable.setChecked(false);
             seekGalaInc.setValue(15);

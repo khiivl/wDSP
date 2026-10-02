@@ -6,8 +6,11 @@
     <color name="cyan_custom">#79bcbd</color>
     <color name="custom_square">#15BDBDBD</color>
     <color name="visualizer_grid">#18FFFFFF</color>
-    <color name="visualizer_line">#AAFFFFFF</color>
+    <color name="visualizer_line">#BDBDBD</color>
     <color name="visualizer_fill">#80028889</color>
+    <color name="loudness_line">#bbBDBDBD</color>
+    <color name="sub_line">#8CFFFFFF</color>
+    <color name="rear_bass_line">#B0944460</color>
     <color name="band_label">#80FFFFFF</color>
     <color name="q_switch_text">#FFFFFF</color>
     <color name="seek_track">#40FFFFFF</color>

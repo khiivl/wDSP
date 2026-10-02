@@ -20,6 +20,8 @@
     <string name="enable_loudness">Увімкнути Loudness</string>
     <string name="trim_highs">Послабити ВЧ</string>
     <string name="sub_tweaking">Налаштування сабвуфера</string>
+    <string name="show_loudness_on_main">На головному екрані</string>
+    <string name="true_22_display">Справжній 2.2</string>
     <string name="fm_visualizer_label">Попередній перегляд корекції</string>
     <string name="lbl_volume">Гучність:</string>
     <string name="lbl_sub_offset">Зміщення сабв.:</string>
@@ -29,6 +31,8 @@
 
     <!-- Delays Tab -->
     <string name="delays_title">Часова корекція (Затримки)</string>
+    <string name="sync_delay_front">Синхр. перед Л/П</string>
+    <string name="sync_delay_rear">Синхр. зад Л/П</string>
     <string name="spatial_correction">Просторова корекція</string>
     <string name="surround_mode">Режим Surround</string>
     <string name="front_left">Передній лівий</string>
@@ -41,6 +45,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Вбудована Loudness (ЗАСТАРІЛО)</string>
+    <string name="sync_bass_fr">Синхр. баса перед/зад</string>
     <string name="speaker_bass_controls">Керування басом динаміків</string>
     <string name="front_speaker_bass">Бас передніх динаміків</string>
     <string name="rear_speaker_bass">Бас задніх динаміків</string>
@@ -128,7 +133,7 @@
 
     <!-- Menu -->
     <string name="EQtab">Еквалайзер</string>
-    <string name="FMtab">Тонкомпенсація</string>
+    <string name="FMtab">Корекція</string>
     <string name="DLtab">Затримки</string>
     <string name="OTtab">Інше</string>
     <string name="GLtab">Адапт. Гучн.</string>

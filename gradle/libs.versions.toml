@@ -10,6 +10,7 @@ activity = "1.13.0"
 constraintlayout = "2.2.1"
 gson = "2.13.2"
 multidex = "2.0.1"
+flexbox = "3.0.0"
 
 [libraries]
 core-ktx-v1131 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
@@ -22,6 +23,7 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 multidex = { module = "androidx.multidex:multidex", version.ref = "multidex" }
+flexbox = { group = "com.google.android.flexbox", name = "flexbox", version.ref = "flexbox" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

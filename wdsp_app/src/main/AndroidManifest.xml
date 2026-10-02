@@ -26,6 +26,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WDSP">
+
+        <profileable
+            android:shell="true"
+            android:enabled="true" />
+
         <activity
             android:name="com.radiorubka.wdsp.MainActivity"
             android:exported="true">

@@ -497,6 +497,42 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/show_loudness_on_main" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_show_loudness_main"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/ultra_bass" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_ultra_bass"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
                     <FrameLayout
                         android:id="@+id/fm_visualizer_container"
                         android:layout_width="match_parent"
@@ -633,6 +669,114 @@
                             android:gravity="end"
                             android:text="@string/value_default" />
                     </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_small"
+                        android:text="@string/lbl_trim_highs_start_vol" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_fat_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="25"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView
+                            android:id="@+id/tv_fat_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_small"
+                        android:text="@string/lbl_ultra_bass_start_vol" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_ultra_bass_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="16"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_small"
+                        android:text="@string/lbl_ultra_bass_max_db" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_ultra_bass_max_db"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:valueFrom="1"
+                            android:valueTo="12"
+                            android:stepSize="1"
+                            android:value="6"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:thumbHeight="@dimen/thumb_height"/>
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_max_db_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default" />
+                    </LinearLayout>
                 </LinearLayout>
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -666,6 +810,44 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="@dimen/padding_standard">
+
+                    <!-- Applies to both delay systems' FL/FR and RL/RR pairs below (see
+                         MainActivity.setupDelayControls()/setupDelay1Controls()). -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/sync_delay_front" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_sync_delay_front"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/sync_delay_rear" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_sync_delay_rear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
 
                     <!-- Precise Delays Section -->
                     <LinearLayout
@@ -1259,6 +1441,14 @@
                             </com.google.android.material.textfield.TextInputLayout>
                         </GridLayout>
                     </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switch_sync_bass"
+                        style="@style/TextLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        android:text="@string/sync_bass_fr" />
 
                     <!-- Fader Section -->
                     <TextView

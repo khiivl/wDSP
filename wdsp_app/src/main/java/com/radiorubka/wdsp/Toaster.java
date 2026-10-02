@@ -1,7 +1,6 @@
 package com.radiorubka.wdsp;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;  // <--- Correct one
 import android.os.Looper;
@@ -9,13 +8,16 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.core.content.ContextCompat;
 
 public class Toaster {
     // One static handler for the whole app - very low resource usage
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static Toast toast;
     public static void show(Context context, String message) {
+        show(context, message, Toast.LENGTH_SHORT);
+    }
+
+    public static void show(Context context, String message, int duration) {
 
         final Context appContext = context.getApplicationContext();
 
@@ -42,7 +44,7 @@ public class Toaster {
 
             int text_color = androidx.core.content.ContextCompat.getColor(appContext, R.color.text_theme_aware);
             tv.setTextColor(text_color);
-            tv.setTextSize(appContext.getResources().getDimension(R.dimen.text_size_button));
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, appContext.getResources().getDimension(R.dimen.text_size_button));
 
             int pad = appContext.getResources().getDimensionPixelSize(R.dimen.padding_small);
             int pad2 = appContext.getResources().getDimensionPixelSize(R.dimen.padding_standard);
@@ -52,7 +54,7 @@ public class Toaster {
 
             // 4. Create and show the Toast
             toast = new Toast(appContext);
-            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setDuration(duration);
             toast.setView(tv);
             toast.setGravity(Gravity.BOTTOM | Gravity.END, pad2, pad2);
             toast.show();

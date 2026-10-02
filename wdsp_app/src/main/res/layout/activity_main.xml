@@ -465,54 +465,118 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <LinearLayout
+                    <!-- Packs as many label+switch pairs per line as actually fit, wrapping the
+                         rest to additional lines - adapts to whatever width any given locale's
+                         strings need (e.g. German "Subwoofer-Feineinstellung") instead of a
+                         hardcoded row split. -->
+                    <com.google.android.flexbox.FlexboxLayout
                         android:id="@+id/layout_fm_toggles"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/margin_standard"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
+                        app:flexWrap="wrap"
+                        app:alignItems="center"
                         app:layout_constraintTop_toBottomOf="@id/tv_fm_title">
 
-                        <TextView
-                            style="@style/TextLabel"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/enable_loudness" />
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/enable_loudness" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_fm_enable"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false" />
+                        </LinearLayout>
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switch_fm_enable"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false" />
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/trim_highs" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_fatigue_enable"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false" />
+                        </LinearLayout>
 
-                        <TextView
-                            style="@style/TextLabel"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/trim_highs" />
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/sub_tweaking" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_fm_sub_comp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false" />
+                        </LinearLayout>
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switch_fatigue_enable"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false" />
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/show_loudness_on_main" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_show_loudness_main"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false" />
+                        </LinearLayout>
 
-                        <TextView
-                            style="@style/TextLabel"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/sub_tweaking" />
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switch_fm_sub_comp"
-                            android:layout_width="wrap_content"
-                            android:paddingHorizontal="12dp"
-                            app:showText="false"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ultra_bass" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_ultra_bass"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false" />
+                        </LinearLayout>
+                    </com.google.android.flexbox.FlexboxLayout>
 
                     <!-- FR Graph for FM Curve -->
                     <FrameLayout
@@ -649,6 +713,7 @@
 
                     <!-- Strength Slider -->
                     <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/layout_fm_strength"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
@@ -703,6 +768,177 @@
                             app:layout_constraintTop_toTopOf="parent" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
+                    <!-- Trim Highs Start Volume Slider -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/layout_fat_start_vol"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:layout_constraintTop_toBottomOf="@id/layout_fm_strength">
+
+                        <TextView
+                            android:id="@+id/lbl_fat_start_vol"
+                            style="@style/TextLabel"
+                            android:layout_width="140dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lbl_trim_highs_start_vol"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            app:thumbHeight="@dimen/thumb_height"
+                            android:id="@+id/seek_fat_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="25"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/tv_fat_start_vol_val"
+                            app:layout_constraintStart_toEndOf="@id/lbl_fat_start_vol"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
+
+                        <TextView
+                            android:id="@+id/tv_fat_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/seek_fat_start_vol"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <!-- Ultra Bass Start Volume Slider -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/layout_ultra_bass_start_vol"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:layout_constraintTop_toBottomOf="@id/layout_fat_start_vol">
+
+                        <TextView
+                            android:id="@+id/lbl_ultra_bass_start_vol"
+                            style="@style/TextLabel"
+                            android:layout_width="140dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lbl_ultra_bass_start_vol"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            app:thumbHeight="@dimen/thumb_height"
+                            android:id="@+id/seek_ultra_bass_start_vol"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="32"
+                            android:stepSize="1"
+                            android:value="16"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/tv_ultra_bass_start_vol_val"
+                            app:layout_constraintStart_toEndOf="@id/lbl_ultra_bass_start_vol"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
+
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_start_vol_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/seek_ultra_bass_start_vol"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <!-- Ultra Bass Max Boost Slider -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="@dimen/margin_standard"
+                        app:layout_constraintTop_toBottomOf="@id/layout_ultra_bass_start_vol">
+
+                        <TextView
+                            android:id="@+id/lbl_ultra_bass_max_db"
+                            style="@style/TextLabel"
+                            android:layout_width="140dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lbl_ultra_bass_max_db"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.google.android.material.slider.Slider
+                            app:thumbHeight="@dimen/thumb_height"
+                            android:id="@+id/seek_ultra_bass_max_db"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="1"
+                            android:valueTo="12"
+                            android:stepSize="1"
+                            android:value="6"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackStopIndicatorSize="0dp"
+                            app:tickVisibilityMode="hidden"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/tv_ultra_bass_max_db_val"
+                            app:layout_constraintStart_toEndOf="@id/lbl_ultra_bass_max_db"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
+
+                        <TextView
+                            android:id="@+id/tv_ultra_bass_max_db_val"
+                            style="@style/TextValue"
+                            android:layout_width="40dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:text="@string/value_default"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/seek_ultra_bass_max_db"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -724,18 +960,61 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <!-- Applies to both delay systems' FL/FR and RL/RR pairs below (see
+                 MainActivity.setupDelayControls()/setupDelay1Controls()). -->
+            <LinearLayout
+                android:id="@+id/row_sync_delays"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="@dimen/padding_standard"
+                android:paddingTop="@dimen/margin_standard"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
+
+                <TextView
+                    style="@style/TextLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_delay_front" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switch_sync_delay_front"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    app:showText="false" />
+
+                <TextView
+                    style="@style/TextLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_delay_rear" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switch_sync_delay_rear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    app:showText="false" />
+            </LinearLayout>
+
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
+                app:layout_constraintTop_toBottomOf="@id/row_sync_delays">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/padding_standard">
+                    android:paddingHorizontal="@dimen/padding_standard"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="@dimen/padding_standard">
 
                     <androidx.constraintlayout.widget.Guideline
                         android:id="@+id/guideline_delays"
@@ -1594,6 +1873,15 @@
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_sync_bass"
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sync_bass_fr"
+                            android:layout_marginTop="16dp"
+                            android:layout_gravity="center_horizontal" />
 
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_loud"

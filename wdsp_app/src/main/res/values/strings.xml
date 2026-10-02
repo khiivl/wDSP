@@ -22,15 +22,22 @@
     <string name="enable_loudness">Enable Loudness</string>
     <string name="trim_highs">Trim Highs</string>
     <string name="sub_tweaking">Sub Tweaking</string>
+    <string name="show_loudness_on_main">Show on Main</string>
+    <string name="ultra_bass">Ultra Bass</string>
     <string name="fm_visualizer_label">Real-time Compensation Preview</string>
     <string name="lbl_volume">Volume:</string>
     <string name="lbl_sub_offset">Sub Offset:</string>
     <string name="lbl_lower_sub_by">Lower sub by:</string>
     <string name="lbl_calibration_point">Calibration Point (has to be around 80 dB):</string>
     <string name="lbl_correction_strength">Correction Strength:</string>
+    <string name="lbl_trim_highs_start_vol">Trim Highs Start Volume:</string>
+    <string name="lbl_ultra_bass_start_vol">Ultra Bass Start Volume:</string>
+    <string name="lbl_ultra_bass_max_db">Ultra Bass Max Boost:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Speaker Time Alignment (Delays)</string>
+    <string name="sync_delay_front">Sync Front L/R</string>
+    <string name="sync_delay_rear">Sync Rear L/R</string>
     <string name="spatial_correction">Spatial Correction</string>
     <string name="surround_mode">Surround Mode</string>
     <string name="front_left">Front Left</string>
@@ -43,6 +50,7 @@
 
     <!-- Filters Tab -->
     <string name="built_in_loudness_legacy">Built-in Loudness (LEGACY)</string>
+    <string name="sync_bass_fr">Sync Front/Rear Bass</string>
     <string name="speaker_bass_controls">Speaker Bass Controls</string>
     <string name="front_speaker_bass">Front Speaker Bass</string>
     <string name="rear_speaker_bass">Rear Speaker Bass</string>
@@ -97,6 +105,7 @@
     <string name="toast_exported">Exported</string>
     <string name="toast_imported">Imported</string>
     <string name="toast_sub_comp_limit">Sub Comp limited to 80Hz</string>
+    <string name="toast_loudness_sync_bass">Loudness active. Bass boost F/R frequencies and levels synchronised. For best results, set the front Bass Boost to 86Hz and the Calibration point to ~80dB.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Keep wDSP Running</string>
@@ -137,7 +146,7 @@
 
     <!-- Menu -->
     <string name="EQtab">EQ</string>
-    <string name="FMtab">F-M Curve</string>
+    <string name="FMtab">Correction</string>
     <string name="DLtab">Delays</string>
     <string name="OTtab">Other</string>
     <string name="GLtab">Speed</string>

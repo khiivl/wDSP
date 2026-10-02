@@ -5,13 +5,11 @@ import static android.media.AudioManager.FLAG_SHOW_UI;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioManager;
-import android.util.Base64;
 import android.util.Log;
 import java.lang.reflect.Method;
 
 /**
  * VolumeHelper handles both standard Android volume and K706 (QF) hardware volume.
- * Uses Base64 obfuscated strings for vendor classes to ensure Play Store compatibility.
  */
 public class VolumeHelper {
     private static final String TAG = "wDSP_VolumeHelper";
@@ -39,9 +37,7 @@ public class VolumeHelper {
 
             mGetCurrentState = vmClass.getMethod("getCurrentVolumeState");
 
-            // Obfuscated: "android.qf.os.VolumeState"
-            String vsName = new String(Base64.decode("YW5kcm9pZC5xZi5vcy5Wb2x1bWVTdGF0ZQ==", Base64.DEFAULT));
-            Class<?> vsClass = Class.forName(vsName);
+            Class<?> vsClass = Class.forName("android.qf.os.VolumeState");
 
             mGetVolumeVal = vsClass.getMethod("getVolumeVal");
             mSetVolumeVal = vsClass.getMethod("setVolumeVal", int.class);
@@ -97,6 +93,7 @@ public class VolumeHelper {
             try {
                 mSetVolumeVal.invoke(activeState, val);
                 Log.d(TAG, "[VolumeSender2000] Volume has been set to " + val);
+                success = true;
             } catch (Exception ignored) {}
         }
 

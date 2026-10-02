@@ -1,12 +1,18 @@
 package com.radiorubka.wdsp;
 
 import android.content.Context;
-import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ComposeShader;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
+import android.graphics.Shader;
 import android.media.audiofx.Visualizer;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -17,18 +23,22 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 /**
- * Live 16-band spectrum drawn behind {@link EqVisualizerView}, sourced from
- * Android's global output mix via {@link Visualizer} (audio session 0).
+ * Live, continuous, log-frequency spectrum analyzer (20Hz-20kHz) drawn behind
+ * {@link EqVisualizerView}, sourced from Android's global output mix via
+ * {@link Visualizer} (audio session 0) - the same idea as a plugin analyzer
+ * (FabFilter Pro-Q etc.): a smooth curve across many closely-spaced frequency
+ * samples, not a small number of discrete bars.
  *
  * READ BEFORE TOUCHING THIS FILE - important caveats:
  *
  * 1. This captures audio BEFORE it leaves Android and reaches the MCU/amp
  *    that actually applies the real EQ (see McuService.sendToHardware()).
  *    It is a PRE-EQ signal - wDSP has no way to see the true, hardware-
- *    filtered output. The gain-reactive scaling in onDraw() is a synthetic
- *    visual effect (real captured level x the user's slider gain, converted
- *    to a linear amplitude multiplier), not a measurement of the filtered
- *    signal.
+ *    filtered output. The gain-reactive scaling in processFft() is a
+ *    synthetic visual effect (real captured level shifted by the actual
+ *    calculated EQ curve at that sample's own frequency - see
+ *    AudioConfig.compositeResponseDb() - converted to a dB offset before
+ *    normalizing), not a measurement of the filtered signal.
  * 2. Session-0 capture normally requires the signature-level
  *    CAPTURE_AUDIO_OUTPUT permission, which most ROMs restrict to system
  *    apps. Whether this head unit's ROM enforces that is UNTESTED - start()
@@ -40,89 +50,110 @@ import androidx.core.content.ContextCompat;
  *    will never show up here - only whatever Android itself is mixing
  *    (media apps, Bluetooth A2DP, etc.) is visible to Visualizer.
  * 4. REF_MIN_DB / REF_MAX_DB below are rough starting guesses for mapping
- *    the raw FFT magnitude to a 0..1 bar height. They will very likely need
- *    tuning by eye once this runs on real hardware with real music.
- * 5. Bands 0 and 1 (20Hz/31.5Hz) get their own separate, slower analysis
- *    path (see processWaveform()/computeLowBandMagnitudes()) instead of
- *    coming from the same fast FFT capture as the other 14 bands. At the
- *    platform's capture-size ceiling (commonly 1024 samples), bin spacing is
- *    ~43Hz - coarser than the gap between those two band edges, so there is
- *    no bin that belongs to them. To resolve them independently we
- *    accumulate raw waveform samples across several capture callbacks into
- *    an 8192-sample sliding window (LOW_FFT_SIZE) and run our own windowed
- *    FFT over that, giving ~5Hz bin spacing at the cost of updating only a
- *    few times a second instead of ~20x/sec. That's the right trade for
- *    bass, which doesn't move fast anyway. Until that first ~186ms window
- *    fills (right after start()), those two bands fall back to borrowing
- *    from the nearest resolved neighbor so they aren't just dead at
- *    startup - see the fallback loop in processFft().
+ *    the raw FFT magnitude to a 0..1 curve height. They will very likely
+ *    need tuning by eye once this runs on real hardware with real music.
+ * 5. Each of the CURVE_SAMPLES frequency points is read via cubic Hermite
+ *    (Catmull-Rom) interpolation through the 4 nearest real FFT bins' dB
+ *    values (see processWaveform()), then smoothed along the frequency axis
+ *    with a light fractional-octave-style pass (see FREQ_SMOOTH_RADIUS).
+ *    That smoothing is a deliberate readability choice, not just cosmetic:
+ *    this view exists so the driver can see which frequency to reach for on
+ *    the EQ, and raw per-bin FFT detail (especially in the treble, where
+ *    many display points span genuinely different real bins) is accurate but
+ *    too noisy to read at a glance - real RTA/tuning tools (REW etc.) smooth
+ *    for the same reason. If you ever want to match a reference analyzer's
+ *    raw look exactly instead, shrink or drop FREQ_SMOOTH_RADIUS.
+ * 6. The whole curve fades to invisible during silence and fades back in once real audio
+ *    resumes (see SILENCE_HIDE_DB/displayAlpha/renderAlpha) - driven by the loudest point in
+ *    the captured content, independent of the EQ-reactive shift, so it hides only when nothing
+ *    is actually playing rather than whenever the EQ curve happens to sit near zero.
  */
 public class SpectrumAnalyzerView extends View {
 
+    // Pre-allocated buffers for manual FFT to prevent GC stutter
+    private float[] hannWindow;
+    private float[] fftReal;
+    private float[] fftImag;
+    private float[] magnitudes;
+
     private static final String TAG = "wDSP_Spectrum";
 
-    // Same 6-group band coloring as EqVisualizerView/FmVisualizerView - kept
-    // in sync per the project's band_color_scheme convention (low bass ->
-    // upper treble, warm -> cool).
-    private int[] groupColors;
-    private final int[][] GROUP_RANGES = {{0, 2}, {3, 4}, {5, 6}, {7, 9}, {10, 12}, {13, 15}};
+    // Frequency-axis smoothing width, in display samples on each side of the point being smoothed
+    // (triangular kernel) - see the class-level doc's item 5 for why this exists. CURVE_SAMPLES is
+    // spread evenly across ~10 octaves (20 samples/octave), so a radius of 4 (9 taps total) is
+    // about a 0.45-octave-wide smoothing window - noticeably calmer than raw FFT detail while still
+    // showing real broad peaks/dips clearly (ISO bands are roughly 1 octave apart, so this doesn't
+    // blur distinct bands into each other).
+    private static final int FREQ_SMOOTH_RADIUS = 4;
 
-    // Edge frequencies (Hz) bounding each of the 16 AudioConfig bands, placed
-    // at the geometric mean between neighboring band centers (20...20k).
-    private static final float[] BAND_EDGES_HZ = {
-            15.9f, 25.1f, 39.7f, 63.2f, 100f, 158.1f, 250.8f, 397.4f,
-            632.5f, 1000f, 1581.1f, 2506.0f, 3969.1f, 6299.6f, 10000f, 15849f, 25198f
-    };
+    // How many points across the width this curve is sampled at - the "resolution" of the
+    // analyzer. High enough to look like a continuous curve rather than a bar graph.
+    private static final int CURVE_SAMPLES = 200;
 
-    // Nominal center frequency of each of the 16 bands - same values as
-    // AudioConfig.BAND_LABELS, just numeric. Only used for PINK_NOISE_TILT's
-    // per-band dB/octave calculation below.
-    private static final float[] BAND_CENTER_HZ = {
-            20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
-            800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
-    };
+    // Each sample's frequency, precomputed once in init() via AudioConfig.frequencyAt() - the
+    // exact same band-position-to-Hz mapping EqVisualizerView's curve uses, NOT an independent
+    // 20Hz-20kHz log sweep. Those two are subtly different: the real per-band Slider columns in
+    // eq_container are 16 evenly-weighted columns, so band 0's center sits at x=0.5/16 of the
+    // width and band 15's at x=15.5/16, not at the true 0%/100% a plain log(20..20000) sweep
+    // would place them at. Sampling via frequencyAt() at the same "(x/width)*16 - 0.5" band
+    // position keeps this curve's x-axis pixel-aligned with the EQ curve/grid/sliders drawn
+    // above it - a plain log sweep looked close but visibly drifted out of alignment with them
+    // away from the center of the view.
+    private final float[] centerHz = new float[CURVE_SAMPLES]; // precomputed once in init()
+
+    // --- Easter egg: radiation icon when the bass level goes nuts ---
+    // Fades in near the bass frequencies whenever the loudest bass sample rises past
+    private static final float BASS_NUKE_CUTOFF_HZ = 100f; // samples below this count as "bass" for this check
+    private static final float BASS_NUKE_THRESHOLD = 1.25f;
+    private static final float BASS_NUKE_ALPHA_RISE = 0.3f;
+    private static final float BASS_NUKE_ALPHA_FALL = 0.05f;
+    private int bassNukeSampleEnd; // last curve sample index under BASS_NUKE_CUTOFF_HZ, computed once in init()
+    private float bassNukeAlpha = 0f;
+    private Bitmap bassNukeIcon;
+    private Paint bassNukePaint;
+    private final Rect bassNukeSrcRect = new Rect();
+    private final RectF bassNukeDstRect = new RectF();
 
     // --- Pink noise tilt compensation (mode switch) ---
     // Real music approximates pink noise: roughly equal energy per OCTAVE,
-    // which - because this view measures average FFT-bin magnitude, i.e.
-    // energy per Hz, not per octave - shows up as a downward slope of about
-    // 3dB/octave toward the treble (confirmed: a white-noise test signal,
-    // which IS flat per Hz, renders as flat bars; real music does not).
-    // That's a genuine property of the signal, not a measurement bug.
-    // Enabling PINK_NOISE_TILT adds a compensating UPWARD slope of
-    // TILT_DB_PER_OCTAVE per octave above/below TILT_REF_HZ, so pink-noise-
-    // like content (most real music) reads roughly flat across all 16 bands
-    // instead of tapering off after the mid-bass. Trade-off: with this on, a
-    // true white-noise signal will now read as tilting UP toward the treble
-    // instead of flat, since the display is calibrated against the pink
-    // reference instead of the Hz-linear one - this is a deliberate choice,
-    // not a bug, matching how RTA/tuning tools (REW etc.) treat pink noise
-    // as the "flat" reference rather than white noise.
-    // Compile-time switch for now, per band_mult/etc. convention in this
-    // file - flip to true and rebuild to try it, no UI toggle yet.
+    // which - because this view measures FFT-bin magnitude, i.e. energy per
+    // Hz, not per octave - shows up as a downward slope of about 3dB/octave
+    // toward the treble (confirmed: a white-noise test signal, which IS flat
+    // per Hz, renders as flat; real music does not). That's a genuine
+    // property of the signal, not a measurement bug. Enabling PINK_NOISE_TILT
+    // adds a compensating UPWARD slope of TILT_DB_PER_OCTAVE per octave
+    // above/below TILT_REF_HZ, so pink-noise-like content (most real music)
+    // reads roughly flat across the curve instead of tapering off after the
+    // mid-bass. Trade-off: with this on, a true white-noise signal will now
+    // read as tilting UP toward the treble instead of flat, since the display
+    // is calibrated against the pink reference instead of the Hz-linear one -
+    // this is a deliberate choice, not a bug, matching how RTA/tuning tools
+    // (REW etc.) treat pink noise as the "flat" reference rather than white
+    // noise. Compile-time switch for now - flip to true and rebuild to try
+    // it, no UI toggle yet.
     private static final boolean PINK_NOISE_TILT = true;
     private static final float TILT_DB_PER_OCTAVE = 3f; // the standard pink-noise correction figure
     private static final float TILT_REF_HZ = 1000f; // pivot frequency - doesn't change the overall look much, ATTENUATION_DB absorbs any net offset
 
-    private static final float REF_MIN_DB = 0f;   // magnitude at/below this reads as silence
-    private static final float REF_MAX_DB = 50f;  // magnitude at/above this reads as full-height
-    private static final float RISE_SMOOTHING = 0.55f; // fast attack
-    private static final float FALL_SMOOTHING = 0.12f; // slow release (classic VU-meter feel)
+    private static final float REF_MIN_DB = -20f;   // magnitude at/below this reads as silence
+    private static final float REF_MAX_DB = 60f;  // magnitude at/above this reads as full-height
+    private static final float RISE_SMOOTHING = 1f; // attack
+    private static final float FALL_SMOOTHING = 0.15f; // release
     // Both apply only to smoothedContentDb[] (real captured audio), not to
     // the gain/attenuation offset - see processFft() for why that split
     // exists.
 
-    // Uniformly pulls every band down by this many dB before normalization,
+    // Uniformly pulls every sample down by this many dB before normalization,
     // independent of REF_MAX_DB. The difference: raising REF_MAX_DB also
     // widens the REF_MIN_DB..REF_MAX_DB window, which compresses/stretches
     // the whole visible dynamic range as a side effect. ATTENUATION_DB just
     // shifts everything down by a flat amount without touching that window's
-    // size - use this when the bars are simply too loud/tall overall but the
-    // existing compression (how much a given dB change moves the bar) looks
-    // right as-is.
-    private static final float ATTENUATION_DB = 5f;
+    // size - use this when the curve is simply too loud/tall overall but the
+    // existing compression (how much a given dB change moves it) looks right
+    // as-is.
+    private static final float ATTENUATION_DB = 0f;
 
-    // How many dB above REF_MIN_DB a band's gain reactivity fades in over,
+    // How many dB above REF_MIN_DB a sample's gain reactivity fades in over,
     // instead of switching on the instant rawDb ticks above REF_MIN_DB. A
     // hard on/off cutoff there flickers: the underlying magnitude is an 8-bit
     // integer scale, so a near-silent bin bounces between reading exactly 0
@@ -132,50 +163,74 @@ public class SpectrumAnalyzerView extends View {
     // instead of popping it from 0% to 100%.
     private static final float SILENCE_FADE_DB = 3f;
 
+    // Peak captured content (dB, real signal only - before EQ shift/tilt/attenuation) below
+    // which the whole curve fades toward invisible, over SILENCE_HIDE_FADE_DB of range - see
+    // displayAlpha/renderAlpha for how that fade itself is smoothed over time. Uses the loudest
+    // point across the whole curve each capture, so a single quiet-but-present tone still
+    // counts as "not silent" even if most of the spectrum is empty.
+    private static final float SILENCE_HIDE_DB = 2f;
+    private static final float SILENCE_HIDE_FADE_DB = 4f;
+    // Deliberately asymmetric, same spirit as RISE_SMOOTHING/FALL_SMOOTHING above but paced for
+    // an on/off visibility fade rather than per-sample bar motion: appear quickly once real
+    // audio starts, but fade out slowly (over roughly a second) so a brief pause between tracks
+    // or a quiet passage in a song doesn't flicker the whole curve in and out.
+    private static final float ALPHA_RISE_SMOOTHING = 0.4f;
+    private static final float ALPHA_FALL_SMOOTHING = 0.08f;
+
     private static final float band_mult = 2f;
-    // Same top-padding fractions as EqVisualizerView's TOP_OFFSET_RATIO/DRAW_HEIGHT_RATIO,
-    // so bars are bounded to the same plot area as the curve/grid and can never grow up
-    // into the frequency-label row above it.
-    private static final float TOP_OFFSET_RATIO = 0.25555555555555f;
-    private static final float DRAW_HEIGHT_RATIO = 0.72222222222222f;
 
-    // --- Slow, high-resolution path for bands 0 (20Hz) and 1 (31.5Hz) only ---
-    // See point 5 of the class javadoc for why this exists. LOW_FFT_SIZE must
-    // be a power of two (the FFT below is radix-2). 8192 samples @ ~44.1kHz
-    // is ~186ms - too slow for the upper bands' snappy response, exactly
-    // right for bass.
-    private static final int LOW_FFT_SIZE = 8192;
-    private static final long LOW_FFT_MIN_INTERVAL_MS = 150; // throttle: don't recompute faster than this
-    // The built-in FFT capture (bands 2-15) reports raw magnitude on an
-    // unwindowed, unnormalized ~8-bit scale straight from the platform's
-    // native Visualizer effect, whose exact internal scaling we can't
-    // inspect. Our own FFT runs on a Hann-windowed, [-1,1]-normalized, much
-    // longer (8x) buffer, so its raw magnitude lands on a very different
-    // scale. This constant is a rough empirical correction (undo the [-1,1]
-    // normalization, i.e. back to an ~8-bit scale) so bands 0/1 read at
-    // roughly the same visual height as their neighbors - it is a guess and
-    // will likely need tuning by eye once seen against bands 2+ on real
-    // hardware.
-    private static final float LOW_BAND_MAGNITUDE_SCALE = 0.7f;
-
-    private final float[] lowRingBuffer = new float[LOW_FFT_SIZE]; // sliding window of recent PCM samples, oldest first
-    private int lowRingFill = 0;       // how many valid samples are currently in the ring (caps at LOW_FFT_SIZE)
-    private long lastLowFftTime = 0;
-    private boolean lowBandsReady = false;
-    private final float[] lowBandMagnitude = new float[2]; // [0]=20Hz band, [1]=31.5Hz band
-    private final float[] fftScratchRe = new float[LOW_FFT_SIZE];
-    private final float[] fftScratchIm = new float[LOW_FFT_SIZE];
+    // Same measured-not-hardcoded slider bounds as EqVisualizerView (see its setSliderBounds()
+    // javadoc) - kept in sync by MainActivity so the curve is bounded to the same plot area as
+    // the EQ curve/grid drawn on top and can never grow up into the frequency-label row above
+    // it, regardless of eq_container's actual per-band row weights.
+    private float topOffsetRatio = 0.17391304f;
+    private float drawHeightRatio = 0.82608696f;
 
     private Visualizer visualizer;
 
-    private final float[] rawLevels = new float[AudioConfig.NUM_BANDS];     // this capture's final level (content ballistics + instant gain/attenuation), 0..1
-    private final float[] displayLevels = new float[AudioConfig.NUM_BANDS]; // == rawLevels as of the last audio capture; kept separate only for the prevLevels/frameCallback interpolation below
-    private final int[] gains = new int[AudioConfig.NUM_BANDS];             // raw slider values, 0..12 (6 = 0dB)
+    // On stock QF/K706 policies (no BitPerfect-style Magisk module reconfiguring primary vs fast
+    // output routing - see SessionResolver's doc), SessionResolver has to resolve a per-track
+    // session instead of the global output mix (session 0). That pre-mix capture point measures
+    // noticeably quieter than the post-mix session-0 tap - this boost compensates, applied only
+    // when attached to a non-zero session (see attachVisualizer()), so session-0 capture is
+    // unaffected. Starting estimate from eyeballing a real K706 without BitPerfect (level sat
+    // near the bottom of the REF_MIN_DB..REF_MAX_DB window instead of its center) - tune by eye.
+    private static final float NON_PRIMARY_SESSION_GAIN_DB = 30f;
+    private float sessionGainLinear = 1f;
+
+    private final float[] rawLevels = new float[CURVE_SAMPLES];     // this capture's final level (content ballistics + instant gain/attenuation), 0..1
+    private final float[] displayLevels = new float[CURVE_SAMPLES]; // == rawLevels as of the last audio capture; kept separate only for the prevLevels/frameCallback interpolation below
+    private final int[] gains = new int[AudioConfig.NUM_BANDS];     // raw EQ slider values, 0..12 (6 = 0dB) - fed into AudioConfig.compositeResponseDb()
+
+    // --- Loudness/sub reactive shift (independently togglable, no UI switches yet) ---
+    // Whether the RTA's gain-reactive shift (see eqDb in processWaveform()) also reflects the
+    // loudness-correction preview and the current sub level, on top of the raw manual EQ curve it
+    // already reacts to. Two separate flags (not one) since they're conceptually independent -
+    // e.g. you might want the sub level always reflected but the loudness preview only sometimes.
+    // The data below is fed in unconditionally by MainActivity either way; these flags only gate
+    // whether processWaveform() actually uses it. Edit the defaults here, or call
+    // setLoudnessReactive()/setSubReactive() once real UI switches exist for each.
+    private boolean loudnessReactiveEnabled = true;
+    private boolean subReactiveEnabled = true;
+    private boolean bassReactiveEnabled = true;
+    private final float[] loudnessCorrectionGains = new float[AudioConfig.NUM_BANDS]; // same baseline-6 delta convention as EqVisualizerView's
+    private boolean loudnessCorrectionActive = false;
+    private float subLevelCutoffHz = 80f;
+    private float subLevelGainDb = 0f;
+    // Front "Bass Boost" stage (see AudioConfig.bassShapingResponseDb()) - same data
+    // EqVisualizerView/FmVisualizerView's front curve already gets from MainActivity.
+    private float bassFilterHz = 20f, bassBoostFreqHz = 0f, bassBoostGainDb = 0f;
     // Fast-attack/slow-release ballistics live HERE now, applied to the raw
-    // captured dB per band before gain/attenuation are added - see the
+    // captured dB per sample before gain/attenuation are added - see the
     // ballistics comment inside processFft() for why they moved off the
     // final (gain-inclusive) value.
-    private final float[] smoothedContentDb = new float[AudioConfig.NUM_BANDS];
+    private final float[] smoothedContentDb = new float[CURVE_SAMPLES];
+
+    // Working buffers for the frequency-axis smoothing pass (see FREQ_SMOOTH_RADIUS) - instDb
+    // holds each sample's raw Catmull-Rom-interpolated dB before smoothing, spatialDb the result
+    // after the triangular kernel pass, which then feeds the ballistics below.
+    private final float[] instDb = new float[CURVE_SAMPLES];
+    private final float[] spatialDb = new float[CURVE_SAMPLES];
 
     // --- 60fps render interpolation ---
     // Audio captures only arrive at ~20Hz (or whatever the device reports),
@@ -184,8 +239,15 @@ public class SpectrumAnalyzerView extends View {
     // interpolates between the last two captured value-sets based on how far
     // through the current capture interval we are, independent of the audio
     // capture rate.
-    private final float[] prevLevels = new float[AudioConfig.NUM_BANDS];   // displayLevels as of the previous capture
-    private final float[] renderLevels = new float[AudioConfig.NUM_BANDS]; // interpolated values onDraw() actually reads
+    private final float[] prevLevels = new float[CURVE_SAMPLES];   // displayLevels as of the previous capture
+    private final float[] renderLevels = new float[CURVE_SAMPLES]; // interpolated values onDraw() actually reads
+    // Whole-curve visibility fade (0 = fully hidden, 1 = fully shown) - same prev/display/
+    // render + Choreographer-interpolation pattern as the level arrays above, just a single
+    // scalar instead of one per sample. Computed/smoothed once per capture in processFft() (see
+    // SILENCE_HIDE_DB), then interpolated at 60fps here like everything else.
+    private float prevAlpha = 0f;
+    private float displayAlpha = 0f;
+    private float renderAlpha = 0f;
     private long lastCaptureTime = 0;
     private long captureIntervalMs = 50; // running estimate of the gap between captures, self-adjusts in processFft()
     private boolean frameCallbackActive = false;
@@ -195,19 +257,31 @@ public class SpectrumAnalyzerView extends View {
             if (!frameCallbackActive) return;
             long elapsed = System.currentTimeMillis() - lastCaptureTime;
             float t = captureIntervalMs > 0 ? Math.min(1f, elapsed / (float) captureIntervalMs) : 1f;
-            for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            for (int i = 0; i < CURVE_SAMPLES; i++) {
                 renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
             }
+            renderAlpha = prevAlpha + (displayAlpha - prevAlpha) * t;
             invalidate();
             Choreographer.getInstance().postFrameCallback(this);
         }
     };
 
-    private Drawable customBackground;
-    private final Path bgPath = new Path();
+    // Same 6-color warm(bass)->cool(treble) palette used across EqVisualizerView/
+    // FmVisualizerView, spread evenly left-to-right here since there are no discrete bands to
+    // anchor gradient positions to anymore.
+    private int[] spectrumColors;
+    private int colorFill;
 
-    private Paint barPaint;
-    private final RectF barRect = new RectF();
+    private Paint linePaint;
+    private Paint fillPaint;
+    private final Path fullPath = new Path();
+    private final Path fillPath = new Path();
+
+    // Cache for gradient parameters to avoid reallocation every frame - same idea as
+    // EqVisualizerView.
+    private float lastGradW = -1;
+    private float lastDrawStartY = -1;
+    private float lastGridBottom = -1;
 
     public SpectrumAnalyzerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -215,27 +289,79 @@ public class SpectrumAnalyzerView extends View {
     }
 
     private void init() {
-        // Same rounded-corner panel background as EqVisualizerView, so this
-        // view can sit behind it as the bottom-most layer without a visible
-        // seam between the two.
-        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.ui_bg_layer);
+        float density = getContext().getResources().getDisplayMetrics().density;
 
-        groupColors = new int[]{
+        spectrumColors = new int[]{
                 ContextCompat.getColor(getContext(), R.color.btn_delete_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_import_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_export_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_add_bg),
                 ContextCompat.getColor(getContext(), R.color.btn_auto_bg)
-        };
 
-        barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        barPaint.setStyle(Paint.Style.FILL);
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3),
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3),
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3),
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3),
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3),
+//                ContextCompat.getColor(getContext(), R.color.text_theme_aware_3)
+        };
+        colorFill = ContextCompat.getColor(getContext(), R.color.visualizer_fill);
+
+        linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        linePaint.setStrokeWidth(2.5f * density);
+        linePaint.setStyle(Paint.Style.STROKE);
+        linePaint.setStrokeCap(Paint.Cap.ROUND);
+        linePaint.setStrokeJoin(Paint.Join.ROUND);
+        // Alpha (base 170, further scaled by the silence-hide fade) is set fresh every frame in
+        // onDraw() instead of here.
+
+        fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        fillPaint.setStyle(Paint.Style.FILL);
+
+        // Sample center frequencies - see centerHz's declaration for why this goes through
+        // AudioConfig.frequencyAt() (matching the EQ curve/sliders' x-axis) rather than an
+        // independent log sweep. Fixed for the view's lifetime, computed once here.
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            float t = (j + 0.5f) / CURVE_SAMPLES * AudioConfig.NUM_BANDS - 0.5f;
+            // Extrapolate frequencies for values outside [0, 15] range to avoid clamping shelf at the edge
+            if (t < 0f) {
+                float ratio = AudioConfig.BAND_CENTER_HZ[1] / AudioConfig.BAND_CENTER_HZ[0];
+                centerHz[j] = (float) (AudioConfig.BAND_CENTER_HZ[0] * Math.pow(ratio, t));
+            } else if (t > AudioConfig.NUM_BANDS - 1) {
+                // Get the frequency of your very last EQ band
+                float lastBandFreq = AudioConfig.BAND_CENTER_HZ[AudioConfig.NUM_BANDS - 1];
+
+                // Define the maximum frequency you want the right edge of the graph to display
+                float maxFreq = 22000f; // Change this to 32000f, 48000f, etc. depending on your hardware/needs
+
+                // Calculate where this specific sample falls in the "overhang" region
+                float tStart = AudioConfig.NUM_BANDS - 1;
+                float tEnd = ((CURVE_SAMPLES - 0.5f) / CURVE_SAMPLES) * AudioConfig.NUM_BANDS - 0.5f;
+                float fraction = (t - tStart) / (tEnd - tStart);
+
+                // Smoothly extrapolate up to maxFreq logarithmically to match the rest of the curve style
+                centerHz[j] = (float) (lastBandFreq * Math.pow(maxFreq / lastBandFreq, fraction));
+            } else {
+                centerHz[j] = AudioConfig.frequencyAt(t);
+            }
+        }
+
+        // nothing important :-]
+        bassNukeSampleEnd = 0;
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            if (centerHz[j] < BASS_NUKE_CUTOFF_HZ) bassNukeSampleEnd = j; else break;
+        }
+        bassNukeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bass_radiation);
+        bassNukePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) gains[i] = 6; // default: 0 dB on every band
     }
 
-    /** Feed the current 16 band gain slider values (0..12, 6 = 0dB) in for the visual gain scaling. */
+    /**
+     * Feed the current 16 EQ band gain slider values (0..12, 6 = 0dB) in for the EQ-reactive
+     * scaling - see AudioConfig.compositeResponseDb() usage in processFft().
+     */
     public void setGains(int[] newGains) {
         System.arraycopy(newGains, 0, this.gains, 0, AudioConfig.NUM_BANDS);
         // No invalidate() here on purpose - the Choreographer frame callback
@@ -243,53 +369,177 @@ public class SpectrumAnalyzerView extends View {
         // running; no need to force an extra one on every slider drag tick.
     }
 
+    /** Enables/disables the RTA's loudness-correction reactive shift - see loudnessReactiveEnabled's declaration. */
+    public void setLoudnessReactive(boolean enabled) {
+        loudnessReactiveEnabled = enabled;
+    }
+
+    /** Enables/disables the RTA's sub-level reactive shift, independent of setLoudnessReactive() - see subReactiveEnabled's declaration. */
+    public void setSubReactive(boolean enabled) {
+        subReactiveEnabled = enabled;
+    }
+
+    /** Enables/disables the RTA's front Bass Boost reactive shift, independent of the other two - see bassReactiveEnabled's declaration. */
+    public void setBassReactive(boolean enabled) {
+        bassReactiveEnabled = enabled;
+    }
+
     /**
-     * Attempts to attach to the global output mix (session 0) and start FFT
-     * capture. Safe to call repeatedly (no-ops if already running). Any
-     * failure (missing permission, ROM restriction, no active session, etc.)
-     * is caught and logged - the view simply stays blank rather than taking
-     * the app down with it. Call from onResume() once RECORD_AUDIO is granted.
+     * Feeds the same loudness-correction curve data as EqVisualizerView.setLoudnessCorrection()
+     * (baseline-6 delta convention) - only applied to the RTA's own shift while
+     * loudnessReactiveEnabled is true, but accepted unconditionally so that's a one-flag switch.
+     */
+    public void setLoudnessCorrection(float[] correctionGains, boolean active) {
+        loudnessCorrectionActive = active;
+        if (active) System.arraycopy(correctionGains, 0, this.loudnessCorrectionGains, 0, AudioConfig.NUM_BANDS);
+    }
+
+    /** Feeds the same sub cutoff/gain as EqVisualizerView.setSubFilter() - see subReactiveEnabled. */
+    public void setSubLevel(float cutoffHz, float gainDb) {
+        subLevelCutoffHz = cutoffHz;
+        subLevelGainDb = gainDb;
+    }
+
+    /** Feeds the same front Bass Boost data as EqVisualizerView/FmVisualizerView's setBassShaping() - see bassReactiveEnabled. */
+    public void setBassShaping(float filterHz, float boostFreqHz, float boostGainDb) {
+        bassFilterHz = filterHz;
+        bassBoostFreqHz = boostFreqHz;
+        bassBoostGainDb = boostGainDb;
+    }
+
+    /** See EqVisualizerView.setSliderBounds() - same idea, kept in sync with the same measurement. */
+    public void setSliderBounds(float topRatio, float heightRatio) {
+        topOffsetRatio = topRatio;
+        drawHeightRatio = heightRatio;
+        // No invalidate() here either, for the same reason as setGains() above.
+    }
+
+    /**
+     * Resolves the real audio session (see SessionResolver's doc - session 0 is silent on stock
+     * QF/K706 policies, which route media to the "fast" mixPort instead of "primary") and attaches
+     * to it asynchronously. Safe to call repeatedly (no-ops if already running or already
+     * resolving). Call from onResume() once RECORD_AUDIO is granted.
      */
     public void start() {
         if (visualizer != null) return;
+        SessionResolver resolver = SessionResolver.getInstance(getContext());
+        resolver.start();
+        resolver.resolveAsync(null, sessionId -> post(() -> attachVisualizer(sessionId <= 0 ? 0 : sessionId)));
+    }
+
+    /**
+     * Attempts to attach to the given audio session and start FFT capture. Any failure (missing
+     * permission, ROM restriction, session gone stale between resolve and attach, etc.) is caught
+     * and logged - the view simply stays blank rather than taking the app down with it. Falls back
+     * to session 0 once if the resolved session fails to attach at all.
+     */
+    private void attachVisualizer(int sessionId) {
+        if (visualizer != null) return;
+        sessionGainLinear = (sessionId == 0) ? 1f : (float) Math.pow(10.0, NON_PRIMARY_SESSION_GAIN_DB / 20.0);
         try {
-            Visualizer v = new Visualizer(0); // 0 = global output mix, not this app's own (nonexistent) session
+            Visualizer v = new Visualizer(sessionId);
+
+            // Absolute levels, not Android's default per-block auto-normalization (which rescales
+            // every capture block to full scale regardless of the track's actual level) - without
+            // this the displayed spectrum's height says nothing about how loud the content is.
+            int scaling = v.setScalingMode(Visualizer.SCALING_MODE_AS_PLAYED);
+            if (scaling != Visualizer.SUCCESS) {
+                Log.w(TAG, "Visualizer refused SCALING_MODE_AS_PLAYED (" + scaling + ") - levels are normalized");
+            }
 
             int[] range = Visualizer.getCaptureSizeRange();
-            int captureSize = range[1]; // use the device max for the best low-frequency bin resolution
+            int captureSize = range[1]; // use the device max for best low-frequency bin resolution
             if (captureSize < range[0]) captureSize = range[0];
             v.setCaptureSize(captureSize);
 
+            // --- Initialize windowing and FFT structures ---
+            hannWindow = new float[captureSize];
+            for (int i = 0; i < captureSize; i++) {
+                // Compute Hann window coefficients: 0.5 * (1 - cos(2*pi*i / (N-1)))
+                hannWindow[i] = (float) (0.5 * (1.0 - Math.cos(2.0 * Math.PI * i / (captureSize - 1))));
+            }
+            fftReal = new float[captureSize];
+            fftImag = new float[captureSize];
+            magnitudes = new float[captureSize / 2 + 1];
+
             int rate = Visualizer.getMaxCaptureRate();
-            if (rate <= 0) rate = 20000; // fallback: 20Hz, in milliHertz as the API expects
+            if (rate <= 0) rate = 20000;
 
             v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
                 @Override
                 public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                    // Feeds the slow, high-resolution bass-only path (bands 0/1) - see processWaveform().
+                    // Route the raw PCM waveform to our custom processing pipeline
                     processWaveform(waveform, samplingRate);
                 }
 
                 @Override
                 public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-                    processFft(fft, samplingRate);
+                    // Unused now that we are windowing manually
                 }
-            }, rate, true, true);
+            }, rate, true, false); // Crucial: true for waveform, false for FFT
 
             v.setEnabled(true);
             visualizer = v;
-            Log.d(TAG, "Spectrum analyzer attached to session 0, captureSize=" + captureSize);
+            Log.d(TAG, "Spectrum analyzer attached to session " + sessionId + ", captureSize=" + captureSize);
 
             if (!frameCallbackActive) {
                 frameCallbackActive = true;
                 Choreographer.getInstance().postFrameCallback(frameCallback);
             }
         } catch (Throwable t) {
-            // Deliberately broad: this talks to an untested vendor ROM's audio
-            // stack, so anything from SecurityException (CAPTURE_AUDIO_OUTPUT
-            // denied) to a native UnsatisfiedLinkError is possible here.
-            Log.w(TAG, "Spectrum analyzer unavailable: " + t);
+            Log.w(TAG, "Spectrum analyzer session " + sessionId + " unavailable: " + t);
             visualizer = null;
+            if (sessionId != 0) attachVisualizer(0);
+        }
+    }
+
+    // Small floor so a true-zero bin reads as a large-but-finite negative dB instead of -Infinity,
+    // without flattening genuinely quiet (but present) content into a near-linear response the way
+    // a "+1" additive floor would - see processWaveform()'s dB-domain quadratic interpolation.
+    private static final float DB_FLOOR_MAG = 0.1f;
+
+    private static float dbMag(float mag) {
+        return (float) (20 * Math.log10(mag + DB_FLOOR_MAG));
+    }
+
+    private void computeFft(float[] real, float[] imag) {
+        int n = real.length;
+
+        // Bit-reversal permutation
+        int j = 0;
+        for (int i = 0; i < n; i++) {
+            if (i < j) {
+                float temp = real[i]; real[i] = real[j]; real[j] = temp;
+                temp = imag[i]; imag[i] = imag[j]; imag[j] = temp;
+            }
+            int m = n >> 1;
+            while (m >= 1 && j >= m) {
+                j -= m;
+                m >>= 1;
+            }
+            j += m;
+        }
+
+        // Cooley-Tukey decimation-in-time
+        for (int size = 2; size <= n; size *= 2) {
+            int halfSize = size / 2;
+            double tabStep = 2.0 * Math.PI / size;
+            for (int i = 0; i < n; i += size) {
+                for (int k = 0; k < halfSize; k++) {
+                    double angle = -k * tabStep;
+                    float wr = (float) Math.cos(angle);
+                    float wi = (float) Math.sin(angle);
+
+                    int edge = i + k + halfSize;
+                    float tr = real[edge] * wr - imag[edge] * wi;
+                    float ti = real[edge] * wi + imag[edge] * wr;
+
+                    real[edge] = real[i + k] - tr;
+                    imag[edge] = imag[i + k] - ti;
+                    real[i + k] += tr;
+                    imag[i + k] += ti;
+                }
+            }
         }
     }
 
@@ -304,338 +554,257 @@ public class SpectrumAnalyzerView extends View {
         } finally {
             visualizer = null;
         }
-        // Reset the slow bass path so a later restart re-fills its window
-        // from fresh audio instead of analyzing stale samples.
-        lowRingFill = 0;
-        lowBandsReady = false;
-        lastLowFftTime = 0;
 
         frameCallbackActive = false;
         Choreographer.getInstance().removeFrameCallback(frameCallback);
     }
 
-    private void processFft(byte[] fft, int samplingRateMilliHz) {
-        int n = fft.length; // capture size; n/2 complex bins are packed into these n bytes
-        if (n < 4) return;
+    private void processWaveform(byte[] waveform, int samplingRateMilliHz) {
+        int captureLen = waveform.length;
+        if (captureLen < 4 || fftReal == null || fftReal.length != captureLen) return;
+        int n = captureLen;
         int numBins = n / 2;
         float sampleRateHz = samplingRateMilliHz / 1000f;
 
-        float[] bandSum = new float[AudioConfig.NUM_BANDS];
-        int[] bandCount = new int[AudioConfig.NUM_BANDS];
+        // 1. Prepare Data: Convert PCM bytes to Windowed Floats
+        for (int i = 0; i < n; i++) {
+            // Convert unsigned 8-bit PCM (0..255) to normalized float (-1..1)
+            float sample = ((float) (waveform[i] & 0xFF) - 128f) / 128f;
+            // Apply Hann window to eliminate spectral leakage (the "jumps")
+            fftReal[i] = sample * hannWindow[i];
+            fftImag[i] = 0f;
+        }
 
+        // 2. Execute the Cooley-Tukey FFT
+        computeFft(fftReal, fftImag);
+
+        // 3. Calculate Magnitudes
         for (int bin = 0; bin <= numBins; bin++) {
-            float re, im;
-            if (bin == 0) {
-                re = fft[0]; im = 0; // DC
-            } else if (bin == numBins) {
-                re = fft[1]; im = 0; // Nyquist
-            } else {
-                re = fft[2 * bin]; im = fft[2 * bin + 1];
-            }
-            float magnitude = (float) Math.sqrt(re * re + im * im);
-
-            float freqHz = bin * sampleRateHz / n;
-            int band = bandForFrequency(freqHz);
-            if (band >= 0) {
-                bandSum[band] += magnitude;
-                bandCount[band]++;
-            }
+            float r = fftReal[bin];
+            float im = fftImag[bin];
+            magnitudes[bin] = (float) Math.sqrt(r * r + im * im);
         }
 
-        // Bands 0/1 (20Hz/31.5Hz) have their own slower, higher-resolution
-        // source - use it once the first window has filled (see class
-        // javadoc point 5 and processWaveform()/computeLowBandMagnitudes()).
-        if (lowBandsReady) {
-            bandSum[0] = lowBandMagnitude[0] * LOW_BAND_MAGNITUDE_SCALE;
-            bandCount[0] = 1;
-            bandSum[1] = lowBandMagnitude[1] * LOW_BAND_MAGNITUDE_SCALE;
-            bandCount[1] = 1;
+        // See NON_PRIMARY_SESSION_GAIN_DB's doc - a no-op (sessionGainLinear == 1f) whenever
+        // attached to session 0.
+        if (sessionGainLinear != 1f) {
+            for (int bin = 0; bin <= numBins; bin++) magnitudes[bin] *= sessionGainLinear;
         }
 
-        // Any band still with no bin/data at this point - in practice just
-        // bands 0/1 during the brief startup window before lowBandsReady
-        // flips true - borrows the nearest resolved neighbor's average
-        // magnitude, attenuated by distance, so they still move with the
-        // beat instead of staying dead. This is a display fallback, not real
-        // independent low-band resolution.
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (bandCount[i] > 0) continue;
-            for (int distance = 1; distance < AudioConfig.NUM_BANDS; distance++) {
-                int lo = i - distance, hi = i + distance;
-                int source = -1;
-                if (lo >= 0 && bandCount[lo] > 0) source = lo;
-                else if (hi < AudioConfig.NUM_BANDS && bandCount[hi] > 0) source = hi;
-                if (source >= 0) {
-                    float attenuation = (float) Math.pow(0.65, distance);
-                    bandSum[i] = (bandSum[source] / bandCount[source]) * attenuation;
-                    bandCount[i] = 1;
-                    break;
-                }
+        float peakContentDb = -999f;
+
+        // 4a. Sample the spectral envelope at each curve point via cubic Hermite (Catmull-Rom)
+        // interpolation through the 4 nearest real bins, evaluated at that sample's fractional bin
+        // position. This passes exactly through the real bin values with a continuously-matching
+        // slope across every bin boundary - unlike fitting a separate parabola per bin (which
+        // disagreed in slope at the handoff between segments, producing small overshoot "ears" next
+        // to real peaks that then needed a post-hoc clamp, which in turn clipped genuine peak
+        // reconstruction too), this is smooth by construction and needs no clamp.
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            float freqHz = centerHz[j];
+
+            float binPos = freqHz * n / sampleRateHz;
+            binPos = Math.max(1f, Math.min(numBins - 1, binPos));
+            int k = Math.max(1, Math.min(numBins - 2, (int) Math.floor(binPos)));
+            float t = binPos - k;
+
+            float p0 = dbMag(magnitudes[Math.max(0, k - 1)]);
+            float p1 = dbMag(magnitudes[k]);
+            float p2 = dbMag(magnitudes[Math.min(numBins - 1, k + 1)]);
+            float p3 = dbMag(magnitudes[Math.min(numBins - 1, k + 2)]);
+
+            float m1 = (p2 - p0) * 0.5f; // tangent at p1
+            float m2 = (p3 - p1) * 0.5f; // tangent at p2
+
+            float t2 = t * t;
+            float t3 = t2 * t;
+            float h00 = 2f * t3 - 3f * t2 + 1f;
+            float h10 = t3 - 2f * t2 + t;
+            float h01 = -2f * t3 + 3f * t2;
+            float h11 = t3 - t2;
+
+            instDb[j] = h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+        }
+
+        // 4b. Frequency-axis (fractional-octave-style) smoothing for readability - see
+        // FREQ_SMOOTH_RADIUS's declaration for why. CURVE_SAMPLES is uniformly log-spaced, so a
+        // fixed-width triangular kernel over neighboring samples approximates constant-fractional-
+        // octave smoothing for free.
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            float sum = 0f, weight = 0f;
+            for (int d = -FREQ_SMOOTH_RADIUS; d <= FREQ_SMOOTH_RADIUS; d++) {
+                int idx = j + d;
+                if (idx < 0 || idx >= CURVE_SAMPLES) continue;
+                float w = FREQ_SMOOTH_RADIUS + 1 - Math.abs(d); // triangular kernel
+                sum += instDb[idx] * w;
+                weight += w;
             }
+            spatialDb[j] = sum / weight;
         }
 
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            float avgMag = bandCount[i] > 0 ? bandSum[i] / bandCount[i] : 0f;
-            float rawDb = (float) (20 * Math.log10(avgMag + 1f));
+        // 4c. Ballistics, EQ reactivity and normalization per sample.
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            float freqHz = centerHz[j];
+            float rawDb = spatialDb[j];
 
-            // Fast attack, slow release - classic spectrum analyzer
-            // ballistics - applied ONLY to the real captured content, in
-            // dB-space, before gain/attenuation are added below. This used
-            // to be applied to the final gain-inclusive value instead, which
-            // meant every gain/attenuation change had to "catch up" through
-            // the same slow-release ballistics as real audio - since content
-            // naturally dips and recovers every capture, that made the
-            // *entire* graph look like it was bouncing/settling for a moment
-            // after every +/- press (most visible there because +/- moves
-            // every band's gain at once). Gain and attenuation are UI
-            // settings, not signal to smooth, so they're added after this
-            // step and take effect on the very next capture instead.
-            float prevContentDb = smoothedContentDb[i];
+            // --- Apply Ballistics ---
+            float prevContentDb = smoothedContentDb[j];
             float contentSmoothing = rawDb > prevContentDb ? RISE_SMOOTHING : FALL_SMOOTHING;
-            smoothedContentDb[i] = prevContentDb + (rawDb - prevContentDb) * contentSmoothing;
+            smoothedContentDb[j] = prevContentDb + (rawDb - prevContentDb) * contentSmoothing;
+            peakContentDb = Math.max(peakContentDb, smoothedContentDb[j]);
 
-            // A band with no/near-no real captured energy shouldn't have its
-            // slider gain conjure a bar out of nothing - that misrepresents
-            // what's actually playing. "presence" ramps 0..1 as rawDb rises
-            // through the SILENCE_FADE_DB range just above REF_MIN_DB, so a
-            // truly silent band (presence 0) ignores the gain shift entirely
-            // while a band with genuine signal (presence 1) reacts fully -
-            // see SILENCE_FADE_DB's declaration comment for why this is a
-            // fade and not a hard cutoff. Based on the instantaneous rawDb,
-            // not the smoothed content, so silence is detected promptly.
-            float presence = (rawDb - REF_MIN_DB) / SILENCE_FADE_DB;
+            // --- Presence Gate (CRUCIAL FIX: Use smoothed value instead of rawDb) ---
+            // This prevents raw frame-to-frame noise from modulating the EQ and Tilt gains downstream.
+            float presence = (smoothedContentDb[j] - REF_MIN_DB) / SILENCE_FADE_DB;
             presence = Math.max(0f, Math.min(1f, presence));
-            // Gain-reactive shift applied here, in dB-space, BEFORE normalizing -
-            // not as a multiplier on the already-clamped-to-[0,1] level (that was
-            // the bug: multiplying a bounded value is wildly asymmetric depending
-            // on how close it already sits to 0 or 1 - a boost near the ceiling
-            // has nowhere to go, a cut near the floor barely moves). Adding a
-            // fixed dB offset before normalizing shifts every band by the same
-            // fraction of the REF_MIN_DB..REF_MAX_DB window regardless of where
-            // it currently sits, so boost and cut feel symmetric. Scaled by
-            // presence so silent bands don't react to it.
-            float db = smoothedContentDb[i] + presence * (gains[i] - 6) * 2f * band_mult;
-            // Pink-noise tilt compensation - see PINK_NOISE_TILT's
-            // declaration comment for what this does and why. Scaled by the
-            // same presence fade as the gain shift: without it, a silent
-            // treble band would get several dB of tilt boost added to
-            // literal near-zero content, making it look like there's real
-            // energy there when there isn't - same "conjuring a bar out of
-            // nothing" problem the gain shift has if left ungated.
+
+            // --- EQ and Compensation ---
+            float eqDb = AudioConfig.compositeResponseDb(gains, freqHz);
+            if (loudnessReactiveEnabled && loudnessCorrectionActive) {
+                // loudnessCorrectionGains is already delta-encoded (baseline 6 = no change), so
+                // this composes directly on top of the raw manual EQ's own shift above.
+                eqDb += AudioConfig.compositeResponseDb(loudnessCorrectionGains, freqHz);
+            }
+            if (subReactiveEnabled) {
+                // Clamped to non-negative: subFilterResponseDb() models the LPF's actual rolloff
+                // (deeply negative well above cutoff), which is correct for drawing the sub's own
+                // dedicated curve but wrong to add directly here - a turned-up sub doesn't SUPPRESS
+                // treble in real life, it just has no effect there, so this should taper to exactly
+                // 0 above the passband instead of subtracting tens of dB from the whole RTA.
+                eqDb += Math.max(0f, AudioConfig.subFilterResponseDb(freqHz, subLevelCutoffHz, AudioConfig.SUB_FILTER_ORDER, subLevelGainDb));
+            }
+            if (bassReactiveEnabled) {
+                // NOT clamped, unlike the sub term above - that clamp exists because
+                // subFilterResponseDb()'s rolloff extends (incorrectly, for this purpose) into
+                // frequencies the sub has no real effect on. Here both terms are already 0
+                // wherever the filter/shelf has no real effect (well above the HPF cutoff or the
+                // boost's own corner), and the HPF's cut is a genuine attenuation of the real
+                // signal at low frequencies - it should suppress the RTA there, not be floored.
+                eqDb += AudioConfig.bassShapingResponseDb(freqHz, bassFilterHz, bassBoostFreqHz, bassBoostGainDb);
+            }
+            float db = smoothedContentDb[j] + presence * eqDb * band_mult;
+
             if (PINK_NOISE_TILT) {
-                float octaves = (float) (Math.log(BAND_CENTER_HZ[i] / TILT_REF_HZ) / Math.log(2));
+                float octaves = (float) (Math.log(freqHz / TILT_REF_HZ) / Math.log(2));
                 db += presence * TILT_DB_PER_OCTAVE * octaves;
             }
-            // Flat attenuation applied last, still in dB-space and before
-            // normalization - always applied, even to silent bands, since it
-            // only ever pulls level down and can't conjure a bar out of
-            // nothing the way the gain shift could - see ATTENUATION_DB's
-            // declaration comment for why this is not the same knob as
-            // REF_MAX_DB.
+
             db -= ATTENUATION_DB;
+
+            // --- Final Normalization ---
+            // Neither end is clamped here - a hot transient can now rise above the nominal 1.0
+            // "plot top" line into the label-row headroom above it (see onDraw()'s clip rect,
+            // extended up to y=0 so this is actually visible instead of being cut off immediately)
+            // instead of flattening into a hard ceiling, the same way quiet content already dips
+            // below the baseline instead of flattening at 0.
             float normalized = (db - REF_MIN_DB) / (REF_MAX_DB - REF_MIN_DB);
-            rawLevels[i] = Math.max(0f, Math.min(1f, normalized));
+            rawLevels[j] = normalized;
         }
 
-        // Snapshot the outgoing values as the interpolation start point, and
-        // re-estimate the gap between captures, before overwriting
-        // displayLevels[] with this capture's new levels - see frameCallback,
-        // which animates renderLevels[] from prevLevels[] to displayLevels[]
-        // over this interval instead of jumping on every capture. This is
-        // pure sub-frame visual interpolation between two already-final
-        // capture values now, not ballistics (that happened above, on
-        // content only) - so displayLevels[] is just a direct copy of
-        // rawLevels[], no further smoothing/lag here.
+        // 5. Update Visibility Alpha
+        float targetAlpha = (peakContentDb - SILENCE_HIDE_DB) / SILENCE_HIDE_FADE_DB;
+        targetAlpha = Math.max(0f, Math.min(1f, targetAlpha));
+        float alphaSmoothing = targetAlpha > displayAlpha ? ALPHA_RISE_SMOOTHING : ALPHA_FALL_SMOOTHING;
+        prevAlpha = displayAlpha;
+        displayAlpha = displayAlpha + (targetAlpha - displayAlpha) * alphaSmoothing;
+
+        // 6. Visual Interpolation Timing
         long now = System.currentTimeMillis();
         if (lastCaptureTime != 0) {
             long observed = now - lastCaptureTime;
             if (observed > 0) captureIntervalMs = observed;
         }
-        System.arraycopy(displayLevels, 0, prevLevels, 0, AudioConfig.NUM_BANDS);
+        System.arraycopy(displayLevels, 0, prevLevels, 0, CURVE_SAMPLES);
         lastCaptureTime = now;
-        System.arraycopy(rawLevels, 0, displayLevels, 0, AudioConfig.NUM_BANDS);
-        // No invalidate() here - the Choreographer frame callback (see
-        // frameCallback field) drives all redraws now, at display refresh
-        // rate, interpolating toward this new target.
-    }
-
-    /**
-     * Slides this callback's raw 8-bit unsigned PCM samples into an
-     * {@link #LOW_FFT_SIZE}-sample window (a simple delay line - oldest
-     * samples drop off the front) and, once full, periodically (throttled to
-     * {@link #LOW_FFT_MIN_INTERVAL_MS}) runs our own FFT over it to resolve
-     * bands 0/1 independently. See class javadoc point 5.
-     */
-    private void processWaveform(byte[] waveform, int samplingRateMilliHz) {
-        int len = waveform.length;
-        if (len == 0) return;
-
-        if (len >= LOW_FFT_SIZE) {
-            // Rare (would need a device capture size >= 8192), but just take the most recent samples.
-            for (int i = 0; i < LOW_FFT_SIZE; i++) {
-                int b = waveform[len - LOW_FFT_SIZE + i] & 0xFF;
-                lowRingBuffer[i] = (b - 128) / 128f;
-            }
-            lowRingFill = LOW_FFT_SIZE;
-        } else {
-            System.arraycopy(lowRingBuffer, len, lowRingBuffer, 0, LOW_FFT_SIZE - len);
-            for (int i = 0; i < len; i++) {
-                int b = waveform[i] & 0xFF;
-                lowRingBuffer[LOW_FFT_SIZE - len + i] = (b - 128) / 128f;
-            }
-            lowRingFill = Math.min(LOW_FFT_SIZE, lowRingFill + len);
-        }
-
-        if (lowRingFill < LOW_FFT_SIZE) return; // window not full yet
-
-        long now = System.currentTimeMillis();
-        if (now - lastLowFftTime < LOW_FFT_MIN_INTERVAL_MS) return; // this path is intentionally slow
-        lastLowFftTime = now;
-
-        computeLowBandMagnitudes(samplingRateMilliHz / 1000f);
-    }
-
-    /** Windows the current low-band buffer, runs the FFT, and averages the bins that fall in bands 0/1. */
-    private void computeLowBandMagnitudes(float sampleRateHz) {
-        for (int i = 0; i < LOW_FFT_SIZE; i++) {
-            // Hann window - reduces spectral leakage from analyzing a finite chunk of continuous audio.
-            float w = 0.5f - 0.5f * (float) Math.cos(2 * Math.PI * i / (LOW_FFT_SIZE - 1));
-            fftScratchRe[i] = lowRingBuffer[i] * w;
-            fftScratchIm[i] = 0f;
-        }
-        fft(fftScratchRe, fftScratchIm);
-
-        float band0Sum = 0f; int band0Count = 0;
-        float band1Sum = 0f; int band1Count = 0;
-        int half = LOW_FFT_SIZE / 2;
-        for (int bin = 1; bin < half; bin++) { // skip DC (bin 0)
-            float freqHz = bin * sampleRateHz / LOW_FFT_SIZE;
-            if (freqHz >= BAND_EDGES_HZ[2]) break; // bins are in ascending frequency order past here
-            float magnitude = (float) Math.sqrt(fftScratchRe[bin] * fftScratchRe[bin] + fftScratchIm[bin] * fftScratchIm[bin]);
-            if (freqHz >= BAND_EDGES_HZ[0] && freqHz < BAND_EDGES_HZ[1]) {
-                band0Sum += magnitude; band0Count++;
-            } else if (freqHz >= BAND_EDGES_HZ[1]) {
-                band1Sum += magnitude; band1Count++;
-            }
-        }
-
-        lowBandMagnitude[0] = band0Count > 0 ? band0Sum / band0Count : 0f;
-        lowBandMagnitude[1] = band1Count > 0 ? band1Sum / band1Count : 0f;
-        lowBandsReady = true;
-    }
-
-    /**
-     * In-place iterative radix-2 Cooley-Tukey FFT (re/im must be equal length, a power of two).
-     * Verified against a naive O(n^2) DFT and a known sine-tone bin peak before shipping.
-     */
-    private static void fft(float[] re, float[] im) {
-        int n = re.length;
-        for (int i = 1, j = 0; i < n; i++) {
-            int bit = n >> 1;
-            for (; (j & bit) != 0; bit >>= 1) j ^= bit;
-            j ^= bit;
-            if (i < j) {
-                float tr = re[i]; re[i] = re[j]; re[j] = tr;
-                float ti = im[i]; im[i] = im[j]; im[j] = ti;
-            }
-        }
-        for (int len = 2; len <= n; len <<= 1) {
-            double angStep = -2 * Math.PI / len;
-            float wr = (float) Math.cos(angStep);
-            float wi = (float) Math.sin(angStep);
-            for (int start = 0; start < n; start += len) {
-                float curWr = 1f, curWi = 0f;
-                int half = len / 2;
-                for (int k = 0; k < half; k++) {
-                    int a = start + k;
-                    int b = start + k + half;
-                    float tr = re[b] * curWr - im[b] * curWi;
-                    float ti = re[b] * curWi + im[b] * curWr;
-                    re[b] = re[a] - tr;
-                    im[b] = im[a] - ti;
-                    re[a] += tr;
-                    im[a] += ti;
-                    float nextWr = curWr * wr - curWi * wi;
-                    float nextWi = curWr * wi + curWi * wr;
-                    curWr = nextWr; curWi = nextWi;
-                }
-            }
-        }
-    }
-
-    private int bandForFrequency(float freqHz) {
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            if (freqHz >= BAND_EDGES_HZ[i] && freqHz < BAND_EDGES_HZ[i + 1]) return i;
-        }
-        return -1;
-    }
-
-    private int groupForBand(int band) {
-        for (int g = 0; g < GROUP_RANGES.length; g++) {
-            if (band >= GROUP_RANGES[g][0] && band <= GROUP_RANGES[g][1]) return g;
-        }
-        return 0;
+        System.arraycopy(rawLevels, 0, displayLevels, 0, CURVE_SAMPLES);
     }
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         float w = getWidth();
         float totalH = getHeight();
-        if (w == 0 || totalH == 0 || groupColors == null) return;
+        if (w == 0 || totalH == 0) return;
 
-        float density = getResources().getDisplayMetrics().density;
+        // Nothing to draw while faded out for silence (see SILENCE_HIDE_DB) - skip the path
+        // build entirely rather than drawing fully-transparent geometry every frame.
+        int globalAlpha = Math.round(255 * Math.max(0f, Math.min(1f, renderAlpha)));
+        if (globalAlpha <= 0) return;
 
-        float topArea = totalH * TOP_OFFSET_RATIO;
-        float drawHeight = totalH * DRAW_HEIGHT_RATIO;
+        float topArea = totalH * topOffsetRatio;
+        float drawHeight = totalH * drawHeightRatio;
         float gridBottom = topArea + drawHeight;
 
-        float stepX = w / (float) AudioConfig.NUM_BANDS;
-        float barGap = stepX * 0.18f;
-        float barWidth = stepX - barGap;
-        float barCornerRadius = getResources().getDimension(R.dimen.button_radius);
-
-        // Same rounded-corner background geometry as EqVisualizerView
-        // draws its own copy of this on top of us) - bgPadding/cornerRadius/
-        // shiftUp values match exactly so the two layers line up seamlessly.
-//        float bgPadding = 25 * density;
-//        float cornerRadius = 15 * density;
-//        int shiftUp = 6;
-//        float bgLeft = 0.5f * stepX - bgPadding;
-//        float bgRight = (AudioConfig.NUM_BANDS - 0.5f) * stepX + bgPadding;
-//        float bgTop = -shiftUp;
-//        float bgBottom = totalH - shiftUp;
-
-        canvas.save();
-//        bgPath.reset();
-//        bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
-//        canvas.clipPath(bgPath);
-
-//        if (customBackground != null) {
-//            customBackground.setBounds((int) bgLeft, (int) bgTop, (int) bgRight, (int) bgBottom);
-//            customBackground.draw(canvas);
-//        }
-
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
-            // Gain-reactive scaling now happens in processFft(), added in
-            // dB-space before normalization (see the comment there) instead
-            // of multiplied here after clamping - that's what fixed the
-            // boost/cut asymmetry. renderLevels[i] already reflects it.
-            float level = renderLevels[i];
-
-            float barHeight = level * drawHeight * 1f;
-            float left = i * stepX + barGap / 2f;
-            float right = left + barWidth;
-            float top = gridBottom - barHeight;
-
-            int group = groupForBand(i);
-            barPaint.setColor(groupColors[group]);
-            barPaint.setAlpha(110);
-
-            barRect.set(left, top, right, gridBottom);
-            canvas.drawRoundRect(barRect, barCornerRadius, barCornerRadius, barPaint);
+        fullPath.reset();
+        for (int j = 0; j < CURVE_SAMPLES; j++) {
+            float x = (j + 0.5f) / CURVE_SAMPLES * w;
+            float y = gridBottom - renderLevels[j] * drawHeight;
+            if (j == 0) fullPath.moveTo(x, y); else fullPath.lineTo(x, y);
         }
 
+        fillPath.set(fullPath);
+        fillPath.lineTo(w, gridBottom);
+        fillPath.lineTo(0, gridBottom);
+        fillPath.close();
+
+        // Update gradients (horizontal band-color for line & fill, vertical fade for fill) &
+        // draw - same technique as EqVisualizerView, cached so it's only rebuilt when the
+        // geometry actually changes.
+        if (w != lastGradW || topArea != lastDrawStartY || gridBottom != lastGridBottom) {
+            int fillAlpha = Color.alpha(colorFill);
+            int[] fillColors = new int[spectrumColors.length];
+            for (int c = 0; c < spectrumColors.length; c++) {
+                int col = spectrumColors[c];
+                fillColors[c] = Color.argb(fillAlpha, Color.red(col), Color.green(col), Color.blue(col));
+            }
+
+            linePaint.setShader(new LinearGradient(0, 0, w, 0, spectrumColors, null, Shader.TileMode.CLAMP));
+
+            Shader fillColorShader = new LinearGradient(0, 0, w, 0, fillColors, null, Shader.TileMode.CLAMP);
+            Shader fadeMaskShader = new LinearGradient(0, topArea, 0, gridBottom, Color.BLACK, Color.TRANSPARENT, Shader.TileMode.CLAMP);
+            fillPaint.setShader(new ComposeShader(fillColorShader, fadeMaskShader, PorterDuff.Mode.DST_IN));
+
+            lastGradW = w;
+            lastDrawStartY = topArea;
+            lastGridBottom = gridBottom;
+        }
+
+        // Base alphas (170 for the line, 255/opaque for the fill - its actual per-pixel alpha
+        // comes from colorFill's own alpha baked into the shader above) scaled by the silence
+        // fade - Paint alpha multiplies with whatever the shader outputs, so this dims both
+        // uniformly without needing to touch the gradients themselves.
+        linePaint.setAlpha(globalAlpha * 170 / 255);
+        fillPaint.setAlpha(globalAlpha);
+
+        // Clip before drawing - rawLevels[] is deliberately unclamped on both ends now (see the
+        // normalization comment above), so quiet content trails off below the baseline and loud
+        // transients rise above the nominal plot top, both needing an explicit clip rather than
+        // flattening at a hard line. The bottom still stops at gridBottom (the view's own bounds
+        // don't reliably end exactly there - there can be padding/other chrome below it - so
+        // without this it was visibly drawing outside the EQ container's plot area). The top now
+        // goes all the way to this view's own edge (y=0) instead of the old topArea boundary,
+        // giving a hot transient room to rise up underneath the frequency-label row drawn on top
+        // by EqVisualizerView instead of clipping flat right at the plot's nominal ceiling.
+        canvas.save();
+        canvas.clipRect(0, 0, w, gridBottom);
+        canvas.drawPath(fillPath, fillPaint);
+        canvas.drawPath(fullPath, linePaint);
         canvas.restore();
 
+        // also nothing important
+        float bassPeak = -999f;
+        for (int j = 0; j <= bassNukeSampleEnd; j++) bassPeak = Math.max(bassPeak, renderLevels[j]);
+        float bassNukeTarget = bassPeak > BASS_NUKE_THRESHOLD ? 1f : 0f;
+        bassNukeAlpha += (bassNukeTarget - bassNukeAlpha) * (bassNukeTarget > bassNukeAlpha ? BASS_NUKE_ALPHA_RISE : BASS_NUKE_ALPHA_FALL);
+        if (bassNukeAlpha > 0.01f && bassNukeIcon != null) {
+            float iconSize = totalH * 0.22f;
+            float bassMidX = ((bassNukeSampleEnd / 2f) + 0.5f) / CURVE_SAMPLES * w;
+            bassNukeSrcRect.set(0, 0, bassNukeIcon.getWidth(), bassNukeIcon.getHeight());
+            bassNukeDstRect.set(bassMidX - iconSize / 2f, topArea - iconSize / 2f,
+                    bassMidX + iconSize / 2f, topArea + iconSize / 2f);
+            bassNukePaint.setAlpha(Math.round(255 * Math.min(1f, bassNukeAlpha)));
+            canvas.drawBitmap(bassNukeIcon, bassNukeSrcRect, bassNukeDstRect, bassNukePaint);
+        }
+        // No explicit invalidate() needed here - the Choreographer frameCallback already redraws
+        // every vsync while the visualizer is active, same as the rest of this view.
     }
 }

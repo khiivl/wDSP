@@ -71,9 +71,19 @@ public class McuService extends Service implements LocationListener {
 
     private boolean cachedSubComp, cachedFmEn, cachedFatEn;
     private int cachedFmCal, cachedFmStr;
+    // Trim Highs' own volume threshold - decoupled from cachedFmCal (Loudness' Calibration
+    // Point), which the ISO/Loudness branch below still uses. See updateFmOffsets().
+    private int cachedFatStartVol;
+
+    // "Ultra Bass" - independent of Loudness/cachedFmEn entirely (see applyBassBoost()'s doc for
+    // why that one IS tied to Loudness) - a plain volume-reactive sub-channel boost, ramping
+    // linearly from 0 at cachedUltraBassStartVol up to cachedUltraBassMaxDb at volume 32. See
+    // updateSubwoofer()'s use of these.
+    private boolean cachedUltraBassEn;
+    private int cachedUltraBassStartVol, cachedUltraBassMaxDb;
 
     // GALA settings
-    private boolean cachedGalaEn;
+    private boolean cachedGalaEn, galaWasShutdown;
     private int cachedGalaInc;
     private int cachedGalaMinV;
     // private int cachedGalaMaxV;
@@ -109,7 +119,21 @@ public class McuService extends Service implements LocationListener {
     private long lastSubWriteTime = 0;
     private byte[] pendingSubData = null;
     private boolean subUpdatePending = false;
+
+    private long lastBassBoostWriteTime = 0;
+    private byte[] pendingBassBoostData = null;
+    private boolean bassBoostUpdatePending = false;
     private static final long THROTTLE_MS = 500; // 2 commands per second
+
+    // Last packet each update*()/apply*() method actually computed (not what's been written to
+    // hardware yet - sendToHardware()'s own mcuCache handles that dedupe). These let
+    // updateEqWithFm()/updateSubwoofer()/applyBassBoost() skip the whole sendXThrottled() pipeline
+    // - clone, throttle scheduling, and sendToHardware()'s own TurboSender2000 logging - on every
+    // ~200ms volume-poll tick when the computed value hasn't actually changed since last time,
+    // instead of only deduping at the very last step (the real RPC invoke) like before.
+    private byte[] lastComputedEqData = null;
+    private byte[] lastComputedSubData = null;
+    private byte[] lastComputedBassBoostData = null;
 
     private LocationManager locationManager;
     private Map<String, String> playerMap = new HashMap<>();
@@ -161,20 +185,31 @@ public class McuService extends Service implements LocationListener {
             else if (key.equals(PREF_GALA_GLOBAL_ENABLED)) {
                 galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
             }
-            else if (currentPresetName != null && key.startsWith(currentPresetName)) {
+            else if (currentPresetName != null && key.startsWith(currentPresetName + "_")) {
 
                 // Reload the data first
                 loadPresetData(currentPresetName);
 
                 Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
 
-                // 1. Check for Subwoofer first (specific)
-                if (key.contains("_sub")) {
+                // 1. Check for Subwoofer first (specific) - _ultra_bass_* also only affects this
+                // same sub-channel write (see updateSubwoofer()).
+                if (key.contains("_sub") || key.contains("_ultra_bass")) {
                     updateSubwoofer(VolumeHelper.getVolume());
                 }
                 // 2. Then check for EQ bands or FM settings (less specific)
-                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm")) {
+                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm") || key.contains("_fat_")) {
                     updateEqWithFm(VolumeHelper.getVolume());
+                    // FM calibration/strength/enable also drive updateSubwoofer()'s Sub Comp
+                    // offset and applyBassBoost()'s own bass-shelf assist (see their respective
+                    // cachedSubComp/cachedFmEn branches) - without this, adjusting Cal
+                    // Volume/Strength or toggling FM never re-sends either channel until an
+                    // unrelated volume change happens to trigger applyVolumeDependentSettings()
+                    // and pick it up incidentally.
+                    if (key.contains("_fm")) {
+                        updateSubwoofer(VolumeHelper.getVolume());
+                        applyBassBoost(VolumeHelper.getVolume());
+                    }
                 }
                 else if (key.contains("_power_vol")) {
                     setPowerAmpVol();
@@ -186,7 +221,12 @@ public class McuService extends Service implements LocationListener {
                     applySurroundDelays();
                 }
                 else if (key.contains("_bb_") || key.contains("_bf_")) {
-                    applyBassBoost();
+                    applyBassBoost(VolumeHelper.getVolume());
+                    // _bb_frq_f specifically also changes which ISO_RAW_TARGET_BY_FREQ row the
+                    // EQ's residual uses (see updateFmOffsets()) - resending unconditionally on
+                    // any _bb_/_bf_ change is simpler than filtering to just that one key, and
+                    // cheap since sendEqThrottled() is already rate-limited.
+                    updateEqWithFm(VolumeHelper.getVolume());
                 }
                 else if (key.contains("_f_") || key.contains("_loud")) {
                     applyFaderLoud();
@@ -356,8 +396,12 @@ public class McuService extends Service implements LocationListener {
         cachedSubComp = prefs.getBoolean(preset + "_sub_comp", false);
         cachedFmEn = prefs.getBoolean(preset + "_fm_en", false);
         cachedFatEn = prefs.getBoolean(preset + "_fat_en", false);
+        cachedFatStartVol = prefs.getInt(preset + "_fat_start_vol", 25);
         cachedFmCal = prefs.getInt(preset + "_fm_cal", 25);
         cachedFmStr = prefs.getInt(preset + "_fm_str", 100);
+        cachedUltraBassEn = prefs.getBoolean(preset + "_ultra_bass_en", false);
+        cachedUltraBassStartVol = prefs.getInt(preset + "_ultra_bass_start_vol", 16);
+        cachedUltraBassMaxDb = prefs.getInt(preset + "_ultra_bass_max_db", 6);
 
         // GALA
         cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
@@ -396,23 +440,33 @@ public class McuService extends Service implements LocationListener {
     private void startPolling() {
         if (!isPolling) {
             isPolling = true;
-            backgroundHandler.post(pollingRunnable);
+            backgroundHandler.post(primaryRunnable);
+            backgroundHandler.post(secondaryRunnable);
         }
     }
 
     private void stopPolling() {
         isPolling = false;
-        backgroundHandler.removeCallbacks(pollingRunnable);
+        backgroundHandler.removeCallbacks(primaryRunnable);
+        backgroundHandler.removeCallbacks(secondaryRunnable);
     }
 
-    private final Runnable pollingRunnable = new Runnable() {
+    private final Runnable secondaryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isPolling) return;
+            checkPlayer();
+            checkForBug();
+            backgroundHandler.postDelayed(this, 200);
+        }
+    };
+
+    private final Runnable primaryRunnable = new Runnable() {
         @Override
         public void run() {
             if (!isPolling) return;
             checkVolumeAndGala();
-            checkPlayer();
-            checkForBug();
-            backgroundHandler.postDelayed(this, 100);
+            backgroundHandler.postDelayed(this, 200);
         }
     };
 
@@ -435,6 +489,23 @@ public class McuService extends Service implements LocationListener {
 
     // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.
     private void checkVolumeAndGala() {
+
+        boolean galaCurrentlyEnabled = isGalaEnabled();
+        if (galaCurrentlyEnabled) {
+            galaWasShutdown = false;
+        }
+
+        // Once GALA is off and has already faded back down to zero, skip the tier/fade
+        // computation below (steps 2-6), but still fall through to step 7 so that
+        // Fletcher-Munson/loudness EQ and the UI volume broadcast keep tracking manual
+        // volume changes - previously this short-circuited the whole method and both of
+        // those stopped updating for as long as GALA stayed off.
+        boolean skipGalaProcessing = !galaCurrentlyEnabled && galaWasShutdown;
+
+        // this gets the volume - needed by step 7 whether or not we skip GALA's own processing
+        int hardwareVol = VolumeHelper.getVolume();
+
+        if (!skipGalaProcessing) {
 
         // gets the player type that is currently active
         String galavoltype = VolumeHelper.getActivePlayerType();
@@ -478,6 +549,9 @@ public class McuService extends Service implements LocationListener {
                     if (aux_standstill != -1) {
                         baseStandstillVolume = aux_standstill;
                     }
+                    else {
+                        baseStandstillVolume = VolumeHelper.getVolume();
+                    }
                 }
                 if (galavoltype.equals("radio_type")) {
                     if (radio_standstill != -1) {
@@ -487,14 +561,38 @@ public class McuService extends Service implements LocationListener {
                         baseStandstillVolume = VolumeHelper.getVolume();
                     }
                 }
+
+                // Push the just-restored base (+ whatever GALA offset is currently active) to
+                // hardware immediately, and sync lastReadHardwareVol/lastAppliedVolume to it,
+                // instead of leaving this to step 5/6 below. The head unit's own OS remembers
+                // each source's volume independently and has usually already jumped hardwareVol
+                // (read at the top of this method, before this block ran) to the NEW source's own
+                // natural volume by the time we get here - which looks exactly like a manual
+                // knob-turn to step 5's detector (hardwareVol differs from the OLD source's
+                // lastReadHardwareVol/lastAppliedVolume), so without this fix step 5 immediately
+                // recomputes baseStandstillVolume as hardwareVol - the OLD currentAppliedOffset,
+                // silently corrupting the base we just restored (and re-saving that corruption
+                // into this source's own _standstill variable next time it's switched away from).
+                // This was the reported "switch to radio while Gaja is active shows the right
+                // volume at first, but once Gaja decays back to 0 the volume is wrong" bug, and
+                // the "switching sources, the other source is still remembered with a stale Gaja
+                // offset baked in" bug. Same "sync tracking vars, return early" pattern as the
+                // unmute-recovery block (step 3) above uses for the same reason.
+                int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
+                if (hardwareVol != targetVol) {
+                    VolumeHelper.setVolume(targetVol);
+                }
+                lastAppliedVolume = targetVol;
+                lastReadHardwareVol = targetVol;
+                galavoltype_last = galavoltype;
+                return; // Exit this poll to let the hardware stabilize
             }
         }
 
         // this gets the speed
         float speed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
 
-        // this gets the volume and the mute state
-        int hardwareVol = VolumeHelper.getVolume();
+        // this gets the mute state
         boolean isCurrentlyMuted = (hardwareVol <= 0 || VolumeHelper.isHardwareMuted());
 
         // 1. THE GUARD: If muted or at volume 0, stop GALA processing immediately.
@@ -561,16 +659,18 @@ public class McuService extends Service implements LocationListener {
 
         // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
         // We detect this because the hardware volume changed, but NOT by our script.
+        // get the volume again so we have the freshest one
         if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
             baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
             if (hardwareVol < currentAppliedOffset) {
                 baseStandstillVolume = 0;
             }
+            lastAppliedVolume = hardwareVol;
             Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
         }
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
-        if (cachedGalaEn) {
+        if (galaCurrentlyEnabled) {
             long now = System.currentTimeMillis();
 
             // 6a. HOLD-TIMER: Has the tier changed?
@@ -602,20 +702,25 @@ public class McuService extends Service implements LocationListener {
             if (hardwareVol != targetVol) {
                 VolumeHelper.setVolume(targetVol);
                 lastAppliedVolume = targetVol;
-                hardwareVol = targetVol;
                 Log.v(TAG, "GALA Update: vol=" + lastReadHardwareVol + " -> " + targetVol + " (offset=" + currentAppliedOffset + ")");
             }
 
             if (isUiVisible) {
                 galaUpdateIntent.putExtra("speed", speed);
                 galaUpdateIntent.putExtra("waveOffset", currentAppliedOffset);
+                galaUpdateIntent.putExtra("base", baseStandstillVolume);
                 sendBroadcast(galaUpdateIntent);
             }
+
         } else {
+
             pendingTargetOffset = 0;
             lastGalaTier        = 0;
 
-            if (currentAppliedOffset < 0) currentAppliedOffset = 0;
+            if (currentAppliedOffset < 0) {
+                currentAppliedOffset = 0;
+                lastAppliedVolume = hardwareVol;;
+            }
 
             if (currentAppliedOffset > 0) {
                 long now = System.currentTimeMillis();
@@ -623,19 +728,44 @@ public class McuService extends Service implements LocationListener {
                 if (now - lastFadeStepTime >= fadeDelay) {
                     currentAppliedOffset--;
                     lastFadeStepTime = now;
-                    Log.v(TAG, "GALA Fade-Out (disabled): appliedOffset=" + currentAppliedOffset);
+                    Log.v(TAG, "GALA Fade-Out: appliedOffset=" + currentAppliedOffset);
                 }
-                int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
-                if (hardwareVol != targetVol) {
-                    VolumeHelper.setVolume(targetVol);
-                    lastAppliedVolume = targetVol;
-                    hardwareVol = targetVol;
-                }
-            } else {
-                currentAppliedOffset = 0;
-                baseStandstillVolume = hardwareVol;
-                lastAppliedVolume    = hardwareVol;
             }
+
+            // Sync hardware to baseStandstillVolume + currentAppliedOffset unconditionally (not
+            // just while currentAppliedOffset > 0, which this used to be nested under) - mirrors
+            // the galaCurrentlyEnabled branch's step 6d above. Without this, switching audio
+            // sources while GALA is already settled at offset 0 (e.g. car stopped, or GALA
+            // toggled off) correctly restores that source's own saved baseStandstillVolume (see
+            // the per-source save/restore block near the top of this method) but the actual
+            // hardware volume never gets told about it, leaving it stuck at the OTHER source's
+            // volume until something else happens to touch it - this was the reported "switch
+            // source A -> B -> back to A, volume doesn't go back to A's own level" bug.
+            int targetVol = Math.min(32, baseStandstillVolume + currentAppliedOffset);
+            if (hardwareVol != targetVol) {
+                VolumeHelper.setVolume(targetVol);
+                lastAppliedVolume = targetVol;
+            }
+
+            if (isUiVisible) {
+                galaUpdateIntent.putExtra("waveOffset", currentAppliedOffset);
+                galaUpdateIntent.putExtra("base", baseStandstillVolume);
+                sendBroadcast(galaUpdateIntent);
+            }
+
+            if (hardwareVol == baseStandstillVolume) {
+                galaUpdateIntent.putExtra("base", 0);
+                sendBroadcast(galaUpdateIntent);
+                galaWasShutdown = true;
+            }
+        }
+
+        }
+        else if (isUiVisible) {
+            float shortCircuitSpeed = simulatedSpeedKmh > 0.0f ? simulatedSpeedKmh : currentSpeedKmh;
+            galaUpdateIntent.putExtra("speed", shortCircuitSpeed);
+            galaUpdateIntent.putExtra("waveOffset", 0);
+            sendBroadcast(galaUpdateIntent);
         }
 
         // 7. TRACKING: Update last seen volume and handle UI volume sync.
@@ -643,7 +773,14 @@ public class McuService extends Service implements LocationListener {
 
         if (hardwareVol != lastVolumeRead) {
             lastVolumeRead = hardwareVol;
-            if (cachedFmEn) {
+            // cachedFatEn (Trim Highs) and cachedUltraBassEn (Ultra Bass) are both independent
+            // toggles from cachedFmEn (Loudness) - they need this same live re-trigger as volume
+            // changes while driving, or they just freeze at whatever was last computed at
+            // (boot/preset load/a related pref edit) instead of tracking volume the way
+            // MainActivity's own preview already does via the VOLUME_CHANGED broadcast below (see
+            // updateFmOffsets()/updateSubwoofer(), which already handle them correctly - it was
+            // only this call site gating them out).
+            if (cachedFmEn || cachedFatEn || cachedUltraBassEn) {
                 applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
             }
             if (isUiVisible) {
@@ -726,26 +863,41 @@ public class McuService extends Service implements LocationListener {
     private void applyVolumeDependentSettings(int currentVol) {
         updateEqWithFm(currentVol);
         updateSubwoofer(currentVol);
+        applyBassBoost(currentVol);
     }
 
     private void updateEqWithFm(int currentVol) {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
 
+        boolean hasOffset = false;
+        float[] targetDb = new float[16];
+        for (int i = 0; i < 16; i++) {
+            targetDb[i] = (cachedGains[i] - 6) * 2 + fmOffsets[i];
+            if (fmOffsets[i] != 0f) hasOffset = true;
+        }
+        // Jointly pre-warp slider+offset together while loudness is actually contributing
+        // something, so the real achieved curve cross-talk-cancels BOTH the offset and
+        // whatever shape the manual sliders have, not just the offset alone (see
+        // AudioConfig.prewarpEq()'s doc). With no offset, driveDb ends up equal to targetDb
+        // anyway - skip the multiply then so manual-only EQ (no loudness) is byte-for-byte
+        // identical to before this existed.
+        float[] driveDb = hasOffset ? AudioConfig.prewarpEq(targetDb) : targetDb;
+
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
-            float db1 = (cachedGains[b1] - 6) * 2 + fmOffsets[b1];
-            int idx1 = Math.max(0, Math.min(12, Math.round((db1 / 2.0f) + 6)));
+            int idx1 = Math.max(0, Math.min(12, Math.round((driveDb[b1] / 2.0f) + 6)));
 
             int b2 = i * 2 + 1;
-            float db2 = (cachedGains[b2] - 6) * 2 + fmOffsets[b2];
-            int idx2 = Math.max(0, Math.min(12, Math.round((db2 / 2.0f) + 6)));
+            int idx2 = Math.max(0, Math.min(12, Math.round((driveDb[b2] / 2.0f) + 6)));
 
             eqData[i + 1] = (byte) ((idx2 << 4) | (idx1 & 0x0F));
         }
         eqData[9] = cachedQByte1;
         eqData[10] = cachedQByte2;
         eqData[11] = 0x00;
+        if (lastComputedEqData != null && Arrays.equals(lastComputedEqData, eqData)) return;
+        lastComputedEqData = eqData.clone();
         sendEqThrottled(eqData);
     }
 
@@ -759,15 +911,23 @@ public class McuService extends Service implements LocationListener {
         if (cachedFmEn && vol < (cachedFmCal - deadzone)) {
             float range = (float) Math.max(1, cachedFmCal - deadzone);
             float ratio = (range - vol) / range;
+            // The EQ's residual job depends on which frequency the Bass Boost shelf is actually
+            // carrying the low end at right now (front channel; see AudioConfig.
+            // isoRawTargetForFreqIdx()'s doc) - only meaningful while applyBassBoost()'s own
+            // assist is also active, but harmless to read unconditionally here. This is the RAW
+            // (not pre-warped) target - updateEqWithFm() jointly pre-warps it together with the
+            // slider's own dB via AudioConfig.prewarpEq(), so don't pre-warp it again here.
+            int manualFreqIdxF = prefs.getInt(currentPresetName + "_bb_frq_f", 0);
+            float[] isoRawTarget = AudioConfig.isoRawTargetForFreqIdx(manualFreqIdxF);
             for (int i = 0; i < 16; i++) {
-                fmOffsets[i] = AudioConfig.ISO_MAX_OFFSETS[i] * ratio * strength;
+                fmOffsets[i] = isoRawTarget[i] * ratio * strength;
             }
         }
-        else if (cachedFatEn && vol > (cachedFmCal + deadzone)) {
-            float range = (float) Math.max(1, 32 - (cachedFmCal + deadzone));
-            float ratio = (vol - (cachedFmCal + deadzone)) / range;
+        else if (cachedFatEn && vol > (cachedFatStartVol + deadzone)) {
+            float range = (float) Math.max(1, 32 - (cachedFatStartVol + deadzone));
+            float ratio = (vol - (cachedFatStartVol + deadzone)) / range;
             for (int i = 0; i < 16; i++) {
-                fmOffsets[i] = AudioConfig.FATIGUE_MAX_OFFSETS[i] * ratio * strength;
+                fmOffsets[i] = AudioConfig.FATIGUE_RAW_TARGET[i] * ratio * strength;
             }
         }
     }
@@ -784,27 +944,96 @@ public class McuService extends Service implements LocationListener {
             subOffset = maxBassBoost * ratio * (cachedFmStr / 100.0f);
         }
 
-        int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset)));
+        // "Ultra Bass" - plain linear ramp with volume, 0 at cachedUltraBassStartVol up to
+        // cachedUltraBassMaxDb at volume 32, completely independent of Loudness/cachedFmEn/
+        // cachedFmCal - see MainActivity.calculateUltraBassOffset() for the identical preview calc.
+        float ultraBassOffset = 0f;
+        if (cachedUltraBassEn && currentVol > cachedUltraBassStartVol) {
+            float ubRange = Math.max(1, 32 - cachedUltraBassStartVol);
+            float ubRatio = Math.min(1f, (currentVol - cachedUltraBassStartVol) / ubRange);
+            ultraBassOffset = cachedUltraBassMaxDb * ubRatio;
+        }
+
+        int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
+        if (lastComputedSubData != null && Arrays.equals(lastComputedSubData, subData)) return;
+        lastComputedSubData = subData.clone();
         sendSubThrottled(subData);
     }
 
+    // Sub crossover frequency -> loudness boost lookup. Deliberately references the NEXT LOWER
+    // EQ band's (bigger) offset rather than the matching band, since the matching-band offsets
+    // alone proved visually/audibly insufficient - confirmed by eye against the sub curve overlay
+    // in EqVisualizerView/FmVisualizerView (see AudioConfig.subFilterResponseDb()).
     private float getMaxBassBoost() {
         int[] freqs = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
         int freq = (cachedSubFreq >= 0 && cachedSubFreq < freqs.length) ? freqs[cachedSubFreq] : 80;
 
-        if (freq == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
-        if (freq == 63 || freq == 50) return AudioConfig.ISO_MAX_OFFSETS[2];
-        if (freq == 40 || freq == 32) return AudioConfig.ISO_MAX_OFFSETS[1];
-        if (freq == 25) return AudioConfig.ISO_MAX_OFFSETS[0];
+        if (freq == 80) return AudioConfig.ISO_FULL_TARGET_DB[2];
+        if (freq == 63 || freq == 50) return AudioConfig.ISO_FULL_TARGET_DB[1];
+        if (freq == 40 || freq == 32) return AudioConfig.ISO_FULL_TARGET_DB[0];
+        if (freq == 25) return AudioConfig.ISO_FULL_TARGET_DB[0];
         return 0;
     }
 
-    private void applyBassBoost() {
-        sendToHardware(new byte[]{(byte) 0x88,
-                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_f", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_f", 0) & 0x0F)),
-                (byte) (((prefs.getInt(currentPresetName + "_bb_frq_r", 0) + 8) << 4) | (prefs.getInt(currentPresetName + "_bb_r", 0) & 0x0F)),
-                (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))});
+    /**
+     * Sends the front/rear "Bass Boost" shelf (0x88) - the user's own manually-saved
+     * frequency/gain, plus loudness compensation's bass-shelf assist (see
+     * AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB's doc) when active. Needs currentVol (unlike the
+     * old static-prefs-only version) since the assist's strength depends on how far below the
+     * calibration volume we currently are - same ratio/strength math as
+     * updateFmOffsets()/updateSubwoofer()'s own branches, computed separately here since this
+     * writes a different packet on its own throttled cadence (see sendBassBoostThrottled()).
+     */
+    private void applyBassBoost(int currentVol) {
+        float shelfOffset = 0f;
+        if (cachedFmEn) {
+            int deadzone = 1;
+            if (currentVol < (cachedFmCal - deadzone)) {
+                float range = Math.max(1, cachedFmCal - deadzone);
+                float ratio = (range - currentVol) / range;
+                shelfOffset = AudioConfig.LOUDNESS_BASS_SHELF_MAX_DB * ratio * (cachedFmStr / 100f);
+            }
+        }
+
+        int manualFreqIdxF = prefs.getInt(currentPresetName + "_bb_frq_f", 0);
+        int manualGainF = prefs.getInt(currentPresetName + "_bb_f", 0);
+        int manualFreqIdxR = prefs.getInt(currentPresetName + "_bb_frq_r", 0);
+        int manualGainR = prefs.getInt(currentPresetName + "_bb_r", 0);
+
+        int freqIdxF, gainF, freqIdxR, gainR;
+        if (cachedFmEn) {
+            // Gated on Loudness being enabled, not on shelfOffset>0 - rear stays synced to front
+            // for the whole time Loudness is on, not just the moments it's actively below
+            // calibration (see MainActivity.updateBassVisualizer()'s identical widened gate for
+            // the preview/widgets). When shelfOffset is 0 (volume currently above calibration),
+            // gainF reduces to manualGainF exactly, so this is a strict superset of the old
+            // behavior, not a change to what gets sent whenever the assist actually has
+            // magnitude. Front follows its own manually-chosen frequency (see MainActivity.
+            // combineBassShelfFreq()'s identical logic for the preview) - so the manual gain
+            // always adds on top, no mismatch to gate on. "off" (idx 0) has no frequency of its
+            // own to contribute, so the assist falls back to the tuned default/most-optimal
+            // frequency and no manual gain applies there.
+            freqIdxF = manualFreqIdxF > 0 ? manualFreqIdxF : AudioConfig.LOUDNESS_BASS_SHELF_FREQ_IDX;
+            gainF = Math.max(0, Math.min(12, Math.round(shelfOffset + (manualFreqIdxF > 0 ? manualGainF : 0))));
+            // Rear's Boost (gain+freq) syncs to front's own whenever Loudness is enabled - keeps
+            // rear's shelf matching the shared EQ curve, which is solved against front's
+            // frequency only (see AudioConfig.isoRawTargetForFreqIdx()'s doc). Rear's manual
+            // prefs are never touched, just not used for the real write while this is active.
+            freqIdxR = freqIdxF;
+            gainR = gainF;
+        } else {
+            freqIdxF = manualFreqIdxF; gainF = manualGainF;
+            freqIdxR = manualFreqIdxR; gainR = manualGainR;
+        }
+
+        byte[] bbData = new byte[]{(byte) 0x88,
+                (byte) (((freqIdxF + 8) << 4) | (gainF & 0x0F)),
+                (byte) (((freqIdxR + 8) << 4) | (gainR & 0x0F)),
+                (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))};
+        if (lastComputedBassBoostData != null && Arrays.equals(lastComputedBassBoostData, bbData)) return;
+        lastComputedBassBoostData = bbData;
+        sendBassBoostThrottled(bbData);
     }
 
     private void applyFaderLoud() {
@@ -849,7 +1078,7 @@ public class McuService extends Service implements LocationListener {
     private void applyStaticSettings() {
         if (currentPresetName == null) return;
 
-        applyBassBoost();
+        applyBassBoost(VolumeHelper.getVolume());
 
         applyFaderLoud();
 
@@ -916,39 +1145,67 @@ public class McuService extends Service implements LocationListener {
         subUpdatePending = false;
     }
 
+    // --- BASS BOOST THROTTLER --- (see applyBassBoost()'s doc for why this now needs
+    // throttling like the EQ/sub above - it used to only fire on rare discrete UI events, now it
+    // also refreshes every volume poll cycle for the loudness bass-shelf assist.)
+    private void sendBassBoostThrottled(byte[] data) {
+        pendingBassBoostData = data.clone();
+        if (bassBoostUpdatePending) return;
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - lastBassBoostWriteTime;
+
+        if (elapsed >= THROTTLE_MS) {
+            executeBassBoostWrite();
+        } else {
+            bassBoostUpdatePending = true;
+            backgroundHandler.postDelayed(this::executeBassBoostWrite, THROTTLE_MS - elapsed);
+        }
+    }
+
+    private void executeBassBoostWrite() {
+        if (pendingBassBoostData != null) {
+            sendToHardware(pendingBassBoostData);
+            lastBassBoostWriteTime = System.currentTimeMillis();
+        }
+        bassBoostUpdatePending = false;
+    }
+
     private void sendToHardware(byte[] data) {
         if (data == null || data.length == 0) return;
         byte cmd = data[0];
 
-        // TurboSender2000
-        String turboSender = java.util.stream.IntStream.range(0, data.length)
-                .mapToObj(i -> String.format("%02X", data[i]))
-                .collect(java.util.stream.Collectors.joining(" "));
-
-        String turboSenderType = "[NO_IDEA_WHAT_THIS_IS]: ";
-        if (cmd == (byte) 0x8B) {
-            turboSenderType = "[SUB]: ";
-        }
-        if (cmd == (byte) 0x88) {
-            turboSenderType = "[BASS_BOOST]: ";
-        }
-        if (cmd == (byte) 0x81) {
-            turboSenderType = "[FADER_LOUD_LEGACY]: ";
-        }
-        if (cmd == (byte) 0x89) {
-            turboSenderType = "[SPATIAL_DELAYS]: ";
-        }
-        if (cmd == (byte) 0x8c) {
-            turboSenderType = "[SURROUND_DELAYS]: ";
-        }
-        if (cmd == (byte) 0x80) {
-            turboSenderType = "[EQ]: ";
-        }
-
-        Log.d(TAG, "[TurboSender2000] SendToHardware invoked with " + turboSenderType + turboSender);
-
         byte[] cached = mcuCache.get(cmd);
         if (cached == null || !Arrays.equals(cached, data)) {
+            // TurboSender2000 - moved inside this dedupe check (was unconditional before) so
+            // logcat only sees an entry when something is actually being written, not on every
+            // throttled flush of an unchanged value.
+            String turboSender = java.util.stream.IntStream.range(0, data.length)
+                    .mapToObj(i -> String.format("%02X", data[i]))
+                    .collect(java.util.stream.Collectors.joining(" "));
+
+            String turboSenderType = "[NO_IDEA_WHAT_THIS_IS]: ";
+            if (cmd == (byte) 0x8B) {
+                turboSenderType = "[SUB]: ";
+            }
+            if (cmd == (byte) 0x88) {
+                turboSenderType = "[BASS_BOOST]: ";
+            }
+            if (cmd == (byte) 0x81) {
+                turboSenderType = "[FADER_LOUD_LEGACY]: ";
+            }
+            if (cmd == (byte) 0x89) {
+                turboSenderType = "[SPATIAL_DELAYS]: ";
+            }
+            if (cmd == (byte) 0x8c) {
+                turboSenderType = "[SURROUND_DELAYS]: ";
+            }
+            if (cmd == (byte) 0x80) {
+                turboSenderType = "[EQ]: ";
+            }
+
+            Log.d(TAG, "[TurboSender2000] SendToHardware invoked with " + turboSenderType + turboSender);
+
             try {
                 ensureMcuManager();
                 if (setEqDataMethod != null && mcuManagerInstance != null) {
