@@ -1241,8 +1241,8 @@ public class McuService extends Service implements LocationListener {
      * was never the reason. Two encoder steps with nothing playing gave
      * {@code pushed=4 type=media_type media=4} and then {@code pushed=3 ... media=3}. The
      * conclusion above still holds for the other reason; the premise was wrong. Whether this job
-     * could listen instead of polling is now an open option rather than an impossibility - see
-     * {@code .agents/DEBT.md}.
+     * could listen instead of polling is now an open option rather than an impossibility - planned,
+     * {@code .agents/TODO.md}, "polling -> events" (measured 02.10: one broadcast per RPC_SetVolume).
      *
      * <h2>🔴 The base, never the live level</h2>
      *
