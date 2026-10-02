@@ -203,8 +203,8 @@ the mounting curves that used to sit in `sweep.cpp`, the single placement rule
 (`applyPlacementLimits`, the windscreen boundary), and the report's wording for all of it. The
 native side is handed the mounting curve and keeps no table; the calibration then keeps only what
 the sweep confirms - a shortfall against the best channel, an excess against the worst. Before this
-the same two facts were answered in four places and disagreed. See `.agents/ROOM_CALIBRATION.md`
-§24-quater.
+the same two facts were answered in four places and disagreed. See `.agents/CABIN_MODEL.md`
+§5–§6.
 
 **The cabin sweep** (`RoomMeasurement`, `sweep.cpp`, 15.09.2026): door channels are averaged in **power**,
 not dB; the impulse window opens 100 ms before the arrival with a smooth rise (an abrupt cut 1.3 ms before the

@@ -11,7 +11,8 @@
 
 An equaliser and cabin-measurement app for QF head units, driving the ROHM **BU32107** sound processor through the
 MCU. The owner's second application; the repository is shared with a friend who keeps `origin/master`.
-Internals — [ARCHITECTURE.md](ARCHITECTURE.md). Measurement and the microphone — [ROOM_CALIBRATION.md](ROOM_CALIBRATION.md).
+Internals — [ARCHITECTURE.md](ARCHITECTURE.md). The model — [CABIN_MODEL.md](CABIN_MODEL.md); the sweep —
+[ROOM_CALIBRATION.md](ROOM_CALIBRATION.md).
 Index of the rest — [INDEX.md](INDEX.md). Why a rule exists — [DECISIONS.md](DECISIONS.md).
 
 ## Build

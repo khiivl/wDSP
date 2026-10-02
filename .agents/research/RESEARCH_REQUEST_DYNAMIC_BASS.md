@@ -1,3 +1,6 @@
+> 📦 Source, kept as written (14.09.2026). **Answered and digested into
+> [`../CABIN_MODEL.md`](../CABIN_MODEL.md) §10–§11. Do not re-read this; read the canon.**
+
 # Research request: level-dependent bass for a car head unit with quantised DSP controls
 
 > Written 14.09.2026 for the owner to commission. Context for a reader with no memory of this
