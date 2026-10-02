@@ -180,9 +180,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvDelay1FlVal, tvDelay1FrVal, tvDelay1RlVal, tvDelay1RrVal, tvDelay1RSSEVal;
 
     // F-M Curve
-    private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp;
-    private Slider seekFmCalVol, seekFmStrength;
+    private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass;
+    private Slider seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol, seekUltraBassMaxDb;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
+    private TextView tvFatStartVolVal, tvUltraBassStartVolVal, tvUltraBassMaxDbVal;
     private TextView tvLoudCheck;
     private MaterialButton btnLoudFix;
     /** The last verdict drawn, so the fix button applies exactly what the person was shown. */
@@ -201,8 +202,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
-    /** Trim Highs' start volume of the loaded preset ("_fat_start_vol", the author's 0.5). */
-    private int currentFatStartVol = LoudnessCurve.FATIGUE_START_DEFAULT;
+    /** Ultra Bass's share of the subwoofer gain at the volume being previewed (the author's 0.5). */
+    private float currentUltraBassOffset = 0f;
     private int currentEffectiveVolume = -1;
 
     private ArrayAdapter<String> presetAdapter;
@@ -756,6 +757,9 @@ public class MainActivity extends AppCompatActivity {
             // F-M Curve
             tintSlider(seekFmCalVol, csl, cslTrack);
             tintSlider(seekFmStrength, csl, cslTrack);
+            tintSlider(seekFatStartVol, csl, cslTrack);
+            tintSlider(seekUltraBassStartVol, csl, cslTrack);
+            tintSlider(seekUltraBassMaxDb, csl, cslTrack);
 
             // GALA
             tintSlider(seekGalaInc, csl, cslTrack);
@@ -772,6 +776,7 @@ public class MainActivity extends AppCompatActivity {
             if (switchFmEnable == null) switchFmEnable = findViewById(R.id.switch_fm_enable);
             if (switchFatigueEnable == null) switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
             if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
+            if (switchUltraBass == null) switchUltraBass = findViewById(R.id.switch_ultra_bass);
             if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
             if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
 
@@ -782,6 +787,7 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFmEnable);
             updateToggleStyle(switchFatigueEnable);
             updateToggleStyle(switchFmSubComp);
+            updateToggleStyle(switchUltraBass);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
 
@@ -1235,6 +1241,13 @@ public class MainActivity extends AppCompatActivity {
         tvFmCalVolVal = findViewById(R.id.tv_fm_cal_vol_val);
         seekFmStrength = findViewById(R.id.seek_fm_strength);
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
+        switchUltraBass = findViewById(R.id.switch_ultra_bass);
+        seekFatStartVol = findViewById(R.id.seek_fat_start_vol);
+        tvFatStartVolVal = findViewById(R.id.tv_fat_start_vol_val);
+        seekUltraBassStartVol = findViewById(R.id.seek_ultra_bass_start_vol);
+        tvUltraBassStartVolVal = findViewById(R.id.tv_ultra_bass_start_vol_val);
+        seekUltraBassMaxDb = findViewById(R.id.seek_ultra_bass_max_db);
+        tvUltraBassMaxDbVal = findViewById(R.id.tv_ultra_bass_max_db_val);
         fmVisualizer = findViewById(R.id.fm_visualizer);
         tvSysVolumeVal = findViewById(R.id.tv_sys_volume_val);
         tvSubOffsetVal = findViewById(R.id.tv_sub_offset_val);
@@ -1254,6 +1267,7 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
@@ -1738,15 +1752,29 @@ public class MainActivity extends AppCompatActivity {
                 updateFmVisualizer();
             }
         });
+        updateToggleStyle(switchUltraBass);
+        switchUltraBass.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            if (!isUpdatingUi) {
+                autoSaveCurrent();
+                updateFmVisualizer();
+            }
+        });
         Slider.OnChangeListener fml = (slider, value, fromUser) -> {
             int p = (int) value;
-            if (slider == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p)); else tvFmStrengthVal.setText(String.valueOf(p));
+            if (slider == seekFmCalVol) tvFmCalVolVal.setText(String.valueOf(p));
+            else if (slider == seekFmStrength) tvFmStrengthVal.setText(String.valueOf(p));
+            else if (slider == seekFatStartVol) tvFatStartVolVal.setText(String.valueOf(p));
+            else if (slider == seekUltraBassStartVol) tvUltraBassStartVolVal.setText(String.valueOf(p));
+            else if (slider == seekUltraBassMaxDb) tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, p));
             if (fromUser && !isUpdatingUi) {
                 updateFmVisualizer();
                 autoSaveCurrent();
             }
         };
         seekFmCalVol.addOnChangeListener(fml); seekFmStrength.addOnChangeListener(fml);
+        seekFatStartVol.addOnChangeListener(fml);
+        seekUltraBassStartVol.addOnChangeListener(fml); seekUltraBassMaxDb.addOnChangeListener(fml);
     }
 
     private void updateFmVisualizer() {
@@ -1800,9 +1828,12 @@ public class MainActivity extends AppCompatActivity {
             gs[i] = Math.round(Math.max(0, Math.min(12, 6f + (total / 2f))));
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
-        if (switchFmSubComp.isChecked()) {
-            tvSubOffsetVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), currentFmSubOffset));
-            float subPot = currentFmSubOffset + seekSubGain.getValue();
+        // Sub compensation and Ultra Bass both add to the subwoofer gain (the author's 0.5): the
+        // service sends round(gain + both), so the preview and its warning show the same sum.
+        if (switchFmSubComp.isChecked() || (switchUltraBass != null && switchUltraBass.isChecked())) {
+            float subAdd = currentFmSubOffset + currentUltraBassOffset;
+            tvSubOffsetVal.setText(String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subAdd));
+            float subPot = subAdd + seekSubGain.getValue();
             tvSubOffsetWarn.setText(subPot > 12.25f ? String.format(Locale.getDefault(), getString(R.string.lbl_db_fmt2), subPot - 12f) : getString(R.string.btn_ok));
         } else { tvSubOffsetVal.setText(getString(R.string.none)); tvSubOffsetWarn.setText(getString(R.string.none)); }
         fmVisualizer.invalidate();
@@ -1817,7 +1848,7 @@ public class MainActivity extends AppCompatActivity {
      * same way, which is the only honest relationship between a preview and a device.
      */
     private float[] calculateFmOffsets() {
-        float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f;
+        float[] offs = new float[AudioConfig.NUM_BANDS]; currentFmSubOffset = 0f; currentUltraBassOffset = 0f;
         if (seekFmCalVol == null || seekFmStrength == null || switchFmEnable == null || switchFatigueEnable == null) {
             return offs;
         }
@@ -1826,12 +1857,21 @@ public class MainActivity extends AppCompatActivity {
         int cal = getIntSlider(seekFmCalVol);
         int str = getIntSlider(seekFmStrength);
         LoudnessCurve.offsets(vol, cal, str,
-                switchFmEnable.isChecked(), switchFatigueEnable.isChecked(), currentFatStartVol,
+                switchFmEnable.isChecked(), switchFatigueEnable.isChecked(), fatStartVol(),
                 frontBassFreqIdx(), offs);
+        if (switchUltraBass != null && seekUltraBassStartVol != null && seekUltraBassMaxDb != null) {
+            currentUltraBassOffset = LoudnessCurve.ultraBassOffset(vol, switchUltraBass.isChecked(),
+                    getIntSlider(seekUltraBassStartVol), getIntSlider(seekUltraBassMaxDb));
+        }
         currentFmSubOffset = LoudnessCurve.subOffset(vol, cal, str, switchFmEnable.isChecked(),
                 switchFmSubComp != null && switchFmSubComp.isChecked(),
                 subFreqIndexOf(Globals.currentSubFreqHz));
         return offs;
+    }
+
+    /** Trim Highs' start volume on screen ("_fat_start_vol", the author's 0.5). */
+    private int fatStartVol() {
+        return seekFatStartVol == null ? LoudnessCurve.FATIGUE_START_DEFAULT : getIntSlider(seekFatStartVol);
     }
 
     /** The front bass shelf frequency on screen, as the index "_bb_frq_f" stores (0 = off). */
@@ -1874,7 +1914,7 @@ public class MainActivity extends AppCompatActivity {
                 switchFmSubComp != null && switchFmSubComp.isChecked(),
                 getIntSlider(seekFmCalVol),
                 getIntSlider(seekFmStrength),
-                currentFatStartVol,
+                fatStartVol(),
                 frontBassFreqIdx(),
                 seekBassBoostFront != null ? getIntSlider(seekBassBoostFront) : 0,
                 carMeasured);
@@ -2107,7 +2147,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_fat_start_vol", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_fat_start_vol", "_ultra_bass_en", "_ultra_bass_start_vol", "_ultra_bass_max_db", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -2274,6 +2314,10 @@ public class MainActivity extends AppCompatActivity {
             e.putBoolean(name + "_sub_comp", switchFmSubComp.isChecked());
             e.putInt(name + "_fm_cal", getIntSlider(seekFmCalVol));
             e.putInt(name + "_fm_str", getIntSlider(seekFmStrength));
+            e.putInt(name + "_fat_start_vol", getIntSlider(seekFatStartVol));
+            e.putBoolean(name + "_ultra_bass_en", switchUltraBass.isChecked());
+            e.putInt(name + "_ultra_bass_start_vol", getIntSlider(seekUltraBassStartVol));
+            e.putInt(name + "_ultra_bass_max_db", getIntSlider(seekUltraBassMaxDb));
             e.putInt(name + "_d_fl", getIntSlider(seekDelayFl));
             e.putInt(name + "_d_fr", getIntSlider(seekDelayFr));
             e.putInt(name + "_d_rl", getIntSlider(seekDelayRl));
@@ -2374,7 +2418,16 @@ public class MainActivity extends AppCompatActivity {
             String calText = "" + getIntSlider(seekFmCalVol);
             tvFmCalVolVal.setText(calText);
             seekFmStrength.setValue((float) p.getInt(name + "_fm_str", 100));
-            currentFatStartVol = p.getInt(name + "_fat_start_vol", LoudnessCurve.FATIGUE_START_DEFAULT);
+            int fatStart = p.getInt(name + "_fat_start_vol", LoudnessCurve.FATIGUE_START_DEFAULT);
+            seekFatStartVol.setValue((float) fatStart);
+            tvFatStartVolVal.setText(String.valueOf(fatStart));
+            switchUltraBass.setChecked(p.getBoolean(name + "_ultra_bass_en", false));
+            int ubStart = p.getInt(name + "_ultra_bass_start_vol", LoudnessCurve.ULTRA_BASS_START_DEFAULT);
+            seekUltraBassStartVol.setValue((float) ubStart);
+            tvUltraBassStartVolVal.setText(String.valueOf(ubStart));
+            int ubMax = p.getInt(name + "_ultra_bass_max_db", LoudnessCurve.ULTRA_BASS_MAX_DB_DEFAULT);
+            seekUltraBassMaxDb.setValue((float) ubMax);
+            tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, ubMax));
             String strText = "" + getIntSlider(seekFmStrength);
             tvFmStrengthVal.setText(strText);
             seekDelayFl.setValue((float) p.getInt(name + "_d_fl", 0));
@@ -2470,8 +2523,9 @@ public class MainActivity extends AppCompatActivity {
                 seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear,
                 spinnerBassFreqFront, spinnerBassFreqRear,
                 seekFaderLr, seekFaderFr,
-                switchLoud, switchFmEnable, switchFatigueEnable, switchFmSubComp,
-                seekFmCalVol, seekFmStrength, btnLoudFix,
+                switchLoud, switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass,
+                seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol,
+                seekUltraBassMaxDb, btnLoudFix,
                 switchPreciseEnable, seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr, seekDelaySub,
                 switchLegacyEnable, seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr, seekDelay1RSSE);
         for (int id : new int[]{R.id.btn_minus, R.id.btn_plus, R.id.btn_center,
@@ -3148,6 +3202,13 @@ public class MainActivity extends AppCompatActivity {
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);
+            seekFatStartVol.setValue(LoudnessCurve.FATIGUE_START_DEFAULT);
+            tvFatStartVolVal.setText(String.valueOf(LoudnessCurve.FATIGUE_START_DEFAULT));
+            switchUltraBass.setChecked(false);
+            seekUltraBassStartVol.setValue(LoudnessCurve.ULTRA_BASS_START_DEFAULT);
+            tvUltraBassStartVolVal.setText(String.valueOf(LoudnessCurve.ULTRA_BASS_START_DEFAULT));
+            seekUltraBassMaxDb.setValue(LoudnessCurve.ULTRA_BASS_MAX_DB_DEFAULT);
+            tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, LoudnessCurve.ULTRA_BASS_MAX_DB_DEFAULT));
             
             // GALA reset
             switchGalaEnable.setChecked(false);

@@ -94,6 +94,9 @@ public class McuService extends Service implements LocationListener {
 
     private boolean cachedSubComp, cachedFmEn, cachedFatEn;
     private int cachedFmCal, cachedFmStr, cachedFatStartVol;
+    /** Ultra Bass (the author's 0.5): the subwoofer's gain ramp with volume, apart from loudness. */
+    private boolean cachedUltraBassEn;
+    private int cachedUltraBassStartVol, cachedUltraBassMaxDb;
     /** The person's own bass shelf, front and rear: frequency index and gain ("_bb_frq_f" ...). */
     private int cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR;
 
@@ -453,7 +456,7 @@ public class McuService extends Service implements LocationListener {
                 Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
 
                 // 1. Check for Subwoofer first (specific)
-                if (key.contains("_sub")) {
+                if (key.contains("_sub") || key.contains("_ultra_bass")) {
                     updateSubwoofer(VolumeHelper.getVolume());
                 }
                 // 2. Then check for EQ bands or FM settings (less specific). Trim Highs ("_fat_")
@@ -1019,6 +1022,9 @@ public class McuService extends Service implements LocationListener {
         cachedFmCal = presetPrefs().getInt(preset + "_fm_cal", 25);
         cachedFmStr = presetPrefs().getInt(preset + "_fm_str", 100);
         cachedFatStartVol = presetPrefs().getInt(preset + "_fat_start_vol", LoudnessCurve.FATIGUE_START_DEFAULT);
+        cachedUltraBassEn = presetPrefs().getBoolean(preset + "_ultra_bass_en", false);
+        cachedUltraBassStartVol = presetPrefs().getInt(preset + "_ultra_bass_start_vol", LoudnessCurve.ULTRA_BASS_START_DEFAULT);
+        cachedUltraBassMaxDb = presetPrefs().getInt(preset + "_ultra_bass_max_db", LoudnessCurve.ULTRA_BASS_MAX_DB_DEFAULT);
         cachedBassFreqF = presetPrefs().getInt(preset + "_bb_frq_f", 0);
         cachedBassGainF = presetPrefs().getInt(preset + "_bb_f", 0);
         cachedBassFreqR = presetPrefs().getInt(preset + "_bb_frq_r", 0);
@@ -1915,7 +1921,7 @@ public class McuService extends Service implements LocationListener {
             // `if (cachedFmEn)`, so a preset with the fatigue trim on and loudness off never had
             // its trim recomputed when the knob moved: the top stayed wherever the last full apply
             // had left it, and the switch appeared to do nothing until the preset was reloaded.
-            if (cachedFmEn || cachedFatEn) {
+            if (cachedFmEn || cachedFatEn || cachedUltraBassEn) {
                 applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
             }
             if (isUiVisible) {
@@ -2162,7 +2168,10 @@ public class McuService extends Service implements LocationListener {
         float subOffset = LoudnessCurve.subOffset(currentVol, cachedFmCal, cachedFmStr,
                 cachedFmEn, cachedSubComp, cachedSubFreq);
 
-        int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset)));
+        float ultraBassOffset = LoudnessCurve.ultraBassOffset(currentVol, cachedUltraBassEn,
+                cachedUltraBassStartVol, cachedUltraBassMaxDb);
+
+        int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
         effectiveSubGainIdx = finalGainIdx;
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
         sendSubThrottled(subData);

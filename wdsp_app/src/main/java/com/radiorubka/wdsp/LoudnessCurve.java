@@ -50,10 +50,11 @@ public final class LoudnessCurve {
     }
 
     /**
-     * The same for the fatigue trim (Trim Highs), which lives above its own start volume. Since the
-     * author's 0.5 that is the preset's {@code _fat_start_vol}, no longer the calibration point.
+     * How far a curve that lives above a start volume has travelled: 0 at the start, 1 at the top
+     * of the scale. Trim Highs ({@code _fat_start_vol}, no longer the calibration point since the
+     * author's 0.5) and Ultra Bass ({@code _ultra_bass_start_vol}) both ride it.
      */
-    public static float fatigueRatio(int vol, int startVol) {
+    public static float rampAbove(int vol, int startVol) {
         if (startVol >= VOL_MAX || vol <= startVol) return 0f;
         float r = (float) (vol - startVol) / (float) (VOL_MAX - startVol);
         return r < 0f ? 0f : (r > 1f ? 1f : r);
@@ -61,6 +62,19 @@ public final class LoudnessCurve {
 
     /** Where Trim Highs starts in a preset that never chose: the author's 0.5 default. */
     public static final int FATIGUE_START_DEFAULT = 25;
+
+    /** Ultra Bass defaults, the author's 0.5: from volume 16, up to +6 at volume 32. */
+    public static final int ULTRA_BASS_START_DEFAULT = 16;
+    public static final int ULTRA_BASS_MAX_DB_DEFAULT = 6;
+
+    /**
+     * Ultra Bass, the author's 0.5: extra subwoofer gain that grows with the volume - 0 at its start
+     * volume, {@code maxDb} at 32 - for when the bass gets thin as the music gets loud. It has
+     * nothing to do with loudness: no calibration point, no strength, acts with loudness off.
+     */
+    public static float ultraBassOffset(int vol, boolean enabled, int startVol, int maxDb) {
+        return enabled ? maxDb * rampAbove(vol, startVol) : 0f;
+    }
 
     /**
      * Fills {@code out} with the 16 band offsets in dB - the target, before the pre-warp
@@ -103,7 +117,7 @@ public final class LoudnessCurve {
             }
         }
         if (fatigueEnabled) {
-            float r = fatigueRatio(vol, fatigueStartVol);
+            float r = rampAbove(vol, fatigueStartVol);
             if (r > 0f) {
                 for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
                     out[i] = AudioConfig.FATIGUE_RAW_TARGET[i] * r * str;

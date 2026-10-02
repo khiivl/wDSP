@@ -311,6 +311,12 @@ public final class PresetsDatabaseValidator {
         clampInt(editor, prefs, pName + "_fm_str", FM_STRENGTH_MIN, FM_STRENGTH_MAX, FM_STRENGTH_DEFAULT, res);
         clampInt(editor, prefs, pName + "_fat_start_vol", FAT_START_VOL_MIN, FAT_START_VOL_MAX,
                 LoudnessCurve.FATIGUE_START_DEFAULT, res);
+        // Ultra Bass, the author's 0.5: his sliders' ranges, 0..32 and 1..12.
+        ensureBoolean(editor, prefs, pName + "_ultra_bass_en", false, res);
+        clampInt(editor, prefs, pName + "_ultra_bass_start_vol", 0, 32,
+                LoudnessCurve.ULTRA_BASS_START_DEFAULT, res);
+        clampInt(editor, prefs, pName + "_ultra_bass_max_db", 1, 12,
+                LoudnessCurve.ULTRA_BASS_MAX_DB_DEFAULT, res);
 
         // 8. Time Alignment (Precise Delays)
         ensureBoolean(editor, prefs, pName + "_d_en", false, res);

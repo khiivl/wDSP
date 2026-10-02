@@ -110,6 +110,7 @@ public final class CallPreset {
             case "_loud":
             case "_fm_en":
             case "_fat_en":
+            case "_ultra_bass_en":
             case "_sub_comp":
             case "_d_en":
             case "_d1_en":    return false;

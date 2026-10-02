@@ -2949,6 +2949,7 @@ public final class RoomMeasurement {
 
         e.putBoolean(presetName + "_fm_en", false);
         e.putBoolean(presetName + "_fat_en", false);
+        e.putBoolean(presetName + "_ultra_bass_en", false);
         e.putInt(presetName + "_fm_cal", MEASURE_VOLUME);
         e.putInt(presetName + "_fm_str", autoFmStrength);
         Log.i(TAG, "loudness curve left ready but off: cal=" + MEASURE_VOLUME
@@ -3065,6 +3066,7 @@ public final class RoomMeasurement {
 
          e.putBoolean(SCRATCH_PRESET + "_fm_en", false);
          e.putBoolean(SCRATCH_PRESET + "_fat_en", false);
+         e.putBoolean(SCRATCH_PRESET + "_ultra_bass_en", false);
          e.putInt(SCRATCH_PRESET + "_fm_cal", 0);
          e.putInt(SCRATCH_PRESET + "_fm_str", 0);
          e.putBoolean(SCRATCH_PRESET + "_gala_enabled", false);
