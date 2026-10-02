@@ -775,7 +775,12 @@ public class McuService extends Service implements LocationListener {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        workerThread = new HandlerThread("wDSP_Worker", -16); // THREAD_PRIORITY_AUDIO
+        // Default priority, not THREAD_PRIORITY_AUDIO (-16) as it was: this thread polls volume,
+        // GALA and the player and sends MCU commands - it never touches audio samples. At audio
+        // priority its 10 Hz poll and its binder calls into the framework competed with
+        // system_server through the whole boot (bench 02.10.2026: a five-minute boot, wDSP at
+        // 31% CPU in the ANR dumps; Antigravity, board #1243).
+        workerThread = new HandlerThread("wDSP_Worker", android.os.Process.THREAD_PRIORITY_DEFAULT);
         workerThread.start();
         backgroundHandler = new Handler(workerThread.getLooper());
 

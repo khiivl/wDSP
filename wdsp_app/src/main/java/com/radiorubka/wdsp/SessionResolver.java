@@ -177,6 +177,14 @@ public final class SessionResolver {
             forget(cached);
         }
 
+        // Nothing is playing, so no session can carry a signal: walking 512 of them only creates and
+        // fails 512 Visualizers in audioserver. At boot that is exactly what happened - the engine
+        // resolves on start, before any player - and it fed a five-minute boot with a cascade of
+        // ANRs (bench, 02.10.2026: 644 failed effect creations; Antigravity, board #1243).
+        if (!isAudioPlaying()) {
+            Log.i(TAG, "Nothing is playing - no sweep");
+            return -1;
+        }
         int swept = sweep();
         if (swept >= 0) {
             Log.i(TAG, "Resolved by sweep: session " + swept + " in "
@@ -211,6 +219,15 @@ public final class SessionResolver {
             if (SessionProbe.probe(sid, PROBE_MS).hasSignal()) return sid;
         }
         return -1;
+    }
+
+    private boolean isAudioPlaying() {
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            return am == null || am.isMusicActive();
+        } catch (Throwable t) {
+            return true; // cannot tell - keep the old behaviour rather than go blind
+        }
     }
 
     private synchronized void remember(String playerPackage, int sessionId) {
