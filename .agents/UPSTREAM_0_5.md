@@ -53,6 +53,14 @@ Read the author's code with `git show origin/master:<path>`; line numbers below 
 | 13 | **Strings**: 8 new keys in 7 locales; "F-M Curve" tab renamed "Correction" | `values*/strings.xml` | ours, 30 locales (Antigravity translates, I check) | en/uk done; 28 locales owed (`show_loudness_on_main`, `sync_*`, `hint_sync_delay_*`, `toast_loudness_sync_bass`); our tab is «Тонкомп.», his rename not taken | ⏳ |
 | 14 | **Build**: `flexbox` 3.0.0 dependency; `<profileable android:shell="true">` in the manifest | `libs.versions.toml`, `build.gradle`, `AndroidManifest.xml` | ours | `<profileable>` taken verbatim (`f655d5a`); `flexbox` not taken — our layout does not use it | ✅ `f655d5a` |
 
+### Late commits, 02.10 evening (found by the trial merge 03.10, which was aborted to port them first)
+
+| # | his commit | what | status |
+|---|---|---|---|
+| 15 | `c64e6fc` | 172/214 Hz shelves back with tuned loudness rows (verified on hardware); rear Boost saves the manual value, not the mirrored one | ✅ `e34e830`: table verbatim, options back; the rear-save fix not needed — our UI never mirrors the rear widgets |
+| 16 | `26b8d14` | GALA settings in a global namespace `__gala_global__` + "disable GALA for this preset"; MainActivity +229; McuService +63; spectrum +111; proxy `build.gradle` +25; `.gitignore`, `wdsp_app/build.gradle`; 6 locales | ⏳ |
+| 17 | `8b1c0a9` | **reverts our** `fd447a9` ("GALA stopping after the volume is changed by hand": `lastReadHardwareVol = reportedVolume`); no reason given | ❓ owner |
+
 ## Order
 
 1 → 9 (the model: pre-warp and filter shapes in `DspResponse`) → 2, 3 (loudness) → 4 (Ultra
