@@ -504,5 +504,29 @@
     <string name="banner_copied">Скопійовано в буфер обміну</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
+    <!-- Вимір салону: етапи, збої, полярність (02.10.2026) -->
+    <string name="room_stage_progress">Етап %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Замір фону тиші</string>
+    <string name="room_stage_noise_detail">Вимір фонового шуму в тиші та фіксація гучності (16 од.)…</string>
+    <string name="room_stage_speakers">Замір динаміків</string>
+    <string name="room_stage_speakers_detail">Відтворення свіпу: %1$s</string>
+    <string name="room_stage_delays">Аналіз затримок</string>
+    <string name="room_stage_delays_detail">Розрахунок часового вирівнювання (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Синтез Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Аналіз спаду мідбасів, сабвуфера та 16 смуг…</string>
+    <string name="room_stage_done">Готово</string>
+    <string name="room_stage_done_detail">Калібрування завершено успішно</string>
+    <string name="room_stage_mic_done_detail">Калібрування мікрофона успішно завершено</string>
+    <string name="room_err_no_preset">Не вибрано жодного пресета, тож міряти нема через що. Виберіть пресет і спробуйте ще раз.</string>
+    <string name="room_err_no_native">Не завантажилась бібліотека виміру. Перевстановіть програму.</string>
+    <string name="room_err_sweep">Не вдалося побудувати тестовий сигнал.</string>
+    <string name="room_err_mic_open">Не вдалося відкрити мікрофон.</string>
+    <string name="room_err_output_open">Не вдалося відкрити звуковий вихід.</string>
+    <string name="room_err_nothing_heard">Жодного динаміка не почуто. Перевірте гучність і чи не закритий мікрофон.</string>
+    <string name="room_err_too_few_heard">Почуто динаміків: %1$d - вирівнювати нема відносно чого. Перевірте гучність і де стоїть мікрофон.</string>
+    <string name="room_err_unexpected">Несподівана помилка: %1$s</string>
+    <string name="room_err_unknown">Невідома помилка</string>
+    <string name="room_polarity_warning">Переплутано полярність (+/-): %1$s. Динамік підключений у протифазі й гасить баси в салоні. Перевірте дроти на його клемах.</string>
+    <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
 </resources>
 

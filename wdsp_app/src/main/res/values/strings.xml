@@ -521,4 +521,28 @@
     <string name="banner_copied">Copied to the clipboard</string>
     <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
     <string name="app_title_short">wDSP</string>
+    <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
+    <string name="room_stage_progress">Step %1$d/%2$d: %3$s</string>
+    <string name="room_stage_noise">Background noise</string>
+    <string name="room_stage_noise_detail">Measuring the cabin in silence and fixing the volume (16)…</string>
+    <string name="room_stage_speakers">Speakers</string>
+    <string name="room_stage_speakers_detail">Playing the sweep: %1$s</string>
+    <string name="room_stage_delays">Delays</string>
+    <string name="room_stage_delays_detail">Calculating time alignment (GCC-PHAT)…</string>
+    <string name="room_stage_autoeq">Auto-EQ</string>
+    <string name="room_stage_autoeq_detail">Analysing midbass and subwoofer roll-off and the 16 bands…</string>
+    <string name="room_stage_done">Done</string>
+    <string name="room_stage_done_detail">Calibration completed successfully</string>
+    <string name="room_stage_mic_done_detail">Microphone calibration completed successfully</string>
+    <string name="room_err_no_preset">No preset is selected, so there is nothing to measure through. Select a preset and try again.</string>
+    <string name="room_err_no_native">The measurement library did not load. Reinstall the app.</string>
+    <string name="room_err_sweep">The test signal could not be built.</string>
+    <string name="room_err_mic_open">The microphone could not be opened.</string>
+    <string name="room_err_output_open">The audio output could not be opened.</string>
+    <string name="room_err_nothing_heard">No speaker was heard at all. Check the volume and that the microphone is not covered.</string>
+    <string name="room_err_too_few_heard">Only %1$d speaker(s) were heard - nothing to align against. Check the volume and the microphone placement.</string>
+    <string name="room_err_unexpected">Unexpected error: %1$s</string>
+    <string name="room_err_unknown">Unknown error</string>
+    <string name="room_polarity_warning">Reversed polarity (+/-) on: %1$s. The speaker is wired in antiphase and cancels bass in the cabin. Check the wires at its terminals.</string>
+    <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
 </resources>
