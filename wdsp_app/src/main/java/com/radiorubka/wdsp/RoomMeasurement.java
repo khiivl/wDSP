@@ -402,17 +402,6 @@ public final class RoomMeasurement {
      public static final String PREF_LAST_SELECTED = "last_selected_preset";
      public static final String PREF_PRESET_NAMES = "preset_names";
 
-     /**
-      * Centre frequency of each of the sixteen hardware equaliser bands.
-      *
-      * <p>The same numbers live in {@code kHwCenters} on the native side. Until 13.09.2026 the Java
-      * side had them only as a literal inside the report's "Band centres:" line, so any code that
-      * needed to know which band is which frequency had nowhere to ask.
-      */
-     public static final float[] BAND_CENTRES_HZ = {
-             20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
-             800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
-     };
 
      // The door high-pass and subwoofer crossover tables live in DspResponse (DOOR_HPF_HZ,
      // SUB_FREQS_HZ), as the chip has them. The copies here called the high-pass's code 0 "20 Hz";
@@ -1402,7 +1391,7 @@ public final class RoomMeasurement {
         if (status16 == null) return "";
         final StringBuilder unknown = new StringBuilder();
         final StringBuilder trimmed = new StringBuilder();
-        for (int b = 0; b < status16.length && b < BAND_CENTRES_HZ.length; b++) {
+        for (int b = 0; b < status16.length && b < DspResponse.BAND_CENTERS_HZ.length; b++) {
             final StringBuilder into;
             if (status16[b] == NativeSweep.MIC_BAND_UNKNOWN) into = unknown;
             else if (status16[b] == NativeSweep.MIC_BAND_TRIMMED) into = trimmed;
@@ -1428,7 +1417,7 @@ public final class RoomMeasurement {
 
     /** One band's centre frequency the way the report's "Band centres:" row prints it. */
     private static String bandCentreLabel(int band) {
-        final float hz = BAND_CENTRES_HZ[band];
+        final float hz = DspResponse.BAND_CENTERS_HZ[band];
         return hz == Math.rint(hz) ? String.valueOf((int) hz) : String.valueOf(hz);
     }
 
@@ -2733,7 +2722,7 @@ public final class RoomMeasurement {
         // and the cabin response stops claiming to describe it. One rule about trust, in one place.
         int unswept = 0;
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-            if (b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] > result.sweepTopHz) {
+            if (b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] > result.sweepTopHz) {
                 avgSnr[b] = UNMEASURED_SNR_DB;
                 unswept++;
             }
@@ -2821,7 +2810,7 @@ public final class RoomMeasurement {
         int fromSub = 0;
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
             final boolean belowCrossover = subUsable && crossoverHz > 0f
-                    && b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] < crossoverHz;
+                    && b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] < crossoverHz;
             final float measured = belowCrossover ? sub.cleanBandsDb[b] : avgClean[b];
             if (belowCrossover) fromSub++;
             result.cabinResponseDb16[b] = (measured + result.micCompensation16[b]) - refMid;
@@ -2829,7 +2818,7 @@ public final class RoomMeasurement {
             // adds nothing that we know of", which is what the spectrum display falls back to for
             // a car that has never been measured at all - and is the honest answer for a band
             // this pass could not reach.
-            if (b < BAND_CENTRES_HZ.length && BAND_CENTRES_HZ[b] > result.sweepTopHz) {
+            if (b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] > result.sweepTopHz) {
                 result.cabinResponseDb16[b] = 0f;
             }
         }
@@ -3719,7 +3708,7 @@ public final class RoomMeasurement {
             // and a report that names the wrong frequency for a band is worse than one that names
             // none - every column in every line above is read against this row.
             sb.append("Band centres:");
-            for (float hz : BAND_CENTRES_HZ) {
+            for (float hz : DspResponse.BAND_CENTERS_HZ) {
                 sb.append(hz >= 1000f
                         ? String.format(Locale.US, " %.0f", hz)
                         : String.format(Locale.US, " %s", hz == Math.rint(hz)

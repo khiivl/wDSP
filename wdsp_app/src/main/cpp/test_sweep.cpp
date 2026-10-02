@@ -118,10 +118,8 @@ void testFlatResponse(const SweepMeasurement& m, const char* which, float tolera
         lowest = std::min(lowest, bands[b]);
         highest = std::max(highest, bands[b]);
     }
-    static const float centres[16] = {20, 31.5f, 50, 80, 125, 200, 315, 500,
-                                      800, 1250, 2000, 3150, 5000, 8000, 12500, 20000};
     for (int b = 0; b < kHwBands; b++) {
-        std::printf("        %7.1f Hz  %8.2f dB\n", centres[b], bands[b]);
+        std::printf("        %7.1f Hz  %8.2f dB\n", kHwCenters[b], bands[b]);
     }
     char detail[128];
     std::snprintf(detail, sizeof(detail), "spread across all 16 bands is %.1f dB", highest - lowest);

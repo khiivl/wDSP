@@ -18,7 +18,11 @@ package com.radiorubka.wdsp;
  */
 public final class DspResponse {
 
-    /** Centre frequency of each of the 16 equaliser bands, matching AudioConfig.BAND_LABELS. */
+    /**
+     * Centre frequency of each of the 16 equaliser bands, matching AudioConfig.BAND_LABELS - the one
+     * Java table. The native analyser keeps its own ({@code kHwCenters}, analyzer.cpp), the one
+     * other copy two languages cannot avoid; {@code RoomMeasurement} had a third until 02.10.2026.
+     */
     public static final float[] BAND_CENTERS_HZ = {
             20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
             800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
