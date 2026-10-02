@@ -497,9 +497,17 @@ clamp 64..255 ; strb [0x2000022c+5], then a loop from index 4 into the register 
 
 The register value falls as `g` rises, and on BU32107 a smaller volume value is louder (DVol
 attenuation 0 = 0 dB, boost `128 - 2*dB`, 0.5 dB a unit) - so **each step of `g` is +1 dB and 12 is
-the loudest**: the "+0..+12" scale below holds as a relative scale. ❓ The branch is taken only while
-bit 1 of `[0x2000022c+10]` is 0; with it set another formula (`r0 - 6*[+7] - 21`) ignores `g`. Who
-sets that bit, and which BU32107 registers the loop writes for channels 4..5, are still open.
+the loudest**: the "+0..+12" scale below holds as a relative scale - 12 is no extra attenuation,
+each step below it 1 dB more. The loop from `0x0800545e` writes shadow `0x200000e2 + 0x73/0x74`,
+which the MCU's register map turns into **`0904`/`0905`, DVol attenuation Sub L/R** (Antigravity,
+board #1237; the map at `0x0800cfd7` not re-read by us); channels 0..3 go to `0900`..`0903`.
+
+🔬 **The mode bit.** The branch is taken only while bit 1 of `[0x2000022c+10]` is 0; with it set,
+another formula (`r0 - 6*[+7] - 21`) ignores `g`. That bit is **bit 7 of the first payload byte of
+command `0x87`** (handler `0x0800c16c`: `ands #0xfd`, `lsrs r1,r7,#7; lsls r1,#1; orrs`, `strb
+[r5,#10]`; bits 6..0 go to `[+6]`). wDSP never sends `0x87`, so the mode is whatever another sender
+(the stock DSP, CarSettings) or the MCU's default left - and MCU RAM keeps it until the power is cut.
+❓ Who sends `0x87` on a stock unit, and the bit's value on ours.
 
 🔬 **The stock QF_DSP overrode us.** While it ran it sent `8B xc` (its own crossover, gain 12) on its
 own schedule, so wDSP's 0x8B was overwritten - the likely reason for "the subwoofer reacts to neither
