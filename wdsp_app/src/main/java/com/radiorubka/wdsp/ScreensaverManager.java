@@ -901,7 +901,6 @@ public final class ScreensaverManager {
 
     /** The touch in both coordinate systems, and the numbers the zones were computed from. */
     private String touchGeometry(float x, float y) {
-        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
         View v = gestureView;
         int[] loc = new int[2];
         int vw = -1, vh = -1;
@@ -910,11 +909,47 @@ public final class ScreensaverManager {
             vw = v.getWidth();
             vh = v.getHeight();
         }
+        TouchArea area = touchArea();
         return String.format(Locale.US,
                 "at %.0f,%.0f in the window (%.0f,%.0f on screen), window %dx%d at %d,%d;"
-                        + " zones from screen %dx%d, top bar %d, now-playing strip %d",
+                        + " zones laid out on %.0fx%.0f, content from y=%.0f, now-playing strip %d",
                 x, y, downRawX, downRawY, vw, vh, loc[0], loc[1],
-                strip.screenWidth(), strip.screenHeight(), strip.systemStatusBarHeight(), infoBarPx());
+                area.w, area.h, area.top, infoBarPx());
+    }
+
+    /**
+     * Where the zones are laid out: on the view the touch landed on, in that view's own
+     * coordinates, which are the coordinates the touch arrives in and the ones the cover and the
+     * style button are drawn in.
+     *
+     * <p>That view fills the window, and the window starts below the status bar unless the person
+     * chose to cover it ({@link #PREF_COVER_STATUS_BAR}, 21.09.2026). The zones used to be laid out
+     * on the whole screen, which matched only while the window was the whole screen: below the bar
+     * every target at the bottom sat one status bar lower than where it was drawn, and a tap on
+     * the player's cover or on the style button was taken for previous or next (owner, 02.10.2026).
+     */
+    private static final class TouchArea {
+        final float w, h;
+        /** Where the content starts: covering the bar, it still keeps the bar's height clear. */
+        final float top;
+
+        TouchArea(float w, float h, float top) {
+            this.w = Math.max(1f, w);
+            this.h = Math.max(1f, h);
+            this.top = top;
+        }
+    }
+
+    private TouchArea touchArea() {
+        StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
+        boolean covers = coversStatusBar();
+        float top = covers ? strip.systemStatusBarHeight() : 0f;
+        View v = gestureView;
+        if (v != null && v.getWidth() > 0 && v.getHeight() > 0) {
+            return new TouchArea(v.getWidth(), v.getHeight(), top);
+        }
+        float windowTop = covers ? 0f : strip.systemStatusBarHeight();
+        return new TouchArea(strip.screenWidth(), strip.screenHeight() - windowTop, top);
     }
 
     private View.OnTouchListener gestures() {
@@ -969,9 +1004,10 @@ public final class ScreensaverManager {
             return;
         }
         StatusBarVisualizerManager strip = StatusBarVisualizerManager.getInstance(context);
-        int screenW = strip.screenWidth();
-        int screenH = strip.screenHeight();
-        float top = strip.systemStatusBarHeight();
+        TouchArea area = touchArea();
+        float screenW = area.w;
+        float screenH = area.h;
+        float top = area.top;
         float bottom = screenH - infoBarPx();
         float usableH = Math.max(1f, bottom - top);
 
@@ -1085,12 +1121,13 @@ public final class ScreensaverManager {
             // Distances are a share of their own dimension. Measured in pixels the top and bottom
             // are always closer on a screen wider than it is tall, and most of the top-left
             // quarter would end up belonging to the top edge.
-            float usableTop = strip.systemStatusBarHeight();
-            float usableH = Math.max(1f, screenH - usableTop);
+            TouchArea area = touchArea();
+            float usableTop = area.top;
+            float usableH = Math.max(1f, area.h - usableTop);
             float toTop = (downY - usableTop) / usableH;
-            float toBottom = (screenH - downY) / usableH;
-            float toLeft = downX / screenW;
-            float toRight = (screenW - downX) / screenW;
+            float toBottom = (area.h - downY) / usableH;
+            float toLeft = downX / area.w;
+            float toRight = (area.w - downX) / area.w;
             float nearest = Math.min(Math.min(toTop, toBottom), Math.min(toLeft, toRight));
 
             if (nearest > EDGE_F) {
