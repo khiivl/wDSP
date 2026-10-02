@@ -189,6 +189,14 @@ public final class NativeSweep implements AutoCloseable {
      * Trust in a band measured {@code snrDb} above its own noise, 0..1 - the ramp the estimate and
      * the synthesis apply, read from the one place it is defined. NaN without the native library.
      */
+    /**
+     * The midband every shape and correction is measured against - mean of bands 5..8 above -70 dB,
+     * NaN when there is none. The one definition, on the native side; NaN without the library.
+     */
+    public static float midbandReference(float[] bands16) {
+        return isAvailable() && bands16 != null ? nativeMidbandReference(bands16) : Float.NaN;
+    }
+
     public static float snrConfidence(float snrDb) {
         return isAvailable() ? nativeSnrConfidence(snrDb) : Float.NaN;
     }
@@ -264,6 +272,8 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native float nativeGccPhatDelay(float[] hRef, int refLen, float[] hCh,
                                                    int chLen, float[] outProminence1);
+
+    private static native float nativeMidbandReference(float[] bands16);
 
     private static native float nativeSnrConfidence(float snrDb);
 

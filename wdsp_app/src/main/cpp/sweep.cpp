@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace wdsp {
 
@@ -489,6 +490,26 @@ void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseD
 constexpr float kSnrNoneDb = 6.0f;
 constexpr float kSnrFullDb = 18.0f;
 
+/** Below this a midband reading is not a reading (a band with nothing in it reads -120). */
+constexpr float kMidGuardDb = -70.0f;
+
+/** The midband every shape and every correction is measured against: the mean of bands 5..8
+ *  (200, 315, 500, 800 Hz) that read above kMidGuardDb, or NaN when none does - the caller decides
+ *  what that means. One definition: until 02.10.2026 there were five, two band ranges (5..7 in the
+ *  microphone estimate, 5..8 everywhere else), three guards and two invented fallbacks. */
+float SweepMeasurement::midbandReference(const float* bands16) {
+    if (bands16 == nullptr) return std::numeric_limits<float>::quiet_NaN();
+    float sum = 0.0f;
+    int count = 0;
+    for (int b = 5; b <= 8; b++) {
+        if (bands16[b] > kMidGuardDb) {
+            sum += bands16[b];
+            count++;
+        }
+    }
+    return count > 0 ? sum / count : std::numeric_limits<float>::quiet_NaN();
+}
+
 /** How far a band measured this far above its own noise may be trusted, 0..1 - the one ramp.
  *  The estimate, the synthesis and the Java report all read it from here. */
 float SweepMeasurement::snrConfidence(float snrDb) {
@@ -579,17 +600,10 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
         outCompensation16[b] = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
     }
 
-    // Mid-frequency cabin reference anchor (200 - 500 Hz: bands 5, 6, 7)
-    // In vehicle acoustics, speech and midband are uncorrupted by cabin gain or mic port high-pass filters.
-    float sumMid = 0.0f;
-    int countMid = 0;
-    for (int b = 5; b <= 7; b++) {
-        if (avgClean16[b] > -100.0f) {
-            sumMid += avgClean16[b];
-            countMid++;
-        }
-    }
-    const float refMid = countMid > 0 ? (sumMid / countMid) : avgClean16[3];
+    // The midband: free of cabin gain below and of the port's resonance above. No midband, nothing
+    // to measure a shortfall against - the mounting alone stands.
+    const float refMid = midbandReference(avgClean16);
+    if (std::isnan(refMid)) return;
 
     // 1. Low-frequency roll-off & cabin gain compensation below 160 Hz (bands 0..4: 20, 31.5, 50, 80, 125 Hz)
     // Head unit mic hardware (pinhole cavity and input AC coupling capacitors) rolls off steeply below 150 Hz.
@@ -925,8 +939,8 @@ float SweepMeasurement::gccPhatDelay(const float* hRef, int refLen,
 float SweepMeasurement::detectMidbassRollOffHz(const float* avgClean16) {
     if (avgClean16 == nullptr) return 63.0f;
 
-    // Midrange reference level: bands 5, 6, 7, 8 (200, 315, 500, 800 Hz)
-    const float refMid = 0.25f * (avgClean16[5] + avgClean16[6] + avgClean16[7] + avgClean16[8]);
+    const float refMid = midbandReference(avgClean16);
+    if (std::isnan(refMid)) return 63.0f;
 
     // Check low-end response:
     // Band 3 = 80 Hz, Band 2 = 50 Hz, Band 1 = 31.5 Hz
@@ -999,16 +1013,9 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         m[b] = avgClean16[b] + (micComp16 != nullptr ? micComp16[b] : 0.0f);
     }
 
-    // Midrange reference (bands 5..8: 200..800 Hz)
-    float refMidSum = 0.0f;
-    int refMidCount = 0;
-    for (int b = 5; b <= 8; b++) {
-        if (m[b] > -70.0f) { // protect against missing/corrupted bands
-            refMidSum += m[b];
-            refMidCount++;
-        }
-    }
-    const float refMid = (refMidCount > 0) ? (refMidSum / refMidCount) : -20.0f;
+    // No midband, no shape to correct: the gains stay flat rather than chase an invented level.
+    const float refMid = midbandReference(m.data());
+    if (std::isnan(refMid)) return;
 
     // 2. Synthesize Target curve T[b] relative to refMid
     for (int b = 0; b < kHwBands; b++) {

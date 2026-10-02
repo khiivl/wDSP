@@ -174,6 +174,9 @@ public:
      */
     static float detectMidbassRollOffHz(const float* avgClean16);
 
+    /** Mean of bands 5..8 (200..800 Hz) that read above -70 dB; NaN when none does. */
+    static float midbandReference(const float* bands16);
+
     /** Trust in a band measured snrDb above its noise: 0 below 6 dB, 1 above 18, a ramp between. */
     static float snrConfidence(float snrDb);
 

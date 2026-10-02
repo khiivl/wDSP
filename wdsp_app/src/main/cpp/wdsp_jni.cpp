@@ -1,3 +1,4 @@
+#include <limits>
 #include <jni.h>
 
 #include <memory>
@@ -509,6 +510,18 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeGccPhatDelay(JNIEnv* env, jclass,
         env->SetFloatArrayRegion(outProminence1, 0, 1, &prominence);
     }
     return delay;
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeMidbandReference(JNIEnv* env, jclass, jfloatArray bands16) {
+    if (bands16 == nullptr || env->GetArrayLength(bands16) < wdsp::kHwBands) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    jfloat* data = env->GetFloatArrayElements(bands16, nullptr);
+    if (data == nullptr) return std::numeric_limits<float>::quiet_NaN();
+    float ref = wdsp::SweepMeasurement::midbandReference(data);
+    env->ReleaseFloatArrayElements(bands16, data, JNI_ABORT);
+    return ref;
 }
 
 JNIEXPORT jfloat JNICALL

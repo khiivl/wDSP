@@ -1319,15 +1319,9 @@ public final class RoomMeasurement {
         for (int k = 0; k < channelCount && k < result.channels.length; k++) {
             final ChannelResult cr = result.channels[k];
             if (cr == null || !cr.ok || !cr.confident || cr.cleanBandsDb == null) continue;
-            // This channel's own midrange, the same bands 5..8 the native side uses.
-            double sumMid = 0.0;
-            int countMid = 0;
-            for (int b = 5; b <= 8 && b < cr.cleanBandsDb.length; b++) {
-                sumMid += cr.cleanBandsDb[b];
-                countMid++;
-            }
-            if (countMid == 0) continue;
-            final float chMid = (float) (sumMid / countMid);
+            // This channel's own midrange - the native side's one definition of it.
+            final float chMid = NativeSweep.midbandReference(cr.cleanBandsDb);
+            if (Float.isNaN(chMid)) continue;
             for (int b = 0; b < NativeSweep.BAND_COUNT && b < cr.cleanBandsDb.length; b++) {
                 final float shape = cr.cleanBandsDb[b] - chMid;
                 if (shape > best[b]) {
@@ -2784,16 +2778,13 @@ public final class RoomMeasurement {
         // No double counting with the DSP curve: DspResponse.compute is given the sub's frequency
         // and gain indices, so the preset's own contribution is already in the other half of the
         // sum, while what is stored here was measured through the flat scratch preset (sub gain 0).
-        float refMidSum = 0f;
-        int refMidCount = 0;
-        for (int b = 5; b <= 8; b++) {
-            float m = avgClean[b] + result.micCompensation16[b];
-            if (m > -70f) {
-                refMidSum += m;
-                refMidCount++;
-            }
+        final float[] judged = new float[NativeSweep.BAND_COUNT];
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            judged[b] = avgClean[b] + result.micCompensation16[b];
         }
-        final float refMid = refMidCount > 0 ? refMidSum / refMidCount : -20f;
+        // NaN - no midband at all - leaves refMid poisoning every band below, and the curve is then
+        // not stored: a car with nothing measured in the middle has no shape to show.
+        final float refMid = NativeSweep.midbandReference(judged);
 
         final ChannelResult sub = result.channels.length > Channel.SUBWOOFER.ordinal()
                 ? result.channels[Channel.SUBWOOFER.ordinal()] : null;
@@ -2819,8 +2810,13 @@ public final class RoomMeasurement {
                 "cabin response for the spectrum: %d of %d bands taken from the subwoofer "
                         + "(crossover %.0f Hz, sub usable=%b)",
                 fromSub, NativeSweep.BAND_COUNT, crossoverHz, subUsable));
-        result.cabinResponseMeasured = true;
-        setCabinResponseCurve(context, result.cabinResponseDb16);
+        result.cabinResponseMeasured = !Float.isNaN(refMid);
+        if (result.cabinResponseMeasured) {
+            setCabinResponseCurve(context, result.cabinResponseDb16);
+        } else {
+            java.util.Arrays.fill(result.cabinResponseDb16, 0f);
+            Log.w(TAG, "cabin response not stored: no midband to measure the shape against");
+        }
         // Pushed into the running analyser now. A preference nobody re-reads is precisely how the
         // flat scratch preset spent months never reaching the chip: the value existed, the wire
         // did not.
