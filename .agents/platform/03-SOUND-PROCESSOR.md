@@ -481,6 +481,30 @@ $$\text{I2S Stereo In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0
   Для дверного ФВЧ нульовий елемент — Through (20 Гц), тому індекс 6 передає код 6 (80 Гц). Фільтри дверного HPF та сабвуферного LPF ідеально сходяться на частоті 80 Гц у точці -3 дБ.
 
 ### 4. Шкала гейну сабвуфера в wDSP vs MCU
+
+🔬 **Where the gain goes (read off `mcu.bin` 002121, image base `0x08003800`, 02.10.2026).** The
+field is RAM `0x20000266` = `0x2000024c + 0x1a`, and also `0x2000022c + 0x3a` - the 0x8B handler
+itself switches bases (`subs r0, #32`), so counting pointers to `0x2000024c` alone misses its
+readers (a decompile-only search claimed "never read"; wrong). Function `0x080052fc` reads it
+twice: `0x08005314` (compared with a shadow to detect a change) and `0x0800543e`:
+
+```
+ldrb r3,[r4,#26] ; g, r4 = 0x2000022c+0x20
+movs r4,#12 ; subs r3,r4,r3 ; lsls r3,r3,#1   ; 2*(12-g)
+adds r0,r3,r0 ; subs r0,#45                    ; + level computed from the volume
+clamp 64..255 ; strb [0x2000022c+5], then a loop from index 4 into the register shadow
+```
+
+The register value falls as `g` rises, and on BU32107 a smaller volume value is louder (DVol
+attenuation 0 = 0 dB, boost `128 - 2*dB`, 0.5 dB a unit) - so **each step of `g` is +1 dB and 12 is
+the loudest**: the "+0..+12" scale below holds as a relative scale. ❓ The branch is taken only while
+bit 1 of `[0x2000022c+10]` is 0; with it set another formula (`r0 - 6*[+7] - 21`) ignores `g`. Who
+sets that bit, and which BU32107 registers the loop writes for channels 4..5, are still open.
+
+🔬 **The stock QF_DSP overrode us.** While it ran it sent `8B xc` (its own crossover, gain 12) on its
+own schedule, so wDSP's 0x8B was overwritten - the likely reason for "the subwoofer reacts to neither
+crossover nor gain" (owner, 02.10). On the bench it was replaced by the wDSP proxy the same day.
+
 - Регулятор `seek_sub_gain` у wDSP має шкалу `0 .. 12` (+0 дБ .. +12 дБ), де нуль є чесним 0 дБ (відсутній зсув +6, на відміну від 16-смугового EQ).
 - Запис значень `outSubGain = 7` або `8` виставляє регулятор на **+7 дБ**, викликаючи надмірний гул («перебор з сабом»).
 - **Калібровані рівні в Auto-EQ**:
