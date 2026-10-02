@@ -125,6 +125,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvSubDb;
 
     private TextView tvPowerDb;
+    /**
+     * The amplifier power level of the preset on screen, or null until one has been shown. The one
+     * place the screen keeps it: savePreset used to read it back off tvPowerDb's text, and a label
+     * that was empty or did not parse came back as 0 and was written over the stored level.
+     */
+    private Integer powerVol;
     private final String[] SUB_FREQS_RAW = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
     /**
      * Built at runtime from SUB_FREQS_RAW and the localised hertz unit. It used to be a literal
@@ -1487,9 +1493,14 @@ public class MainActivity extends AppCompatActivity {
             currentVal = control;
         }
 
-        tvPowerDb.setText(String.valueOf(-currentVal));
+        showPowerVol(currentVal);
 
         prefs.edit().putInt(key, currentVal).apply();
+    }
+
+    private void showPowerVol(int value) {
+        powerVol = value;
+        if (tvPowerDb != null) tvPowerDb.setText(String.valueOf(-value));
     }
 
     // Steps a fader slider (L/R or F/R) by one increment via the small +/- buttons next
@@ -2206,16 +2217,6 @@ public class MainActivity extends AppCompatActivity {
         return 0;
     }
 
-    private int parsePowerDb() {
-        if (tvPowerDb == null) return 0;
-        String text = tvPowerDb.getText().toString().replace("+", "").trim();
-        try {
-            return -Integer.parseInt(text);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
     private void savePreset(String name) {
         if (name == null || name.trim().isEmpty()) return;
         // The service preset for calls is an array in CallPreset and is not edited (owner,
@@ -2247,8 +2248,10 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_sub_f", subFreqIdx);
         }
 
-        int powerVal = parsePowerDb();
-        e.putInt(name + "_power_vol", powerVal);
+        // The same rule as the crossover above: only what the screen actually holds.
+        if (powerVol != null) {
+            e.putInt(name + "_power_vol", powerVol);
+        }
 
         if (isFullyInitialized) {
             e.putInt(name + "_bf_f", getIntSlider(seekBassFilterFront));
@@ -2342,8 +2345,7 @@ public class MainActivity extends AppCompatActivity {
         Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS_RAW[subFreqIdx]);
 
         // Power Volume
-        int powerVal = p.getInt(name + "_power_vol", 0);
-        tvPowerDb.setText(String.valueOf(-powerVal));
+        showPowerVol(p.getInt(name + "_power_vol", 0));
 
         if (isFullyInitialized) {
             seekBassFilterFront.setValue((float) p.getInt(name + "_bf_f", 0));
