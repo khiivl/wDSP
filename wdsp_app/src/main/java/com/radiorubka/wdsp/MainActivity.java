@@ -1531,18 +1531,9 @@ public class MainActivity extends AppCompatActivity {
 
         // 3. Change OnItemSelectedListener to OnItemClickListener
         spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
-            // With subwoofer compensation on, a crossover it cannot act at is refused. The limit is
-            // whatever LoudnessCurve.maxSubBoost supports - not a literal here - so it cannot drift
-            // from the table: 100 Hz was added there on 14.09.2026 and is accepted now, 125 Hz and
-            // above are not. The refusal puts back the crossover that was chosen before, rather
-            // than the fixed 80 Hz it used to force, which quietly replaced a measured value.
-            if (isFullyInitialized && switchFmSubComp.isChecked() && LoudnessCurve.maxSubBoost(pos) <= 0f) {
-                int previous = subFreqIndexOf(Globals.currentSubFreqHz);
-                if (previous >= 0) spinnerSubFreq.setText(SUB_FREQS[previous], false);
-                Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
-                return;
-            }
-
+            // No crossover is refused any more: since 02.10.2026 subwoofer compensation acts at
+            // every crossover the chip offers (LoudnessCurve.maxSubBoost), so the old refusal above
+            // 100 Hz, and the toast that went with it, have nothing left to guard.
             if (!isUpdatingUi) {
                 autoSaveCurrent();
             }
@@ -1738,11 +1729,9 @@ public class MainActivity extends AppCompatActivity {
                 // 🔴 Switching compensation on no longer touches the crossover (owner, 14.09.2026:
                 // "прибери переписування"). It used to set anything above 80 Hz to 80 and save -
                 // added in this mod's 0.4.2, not in the original - and pressed on the owner's
-                // measured preset it replaced 100 Hz with 80 without asking. Now the person is only
-                // told when compensation cannot act at the crossover they have; the crossover stays.
-                if (checked && LoudnessCurve.maxSubBoost(idx) <= 0f) {
-                    Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
-                }
+                // measured preset it replaced 100 Hz with 80 without asking. The crossover stays,
+                // and since 02.10.2026 compensation acts at every crossover, so there is nothing to
+                // warn about either.
                 autoSaveCurrent();
                 updateFmVisualizer();
             }

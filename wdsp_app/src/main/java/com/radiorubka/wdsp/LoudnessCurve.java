@@ -91,9 +91,8 @@ public final class LoudnessCurve {
 
     /**
      * The extra subwoofer gain the loudness curve asks for, in gain-index steps of the 0x8B command.
-     * The subwoofer has no band of its own, so it borrows the offset of whichever equaliser band its
-     * crossover sits in - above 100 Hz there is no band low enough to borrow from and the answer is
-     * zero.
+     * The subwoofer has no band of its own, so it borrows the offset of an equaliser band - see
+     * {@link #maxSubBoost} for which one, at every crossover.
      *
      * @param subFreqIdx index into {@link DspResponse#SUB_FREQS_HZ}
      */
@@ -105,21 +104,40 @@ public final class LoudnessCurve {
         return maxSubBoost(subFreqIdx) * r * strength(strengthPct);
     }
 
-    /** The subwoofer's share of {@link AudioConfig#ISO_MAX_OFFSETS}, by crossover frequency. */
+    /**
+     * The subwoofer's share of the loudness curve at volume 1, by crossover: the ISO 226 boost
+     * ({@link AudioConfig#ISO_FULL_TARGET_DB}) of the highest equaliser band the subwoofer plays on
+     * its own - one band below the band its crossover sits in, since at the crossover itself it is
+     * 3 dB down and shares the band with the doors.
+     *
+     * <pre>
+     * crossover, Hz  25  32  40  50  63  80 | 100 125 160 200 250
+     * boost, dB      12  12  12  10  10   8 |   8   6   6   4   4
+     * </pre>
+     *
+     * <p>Left of the bar is the author's 0.5 table ({@code McuService.getMaxBassBoost}) exactly; it
+     * answered zero from 100 Hz. Right of it is the same rule carried on - the owner, 02.10.2026:
+     * <em>«ти ж маєш дослідження, продовж таблицю»</em>, and on what that means: <em>«тобто, це буде
+     * його, але доповнена нами таблиця?»</em>. Ours until then took the band at the crossover (80 Hz
+     * -> +6) and had stopped at 100 Hz, which was added on the owner's instruction 14.09. Why his
+     * numbers stand where both tables have one: <em>«суть, автор має обладнання для замірів, ми
+     * ні.»</em> The mean ISO boost over all the bands the subwoofer plays was weighed as well (12 11
+     * 11 10 10 9 9 8 8 7 7) and set aside: it is only derived, and it moves three of his numbers by
+     * 1 dB.
+     *
+     * <p>⚠️ The dynamic-bass research's own verdict on this switch is "compensate through the
+     * equaliser only": the equaliser sits before the subwoofer split, so the subwoofer already
+     * receives the loudness boost band by band and this adds to it (.agents/CABIN_MODEL.md §10-11).
+     * It stays as a deliberate extra for when the bass is short - the owner, 15.09.2026.
+     */
     public static float maxSubBoost(int subFreqIdx) {
-        int hz = hzOf(subFreqIdx);
-        // 100 Hz added 14.09.2026 on the owner's instruction. The original table stopped at 80 and
-        // answered zero above it, which is a gap in the table rather than physics: a subwoofer
-        // crossed over at 100 Hz plays the 80 Hz band as well. It takes the 80 Hz band by the rule
-        // the rest of the table already follows - the band at or just below the crossover (40 ->
-        // 31.5, 63 -> 50). Measurement sets 100 Hz on real cars, and the gap is what used to force
-        // the crossover down to 80 whenever compensation was switched on.
-        // ❓ 125 Hz and above still answer zero; nobody has asked for them.
-        if (hz == 100 || hz == 80) return AudioConfig.ISO_MAX_OFFSETS[3];
-        if (hz == 63 || hz == 50) return AudioConfig.ISO_MAX_OFFSETS[2];
-        if (hz == 40 || hz == 32) return AudioConfig.ISO_MAX_OFFSETS[1];
-        if (hz == 25) return AudioConfig.ISO_MAX_OFFSETS[0];
-        return 0f;
+        float crossoverHz = hzOf(subFreqIdx);
+        int atCrossover = -1;
+        for (int i = 0; i < AudioConfig.NUM_BANDS && AudioConfig.BAND_CENTER_HZ[i] <= crossoverHz; i++) {
+            atCrossover = i;
+        }
+        if (atCrossover < 0) return 0f;
+        return AudioConfig.ISO_FULL_TARGET_DB[Math.max(0, atCrossover - 1)];
     }
 
     /**
