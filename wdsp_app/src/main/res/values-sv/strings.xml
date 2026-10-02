@@ -27,6 +27,13 @@
     <string name="lbl_calibration_point">Kalibreringspunkt (volym över vilken kurvan inte verkar):</string>
     <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Visa på huvudskärmen</string>
+    <string name="sync_delay_front">Flytta främre tillsammans</string>
+    <string name="sync_delay_rear">Flytta bakre tillsammans</string>
+    <string name="sync_bass_fr">Samma som fram</string>
+    <string name="hint_sync_delay_front">Vänster och höger fram rör sig nu tillsammans; skillnaden mellan dem behålls.</string>
+    <string name="hint_sync_delay_rear">Vänster och höger bak rör sig nu tillsammans; skillnaden mellan dem behålls.</string>
+    <string name="toast_loudness_sync_bass">Loudness aktiv: bakbasen följer frontbasen. Bästa resultat fås med frontbasen på 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Startvolym för dämpning av diskant:</string>
     <string name="lbl_ultra_bass_start_vol">Startvolym för Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maximal förstärkning för Ultra Bass:</string>
@@ -285,6 +292,8 @@
     <string name="screensaver_section_title">Skärmsläckare</string>
     <string name="screensaver_enable">Skärmsläckare</string>
     <string name="screensaver_enable_desc">Helskärmsvisualisering vid inaktivitet. Döljs vid beröring.</string>
+    <string name="screensaver_cover_sb">Täck statusfältet</string>
+    <string name="screensaver_cover_sb_desc">Av — skärmsläckaren börjar under statusfältet: klocka, nätverk och senaste appar förblir synliga och klickbara. På — fyller hela skärmen.</string>
     <string name="screensaver_delay">Fördröjning</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Bakgrund</string>

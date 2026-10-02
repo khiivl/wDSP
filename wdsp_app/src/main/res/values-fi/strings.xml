@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibrointipiste (äänenvoimakkuus, jonka yläpuolella käyrä ei toimi):</string>
     <string name="lbl_correction_strength">Korjauksen voimakkuus:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Näytä päänäytöllä</string>
+    <string name="sync_delay_front">Etukaiuttimet yhdessä</string>
+    <string name="sync_delay_rear">Takakaiuttimet yhdessä</string>
+    <string name="sync_bass_fr">Kuten edessä</string>
+    <string name="hint_sync_delay_front">Etuvasen ja etuoikea liikkuvat nyt yhdessä; niiden välinen ero säilytetään.</string>
+    <string name="hint_sync_delay_rear">Takavasen ja takaoikea liikkuvat nyt yhdessä; niiden välinen ero säilytetään.</string>
+    <string name="toast_loudness_sync_bass">Loudness käytössä: takabasso seuraa etubassoa. Paras tulos saavutetaan asettamalla etubasso taajuudelle 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Diskantin vaimennuksen aloitusäänenvoimakkuus:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bassin aloitusäänenvoimakkuus:</string>
     <string name="lbl_ultra_bass_max_db">Ultra Bassin enimmäisvahvistus:</string>
@@ -297,6 +304,8 @@ Yleinen oletus: %1$s</string>
     <string name="screensaver_section_title">Näytönsäästäjä</string>
     <string name="screensaver_enable">Säästäjä</string>
     <string name="screensaver_enable_desc">Koko näytön visualisoija inaktiivisuuden jälkeen. Piilotetaan kosketuksesta.</string>
+    <string name="screensaver_cover_sb">Peitä tilapalkki</string>
+    <string name="screensaver_cover_sb_desc">Pois — näytönsäästäjä alkaa tilapalkin alapuolelta: kello, verkko ja viimeisimmät-painike pysyvät näkyvissä ja käytettävissä. Päällä — koko näytöllä.</string>
     <string name="screensaver_delay">Viive</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Tausta</string>

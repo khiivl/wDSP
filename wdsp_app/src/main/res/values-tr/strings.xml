@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibrasyon noktası (üstünde eğrinin etki etmediği ses seviyesi):</string>
     <string name="lbl_correction_strength">Düzeltme Gücü:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Ana ekranda göster</string>
+    <string name="sync_delay_front">Önleri birlikte kaydır</string>
+    <string name="sync_delay_rear">Arkaları birlikte kaydır</string>
+    <string name="sync_bass_fr">Öndeki gibi</string>
+    <string name="hint_sync_delay_front">Ön sol ve sağ artık birlikte hareket eder; aralarındaki fark korunur.</string>
+    <string name="hint_sync_delay_rear">Arka sol ve sağ artık birlikte hareket eder; aralarındaki fark korunur.</string>
+    <string name="toast_loudness_sync_bass">Loudness etkin: arka bas ön bası takip eder. En iyi sonuç için ön bası 86 Hz olarak ayarlayın.</string>
     <string name="lbl_trim_highs_start_vol">Tizleri kırpma başlangıç ses seviyesi:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bass başlangıç ses seviyesi:</string>
     <string name="lbl_ultra_bass_max_db">Ultra Bass maksimum güçlendirme:</string>
@@ -297,6 +304,8 @@ Genel Varsayılan: %1$s</string>
     <string name="screensaver_section_title">Ekran koruyucu</string>
     <string name="screensaver_enable">Koruyucu</string>
     <string name="screensaver_enable_desc">Hareketsizlik sonrası tam ekran görselleştirici. Dokunulduğunda gizlenir.</string>
+    <string name="screensaver_cover_sb">Durum çubuğunu kapla</string>
+    <string name="screensaver_cover_sb_desc">Kapalı — ekran koruyucu durum çubuğunun altından başlar: saat, ağ ve son uygulamalar düğmesi görünür ve tıklanabilir kalır. Açık — tüm ekranı kaplar.</string>
     <string name="screensaver_delay">Gecikme</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Arkaplan</string>

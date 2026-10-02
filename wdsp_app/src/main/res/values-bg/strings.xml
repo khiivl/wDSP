@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Точка на калибриране (сила на звука, над която кривата не действа):</string>
     <string name="lbl_correction_strength">Сила на корекцията:</string>
     <string name="ultra_bass">Ултра бас</string>
+    <string name="show_loudness_on_main">Показ на главния</string>
+    <string name="sync_delay_front">Предните заедно</string>
+    <string name="sync_delay_rear">Задните заедно</string>
+    <string name="sync_bass_fr">Като отпред</string>
+    <string name="hint_sync_delay_front">Предният ляв и десен вече се движат заедно, разликата между тях се запазва.</string>
+    <string name="hint_sync_delay_rear">Задният ляв и десен вече се движат заедно, разликата между тях се запазва.</string>
+    <string name="toast_loudness_sync_bass">Тонкомпенсацията е включена: задният бас следва предния. Най-добре е предният бас да е на 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Начална сила на звука за подрязване на високи:</string>
     <string name="lbl_ultra_bass_start_vol">Начална сила на звука за Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Максимално усилване на Ultra Bass:</string>
@@ -297,6 +304,8 @@
     <string name="screensaver_section_title">Скрийнсейвър</string>
     <string name="screensaver_enable">Скрийнсейвър</string>
     <string name="screensaver_enable_desc">Визуализатор на цял екран при неактивност. Докосване го скрива.</string>
+    <string name="screensaver_cover_sb">Покриване на статус бара</string>
+    <string name="screensaver_cover_sb_desc">Изключено — заставката започва под статус бара: часовникът, мрежата и бутонът «скорошни» остават видими и активни. Включено — на цял екран.</string>
     <string name="screensaver_delay">Забавяне</string>
     <string name="screensaver_delay_fmt">%1$d с</string>
     <string name="screensaver_bg_alpha">Фон</string>

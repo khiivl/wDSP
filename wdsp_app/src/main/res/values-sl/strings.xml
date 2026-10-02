@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibracijska točka (glasnost, nad katero krivulja ne deluje):</string>
     <string name="lbl_correction_strength">Moč korekcije:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Prikaži na glavnem</string>
+    <string name="sync_delay_front">Premakni sprednje skupaj</string>
+    <string name="sync_delay_rear">Premakni zadnje skupaj</string>
+    <string name="sync_bass_fr">Enako kot spredaj</string>
+    <string name="hint_sync_delay_front">Sprednji levi in desni se zdaj premikata skupaj, razlika med njima se ohranja.</string>
+    <string name="hint_sync_delay_rear">Zadnji levi in desni se zdaj premikata skupaj, razlika med njima se ohranja.</string>
+    <string name="toast_loudness_sync_bass">Loudness je vklopljen: zadnji nizki toni sledijo sprednjim. Najboljši rezultat: sprednji nizki toni na 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Začetna glasnost prirejanja visokih tonov:</string>
     <string name="lbl_ultra_bass_start_vol">Začetna glasnost Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Največje ojačanje Ultra Bass:</string>
@@ -297,6 +304,8 @@ Globalno privzeto: %1$s</string>
     <string name="screensaver_section_title">Ohranjevalnik</string>
     <string name="screensaver_enable">Ohranjevalnik</string>
     <string name="screensaver_enable_desc">Celozaslonski vizualizator po neaktivnosti. Skrije se ob dotiku.</string>
+    <string name="screensaver_cover_sb">Prekrij vrstico stanja</string>
+    <string name="screensaver_cover_sb_desc">Izklopljeno — ohranjevalnik zaslona se začne pod vrstico stanja: ura, omrežje in gumb za nedavne aplikacije ostanejo vidni in odzivni. Vklopljeno — čez celoten zaslon.</string>
     <string name="screensaver_delay">Zakasnitev</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Ozadje</string>

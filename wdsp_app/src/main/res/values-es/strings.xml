@@ -26,6 +26,13 @@
     <string name="lbl_calibration_point">Punto de calibración (volumen por encima del cual la curva no actúa):</string>
     <string name="lbl_correction_strength">Intensidad de la Corrección:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Mostrar en principal</string>
+    <string name="sync_delay_front">Mover frontales juntos</string>
+    <string name="sync_delay_rear">Mover traseros juntos</string>
+    <string name="sync_bass_fr">Igual que frontal</string>
+    <string name="hint_sync_delay_front">Los frontales izquierdo y derecho ahora se mueven juntos; se mantiene la diferencia entre ellos.</string>
+    <string name="hint_sync_delay_rear">Los traseros izquierdo y derecho ahora se mueven juntos; se mantiene la diferencia entre ellos.</string>
+    <string name="toast_loudness_sync_bass">Loudness activado: los graves traseros siguen a los delanteros. Para mejores resultados, configure los graves delanteros a 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Volumen inicial de recorte de agudos:</string>
     <string name="lbl_ultra_bass_start_vol">Volumen inicial de Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Realce máximo de Ultra Bass:</string>
@@ -286,6 +293,8 @@
     <string name="screensaver_section_title">Salvapantallas</string>
     <string name="screensaver_enable">Salvapantallas</string>
     <string name="screensaver_enable_desc">Visualizador a pantalla completa tras inactividad. Un toque lo oculta.</string>
+    <string name="screensaver_cover_sb">Cubrir la barra de estado</string>
+    <string name="screensaver_cover_sb_desc">Desactivado: el salvapantallas comienza debajo de la barra de estado; el reloj, la red y el botón de apps recientes siguen visibles y funcionales. Activado: pantalla completa.</string>
     <string name="screensaver_delay">Retraso</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fondo</string>

@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Тачка калибрације (јачина звука изнад које крива не делује):</string>
     <string name="lbl_correction_strength">Снага корекције:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Прикажи на главном</string>
+    <string name="sync_delay_front">Померај предње заједно</string>
+    <string name="sync_delay_rear">Померај задње заједно</string>
+    <string name="sync_bass_fr">Као спреда</string>
+    <string name="hint_sync_delay_front">Предњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>
+    <string name="hint_sync_delay_rear">Задњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>
+    <string name="toast_loudness_sync_bass">Тонкомпензација је укључена: задњи бас прати предњи. Најбољи резултат: предњи бас на 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Почетна јачина звука подрезивања високих:</string>
     <string name="lbl_ultra_bass_start_vol">Почетна јачина звука Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Максимално појачање Ultra Bass:</string>
@@ -297,6 +304,8 @@
     <string name="screensaver_section_title">Čuvar ekrana</string>
     <string name="screensaver_enable">Čuvar</string>
     <string name="screensaver_enable_desc">Vizualizator preko celog ekrana u neaktivnosti. Nestaje na dodir.</string>
+    <string name="screensaver_cover_sb">Прекривај статусну траку</string>
+    <string name="screensaver_cover_sb_desc">Искључено — чувар екрана почиње испод статусне траке: сат, мрежа и дугме за недавне апликације остају видљиви и активни. Укључено — преко целог екрана.</string>
     <string name="screensaver_delay">Odlaganje</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Pozadina</string>

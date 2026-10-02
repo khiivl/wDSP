@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Point de calibrage (volume au-dessus duquel la courbe n\'agit pas) :</string>
     <string name="lbl_correction_strength">Intensité de correction :</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Afficher sur l\'accueil</string>
+    <string name="sync_delay_front">Déplacer l\'avant ensemble</string>
+    <string name="sync_delay_rear">Déplacer l\'arrière ensemble</string>
+    <string name="sync_bass_fr">Comme à l\'avant</string>
+    <string name="hint_sync_delay_front">Les haut-parleurs avant gauche et droit bougent désormais ensemble ; la différence entre eux est conservée.</string>
+    <string name="hint_sync_delay_rear">Les haut-parleurs arrière gauche et droit bougent désormais ensemble ; la différence entre eux est conservée.</string>
+    <string name="toast_loudness_sync_bass">Loudness activé : les basses arrière suivent les avant. Idéalement, réglez les basses avant sur 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Volume de départ de l\'atténuation des aigus :</string>
     <string name="lbl_ultra_bass_start_vol">Volume de départ d\'Ultra Bass :</string>
     <string name="lbl_ultra_bass_max_db">Amplification maximale d\'Ultra Bass :</string>
@@ -297,6 +304,8 @@ Par défaut global : %1$s</string>
     <string name="screensaver_section_title">Écran de veille</string>
     <string name="screensaver_enable">Veille</string>
     <string name="screensaver_enable_desc">Visualiseur plein écran après inactivité. Disparaît au toucher.</string>
+    <string name="screensaver_cover_sb">Recouvrir la barre d\'état</string>
+    <string name="screensaver_cover_sb_desc">Désactivé — l\'écran de veille commence sous la barre d\'état : l\'horloge, le réseau et le bouton des applications récentes restent visibles et accessibles. Activé — en plein écran.</string>
     <string name="screensaver_delay">Délai</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fond</string>

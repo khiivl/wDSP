@@ -26,6 +26,13 @@
     <string name="lbl_calibration_point">Точка калибровки (громкость, выше которой кривая не действует):</string>
     <string name="lbl_correction_strength">Степень коррекции:</string>
     <string name="ultra_bass">Ультра-бас</string>
+    <string name="show_loudness_on_main">Показать на главной</string>
+    <string name="sync_delay_front">Передние двигать вместе</string>
+    <string name="sync_delay_rear">Задние двигать вместе</string>
+    <string name="sync_bass_fr">Как спереди</string>
+    <string name="hint_sync_delay_front">Передний левый и правый теперь двигаются вместе, разница между ними сохраняется.</string>
+    <string name="hint_sync_delay_rear">Задний левый и правый теперь двигаются вместе, разница между ними сохраняется.</string>
+    <string name="toast_loudness_sync_bass">Тонкомпенсация включена: полка баса сзади следует за передней. Оптимально — передняя полка на 86 Гц.</string>
     <string name="lbl_trim_highs_start_vol">Громкость начала уменьшения ВЧ:</string>
     <string name="lbl_ultra_bass_start_vol">Громкость, с которой действует ультра-бас:</string>
     <string name="lbl_ultra_bass_max_db">Наибольшее усиление ультра-баса:</string>
@@ -291,6 +298,8 @@
     <string name="screensaver_section_title">Заставка</string>
     <string name="screensaver_enable">Заставка</string>
     <string name="screensaver_enable_desc">Визуализатор на весь экран при простое. Скрывается по касанию.</string>
+    <string name="screensaver_cover_sb">Перекрывать статус-бар</string>
+    <string name="screensaver_cover_sb_desc">Выключено — заставка начинается под статус-баром: часы, сеть и кнопка недавних приложений остаются видимыми и нажимаются. Включено — на весь экран.</string>
     <string name="screensaver_delay">Задержка</string>
     <string name="screensaver_delay_fmt">%1$d с</string>
     <string name="screensaver_bg_alpha">Фон</string>

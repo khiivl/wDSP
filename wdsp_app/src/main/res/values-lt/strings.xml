@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibravimo taškas (garsumas, virš kurio kreivė neveikia):</string>
     <string name="lbl_correction_strength">Korekcijos stiprumas:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Rodyti pagrindiniame</string>
+    <string name="sync_delay_front">Priekinius judinti kartu</string>
+    <string name="sync_delay_rear">Galinius judinti kartu</string>
+    <string name="sync_bass_fr">Kaip priekyje</string>
+    <string name="hint_sync_delay_front">Priekinis kairysis ir dešinysis dabar juda kartu, skirtumas tarp jų išlaikomas.</string>
+    <string name="hint_sync_delay_rear">Galinis kairysis ir dešinysis dabar juda kartu, skirtumas tarp jų išlaikomas.</string>
+    <string name="toast_loudness_sync_bass">Loudness įjungtas: galiniai žemi dažniai atkartoja priekinius. Geriausiam rezultatui nustatykite priekinius žemus dažnius ties 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Aukštų dažnių apkarpymo pradinis garsumas:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bass pradinis garsumas:</string>
     <string name="lbl_ultra_bass_max_db">Maksimalus Ultra Bass stiprinimas:</string>
@@ -297,6 +304,8 @@ Bendras numatytasis: %1$s</string>
     <string name="screensaver_section_title">Ekrano užsklanda</string>
     <string name="screensaver_enable">Užsklanda</string>
     <string name="screensaver_enable_desc">Viso ekrano vizualizacija ramybės būsenoje. Dingsta palietus.</string>
+    <string name="screensaver_cover_sb">Uždengti būsenos juostą</string>
+    <string name="screensaver_cover_sb_desc">Išjungta — ekrano užsklanda prasideda po būsenos juosta: laikrodis, tinklas ir paskutiniųjų programų mygtukas lieka matomi ir pasiekiami. Įjungta — per visą ekraną.</string>
     <string name="screensaver_delay">Delsa</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fonas</string>

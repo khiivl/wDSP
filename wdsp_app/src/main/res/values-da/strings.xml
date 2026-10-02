@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibreringspunkt (lydstyrke, hvorover kurven ikke virker):</string>
     <string name="lbl_correction_strength">Korrektionsstyrke:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Vis på hovedskærm</string>
+    <string name="sync_delay_front">Flyt forreste sammen</string>
+    <string name="sync_delay_rear">Flyt bageste sammen</string>
+    <string name="sync_bass_fr">Som foran</string>
+    <string name="hint_sync_delay_front">Forreste venstre og højre flyttes nu sammen; forskellen mellem dem bevares.</string>
+    <string name="hint_sync_delay_rear">Bageste venstre og højre flyttes nu sammen; forskellen mellem dem bevares.</string>
+    <string name="toast_loudness_sync_bass">Loudness er aktiv: bagbassen følger forbassen. Det bedste resultat opnås med forbassen på 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Startlydstyrke for dæmpning af diskant:</string>
     <string name="lbl_ultra_bass_start_vol">Startlydstyrke for Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maksimal forstærkning for Ultra Bass:</string>
@@ -297,6 +304,8 @@ Global standard: %1$s</string>
     <string name="screensaver_section_title">Pauseskærm</string>
     <string name="screensaver_enable">Pauseskærm</string>
     <string name="screensaver_enable_desc">Fuldskærms visualiser efter inaktivitet. Skjules ved berøring.</string>
+    <string name="screensaver_cover_sb">Dæk statuslinjen</string>
+    <string name="screensaver_cover_sb_desc">Fra — pauseskærmen starter under statuslinjen: uret, netværket og knappen til seneste apps forbliver synlige og trykbare. Til — dækker hele skærmen.</string>
     <string name="screensaver_delay">Forsinkelse</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Baggrund</string>

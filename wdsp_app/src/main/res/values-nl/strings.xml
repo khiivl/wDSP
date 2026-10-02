@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibratiepunt (volume waarboven de curve niet meer werkt):</string>
     <string name="lbl_correction_strength">Correctiesterkte:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Op hoofdscherm tonen</string>
+    <string name="sync_delay_front">Voorzijde samen bewegen</string>
+    <string name="sync_delay_rear">Achterzijde samen bewegen</string>
+    <string name="sync_bass_fr">Als voorzijde</string>
+    <string name="hint_sync_delay_front">Linksvoor en rechtsvoor bewegen nu samen; het verschil ertussen blijft behouden.</string>
+    <string name="hint_sync_delay_rear">Linksachter en rechtsachter bewegen nu samen; het verschil ertussen blijft behouden.</string>
+    <string name="toast_loudness_sync_bass">Loudness actief: bas achter volgt de voorzijde. Het beste resultaat bereik je met bas voorzijde op 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Startvolume hoge tonen dempen:</string>
     <string name="lbl_ultra_bass_start_vol">Startvolume Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maximale versterking Ultra Bass:</string>
@@ -297,6 +304,8 @@ Globale standaard: %1$s</string>
     <string name="screensaver_section_title">Screensaver</string>
     <string name="screensaver_enable">Screensaver</string>
     <string name="screensaver_enable_desc">Schermvullende visualisatie bij inactiviteit. Verdwijnt bij aanraking.</string>
+    <string name="screensaver_cover_sb">Statusbalk bedekken</string>
+    <string name="screensaver_cover_sb_desc">Uit — de schermbeveiliging begint onder de statusbalk: klok, netwerk en de knop voor recente apps blijven zichtbaar en tikbaar. Aan — vult het hele scherm.</string>
     <string name="screensaver_delay">Vertraging</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Achtergrond</string>

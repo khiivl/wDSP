@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibrační bod (hlasitost, nad kterou křivka nepůsobí):</string>
     <string name="lbl_correction_strength">Síla korekce:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Zobrazit na hlavní</string>
+    <string name="sync_delay_front">Přední posouvat spolu</string>
+    <string name="sync_delay_rear">Zadní posouvat spolu</string>
+    <string name="sync_bass_fr">Jako vpředu</string>
+    <string name="hint_sync_delay_front">Přední levý a pravý se nyní posouvají společně; rozdíl mezi nimi je zachován.</string>
+    <string name="hint_sync_delay_rear">Zadní levý a pravý se nyní posouvají společně; rozdíl mezi nimi je zachován.</string>
+    <string name="toast_loudness_sync_bass">Loudness je aktivní: zadní basy sledují přední. Nejlepší výsledek je s předními basy na 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Počáteční hlasitost oříznutí výšek:</string>
     <string name="lbl_ultra_bass_start_vol">Počáteční hlasitost Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maximální zesílení Ultra Bass:</string>
@@ -297,6 +304,8 @@ Globální výchozí: %1$s</string>
     <string name="screensaver_section_title">Spořič obrazovky</string>
     <string name="screensaver_enable">Spořič</string>
     <string name="screensaver_enable_desc">Celoobrazovkový vizualizér při nečinnosti. Zmizí po dotyku.</string>
+    <string name="screensaver_cover_sb">Překrýt stavový řádek</string>
+    <string name="screensaver_cover_sb_desc">Vypnuto — spořič začíná pod stavovým řádkem: hodiny, síť a tlačítko nedávných aplikací zůstávají viditelné a lze na ně klepnout. Zapnuto — na celou obrazovku.</string>
     <string name="screensaver_delay">Zpoždění</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Pozadí</string>

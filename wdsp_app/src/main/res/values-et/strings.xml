@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibreerimispunkt (helitugevus, millest kõrgemal kõver ei toimi):</string>
     <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Kuva pealehel</string>
+    <string name="sync_delay_front">Liiguta esimesi koos</string>
+    <string name="sync_delay_rear">Liiguta tagumisi koos</string>
+    <string name="sync_bass_fr">Nagu ees</string>
+    <string name="hint_sync_delay_front">Eesmine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>
+    <string name="hint_sync_delay_rear">Tagumine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>
+    <string name="toast_loudness_sync_bass">Loudness on aktiivne: tagumine bass järgib esibassi. Parim tulemus on esibass 86 Hz peal.</string>
     <string name="lbl_trim_highs_start_vol">Kõrgete helide kärpimise alghelitugevus:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bassi alghelitugevus:</string>
     <string name="lbl_ultra_bass_max_db">Ultra Bassi maksimaalne võimendus:</string>
@@ -297,6 +304,8 @@
     <string name="screensaver_section_title">Ekraanisäästja</string>
     <string name="screensaver_enable">Säästja</string>
     <string name="screensaver_enable_desc">Täisekraanil visualiseerija tegevusetuse korral. Kaob puudutamisel.</string>
+    <string name="screensaver_cover_sb">Kata olekuriba</string>
+    <string name="screensaver_cover_sb_desc">Väljas — ekraanisäästja algab olekuriba alt: kell, võrk ja viimaste rakenduste nupp jäävad nähtavale ning on vajutatavad. Sees — üle terve ekraani.</string>
     <string name="screensaver_delay">Viivitus</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Taust</string>

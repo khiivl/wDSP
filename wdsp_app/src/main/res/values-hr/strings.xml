@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibracijska točka (glasnoća iznad koje krivulja ne djeluje):</string>
     <string name="lbl_correction_strength">Snaga korekcije:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Prikaži na početnom</string>
+    <string name="sync_delay_front">Pomiči prednje zajedno</string>
+    <string name="sync_delay_rear">Pomiči stražnje zajedno</string>
+    <string name="sync_bass_fr">Kao sprijeda</string>
+    <string name="hint_sync_delay_front">Prednji lijevi i desni sada se pomiču zajedno, razlika između njih ostaje očuvana.</string>
+    <string name="hint_sync_delay_rear">Stražnji lijevi i desni sada se pomiču zajedno, razlika između njih ostaje očuvana.</string>
+    <string name="toast_loudness_sync_bass">Loudness je uključen: stražnji bas prati prednji. Najbolje je prednji bas postaviti na 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Početna glasnoća obrezivanja visokih:</string>
     <string name="lbl_ultra_bass_start_vol">Početna glasnoća Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maksimalno pojačanje Ultra Bass:</string>
@@ -297,6 +304,8 @@ Globalno zadano: %1$s</string>
     <string name="screensaver_section_title">Čuvar zaslona</string>
     <string name="screensaver_enable">Čuvar</string>
     <string name="screensaver_enable_desc">Vizualizator preko cijelog zaslona u neaktivnosti. Nestaje na dodir.</string>
+    <string name="screensaver_cover_sb">Prekrij statusnu traku</string>
+    <string name="screensaver_cover_sb_desc">Isključeno — čuvar zaslona počinje ispod statusne trake: sat, mreža i gumb nedavnih aplikacija ostaju vidljivi i dostupni. Uključeno — preko cijelog zaslona.</string>
     <string name="screensaver_delay">Odgoda</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Pozadina</string>

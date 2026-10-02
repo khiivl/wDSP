@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Σημείο βαθμονόμησης (ένταση πάνω από την οποία η καμπύλη παύει να δρα):</string>
     <string name="lbl_correction_strength">Ισχύς διόρθωσης:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Προβολή στην αρχική</string>
+    <string name="sync_delay_front">Εμπρός μαζί</string>
+    <string name="sync_delay_rear">Πίσω μαζί</string>
+    <string name="sync_bass_fr">Όπως εμπρός</string>
+    <string name="hint_sync_delay_front">Το εμπρός αριστερό και δεξί κινούνται πλέον μαζί, η διαφορά μεταξύ τους διατηρείται.</string>
+    <string name="hint_sync_delay_rear">Το πίσω αριστερό και δεξί κινούνται πλέον μαζί, η διαφορά μεταξύ τους διατηρείται.</string>
+    <string name="toast_loudness_sync_bass">Το Loudness είναι ενεργό: τα πίσω μπάσα ακολουθούν τα εμπρός. Για βέλτιστο αποτέλεσμα ορίστε τα εμπρός μπάσα στα 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Ένταση εκκίνησης περικοπής πρίμων:</string>
     <string name="lbl_ultra_bass_start_vol">Ένταση εκκίνησης Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Μέγιστη ενίσχυση Ultra Bass:</string>
@@ -297,6 +304,8 @@
     <string name="screensaver_section_title">Προστασία οθόνης</string>
     <string name="screensaver_enable">Προστασία</string>
     <string name="screensaver_enable_desc">Οπτικοποίηση πλήρους οθόνης λόγω αδράνειας. Κρύβεται με άγγιγμα.</string>
+    <string name="screensaver_cover_sb">Επικάλυψη γραμμής κατάστασης</string>
+    <string name="screensaver_cover_sb_desc">Ανενεργό — η προφύλαξη ξεκινά κάτω από τη γραμμή κατάστασης: το ρολόι, το δίκτυο και τα πρόσφατα παραμένουν ορατά και λειτουργικά. Ενεργό — σε πλήρη οθόνη.</string>
     <string name="screensaver_delay">Καθυστέρηση</string>
     <string name="screensaver_delay_fmt">%1$d δ</string>
     <string name="screensaver_bg_alpha">Φόντο</string>

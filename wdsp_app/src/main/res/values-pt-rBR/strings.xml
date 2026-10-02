@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Ponto de calibração (volume acima do qual a curva não atua):</string>
     <string name="lbl_correction_strength">Intensidade da Correção:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Mostrar na principal</string>
+    <string name="sync_delay_front">Mover frontais juntos</string>
+    <string name="sync_delay_rear">Mover traseiros juntos</string>
+    <string name="sync_bass_fr">Igual à frente</string>
+    <string name="hint_sync_delay_front">Os dianteiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
+    <string name="hint_sync_delay_rear">Os traseiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
+    <string name="toast_loudness_sync_bass">Loudness ativado: os graves traseiros acompanham os dianteiros. O ideal é definir os graves frontais em 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Volume inicial de atenuação de agudos:</string>
     <string name="lbl_ultra_bass_start_vol">Volume inicial de Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Ganho máximo de Ultra Bass:</string>
@@ -295,6 +302,8 @@
     <string name="screensaver_section_title">Protetor de tela</string>
     <string name="screensaver_enable">Protetor</string>
     <string name="screensaver_enable_desc">Visualizador em tela cheia após inatividade. Oculta ao tocar.</string>
+    <string name="screensaver_cover_sb">Cobrir a barra de status</string>
+    <string name="screensaver_cover_sb_desc">Desativado — a proteção de tela começa abaixo da barra de status: o relógio, a rede e o botão de recentes continuam visíveis e funcionais. Ativado — tela inteira.</string>
     <string name="screensaver_delay">Atraso</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fundo</string>

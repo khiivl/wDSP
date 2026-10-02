@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Punct de calibrare (volum peste care curba nu acționează):</string>
     <string name="lbl_correction_strength">Putere corecție:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Afișează pe principal</string>
+    <string name="sync_delay_front">Mută fața împreună</string>
+    <string name="sync_delay_rear">Mută spatele împreună</string>
+    <string name="sync_bass_fr">La fel ca în față</string>
+    <string name="hint_sync_delay_front">Canalele stânga și dreapta față se mișcă acum împreună; diferența dintre ele este păstrată.</string>
+    <string name="hint_sync_delay_rear">Canalele stânga și dreapta spate se mișcă acum împreună; diferența dintre ele este păstrată.</string>
+    <string name="toast_loudness_sync_bass">Loudness este activat: basul din spate îl urmărește pe cel din față. Cel mai bun rezultat: basul față la 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Volum de pornire atenuare înalte:</string>
     <string name="lbl_ultra_bass_start_vol">Volum de pornire Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Amplificare maximă Ultra Bass:</string>
@@ -297,6 +304,8 @@ Implicit global: %1$s</string>
     <string name="screensaver_section_title">Economizor ecran</string>
     <string name="screensaver_enable">Economizor</string>
     <string name="screensaver_enable_desc">Vizualizator pe tot ecranul după inactivitate. Ascuns la atingere.</string>
+    <string name="screensaver_cover_sb">Acoperă bara de stare</string>
+    <string name="screensaver_cover_sb_desc">Dezactivat — economizorul de ecran începe sub bara de stare: ceasul, rețeaua și butonul de aplicații recente rămân vizibile și accesibile. Activat — pe tot ecranul.</string>
     <string name="screensaver_delay">Întârziere</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fundal</string>

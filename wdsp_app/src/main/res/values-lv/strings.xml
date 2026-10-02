@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibrēšanas punkts (skaļums, virs kura līkne nedarbojas):</string>
     <string name="lbl_correction_strength">Korekcijas stiprums:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Rādīt galvenajā</string>
+    <string name="sync_delay_front">Priekšējos pārvietot kopā</string>
+    <string name="sync_delay_rear">Aizmugurējos pārvietot kopā</string>
+    <string name="sync_bass_fr">Kā priekšā</string>
+    <string name="hint_sync_delay_front">Priekšējais kreisais un labais tagad pārvietojas kopā, starpība starp tiem tiek saglabāta.</string>
+    <string name="hint_sync_delay_rear">Aizmugurējais kreisais un labais tagad pārvietojas kopā, starpība starp tiem tiek saglabāta.</string>
+    <string name="toast_loudness_sync_bass">Loudness ir ieslēgts: aizmugurējais bass seko priekšējam. Vislabāk priekšējo basu iestatīt uz 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Augsto frekvenču apgriešanas sākuma skaļums:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bass sākuma skaļums:</string>
     <string name="lbl_ultra_bass_max_db">Ultra Bass maksimālais pastiprinājums:</string>
@@ -297,6 +304,8 @@ Globāli noklusējums: %1$s</string>
     <string name="screensaver_section_title">Ekrānsaudzētājs</string>
     <string name="screensaver_enable">Ekrānsaudzētājs</string>
     <string name="screensaver_enable_desc">Pilnekrāna vizualizators dīkstāvē. Pazūd pieskaroties.</string>
+    <string name="screensaver_cover_sb">Pārklāt statusa joslu</string>
+    <string name="screensaver_cover_sb_desc">Izslēgts — ekrānsaudzētājs sākas zem statusa joslas: pulkstenis, tīkls un neseno lietotņu poga paliek redzami un nospiežami. Ieslēgts — pa visu ekrānu.</string>
     <string name="screensaver_delay">Aizkave</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Fons</string>

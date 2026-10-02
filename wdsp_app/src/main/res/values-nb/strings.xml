@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Kalibreringspunkt (volum over hvilket kurven ikke virker):</string>
     <string name="lbl_correction_strength">Korreksjonsstyrke:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Vis på hovedskjerm</string>
+    <string name="sync_delay_front">Flytt fremre sammen</string>
+    <string name="sync_delay_rear">Flytt bakre sammen</string>
+    <string name="sync_bass_fr">Som foran</string>
+    <string name="hint_sync_delay_front">Venstre og høyre foran flyttes nå sammen; forskjellen mellom dem beholdes.</string>
+    <string name="hint_sync_delay_rear">Venstre og høyre bak flyttes nå sammen; forskjellen mellom dem beholdes.</string>
+    <string name="toast_loudness_sync_bass">Loudness er aktiv: bass bak følger bass foran. Best resultat oppnås med bass foran på 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Startvolum for demping av diskant:</string>
     <string name="lbl_ultra_bass_start_vol">Startvolum for Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maksimal forsterkning for Ultra Bass:</string>
@@ -297,6 +304,8 @@ Global standard: %1$s</string>
     <string name="screensaver_section_title">Skjermsparer</string>
     <string name="screensaver_enable">Skjermsparer</string>
     <string name="screensaver_enable_desc">Fullskjermsvisualisering ved inaktivitet. Skjules ved berøring.</string>
+    <string name="screensaver_cover_sb">Dekk statuslinjen</string>
+    <string name="screensaver_cover_sb_desc">Av — pauseskjermen starter under statuslinjen: klokken, nettverket og nylige apper forblir synlige og trykkbare. På — fyller hele skjermen.</string>
     <string name="screensaver_delay">Forsinkelse</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Bakgrunn</string>

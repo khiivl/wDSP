@@ -29,6 +29,13 @@
     <string name="lbl_calibration_point">Punto di calibrazione (volume oltre il quale la curva non agisce):</string>
     <string name="lbl_correction_strength">Intensità correzione:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Mostra nella principale</string>
+    <string name="sync_delay_front">Muovi anteriori insieme</string>
+    <string name="sync_delay_rear">Muovi posteriori insieme</string>
+    <string name="sync_bass_fr">Come davanti</string>
+    <string name="hint_sync_delay_front">Anteriore sinistro e destro ora si muovono insieme; la differenza tra loro viene mantenuta.</string>
+    <string name="hint_sync_delay_rear">Posteriore sinistro e destro ora si muovono insieme; la differenza tra loro viene mantenuta.</string>
+    <string name="toast_loudness_sync_bass">Loudness attivo: i bassi posteriori seguono gli anteriori. Per un risultato ottimale, imposta i bassi anteriori a 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Volume iniziale taglio alti:</string>
     <string name="lbl_ultra_bass_start_vol">Volume iniziale Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Incremento massimo Ultra Bass:</string>
@@ -297,6 +304,8 @@ Predefinito globale: %1$s</string>
     <string name="screensaver_section_title">Salvaschermo</string>
     <string name="screensaver_enable">Salvaschermo</string>
     <string name="screensaver_enable_desc">Visualizzatore a schermo intero dopo inattività. Un tocco lo nasconde.</string>
+    <string name="screensaver_cover_sb">Copri la barra di stato</string>
+    <string name="screensaver_cover_sb_desc">Disattivo: il salvaschermo inizia sotto la barra di stato; orologio, rete e tasto recenti rimangono visibili e selezionabili. Attivo: a schermo intero.</string>
     <string name="screensaver_delay">Ritardo</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Sfondo</string>

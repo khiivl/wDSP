@@ -27,6 +27,13 @@
     <string name="lbl_calibration_point">Punkt kalibracji (głośność, powyżej której krzywa nie działa):</string>
     <string name="lbl_correction_strength">Siła korekcji:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Pokaż na głównym</string>
+    <string name="sync_delay_front">Przesuwaj przednie razem</string>
+    <string name="sync_delay_rear">Przesuwaj tylne razem</string>
+    <string name="sync_bass_fr">Jak z przodu</string>
+    <string name="hint_sync_delay_front">Przedni lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>
+    <string name="hint_sync_delay_rear">Tylny lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>
+    <string name="toast_loudness_sync_bass">Loudness włączony: bas z tyłu podąża za przednim. Najlepszy rezultat to przedni bas na 86 Hz.</string>
     <string name="lbl_trim_highs_start_vol">Głośność startowa ograniczenia wysokich tonów:</string>
     <string name="lbl_ultra_bass_start_vol">Głośność startowa Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maksymalne wzmocnienie Ultra Bass:</string>
@@ -285,6 +292,8 @@
     <string name="screensaver_section_title">Wygaszacz</string>
     <string name="screensaver_enable">Wygaszacz</string>
     <string name="screensaver_enable_desc">Wizualizator pełnoekranowy po bezczynności. Znika po dotknięciu.</string>
+    <string name="screensaver_cover_sb">Zakrywaj pasek stanu</string>
+    <string name="screensaver_cover_sb_desc">Wyłączone — wygaszacz zaczyna się pod paskiem stanu: zegar, sieć i przycisk ostatnich aplikacji pozostają widoczne i aktywne. Włączone — na pełnym ekranie.</string>
     <string name="screensaver_delay">Opóźnienie</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Tło</string>

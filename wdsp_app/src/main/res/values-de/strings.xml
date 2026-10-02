@@ -26,6 +26,13 @@
     <string name="lbl_calibration_point">Kalibrationspunkt (Lautstärke, oberhalb der die Kurve nicht wirkt):</string>
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Auf Hauptseite zeigen</string>
+    <string name="sync_delay_front">Vorne zusammen bewegen</string>
+    <string name="sync_delay_rear">Hinten zusammen bewegen</string>
+    <string name="sync_bass_fr">Wie vorne</string>
+    <string name="hint_sync_delay_front">Vorne links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>
+    <string name="hint_sync_delay_rear">Hinten links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>
+    <string name="toast_loudness_sync_bass">Loudness ist aktiv: Der hintere Bass folgt dem vorderen. Am besten den vorderen Bass auf 86 Hz einstellen.</string>
     <string name="lbl_trim_highs_start_vol">Startlautstärke Höhenreduzierung:</string>
     <string name="lbl_ultra_bass_start_vol">Startlautstärke Ultra Bass:</string>
     <string name="lbl_ultra_bass_max_db">Maximale Anhebung Ultra Bass:</string>
@@ -285,6 +292,8 @@
     <string name="screensaver_section_title">Bildschirmschoner</string>
     <string name="screensaver_enable">Schoner</string>
     <string name="screensaver_enable_desc">Vollbild-Visualisierer bei Inaktivität. Verschwindet bei Berührung.</string>
+    <string name="screensaver_cover_sb">Statusleiste überdecken</string>
+    <string name="screensaver_cover_sb_desc">Aus — der Bildschirmschoner beginnt unter der Statusleiste: Uhr, Netzwerk und die Taste für letzte Apps bleiben sichtbar und bedienbar. Ein — füllt den ganzen Bildschirm.</string>
     <string name="screensaver_delay">Verzögerung</string>
     <string name="screensaver_delay_fmt">%1$d s</string>
     <string name="screensaver_bg_alpha">Hintergrund</string>
