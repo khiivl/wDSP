@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private MaterialButton switchGalaEnable, switchGalaGlobal;
+    private MaterialButton switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
@@ -790,6 +790,7 @@ public class MainActivity extends AppCompatActivity {
             if (switchSyncBass == null) switchSyncBass = findViewById(R.id.switch_sync_bass);
             if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
             if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
+            if (switchGalaDisableForPreset == null) switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
 
             // Style all toggle buttons
             updateToggleStyle(switchLoud);
@@ -805,6 +806,7 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchSyncBass);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
+            updateToggleStyle(switchGalaDisableForPreset);
 
             // Spectrum Mode toggle
             updateSpectrumModeUi();
@@ -1280,6 +1282,7 @@ public class MainActivity extends AppCompatActivity {
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
+        switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
 
         // Tactile touch attachment for all 8 toggles (shift down-right & shadow depression)
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLoud);
@@ -1304,6 +1307,9 @@ public class MainActivity extends AppCompatActivity {
                 switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaDisableForPreset);
+        com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.row_gala_toggles), null, 0,
+                switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -2331,7 +2337,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_fat_start_vol", "_ultra_bass_en", "_ultra_bass_start_vol", "_ultra_bass_max_db", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_fat_start_vol", "_ultra_bass_en", "_ultra_bass_start_vol", "_ultra_bass_max_db", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_gala_disabled_for_preset", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -2533,6 +2539,7 @@ public class MainActivity extends AppCompatActivity {
                 e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
                 e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
             }
+            e.putBoolean(name + "_gala_disabled_for_preset", isChecked(switchGalaDisableForPreset));
         }
         e.apply();
     }
@@ -2663,6 +2670,11 @@ public class MainActivity extends AppCompatActivity {
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
             seekGalaHoldMs.setValue((float) p.getInt(gKeyHoldMs, 1000));
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
+            if (switchGalaDisableForPreset != null) {
+                switchGalaDisableForPreset.setChecked(p.getBoolean(name + "_gala_disabled_for_preset", false));
+                switchGalaDisableForPreset.setEnabled(gg);
+                updateToggleStyle(switchGalaDisableForPreset);
+            }
         }
         isUpdatingUi = false;
         applyServicePresetLock(name);
@@ -3121,10 +3133,22 @@ public class MainActivity extends AppCompatActivity {
         // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
         // see the GALA sections of savePreset()/loadPreset().
         updateGalaGlobalModeFromPrefs();
+        // The author's 26b8d14: a preset may opt out of the shared GALA. Only the global mode gives
+        // it a meaning, so it is enabled only there; the hint says what it does when switched on.
+        switchGalaDisableForPreset.setEnabled(galaGlobalMode);
+        updateToggleStyle(switchGalaDisableForPreset);
+        switchGalaDisableForPreset.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            if (isUpdatingUi) return;
+            if (checked) Toaster.show(MainActivity.this, getString(R.string.hint_gala_disable_for_preset));
+            autoSaveCurrent();
+        });
         switchGalaGlobal.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (isUpdatingUi) return;
             galaGlobalMode = checked;
+            switchGalaDisableForPreset.setEnabled(checked);
+            updateToggleStyle(switchGalaDisableForPreset);
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                     .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked).apply();
             // Whichever way the switch went, write what is on screen into the place that is now

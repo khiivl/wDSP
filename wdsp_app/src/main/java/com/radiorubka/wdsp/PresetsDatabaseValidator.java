@@ -353,6 +353,7 @@ public final class PresetsDatabaseValidator {
 
         // 11. GALA
         ensureBoolean(editor, prefs, pName + "_gala_enabled", false, res);
+        ensureBoolean(editor, prefs, pName + "_gala_disabled_for_preset", false, res);
         clampInt(editor, prefs, pName + "_gala_increment", GALA_INC_MIN, GALA_INC_MAX, GALA_INC_DEFAULT, res);
         // Crucial clamp for legacy presets that had speed > 200 km/h (> 40 steps)
         clampInt(editor, prefs, pName + "_gala_min_speed", GALA_MIN_SPEED_MIN, GALA_MIN_SPEED_MAX, GALA_MIN_SPEED_DEFAULT, res);

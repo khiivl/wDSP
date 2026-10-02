@@ -125,6 +125,9 @@ public class McuService extends Service implements LocationListener {
     // (galaGlobalEnabled) instead of read from cachedGalaEn per-preset - see isGalaEnabled().
     private boolean galaGlobalMode;
     private boolean galaGlobalEnabled;
+    // The current preset opted out of the shared GALA (the author's 26b8d14); read only in global
+    // mode, where it is the one per-preset say left.
+    private boolean cachedGalaDisabledForPreset;
     
     /**
      * Speed in km/h - the real one from GPS, and the simulated one from the slider in Settings.
@@ -1094,6 +1097,7 @@ public class McuService extends Service implements LocationListener {
         cachedGalaMaxAdj = prefs.getInt(gKeyMaxAdj, 12);
         cachedGalaFadeDelayMs = prefs.getInt(gKeyFadeMs, 100);
         cachedGalaHoldMs = prefs.getInt(gKeyHoldMs, 1000);
+        cachedGalaDisabledForPreset = presetPrefs().getBoolean(preset + "_gala_disabled_for_preset", false);
     }
 
     @Override
@@ -1535,9 +1539,10 @@ public class McuService extends Service implements LocationListener {
     }
 
     // True/false state actually used by GALA processing - the shared global switch when
-    // galaGlobalMode is on, otherwise whatever the current preset has stored.
+    // galaGlobalMode is on, unless the current preset opted out of it; otherwise whatever the
+    // current preset has stored.
     private boolean isGalaEnabled() {
-        return galaGlobalMode ? galaGlobalEnabled : cachedGalaEn;
+        return galaGlobalMode ? galaGlobalEnabled && !cachedGalaDisabledForPreset : cachedGalaEn;
     }
 
     // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.
