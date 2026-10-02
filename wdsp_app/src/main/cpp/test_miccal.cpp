@@ -29,7 +29,10 @@ static const float kAvgClean[16] =
     {-46.2f,-31.8f,-24.2f,-14.6f,-14.5f,-2.4f,2.5f,-1.0f,0.9f,0.2f,-1.4f,-1.6f,-1.5f,-2.4f,-2.3f,-2.3f};
 static const float kAvgSnr[16] =
     {26.6f,37.3f,43.4f,41.9f,40.2f,48.7f,34.0f,30.1f,20.5f,21.5f,22.5f,26.9f,26.2f,29.6f,22.4f,18.3f};
-// The mounting the owner stated: room_mic_body = 1, pinhole. Lives in MicProfile.java now.
+// The mounting the owner stated on 20.09: room_mic_body = 1, pinhole. A FIXTURE of that day, not a
+// copy of the live table: the live one is MicProfile.MOUNTING_DB (Java, which a host test cannot
+// read), and this harness replays the run as it was - if the live row ever changes, this one must
+// not follow it, or the replay stops being the 20.09 run.
 static const float kPinhole[16] = {0,0,0,2.0f,0,0,0,0,0,0,-1.5f,-5.0f,-1.0f,3.5f,7.0f,10.0f};
 
 static void printRow(const char* label, const float* v) {
