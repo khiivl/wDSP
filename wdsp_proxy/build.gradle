@@ -10,14 +10,36 @@ android {
         applicationId "com.qf.soundeffect"
         minSdk 28
         targetSdk 28
+        // Android 14 inclusive (owner, 02.10.2026). Informational: Android has not enforced
+        // maxSdkVersion at install since 2.0.1. It replaces an android:maxSdkVersion="28" that sat
+        // on the activity, where the attribute means nothing.
+        maxSdk 34
         versionCode 1
         versionName "0.5"
 
         resConfigs "en"
     }
 
+    // The same release key as wdsp_app (local.properties, never in git). The stock QF_DSP is
+    // platform-signed; installing this over it as an update needs signature checks disabled
+    // (PMPatch3 on the unit).
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
+    }
+    signingConfigs {
+        release {
+            storeFile file(localProperties.getProperty('keystore.file', ''))
+            storePassword localProperties.getProperty('keystore.password', '')
+            keyAlias localProperties.getProperty('key.alias', '')
+            keyPassword localProperties.getProperty('key.password', '')
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
