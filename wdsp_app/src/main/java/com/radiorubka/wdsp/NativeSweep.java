@@ -186,6 +186,14 @@ public final class NativeSweep implements AutoCloseable {
     }
 
     /**
+     * Trust in a band measured {@code snrDb} above its own noise, 0..1 - the ramp the estimate and
+     * the synthesis apply, read from the one place it is defined. NaN without the native library.
+     */
+    public static float snrConfidence(float snrDb) {
+        return isAvailable() ? nativeSnrConfidence(snrDb) : Float.NaN;
+    }
+
+    /**
      * Where the door speakers stop delivering bass, in Hz (50, 63, 80 or 100) - the chip's code for
      * it is {@link DspResponse#doorHpfIndexOf}.
      */
@@ -256,6 +264,8 @@ public final class NativeSweep implements AutoCloseable {
 
     private static native float nativeGccPhatDelay(float[] hRef, int refLen, float[] hCh,
                                                    int chLen, float[] outProminence1);
+
+    private static native float nativeSnrConfidence(float snrDb);
 
     private static native float nativeDetectMidbassRollOffHz(float[] avgClean16);
 

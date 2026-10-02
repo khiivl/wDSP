@@ -489,6 +489,13 @@ void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseD
 constexpr float kSnrNoneDb = 6.0f;
 constexpr float kSnrFullDb = 18.0f;
 
+/** How far a band measured this far above its own noise may be trusted, 0..1 - the one ramp.
+ *  The estimate, the synthesis and the Java report all read it from here. */
+float SweepMeasurement::snrConfidence(float snrDb) {
+    const float c = (snrDb - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
+    return std::min(1.0f, std::max(0.0f, c));
+}
+
 /**
  * The cabin gain anchor, and why it is back.
  *
@@ -695,9 +702,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
         }
         float correction = deficit;
         if (snr16 != nullptr) {
-            float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
-            confidence = std::min(1.0f, std::max(0.0f, confidence));
-            correction *= confidence;
+            correction *= snrConfidence(snr16[b]);
         }
         // Added, not assigned: the mounting's acoustic loss and the input stage's electrical
         // roll-off are different mechanisms in series, and both are present.
@@ -805,9 +810,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
             measured = -rWorst;                // the smallest peak any channel had
         }
         if (snr16 != nullptr) {
-            float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
-            confidence = std::min(1.0f, std::max(0.0f, confidence));
-            measured *= confidence;
+            measured *= snrConfidence(snr16[b]);
         }
 
         // Where the mounting says nothing, the measurement speaks alone ONLY where a capsule
@@ -1107,9 +1110,7 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         // A ramp rather than a threshold: no band flips between fully corrected and ignored over a
         // single decibel of cabin noise.
         if (snr16 != nullptr) {
-            float confidence = (snr16[b] - kSnrNoneDb) / (kSnrFullDb - kSnrNoneDb);
-            confidence = std::min(1.0f, std::max(0.0f, confidence));
-            deltaDb *= confidence;
+            deltaDb *= snrConfidence(snr16[b]);
         }
 
         // Subwoofer / Midbass Crossover Rule:

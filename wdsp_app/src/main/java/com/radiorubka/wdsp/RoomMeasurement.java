@@ -3646,8 +3646,7 @@ public final class RoomMeasurement {
             sb.append("\n");
             sb.append("EQ trust (0..1):      ");
             for (float band : result.avgSnrDb16) {
-                float trust = (band - 6.0f) / 12.0f;
-                sb.append(String.format(Locale.US, " %.2f", Math.max(0f, Math.min(1f, trust))));
+                sb.append(String.format(Locale.US, " %.2f", NativeSweep.snrConfidence(band)));
             }
             sb.append("\n");
             if (result.clippedSamples > 0) {

@@ -174,6 +174,9 @@ public:
      */
     static float detectMidbassRollOffHz(const float* avgClean16);
 
+    /** Trust in a band measured snrDb above its noise: 0 below 6 dB, 1 above 18, a ramp between. */
+    static float snrConfidence(float snrDb);
+
     enum TargetCurve {
         TARGET_HARMAN = 0,
         TARGET_DOLBY_ATMOS = 1,

@@ -512,6 +512,11 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeGccPhatDelay(JNIEnv* env, jclass,
 }
 
 JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeSnrConfidence(JNIEnv*, jclass, jfloat snrDb) {
+    return wdsp::SweepMeasurement::snrConfidence(snrDb);
+}
+
+JNIEXPORT jfloat JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeDetectMidbassRollOffHz(JNIEnv* env, jclass,
                                                                  jfloatArray avgClean16) {
     if (avgClean16 == nullptr || env->GetArrayLength(avgClean16) < wdsp::kHwBands) return 63.0f;
