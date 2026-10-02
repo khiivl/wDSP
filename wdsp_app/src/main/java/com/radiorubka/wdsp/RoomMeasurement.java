@@ -1428,7 +1428,7 @@ public final class RoomMeasurement {
         if (status16 == null) return "";
         final StringBuilder unknown = new StringBuilder();
         final StringBuilder trimmed = new StringBuilder();
-        for (int b = 0; b < status16.length && b < DspResponse.BAND_CENTERS_HZ.length; b++) {
+        for (int b = 0; b < status16.length && b < AudioConfig.BAND_CENTER_HZ.length; b++) {
             final StringBuilder into;
             if (status16[b] == NativeSweep.MIC_BAND_UNKNOWN) into = unknown;
             else if (status16[b] == NativeSweep.MIC_BAND_TRIMMED) into = trimmed;
@@ -1454,7 +1454,7 @@ public final class RoomMeasurement {
 
     /** One band's centre frequency the way the report's "Band centres:" row prints it. */
     private static String bandCentreLabel(int band) {
-        final float hz = DspResponse.BAND_CENTERS_HZ[band];
+        final float hz = AudioConfig.BAND_CENTER_HZ[band];
         return hz == Math.rint(hz) ? String.valueOf((int) hz) : String.valueOf(hz);
     }
 
@@ -2722,7 +2722,7 @@ public final class RoomMeasurement {
         // and the cabin response stops claiming to describe it. One rule about trust, in one place.
         int unswept = 0;
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-            if (b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] > result.sweepTopHz) {
+            if (b < AudioConfig.BAND_CENTER_HZ.length && AudioConfig.BAND_CENTER_HZ[b] > result.sweepTopHz) {
                 avgSnr[b] = UNMEASURED_SNR_DB;
                 unswept++;
             }
@@ -2798,7 +2798,7 @@ public final class RoomMeasurement {
         int fromSub = 0;
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
             final boolean belowCrossover = subUsable && crossoverHz > 0f
-                    && b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] < crossoverHz;
+                    && b < AudioConfig.BAND_CENTER_HZ.length && AudioConfig.BAND_CENTER_HZ[b] < crossoverHz;
             final float measured = belowCrossover ? sub.cleanBandsDb[b] : avgClean[b];
             if (belowCrossover) fromSub++;
             result.cabinResponseDb16[b] = (measured + result.micCompensation16[b]) - refMid;
@@ -2806,7 +2806,7 @@ public final class RoomMeasurement {
             // adds nothing that we know of", which is what the spectrum display falls back to for
             // a car that has never been measured at all - and is the honest answer for a band
             // this pass could not reach.
-            if (b < DspResponse.BAND_CENTERS_HZ.length && DspResponse.BAND_CENTERS_HZ[b] > result.sweepTopHz) {
+            if (b < AudioConfig.BAND_CENTER_HZ.length && AudioConfig.BAND_CENTER_HZ[b] > result.sweepTopHz) {
                 result.cabinResponseDb16[b] = 0f;
             }
         }
@@ -3700,7 +3700,7 @@ public final class RoomMeasurement {
             // and a report that names the wrong frequency for a band is worse than one that names
             // none - every column in every line above is read against this row.
             sb.append("Band centres:");
-            for (float hz : DspResponse.BAND_CENTERS_HZ) {
+            for (float hz : AudioConfig.BAND_CENTER_HZ) {
                 sb.append(hz >= 1000f
                         ? String.format(Locale.US, " %.0f", hz)
                         : String.format(Locale.US, " %s", hz == Math.rint(hz)

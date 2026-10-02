@@ -7,30 +7,21 @@ package com.radiorubka.wdsp;
  * downstream of AudioFlinger - so to show what the listener hears we have to add the DSP's own
  * response on top of the measured content.
  *
- * The previous implementation approximated each equaliser band with three hand-picked weights
- * (dist 1 -> 0.36, dist 2 -> 0.08 for wide Q), which made Q 2.2 and Q 4.7 look nearly identical
- * and had no notion of the subwoofer at all. Here every band is evaluated as the real magnitude
- * response of a peaking biquad, which is what the hardware implements, so the two Q values differ
- * because they physically differ.
+ * The filter shapes are the author's, in {@link AudioConfig} since his 0.5 (02.10.2026): the
+ * Q = 2.2 bell ({@code compositeResponseDb}), the subwoofer low-pass ({@code subFilterResponseDb})
+ * and the door high-pass ({@code bassShapingResponseDb}). This class composes them into what the
+ * chip does to the signal and keeps no second copy of any of them: until then it had its own RBJ
+ * biquad evaluated at the capture sample rate - a rate the chip knows nothing about - which agreed
+ * with his bell to 0.3 dB at the neighbouring band centres and drifted only near Nyquist, while his
+ * EQ pre-warp ({@code AudioConfig.prewarpEq}) is solved against his bell. One bell, so the curve
+ * drawn and the curve pre-warped are the same curve. The band centres are his
+ * {@code AudioConfig.BAND_CENTER_HZ}; the native analyser keeps its own ({@code kHwCenters},
+ * analyzer.cpp), the one other copy two languages cannot avoid.
  *
  * The whole curve only changes when a slider moves, so it is computed on demand and cached by the
  * caller rather than recalculated per frame.
  */
 public final class DspResponse {
-
-    /**
-     * Centre frequency of each of the 16 equaliser bands, matching AudioConfig.BAND_LABELS - the one
-     * Java table. The native analyser keeps its own ({@code kHwCenters}, analyzer.cpp), the one
-     * other copy two languages cannot avoid; {@code RoomMeasurement} had a third until 02.10.2026.
-     */
-    public static final float[] BAND_CENTERS_HZ = {
-            20f, 31.5f, 50f, 80f, 125f, 200f, 315f, 500f,
-            800f, 1250f, 2000f, 3150f, 5000f, 8000f, 12500f, 20000f
-    };
-
-    /** The two Q factors the hardware offers per band. */
-    public static final float Q_WIDE = 2.2f;
-    public static final float Q_NARROW = 4.7f;
 
     /** Subwoofer crossover frequencies, index order as sent to the MCU in command 0x8B. */
     public static final int[] SUB_FREQS_HZ = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
@@ -85,14 +76,6 @@ public final class DspResponse {
      */
     static final float[] DOOR_HPF_HZ = {0f, 25f, 31.5f, 40f, 50f, 63f, 80f, 100f, 125f, 160f, 200f, 250f};
 
-    /**
-     * 🔴 The MCU firmware forces Q = 2.2 on every equaliser band whatever the Q switches say (bit 5
-     * ORed into every write in FUN_080050d4, 03-SOUND-PROCESSOR.md §7). The switches stay in the
-     * interface for a firmware byte patch (owner, 12.09 and 14.09.2026); until that patch is on the
-     * unit the model must draw what the chip does. Set to false once the firmware honours Q.
-     */
-    static final boolean FIRMWARE_FORCES_WIDE_Q = true;
-
     private DspResponse() {
     }
 
@@ -107,21 +90,23 @@ public final class DspResponse {
      * same band do.
      *
      * @param gains        per-band index 0..12, where 6 is flat and each step is 2 dB
-     * @param qNarrow      the Q switches; ignored while {@link #FIRMWARE_FORCES_WIDE_Q}
+     * @param qNarrow      the Q switches - 🔴 not modelled: the MCU firmware forces Q = 2.2 on every
+     *                     band whatever they say (bit 5 ORed into every write in FUN_080050d4,
+     *                     03-SOUND-PROCESSOR.md §7), and the bell is built for that Q. The switches
+     *                     and this parameter stay for a firmware byte patch (owner, 12.09 and
+     *                     14.09.2026); the day it is on the unit, the bell needs a per-band Q.
      * @param fmOffsets    Fletcher-Munson / fatigue offsets already in dB, may be null
      * @param subFreqIdx   index into {@link #SUB_FREQS_HZ}, negative when there is no subwoofer
      * @param subGainIdx   subwoofer gain 0..12, in dB
      * @param hpfFrontCode door high-pass code for the front pair, see {@link #DOOR_HPF_HZ}
      * @param hpfRearCode  the same for the rear pair
-     * @param sampleRate   capture sample rate in Hz
      * @param out          16-element destination
      */
     public static void compute(int[] gains, boolean[] qNarrow, float[] fmOffsets,
                                int subFreqIdx, int subGainIdx, int hpfFrontCode, int hpfRearCode,
-                               float sampleRate, float[] out) {
+                               float[] out) {
         final int bands = AudioConfig.NUM_BANDS;
         if (out == null || out.length < bands) return;
-        if (sampleRate <= 0) sampleRate = 48000f;
 
         final float frontHz = doorHpfHz(hpfFrontCode);
         final float rearHz = doorHpfHz(hpfRearCode);
@@ -130,16 +115,9 @@ public final class DspResponse {
         final float subGainDb = Math.max(0, Math.min(12, subGainIdx));
 
         for (int i = 0; i < bands; i++) {
-            // 1. Equaliser: the magnitude responses of all 16 peaking filters, in cascade.
-            float eqDb = 0f;
-            float probeHz = BAND_CENTERS_HZ[i];
-            for (int j = 0; j < bands; j++) {
-                float gainDb = gains != null ? (gains[j] - 6) * 2.0f : 0f;
-                if (gainDb == 0f) continue;
-                boolean narrow = !FIRMWARE_FORCES_WIDE_Q && qNarrow != null && qNarrow[j];
-                eqDb += peakingResponseDb(probeHz, BAND_CENTERS_HZ[j], narrow ? Q_NARROW : Q_WIDE,
-                        gainDb, sampleRate);
-            }
+            // 1. Equaliser: all 16 bells summed, the author's model.
+            final float probeHz = AudioConfig.BAND_CENTER_HZ[i];
+            float eqDb = gains != null ? AudioConfig.compositeResponseDb(gains, probeHz) : 0f;
             if (fmOffsets != null && inRange(i, fmOffsets.length)) {
                 eqDb += fmOffsets[i];
             }
@@ -166,62 +144,23 @@ public final class DspResponse {
         return code > 0 && code < DOOR_HPF_HZ.length ? DOOR_HPF_HZ[code] : 0f;
     }
 
-    /** Second-order Butterworth high-pass magnitude in dB - the door crossover slope. 0 dB when off. */
+    /**
+     * The door high-pass in dB, 0 when off - the author's model with its boost shelf left out (the
+     * shelf is the separate P2Bass control, not the crossover).
+     */
     public static float highPass2Db(float freqHz, float cutoffHz) {
         if (cutoffHz <= 0 || freqHz <= 0) return 0f;
-        double r4 = Math.pow(freqHz / cutoffHz, 4);
-        return (float) (10.0 * Math.log10(r4 / (1.0 + r4)));
+        return AudioConfig.bassShapingResponseDb(freqHz, cutoffHz, 0f, 0f);
     }
 
     private static boolean inRange(int index, int length) {
         return index >= 0 && index < length;
     }
 
-    /**
-     * Magnitude response, in dB, of one RBJ peaking-EQ biquad evaluated at an arbitrary frequency.
-     * This is the same filter form the hardware uses, so band interaction and the difference
-     * between Q 2.2 and Q 4.7 come out of the maths instead of being guessed.
-     */
-    public static float peakingResponseDb(float probeHz, float centerHz, float q, float gainDb,
-                                          float sampleRate) {
-        double nyquist = sampleRate / 2.0;
-        if (centerHz >= nyquist) centerHz = (float) (nyquist * 0.99);
-        if (probeHz >= nyquist) probeHz = (float) (nyquist * 0.99);
-
-        double a = Math.pow(10.0, gainDb / 40.0);
-        double w0 = 2.0 * Math.PI * centerHz / sampleRate;
-        double alpha = Math.sin(w0) / (2.0 * q);
-        double cosW0 = Math.cos(w0);
-
-        double b0 = 1.0 + alpha * a;
-        double b1 = -2.0 * cosW0;
-        double b2 = 1.0 - alpha * a;
-        double a0 = 1.0 + alpha / a;
-        double a1 = -2.0 * cosW0;
-        double a2 = 1.0 - alpha / a;
-
-        double w = 2.0 * Math.PI * probeHz / sampleRate;
-        double cosW = Math.cos(w), sinW = Math.sin(w);
-        double cos2W = Math.cos(2 * w), sin2W = Math.sin(2 * w);
-
-        double numRe = b0 + b1 * cosW + b2 * cos2W;
-        double numIm = -(b1 * sinW + b2 * sin2W);
-        double denRe = a0 + a1 * cosW + a2 * cos2W;
-        double denIm = -(a1 * sinW + a2 * sin2W);
-
-        double numMag = Math.hypot(numRe, numIm);
-        double denMag = Math.hypot(denRe, denIm);
-        if (denMag <= 1e-12) return 0f;
-
-        return (float) (20.0 * Math.log10(numMag / denMag));
-    }
-
-    /** Second-order Butterworth low-pass magnitude in dB - the subwoofer crossover slope. */
+    /** The subwoofer low-pass in dB, the author's model at his filter order, 0 when off. */
     public static float lowPass2Db(float freqHz, float cutoffHz) {
         if (cutoffHz <= 0) return 0f;
-        double ratio = freqHz / cutoffHz;
-        double magSquared = 1.0 / (1.0 + Math.pow(ratio, 4));
-        return (float) (10.0 * Math.log10(magSquared));
+        return AudioConfig.subFilterResponseDb(freqHz, cutoffHz, AudioConfig.SUB_FILTER_ORDER, 0f);
     }
 
     /** Adds two levels as energy rather than as numbers. */

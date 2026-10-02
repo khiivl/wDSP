@@ -68,7 +68,6 @@ public class AudioSpectrumEngine {
         nativeCurveStale = true;
         micCurveStale = true;
     }
-    private float dspCurveSampleRate = 0f;
 
     // State parameters for Post-DSP synthesis
     private final int[] gains = new int[NUM_BANDS_16];
@@ -746,14 +745,18 @@ public class AudioSpectrumEngine {
                 + " agcBar=" + barAgcEnabled);
     }
 
-    /** The DSP response curve, recomputed only when the state or the sample rate changed. */
-    private float[] getDspCurve(float sampleRateHz) {
+    /**
+     * The DSP response curve, recomputed only when the state changed. It no longer depends on the
+     * capture sample rate: the chip's filters are modelled as the author's analogue shapes
+     * (DspResponse), not as biquads at a rate the chip never sees.
+     */
+    private float[] getDspCurve() {
         synchronized (dspGainIdx) {
-            if (dspCurveDirty || sampleRateHz != dspCurveSampleRate) {
+            if (dspCurveDirty) {
                 if (hasServiceDspState) {
                     DspResponse.compute(dspGainIdx, dspQNarrow, null,
                             dspSubFreqIdx, dspSubGainIdx, dspHpfFrontCode, dspHpfRearCode,
-                            sampleRateHz, dspCurveDb);
+                            dspCurveDb);
                 } else {
                     // No service state yet: fall back to the raw sliders, and since the curve is
                     // not baked into them here, add the Fletcher-Munson offsets explicitly.
@@ -761,12 +764,11 @@ public class AudioSpectrumEngine {
                         synchronized (qNarrow) {
                             synchronized (fmOffsets) {
                                 DspResponse.compute(gains, qNarrow, fmOffsets,
-                                        -1, 0, 0, 0, sampleRateHz, dspCurveDb);
+                                        -1, 0, 0, 0, dspCurveDb);
                             }
                         }
                     }
                 }
-                dspCurveSampleRate = sampleRateHz;
                 dspCurveDirty = false;
             }
             return dspCurveDb;
@@ -810,7 +812,7 @@ public class AudioSpectrumEngine {
         //
         // A fresh array: getDspCurve hands back its own cached buffer, and a caller changing it would
         // corrupt the cache for every later reader. Sixteen floats, built only when settings change.
-        final float[] dsp = getDspCurve(dspCurveSampleRate > 0 ? dspCurveSampleRate : 48000f);
+        final float[] dsp = getDspCurve();
         return Arrays.copyOf(dsp, NUM_BANDS_16);
     }
 

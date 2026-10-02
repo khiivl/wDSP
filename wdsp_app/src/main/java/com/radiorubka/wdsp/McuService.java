@@ -2084,14 +2084,25 @@ public class McuService extends Service implements LocationListener {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
 
+        // The author's EQ pre-warp (0.5): while loudness or fatigue adds an offset, the sliders' dB
+        // and the offset are pre-warped together (AudioConfig.prewarpEq), so the 16 overlapping
+        // Q 2.2 bells sum to the target at every band centre instead of overshooting where
+        // neighbours leak into each other. With no offset the drive is the sliders, byte for byte
+        // as before.
+        boolean hasOffset = false;
+        float[] targetDb = new float[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            targetDb[i] = (cachedGains[i] - 6) * 2 + fmOffsets[i];
+            if (fmOffsets[i] != 0f) hasOffset = true;
+        }
+        float[] driveDb = hasOffset ? AudioConfig.prewarpEq(targetDb) : targetDb;
+
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
-            float db1 = (cachedGains[b1] - 6) * 2 + fmOffsets[b1];
-            int idx1 = Math.max(0, Math.min(12, Math.round((db1 / 2.0f) + 6)));
+            int idx1 = Math.max(0, Math.min(12, Math.round((driveDb[b1] / 2.0f) + 6)));
 
             int b2 = i * 2 + 1;
-            float db2 = (cachedGains[b2] - 6) * 2 + fmOffsets[b2];
-            int idx2 = Math.max(0, Math.min(12, Math.round((db2 / 2.0f) + 6)));
+            int idx2 = Math.max(0, Math.min(12, Math.round((driveDb[b2] / 2.0f) + 6)));
 
             effectiveGainIdx[b1] = idx1;
             effectiveGainIdx[b2] = idx2;
