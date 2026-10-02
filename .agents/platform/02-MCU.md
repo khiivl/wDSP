@@ -138,7 +138,7 @@ Separately, not through `RPC_SetEQData`:
 | message | what |
 |---|---|
 | `RPC_SendMcuMsgData(0x18, {1, x})` | steering-wheel button type |
-| `RPC_SendMcuMsgData(0x18, {2, x})` | **power amplifier pre-gain** |
+| `RPC_SendMcuMsgData(0x18, {2, x})` | **"Amp Power" — a gain inside the BU32107**, not the power amplifier (that one is purely analogue; owner, 03.10.2026). The MCU stores the byte unclamped at RAM `0x2000022c+8` and packs its low nibble into the saved config (`0x20000674+1`, high nibble) — same code in V02.13.20251124 and V02.14.20260703. wDSP sends −3..9; the new firmware no longer lets the negative values raise the level (owner, 03.10.2026) |
 | `RPC_SendMcuMsgData(0x18, {5, x})` | CAN bus rate |
 | `RPC_SendMcuMsgData(0x18, {6, …})` | reset audio settings |
 

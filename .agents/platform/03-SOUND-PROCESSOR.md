@@ -507,7 +507,24 @@ another formula (`r0 - 6*[+7] - 21`) ignores `g`. That bit is **bit 7 of the fir
 command `0x87`** (handler `0x0800c16c`: `ands #0xfd`, `lsrs r1,r7,#7; lsls r1,#1; orrs`, `strb
 [r5,#10]`; bits 6..0 go to `[+6]`). wDSP never sends `0x87`, so the mode is whatever another sender
 (the stock DSP, CarSettings) or the MCU's default left - and MCU RAM keeps it until the power is cut.
-❓ Who sends `0x87` on a stock unit, and the bit's value on ours.
+❓ Who sends `0x87` on a stock unit, and the bit's value on ours. (Moot from V02.14: see below.)
+
+🔬 **V02.14.20260703.002121 made the subwoofer quieter** (diffed against V02.13.20251124 by us,
+03.10.2026; images in `C:\MCU\QF05.V02.14.20260703.002121\`, the unit's copy came from Telegram on
+27.09). In the same function (now `0x08005324`) the subwoofer DVol value became
+
+```
+old:  level + 2*(12-g) - 45
+new:  level + vol + 2*(12-g) - 32      ; vol = [0x2000022c+3], the volume step 0..32
+```
+
+so for the same `g` the subwoofer is `(vol + 13) / 2` dB quieter (0.5 dB a unit, larger = quieter):
+8 dB at volume 3, 10.5 at 8, 14 at 15, 19 at 25 - and it falls a further 0.5 dB behind the doors with
+every volume step. The `0x87` mode branch (`r0 - 6*[+7] - 21`) is gone. `g` still works, so the sub
+slider still moves the level; it cannot buy back the offset, 12 being "no extra attenuation". The
+per-source volume tables (`0x0800d0ca`..) changed too and a 33-step table was added. The revision note
+names only "restored mix2 mode, navigation level consistent across modes". Heard on the bench 03.10:
+"the subwoofer barely plays", while our `8B 5C` (80 Hz, 12) is on the wire.
 
 🔬 **The stock QF_DSP overrode us.** While it ran it sent `8B xc` (its own crossover, gain 12) on its
 own schedule, so wDSP's 0x8B was overwritten - the likely reason for "the subwoofer reacts to neither
