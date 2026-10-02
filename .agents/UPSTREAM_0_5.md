@@ -45,7 +45,7 @@ Read the author's code with `git show origin/master:<path>`; line numbers below 
 | 5 | **Sub-comp boost table** from `ISO_FULL_TARGET_DB` (80 Hz 8, 50/63 10, 25–40 12, ≥100 0) | `McuService.getMaxBassBoost` | `LoudnessCurve.maxSubBoost` | **his table, carried on by his rule** (the band below the crossover band): 25–80 Hz his 12 12 12 10 10 8, then 100–250 Hz 8 6 6 4 4 — owner 02.10: *«тобто, це буде його, але доповнена нами таблиця?»* | ✅ `e2d9b7e` |
 | 6 | **Dedupe of computed packets** (`lastComputed*`) before the throttle; pref listener matches `preset + "_"` (a preset "Music" no longer reacts to "Music2_*"); `_fm*` changes resend sub and bass boost; `_bb_/_bf_` resend EQ | `McuService` listener and `update*` | `McuService` | absorbed; **ours, on purpose**: one `forgetChipState()` clears `mcuCache` and the computed packets together on ACC_ON / RESET_AUDIO_MCU (his are never cleared, which would stop our post-sleep re-apply); the spectrum still updates on an unchanged packet | ✅ `e48bf8f` |
 | 7 | **Polling split** 100 ms → primary (volume/GALA) + secondary (player/bug) at 200 ms | `McuService.primaryRunnable/secondaryRunnable` | — | ❓ our loop also carries the Call preset and the audio contract; check before touching | ❓ |
-| 8 | **GALA fixes** (shutdown state, standstill fallback, push on source change) | `McuService.checkVolumeAndGala` | a GALA strategy beside ours, chosen by a switch | **both, switchable** — owner 02.10: *«Гала - зробиш перемикач - оригінал\наш варіант.»* His GALA ported whole as the "original" option, ours stays the other | 📋 |
+| 8 | **GALA fixes** (shutdown state, standstill fallback, push on source change) | `McuService.checkVolumeAndGala` | our GALA | **merged, no switch** — owner 02.10: *«краще з двох світів»* (he first asked for a switch, then: «може звести а не перемикати?»). His shutdown skip and disabled-state sync were already ours in our own form; taken: on a source change write base + the running boost and end the poll | ✅ `3b6f6e6` |
 | 9 | **Filter models for drawing**: sub LPF (2nd-order Butterworth), front/rear bass shaping (HPF + 1st-order shelf) | `AudioConfig.subFilterResponseDb`, `bassShapingResponseDb`, `compositeResponseDb`, `frequencyAt` | `DspResponse` (we have `lowPass2Db/highPass2Db/peakingResponseDb`; add the shelf) | absorbed: `DspResponse` composes his shapes and keeps no bell, LPF or HPF of its own (our RBJ biquad at the capture rate is gone) | ✅ `c9897c3` |
 | 10 | **EQ view**: true Q 2.2 composite curve, loudness overlay, sub curve, rear bass curve, animation | `EqVisualizerView` (+558), `FmVisualizerView` (+161); colours `loudness_line`, `sub_line`, `rear_bass_line` | our views | absorb | 📋 |
 | 11 | **Spectrum**: pink-noise tilt (`8c71b6a`), loudness/sub/bass-reactive scaling, RTA | `SpectrumAnalyzerView` (+1015 incl. its own FFT/Visualizer) | `AudioSpectrumEngine` + our view — **keep ours**, port the features only | absorb features | 📋 |
@@ -56,7 +56,7 @@ Read the author's code with `git show origin/master:<path>`; line numbers below 
 ## Order
 
 1 → 9 (the model: pre-warp and filter shapes in `DspResponse`) → 2, 3 (loudness) → 4 (Ultra
-Bass) → 6 (wire hygiene) → 8 (GALA switch) → 12, 13, 14 (controls) → 10 (EQ views) → 11 (spectrum features).
+Bass) → 6 (wire hygiene) → 8 (GALA, merged) → 12, 13, 14 (controls) → 10 (EQ views) → 11 (spectrum features).
 Each lands as its own commit, verified by build and, where it changes what reaches the chip, by the
 `TurboSender2000` log on the bench before and after.
 
