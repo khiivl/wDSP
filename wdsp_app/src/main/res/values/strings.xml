@@ -39,6 +39,7 @@
     <string name="lbl_calibration_point">Calibration point (the volume above which the curve stops acting):</string>
     <string name="lbl_correction_strength">Correction Strength:</string>
     <string name="ultra_bass">Ultra Bass</string>
+    <string name="show_loudness_on_main">Show on Main</string>
     <string name="lbl_trim_highs_start_vol">Trim Highs Start Volume:</string>
     <string name="lbl_ultra_bass_start_vol">Ultra Bass Start Volume:</string>
     <string name="lbl_ultra_bass_max_db">Ultra Bass Max Boost:</string>

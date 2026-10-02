@@ -886,6 +886,32 @@
                             android:textStyle="bold"
                             android:checkable="true" />
 
+                        <!-- Show on main (the author's 0.5): the main curve draws what loudness does; app-wide -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_show_loudness_main"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="@color/card_bg_theme_aware"
+                            android:text="@string/show_loudness_on_main"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
+
                         <!-- Ultra Bass (the author's 0.5): the subwoofer's gain grows with the volume -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_ultra_bass"
@@ -911,6 +937,7 @@
                             android:textSize="@dimen/eq_value_text"
                             android:textStyle="bold"
                             android:checkable="true" />
+
                     </LinearLayout>
 
                     <!-- FR Graph for FM Curve (Visualizer Card) -->

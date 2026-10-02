@@ -32,6 +32,7 @@
     <string name="lbl_calibration_point">Точка калібрування (гучність, вище якої крива не діє):</string>
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
     <string name="ultra_bass">Ультра-бас</string>
+    <string name="show_loudness_on_main">Показати на головній</string>
     <string name="lbl_trim_highs_start_vol">Гучність, з якої послаблювати ВЧ:</string>
     <string name="lbl_ultra_bass_start_vol">Гучність, з якої діє ультра-бас:</string>
     <string name="lbl_ultra_bass_max_db">Найбільше підсилення ультра-баса:</string>
