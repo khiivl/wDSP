@@ -48,7 +48,9 @@ public class McuService extends Service implements LocationListener {
 //    private static final String PREF_DEFAULT_PRESET = "default_preset_name";
 
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
-    private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
+    // Must match MainActivity's GALA_GLOBAL_NAMESPACE/GALA_FIELD_SUFFIXES - when global mode is
+    // on, every GALA field is read from this pseudo-preset's keys instead of the real preset's.
+    private static final String GALA_GLOBAL_NAMESPACE = "__gala_global__";
     
     private SharedPreferences prefs;
     private HandlerThread workerThread;
@@ -90,12 +92,13 @@ public class McuService extends Service implements LocationListener {
     private int cachedGalaMaxAdj;
     private int cachedGalaFadeDelayMs; // ms between each ±1 fade step (default 100)
     private int cachedGalaHoldMs;      // ms a tier must be stable before being applied (default 1000)
+    // Per-preset override - forces GALA off for this preset even while global mode is on for
+    // every other preset. Always read from the real preset's own keys, never GALA_GLOBAL_NAMESPACE.
+    private boolean cachedGalaDisabledForPreset;
 
-
-    // When galaGlobalMode is on, GALA's on/off state is shared across all presets
-    // (galaGlobalEnabled) instead of read from cachedGalaEn per-preset - see isGalaEnabled().
+    // When on, every GALA field above is loaded from GALA_GLOBAL_NAMESPACE's keys instead of
+    // the current preset's own - see loadPresetData()/isGalaEnabled().
     private boolean galaGlobalMode;
-    private boolean galaGlobalEnabled;
     
     private float currentSpeedKmh = 0.0f;
     private float simulatedSpeedKmh = 0.0f;
@@ -181,9 +184,13 @@ public class McuService extends Service implements LocationListener {
             }
             else if (key.equals(PREF_GALA_GLOBAL_MODE)) {
                 galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+                if (currentPresetName != null) loadPresetData(currentPresetName);
             }
-            else if (key.equals(PREF_GALA_GLOBAL_ENABLED)) {
-                galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+            else if (key.startsWith(GALA_GLOBAL_NAMESPACE + "_")) {
+                // The shared bucket changed (a slider dragged while global mode is on, or the
+                // seed/crystallize copy fired when the global switch itself was flipped) -
+                // refresh the cached GALA fields the same way a normal preset key change does.
+                if (currentPresetName != null) loadPresetData(currentPresetName);
             }
             else if (currentPresetName != null && key.startsWith(currentPresetName + "_")) {
 
@@ -334,9 +341,10 @@ public class McuService extends Service implements LocationListener {
             prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             currentPresetName = prefs.getString("Preset 1", "Preset 1");
             sendBroadcast(presetChangedIntent);
-            loadPresetData(currentPresetName);
+            // galaGlobalMode must be set before loadPresetData() runs - it decides which
+            // "preset name" the GALA fields actually come from (see galaNamespace()).
             galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
-            galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+            loadPresetData(currentPresetName);
             prefs.registerOnSharedPreferenceChangeListener(prefListener);
             loadPlayerMap();
             syncPreset(true);
@@ -403,14 +411,22 @@ public class McuService extends Service implements LocationListener {
         cachedUltraBassStartVol = prefs.getInt(preset + "_ultra_bass_start_vol", 16);
         cachedUltraBassMaxDb = prefs.getInt(preset + "_ultra_bass_max_db", 6);
 
-        // GALA
-        cachedGalaEn = prefs.getBoolean(preset + "_gala_enabled", false);
-        cachedGalaInc = prefs.getInt(preset + "_gala_increment", 15);
-        cachedGalaMinV = prefs.getInt(preset + "_gala_min_speed", 0);
-//        cachedGalaMaxV = prefs.getInt(preset + "_gala_max_speed", 30);
-        cachedGalaMaxAdj = prefs.getInt(preset + "_gala_max_adj", 12);
-        cachedGalaFadeDelayMs = prefs.getInt(preset + "_gala_fade_ms", 100);
-        cachedGalaHoldMs = prefs.getInt(preset + "_gala_hold_ms", 1000);
+        // GALA - galaGlobalMode must already be loaded by the time this runs, since it picks
+        // which "preset name" these fields actually come from (see galaNamespace()).
+        String galaNs = galaNamespace(preset);
+        cachedGalaEn = prefs.getBoolean(galaNs + "_gala_enabled", false);
+        cachedGalaInc = prefs.getInt(galaNs + "_gala_increment", 15);
+        cachedGalaMinV = prefs.getInt(galaNs + "_gala_min_speed", 0);
+//        cachedGalaMaxV = prefs.getInt(galaNs + "_gala_max_speed", 30);
+        cachedGalaMaxAdj = prefs.getInt(galaNs + "_gala_max_adj", 12);
+        cachedGalaFadeDelayMs = prefs.getInt(galaNs + "_gala_fade_ms", 100);
+        cachedGalaHoldMs = prefs.getInt(galaNs + "_gala_hold_ms", 1000);
+        // Always this preset's own key, never the global bucket.
+        cachedGalaDisabledForPreset = prefs.getBoolean(preset + "_gala_disabled_for_preset", false);
+    }
+
+    private String galaNamespace(String presetName) {
+        return galaGlobalMode ? GALA_GLOBAL_NAMESPACE : presetName;
     }
 
     @Override
@@ -481,10 +497,11 @@ public class McuService extends Service implements LocationListener {
     }
 
 
-    // True/false state actually used by GALA processing - the shared global switch when
-    // galaGlobalMode is on, otherwise whatever the current preset has stored.
+    // True/false state actually used by GALA processing - cachedGalaEn already resolves to the
+    // shared global switch or this preset's own, per galaNamespace(); cachedGalaDisabledForPreset
+    // is a separate per-preset override that always applies on top of that, in either mode.
     private boolean isGalaEnabled() {
-        return galaGlobalMode ? galaGlobalEnabled : cachedGalaEn;
+        return cachedGalaEn && !cachedGalaDisabledForPreset;
     }
 
     // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.
@@ -965,6 +982,12 @@ public class McuService extends Service implements LocationListener {
     // EQ band's (bigger) offset rather than the matching band, since the matching-band offsets
     // alone proved visually/audibly insufficient - confirmed by eye against the sub curve overlay
     // in EqVisualizerView/FmVisualizerView (see AudioConfig.subFilterResponseDb()).
+    // No branch exists above 80Hz (100/125/160/200/250 all fall through to 0) - intentional, not a
+    // gap. The ISO 226 loudness-compensation curve this assist reinforces is steepest around
+    // 20-80Hz (where ears lose the most sensitivity at low volume); a crossover set at 100Hz+ isn't
+    // "deep bass" any more and already sits inside the main 16-band EQ's own directly-compensated
+    // range (fmOffsets, same ISO_RAW_TARGET_BY_FREQ row) - an extra assist here would just double-
+    // compensate the same region rather than model anything real.
     private float getMaxBassBoost() {
         int[] freqs = {25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250};
         int freq = (cachedSubFreq >= 0 && cachedSubFreq < freqs.length) ? freqs[cachedSubFreq] : 80;

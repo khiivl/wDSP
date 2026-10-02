@@ -2203,6 +2203,19 @@
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:text="@string/gala_disable_for_preset"
+                            android:layout_marginStart="16dp"/>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_gala_disable_for_preset"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"/>
+
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:text="@string/vol_step_every"
                             android:layout_marginStart="16dp"/>
 

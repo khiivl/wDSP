@@ -21,13 +21,16 @@
     <string name="trim_highs">Ogranicz wysokie tony</string>
     <string name="sub_tweaking">Dostrajanie subwoofera</string>
     <string name="show_loudness_on_main">Pokaż na głównym</string>
-    <string name="true_22_display">Prawdziwe 2.2</string>
+    <string name="ultra_bass">Ultra Bas</string>
     <string name="fm_visualizer_label">Podgląd korekcji w czasie rzeczywistym</string>
     <string name="lbl_volume">Głośność:</string>
     <string name="lbl_sub_offset">Przesunięcie subwoofera:</string>
     <string name="lbl_lower_sub_by">Obniż poziom subwoofera o:</string>
     <string name="lbl_calibration_point">Punkt kalibracji (powinien być ok. 80 dB):</string>
     <string name="lbl_correction_strength">Siła korekcji:</string>
+    <string name="lbl_trim_highs_start_vol">Głośność startowa ogr. wysokich:</string>
+    <string name="lbl_ultra_bass_start_vol">Głośność startowa Ultra Bas:</string>
+    <string name="lbl_ultra_bass_max_db">Maks. wzmocnienie Ultra Bas:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Korekcja czasowa (Opóźnienia)</string>
@@ -61,6 +64,7 @@
     <string name="enable_gala">Włącz GALA</string>
     <string name="enable_gala_feature">Aktywuj funkcję GALA</string>
     <string name="gala_global">Globalne</string>
+    <string name="gala_disable_for_preset">Wyłącz dla tego profilu</string>
     <string name="vol_step_every">Krok głośności co:</string>
     <string name="gps_speed_label">PRĘDKOŚĆ GPS</string>
     <string name="current_gps_speed">Aktualna prędkość GPS:</string>
@@ -96,6 +100,7 @@
     <string name="toast_exported">Wyeksportowano</string>
     <string name="toast_imported">Zaimportowano</string>
     <string name="toast_sub_comp_limit">Kompensacja subwoofera ograniczona do 80Hz</string>
+    <string name="toast_loudness_sync_bass">Loudness aktywny. Częstotliwości i poziomy Wzmocnienia basu przód/tył są synchronizowane. Dla najlepszych efektów ustaw przednie Wzmocnienie basu na 86Hz, a Punkt kalibracji na ~80dB.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Praca wDSP w tle</string>
@@ -138,5 +143,4 @@
     <string name="OTtab">Inne</string>
     <string name="GLtab">GALA</string>
     <string name="lbl_pwr">Moc Ampa:</string>
-    <string name="hint_sub_freq">Częstot.</string>
 </resources>

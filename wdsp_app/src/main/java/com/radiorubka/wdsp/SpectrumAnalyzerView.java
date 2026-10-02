@@ -76,6 +76,29 @@ public class SpectrumAnalyzerView extends View {
     private float[] fftImag;
     private float[] magnitudes;
 
+    // --- Low-band refinement: 2x accumulation + 50% STFT overlap ---
+    // A second, independent FFT at 2x the HAL's own capture size, built by concatenating the
+    // previous callback's chunk with the current one (see processWaveform()). Since the window
+    // advances by exactly one HAL chunk each callback, consecutive windows share half their
+    // samples (50% overlap) for free, and it's recomputed every callback - same cadence as the
+    // main FFT, which is what avoids the old ring buffer's sawtooth (ballistics have to track the
+    // actual update rate of whatever they're smoothing, not a throttled one). Only spliced in
+    // below LOW_BAND_SPLICE_HZ - see processWaveform() step 4a.
+    private static final float LOW_BAND_SPLICE_HZ = 100f;
+    // A longer Hann window's raw FFT magnitude scales ~N for tones (coherent gain) but only
+    // ~sqrt(N) for noise (incoherent summation) - at 2x the window size those two "correct" scale
+    // factors are 0.5 (tone-exact) and 1/sqrt(2)=0.7071 (noise-exact), 3dB apart. This app is used
+    // with pink noise (broadband) for tuning, not just tonal program content, so neither case
+    // should be favored outright - this splits the gap evenly in dB (geometric mean of the two),
+    // bounding BOTH cases to +-1.5dB instead of one being exact and the other off by the full 3dB.
+    private static final float LOW_BAND_MAG_SCALE = 0.5946f;
+    private float[] lowBandHann;
+    private float[] lowBandReal;
+    private float[] lowBandImag;
+    private float[] lowBandMag;
+    private float[] prevChunk; // previous callback's raw (unwindowed) samples, for the 50% overlap
+    private int lowBandSize;
+
     private static final String TAG = "wDSP_Spectrum";
 
     // Frequency-axis smoothing width, in display samples on each side of the point being smoothed
@@ -462,6 +485,17 @@ public class SpectrumAnalyzerView extends View {
             fftImag = new float[captureSize];
             magnitudes = new float[captureSize / 2 + 1];
 
+            // --- Low-band refinement buffers (see LOW_BAND_SPLICE_HZ's doc) ---
+            lowBandSize = captureSize * 2;
+            lowBandHann = new float[lowBandSize];
+            for (int i = 0; i < lowBandSize; i++) {
+                lowBandHann[i] = (float) (0.5 * (1.0 - Math.cos(2.0 * Math.PI * i / (lowBandSize - 1))));
+            }
+            lowBandReal = new float[lowBandSize];
+            lowBandImag = new float[lowBandSize];
+            lowBandMag = new float[lowBandSize / 2 + 1];
+            prevChunk = new float[captureSize];
+
             int rate = Visualizer.getMaxCaptureRate();
             if (rate <= 0) rate = 20000;
 
@@ -559,6 +593,33 @@ public class SpectrumAnalyzerView extends View {
         Choreographer.getInstance().removeFrameCallback(frameCallback);
     }
 
+    // Cubic Hermite (Catmull-Rom) interpolation through the 4 nearest real FFT bins at freqHz -
+    // factored out so both the main and low-band FFTs (see lowBandMag's doc) can share it,
+    // parameterized only by which magnitude array/size they're reading from.
+    private float hermiteDb(float[] mags, int numBins, int fftSize, float sampleRateHz, float freqHz) {
+        float binPos = freqHz * fftSize / sampleRateHz;
+        binPos = Math.max(1f, Math.min(numBins - 1, binPos));
+        int k = Math.max(1, Math.min(numBins - 2, (int) Math.floor(binPos)));
+        float t = binPos - k;
+
+        float p0 = dbMag(mags[Math.max(0, k - 1)]);
+        float p1 = dbMag(mags[k]);
+        float p2 = dbMag(mags[Math.min(numBins - 1, k + 1)]);
+        float p3 = dbMag(mags[Math.min(numBins - 1, k + 2)]);
+
+        float m1 = (p2 - p0) * 0.5f; // tangent at p1
+        float m2 = (p3 - p1) * 0.5f; // tangent at p2
+
+        float t2 = t * t;
+        float t3 = t2 * t;
+        float h00 = 2f * t3 - 3f * t2 + 1f;
+        float h10 = t3 - 2f * t2 + t;
+        float h01 = -2f * t3 + 3f * t2;
+        float h11 = t3 - t2;
+
+        return h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+    }
+
     private void processWaveform(byte[] waveform, int samplingRateMilliHz) {
         int captureLen = waveform.length;
         if (captureLen < 4 || fftReal == null || fftReal.length != captureLen) return;
@@ -591,6 +652,31 @@ public class SpectrumAnalyzerView extends View {
             for (int bin = 0; bin <= numBins; bin++) magnitudes[bin] *= sessionGainLinear;
         }
 
+        // 3b. Low-band refinement: build the 2x-length overlapped window from the previous
+        // callback's raw samples + this callback's raw samples (see lowBandReal's doc), run its
+        // own FFT, and compute its magnitudes - spliced in below LOW_BAND_SPLICE_HZ in step 4a.
+        int lowBandNumBins = lowBandSize / 2;
+        for (int i = 0; i < n; i++) {
+            float oldSample = prevChunk[i];
+            lowBandReal[i] = oldSample * lowBandHann[i];
+            lowBandImag[i] = 0f;
+
+            float newSample = ((float) (waveform[i] & 0xFF) - 128f) / 128f;
+            lowBandReal[n + i] = newSample * lowBandHann[n + i];
+            lowBandImag[n + i] = 0f;
+
+            prevChunk[i] = newSample;
+        }
+        computeFft(lowBandReal, lowBandImag);
+        for (int bin = 0; bin <= lowBandNumBins; bin++) {
+            float r = lowBandReal[bin];
+            float im = lowBandImag[bin];
+            lowBandMag[bin] = (float) Math.sqrt(r * r + im * im) * LOW_BAND_MAG_SCALE;
+        }
+        if (sessionGainLinear != 1f) {
+            for (int bin = 0; bin <= lowBandNumBins; bin++) lowBandMag[bin] *= sessionGainLinear;
+        }
+
         float peakContentDb = -999f;
 
         // 4a. Sample the spectral envelope at each curve point via cubic Hermite (Catmull-Rom)
@@ -602,28 +688,9 @@ public class SpectrumAnalyzerView extends View {
         // reconstruction too), this is smooth by construction and needs no clamp.
         for (int j = 0; j < CURVE_SAMPLES; j++) {
             float freqHz = centerHz[j];
-
-            float binPos = freqHz * n / sampleRateHz;
-            binPos = Math.max(1f, Math.min(numBins - 1, binPos));
-            int k = Math.max(1, Math.min(numBins - 2, (int) Math.floor(binPos)));
-            float t = binPos - k;
-
-            float p0 = dbMag(magnitudes[Math.max(0, k - 1)]);
-            float p1 = dbMag(magnitudes[k]);
-            float p2 = dbMag(magnitudes[Math.min(numBins - 1, k + 1)]);
-            float p3 = dbMag(magnitudes[Math.min(numBins - 1, k + 2)]);
-
-            float m1 = (p2 - p0) * 0.5f; // tangent at p1
-            float m2 = (p3 - p1) * 0.5f; // tangent at p2
-
-            float t2 = t * t;
-            float t3 = t2 * t;
-            float h00 = 2f * t3 - 3f * t2 + 1f;
-            float h10 = t3 - 2f * t2 + t;
-            float h01 = -2f * t3 + 3f * t2;
-            float h11 = t3 - t2;
-
-            instDb[j] = h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+            instDb[j] = (freqHz < LOW_BAND_SPLICE_HZ)
+                    ? hermiteDb(lowBandMag, lowBandNumBins, lowBandSize, sampleRateHz, freqHz)
+                    : hermiteDb(magnitudes, numBins, n, sampleRateHz, freqHz);
         }
 
         // 4b. Frequency-axis (fractional-octave-style) smoothing for readability - see

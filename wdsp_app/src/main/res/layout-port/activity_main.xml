@@ -1242,7 +1242,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_filter"
                                 android:layout_gravity="center_vertical" />
-                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <LinearLayout android:layout_width="0dp" android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
                                     android:id="@+id/seek_bass_filter_front"
                                     android:layout_width="0dp"
@@ -1278,7 +1278,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_boost"
                                 android:layout_gravity="center_vertical" />
-                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <LinearLayout android:layout_width="0dp" android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
                                     android:id="@+id/seek_bass_boost_front"
                                     android:layout_width="0dp"
@@ -1317,7 +1317,9 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_front"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
+                                android:layout_columnWeight="1"
+                                android:layout_gravity="fill_horizontal"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
@@ -1349,7 +1351,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_filter"
                                 android:layout_gravity="center_vertical" />
-                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <LinearLayout android:layout_width="0dp" android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
                                     android:id="@+id/seek_bass_filter_rear"
                                     android:layout_width="0dp"
@@ -1385,7 +1387,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/lbl_boost"
                                 android:layout_gravity="center_vertical" />
-                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <LinearLayout android:layout_width="0dp" android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                                 <com.google.android.material.slider.Slider
                                     android:id="@+id/seek_bass_boost_rear"
                                     android:layout_width="0dp"
@@ -1424,7 +1426,9 @@
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/layout_spinner_bass_freq_rear"
                                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
+                                android:layout_columnWeight="1"
+                                android:layout_gravity="fill_horizontal"
                                 android:layout_height="wrap_content"
                                 app:boxStrokeColor="@color/cyan_custom"
                                 app:hintTextColor="@color/cyan_custom"
@@ -1774,6 +1778,27 @@
                             android:text="@string/gala_global" />
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_gala_global"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Disable GALA for this preset (only meaningful while Global GALA is on) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:background="@color/visualizer_container_bg">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/gala_disable_for_preset" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_gala_disable_for_preset"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </LinearLayout>

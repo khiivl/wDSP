@@ -685,12 +685,18 @@ public class EqVisualizerView extends View {
             float left = xCoords[startIdx] - boxPaddingDynamic;
             float right = xCoords[endIdx] + boxPaddingDynamic;
 
-            // CONSTRAINT: Ensure the first and last boxes don't touch the screen edges
+            // CONSTRAINT: pull the first/last box in from the screen edge by edgeMargin, but never
+            // by so much that it eats into most of the box's own natural padding around its edge
+            // label - on a wide landscape view edgeMargin never bites into that padding anyway, but
+            // on a narrow portrait one the two can conflict, and a label crowding its own box
+            // border is worse than the box sitting a little closer to the screen edge than
+            // edgeMargin alone would put it. 0.88 keeps most of the pull-in effect while guaranteeing
+            // at least 88% of the natural padding stays around the label.
             if (g == 0) {
-                left = Math.max(left, edgeMargin);
+                left = Math.min(Math.max(left, edgeMargin), xCoords[startIdx] - boxPaddingDynamic * 0.88f);
             }
             if (g == GROUP_RANGES.length - 1) {
-                right = Math.min(right, w - edgeMargin);
+                right = Math.max(Math.min(right, w - edgeMargin), xCoords[endIdx] + boxPaddingDynamic * 0.88f);
             }
 
             int alpha = 200;

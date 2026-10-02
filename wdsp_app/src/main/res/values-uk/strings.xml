@@ -21,13 +21,16 @@
     <string name="trim_highs">Послабити ВЧ</string>
     <string name="sub_tweaking">Налаштування сабвуфера</string>
     <string name="show_loudness_on_main">На головному екрані</string>
-    <string name="true_22_display">Справжній 2.2</string>
+    <string name="ultra_bass">Ультра бас</string>
     <string name="fm_visualizer_label">Попередній перегляд корекції</string>
     <string name="lbl_volume">Гучність:</string>
     <string name="lbl_sub_offset">Зміщення сабв.:</string>
     <string name="lbl_lower_sub_by">Знизити рівень сабв. на:</string>
     <string name="lbl_calibration_point">Точка калібрування (має бути ~80 дБ):</string>
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
+    <string name="lbl_trim_highs_start_vol">Гучність початку ВЧ:</string>
+    <string name="lbl_ultra_bass_start_vol">Гучність початку Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Макс. підсилення Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Часова корекція (Затримки)</string>
@@ -61,6 +64,7 @@
     <string name="enable_gala">Увімкнути GALA</string>
     <string name="enable_gala_feature">Активувати функцію GALA</string>
     <string name="gala_global">Глобально</string>
+    <string name="gala_disable_for_preset">Вимкнути для цього пресету</string>
     <string name="vol_step_every">Крок гучності кожні:</string>
     <string name="gps_speed_label">ШВИДКІСТЬ GPS</string>
     <string name="current_gps_speed">Поточна швидкість GPS:</string>
@@ -96,6 +100,7 @@
     <string name="toast_exported">Експортовано</string>
     <string name="toast_imported">Імпортовано</string>
     <string name="toast_sub_comp_limit">Компенсація сабвуфера обмежена 80Гц</string>
+    <string name="toast_loudness_sync_bass">Тонкомпенсація активна. Частоти та рівні підсилення баса перед/зад синхронізовано. Для найкращого результату встановіть переднє підсилення баса на 86Гц, а точку калібрування на ~80дБ.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Робота wDSP у фоні</string>
@@ -138,5 +143,4 @@
     <string name="OTtab">Інше</string>
     <string name="GLtab">Адапт. Гучн.</string>
     <string name="lbl_pwr">Підсилення:</string>
-    <string name="hint_sub_freq">Частота</string>
 </resources>

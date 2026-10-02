@@ -20,13 +20,16 @@
     <string name="trim_highs">Уменьш. ВЧ</string>
     <string name="sub_tweaking">Автом. Саб</string>
     <string name="show_loudness_on_main">На главном экране</string>
-    <string name="true_22_display">Точный 2.2</string>
+    <string name="ultra_bass">Ультра бас</string>
     <string name="fm_visualizer_label">Предпросмотр компенсации</string>
     <string name="lbl_volume">Громкость:</string>
     <string name="lbl_sub_offset">Смещение Sub:</string>
     <string name="lbl_lower_sub_by">Снизить sub на:</string>
     <string name="lbl_calibration_point">Точка калибровки (около 80 дБ):</string>
     <string name="lbl_correction_strength">Степень коррекции:</string>
+    <string name="lbl_trim_highs_start_vol">Громкость начала ВЧ:</string>
+    <string name="lbl_ultra_bass_start_vol">Громкость начала Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Макс. усиление Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Корр.врем.воспр. (Задержки)</string>
@@ -60,18 +63,19 @@
     <string name="enable_gala">Вкл. GALA:</string>
     <string name="enable_gala_feature">Использование GALA</string>
     <string name="gala_global">Глобально</string>
+    <string name="gala_disable_for_preset">Отключить для этого пресета</string>
     <string name="vol_step_every">Шаг громк. каждые:</string>
     <string name="gps_speed_label">Скорость GPS</string>
     <string name="current_gps_speed">Текущ. скор. GPS:</string>
     <string name="vol_offset_label">Смещен. громк.</string>
     <string name="applied_vol_offset">Фактич. коррекция:</string>
     <string name="standstill_threshold">Порог нечувствит.</string>
-    <string name="standstill_speed">Регулировка от:</string>
+    <string name="standstill_speed">Скорость остановки:</string>
     <string name="max_speed_limit">Макс. предел скор.</string>
     <string name="max_speed_label">Макс. скорость:</string>
     <string name="max_vol_adj">Макс. коррекц.громк.</string>
     <string name="max_adjustment">Макс. коррекция:</string>
-    <string name="sensitivity_settings">Sensitivity Settings</string>
+    <string name="sensitivity_settings">Настройки чувствительности</string>
     <string name="simulation_debug">Моделирование и отладка</string>
     <string name="simulate_vehicle_speed">Симуляция скорости:</string>
     <string name="simulate_speed">Симуляция скорости:</string>
@@ -95,6 +99,7 @@
     <string name="toast_exported">Экспортированно</string>
     <string name="toast_imported">Импортированно</string>
     <string name="toast_sub_comp_limit">Сабвуфер ограничен 80Гц</string>
+    <string name="toast_loudness_sync_bass">Тонкомпенсация активна. Частоты и уровни усиления баса перед/зад синхронизированы. Для лучшего результата установите переднее усиление баса на 86Гц, а точку калибровки на ~80дБ.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Оставить wDSP работать в фоне</string>

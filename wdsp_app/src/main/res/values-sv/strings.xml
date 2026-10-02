@@ -21,13 +21,16 @@
     <string name="trim_highs">Dämpa diskant</string>
     <string name="sub_tweaking">Sub-justering</string>
     <string name="show_loudness_on_main">Visa på huvudsidan</string>
-    <string name="true_22_display">Äkta 2.2-vy</string>
+    <string name="ultra_bass">Ultra Bas</string>
     <string name="fm_visualizer_label">Realtidsvy korrigering</string>
     <string name="lbl_volume">Volym:</string>
     <string name="lbl_sub_offset">Sub-offset:</string>
     <string name="lbl_lower_sub_by">Sänk sub med:</string>
     <string name="lbl_calibration_point">Kalibreringspunkt (bör vara ca 80 dB):</string>
     <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
+    <string name="lbl_trim_highs_start_vol">Startvolym höjddämpning:</string>
+    <string name="lbl_ultra_bass_start_vol">Startvolym Ultra Bas:</string>
+    <string name="lbl_ultra_bass_max_db">Max höjning Ultra Bas:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Tidskorrigering (Delays)</string>
@@ -61,6 +64,7 @@
     <string name="enable_gala">Aktivera GALA</string>
     <string name="enable_gala_feature">Aktivera GALA-funktion</string>
     <string name="gala_global">Global</string>
+    <string name="gala_disable_for_preset">Inaktivera för denna profil</string>
     <string name="vol_step_every">Volymsteg per:</string>
     <string name="gps_speed_label">GPS-HASTIGHET</string>
     <string name="current_gps_speed">Nuvarande GPS-hastighet:</string>
@@ -96,6 +100,7 @@
     <string name="toast_exported">Exporterad</string>
     <string name="toast_imported">Importerad</string>
     <string name="toast_sub_comp_limit">Sub-komp begränsad till 80Hz</string>
+    <string name="toast_loudness_sync_bass">Loudness aktiv. Bas-boost-frekvenser och nivåer fram/bak synkas. För bästa resultat, ställ in främre Bas-boost till 86Hz och kalibreringspunkten till ca 80dB.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Låt wDSP köras</string>
@@ -137,6 +142,6 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
-    <string name="lbl_pwr">" Förstärkar:"</string>
+    <string name="lbl_pwr">Ampeffekt:</string>
 
 </resources>

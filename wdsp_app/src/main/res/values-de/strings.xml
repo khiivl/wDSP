@@ -20,13 +20,16 @@
     <string name="trim_highs">Höhen reduzieren</string>
     <string name="sub_tweaking">Subwoofer-Feineinstellung</string>
     <string name="show_loudness_on_main">Auf Hauptseite anzeigen</string>
-    <string name="true_22_display">Echte 2,2-Anzeige</string>
+    <string name="ultra_bass">Ultra Bass</string>
     <string name="fm_visualizer_label">Echtzeit-Korrekturvorschau</string>
     <string name="lbl_volume">Lautstärke:</string>
     <string name="lbl_sub_offset">Sub-Offset:</string>
     <string name="lbl_lower_sub_by">Sub absenken um:</string>
     <string name="lbl_calibration_point">Kalibrationspunkt (muss ca. 80 dB sein):</string>
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
+    <string name="lbl_trim_highs_start_vol">Starthöhe Höhenred.:</string>
+    <string name="lbl_ultra_bass_start_vol">Startlautst. Ultra Bass:</string>
+    <string name="lbl_ultra_bass_max_db">Max. Anhebung Ultra Bass:</string>
 
     <!-- Delays Tab -->
     <string name="delays_title">Laufzeitkorrektur (Delays)</string>
@@ -60,6 +63,7 @@
     <string name="enable_gala">GALA aktivieren</string>
     <string name="enable_gala_feature">GALA-Funktion aktivieren</string>
     <string name="gala_global">Global</string>
+    <string name="gala_disable_for_preset">Für dieses Preset deaktivieren</string>
     <string name="vol_step_every">Lautstärke-Schritt alle:</string>
     <string name="gps_speed_label">GPS GESCHWINDIGKEIT</string>
     <string name="current_gps_speed">Aktuelle GPS-Geschw.:</string>
@@ -76,7 +80,7 @@
     <string name="simulate_vehicle_speed">Fahrzeuggeschw. simulieren</string>
     <string name="simulate_speed">Geschw. simulieren:</string>
     <string name="gala_fade_delay">Einblend-Geschwindigkeit (Verzögerung/Schritt):</string>
-    <string name="gala_hold_timer">Schwellenwert-Haltezeit (Zeit, in der der Geschwindigkeitsschwellenwert vor dem Abklingen beibehalten wird)</string>
+    <string name="gala_hold_timer">Schwellenwert-Haltezeit (Zeit vor dem Abklingen)</string>
     <string name="gala_ms_fmt">%d ms</string>
     <string name="gala_s_fmt">%.1f s</string>
 
@@ -95,6 +99,7 @@
     <string name="toast_exported">Exportiert</string>
     <string name="toast_imported">Importiert</string>
     <string name="toast_sub_comp_limit">Sub-Kompensation auf 80Hz begrenzt</string>
+    <string name="toast_loudness_sync_bass">Loudness aktiv. Bass-Boost-Frequenzen und -Pegel vorne/hinten werden synchronisiert. Für beste Ergebnisse den vorderen Bass-Boost auf 86Hz und den Kalibrationspunkt auf ca. 80dB einstellen.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP im Hintergrund ausführen</string>
@@ -138,5 +143,4 @@
     <string name="GLtab">GALA</string>
     <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
-    <string name="hint_sub_freq">Freq</string>
 </resources>

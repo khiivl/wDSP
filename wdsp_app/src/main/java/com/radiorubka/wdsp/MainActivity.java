@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Color;
 //import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -82,7 +83,14 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_PLAYER_MAP = "player_preset_map";
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
-    private static final String PREF_GALA_GLOBAL_ENABLED = "gala_global_enabled";
+    // Not a real preset - just the "preset name" galaNamespace() resolves to when global mode
+    // is on, so every GALA field (enable + all 5 sliders) reads/writes one shared bucket of the
+    // exact same "<namespace>_gala_*" keys every preset already uses, instead of needing a
+    // parallel set of global-only key constants and a branch at every read/write site.
+    private static final String GALA_GLOBAL_NAMESPACE = "__gala_global__";
+    private static final String[] GALA_FIELD_SUFFIXES = {
+            "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms"
+    };
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -138,14 +146,14 @@ public class MainActivity extends AppCompatActivity {
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private SwitchCompat switchGalaEnable, switchGalaGlobal;
+    private SwitchCompat switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset;
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
     private TextView tvGalaIncVal, tvGalaSpeed, tvGalaMinSpeedVal, tvGalaOffset, tvSimulateSpeedVal, tvGalaMaxAdjVal, tvGalaFadeMsVal, tvGalaHoldMsVal;
     
-    // Whether GALA's on/off state is shared across all presets instead of per-preset.
-    // Kept in sync with PREF_GALA_GLOBAL_MODE; see setupGalaControls()/savePreset()/loadPreset().
+    // Whether every GALA field (enable + all 5 sliders) is shared across all presets instead
+    // of per-preset. Kept in sync with PREF_GALA_GLOBAL_MODE; see galaNamespace().
     private boolean galaGlobalMode = false;
 
     private float currentFmSubOffset = 0f;
@@ -608,6 +616,7 @@ public class MainActivity extends AppCompatActivity {
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
+        switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -1513,6 +1522,9 @@ public class MainActivity extends AppCompatActivity {
                 // ISO_FULL_TARGET_DB, not ISO_MAX_OFFSETS - the sub channel is a separate hardware
                 // output from the 16-band EQ/bass-shelf split, so it targets the real intended
                 // boost, not the EQ's own (now much smaller) residual share of it.
+                // No branch above 80Hz - intentional, see McuService.getMaxBassBoost()'s identical
+                // doc: 100Hz+ isn't "deep bass" any more and is already covered by the main 16-band
+                // EQ's own offsets, so skipping the sub-channel assist there avoids double-compensating.
                 int currentSubFreq = Globals.currentSubFreqHz;
                 if (currentSubFreq == 80) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[2] * ratio * str;
                 else if (currentSubFreq == 63 || currentSubFreq == 50) currentFmSubOffset = AudioConfig.ISO_FULL_TARGET_DB[1] * ratio * str;
@@ -1595,8 +1607,67 @@ public class MainActivity extends AppCompatActivity {
             presetNames.add("Call");
             Collections.sort(presetNames);
             savePresetList();
+            writeCallPresetDefaults();
             presetAdapter.notifyDataSetChanged();
         }
+    }
+
+    // Optimized for voice intelligibility during a phone call, not for music: bass filter maxed
+    // (highpasses all midbass off the door speakers) plus sub pushed down to 25Hz leaves no bass
+    // reinforcement anywhere, which is intentional - a call's own bandwidth has no bass to begin
+    // with. Fader pushed fully front since rear speakers just add echo/reverb to a mono call
+    // signal. All loudness curves, delays and GALA disabled - none of them help intelligibility,
+    // and delays in particular would otherwise silently carry over 0 instead of this preset's own
+    // calibration since it's a separate, independent set of keys from every other preset.
+    private void writeCallPresetDefaults() {
+        SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
+            e.putInt("Call_g" + i, 6); // flat (0dB)
+            e.putBoolean("Call_q" + i, false);
+        }
+        e.putInt("Call_sub_g", 0);
+        e.putInt("Call_sub_f", 0); // 25Hz
+        e.putInt("Call_bf_f", BASS_FILTER_FREQS.length - 1); // max filter freq (250Hz)
+        e.putInt("Call_bb_f", 0); // boost disabled
+        e.putInt("Call_bf_r", BASS_FILTER_FREQS.length - 1);
+        e.putInt("Call_bb_r", 0);
+        e.putInt("Call_bb_frq_f", 0);
+        e.putInt("Call_bb_frq_r", 0);
+        e.putInt("Call_f_lr", 12); // centered L/R
+        e.putInt("Call_f_fr", 24); // full front
+        e.putBoolean("Call_loud", false);
+        e.putBoolean("Call_fm_en", false);
+        e.putBoolean("Call_fat_en", false);
+        e.putBoolean("Call_sub_comp", false);
+        e.putInt("Call_fm_cal", 25);
+        e.putInt("Call_fm_str", 100);
+        e.putInt("Call_fat_start_vol", 25);
+        e.putBoolean("Call_ultra_bass_en", false);
+        e.putInt("Call_ultra_bass_start_vol", 16);
+        e.putInt("Call_ultra_bass_max_db", 6);
+        e.putInt("Call_d_fl", 0);
+        e.putInt("Call_d_fr", 0);
+        e.putInt("Call_d_rl", 0);
+        e.putInt("Call_d_rr", 0);
+        e.putInt("Call_d_sub", 0);
+        e.putBoolean("Call_d_en", false);
+        e.putInt("Call_d1_fl", 0);
+        e.putInt("Call_d1_fr", 0);
+        e.putInt("Call_d1_rl", 0);
+        e.putInt("Call_d1_rr", 0);
+        e.putInt("Call_rsse_val", 10);
+        e.putBoolean("Call_d1_en", false);
+        e.putBoolean("Call_gala_enabled", false);
+        e.putInt("Call_gala_increment", 15);
+        e.putInt("Call_gala_min_speed", 0);
+        e.putInt("Call_gala_max_adj", 12);
+        e.putInt("Call_gala_fade_ms", 100);
+        e.putInt("Call_gala_hold_ms", 1000);
+        // Forces GALA off for Call even if Global GALA is on for every other preset - "Call_gala_enabled"
+        // above only covers the case where global mode is off.
+        e.putBoolean("Call_gala_disabled_for_preset", true);
+        e.putInt("Call_power_vol", 0);
+        e.apply();
     }
 
     private void addNewPreset() {
@@ -1728,7 +1799,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void copyPresetData(SharedPreferences p, SharedPreferences.Editor e, String o, String n) {
-        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_sub_comp", "_fm_cal", "_fm_str", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_power_vol"};
+        String[] keys = {"_sub_g", "_sub_f", "_bf_f", "_bb_f", "_bf_r", "_bb_r", "_bb_frq_f", "_bb_frq_r", "_f_lr", "_f_fr", "_loud", "_fm_en", "_fat_en", "_fat_start_vol", "_sub_comp", "_fm_cal", "_fm_str", "_ultra_bass_en", "_ultra_bass_start_vol", "_ultra_bass_max_db", "_d_fl", "_d_fr", "_d_rl", "_d_rr", "_d_sub", "_d_en", "_d1_fl", "_d1_fr", "_d1_rl", "_d1_rr", "_rsse_val", "_d1_en", "_gala_enabled", "_gala_increment", "_gala_min_speed", "_gala_max_speed", "_gala_max_adj", "_gala_fade_ms", "_gala_hold_ms", "_gala_disabled_for_preset", "_power_vol"};
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             String g = "_g" + i, q = "_q" + i; e.putInt(n+g, p.getInt(o+g, 6)); e.putBoolean(n+q, p.getBoolean(o+q, false)); e.remove(o+g); e.remove(o+q);
         }
@@ -1742,7 +1813,13 @@ public class MainActivity extends AppCompatActivity {
     private void deleteCurrentPreset() {
         String curr = spinnerPresets.getText().toString();
         int currindex = presetNames.indexOf(curr);
-        if ("Call".equals(curr)) return;
+        if ("Call".equals(curr)) {
+            // Call can't actually be deleted (automation depends on it always existing) - instead
+            // "delete" resets it back to its own optimized defaults, same as a fresh install.
+            writeCallPresetDefaults();
+            loadPreset("Call");
+            return;
+        }
         if (presetNames.size() <= 1) {
             Toaster.show(this, getString(R.string.toast_cannot_delete_last));
             return;
@@ -1819,19 +1896,19 @@ public class MainActivity extends AppCompatActivity {
             e.putInt(name + "_rsse_val", getIntSlider(seekDelay1RSSE));
             e.putBoolean(name + "_d1_en", switchLegacyEnable.isChecked());
             
-            // GALA
-            if (galaGlobalMode) {
-                // Shared across all presets - not part of this preset's own data.
-                e.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
-            } else {
-                e.putBoolean(name + "_gala_enabled", switchGalaEnable.isChecked());
-            }
-            e.putInt(name + "_gala_increment", getIntSlider(seekGalaInc));
-            e.putInt(name + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
-//            e.putInt(name + "_gala_max_speed", seekGalaMaxSpeed.getProgress());
-            e.putInt(name + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
-            e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
-            e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
+            // GALA - galaNamespace(name) resolves to GALA_GLOBAL_NAMESPACE instead of this
+            // preset's own name when global mode is on, so these land in the one shared bucket
+            // every preset reads back from instead of this preset's own data.
+            String galaNs = galaNamespace(name);
+            e.putBoolean(galaNs + "_gala_enabled", switchGalaEnable.isChecked());
+            e.putInt(galaNs + "_gala_increment", getIntSlider(seekGalaInc));
+            e.putInt(galaNs + "_gala_min_speed", getIntSlider(seekGalaMinSpeed));
+            e.putInt(galaNs + "_gala_max_adj", getIntSlider(seekGalaMaxAdj));
+            e.putInt(galaNs + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
+            e.putInt(galaNs + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
+            // Always this preset's own data, never the global bucket - lets a preset opt out of
+            // GALA even while global mode is on for every other preset.
+            e.putBoolean(name + "_gala_disabled_for_preset", switchGalaDisableForPreset.isChecked());
 
             e.putInt(name + "_power_vol", -Integer.parseInt(tvPowerDb.getText().toString()));
 
@@ -1927,20 +2004,22 @@ public class MainActivity extends AppCompatActivity {
             seekDelay1RSSE.setValue((float) p.getInt(name + "_rsse_val", 10));
             switchLegacyEnable.setChecked(p.getBoolean(name + "_d1_en", false));
             
-            // GALA
-            switchGalaEnable.setChecked(galaGlobalMode
-                    ? p.getBoolean(PREF_GALA_GLOBAL_ENABLED, false)
-                    : p.getBoolean(name + "_gala_enabled", false));
-            seekGalaInc.setValue((float) p.getInt(name + "_gala_increment", 15));
+            // GALA - see galaNamespace()/savePreset() for why this reads from a shared bucket
+            // instead of this preset's own keys when global mode is on.
+            String galaNs = galaNamespace(name);
+            switchGalaEnable.setChecked(p.getBoolean(galaNs + "_gala_enabled", false));
+            seekGalaInc.setValue((float) p.getInt(galaNs + "_gala_increment", 15));
             tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
-            seekGalaMinSpeed.setValue((float) p.getInt(name + "_gala_min_speed", 0));
+            seekGalaMinSpeed.setValue((float) p.getInt(galaNs + "_gala_min_speed", 0));
             tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
-            seekGalaMaxAdj.setValue((float) p.getInt(name + "_gala_max_adj", 12));
+            seekGalaMaxAdj.setValue((float) p.getInt(galaNs + "_gala_max_adj", 12));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
-            seekGalaFadeMs.setValue((float) p.getInt(name + "_gala_fade_ms", 100));    // Changed from 300ms
+            seekGalaFadeMs.setValue((float) p.getInt(galaNs + "_gala_fade_ms", 100));    // Changed from 300ms
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
-            seekGalaHoldMs.setValue((float) p.getInt(name + "_gala_hold_ms", 1000));   // Changed from 3000ms
+            seekGalaHoldMs.setValue((float) p.getInt(galaNs + "_gala_hold_ms", 1000));   // Changed from 3000ms
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
+            switchGalaDisableForPreset.setChecked(p.getBoolean(name + "_gala_disabled_for_preset", false));
+            switchGalaDisableForPreset.setEnabled(galaGlobalMode);
 
             // Power - if a preset was saved with positive amp power before the MCU firmware
             // stopped supporting it, clamp and re-persist it now rather than just hiding the
@@ -2066,8 +2145,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets the head unit's button/backlight RGB to wDSP's accent color (accentColor,
-     * R.color.cyan_custom), scaled to the same perceptual luminance (standard
+     * Resolves a color resource's night-mode variant regardless of the app's own current theme -
+     * used by setButtonRgbCyan() so the physical backlight always matches the same cyan whether
+     * the UI itself is currently rendering day or night mode, rather than following accentColor
+     * (which does follow the current theme, correctly, for actual UI elements - see its own
+     * usages). Reads it via a Configuration override instead of hardcoding the night hex value,
+     * so values-night/colors.xml stays the single source of truth for it.
+     */
+    private int getNightModeColor(int colorRes) {
+        Configuration nightConfig = new Configuration(getResources().getConfiguration());
+        nightConfig.uiMode = (nightConfig.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | Configuration.UI_MODE_NIGHT_YES;
+        return ContextCompat.getColor(createConfigurationContext(nightConfig), colorRes);
+    }
+
+    /**
+     * Sets the head unit's button/backlight RGB to wDSP's night-mode accent color (always the
+     * night variant of R.color.cyan_custom - see getNightModeColor()'s doc - regardless of which
+     * theme the app's own UI is currently in), scaled to the same perceptual luminance (standard
      * 0.299R+0.587G+0.114B luma weights, not just the raw peak channel) as whatever the user
      * currently has set via persist.sys.color.light.value (a packed ARGB int; see
      * C:\Users\v\Downloads\QF_RGB_control.md for the full protocol writeup this mirrors). If
@@ -2102,11 +2196,12 @@ public class MainActivity extends AppCompatActivity {
         defaultBacklightB = (byte) b;
         backlightDefaultCaptured = true;
 
-        int accentR = Color.red(accentColor);
-        int accentG = Color.green(accentColor);
-        int accentB = Color.blue(accentColor);
+        int nightAccent = getNightModeColor(R.color.cyan_custom);
+        int accentR = Color.red(nightAccent);
+        int accentG = Color.green(nightAccent);
+        int accentB = Color.blue(nightAccent);
         // Standard luma weights - matches perceived brightness far better than the raw peak
-        // channel would, since accentColor's hue (teal/cyan) differs from whatever hue the
+        // channel would, since nightAccent's hue (teal/cyan) differs from whatever hue the
         // system's own light color happens to be.
         float systemLuminance = 0.299f * r + 0.587f * g + 0.114f * b;
         float accentLuminance = 0.299f * accentR + 0.587f * accentG + 0.114f * accentB;
@@ -2188,39 +2283,66 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    // galaGlobalMode's current "preset name" for every GALA field - GALA_GLOBAL_NAMESPACE
+    // when global mode is on, or the real preset otherwise. Letting load/save just prefix
+    // keys with this instead of branching per field is what keeps the GALA sections of
+    // loadPreset()/savePreset() a single pass instead of six hand-written if/else pairs.
+    private String galaNamespace(String presetName) {
+        return galaGlobalMode ? GALA_GLOBAL_NAMESPACE : presetName;
+    }
+
+    // Copies every GALA field (enable + all 5 sliders) from one preset's keys to another's,
+    // treating GALA_GLOBAL_NAMESPACE as just another "preset name" - used by switchGalaGlobal's
+    // listener below to seed/crystallize the shared bucket. Same copy-by-suffix idiom as
+    // copyPresetData() uses for the rest of a preset's fields.
+    private void copyGalaFields(SharedPreferences.Editor e, String fromNamespace, String toNamespace) {
+        SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        for (String suffix : GALA_FIELD_SUFFIXES) {
+            Object v = p.getAll().get(fromNamespace + suffix);
+            if (v instanceof Boolean) e.putBoolean(toNamespace + suffix, (Boolean) v);
+            else if (v instanceof Integer) e.putInt(toNamespace + suffix, (Integer) v);
+        }
+    }
+
     private void setupGalaControls() {
         switchGalaEnable.jumpDrawablesToCurrentState();
         switchGalaEnable.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
 
+        // Per-preset override, always independent of galaNamespace() - lets a preset opt out
+        // of GALA even while global mode is on for every other preset. Only meaningful while
+        // global mode is on (otherwise this preset's own switchGalaEnable already does the
+        // same job), so it's greyed out the rest of the time - see the setEnabled() calls below
+        // and in loadPreset().
+        switchGalaDisableForPreset.jumpDrawablesToCurrentState();
+        switchGalaDisableForPreset.setOnCheckedChangeListener((bv, checked) -> { if (!isUpdatingUi) { autoSaveCurrent(); } });
+
         // Global GALA: not tied to any preset, so it's loaded/wired once here rather than
-        // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
-        // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
-        // see the GALA sections of savePreset()/loadPreset().
+        // in loadPreset(). When on, every GALA field reads/writes GALA_GLOBAL_NAMESPACE
+        // instead of this preset's own name - see galaNamespace() and the GALA sections of
+        // savePreset()/loadPreset().
         switchGalaGlobal.jumpDrawablesToCurrentState();
         SharedPreferences galaPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         galaGlobalMode = galaPrefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
         switchGalaGlobal.setChecked(galaGlobalMode);
+        switchGalaDisableForPreset.setEnabled(galaGlobalMode);
         switchGalaGlobal.setOnCheckedChangeListener((bv, checked) -> {
             if (isUpdatingUi) return;
-            galaGlobalMode = checked;
-            SharedPreferences galaModePrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            SharedPreferences.Editor ed = galaModePrefs.edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked);
+            String currentPreset = spinnerPresets.getText().toString();
+            SharedPreferences.Editor ed = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
             if (checked) {
-                // Seed the global value from whatever's on screen right now, so flipping
-                // this on doesn't silently reset GALA to off.
-                ed.putBoolean(PREF_GALA_GLOBAL_ENABLED, switchGalaEnable.isChecked());
-                ed.apply();
+                // Seed the global bucket from this preset's own values (every GALA slider
+                // already autosaves on change, so these are exactly what's on screen), so
+                // flipping this on doesn't silently reset GALA to off.
+                copyGalaFields(ed, currentPreset, GALA_GLOBAL_NAMESPACE);
             } else {
-                ed.apply();
-                // Turning global mode off: reflect this preset's own saved GALA state
-                // on screen instead of leaving whatever the global switch showed. Guard
-                // with isUpdatingUi so this doesn't itself trigger an autoSaveCurrent().
-                String currentPreset = spinnerPresets.getText().toString();
-                boolean presetGalaEnabled = galaModePrefs.getBoolean(currentPreset + "_gala_enabled", false);
-                isUpdatingUi = true;
-                switchGalaEnable.setChecked(presetGalaEnabled);
-                isUpdatingUi = false;
+                // Turning global mode off: the global bucket's values become this preset's
+                // own, instead of discarding whatever was just in use globally.
+                copyGalaFields(ed, GALA_GLOBAL_NAMESPACE, currentPreset);
             }
+            ed.putBoolean(PREF_GALA_GLOBAL_MODE, checked);
+            ed.apply();
+            galaGlobalMode = checked;
+            switchGalaDisableForPreset.setEnabled(checked);
         });
 
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
@@ -2405,6 +2527,7 @@ public class MainActivity extends AppCompatActivity {
 
             // GALA reset
             switchGalaEnable.setChecked(false);
+            switchGalaDisableForPreset.setChecked(false);
             seekGalaInc.setValue(15);
             seekGalaMinSpeed.setValue(0);
 //            seekGalaMaxSpeed.setProgress(30);

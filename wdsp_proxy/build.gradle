@@ -2,6 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// Same shared release keystore as wdsp_app - this module's sharedUserId="android.uid.system"
+// doesn't actually need the real platform certificate, since it's installed via pmpatch rather
+// than a normal system-partition signature check. See wdsp_app/build.gradle's identical block for
+// the full doc on keystore.properties.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'com.qf.soundeffect'
     compileSdk 36
@@ -9,6 +19,7 @@ android {
     defaultConfig {
         applicationId "com.qf.soundeffect"
         minSdk 28
+        //noinspection ExpiredTargetSdkVersion
         targetSdk 28
         versionCode 1
         versionName "0.5"
@@ -16,11 +27,25 @@ android {
         resConfigs "en"
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
