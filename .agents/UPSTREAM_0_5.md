@@ -3,6 +3,17 @@
 The owner, 02.10.2026: *«важливо — абсорбуй. Гала в нас дещо своєї конструкції, але все що автор
 додав — повна абсорбація»*; on the spectrum: *«зберегти наше»* (our `AudioSpectrumEngine` stays).
 
+And, the same day: *«ми від нього на голову далі, але важливе що він робив треба забрати, і ми не
+повинні створювати конфлікти для злиття якщо він захоче прийняти ПР. Але наша гала ніби продвинутіша,
+ми маємо контракти, яких не має його версія, тобто — його нові напрацювання + наше, а не сліпа
+заміна»*. So:
+- **his new work on top of ours**, never a replacement of ours — our GALA, the contracts
+  (`C:\APPS_Contacts\`), the Call preset, the audio-ownership duties stay;
+- **the branch must stay mergeable into his `master`**: after the features are ported, finish with
+  a real `git merge origin/master` whose conflicts are resolved to "ours + his features", so a PR
+  from `kostyfmat_mod` to `master` applies without conflicts;
+- **questions to the owner one at a time**, never a list.
+
 Source: `origin/master` (author khiivl) since our split at `fd447a9` (20.08):
 `8c71b6a` (17.08, pink-noise tilt), `59c542c` (02.10, "huge commit for 0.5", +3224/−637 in 24
 files), `704ee61` (merge), `8b1c0a9` (revert of our "Fix GALA stopping…").
@@ -42,4 +53,7 @@ Bass) → 6 (wire hygiene) → 12, 13, 14 (controls) → 10 (EQ views) → 11 (s
 Each lands as its own commit, verified by build and, where it changes what reaches the chip, by the
 `TurboSender2000` log on the bench before and after.
 
-Open questions for the owner: #5 (sub-comp table vs his 14.09 decision), #7 (polling), #8 (GALA).
+Last step: `git merge origin/master` with every conflict resolved to the ported result (above).
+
+Open questions for the owner — **one at a time, in this order**: #5 (sub-comp table vs his 14.09
+decision), #7 (polling), #8 (which of his GALA fixes, if any, our GALA lacks).
