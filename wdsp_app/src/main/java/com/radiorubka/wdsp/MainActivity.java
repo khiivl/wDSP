@@ -182,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
     // F-M Curve
     private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass;
     private MaterialButton switchShowLoudnessMain;
+    /** Pair locks, app-wide (the author's 0.5): delays keep their difference, the bass stage copies. */
+    private MaterialButton switchSyncDelayFront, switchSyncDelayRear, switchSyncBass;
+    private final java.util.Map<Slider, Float> lastSliderValue = new java.util.HashMap<>();
     private Slider seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol, seekUltraBassMaxDb;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn;
     private TextView tvFatStartVolVal, tvUltraBassStartVolVal, tvUltraBassMaxDbVal;
@@ -779,6 +782,9 @@ public class MainActivity extends AppCompatActivity {
             if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
             if (switchUltraBass == null) switchUltraBass = findViewById(R.id.switch_ultra_bass);
             if (switchShowLoudnessMain == null) switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
+            if (switchSyncDelayFront == null) switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
+            if (switchSyncDelayRear == null) switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
+            if (switchSyncBass == null) switchSyncBass = findViewById(R.id.switch_sync_bass);
             if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
             if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
 
@@ -791,6 +797,9 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFmSubComp);
             updateToggleStyle(switchUltraBass);
             updateToggleStyle(switchShowLoudnessMain);
+            updateToggleStyle(switchSyncDelayFront);
+            updateToggleStyle(switchSyncDelayRear);
+            updateToggleStyle(switchSyncBass);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
 
@@ -1248,6 +1257,9 @@ public class MainActivity extends AppCompatActivity {
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
         switchUltraBass = findViewById(R.id.switch_ultra_bass);
         switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
+        switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
+        switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
+        switchSyncBass = findViewById(R.id.switch_sync_bass);
         seekFatStartVol = findViewById(R.id.seek_fat_start_vol);
         tvFatStartVolVal = findViewById(R.id.tv_fat_start_vol_val);
         seekUltraBassStartVol = findViewById(R.id.seek_ultra_bass_start_vol);
@@ -1275,6 +1287,12 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchShowLoudnessMain);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayFront);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayRear);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncBass);
+        bindAppToggle(switchSyncDelayFront, "sync_delay_front");
+        bindAppToggle(switchSyncDelayRear, "sync_delay_rear");
+        bindAppToggle(switchSyncBass, "sync_bass_fr");
         // The loudness toggles share their row by weight; five of them wrapped their captions on
         // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
         // included (owner, 02.10.2026: «навчи RowFit стискати ряд без повзунка»).
@@ -1633,15 +1651,20 @@ public class MainActivity extends AppCompatActivity {
         spinnerBassFreqRear.setAdapter(bbAdapter);
 
         // Replaced the old OnItemSelectedListener with OnItemClickListener
-        AdapterView.OnItemClickListener itemClickListener = (parent, view, pos, id) -> {
+        spinnerBassFreqFront.setOnItemClickListener((parent, view, pos, id) -> {
             if (!isUpdatingUi) {
+                if (isChecked(switchSyncBass)) spinnerBassFreqRear.setText(BASS_BOOST_FREQS_SHOWN[pos], false);
                 autoSaveCurrent();
                 updateVisualizer();   // the bass shelf on the main curve
             }
-        };
-
-        spinnerBassFreqFront.setOnItemClickListener(itemClickListener);
-        spinnerBassFreqRear.setOnItemClickListener(itemClickListener);
+        });
+        spinnerBassFreqRear.setOnItemClickListener((parent, view, pos, id) -> {
+            if (!isUpdatingUi) {
+                if (isChecked(switchSyncBass)) spinnerBassFreqFront.setText(BASS_BOOST_FREQS_SHOWN[pos], false);
+                autoSaveCurrent();
+                updateVisualizer();
+            }
+        });
 
         Slider.OnChangeListener bl = (slider, value, fromUser) -> {
             int p = (int) value;
@@ -1650,6 +1673,12 @@ public class MainActivity extends AppCompatActivity {
             else if (slider == seekBassFilterRear) tvBassFilterRearVal.setText(doorHighPassLabel(p));
             else if (slider == seekBassBoostRear) tvBassBoostRearDb.setText(getString(R.string.lbl_db_fmt, p));
             if (fromUser && !isUpdatingUi) {
+                if (isChecked(switchSyncBass)) {   // the author's 0.5: the other pair copies
+                    if (slider == seekBassFilterFront) seekBassFilterRear.setValue(value);
+                    else if (slider == seekBassFilterRear) seekBassFilterFront.setValue(value);
+                    else if (slider == seekBassBoostFront) seekBassBoostRear.setValue(value);
+                    else if (slider == seekBassBoostRear) seekBassBoostFront.setValue(value);
+                }
                 autoSaveCurrent();
                 updateVisualizer();   // the bass stage on the main curve
             }
@@ -1682,6 +1711,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** An app-wide toggle stored under {@code key} in the presets file, not in any preset. */
+    private void bindAppToggle(MaterialButton b, String key) {
+        if (b == null) return;
+        b.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(key, false));
+        updateToggleStyle(b);
+        b.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(key, checked).apply();
+        });
+    }
+
+    private static boolean isChecked(MaterialButton b) {
+        return b != null && b.isChecked();
+    }
+
+    /**
+     * The pair locks for delays (the author's 0.5), with one change by the owner's decision of
+     * 02.10.2026 («так, зі збереженням різниці»): the partner moves BY the step the person
+     * moved, it does not copy the value. A measured "driver" preset delays left and right
+     * differently on purpose - that difference is the alignment to the seat - and a copy would
+     * erase it at the first touch.
+     */
+    private void mirrorDelayPair(Slider moved, float value, Slider fl, Slider fr, Slider rl, Slider rr) {
+        Slider partner = null;
+        if (isChecked(switchSyncDelayFront)) {
+            if (moved == fl) partner = fr; else if (moved == fr) partner = fl;
+        }
+        if (partner == null && isChecked(switchSyncDelayRear)) {
+            if (moved == rl) partner = rr; else if (moved == rr) partner = rl;
+        }
+        Float prev = lastSliderValue.get(moved);
+        if (partner == null || prev == null) return;
+        float step = partner.getStepSize() > 0 ? partner.getStepSize() : 1f;
+        float target = partner.getValue() + (value - prev);
+        target = partner.getValueFrom() + Math.round((target - partner.getValueFrom()) / step) * step;
+        target = Math.max(partner.getValueFrom(), Math.min(partner.getValueTo(), target));
+        if (target != partner.getValue()) partner.setValue(target);
+    }
+
     private void setupDelayControls() {
         Slider.OnChangeListener dl = (slider, value, fromUser) -> {
             int p = (int) value;
@@ -1689,7 +1757,11 @@ public class MainActivity extends AppCompatActivity {
             if (slider == seekDelayFl) tvDelayFlVal.setText(val); else if (slider == seekDelayFr) tvDelayFrVal.setText(val);
             else if (slider == seekDelayRl) tvDelayRlVal.setText(val); else if (slider == seekDelayRr) tvDelayRrVal.setText(val);
             else if (slider == seekDelaySub) tvDelaySubVal.setText(val);
-            if (fromUser && !isUpdatingUi) autoSaveCurrent();
+            if (fromUser && !isUpdatingUi) {
+                mirrorDelayPair(slider, value, seekDelayFl, seekDelayFr, seekDelayRl, seekDelayRr);
+                autoSaveCurrent();
+            }
+            lastSliderValue.put(slider, value);
         };
         seekDelayFl.addOnChangeListener(dl); seekDelayFr.addOnChangeListener(dl);
         seekDelayRl.addOnChangeListener(dl); seekDelayRr.addOnChangeListener(dl); seekDelaySub.addOnChangeListener(dl);
@@ -1742,7 +1814,11 @@ public class MainActivity extends AppCompatActivity {
                 if (slider == seekDelay1Fl) tvDelay1FlVal.setText(val); else if (slider == seekDelay1Fr) tvDelay1FrVal.setText(val);
                 else if (slider == seekDelay1Rl) tvDelay1RlVal.setText(val); else if (slider == seekDelay1Rr) tvDelay1RrVal.setText(val);
             }
-            if (fromUser && !isUpdatingUi) autoSaveCurrent();
+            if (fromUser && !isUpdatingUi) {
+                mirrorDelayPair(slider, value, seekDelay1Fl, seekDelay1Fr, seekDelay1Rl, seekDelay1Rr);
+                autoSaveCurrent();
+            }
+            lastSliderValue.put(slider, value);
         };
         seekDelay1Fl.addOnChangeListener(dl); seekDelay1Fr.addOnChangeListener(dl);
         seekDelay1Rl.addOnChangeListener(dl); seekDelay1Rr.addOnChangeListener(dl); seekDelay1RSSE.addOnChangeListener(dl);
@@ -1773,6 +1849,8 @@ public class MainActivity extends AppCompatActivity {
         switchFmEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (!isUpdatingUi) {
+                // The author's 0.5: say why the rear shelf stops following its own sliders.
+                if (checked) Toaster.show(MainActivity.this, getString(R.string.toast_loudness_sync_bass));
                 autoSaveCurrent();
                 updateFmVisualizer();
             }
