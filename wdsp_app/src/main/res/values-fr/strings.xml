@@ -222,6 +222,7 @@ Par défaut global : %1$s</string>
     <string name="loud_check_inert">Cette courbe est configurée pour ne rien faire : le point de calibrage ou l\'intensité de correction est à zéro. Activer le Loudness ne changera pas le son tant qu\'ils ne sont pas réglés.</string>
     <string name="loud_check_cal_low">Le point de calibrage est trop bas — il n\'y a pas de volume en dessous pour que la courbe agisse.</string>
     <string name="loud_check_strength_zero">L\'intensité de correction est à zéro, la courbe est donc annulée.</string>
+    <string name="loud_check_fatigue_start_no_room">L\'atténuation des aigus est activée, mais il n\'y a pas de volume au-dessus de son volume de départ pour qu\'elle agisse.</string>
     <string name="loud_check_ceiling">En dessous du volume %1$d, la courbe manque de marge : %2$d bandes cessent d\'augmenter et elle s\'aplatit en palier au lieu d\'une courbe.</string>
     <string name="loud_check_bass_stacks">Une amplification séparée des basses est également activée. Cela fait deux réglages de basses sous une même courbe.</string>
     <string name="loud_check_cal_not_measured">La courbe est calée sur le volume %1$d, mais le véhicule a été mesuré à %2$d. Le profil est exact au volume mesuré, c\'est donc là que la courbe doit s\'arrêter.</string>

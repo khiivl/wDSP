@@ -220,6 +220,7 @@
     <string name="loud_check_inert">Esta curva está configurada para não fazer nada: o ponto de calibração ou a força da correção está a zero. Ativar o Loudness não alterará o som até que sejam configurados.</string>
     <string name="loud_check_cal_low">O ponto de calibração é demasiado baixo — não há volume abaixo dele para a curva atuar.</string>
     <string name="loud_check_strength_zero">A força da correção é zero, pelo que a curva é anulada.</string>
+    <string name="loud_check_fatigue_start_no_room">A atenuação de agudos está ativada, mas não há volume acima do seu volume inicial para que atue.</string>
     <string name="loud_check_ceiling">Abaixo do volume %1$d a curva fica sem margem: %2$d bandas param de subir e ela achata-se num patamar em vez de curva.</string>
     <string name="loud_check_bass_stacks">Um reforço de graves separado também está ativado. São dois controlos de graves sob uma mesma curva.</string>
     <string name="loud_check_cal_not_measured">A curva está ancorada no volume %1$d, mas o veículo foi medido a %2$d. O perfil é exato no volume medido, pelo que é aí que a curva deve parar.</string>

@@ -222,6 +222,7 @@ Genel Varsayılan: %1$s</string>
     <string name="loud_check_inert">Bu eğri hiçbir şey yapmayacak şekilde ayarlanmış: kalibrasyon noktası veya düzeltme gücü sıfırda. Bunlar ayarlanana kadar Loudness\'ı açmak sesi değiştirmeyecektir.</string>
     <string name="loud_check_cal_low">Kalibrasyon noktası çok düşük — altında eğrinin çalışabileceği bir ses seviyesi kalmıyor.</string>
     <string name="loud_check_strength_zero">Düzeltme gücü sıfır olduğundan eğrinin etkisi sıfırlanır.</string>
+    <string name="loud_check_fatigue_start_no_room">Tizleri kırpma açık, ancak başlangıç ses seviyesinin üzerinde etkili olabileceği bir ses seviyesi yok.</string>
     <string name="loud_check_ceiling">%1$d ses seviyesinin altında eğrinin payı tükeniyor: %2$d bant yükselmeyi durduruyor ve eğri yerine düz bir rafa dönüşüyor.</string>
     <string name="loud_check_bass_stacks">Ayrı bir bas güçlendirme de açık. Bu, tek bir eğri altında iki bas kontrolü demektir.</string>
     <string name="loud_check_cal_not_measured">Eğri %1$d ses seviyesine sabitlenmiş, ancak araç %2$d seviyesinde ölçülmüştü. Profil ölçülen ses seviyesinde tam doğrudur, bu yüzden eğri tam orada durmalıdır.</string>

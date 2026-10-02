@@ -222,6 +222,7 @@ Yleinen oletus: %1$s</string>
     <string name="loud_check_inert">Tämä käyrä on asetettu olemaan tekemättä mitään: kalibrointipiste tai korjauksen voimakkuus on nollassa. Loudnessin kytkeminen päälle ei muuta ääntä ennen kuin ne on asetettu.</string>
     <string name="loud_check_cal_low">Kalibrointipiste on liian matala — sen alapuolella ei ole äänenvoimakkuutta, jolla käyrä voisi toimia.</string>
     <string name="loud_check_strength_zero">Korjauksen voimakkuus on nolla, joten käyrä nollautuu.</string>
+    <string name="loud_check_fatigue_start_no_room">Diskantin vaimennus on päällä, mutta sen aloitusäänenvoimakkuuden yläpuolella ei ole äänenvoimakkuutta, jolla se voisi toimia.</string>
     <string name="loud_check_ceiling">Äänenvoimakkuuden %1$d alapuolella käyrästä loppuu tila: %2$d kaistaa lakkaa nousemasta ja käyrä litistyy tasanteeksi.</string>
     <string name="loud_check_bass_stacks">Myös erillinen bassokorostus on päällä. Se tarkoittaa kahta bassosäädintä saman käyrän alla.</string>
     <string name="loud_check_cal_not_measured">Käyrä on ankkuroitu äänenvoimakkuuteen %1$d, mutta auto mitattiin tasolla %2$d. Profiili on tarkka mittausvoimakkuudella, joten käyrän tulisi päättyä siihen.</string>
