@@ -339,6 +339,47 @@ public final class RoomMeasurement {
     private static final float MAX_PLAUSIBLE_SUB_SPREAD_MS = 18.0f;
 
     /**
+     * The channel every arrival is judged against: the clearest door channel that was heard, or -1.
+     * Never the subwoofer - its arrival comes through a low-pass and is blunt, a poor reference for
+     * GCC-PHAT and for timing. One rule: until 02.10.2026 the pass picked from all five channels and
+     * the delay computation from the doors only.
+     */
+    private static int arrivalAnchor(Result result) {
+        int anchor = -1;
+        for (int i = 0; i < Math.min(Channel.SUBWOOFER.ordinal(), result.channels.length); i++) {
+            ChannelResult c = result.channels[i];
+            if (c == null || !c.ok) continue;
+            if (anchor < 0 || c.clarityDb > result.channels[anchor].clarityDb) anchor = i;
+        }
+        return anchor;
+    }
+
+    /**
+     * Drops arrivals too far from the anchor to be the speaker itself: 10 ms for a door, 18 ms for
+     * the subwoofer (a boot is further away, and a sub amplifier adds latency). One rule, applied
+     * by the pass and again by the delay computation after GCC-PHAT has refined the times - until
+     * 02.10.2026 the pass applied 10 ms to every channel, so a subwoofer 10-18 ms away was thrown
+     * out before the computation that allows it could see it.
+     */
+    private static void disqualifyPhantoms(Result result, int anchorIdx) {
+        if (anchorIdx < 0) return;
+        final ChannelResult anchor = result.channels[anchorIdx];
+        for (int i = 0; i < result.channels.length; i++) {
+            ChannelResult c = result.channels[i];
+            if (c == null || !c.ok || i == anchorIdx) continue;
+            final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
+            final float limit = i == Channel.SUBWOOFER.ordinal()
+                    ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
+            if (apart > limit) {
+                c.ok = false;
+                Log.w(TAG, String.format(Locale.US,
+                        "%s: arrived %.1f ms from anchor %s (> %.0f ms) - disqualified phantom/reflection",
+                        c.label, apart, anchor.label, limit));
+            }
+        }
+    }
+
+    /**
      * The largest delay that can be entered, in slider steps.
      *
      * <p>Forty, and that figure is the hardware's rather than the interface's. It was measured
@@ -2119,16 +2160,8 @@ public final class RoomMeasurement {
         }
 
         // 2. GCC-PHAT high-precision delay estimation
-        // 2. Select anchor channel with HIGHEST clarityDb among real speakers
-        int refIdx = -1;
-        float maxClarity = -100f;
-        for (int k = 0; k < channels.length; k++) {
-            ChannelResult cr = result.channels[k];
-            if (cr != null && cr.ok && cr.clarityDb > maxClarity) {
-                maxClarity = cr.clarityDb;
-                refIdx = k;
-            }
-        }
+        // 2. The anchor: the clearest door channel (arrivalAnchor - one rule with computeDelays).
+        final int refIdx = arrivalAnchor(result);
 
         // The deconvolved floor reported is that of the anchor channel. This no longer destroys the
         // measured cabin silence: that lives in result.ambientNoiseDb16 and the two are different
@@ -2143,21 +2176,8 @@ public final class RoomMeasurement {
         }
         Log.i(TAG, nfLog.toString());
 
-        // Disqualify phantom arrivals that are physically too far from the anchor (> 30 ms)
-        if (refIdx >= 0) {
-            ChannelResult anchor = result.channels[refIdx];
-            for (int k = 0; k < channels.length; k++) {
-                ChannelResult cr = result.channels[k];
-                if (cr == null || k == refIdx) continue;
-                final float apart = Math.abs(cr.arrivalMs - anchor.arrivalMs);
-                if (apart > MAX_PLAUSIBLE_SPREAD_MS) {
-                    cr.ok = false;
-                    Log.w(TAG, String.format(Locale.US,
-                            "%s: arrived %.1f ms from anchor %s (> %.0f ms) - disqualified phantom",
-                            cr.label, apart, anchor.label, MAX_PLAUSIBLE_SPREAD_MS));
-                }
-            }
-        }
+        // Arrivals too far from the anchor to be the speaker itself.
+        disqualifyPhantoms(result, refIdx);
 
         // GCC-PHAT high-precision delay estimation relative to the anchor
         if (refIdx >= 0 && channelImpulses[refIdx] != null) {
@@ -2376,31 +2396,15 @@ public final class RoomMeasurement {
      */
     private static void computeDelays(Result result, SoundstageMode mode) {
         if (mode == null) mode = SoundstageMode.DRIVER;
-        ChannelResult anchor = null;
-        for (int i = 0; i < Math.min(4, result.channels.length); i++) {
-            ChannelResult c = result.channels[i];
-            if (c == null || !c.ok) continue;
-            if (anchor == null || c.clarityDb > anchor.clarityDb) anchor = c;
-        }
-        if (anchor == null) {
+        final int anchorIdx = arrivalAnchor(result);
+        if (anchorIdx < 0) {
             result.fail(MeasurementFailure.NOTHING_HEARD);
             Log.w(TAG, result.error);
             return;
         }
-
-        for (int i = 0; i < result.channels.length; i++) {
-            ChannelResult c = result.channels[i];
-            if (c == null || !c.ok || c == anchor) continue;
-            final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
-            final float maxSpread = (i == Channel.SUBWOOFER.ordinal())
-                    ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
-            if (apart > maxSpread) {
-                c.ok = false;
-                Log.w(TAG, String.format(Locale.US,
-                        "%s: arrived %.1f ms from anchor %s (> %.1f ms) - disqualified phantom/reflection",
-                        c.label, apart, anchor.label, maxSpread));
-            }
-        }
+        final ChannelResult anchor = result.channels[anchorIdx];
+        // Again, with the times GCC-PHAT has refined since the pass applied the same rule.
+        disqualifyPhantoms(result, anchorIdx);
 
         float latest = Float.NEGATIVE_INFINITY;
         float earliest = Float.POSITIVE_INFINITY;
