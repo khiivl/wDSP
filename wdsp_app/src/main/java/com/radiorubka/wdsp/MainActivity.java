@@ -564,7 +564,7 @@ public class MainActivity extends AppCompatActivity {
         s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
 
-    private void updateToggleStyle(View v) {
+    public void updateToggleStyle(View v) {
         if (v == null) return;
         boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
         int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this, isNight);
@@ -577,10 +577,23 @@ public class MainActivity extends AppCompatActivity {
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
             boolean checked = mb.isChecked();
-            mb.setBackgroundTintList(null);
-            mb.setStrokeWidth(0);
-            mb.setRippleColor(null);
-            mb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            if (com.radiorubka.wdsp.ui.theme.ThemeManager.isClassic(this)) {
+                float density = getResources().getDisplayMetrics().density;
+                int uncheckedBg = isNight ? Color.parseColor("#1F33373B") : Color.parseColor("#15000000");
+                int uncheckedBorder = isNight ? Color.parseColor("#44FFFFFF") : Color.parseColor("#33000000");
+                int bg = checked ? accent : uncheckedBg;
+                int strokeCol = checked ? accent : uncheckedBorder;
+                mb.setBackgroundTintList(ColorStateList.valueOf(bg));
+                mb.setStrokeColor(ColorStateList.valueOf(strokeCol));
+                mb.setStrokeWidth(Math.max(1, (int)(1.2f * density)));
+                mb.setCornerRadius((int)(10 * density));
+                mb.setRippleColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+            } else {
+                mb.setBackgroundTintList(null);
+                mb.setStrokeWidth(0);
+                mb.setRippleColor(null);
+                mb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            }
             int userFg = checked ? onAccentColor : textPrimary;
             int fg = checked ? userFg : com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(userFg, substrate);
             mb.setTextColor(fg);

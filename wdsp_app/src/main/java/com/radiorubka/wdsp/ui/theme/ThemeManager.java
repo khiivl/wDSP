@@ -65,7 +65,7 @@ public final class ThemeManager {
     public static final int CLASSIC_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF000000;
     public static final int CLASSIC_ON_ACCENT_TEXT_COLOR_DAY = 0xFFFFFFFF;
     public static final int CLASSIC_CARD_BG_NIGHT = 0xF029292B;
-    public static final int CLASSIC_CARD_BG_DAY = 0xF0EBEBEA;
+    public static final int CLASSIC_CARD_BG_DAY = 0xFFFFFFFF;
     public static final int CLASSIC_BACKGROUND_NIGHT = 0xFF000000;
     public static final int CLASSIC_BACKGROUND_DAY = 0xFFFFFFFF;
 
@@ -755,7 +755,7 @@ public final class ThemeManager {
             d.setShape(GradientDrawable.RECTANGLE);
             d.setCornerRadius(15f * density);
             d.setColor(night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY);
-            int strokeColor = night ? Color.parseColor("#20FFFFFF") : Color.parseColor("#15000000");
+            int strokeColor = night ? Color.parseColor("#20FFFFFF") : Color.parseColor("#1A000000");
             d.setStroke(Math.max(1, (int)(1f * density)), strokeColor);
             return d;
         }
