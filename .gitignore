@@ -33,3 +33,4 @@ __pycache__/
 /keystore/
 *.keystore
 *.jks
+/scratch/
