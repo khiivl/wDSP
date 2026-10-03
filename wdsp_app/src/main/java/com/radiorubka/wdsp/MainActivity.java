@@ -544,15 +544,22 @@ public class MainActivity extends AppCompatActivity {
     private void tintSlider(Slider s, ColorStateList csl, ColorStateList cslTrack) {
         if (s == null) return;
         boolean isNight = ThemeManager.isNight(this);
+        boolean isClassic = ThemeManager.isClassic(this);
         float density = getResources().getDisplayMetrics().density;
         s.setThumbTintList(csl);
         s.setTrackActiveTintList(csl);
         s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(isNight)));
         s.setHaloRadius(0);
-        s.setTrackHeight((int) (5 * density));
-        s.setThumbRadius((int) (10 * density));
-        s.setThumbWidth((int) (20 * density));
-        s.setThumbHeight((int) (20 * density));
+        if (isClassic) {
+            s.setTrackHeight((int) (4 * density));
+            s.setThumbWidth((int) (4 * density));
+            s.setThumbHeight((int) (20 * density));
+        } else {
+            s.setTrackHeight((int) (5 * density));
+            s.setThumbRadius((int) (10 * density));
+            s.setThumbWidth((int) (20 * density));
+            s.setThumbHeight((int) (20 * density));
+        }
         s.setTrackStopIndicatorSize(0);
         s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
@@ -703,6 +710,9 @@ public class MainActivity extends AppCompatActivity {
                     s.setTickActiveTintList(ColorStateList.valueOf(tickActive));
                     s.setTickInactiveTintList(ColorStateList.valueOf(tickInactive));
                     s.setTrackStopIndicatorSize(0);
+                    s.setTrackHeight((int) (4 * density));
+                    s.setThumbWidth((int) (4 * density));
+                    s.setThumbHeight((int) (20 * density));
                 }
             } else {
                 for (Slider s : gainSliders) {
@@ -1509,21 +1519,26 @@ public class MainActivity extends AppCompatActivity {
             s.setValueTo(12f);
             s.setStepSize(1f);
             float density = getResources().getDisplayMetrics().density;
-            s.setThumbHeight((int) (20 * density));
-            s.setThumbWidth((int) (20 * density));
-            s.setThumbRadius((int) (10 * density));
+            if (isClassic) {
+                s.setThumbWidth((int) (4 * density));
+                s.setThumbHeight((int) (20 * density));
+                s.setTrackHeight((int) (4 * density));
+            } else {
+                s.setThumbHeight((int) (20 * density));
+                s.setThumbWidth((int) (20 * density));
+                s.setThumbRadius((int) (10 * density));
+                s.setTrackHeight((int) (5 * density));
+            }
             s.setHaloRadius(0);
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
             s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
             s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accentColor, 70)));
-            s.setTrackHeight((int) (5 * density));
             s.setRotation(270f);
             s.setTrackStopIndicatorSize(0);
             s.setLabelBehavior(LabelFormatter.LABEL_GONE);
 
             FrameLayout seekBox = new FrameLayout(this);
-            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(1000, -2);
             lp.gravity = Gravity.CENTER; s.setLayoutParams(lp);
 
@@ -1542,14 +1557,23 @@ public class MainActivity extends AppCompatActivity {
             });
 
             if (isClassic) {
+                layout.setWeightSum(1.0f);
+                q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+                db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
                 View spacer = new View(this);
-                spacer.setLayoutParams(new LinearLayout.LayoutParams(-1, (int) (44 * dens)));
+                spacer.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.09555555f));
+                seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.72222222f));
+                View bottomSpacer = new View(this);
+                bottomSpacer.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.02222223f));
+
                 layout.addView(q);
                 layout.addView(db);
                 layout.addView(spacer);
                 seekBox.addView(s);
                 layout.addView(seekBox);
+                layout.addView(bottomSpacer);
             } else {
+                seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
                 layout.addView(q);
                 layout.addView(db);
                 seekBox.addView(s);
