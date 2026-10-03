@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.preference.PreferenceManager;
@@ -41,6 +42,10 @@ public final class ThemeManager {
     public static final int THEME_MODE_NIGHT = 2;
 
     public static final String PREF_THEME_MODE = "theme_mode";
+    public static final String PREF_UI_STYLE = "theme_ui_style";
+    public static final int UI_STYLE_MODERN = 0;
+    public static final int UI_STYLE_CLASSIC = 1;
+
     public static final String PREF_ACCENT_PREFIX = "theme_accent_color_";
     public static final String PREF_PRIMARY_TEXT_PREFIX = "theme_primary_text_color_";
     public static final String PREF_SECONDARY_TEXT_PREFIX = "theme_secondary_text_color_";
@@ -49,6 +54,20 @@ public final class ThemeManager {
     public static final String PREF_WALLPAPER_NIGHT = "theme_wallpaper_night";
     public static final String PREF_SOLID_PREFIX = "theme_solid_enabled_";
     public static final String PREF_SOLID_COLOR_PREFIX = "theme_solid_color_";
+
+    // Авторська класична палітра з upstream master (khiivl / Volodymyr Chebanenko)
+    public static final int CLASSIC_ACCENT_COLOR_NIGHT = 0xFF79BCBD;
+    public static final int CLASSIC_ACCENT_COLOR_DAY = 0xFF028889;
+    public static final int CLASSIC_PRIMARY_TEXT_COLOR_NIGHT = 0xFFE0E0E0;
+    public static final int CLASSIC_PRIMARY_TEXT_COLOR_DAY = 0xFF212121;
+    public static final int CLASSIC_SECONDARY_TEXT_COLOR_NIGHT = 0xFFBDBDBD;
+    public static final int CLASSIC_SECONDARY_TEXT_COLOR_DAY = 0xFF757575;
+    public static final int CLASSIC_ON_ACCENT_TEXT_COLOR_NIGHT = 0xFF000000;
+    public static final int CLASSIC_ON_ACCENT_TEXT_COLOR_DAY = 0xFFFFFFFF;
+    public static final int CLASSIC_CARD_BG_NIGHT = 0xF029292B;
+    public static final int CLASSIC_CARD_BG_DAY = 0xF0EBEBEA;
+    public static final int CLASSIC_BACKGROUND_NIGHT = 0xFF000000;
+    public static final int CLASSIC_BACKGROUND_DAY = 0xFFFFFFFF;
 
     public static final int DEFAULT_ACCENT_COLOR_NIGHT = 0xFF1FE7C4;
     public static final int DEFAULT_ACCENT_COLOR_DAY = 0xFF00838F; // Насичений океанічний ціан (4.8:1 контраст на білому фоні)
@@ -77,6 +96,19 @@ public final class ThemeManager {
 
     public static SharedPreferences prefs(Context ctx) {
         return PreferenceManager.getDefaultSharedPreferences(ctx);
+    }
+
+    public static int getUiStyle(Context ctx) {
+        return prefs(ctx).getInt(PREF_UI_STYLE, UI_STYLE_MODERN);
+    }
+
+    public static void setUiStyle(Context ctx, int style) {
+        prefs(ctx).edit().putInt(PREF_UI_STYLE, style).apply();
+        clearFrostedCache();
+    }
+
+    public static boolean isClassic(Context ctx) {
+        return getUiStyle(ctx) == UI_STYLE_CLASSIC;
     }
 
     public static int getThemeMode(Context ctx) {
@@ -134,6 +166,9 @@ public final class ThemeManager {
     }
 
     public static int accent(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_ACCENT_COLOR_NIGHT : CLASSIC_ACCENT_COLOR_DAY;
+        }
         String key = PREF_ACCENT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_ACCENT_COLOR_NIGHT : DEFAULT_ACCENT_COLOR_DAY;
         return prefs(ctx).getInt(key, def);
@@ -159,6 +194,9 @@ public final class ThemeManager {
     }
 
     public static int textPrimary(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_PRIMARY_TEXT_COLOR_NIGHT : CLASSIC_PRIMARY_TEXT_COLOR_DAY;
+        }
         String key = PREF_PRIMARY_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_PRIMARY_TEXT_COLOR_NIGHT : DEFAULT_PRIMARY_TEXT_COLOR_DAY;
         int color = prefs(ctx).getInt(key, def);
@@ -175,6 +213,9 @@ public final class ThemeManager {
     }
 
     public static int textSecondary(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_SECONDARY_TEXT_COLOR_NIGHT : CLASSIC_SECONDARY_TEXT_COLOR_DAY;
+        }
         String key = PREF_SECONDARY_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_SECONDARY_TEXT_COLOR_NIGHT : DEFAULT_SECONDARY_TEXT_COLOR_DAY;
         int color = prefs(ctx).getInt(key, def);
@@ -191,6 +232,9 @@ public final class ThemeManager {
     }
 
     public static int onAccent(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_ON_ACCENT_TEXT_COLOR_NIGHT : CLASSIC_ON_ACCENT_TEXT_COLOR_DAY;
+        }
         String key = PREF_ON_ACCENT_TEXT_PREFIX + (night ? "night" : "day");
         int def = night ? DEFAULT_ON_ACCENT_TEXT_COLOR_NIGHT : DEFAULT_ON_ACCENT_TEXT_COLOR_DAY;
         int userOnAccent = prefs(ctx).getInt(key, def);
@@ -237,7 +281,14 @@ public final class ThemeManager {
     }
 
     public static int background(Context ctx) {
-        return background(isNight(ctx));
+        return background(ctx, isNight(ctx));
+    }
+
+    public static int background(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY;
+        }
+        return background(night);
     }
 
     public static int background(boolean night) {
@@ -249,6 +300,9 @@ public final class ThemeManager {
     }
 
     public static int cardBackground(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY;
+        }
         return night ? Color.parseColor("#12161b") : Color.parseColor("#ffffff");
     }
 
@@ -257,6 +311,9 @@ public final class ThemeManager {
     }
 
     public static int panelBorder(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return ContextCompat.getColor(ctx, R.color.stroke_color);
+        }
         return night ? Color.parseColor("#1b2126") : Color.parseColor("#d7dde1");
     }
 
@@ -305,6 +362,13 @@ public final class ThemeManager {
     }
 
     public static Drawable wallpaperBackground(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            try {
+                return ContextCompat.getDrawable(ctx, R.drawable.app_background);
+            } catch (Exception e) {
+                return new ColorDrawable(night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY);
+            }
+        }
         if (isSolidWallpaper(ctx, night)) {
             return new ColorDrawable(getSolidWallpaperColor(ctx, night));
         }
@@ -556,6 +620,9 @@ public final class ThemeManager {
     }
 
     public static int dockSubstrateColor(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY;
+        }
         if (isSolidWallpaper(ctx, night)) {
             int solid = getSolidWallpaperColor(ctx, night);
             return night ? ColorUtils.blendARGB(solid, Color.parseColor("#12161B"), 0.6f)
@@ -585,6 +652,9 @@ public final class ThemeManager {
     }
 
     public static Drawable dockBackground(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return new ColorDrawable(Color.TRANSPARENT);
+        }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
         int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
@@ -609,6 +679,9 @@ public final class ThemeManager {
      * - Правий край огинає круглу кнопку дій експорту (напівкруглий радіус 24dp = повна піла).
      */
     public static Drawable presetsDockBackground(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            return new ColorDrawable(Color.TRANSPARENT);
+        }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
         int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
@@ -646,6 +719,14 @@ public final class ThemeManager {
     }
 
     public static Drawable cardDrawable(Context ctx, boolean night, float cornerRadiusDp) {
+        if (isClassic(ctx)) {
+            float density = ctx.getResources().getDisplayMetrics().density;
+            GradientDrawable d = new GradientDrawable();
+            d.setShape(GradientDrawable.RECTANGLE);
+            d.setCornerRadius(15f * density);
+            d.setColor(night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY);
+            return d;
+        }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
         int baseGlass = night ? Color.parseColor("#73101419") : Color.parseColor("#59FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
@@ -669,6 +750,16 @@ public final class ThemeManager {
     }
 
     public static Drawable buttonDrawable(Context ctx, boolean night, float cornerRadiusDp) {
+        if (isClassic(ctx)) {
+            float density = ctx.getResources().getDisplayMetrics().density;
+            GradientDrawable d = new GradientDrawable();
+            d.setShape(GradientDrawable.RECTANGLE);
+            d.setCornerRadius(15f * density);
+            d.setColor(Color.TRANSPARENT);
+            int strokeColor = ContextCompat.getColor(ctx, R.color.stroke_color);
+            d.setStroke(Math.max(1, (int)(1f * density)), strokeColor);
+            return d;
+        }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
         int baseGlass = night ? Color.parseColor("#40101419") : Color.parseColor("#4DFFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);
@@ -684,6 +775,19 @@ public final class ThemeManager {
     }
 
     public static Drawable pillDrawable(Context ctx, boolean active, boolean night, float cornerRadiusDp, int accent, int border) {
+        if (isClassic(ctx)) {
+            float density = ctx.getResources().getDisplayMetrics().density;
+            GradientDrawable d = new GradientDrawable();
+            d.setShape(GradientDrawable.RECTANGLE);
+            d.setCornerRadius(15f * density);
+            if (active) {
+                d.setColor(accent);
+            } else {
+                d.setColor(Color.TRANSPARENT);
+                d.setStroke(Math.max(1, (int)(1f * density)), border);
+            }
+            return d;
+        }
         if (active) {
             return FrostedGlassDrawable.createAccentPill(ctx, night, cornerRadiusDp, accent);
         } else {
@@ -697,7 +801,9 @@ public final class ThemeManager {
 
     public static ColorStateList bottomNavColorStateList(Context ctx, boolean night) {
         int accent = accent(ctx, night);
-        int secondary = textSecondary(ctx, night);
+        int secondary = isClassic(ctx)
+                ? (night ? CLASSIC_SECONDARY_TEXT_COLOR_NIGHT : CLASSIC_SECONDARY_TEXT_COLOR_DAY)
+                : textSecondary(ctx, night);
         int[][] states = new int[][]{
             new int[]{android.R.attr.state_checked},
             new int[]{-android.R.attr.state_checked}
@@ -714,6 +820,14 @@ public final class ThemeManager {
     }
 
     public static Drawable dropdownBackground(Context ctx, boolean night) {
+        if (isClassic(ctx)) {
+            float density = ctx.getResources().getDisplayMetrics().density;
+            GradientDrawable d = new GradientDrawable();
+            d.setShape(GradientDrawable.RECTANGLE);
+            d.setCornerRadius(15f * density);
+            d.setColor(night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY);
+            return d;
+        }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
         int baseGlass = night ? Color.parseColor("#99101419") : Color.parseColor("#80FFFFFF");
         int substrateColor = dockSubstrateColor(ctx, night);

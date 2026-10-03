@@ -92,8 +92,10 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout settingsColumn;
     private SegmentedPillNavView bottomNav;
 
-    // Theme Mode
+    // Theme Mode & UI Style
     private TextView btnThemeDay, btnThemeNight, btnThemeAuto;
+    private View layoutCustomPaletteControls;
+    private TextView btnUiStyleClassic, btnUiStyleModern;
     private boolean editNight;
 
     // 4 Hue Wheels
@@ -355,6 +357,9 @@ public class SettingsActivity extends AppCompatActivity {
             applyTheme();
         });
 
+        // Custom Palette Controls
+        layoutCustomPaletteControls = findViewById(R.id.layout_custom_palette_controls);
+
         // 4 Hue Wheels
         pickerAccentWheel = findViewById(R.id.picker_accent_wheel);
         pickerAccentBrightness = findViewById(R.id.picker_accent_brightness);
@@ -614,6 +619,24 @@ public class SettingsActivity extends AppCompatActivity {
         bindPrefToggle(R.id.btn_resume_after_sleep_toggle, PlayerResume.PREF_AFTER_SLEEP);
         bindPrefToggle(R.id.btn_button_backlight_toggle, ButtonBacklight.PREF_ENABLED);
         bindSleepWhitelistButton();
+
+        // UI Style (Classic / Modern)
+        btnUiStyleClassic = findViewById(R.id.btn_ui_style_classic);
+        btnUiStyleModern = findViewById(R.id.btn_ui_style_modern);
+        if (btnUiStyleClassic != null && btnUiStyleModern != null) {
+            TouchGlow.attach(btnUiStyleClassic);
+            TouchGlow.attach(btnUiStyleModern);
+            btnUiStyleClassic.setOnClickListener(v -> {
+                ThemeManager.setUiStyle(this, ThemeManager.UI_STYLE_CLASSIC);
+                updateUiStyleButtons();
+                applyTheme();
+            });
+            btnUiStyleModern.setOnClickListener(v -> {
+                ThemeManager.setUiStyle(this, ThemeManager.UI_STYLE_MODERN);
+                updateUiStyleButtons();
+                applyTheme();
+            });
+        }
     }
 
     /**
@@ -1100,6 +1123,18 @@ public class SettingsActivity extends AppCompatActivity {
         styleToggleButton(btnThemeAuto, mode == ThemeManager.THEME_MODE_AUTO);
     }
 
+    private void updateUiStyleButtons() {
+        int uiStyle = ThemeManager.getUiStyle(this);
+        boolean isClassic = (uiStyle == ThemeManager.UI_STYLE_CLASSIC);
+        if (btnUiStyleClassic != null && btnUiStyleModern != null) {
+            styleToggleButton(btnUiStyleClassic, isClassic);
+            styleToggleButton(btnUiStyleModern, !isClassic);
+        }
+        if (layoutCustomPaletteControls != null) {
+            layoutCustomPaletteControls.setVisibility(isClassic ? View.GONE : View.VISIBLE);
+        }
+    }
+
     private void updatePermissionButtons() {
         int accent = ThemeManager.accent(this, editNight);
         int border = ThemeManager.panelBorder(this, editNight);
@@ -1169,9 +1204,10 @@ public class SettingsActivity extends AppCompatActivity {
     private void loadSettings() {
         SharedPreferences p = ThemeManager.prefs(this);
 
-        // Theme mode
+        // Theme mode & UI Style
         int mode = ThemeManager.getThemeMode(this);
         updateThemeModeButtons(mode);
+        updateUiStyleButtons();
 
         // 4 Hue Wheels
         loadColorToWheel(ThemeManager.accent(this, editNight), pickerAccentWheel, pickerAccentBrightness);
@@ -3148,7 +3184,8 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
             R.id.label_screensaver_enable, R.id.label_screensaver_cover_sb, R.id.label_screensaver_apps,
-            R.id.label_resume_after_reboot, R.id.label_resume_after_sleep, R.id.label_button_backlight
+            R.id.label_resume_after_reboot, R.id.label_resume_after_sleep, R.id.label_button_backlight,
+            R.id.label_ui_style
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -3182,7 +3219,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_screensaver_apps,
             R.id.label_screensaver_width, R.id.label_screensaver_height,
             R.id.label_screensaver_bright_day, R.id.label_screensaver_bright_night,
-            R.id.label_screensaver_info_h
+            R.id.label_screensaver_info_h, R.id.desc_ui_style
         };
         for (int id : secondaryLabels) {
             TextView tv = findViewById(id);
@@ -3369,6 +3406,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Update toggle and permission button states
         updateThemeModeButtons(ThemeManager.getThemeMode(this));
+        updateUiStyleButtons();
         styleToggleButton(btnSolidWallpaper, ThemeManager.isSolidWallpaper(this, editNight));
         updateStyleButtonHighlights(editingEffect);
         int currentTheme = StatusBarVisualizerManager.getInstance(this).getThemeForStyle(editingEffect, editNight);

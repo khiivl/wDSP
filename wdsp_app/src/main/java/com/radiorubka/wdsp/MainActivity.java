@@ -14,7 +14,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
-//import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -721,18 +721,34 @@ public class MainActivity extends AppCompatActivity {
                 galaBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
-            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export) - round buttons
+            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
+            boolean isClassic = ThemeManager.isClassic(this);
             int[] presetBtns = {
                 R.id.btn_auto_preset, R.id.btn_add_preset, R.id.btn_rename_preset,
                 R.id.btn_delete_preset, R.id.btn_import_presets, R.id.btn_export_presets
             };
+            int[] classicColors = {
+                R.color.btn_auto_bg, R.color.btn_add_bg, R.color.btn_rename_bg,
+                R.color.btn_delete_bg, R.color.btn_import_bg, R.color.btn_export_bg
+            };
+            int coloredBtnText = ContextCompat.getColor(this, R.color.colored_button_text);
             float btnRadiusDp = getResources().getDimension(R.dimen.toggle_height) / (2f * getResources().getDisplayMetrics().density);
-            for (int id : presetBtns) {
-                View v = findViewById(id);
+
+            for (int i = 0; i < presetBtns.length; i++) {
+                View v = findViewById(presetBtns[i]);
                 if (v instanceof androidx.appcompat.widget.AppCompatImageButton) {
                     androidx.appcompat.widget.AppCompatImageButton b = (androidx.appcompat.widget.AppCompatImageButton) v;
-                    b.setBackground(ThemeManager.buttonDrawable(this, isNight, btnRadiusDp));
-                    b.setImageTintList(ColorStateList.valueOf(secondaryText));
+                    if (isClassic) {
+                        GradientDrawable gd = new GradientDrawable();
+                        gd.setShape(GradientDrawable.RECTANGLE);
+                        gd.setCornerRadius(14f * density);
+                        gd.setColor(ContextCompat.getColor(this, classicColors[i]));
+                        b.setBackground(gd);
+                        b.setImageTintList(ColorStateList.valueOf(coloredBtnText));
+                    } else {
+                        b.setBackground(ThemeManager.buttonDrawable(this, isNight, btnRadiusDp));
+                        b.setImageTintList(ColorStateList.valueOf(secondaryText));
+                    }
                 }
             }
 
@@ -954,6 +970,7 @@ public class MainActivity extends AppCompatActivity {
             View topBar = findViewById(R.id.layout_presets);
             if (topBar != null) {
                 topBar.setBackground(ThemeManager.presetsDockBackground(this, isNight));
+                topBar.setElevation(isClassic ? 0f : (6f * density));
                 topBar.setPadding(0, 0, 0, 0);
             }
 
@@ -961,6 +978,7 @@ public class MainActivity extends AppCompatActivity {
             View bottomBar = findViewById(R.id.bottom_navigation_bar);
             if (bottomBar != null) {
                 bottomBar.setBackground(ThemeManager.dockBackground(this, isNight));
+                bottomBar.setElevation(isClassic ? 0f : (6f * density));
                 bottomBar.setPadding(0, 0, 0, 0);
             }
             SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
@@ -974,7 +992,11 @@ public class MainActivity extends AppCompatActivity {
 
             ImageView carView = findViewById(R.id.imageView);
             if (carView != null) {
-                carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+                if (isClassic) {
+                    carView.setImageResource(R.drawable.car);
+                } else {
+                    carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+                }
             }
 
             if (eqVisualizer != null) eqVisualizer.invalidate();

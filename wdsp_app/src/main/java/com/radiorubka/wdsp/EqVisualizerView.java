@@ -3,16 +3,19 @@ package com.radiorubka.wdsp;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
 import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.Choreographer;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
@@ -378,10 +381,52 @@ public class EqVisualizerView extends View {
         fillPath.lineTo(leftMargin, gridBottom);
         fillPath.close();
 
-        int fillTopColor = Color.argb(55, Color.red(accent), Color.green(accent), Color.blue(accent));
-        int fillBottomColor = Color.argb(0, Color.red(accent), Color.green(accent), Color.blue(accent));
-        fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom, fillTopColor, fillBottomColor, Shader.TileMode.CLAMP));
-        linePaint.setColor(accent);
+        boolean isClassic = ThemeManager.isClassic(getContext());
+        if (isClassic) {
+            int[][] groupRanges = {
+                    {0, 2},   // Low Bass: 25, 40, 63
+                    {3, 4},   // Bass: 100, 160
+                    {5, 7},   // Mid Bass: 250, 400, 630
+                    {8, 10},  // Mid: 1k, 1.6k, 2.5k
+                    {11, 12}, // High: 4k, 6.3k
+                    {13, 15}  // Treble: 10k, 12.5k, 16k
+            };
+            int[] groupColors = {
+                    ContextCompat.getColor(getContext(), R.color.btn_delete_bg),
+                    ContextCompat.getColor(getContext(), R.color.btn_import_bg),
+                    ContextCompat.getColor(getContext(), R.color.btn_export_bg),
+                    ContextCompat.getColor(getContext(), R.color.btn_rename_bg),
+                    ContextCompat.getColor(getContext(), R.color.btn_add_bg),
+                    ContextCompat.getColor(getContext(), R.color.btn_auto_bg)
+            };
+            float totalW = Math.max(1f, activeWidth);
+            float[] positions = new float[groupColors.length];
+            int[] fillColors = new int[groupColors.length];
+            int fillAlpha = isNight ? 128 : 64;
+            for (int g = 0; g < groupRanges.length; g++) {
+                int startIdx = groupRanges[g][0];
+                int endIdx = groupRanges[g][1];
+                float midX = (xCoords[startIdx] + xCoords[endIdx]) / 2f;
+                positions[g] = Math.max(0f, Math.min(1f, (midX - leftMargin) / totalW));
+                int c = groupColors[g];
+                fillColors[g] = Color.argb(fillAlpha, Color.red(c), Color.green(c), Color.blue(c));
+            }
+            Shader lineShader = new LinearGradient(leftMargin, 0, w, 0,
+                    groupColors, positions, Shader.TileMode.CLAMP);
+            linePaint.setShader(lineShader);
+
+            Shader fillColorShader = new LinearGradient(leftMargin, 0, w, 0,
+                    fillColors, positions, Shader.TileMode.CLAMP);
+            Shader fadeMaskShader = new LinearGradient(0, drawStartY, 0, gridBottom,
+                    Color.BLACK, Color.TRANSPARENT, Shader.TileMode.CLAMP);
+            fillPaint.setShader(new ComposeShader(fillColorShader, fadeMaskShader, PorterDuff.Mode.DST_IN));
+        } else {
+            linePaint.setShader(null);
+            linePaint.setColor(accent);
+            int fillTopColor = Color.argb(55, Color.red(accent), Color.green(accent), Color.blue(accent));
+            int fillBottomColor = Color.argb(0, Color.red(accent), Color.green(accent), Color.blue(accent));
+            fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom, fillTopColor, fillBottomColor, Shader.TileMode.CLAMP));
+        }
         subLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(textNormalColor, 210));
         rearBassLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(textNormalColor, 150));
         int loudnessColor = isNight ? 0xFFFFB74D : 0xFFE67E22;
