@@ -66,6 +66,13 @@ public class McuService extends Service implements LocationListener {
     private Method setEqDataMethod;
     private Method setMcuMsgMethod;
 
+    // Mirrors MainActivity.SUB_FREQS.length-1 - "No Sub" is the last entry there (keep these two
+    // in sync if that array's length ever changes). It's a pure app-side/UI sentinel with no real
+    // hardware meaning - the sub protocol (see updateSubwoofer()'s 0x8B packet) has no "off" bit
+    // at all, so loadPresetData() below translates it to the lowest real table index + 0 gain
+    // before cachedSubFreq/cachedSubGain ever reach a packet.
+    private static final int NO_SUB_INDEX = 11;
+
     private String currentPresetName;
     private final int[] cachedGains = new int[16];
     private byte cachedQByte1, cachedQByte2;
@@ -103,6 +110,15 @@ public class McuService extends Service implements LocationListener {
     private float currentSpeedKmh = 0.0f;
     private float simulatedSpeedKmh = 0.0f;
     private int baseStandstillVolume = -1;
+
+    // Audio Check tab overrides (MainActivity's AUDIOCHECK_FADER/AUDIOCHECK_ONLY_SUB broadcasts,
+    // same runtime-only pattern as simulatedSpeedKmh above) - -1/false means "no override, use
+    // the real preset data". Deliberately never written to prefs: applyFaderLoud()/
+    // applyBassBoost()/updateEqWithFm() check these first, so a test can't get silently
+    // overwritten by an unrelated autoSaveCurrent() elsewhere, and can't corrupt the saved
+    // preset even if the app dies mid-test.
+    private int audioCheckFaderFr = -1, audioCheckFaderLr = -1;
+    private boolean audioCheckOnlySub = false;
 
     // GALA fade & hold-timer state
     private int currentAppliedOffset = -1; // the offset currently SET on the hardware
@@ -281,6 +297,15 @@ public class McuService extends Service implements LocationListener {
                 else if ("com.radiorubka.wdsp.SUB_GAIN_DOWN".equals(action)) {
                     adjustSubGain(-1);
                 }
+                else if ("com.radiorubka.wdsp.AUDIOCHECK_FADER".equals(action)) {
+                    audioCheckFaderFr = intent.getIntExtra("fr", -1);
+                    audioCheckFaderLr = intent.getIntExtra("lr", -1);
+                    applyCurrentSettings();
+                }
+                else if ("com.radiorubka.wdsp.AUDIOCHECK_ONLY_SUB".equals(action)) {
+                    audioCheckOnlySub = intent.getBooleanExtra("enabled", false);
+                    applyCurrentSettings();
+                }
             });
         }
     };
@@ -371,6 +396,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SET_POWER");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_UP");
         controlFilter.addAction("com.radiorubka.wdsp.SUB_GAIN_DOWN");
+        controlFilter.addAction("com.radiorubka.wdsp.AUDIOCHECK_FADER");
+        controlFilter.addAction("com.radiorubka.wdsp.AUDIOCHECK_ONLY_SUB");
         return controlFilter;
     }
 
@@ -399,8 +426,13 @@ public class McuService extends Service implements LocationListener {
         }
         cachedQByte1 = calculateQByte(preset, 0);
         cachedQByte2 = calculateQByte(preset, 8);
-        cachedSubFreq = prefs.getInt(preset + "_sub_f", 5);
+        cachedSubFreq = prefs.getInt(preset + "_sub_f", NO_SUB_INDEX);
         cachedSubGain = prefs.getInt(preset + "_sub_g", 0);
+        if (cachedSubFreq == NO_SUB_INDEX) {
+            // "No Sub" selected - see NO_SUB_INDEX's doc above.
+            cachedSubFreq = 0;
+            cachedSubGain = 0;
+        }
         cachedSubComp = prefs.getBoolean(preset + "_sub_comp", false);
         cachedFmEn = prefs.getBoolean(preset + "_fm_en", false);
         cachedFatEn = prefs.getBoolean(preset + "_fat_en", false);
@@ -416,7 +448,7 @@ public class McuService extends Service implements LocationListener {
         String galaNs = galaNamespace(preset);
         cachedGalaEn = prefs.getBoolean(galaNs + "_gala_enabled", false);
         cachedGalaInc = prefs.getInt(galaNs + "_gala_increment", 15);
-        cachedGalaMinV = prefs.getInt(galaNs + "_gala_min_speed", 0);
+        cachedGalaMinV = Math.max(0, Math.min(15, prefs.getInt(galaNs + "_gala_min_speed", 0)));
 //        cachedGalaMaxV = prefs.getInt(galaNs + "_gala_max_speed", 30);
         cachedGalaMaxAdj = prefs.getInt(galaNs + "_gala_max_adj", 12);
         cachedGalaFadeDelayMs = prefs.getInt(galaNs + "_gala_fade_ms", 100);
@@ -632,7 +664,7 @@ public class McuService extends Service implements LocationListener {
         int rawOffset = 0;
         if (isGalaEnabled()) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
-            int minSpeed = cachedGalaMinV * 5;
+            int minSpeed = cachedGalaMinV;
             if (speed >= minSpeed) {
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
                 rawOffset = Math.min(rawOffset, cachedGalaMaxAdj);
@@ -887,19 +919,28 @@ public class McuService extends Service implements LocationListener {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
 
-        boolean hasOffset = false;
-        float[] targetDb = new float[16];
-        for (int i = 0; i < 16; i++) {
-            targetDb[i] = (cachedGains[i] - 6) * 2 + fmOffsets[i];
-            if (fmOffsets[i] != 0f) hasOffset = true;
+        float[] driveDb;
+        if (audioCheckOnlySub) {
+            // Audio Check "Only Sub" override - flat -12dB (the EQ's own minimum) on every band,
+            // skipping the offset/pre-warp logic below entirely so loudness/trim-highs can't
+            // push it back up.
+            driveDb = new float[16];
+            Arrays.fill(driveDb, -12f);
+        } else {
+            boolean hasOffset = false;
+            float[] targetDb = new float[16];
+            for (int i = 0; i < 16; i++) {
+                targetDb[i] = (cachedGains[i] - 6) * 2 + fmOffsets[i];
+                if (fmOffsets[i] != 0f) hasOffset = true;
+            }
+            // Jointly pre-warp slider+offset together while loudness is actually contributing
+            // something, so the real achieved curve cross-talk-cancels BOTH the offset and
+            // whatever shape the manual sliders have, not just the offset alone (see
+            // AudioConfig.prewarpEq()'s doc). With no offset, driveDb ends up equal to targetDb
+            // anyway - skip the multiply then so manual-only EQ (no loudness) is byte-for-byte
+            // identical to before this existed.
+            driveDb = hasOffset ? AudioConfig.prewarpEq(targetDb) : targetDb;
         }
-        // Jointly pre-warp slider+offset together while loudness is actually contributing
-        // something, so the real achieved curve cross-talk-cancels BOTH the offset and
-        // whatever shape the manual sliders have, not just the offset alone (see
-        // AudioConfig.prewarpEq()'s doc). With no offset, driveDb ends up equal to targetDb
-        // anyway - skip the multiply then so manual-only EQ (no loudness) is byte-for-byte
-        // identical to before this existed.
-        float[] driveDb = hasOffset ? AudioConfig.prewarpEq(targetDb) : targetDb;
 
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
@@ -1050,19 +1091,33 @@ public class McuService extends Service implements LocationListener {
             freqIdxR = manualFreqIdxR; gainR = manualGainR;
         }
 
+        // Audio Check "Only Sub" override - forces the boost gain to 0 and the filter to its
+        // highest cutoff (250Hz, BASS_FILTER_FREQS' last index - see MainActivity's doc) so
+        // front/rear contribute almost nothing below it, isolating the sub channel for testing.
+        int bfF, bfR;
+        if (audioCheckOnlySub) {
+            gainF = 0; gainR = 0;
+            bfF = 11; bfR = 11;
+        } else {
+            bfF = prefs.getInt(currentPresetName + "_bf_f", 0);
+            bfR = prefs.getInt(currentPresetName + "_bf_r", 0);
+        }
+
         byte[] bbData = new byte[]{(byte) 0x88,
                 (byte) (((freqIdxF + 8) << 4) | (gainF & 0x0F)),
                 (byte) (((freqIdxR + 8) << 4) | (gainR & 0x0F)),
-                (byte) ((prefs.getInt(currentPresetName + "_bf_f", 0) << 4) | (prefs.getInt(currentPresetName + "_bf_r", 0) & 0x0F))};
+                (byte) ((bfF << 4) | (bfR & 0x0F))};
         if (lastComputedBassBoostData != null && Arrays.equals(lastComputedBassBoostData, bbData)) return;
         lastComputedBassBoostData = bbData;
         sendBassBoostThrottled(bbData);
     }
 
     private void applyFaderLoud() {
+        int lr = audioCheckFaderLr >= 0 ? audioCheckFaderLr : prefs.getInt(currentPresetName + "_f_lr", 12);
+        int fr = audioCheckFaderFr >= 0 ? audioCheckFaderFr : prefs.getInt(currentPresetName + "_f_fr", 12);
         sendToHardware(new byte[]{(byte) 0x81,
-                (byte) (prefs.getInt(currentPresetName + "_f_lr", 12) & 0xFF),
-                (byte) (prefs.getInt(currentPresetName + "_f_fr", 12) & 0xFF),
+                (byte) (lr & 0xFF),
+                (byte) (fr & 0xFF),
                 (byte) (prefs.getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
     }
 

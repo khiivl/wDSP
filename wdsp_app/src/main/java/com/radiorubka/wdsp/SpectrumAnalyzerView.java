@@ -13,6 +13,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.media.AudioManager;
 import android.media.audiofx.Visualizer;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -85,6 +86,11 @@ public class SpectrumAnalyzerView extends View {
     // actual update rate of whatever they're smoothing, not a throttled one). Only spliced in
     // below LOW_BAND_SPLICE_HZ - see processWaveform() step 4a.
     private static final float LOW_BAND_SPLICE_HZ = 100f;
+    // Temporary diagnostic toggle - false skips the whole low-band FFT (step 3b) and makes the
+    // curve sampling always read the main FFT, to isolate whether the dual-window splice itself
+    // is contributing to the harmonics seen on a sweep, versus Visualizer.getWaveForm()'s 8-bit
+    // quantization (the more likely cause, but unconfirmed). Flip back to true once tested.
+    private static final boolean ENABLE_LOW_BAND_SPLICE = false;
     // A longer Hann window's raw FFT magnitude scales ~N for tones (coherent gain) but only
     // ~sqrt(N) for noise (incoherent summation) - at 2x the window size those two "correct" scale
     // factors are 0.5 (tone-exact) and 1/sqrt(2)=0.7071 (noise-exact), 3dB apart. This app is used
@@ -236,13 +242,35 @@ public class SpectrumAnalyzerView extends View {
     private boolean loudnessReactiveEnabled = true;
     private boolean subReactiveEnabled = true;
     private boolean bassReactiveEnabled = true;
+    // Set true for exactly as long as MainActivity's Audio Check sine generator is playing (see
+    // setSmoothingDisabled()) - FREQ_SMOOTH_RADIUS's whole premise is that real program content
+    // has no single narrowband peak worth preserving, which is backwards for a deliberate single-
+    // frequency test tone: smoothing is exactly what was blurring/attenuating the sine's true
+    // peak (see FREQ_SMOOTH_RADIUS's own doc on why a narrowband tone is the one case to turn it
+    // off for). Everything else about the curve stays normal; this only skips the one pass.
+    private boolean smoothingDisabled = false;
     private final float[] loudnessCorrectionGains = new float[AudioConfig.NUM_BANDS]; // same baseline-6 delta convention as EqVisualizerView's
     private boolean loudnessCorrectionActive = false;
     private float subLevelCutoffHz = 80f;
     private float subLevelGainDb = 0f;
-    // Front "Bass Boost" stage (see AudioConfig.bassShapingResponseDb()) - same data
-    // EqVisualizerView/FmVisualizerView's front curve already gets from MainActivity.
+    // Front/rear "Bass Boost" stage (see AudioConfig.bassShapingResponseDb()) - same data
+    // EqVisualizerView's two lines already get from MainActivity (see setBassShaping()). Combined
+    // with the sub (subLevelCutoffHz/subLevelGainDb above) via combineDbLinear() in processFft()
+    // instead of using front alone - see that method's doc for why.
     private float bassFilterHz = 20f, bassBoostFreqHz = 0f, bassBoostGainDb = 0f;
+    private float rearBassFilterHz = 20f, rearBassBoostFreqHz = 0f, rearBassBoostGainDb = 0f;
+    // Raw Fader (front/rear) and Balance (left/right) slider values, same 0..24/12=center
+    // convention as MainActivity's seekFaderFr/seekFaderLr (see setFaderBalance()'s doc) - used to
+    // weight how much each of front/rear/sub actually contributes to the RTA's combined curve,
+    // since panning the fader/balance toward one side measurably fades the other speakers (and,
+    // per real-world wiring, the sub) out rather than just re-imaging a signal that's still at
+    // full level everywhere.
+    private float faderFrontRearRaw = 12f, faderLeftRightRaw = 12f;
+    // Reused scratch buffers for combineDbLinear() below - avoids allocating per curve sample per
+    // captured frame (this runs CURVE_SAMPLES times every callback). At most 3 real entries:
+    // front bass shaping, rear bass shaping, sub.
+    private final float[] bassSubCombineScratch = new float[3];
+    private final float[] bassSubWeightScratch = new float[3];
     // Fast-attack/slow-release ballistics live HERE now, applied to the raw
     // captured dB per sample before gain/attenuation are added - see the
     // ballistics comment inside processFft() for why they moved off the
@@ -407,6 +435,12 @@ public class SpectrumAnalyzerView extends View {
         bassReactiveEnabled = enabled;
     }
 
+    /** Enables/disables the frequency-axis smoothing pass - see smoothingDisabled's own doc for
+     * why MainActivity calls this with the Audio Check sine generator's own on/off state. */
+    public void setSmoothingDisabled(boolean disabled) {
+        smoothingDisabled = disabled;
+    }
+
     /**
      * Feeds the same loudness-correction curve data as EqVisualizerView.setLoudnessCorrection()
      * (baseline-6 delta convention) - only applied to the RTA's own shift while
@@ -423,11 +457,26 @@ public class SpectrumAnalyzerView extends View {
         subLevelGainDb = gainDb;
     }
 
-    /** Feeds the same front Bass Boost data as EqVisualizerView/FmVisualizerView's setBassShaping() - see bassReactiveEnabled. */
-    public void setBassShaping(float filterHz, float boostFreqHz, float boostGainDb) {
-        bassFilterHz = filterHz;
-        bassBoostFreqHz = boostFreqHz;
-        bassBoostGainDb = boostGainDb;
+    /** Feeds both front AND rear Bass Boost data (EqVisualizerView only needs front+rear-if-
+     * different for its own two-line display; the RTA needs both regardless, since it combines
+     * them into one real perceived curve via combineDbLinear() in processFft() instead of just
+     * showing front's own response - see that method's doc). */
+    public void setBassShaping(float frontFilterHz, float frontBoostFreqHz, float frontBoostGainDb,
+                                float rearFilterHz, float rearBoostFreqHz, float rearBoostGainDb) {
+        bassFilterHz = frontFilterHz;
+        bassBoostFreqHz = frontBoostFreqHz;
+        bassBoostGainDb = frontBoostGainDb;
+        rearBassFilterHz = rearFilterHz;
+        rearBassBoostFreqHz = rearBoostFreqHz;
+        rearBassBoostGainDb = rearBoostGainDb;
+    }
+
+    /** Feeds the raw Fader (front/rear) and Balance (left/right) slider values - same 0..24,
+     * 12=center convention as MainActivity's seekFaderFr/seekFaderLr - see faderFrontRearRaw's
+     * doc for how these weight the RTA's front/rear/sub combination. */
+    public void setFaderBalance(float frontRearRaw, float leftRightRaw) {
+        faderFrontRearRaw = frontRearRaw;
+        faderLeftRightRaw = leftRightRaw;
     }
 
     /** See EqVisualizerView.setSliderBounds() - same idea, kept in sync with the same measurement. */
@@ -448,6 +497,29 @@ public class SpectrumAnalyzerView extends View {
         SessionResolver resolver = SessionResolver.getInstance(getContext());
         resolver.start();
         resolver.resolveAsync(null, sessionId -> post(() -> attachVisualizer(sessionId <= 0 ? 0 : sessionId)));
+    }
+
+    /** Force-reattaches to a specific, already-known session, bypassing start()'s own "already
+     * attached, no-op" guard - needed because start() only resolves/attaches once at launch, and
+     * every freshly-created MediaPlayer/AudioTrack (Audio Check's stems/pink noise/sine) gets its
+     * own new session the RTA would otherwise never see, since nothing ever re-resolves after
+     * that first attach. Call with the source's own getAudioSessionId() right after starting it -
+     * that's a known-good session, so this skips SessionResolver's heuristic guessing entirely.
+     * Releasing-then-reattaching (not just skipping if already attached) also covers switching
+     * from one Audio Check source to a different one, not just the "RTA never attached" case. */
+    public void attachToSession(int sessionId) {
+        if (sessionId <= 0) return;
+        if (visualizer != null) {
+            try {
+                visualizer.setEnabled(false);
+                visualizer.release();
+            } catch (Throwable t) {
+                Log.w(TAG, "Error releasing spectrum analyzer before resweep: " + t);
+            } finally {
+                visualizer = null;
+            }
+        }
+        attachVisualizer(sessionId);
     }
 
     /**
@@ -498,6 +570,33 @@ public class SpectrumAnalyzerView extends View {
 
             int rate = Visualizer.getMaxCaptureRate();
             if (rate <= 0) rate = 20000;
+            // Visualizer.getMaxCaptureRate() is just the device's ceiling on how often it CAN
+            // deliver a callback - it says nothing about how long captureSize samples actually
+            // take to refill. We deliberately maximized captureSize above for bin resolution, so
+            // naively requesting the max rate on top of that was asking for a new snapshot faster
+            // than genuinely new audio accumulates - consecutive captures silently overlapped
+            // (shared some of the same samples) by an uncontrolled, unintended amount, which was a
+            // real contributor to the spurious harmonics seen on a sweep.
+            //
+            // Deliberate 50% overlap (hop = captureSize/2) instead, now that it's a conscious
+            // choice on ONE consistently-sized window rather than an accident on top of the
+            // low-band splice's own second, differently-scaled FFT: this doubles how often the RTA
+            // gets a new frame (more reactive), at the real (not assumed) output sample rate's
+            // 50%-overlap rate - sampleRateHz/captureSize is the 0%-overlap boundary, so request
+            // exactly twice that. Still capped at Visualizer.getMaxCaptureRate() - many devices'
+            // real ceiling sits below this target, in which case we just get whatever overlap that
+            // ceiling allows instead of the full 50%.
+            try {
+                AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+                String sr = am != null ? am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE) : null;
+                int sampleRateHz = sr != null ? Integer.parseInt(sr) : 0;
+                if (sampleRateHz > 0) {
+                    int overlapRate = (int) (2.0 * sampleRateHz * 1000.0 / captureSize);
+                    rate = Math.min(rate, overlapRate);
+                }
+            } catch (Exception ex) {
+                Log.w(TAG, "Couldn't read output sample rate - keeping Visualizer.getMaxCaptureRate()", ex);
+            }
 
             v.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
                 @Override
@@ -534,6 +633,44 @@ public class SpectrumAnalyzerView extends View {
 
     private static float dbMag(float mag) {
         return (float) (20 * Math.log10(mag + DB_FLOOR_MAG));
+    }
+
+    /**
+     * Combines up to `count` correlated dB responses (front/rear Bass Boost, sub) into the one
+     * curve a listener actually perceives at a given frequency - NOT by picking one channel's
+     * response, and NOT by naively averaging the dB values themselves (dB doesn't add linearly).
+     * Converts each to linear pressure, scales each by its own weight[i] (see below), sums, then
+     * normalizes by the plain slot COUNT (not the weight total - see why below) and converts back.
+     * All weights 1 collapses to a plain average (the original, pre-fader/balance version of this
+     * method) - N equal-value inputs give back exactly that value, same as before.
+     *
+     * Pressures (not powers) are summed - i.e. this assumes the sources are coherent/in-phase,
+     * appropriate here since front/rear/sub are all shaping the SAME underlying program content,
+     * just with different per-channel gain; a listener equidistant from all of them hears them
+     * arrive in phase. This is also why a front/rear HPF cut no longer needs an artificial
+     * clamp-to-non-negative the way the old sub-only term had: a very negative dB term just drops
+     * out of the linear sum almost entirely instead of dragging the whole combination down, as
+     * long as another term (the sub, or the other channel) still covers that frequency. If NONE
+     * of them do, the combination still correctly shows a real dip - that's accurate, not a bug.
+     *
+     * weights[i] is how much source i actually contributes here - see faderFrontRearRaw/
+     * faderLeftRightRaw's doc for where these come from (Fader/Balance progressively muting a
+     * speaker, or the sub, as they're panned away from it). Crucially, this divides by the slot
+     * COUNT, not the weight total: dividing by the weight total would re-normalize the result back
+     * up as if nothing changed whenever every included value happens to be equal, which silently
+     * hides a real loudness loss (e.g. front faded to half while rear stays full SHOULD measurably
+     * reduce the combined total, even though front and rear started out equal) - exactly the bug
+     * this fixed after hand-checking the numbers against a specific fader/balance test case.
+     *
+     * Returns 0 (no shift) for count == 0.
+     */
+    private static float combineDbLinear(float[] values, float[] weights, int count) {
+        if (count == 0) return 0f;
+        double sum = 0;
+        for (int i = 0; i < count; i++) {
+            sum += weights[i] * Math.pow(10.0, values[i] / 20.0);
+        }
+        return (float) (20.0 * Math.log10(sum / count));
     }
 
     private void computeFft(float[] real, float[] imag) {
@@ -655,26 +792,29 @@ public class SpectrumAnalyzerView extends View {
         // 3b. Low-band refinement: build the 2x-length overlapped window from the previous
         // callback's raw samples + this callback's raw samples (see lowBandReal's doc), run its
         // own FFT, and compute its magnitudes - spliced in below LOW_BAND_SPLICE_HZ in step 4a.
+        // Skipped entirely while ENABLE_LOW_BAND_SPLICE is false (see its own doc).
         int lowBandNumBins = lowBandSize / 2;
-        for (int i = 0; i < n; i++) {
-            float oldSample = prevChunk[i];
-            lowBandReal[i] = oldSample * lowBandHann[i];
-            lowBandImag[i] = 0f;
+        if (ENABLE_LOW_BAND_SPLICE) {
+            for (int i = 0; i < n; i++) {
+                float oldSample = prevChunk[i];
+                lowBandReal[i] = oldSample * lowBandHann[i];
+                lowBandImag[i] = 0f;
 
-            float newSample = ((float) (waveform[i] & 0xFF) - 128f) / 128f;
-            lowBandReal[n + i] = newSample * lowBandHann[n + i];
-            lowBandImag[n + i] = 0f;
+                float newSample = ((float) (waveform[i] & 0xFF) - 128f) / 128f;
+                lowBandReal[n + i] = newSample * lowBandHann[n + i];
+                lowBandImag[n + i] = 0f;
 
-            prevChunk[i] = newSample;
-        }
-        computeFft(lowBandReal, lowBandImag);
-        for (int bin = 0; bin <= lowBandNumBins; bin++) {
-            float r = lowBandReal[bin];
-            float im = lowBandImag[bin];
-            lowBandMag[bin] = (float) Math.sqrt(r * r + im * im) * LOW_BAND_MAG_SCALE;
-        }
-        if (sessionGainLinear != 1f) {
-            for (int bin = 0; bin <= lowBandNumBins; bin++) lowBandMag[bin] *= sessionGainLinear;
+                prevChunk[i] = newSample;
+            }
+            computeFft(lowBandReal, lowBandImag);
+            for (int bin = 0; bin <= lowBandNumBins; bin++) {
+                float r = lowBandReal[bin];
+                float im = lowBandImag[bin];
+                lowBandMag[bin] = (float) Math.sqrt(r * r + im * im) * LOW_BAND_MAG_SCALE;
+            }
+            if (sessionGainLinear != 1f) {
+                for (int bin = 0; bin <= lowBandNumBins; bin++) lowBandMag[bin] *= sessionGainLinear;
+            }
         }
 
         float peakContentDb = -999f;
@@ -688,7 +828,7 @@ public class SpectrumAnalyzerView extends View {
         // reconstruction too), this is smooth by construction and needs no clamp.
         for (int j = 0; j < CURVE_SAMPLES; j++) {
             float freqHz = centerHz[j];
-            instDb[j] = (freqHz < LOW_BAND_SPLICE_HZ)
+            instDb[j] = (ENABLE_LOW_BAND_SPLICE && freqHz < LOW_BAND_SPLICE_HZ)
                     ? hermiteDb(lowBandMag, lowBandNumBins, lowBandSize, sampleRateHz, freqHz)
                     : hermiteDb(magnitudes, numBins, n, sampleRateHz, freqHz);
         }
@@ -696,18 +836,34 @@ public class SpectrumAnalyzerView extends View {
         // 4b. Frequency-axis (fractional-octave-style) smoothing for readability - see
         // FREQ_SMOOTH_RADIUS's declaration for why. CURVE_SAMPLES is uniformly log-spaced, so a
         // fixed-width triangular kernel over neighboring samples approximates constant-fractional-
-        // octave smoothing for free.
-        for (int j = 0; j < CURVE_SAMPLES; j++) {
-            float sum = 0f, weight = 0f;
-            for (int d = -FREQ_SMOOTH_RADIUS; d <= FREQ_SMOOTH_RADIUS; d++) {
-                int idx = j + d;
-                if (idx < 0 || idx >= CURVE_SAMPLES) continue;
-                float w = FREQ_SMOOTH_RADIUS + 1 - Math.abs(d); // triangular kernel
-                sum += instDb[idx] * w;
-                weight += w;
+        // octave smoothing for free. Skipped entirely while smoothingDisabled (the Audio Check
+        // sine generator is playing) - see its own doc for why a narrowband test tone is exactly
+        // the case this smoothing was never meant for.
+        if (smoothingDisabled) {
+            System.arraycopy(instDb, 0, spatialDb, 0, CURVE_SAMPLES);
+        } else {
+            for (int j = 0; j < CURVE_SAMPLES; j++) {
+                float sum = 0f, weight = 0f;
+                for (int d = -FREQ_SMOOTH_RADIUS; d <= FREQ_SMOOTH_RADIUS; d++) {
+                    int idx = j + d;
+                    if (idx < 0 || idx >= CURVE_SAMPLES) continue;
+                    float w = FREQ_SMOOTH_RADIUS + 1 - Math.abs(d); // triangular kernel
+                    sum += instDb[idx] * w;
+                    weight += w;
+                }
+                spatialDb[j] = sum / weight;
             }
-            spatialDb[j] = sum / weight;
         }
+
+        // Fader/Balance weights (see faderFrontRearRaw's doc) - frame-constant, computed once
+        // here rather than per curve sample since they don't depend on freqHz at all.
+        float frStepRear = Math.max(0f, 12f - faderFrontRearRaw);
+        float frStepFront = Math.max(0f, faderFrontRearRaw - 12f);
+        float lrStepRight = Math.max(0f, faderLeftRightRaw - 12f);
+        float frontWeight = 1f - frStepRear / 12f;
+        float rearWeight = 1f - frStepFront / 12f;
+        float subAttenStep = Math.max(frStepRear, lrStepRight);
+        float subWeight = 1f - subAttenStep / 12f;
 
         // 4c. Ballistics, EQ reactivity and normalization per sample.
         for (int j = 0; j < CURVE_SAMPLES; j++) {
@@ -732,23 +888,29 @@ public class SpectrumAnalyzerView extends View {
                 // this composes directly on top of the raw manual EQ's own shift above.
                 eqDb += AudioConfig.compositeResponseDb(loudnessCorrectionGains, freqHz);
             }
-            if (subReactiveEnabled) {
-                // Clamped to non-negative: subFilterResponseDb() models the LPF's actual rolloff
-                // (deeply negative well above cutoff), which is correct for drawing the sub's own
-                // dedicated curve but wrong to add directly here - a turned-up sub doesn't SUPPRESS
-                // treble in real life, it just has no effect there, so this should taper to exactly
-                // 0 above the passband instead of subtracting tens of dB from the whole RTA.
-                eqDb += Math.max(0f, AudioConfig.subFilterResponseDb(freqHz, subLevelCutoffHz, AudioConfig.SUB_FILTER_ORDER, subLevelGainDb));
-            }
+            // --- Front/Rear Bass Boost + Sub, combined ---
+            // Combined via combineDbLinear() (front+rear's own real SPL-combination formula,
+            // extended to the sub as a third term) instead of adding each separately with an
+            // ad-hoc clamp - see that method's doc for why this is the physically-correct
+            // replacement for the old sub-only non-negative floor, and SUB_FREQS's "No Sub" entry
+            // (MainActivity) for why subLevelCutoffHz <= 0f means no sub is actually installed.
+            int bassSubCount = 0;
             if (bassReactiveEnabled) {
-                // NOT clamped, unlike the sub term above - that clamp exists because
-                // subFilterResponseDb()'s rolloff extends (incorrectly, for this purpose) into
-                // frequencies the sub has no real effect on. Here both terms are already 0
-                // wherever the filter/shelf has no real effect (well above the HPF cutoff or the
-                // boost's own corner), and the HPF's cut is a genuine attenuation of the real
-                // signal at low frequencies - it should suppress the RTA there, not be floored.
-                eqDb += AudioConfig.bassShapingResponseDb(freqHz, bassFilterHz, bassBoostFreqHz, bassBoostGainDb);
+                // + typicalCarSpeakerFloorDb(): front/rear are door/dash speakers, not subs - see
+                // its own doc for why this fixed floor is layered on top of the user's own HPF/
+                // shelf instead of replacing it.
+                float speakerFloorDb = AudioConfig.typicalCarSpeakerFloorDb(freqHz);
+                bassSubCombineScratch[bassSubCount] = AudioConfig.bassShapingResponseDb(freqHz, bassFilterHz, bassBoostFreqHz, bassBoostGainDb) + speakerFloorDb;
+                bassSubWeightScratch[bassSubCount++] = frontWeight;
+                bassSubCombineScratch[bassSubCount] = AudioConfig.bassShapingResponseDb(freqHz, rearBassFilterHz, rearBassBoostFreqHz, rearBassBoostGainDb) + speakerFloorDb;
+                bassSubWeightScratch[bassSubCount++] = rearWeight;
             }
+            if (subReactiveEnabled && subLevelCutoffHz > 0f) {
+                bassSubCombineScratch[bassSubCount] = AudioConfig.subFilterResponseDb(freqHz, subLevelCutoffHz, AudioConfig.SUB_FILTER_ORDER, subLevelGainDb);
+                bassSubWeightScratch[bassSubCount++] = subWeight;
+            }
+            float bassSubDb = combineDbLinear(bassSubCombineScratch, bassSubWeightScratch, bassSubCount);
+            eqDb += bassSubDb;
             float db = smoothedContentDb[j] + presence * eqDb * band_mult;
 
             if (PINK_NOISE_TILT) {

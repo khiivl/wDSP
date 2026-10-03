@@ -11,6 +11,7 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Саб:</string>
+    <string name="no_sub">Выкл.</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
@@ -64,6 +65,7 @@
     <string name="enable_gala_feature">Использование GALA</string>
     <string name="gala_global">Глобально</string>
     <string name="gala_disable_for_preset">Отключить для этого пресета</string>
+    <string name="gala_advanced_settings">Дополнительно</string>
     <string name="vol_step_every">Шаг громк. каждые:</string>
     <string name="gps_speed_label">Скорость GPS</string>
     <string name="current_gps_speed">Текущ. скор. GPS:</string>

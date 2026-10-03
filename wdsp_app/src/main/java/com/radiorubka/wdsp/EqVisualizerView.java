@@ -741,21 +741,25 @@ public class EqVisualizerView extends View {
         // sampling as the main curve above, just a different response formula and drawn as a
         // separate dashed line instead of being blended into the 16-band curve/fill.
         subPath.reset();
-        for (int s = 0; s <= CURVE_SAMPLES; s++) {
-            float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
-            // See sampleBellCurve()'s own t comment - unclamped so frequencyAt() can extrapolate
-            // past the first/last band instead of this pinning flat in the padded lead-in/out.
-            float t = (x - bandSpanStart) / (bandSpanEnd - bandSpanStart) * (AudioConfig.NUM_BANDS - 1);
+        // animatedSubCutoffHz <= 0 means "No Sub" (see MainActivity.SUB_FREQS's doc) - leave
+        // subPath empty (a no-op to draw) instead of plotting a curve for a sub that doesn't exist.
+        if (animatedSubCutoffHz > 0f) {
+            for (int s = 0; s <= CURVE_SAMPLES; s++) {
+                float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
+                // See sampleBellCurve()'s own t comment - unclamped so frequencyAt() can extrapolate
+                // past the first/last band instead of this pinning flat in the padded lead-in/out.
+                float t = (x - bandSpanStart) / (bandSpanEnd - bandSpanStart) * (AudioConfig.NUM_BANDS - 1);
 
-            float freqHz = AudioConfig.frequencyAt(t);
-            float db = AudioConfig.subFilterResponseDb(freqHz, animatedSubCutoffHz, AudioConfig.SUB_FILTER_ORDER, animatedSubGainDb);
-            // Only the top is clamped - once the LPF has rolled off past what the chart can show,
-            // let it keep going down and get clipped by the plot rect below instead of pinning flat
-            // along the bottom grid line for the rest of the curve.
-            float value = Math.min(MAX_GAIN, 6f + db / 2f);
-            float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
+                float freqHz = AudioConfig.frequencyAt(t);
+                float db = AudioConfig.subFilterResponseDb(freqHz, animatedSubCutoffHz, AudioConfig.SUB_FILTER_ORDER, animatedSubGainDb);
+                // Only the top is clamped - once the LPF has rolled off past what the chart can show,
+                // let it keep going down and get clipped by the plot rect below instead of pinning flat
+                // along the bottom grid line for the rest of the curve.
+                float value = Math.min(MAX_GAIN, 6f + db / 2f);
+                float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
 
-            if (s == 0) subPath.moveTo(x, y); else subPath.lineTo(x, y);
+                if (s == 0) subPath.moveTo(x, y); else subPath.lineTo(x, y);
+            }
         }
 
         // 4c'. Rear "Bass Boost" overlay (see buildRearBassPath()) - only built while

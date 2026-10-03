@@ -11,12 +11,13 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
+    <string name="no_sub">Apagado</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Curva de Compensación de Loudness</string>
-    <string name="enable_loudness">Habilitar Compensación de Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Recorte de Agudos</string>
     <string name="sub_tweaking">Calibración de Subwoofer</string>
     <string name="show_loudness_on_main">Mostrar en Principal</string>
@@ -64,6 +65,7 @@
     <string name="enable_gala_feature">Habilitar Función GALA</string>
     <string name="gala_global">Global</string>
     <string name="gala_disable_for_preset">Desactivar para este preajuste</string>
+    <string name="gala_advanced_settings">Avanzado</string>
     <string name="vol_step_every">Salto de Volumen cada:</string>
     <string name="gps_speed_label">VELOCIDAD GPS</string>
     <string name="current_gps_speed">Velocidad Actual GPS:</string>

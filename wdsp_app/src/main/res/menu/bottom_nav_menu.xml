@@ -25,4 +25,9 @@
         android:iconTint="@color/btn_import_bg"
         android:id="@+id/nav_gala"
         android:title="@string/GLtab"/>
+    <item
+        android:id="@+id/nav_audiocheck"
+        android:icon="@drawable/audiocheck_icon"
+        android:iconTint="@color/btn_delete_bg"
+        android:title="@string/ACtab" />
 </menu>

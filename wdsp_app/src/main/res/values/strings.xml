@@ -11,6 +11,7 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
+    <string name="no_sub">Off</string>
     <string name="btn_plus" translatable="false">＋</string>
     <string name="btn_minus" translatable="false">－</string>
     <string name="btn_center" translatable="false">０</string>
@@ -19,7 +20,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Compensation Curve</string>
-    <string name="enable_loudness">Enable Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Trim Highs</string>
     <string name="sub_tweaking">Sub Tweaking</string>
     <string name="show_loudness_on_main">Show on Main</string>
@@ -71,6 +72,7 @@
     <string name="enable_gala_feature">Enable GALA Feature</string>
     <string name="gala_global">Global</string>
     <string name="gala_disable_for_preset">Disable for this preset</string>
+    <string name="gala_advanced_settings">Advanced</string>
     <string name="vol_step_every">Volume Step every:</string>
     <string name="gps_speed_label">GPS SPEED</string>
     <string name="current_gps_speed">Current GPS Speed:</string>
@@ -86,8 +88,8 @@
     <string name="simulation_debug">Simulation &amp; Debug</string>
     <string name="simulate_vehicle_speed">Simulate Vehicle Speed</string>
     <string name="simulate_speed">Simulate Speed:</string>
-    <string name="gala_fade_delay">Fade Speed (delay per step):</string>
-    <string name="gala_hold_timer">Threshold Hold Timer (Time to hold speed threshold before fading):</string>
+    <string name="gala_fade_delay">Fade Speed:</string>
+    <string name="gala_hold_timer">Threshold Hold Timer:</string>
     <string name="gala_ms_fmt">%d ms</string>
     <string name="gala_s_fmt">%.1f s</string>
 
@@ -151,8 +153,28 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Other</string>
     <string name="GLtab">Speed</string>
+    <string name="ACtab">Audio Check</string>
 
     <!-- PowerVolume -->
     <string name="lbl_pwr">Amp Power:</string>
+
+    <!-- Audio Check Tab (internal QA tool) -->
+    <string name="audiocheck_title">Audio Check</string>
+    <string name="audiocheck_stems_label">Theme Song Stems (loop, mix freely) and generators:</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_vocal">Vocal</string>
+    <string name="stem_drums">Drums</string>
+    <string name="stem_melody">Melody</string>
+    <string name="audiocheck_pink_noise">Pink Noise</string>
+    <string name="audiocheck_sine_label">Sine Generator</string>
+    <string name="audiocheck_sine_freq">Frequency:</string>
+    <string name="audiocheck_speaker_label">Speaker Test (sets fader, one at a time)</string>
+    <!-- Universal car-audio shorthand (Front-Left/Front-Right/Rear-Left/Rear-Right) - kept as-is
+         in every locale rather than translated, same convention the industry already uses. -->
+    <string name="speaker_fl" translatable="false">FL</string>
+    <string name="speaker_fr" translatable="false">FR</string>
+    <string name="speaker_rl" translatable="false">RL</string>
+    <string name="speaker_rr" translatable="false">RR</string>
+    <string name="audiocheck_only_sub">Only Sub (EQ -12, filters 250Hz, boost 0)</string>
 
 </resources>

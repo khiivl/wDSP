@@ -578,366 +578,467 @@
                         </LinearLayout>
                     </com.google.android.flexbox.FlexboxLayout>
 
-                    <!-- FR Graph for FM Curve -->
-                    <FrameLayout
-                        android:id="@+id/fm_visualizer_container"
+                    <!-- Three switch-gated, collapsible groups - each one entirely hidden unless
+                         its own switch (above) is on, since every slider in here is meaningless
+                         while its feature is off; and collapsed-by-default like GALA's Advanced
+                         when it IS visible, so the EQ/Correction screen doesn't show every control
+                         for every feature at once. Headers reuse each switch's own label string
+                         (enable_loudness/trim_highs/ultra_bass) rather than separate copy, so the
+                         group is always named exactly what you just turned on. Visibility (both
+                         the switch-gate and the expand state) is wired in MainActivity's
+                         setupGalaControls()-style toggle helpers, not here. -->
+                    <LinearLayout
+                        android:id="@+id/layout_fm_groups"
+                        android:orientation="vertical"
                         android:layout_width="match_parent"
-                        android:layout_height="180dp"
-                        android:layout_marginTop="@dimen/margin_standard"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_small"
                         app:layout_constraintTop_toBottomOf="@id/layout_fm_toggles">
 
-                        <com.radiorubka.wdsp.FmVisualizerView
-                            android:id="@+id/fm_visualizer"
+                        <!-- Loudness group: visualizer, volume/sub-offset telemetry, calibration
+                             point, correction strength - everything that only means something
+                             while Enable Loudness is on. -->
+                        <LinearLayout
+                            android:id="@+id/group_loudness"
+                            android:orientation="vertical"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
-
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="top|center"
-                            android:layout_marginTop="@dimen/margin_standard"
-                            android:alpha="0.7"
-                            android:text="@string/fm_visualizer_label" />
-                    </FrameLayout>
+                            android:visibility="gone">
 
-                    <!-- System Volume Monitor -->
-                    <LinearLayout
-                        android:id="@+id/layout_vol_monitor"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_standard"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        app:layout_constraintTop_toBottomOf="@id/fm_visualizer_container">
+                            <LinearLayout
+                                android:id="@+id/row_loudness_toggle"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingVertical="4dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackground">
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/enable_loudness"/>
+
+                                <ImageView
+                                    android:id="@+id/iv_loudness_chevron"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_marginStart="8dp"
+                                    android:rotation="180"
+                                    android:src="@drawable/ic_arrow"
+                                    android:importantForAccessibility="no"/>
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/panel_loudness"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone">
+
+                                <!-- FR Graph for FM Curve -->
+                                <FrameLayout
+                                    android:id="@+id/fm_visualizer_container"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="180dp"
+                                    android:layout_marginTop="12dp">
+
+                                    <com.radiorubka.wdsp.FmVisualizerView
+                                        android:id="@+id/fm_visualizer"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent" />
+
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="top|center"
+                                        android:layout_marginTop="@dimen/margin_standard"
+                                        android:alpha="0.7"
+                                        android:text="@string/fm_visualizer_label" />
+                                </FrameLayout>
+
+                                <!-- System Volume Monitor -->
+                                <LinearLayout
+                                    android:id="@+id/layout_vol_monitor"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/margin_standard"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/lbl_volume" />
+
+                                    <TextView
+                                        android:id="@+id/tv_sys_volume_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="@dimen/margin_small"
+                                        android:text="@string/value_default" />
+
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="24dp"
+                                        android:text="@string/lbl_sub_offset" />
+
+                                    <TextView
+                                        android:id="@+id/tv_sub_offset_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="@dimen/margin_small"
+                                        android:text="@string/value_default" />
+
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="24dp"
+                                        android:text="@string/lbl_lower_sub_by" />
+
+                                    <TextView
+                                        android:id="@+id/tv_sub_offset_warn"
+                                        style="@style/TextValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="@dimen/margin_small"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                                <!-- Calibration Volume -->
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:text="@string/lbl_calibration_point" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical">
+                                    <com.google.android.material.slider.Slider
+                                        android:id="@+id/seek_fm_cal_vol"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="@dimen/slider_offset"
+                                        android:layout_marginTop="@dimen/slider_margin_top"
+                                        android:valueFrom="0"
+                                        android:valueTo="32"
+                                        android:stepSize="1"
+                                        android:value="25"
+                                        app:thumbRadius="10dp"
+                                        app:haloRadius="24dp"
+                                        app:haloColor="@color/transparent"
+                                        app:thumbColor="@color/cyan_custom"
+                                        app:trackColorActive="@color/track_color_active"
+                                        app:trackColorInactive="@color/track_color_inactive"
+                                        app:trackHeight="@dimen/slider_track_height"
+                                        app:labelBehavior="gone"
+                                        app:tickColorActive="@color/tick_color_active"
+                                        app:tickColorInactive="@color/tick_color_inactive"
+                                        app:thumbHeight="@dimen/thumb_height"/>
+                                    <TextView
+                                        android:id="@+id/tv_fm_cal_vol_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="40dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                                <!-- Strength Slider -->
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:text="@string/lbl_correction_strength" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical"
+                                    android:layout_marginBottom="@dimen/padding_standard">
+                                    <com.google.android.material.slider.Slider
+                                        app:thumbHeight="@dimen/thumb_height"
+                                        android:id="@+id/seek_fm_strength"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="@dimen/slider_offset"
+                                        android:layout_marginTop="@dimen/slider_margin_top"
+                                        android:valueFrom="0"
+                                        android:valueTo="100"
+                                        android:stepSize="1"
+                                        android:value="100"
+                                        app:thumbRadius="10dp"
+                                        app:haloRadius="24dp"
+                                        app:haloColor="@color/transparent"
+                                        app:thumbColor="@color/cyan_custom"
+                                        app:trackColorActive="@color/track_color_active"
+                                        app:trackColorInactive="@color/track_color_inactive"
+                                        app:trackHeight="@dimen/slider_track_height"
+                                        app:labelBehavior="gone"
+                                        app:tickColorActive="@color/tick_color_active"
+                                        app:tickColorInactive="@color/tick_color_inactive"
+                                        app:trackStopIndicatorSize="0dp"
+                                        app:tickVisibilityMode="hidden" />
+                                    <TextView
+                                        android:id="@+id/tv_fm_strength_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="40dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Trim Highs group -->
+                        <LinearLayout
+                            android:id="@+id/group_trim_highs"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/lbl_volume" />
+                            android:layout_marginTop="12dp"
+                            android:visibility="gone">
 
-                        <TextView
-                            android:id="@+id/tv_sys_volume_val"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
+                            <LinearLayout
+                                android:id="@+id/row_trim_highs_toggle"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingVertical="4dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackground">
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:text="@string/lbl_sub_offset" />
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/trim_highs"/>
 
-                        <TextView
-                            android:id="@+id/tv_sub_offset_val"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
+                                <ImageView
+                                    android:id="@+id/iv_trim_highs_chevron"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_marginStart="8dp"
+                                    android:rotation="180"
+                                    android:src="@drawable/ic_arrow"
+                                    android:importantForAccessibility="no"/>
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:text="@string/lbl_lower_sub_by" />
+                            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/tv_sub_offset_warn"
-                            style="@style/TextValue"
-                            android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:id="@+id/panel_trim_highs"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone">
+
+                                <!-- Trim Highs Start Volume Slider -->
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:text="@string/lbl_trim_highs_start_vol" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical">
+                                    <com.google.android.material.slider.Slider
+                                        app:thumbHeight="@dimen/thumb_height"
+                                        android:id="@+id/seek_fat_start_vol"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="@dimen/slider_offset"
+                                        android:layout_marginTop="@dimen/slider_margin_top"
+                                        android:valueFrom="0"
+                                        android:valueTo="32"
+                                        android:stepSize="1"
+                                        android:value="25"
+                                        app:thumbRadius="10dp"
+                                        app:haloRadius="24dp"
+                                        app:haloColor="@color/transparent"
+                                        app:thumbColor="@color/cyan_custom"
+                                        app:trackColorActive="@color/track_color_active"
+                                        app:trackColorInactive="@color/track_color_inactive"
+                                        app:trackHeight="@dimen/slider_track_height"
+                                        app:labelBehavior="gone"
+                                        app:tickColorActive="@color/tick_color_active"
+                                        app:tickColorInactive="@color/tick_color_inactive"
+                                        app:trackStopIndicatorSize="0dp"
+                                        app:tickVisibilityMode="hidden" />
+                                    <TextView
+                                        android:id="@+id/tv_fat_start_vol_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="40dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Ultra Bass group -->
+                        <LinearLayout
+                            android:id="@+id/group_ultra_bass"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/margin_small"
-                            android:text="@string/value_default" />
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="@dimen/margin_standard"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:id="@+id/row_ultra_bass_toggle"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingVertical="4dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackground">
+
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/ultra_bass"/>
+
+                                <ImageView
+                                    android:id="@+id/iv_ultra_bass_chevron"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_marginStart="8dp"
+                                    android:rotation="180"
+                                    android:src="@drawable/ic_arrow"
+                                    android:importantForAccessibility="no"/>
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/panel_ultra_bass"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone">
+
+                                <!-- Ultra Bass Start Volume Slider -->
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:text="@string/lbl_ultra_bass_start_vol" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical">
+                                    <com.google.android.material.slider.Slider
+                                        app:thumbHeight="@dimen/thumb_height"
+                                        android:id="@+id/seek_ultra_bass_start_vol"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="@dimen/slider_offset"
+                                        android:layout_marginTop="@dimen/slider_margin_top"
+                                        android:valueFrom="0"
+                                        android:valueTo="32"
+                                        android:stepSize="1"
+                                        android:value="16"
+                                        app:thumbRadius="10dp"
+                                        app:haloRadius="24dp"
+                                        app:haloColor="@color/transparent"
+                                        app:thumbColor="@color/cyan_custom"
+                                        app:trackColorActive="@color/track_color_active"
+                                        app:trackColorInactive="@color/track_color_inactive"
+                                        app:trackHeight="@dimen/slider_track_height"
+                                        app:labelBehavior="gone"
+                                        app:tickColorActive="@color/tick_color_active"
+                                        app:tickColorInactive="@color/tick_color_inactive"
+                                        app:trackStopIndicatorSize="0dp"
+                                        app:tickVisibilityMode="hidden" />
+                                    <TextView
+                                        android:id="@+id/tv_ultra_bass_start_vol_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="40dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                                <!-- Ultra Bass Max Boost Slider -->
+                                <TextView
+                                    style="@style/TextLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:text="@string/lbl_ultra_bass_max_db" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical">
+                                    <com.google.android.material.slider.Slider
+                                        app:thumbHeight="@dimen/thumb_height"
+                                        android:id="@+id/seek_ultra_bass_max_db"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="@dimen/slider_offset"
+                                        android:layout_marginTop="@dimen/slider_margin_top"
+                                        android:valueFrom="1"
+                                        android:valueTo="12"
+                                        android:stepSize="1"
+                                        android:value="6"
+                                        app:thumbRadius="10dp"
+                                        app:haloRadius="24dp"
+                                        app:haloColor="@color/transparent"
+                                        app:thumbColor="@color/cyan_custom"
+                                        app:trackColorActive="@color/track_color_active"
+                                        app:trackColorInactive="@color/track_color_inactive"
+                                        app:trackHeight="@dimen/slider_track_height"
+                                        app:labelBehavior="gone"
+                                        app:tickColorActive="@color/tick_color_active"
+                                        app:tickColorInactive="@color/tick_color_inactive"
+                                        app:trackStopIndicatorSize="0dp"
+                                        app:tickVisibilityMode="hidden" />
+                                    <TextView
+                                        android:id="@+id/tv_ultra_bass_max_db_val"
+                                        style="@style/TextValue"
+                                        android:layout_width="40dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:text="@string/value_default" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+                        </LinearLayout>
+
                     </LinearLayout>
-
-                    <!-- Calibration Volume -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_cal_vol"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_vol_monitor">
-
-                        <TextView
-                            android:id="@+id/lbl_cal_vol"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_calibration_point"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.slider.Slider
-                            android:id="@+id/seek_fm_cal_vol"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="32"
-                            android:stepSize="1"
-                            android:value="25"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_fm_cal_vol_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_cal_vol"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big"
-                            app:thumbHeight="@dimen/thumb_height"/>
-
-                        <TextView
-                            android:id="@+id/tv_fm_cal_vol_val"
-                            style="@style/TextValue"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_fm_cal_vol"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <!-- Strength Slider -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_fm_strength"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_cal_vol">
-
-                        <TextView
-                            android:id="@+id/lbl_strength"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_correction_strength"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_fm_strength"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="100"
-                            android:stepSize="1"
-                            android:value="100"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_fm_strength_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_strength"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
-
-                        <TextView
-                            android:id="@+id/tv_fm_strength_val"
-                            style="@style/TextValue"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_fm_strength"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <!-- Trim Highs Start Volume Slider -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_fat_start_vol"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_fm_strength">
-
-                        <TextView
-                            android:id="@+id/lbl_fat_start_vol"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_trim_highs_start_vol"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_fat_start_vol"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="32"
-                            android:stepSize="1"
-                            android:value="25"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_fat_start_vol_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_fat_start_vol"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
-
-                        <TextView
-                            android:id="@+id/tv_fat_start_vol_val"
-                            style="@style/TextValue"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_fat_start_vol"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <!-- Ultra Bass Start Volume Slider -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_ultra_bass_start_vol"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:layout_constraintTop_toBottomOf="@id/layout_fat_start_vol">
-
-                        <TextView
-                            android:id="@+id/lbl_ultra_bass_start_vol"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_ultra_bass_start_vol"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_ultra_bass_start_vol"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="32"
-                            android:stepSize="1"
-                            android:value="16"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_ultra_bass_start_vol_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_ultra_bass_start_vol"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
-
-                        <TextView
-                            android:id="@+id/tv_ultra_bass_start_vol_val"
-                            style="@style/TextValue"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_ultra_bass_start_vol"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <!-- Ultra Bass Max Boost Slider -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="@dimen/margin_standard"
-                        app:layout_constraintTop_toBottomOf="@id/layout_ultra_bass_start_vol">
-
-                        <TextView
-                            android:id="@+id/lbl_ultra_bass_max_db"
-                            style="@style/TextLabel"
-                            android:layout_width="140dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/lbl_ultra_bass_max_db"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_ultra_bass_max_db"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="1"
-                            android:valueTo="12"
-                            android:stepSize="1"
-                            android:value="6"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackStopIndicatorSize="0dp"
-                            app:tickVisibilityMode="hidden"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/tv_ultra_bass_max_db_val"
-                            app:layout_constraintStart_toEndOf="@id/lbl_ultra_bass_max_db"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintWidth_max="@dimen/slider_max_width_big" />
-
-                        <TextView
-                            android:id="@+id/tv_ultra_bass_max_db_val"
-                            style="@style/TextValue"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="@string/value_default"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@id/seek_ultra_bass_max_db"
-                            app:layout_constraintTop_toTopOf="parent" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </ScrollView>
@@ -960,54 +1061,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Applies to both delay systems' FL/FR and RL/RR pairs below (see
-                 MainActivity.setupDelayControls()/setupDelay1Controls()). -->
-            <LinearLayout
-                android:id="@+id/row_sync_delays"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="@dimen/padding_standard"
-                android:paddingTop="@dimen/margin_standard"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
-
-                <TextView
-                    style="@style/TextLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sync_delay_front" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switch_sync_delay_front"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    app:showText="false" />
-
-                <TextView
-                    style="@style/TextLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sync_delay_rear" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switch_sync_delay_rear"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    app:showText="false" />
-            </LinearLayout>
-
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/row_sync_delays">
+                app:layout_constraintTop_toBottomOf="@id/tv_delays_title">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -1025,6 +1085,7 @@
 
                     <!-- Precise Delays Column -->
                     <LinearLayout
+                        android:id="@+id/column_delays_precise"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -1291,6 +1352,7 @@
 
                     <!-- Legacy Delays Column -->
                     <LinearLayout
+                        android:id="@+id/column_delays_legacy"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -1550,6 +1612,58 @@
                                 app:labelBehavior="gone"
                                 app:layout_constraintTop_toBottomOf="@id/tv_delay1_rsse_val" />
                         </androidx.constraintlayout.widget.ConstraintLayout>
+                    </LinearLayout>
+
+                    <!-- Bottom of whichever column is taller, regardless of which (Precise vs
+                         Legacy) actually has more content at a given moment. -->
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier_delays_columns_bottom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="bottom"
+                        app:constraint_referenced_ids="column_delays_precise,column_delays_legacy" />
+
+                    <!-- Applies to both delay systems' FL/FR and RL/RR pairs above (see
+                         MainActivity.setupDelayControls()/setupDelay1Controls()) - at the bottom
+                         of the section, below both columns, centered as one unit since it
+                         genuinely applies to both equally rather than belonging to just one. -->
+                    <LinearLayout
+                        android:id="@+id/row_sync_delays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:paddingTop="@dimen/margin_standard"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/barrier_delays_columns_bottom">
+
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sync_delay_front" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_sync_delay_front"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="12dp"
+                            app:showText="false" />
+
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/margin_large"
+                            android:text="@string/sync_delay_rear" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_sync_delay_rear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="12dp"
+                            app:showText="false" />
                     </LinearLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </ScrollView>
@@ -2152,8 +2266,6 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:padding="16dp"
-                    android:background="@drawable/ui_bg_layer"
                     android:layout_height="wrap_content">
 
                     <TextView
@@ -2171,7 +2283,7 @@
                         android:id="@+id/layout_gala_controls"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="@dimen/margin_standard"
                         app:layout_constraintTop_toBottomOf="@+id/tv_gala_title">
 
                         <TextView
@@ -2212,88 +2324,38 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"/>
 
-                        <TextView
-                            style="@style/TextLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/vol_step_every"
-                            android:layout_marginStart="16dp"/>
-
-                        <com.google.android.material.slider.Slider
-                            app:thumbHeight="@dimen/thumb_height"
-                            android:id="@+id/seek_gala_increment"
-                            android:layout_width="200dp"
-                            android:layout_height="wrap_content"
-                            android:valueFrom="0"
-                            android:valueTo="45"
-                            android:stepSize="1"
-                            android:value="15"
-                            android:layout_marginStart="8dp"
-                            app:thumbRadius="10dp"
-                            app:haloRadius="24dp"
-                            app:haloColor="@color/transparent"
-                            app:thumbColor="@color/cyan_custom"
-                            app:tickColorActive="@color/tick_color_active"
-                            app:tickColorInactive="@color/tick_color_inactive"
-                            app:trackColorActive="@color/track_color_active"
-                            app:trackColorInactive="@color/track_color_inactive"
-                            app:trackHeight="@dimen/slider_track_height"
-                            app:labelBehavior="gone" />
-
-                        <TextView
-                            style="@style/TextValue"
-                            android:id="@+id/tv_gala_increment_val"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/value_default"
-                            android:layout_marginStart="8dp"/>
-
                     </LinearLayout>
 
                     <LinearLayout
                         android:orientation="vertical"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
+                        android:layout_marginTop="@dimen/margin_standard"
                         app:layout_constraintTop_toBottomOf="@+id/layout_gala_controls">
 
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vol_step_every"/>
                         <LinearLayout
                             android:orientation="horizontal"
                             android:layout_width="match_parent"
-                            android:gravity="center_vertical"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/current_gps_speed"/>
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:id="@+id/tv_gala_speed"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="16dp"/>
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/standstill_speed"
-                                android:layout_marginStart="16dp"/>
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical">
 
                             <com.google.android.material.slider.Slider
                                 app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_minspeed"
-                                android:layout_width="350dp"
+                                android:id="@+id/seek_gala_increment"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:valueFrom="0"
-                                android:valueTo="60"
-                                android:stepSize="1"
-                                android:value="0"
-                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:layout_marginStart="@dimen/slider_offset"
+                                android:layout_marginTop="@dimen/slider_margin_top"
+                                android:valueFrom="10"
+                                android:valueTo="100"
+                                android:stepSize="10"
+                                android:value="20"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
@@ -2307,94 +2369,38 @@
 
                             <TextView
                                 style="@style/TextValue"
-                                android:id="@+id/tv_gala_minspeed_val"
-                                android:layout_width="wrap_content"
+                                android:id="@+id/tv_gala_increment_val"
+                                android:layout_width="70dp"
                                 android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
+                                android:gravity="center_vertical"
+                                android:text="@string/value_default"/>
 
                         </LinearLayout>
 
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="32dp"
+                            android:text="@string/max_adjustment"/>
                         <LinearLayout
                             android:orientation="horizontal"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="16dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/applied_vol_offset"/>
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:id="@+id/tv_gala_offset"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="16dp"/>
-
-        <!--                    <TextView-->
-        <!--                        android:textSize="18sp"-->
-        <!--                        android:textColor="@color/text_theme_aware"-->
-        <!--                        android:layout_width="wrap_content"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:text="@string/max_speed_label"-->
-        <!--                        android:layout_marginStart="32dp"/>-->
-
-        <!--                    <com.google.android.material.slider.Slider-->
-        <!--                        android:id="@+id/seek_gala_maxspeed"-->
-        <!--                        android:layout_width="350dp"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:valueFrom="0"-->
-        <!--                        android:valueTo="60"-->
-        <!--                        android:stepSize="1"-->
-        <!--                        android:value="30"-->
-        <!--                        android:layout_marginStart="8dp"-->
-        <!--                        app:thumbRadius="10dp"-->
-        <!--                        app:haloRadius="24dp"-->
-        <!--                        app:haloColor="@color/transparent"-->
-        <!--                        app:thumbColor="@color/cyan_custom"-->
-        <!--                        app:trackColorActive="@color/cyan_custom"-->
-        <!--                        app:trackHeight="4dp" />-->
-
-        <!--                    <TextView-->
-        <!--                        android:textSize="18sp"-->
-        <!--                        android:textStyle="bold"-->
-        <!--                        android:textColor="@color/text_theme_aware_2"-->
-        <!--                        android:id="@+id/tv_gala_maxspeed_val"-->
-        <!--                        android:layout_width="wrap_content"-->
-        <!--                        android:layout_height="wrap_content"-->
-        <!--                        android:text="@string/value_default"-->
-        <!--                        android:layout_marginStart="8dp"/>-->
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="32dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/max_adjustment"/>
+                            android:gravity="center_vertical">
 
                             <com.google.android.material.slider.Slider
                                 app:thumbHeight="@dimen/thumb_height"
                                 android:id="@+id/seek_gala_max_adj"
-                                android:layout_width="350dp"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="@dimen/slider_offset"
+                                android:layout_marginTop="@dimen/slider_margin_top"
                                 android:valueFrom="0"
-                                android:valueTo="32"
+                                android:valueTo="16"
                                 android:stepSize="1"
                                 android:value="12"
-                                android:layout_marginStart="8dp"
                                 app:thumbRadius="10dp"
                                 app:haloRadius="24dp"
                                 app:haloColor="@color/transparent"
@@ -2409,141 +2415,295 @@
                             <TextView
                                 style="@style/TextValue"
                                 android:id="@+id/tv_gala_max_adj_val"
-                                android:layout_width="wrap_content"
+                                android:layout_width="70dp"
                                 android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="32dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/gala_fade_delay"/>
-
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_fade_ms"
-                                android:layout_width="@dimen/slider_max_width_big"
-                                android:layout_height="wrap_content"
-                                android:valueFrom="0"
-                                android:valueTo="2000"
-                                android:stepSize="100"
-                                android:value="300"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/transparent"
-                                app:thumbColor="@color/cyan_custom"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/track_color_active"
-                                app:trackColorInactive="@color/track_color_inactive"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:id="@+id/tv_gala_fade_ms_val"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="160dp"
-                                android:layout_height="wrap_content"
-                                android:text="@string/gala_hold_timer"/>
-
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_gala_hold_ms"
-                                android:layout_width="@dimen/slider_max_width_big"
-                                android:layout_height="wrap_content"
-                                android:valueFrom="0"
-                                android:valueTo="10000"
-                                android:stepSize="500"
-                                android:value="3000"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/transparent"
-                                app:thumbColor="@color/cyan_custom"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/track_color_active"
-                                app:trackColorInactive="@color/track_color_inactive"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:id="@+id/tv_gala_hold_ms_val"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/value_default"
-                                android:layout_marginStart="8dp"/>
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="32dp">
-
-                            <TextView
-                                style="@style/TextLabel"
-                                android:layout_width="160dp"
-                                android:layout_height="wrap_content"
-                                android:text="@string/simulate_speed"/>
-
-                            <com.google.android.material.slider.Slider
-                                app:thumbHeight="@dimen/thumb_height"
-                                android:id="@+id/seek_simulate_speed"
-                                android:layout_width="@dimen/slider_max_width_big"
-                                android:layout_height="wrap_content"
-                                android:valueFrom="0"
-                                android:valueTo="200"
-                                android:stepSize="1"
-                                android:value="0"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/transparent"
-                                app:thumbColor="#ff5722"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:tickVisibilityMode="hidden"
-                                app:trackColorActive="#ff5722"
-                                app:trackColorInactive="@color/track_color_inactive"
-                                app:trackStopIndicatorSize="0dp"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone" />
-
-                            <TextView
-                                style="@style/TextValue"
-                                android:gravity="end"
-                                android:id="@+id/tv_simulate_speed_val"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
                                 android:text="@string/value_default"/>
+
+                        </LinearLayout>
+
+                        <!-- Advanced - the controls below are either read-only telemetry (GPS
+                             speed, applied offset) or tuned once and rarely touched again
+                             (fade/hold timing, standstill speed, the debug speed simulator), so
+                             they're tucked behind this toggle instead of sharing top-level billing
+                             with Enable/Global/Volume Step/Max Adjustment, which are the ones
+                             actually used day to day. -->
+                        <LinearLayout
+                            android:id="@+id/row_gala_advanced_toggle"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="32dp"
+                            android:paddingVertical="4dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground">
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/gala_advanced_settings"/>
+
+                            <ImageView
+                                android:id="@+id/iv_gala_advanced_chevron"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginStart="8dp"
+                                android:rotation="180"
+                                android:src="@drawable/ic_arrow"
+                                android:importantForAccessibility="no"/>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/layout_gala_advanced"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:baselineAligned="false"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="32dp"
+                                android:weightSum="2">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center"
+                                    android:padding="8dp"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@color/visualizer_container_bg">
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/gps_speed_label"
+                                        android:textSize="12sp" />
+                                    <TextView
+                                        android:id="@+id/tv_gala_speed"
+                                        style="@style/TextValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/value_default"
+                                        android:textSize="22sp"
+                                        android:textColor="@color/cyan_custom" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center"
+                                    android:padding="8dp"
+                                    android:layout_marginStart="4dp"
+                                    android:background="@color/visualizer_container_bg">
+                                    <TextView
+                                        style="@style/TextLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/vol_offset_label"
+                                        android:textSize="12sp" />
+                                    <TextView
+                                        android:id="@+id/tv_gala_offset"
+                                        style="@style/TextValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/value_default"
+                                        android:textSize="22sp"
+                                        android:textColor="@color/cyan_custom" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="32dp"
+                                android:text="@string/standstill_speed"/>
+                            <LinearLayout
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:gravity="center_vertical"
+                                android:layout_height="wrap_content">
+
+                                <com.google.android.material.slider.Slider
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    android:id="@+id/seek_gala_minspeed"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="@dimen/slider_offset"
+                                    android:layout_marginTop="@dimen/slider_margin_top"
+                                    android:valueFrom="0"
+                                    android:valueTo="15"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
+
+                                <TextView
+                                    style="@style/TextValue"
+                                    android:id="@+id/tv_gala_minspeed_val"
+                                    android:layout_width="70dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:text="@string/value_default"/>
+
+                            </LinearLayout>
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="32dp"
+                                android:text="@string/gala_fade_delay"/>
+                            <LinearLayout
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <com.google.android.material.slider.Slider
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    android:id="@+id/seek_gala_fade_ms"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="@dimen/slider_offset"
+                                    android:layout_marginTop="@dimen/slider_margin_top"
+                                    android:valueFrom="0"
+                                    android:valueTo="2000"
+                                    android:stepSize="100"
+                                    android:value="300"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
+
+                                <TextView
+                                    style="@style/TextValue"
+                                    android:id="@+id/tv_gala_fade_ms_val"
+                                    android:layout_width="70dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:text="@string/value_default"/>
+
+                            </LinearLayout>
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="32dp"
+                                android:text="@string/gala_hold_timer"/>
+                            <LinearLayout
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <com.google.android.material.slider.Slider
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    android:id="@+id/seek_gala_hold_ms"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="@dimen/slider_offset"
+                                    android:layout_marginTop="@dimen/slider_margin_top"
+                                    android:valueFrom="0"
+                                    android:valueTo="10000"
+                                    android:stepSize="500"
+                                    android:value="3000"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="@color/cyan_custom"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:trackColorActive="@color/track_color_active"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
+
+                                <TextView
+                                    style="@style/TextValue"
+                                    android:id="@+id/tv_gala_hold_ms_val"
+                                    android:layout_width="70dp"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:text="@string/value_default"/>
+
+                            </LinearLayout>
+
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="32dp"
+                                android:text="@string/simulate_speed"/>
+                            <LinearLayout
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <com.google.android.material.slider.Slider
+                                    app:thumbHeight="@dimen/thumb_height"
+                                    android:id="@+id/seek_simulate_speed"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="@dimen/slider_offset"
+                                    android:layout_marginTop="@dimen/slider_margin_top"
+                                    android:valueFrom="0"
+                                    android:valueTo="200"
+                                    android:stepSize="1"
+                                    android:value="0"
+                                    app:thumbRadius="10dp"
+                                    app:haloRadius="24dp"
+                                    app:haloColor="@color/transparent"
+                                    app:thumbColor="#ff5722"
+                                    app:tickColorActive="@color/tick_color_active"
+                                    app:tickColorInactive="@color/tick_color_inactive"
+                                    app:tickVisibilityMode="hidden"
+                                    app:trackColorActive="#ff5722"
+                                    app:trackColorInactive="@color/track_color_inactive"
+                                    app:trackStopIndicatorSize="0dp"
+                                    app:trackHeight="@dimen/slider_track_height"
+                                    app:labelBehavior="gone" />
+
+                                <TextView
+                                    style="@style/TextValue"
+                                    android:gravity="center_vertical"
+                                    android:id="@+id/tv_simulate_speed_val"
+                                    android:layout_width="70dp"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/value_default"/>
+
+                            </LinearLayout>
 
                         </LinearLayout>
 
@@ -2551,6 +2711,379 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
+            </ScrollView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Audio Check Tab Content - internal hardware QA tool (looping stem playback +
+             per-speaker test tones + an EQ/filter override to isolate the sub), not meant for
+             end users, so its strings are English-only (see strings.xml). -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_audiocheck"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:overScrollMode="never">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/padding_standard"
+                    android:background="@drawable/ui_bg_layer">
+
+                    <TextView
+                        style="@style/TextTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/audiocheck_title" />
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/audiocheck_stems_label" />
+
+                    <!-- Same flowing-row pattern as the Correction tab's layout_fm_toggles - packs
+                         as many label+switch pairs per line as actually fit and wraps the rest,
+                         instead of a fixed column count. -->
+                    <com.google.android.flexbox.FlexboxLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:flexWrap="wrap"
+                        app:alignItems="center">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/audiocheck_switches"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_bass" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_bass"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_vocal" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_vocal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_drums" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_drums"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_melody" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_melody"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/audiocheck_pink_noise" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_pink_noise"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/audiocheck_sine_label" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_sine"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="12dp"
+                                app:showText="false"/>
+                        </LinearLayout>
+
+                    </com.google.android.flexbox.FlexboxLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        android:text="@string/audiocheck_sine_freq" />
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_audiocheck_sine_freq"
+                            app:thumbHeight="@dimen/thumb_height"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="@dimen/slider_offset"
+                            android:layout_marginTop="@dimen/slider_margin_top"
+                            android:layout_marginBottom="@dimen/slider_margin_bottom"
+                            android:valueFrom="0"
+                            android:valueTo="1"
+                            android:value="0.56632"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
+                        <TextView
+                            android:id="@+id/tv_audiocheck_sine_freq_val"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/value_default" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_minus10"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="-10"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_minus1"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="-1"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_plus1"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="+1"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_plus10"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="+10"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_standard"
+                        android:text="@string/audiocheck_speaker_label" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_standard">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_fl"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:backgroundTint="@color/btn_rename_bg"
+                            android:layout_marginStart="0dp"
+                            android:layout_marginEnd="@dimen/margin_small"
+                            android:text="@string/speaker_fl"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_fr"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_export_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_fr"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_rl"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_import_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_rl"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_rr"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_delete_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_rr"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_standard"
+                        android:gravity="center_vertical">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/audiocheck_only_sub" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_audiocheck_only_sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="12dp"
+                            app:showText="false"/>
+                    </LinearLayout>
+
+                </LinearLayout>
             </ScrollView>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

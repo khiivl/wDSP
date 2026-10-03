@@ -11,12 +11,13 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
+    <string name="no_sub">Aus</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Gehörrichtige Lautstärkekorrektur</string>
-    <string name="enable_loudness">Loudness aktivieren</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Höhen reduzieren</string>
     <string name="sub_tweaking">Subwoofer-Feineinstellung</string>
     <string name="show_loudness_on_main">Auf Hauptseite anzeigen</string>
@@ -64,6 +65,7 @@
     <string name="enable_gala_feature">GALA-Funktion aktivieren</string>
     <string name="gala_global">Global</string>
     <string name="gala_disable_for_preset">Für dieses Preset deaktivieren</string>
+    <string name="gala_advanced_settings">Erweitert</string>
     <string name="vol_step_every">Lautstärke-Schritt alle:</string>
     <string name="gps_speed_label">GPS GESCHWINDIGKEIT</string>
     <string name="current_gps_speed">Aktuelle GPS-Geschw.:</string>
@@ -143,4 +145,22 @@
     <string name="GLtab">GALA</string>
     <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
+
+    <!-- Audio Check Tab (internal QA tool) -->
+    <string name="ACtab">Audio-Check</string>
+    <string name="audiocheck_title">Audio-Check</string>
+    <string name="audiocheck_stems_label">Titelsong-Stems (Loop, frei kombinierbar) und Generatoren:</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_vocal">Gesang</string>
+    <string name="stem_drums">Schlagzeug</string>
+    <string name="stem_melody">Melodie</string>
+    <string name="audiocheck_pink_noise">Rosa Rauschen</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frequenz:</string>
+    <string name="audiocheck_speaker_label">Lautsprechertest (stellt Fader ein, einzeln)</string>
+    <string name="speaker_fl" translatable="false">FL</string>
+    <string name="speaker_fr" translatable="false">FR</string>
+    <string name="speaker_rl" translatable="false">RL</string>
+    <string name="speaker_rr" translatable="false">RR</string>
+    <string name="audiocheck_only_sub">Nur Sub (EQ -12, Filter 250Hz, Boost 0)</string>
 </resources>

@@ -291,6 +291,28 @@ public class AudioConfig {
     }
 
     /**
+     * Fixed, non-adjustable acoustic rolloff approximating a typical mid-size (5.25"-6.5") car
+     * door/dash speaker's natural low-frequency extension - independent of whatever the user has
+     * dialed into bassShapingResponseDb() above, since no HPF/shelf setting changes what the
+     * driver+cabin system actually does. Deliberately gentle, for a specific reason: the driver
+     * itself rolls off close to 12dB/octave below its own resonance (standard infinite-baffle
+     * behavior), but real in-cabin response is also shaped by "cabin gain" - the cabin
+     * pressurizing as a whole below roughly 70-90Hz, adding back ~7-9dB/octave in almost that same
+     * range - which cancels most of the driver's own rolloff right where it would otherwise bite.
+     * This models only what's left after that cancellation (1st order/6dB-oct, corner pushed well
+     * below the driver's own ~60-80Hz Fs) rather than the driver's raw anechoic response, so it
+     * stays negligible through the cabin-gain-dominated range and only shows up once that
+     * compensation has run out: ~-1dB at 80Hz, ~-2dB at 60Hz, ~-5dB at 30Hz, ~-8dB at 20Hz.
+     */
+    public static final float TYPICAL_SPEAKER_FLOOR_HZ = 40f;
+    public static final int TYPICAL_SPEAKER_FLOOR_ORDER = 1;
+
+    public static float typicalCarSpeakerFloorDb(float freqHz) {
+        double ratio = TYPICAL_SPEAKER_FLOOR_HZ / freqHz;
+        return (float) (-10.0 * Math.log10(1.0 + Math.pow(ratio, 2 * TYPICAL_SPEAKER_FLOOR_ORDER)));
+    }
+
+    /**
      * Maps a continuous band position to Hz - see this method's original doc above for the
      * in-range (0..NUM_BANDS-1) mapping, which is unchanged. For t outside that range, extends
      * the SAME log-per-step spacing past the nearest real edge (band 0/1's ratio below band 0,

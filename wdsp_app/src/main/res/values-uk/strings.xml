@@ -12,12 +12,13 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Саб:</string>
+    <string name="no_sub">Вимк.</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Тонкомпенсація (Крива Флетчера-Менсона)</string>
-    <string name="enable_loudness">Увімкнути Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Послабити ВЧ</string>
     <string name="sub_tweaking">Налаштування сабвуфера</string>
     <string name="show_loudness_on_main">На головному екрані</string>
@@ -65,6 +66,7 @@
     <string name="enable_gala_feature">Активувати функцію GALA</string>
     <string name="gala_global">Глобально</string>
     <string name="gala_disable_for_preset">Вимкнути для цього пресету</string>
+    <string name="gala_advanced_settings">Додатково</string>
     <string name="vol_step_every">Крок гучності кожні:</string>
     <string name="gps_speed_label">ШВИДКІСТЬ GPS</string>
     <string name="current_gps_speed">Поточна швидкість GPS:</string>

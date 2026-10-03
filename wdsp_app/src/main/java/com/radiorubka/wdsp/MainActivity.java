@@ -11,6 +11,10 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
+import android.media.AudioTrack;
+import android.media.MediaPlayer;
 //import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -29,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -55,6 +60,7 @@ import com.google.android.material.slider.Slider;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -106,7 +112,15 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvSubDb;
 
     private TextView tvPowerDb;
-    private final String[] SUB_FREQS = {"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250"};
+    // The "Off" entry is appended, not prepended, so every existing saved preset's "_sub_f" index
+    // keeps meaning exactly what it already meant - only brand-new presets/installs default to it
+    // (see setupSubControls()). It's a pure app-side/UI sentinel with no real hardware meaning -
+    // McuService.loadPresetData() translates it to the lowest real table index + 0 gain before it
+    // ever reaches the sub packet (the protocol has no "off" bit for the sub channel at all).
+    // Populated in setupSubControls() rather than here, since that last entry is a translated
+    // string resource and getString() isn't available yet during field initialization.
+    private String[] SUB_FREQS;
+    private final int NO_SUB_INDEX = 11; // SUB_FREQS.length - 1 (12 entries) - mirrored as a literal in McuService.NO_SUB_INDEX too
 
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
@@ -144,6 +158,10 @@ public class MainActivity extends AppCompatActivity {
     private Slider seekFmCalVol, seekFmStrength, seekFatStartVol, seekUltraBassStartVol, seekUltraBassMaxDb;
     private TextView tvFmCalVolVal, tvFmStrengthVal, tvFatStartVolVal, tvSysVolumeVal, tvSubOffsetVal, tvSubOffsetWarn, tvUltraBassStartVolVal, tvUltraBassMaxDbVal;
     private FmVisualizerView fmVisualizer;
+    // Switch-gated collapsible groups (see activity_main.xml's layout_fm_groups doc) - each
+    // group's own visibility (shown at all) is driven by its switch; its panel's visibility
+    // (expanded/collapsed within the group) is the same disclosure pattern as GALA's Advanced.
+    private View groupLoudness, groupTrimHighs, groupUltraBass;
     
     // GALA Controls
     private SwitchCompat switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset;
@@ -155,6 +173,62 @@ public class MainActivity extends AppCompatActivity {
     // Whether every GALA field (enable + all 5 sliders) is shared across all presets instead
     // of per-preset. Kept in sync with PREF_GALA_GLOBAL_MODE; see galaNamespace().
     private boolean galaGlobalMode = false;
+
+    // Audio Check Controls (internal hardware QA tool - see layout_audiocheck's doc). Not saved
+    // to any preset and not loaded by loadPreset() - these are pure runtime state, on purpose.
+    private SwitchCompat switchAcBass, switchAcVocal, switchAcDrums, switchAcMelody, switchAcOnlySub;
+    private SwitchCompat switchAcPinkNoise, switchAcSine;
+    private Slider seekAcSineFreq;
+    private TextView tvAcSineFreqVal;
+    // Pink noise and the sine generator are standalone signal sources, not stems of anything -
+    // unlike acBass/acVocal/acDrums/acMelody above they don't participate in the stem sync clock
+    // at all. Pink noise is cached/reused like a stem (same signal every time, so no reason to
+    // resynthesize 5 seconds of noise on every toggle); the sine track is rebuilt fresh whenever
+    // it's turned on or its frequency changes while on, since unlike pink noise its content
+    // actually depends on a value that can change between toggles.
+    private LoopTrack acPinkNoise, acSine;
+    // Pending debounced rebuild from scheduleSineRebuild() - null when none is scheduled, so a
+    // toggle-off (or another rebuild) knows whether there's a stale one to cancel.
+    private Runnable pendingSineRebuild;
+    // Stems use AudioTrack in MODE_STATIC with setLoopPoints(), not MediaPlayer - MediaPlayer's
+    // own looping has an audible gap at the loop point even for an uncompressed WAV, since it
+    // re-triggers the decoder; AudioTrack's static-buffer loop points are the only genuinely
+    // sample-accurate/gapless way to loop on Android. Built lazily on first toggle-on and kept
+    // around (paused, not released) across toggles so later ones don't re-parse the WAV.
+    private LoopTrack acBass, acVocal, acDrums, acMelody;
+    // Shared "loop clock" so a stem toggled on while others are already looping joins already in
+    // sync instead of restarting the loop at 0 - see toggleAcStem()'s doc. -1 = no stem currently
+    // playing (clock not running); reset whenever the last playing stem stops, so the next fresh
+    // start begins a new sync epoch.
+    private long acStemLoopStartNanos = -1;
+    // Periodically re-checks playing stems against the loop clock and snaps back any that have
+    // drifted - each stem loops independently via its own AudioTrack's hardware loop points, and
+    // on devices that have to resample to a different native output rate, independent rounding at
+    // each track's own loop boundary can slowly pull two stems that started in perfect sync apart
+    // over many cycles. See checkAcStemSync()'s doc for the correction itself.
+    private static final int AC_STEM_SYNC_CHECK_MS = 3000;
+    private static final int AC_STEM_SYNC_TOLERANCE_MS = 40;
+    private final Runnable acStemSyncWatchdog = this::checkAcStemSync;
+
+    // Speaker-test buttons stay plain MediaPlayer, one-shot (no loop) - a single playthrough has
+    // no loop point, so none of the AudioTrack machinery above is needed here. Only one plays at
+    // a time (they share the one real fader, and testing two corners at once defeats the point of
+    // isolating a single speaker) - these track whichever one (if any) is currently active, so a
+    // second tap on the same button, or a tap on a different one, knows what to stop first.
+    // 0 = none active.
+    private MediaPlayer mpAcSpeaker;
+    private int activeSpeakerBtnId = 0;
+
+    /** AudioTrack + the frame count/sample rate it was built with, so toggleAcStem()'s sync math
+     * doesn't have to re-derive them from the track itself. */
+    private static class LoopTrack {
+        final AudioTrack track;
+        final int frames;
+        final int sampleRate;
+        LoopTrack(AudioTrack track, int frames, int sampleRate) {
+            this.track = track; this.frames = frames; this.sampleRate = sampleRate;
+        }
+    }
 
     private float currentFmSubOffset = 0f;
     private float currentFmBassShelfOffset = 0f;
@@ -257,6 +331,13 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Populated here, not as a field initializer, since the last entry is a translated
+        // string resource and getString() needs the Activity's Context - not attached yet during
+        // field initialization. Can't wait for the deferred setupLogic()/setupSubControls()
+        // either though: setupPresets() (below, via the non-delayed handler.post()) calls
+        // loadPreset() before that, and loadPreset() reads SUB_FREQS.
+        SUB_FREQS = new String[]{"25", "32", "40", "50", "63", "80", "100", "125", "160", "200", "250", getString(R.string.no_sub)};
 
         accentColor = ContextCompat.getColor(this, R.color.cyan_custom);
 
@@ -526,6 +607,7 @@ public class MainActivity extends AppCompatActivity {
         setupDelayControls();
         setupDelay1Controls();
         setupGalaControls();
+        setupAudioCheckControls();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
         findViewById(R.id.btn_plus).setOnClickListener(v -> adjustAllBands(1));
@@ -612,7 +694,10 @@ public class MainActivity extends AppCompatActivity {
         tvSysVolumeVal = findViewById(R.id.tv_sys_volume_val);
         tvSubOffsetVal = findViewById(R.id.tv_sub_offset_val);
         tvSubOffsetWarn = findViewById(R.id.tv_sub_offset_warn);
-        
+        groupLoudness = findViewById(R.id.group_loudness);
+        groupTrimHighs = findViewById(R.id.group_trim_highs);
+        groupUltraBass = findViewById(R.id.group_ultra_bass);
+
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
@@ -645,6 +730,12 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         sendUiSignal(false);
         restoreDefaultBacklight();
+        // Minimizing (as opposed to onPause()'s much more frequent "lost focus" - a notification,
+        // a permission dialog) is the point an Activity recreation becomes possible without a
+        // guaranteed onDestroy() on the old instance first - stopping here means there's never a
+        // still-playing zombie AudioTrack left over from a previous instance to double up with a
+        // freshly re-enabled switch.
+        stopAllAudioCheck();
     }
 
     private void sendUiSignal(boolean active) {
@@ -918,7 +1009,7 @@ public class MainActivity extends AppCompatActivity {
         if (!isFullyInitialized) {
             if (eqVisualizer != null) eqVisualizer.setBassShaping(20f, 0f, 0f, 20f, 0f, 0f);
             if (fmVisualizer != null) fmVisualizer.setBassShaping(20f, 0f, 0f);
-            if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(20f, 0f, 0f);
+            if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(20f, 0f, 0f, 20f, 0f, 0f);
             return;
         }
         float frontFilterHz = Float.parseFloat(BASS_FILTER_FREQS[getIntSlider(seekBassFilterFront)]);
@@ -985,7 +1076,14 @@ public class MainActivity extends AppCompatActivity {
         // Front only for now - see EqVisualizerView's own front/rear split for why rear would need
         // its own overlay line rather than being baked into this single curve.
         if (fmVisualizer != null) fmVisualizer.setBassShaping(frontFilterHz, effFrontBoostHz, effFrontBoostDb);
-        if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(frontFilterHz, effFrontBoostHz, effFrontBoostDb);
+        // Unlike eqVisualizer above, not gated on showOnMain - the RTA has its own separate gate
+        // (bassReactiveEnabled/loudnessReactiveEnabled), same as the existing comment already
+        // established for the front-only value this always used. Needs both front AND rear (see
+        // SpectrumAnalyzerView.setBassShaping()'s doc) so it can combine them into one real
+        // perceived curve instead of only ever showing front's own response.
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setBassShaping(
+                frontFilterHz, effFrontBoostHz, effFrontBoostDb,
+                rearFilterHz, effRearBoostHz, effRearBoostDb);
     }
 
     /**
@@ -1103,6 +1201,33 @@ public class MainActivity extends AppCompatActivity {
         if (!isUpdatingUi) autoSaveCurrent();
     }
 
+    /** SUB_FREQS[NO_SUB_INDEX] ("No Sub") isn't a real frequency - parsing it as one would throw,
+     * so this returns the 0 sentinel instead (see SUB_FREQS's own doc for why 0 is safe: it makes
+     * AudioConfig.subFilterResponseDb() read as -infinity dB for any real frequency, so the sub
+     * naturally drops out of every curve/combination with no special-casing needed downstream). */
+    private int parseSubFreqHz(String subFreqText) {
+        return SUB_FREQS[NO_SUB_INDEX].equals(subFreqText) ? 0 : Integer.parseInt(subFreqText);
+    }
+
+    /** Greys out the controls that only make sense with a real subwoofer attached, and zeroes the
+     * gain slider to match what McuService actually sends to hardware once "No Sub" is selected
+     * (see SUB_FREQS's doc). Called from the spinner's own click listener below AND from preset
+     * load/reset, so the greyed-out state is correct immediately on load, not just reactively. */
+    private void updateSubDependentControlsEnabled(boolean noSub) {
+        // Null-checked: loadPreset() can run very early (before initSecondaryViews() has bound
+        // switchFmSubComp/switchUltraBass) during startup bootstrap - same hazard
+        // updateBassVisualizer() already guards against for its own early-bootstrap call. Just
+        // skip greying out controls that don't exist yet; the real preset load that follows once
+        // everything's bound calls this again with the correct final state anyway.
+        if (seekSubGain != null) {
+            seekSubGain.setEnabled(!noSub);
+            if (noSub) seekSubGain.setValue(0f);
+        }
+        if (noSub && tvSubDb != null) tvSubDb.setText("+0");
+        if (switchFmSubComp != null) switchFmSubComp.setEnabled(!noSub);
+        if (switchUltraBass != null) switchUltraBass.setEnabled(!noSub);
+    }
+
     private void setupSubControls() {
         // 1. Create the adapter (using a standard material-friendly layout)
         ArrayAdapter<String> subAdapter = new ArrayAdapter<>(
@@ -1112,23 +1237,28 @@ public class MainActivity extends AppCompatActivity {
         );
         spinnerSubFreq.setAdapter(subAdapter);
 
-        // 2. Set the initial text (replaces setSelection)
+        // 2. Set the initial text (replaces setSelection) - "No Sub" is the default for a fresh
+        // install/new preset (see SUB_FREQS's doc); existing saved presets are unaffected since
+        // this only matters until loadPreset() overwrites it with whatever was actually saved.
         // 'false' is critical here to prevent the dropdown from opening or filtering
-        spinnerSubFreq.setText(SUB_FREQS[5], false);
-        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+        spinnerSubFreq.setText(SUB_FREQS[NO_SUB_INDEX], false);
+        Globals.currentSubFreqHz = parseSubFreqHz(SUB_FREQS[NO_SUB_INDEX]);
+        updateSubDependentControlsEnabled(true);
 
         // 3. Change OnItemSelectedListener to OnItemClickListener
         spinnerSubFreq.setOnItemClickListener((parent, view, pos, id) -> {
             // Logic for Sub Comp limit (if FM Sub Comp is on AND loudness is actually active, limit
             // to 80Hz/Index 5 - Sub Comp's offset is only ever computed while loudness is on, see
-            // calculateFmOffsets(), so this restriction shouldn't apply while loudness is off)
-            if (isFullyInitialized && switchFmSubComp.isChecked() && switchFmEnable.isChecked() && pos > 5) {
+            // calculateFmOffsets(), so this restriction shouldn't apply while loudness is off).
+            // Excludes NO_SUB_INDEX - "No Sub" is always reachable regardless of Sub Comp, since
+            // selecting it disables Sub Comp outright (see updateSubDependentControlsEnabled()).
+            if (isFullyInitialized && switchFmSubComp.isChecked() && switchFmEnable.isChecked() && pos > 5 && pos != NO_SUB_INDEX) {
                 // Revert the text back to 80Hz (Index 5)
                 spinnerSubFreq.setText(SUB_FREQS[5], false);
                 Toaster.show(MainActivity.this, getString(R.string.toast_sub_comp_limit));
 
                 // Re-sync Global just in case
-                Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                Globals.currentSubFreqHz = parseSubFreqHz(SUB_FREQS[5]);
                 updateVisualizer();
                 return;
             }
@@ -1139,7 +1269,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Update the global value for other calculations
             String freqString = SUB_FREQS[pos];
-            Globals.currentSubFreqHz = Integer.parseInt(freqString);
+            Globals.currentSubFreqHz = parseSubFreqHz(freqString);
+            updateSubDependentControlsEnabled(pos == NO_SUB_INDEX);
             updateVisualizer();
         });
 
@@ -1361,6 +1492,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupFmControls() {
         switchFmEnable.jumpDrawablesToCurrentState();
         switchFmEnable.setOnCheckedChangeListener((bv, checked) -> {
+            updateFmGroupVisibility();
             if (!isUpdatingUi) {
                 if (checked) Toaster.show(this, getString(R.string.toast_loudness_sync_bass), Toast.LENGTH_LONG);
                 autoSaveCurrent();
@@ -1369,6 +1501,7 @@ public class MainActivity extends AppCompatActivity {
         });
         switchFatigueEnable.jumpDrawablesToCurrentState();
         switchFatigueEnable.setOnCheckedChangeListener((bv, checked) -> {
+            updateFmGroupVisibility();
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -1378,9 +1511,10 @@ public class MainActivity extends AppCompatActivity {
         switchFmSubComp.jumpDrawablesToCurrentState();
         switchFmSubComp.setOnCheckedChangeListener((bv, checked) -> {
             if (!isUpdatingUi) {
-                if (checked && switchFmEnable.isChecked() && java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString()) > 5) {
+                int subIdx = java.util.Arrays.asList(SUB_FREQS).indexOf(spinnerSubFreq.getText().toString());
+                if (checked && switchFmEnable.isChecked() && subIdx > 5 && subIdx != NO_SUB_INDEX) {
                     spinnerSubFreq.setText(SUB_FREQS[5], false);
-                    Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+                    Globals.currentSubFreqHz = parseSubFreqHz(SUB_FREQS[5]);
                 }
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -1404,6 +1538,7 @@ public class MainActivity extends AppCompatActivity {
         // see McuService.updateSubwoofer()'s identical calc for the real hardware write.
         switchUltraBass.jumpDrawablesToCurrentState();
         switchUltraBass.setOnCheckedChangeListener((bv, checked) -> {
+            updateFmGroupVisibility();
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -1431,6 +1566,44 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         seekUltraBassStartVol.addOnChangeListener(ubl); seekUltraBassMaxDb.addOnChangeListener(ubl);
+
+        setupFmDisclosureToggle(R.id.row_loudness_toggle, R.id.panel_loudness, R.id.iv_loudness_chevron, "fm_panel_loudness_open");
+        setupFmDisclosureToggle(R.id.row_trim_highs_toggle, R.id.panel_trim_highs, R.id.iv_trim_highs_chevron, "fm_panel_trim_highs_open");
+        setupFmDisclosureToggle(R.id.row_ultra_bass_toggle, R.id.panel_ultra_bass, R.id.iv_ultra_bass_chevron, "fm_panel_ultra_bass_open");
+        updateFmGroupVisibility();
+    }
+
+    /** Same expand/collapse-on-tap pattern as GALA's Advanced section (see
+     * row_gala_advanced_toggle's wiring), but unlike it, persisted to the standalone app prefs
+     * (not per-preset, same as switch_show_loudness_main) so these three panels reopen the way
+     * the user left them across app restarts instead of always starting collapsed. Reused here
+     * for all three switch-gated groups instead of copying the click listener three times. */
+    private void setupFmDisclosureToggle(int toggleId, int panelId, int chevronId, String prefKey) {
+        View toggle = findViewById(toggleId);
+        View panel = findViewById(panelId);
+        ImageView chevron = findViewById(chevronId);
+        if (toggle == null || panel == null) return;
+        SharedPreferences appPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean open = appPrefs.getBoolean(prefKey, false);
+        panel.setVisibility(open ? View.VISIBLE : View.GONE);
+        if (chevron != null) chevron.setRotation(open ? 0f : 180f);
+        toggle.setOnClickListener(v -> {
+            boolean expanding = panel.getVisibility() != View.VISIBLE;
+            panel.setVisibility(expanding ? View.VISIBLE : View.GONE);
+            if (chevron != null) chevron.setRotation(expanding ? 0f : 180f);
+            appPrefs.edit().putBoolean(prefKey, expanding).apply();
+        });
+    }
+
+    /** Shows/hides each of the three Loudness/Trim Highs/Ultra Bass groups entirely based on
+     * whether its own switch is on - see layout_fm_groups' doc in activity_main.xml for why
+     * (every slider in them is meaningless while its feature is off). Called from each switch's
+     * own listener above and from loadPreset(), so it's correct both live and right after a
+     * preset loads. */
+    private void updateFmGroupVisibility() {
+        if (groupLoudness != null) groupLoudness.setVisibility(switchFmEnable != null && switchFmEnable.isChecked() ? View.VISIBLE : View.GONE);
+        if (groupTrimHighs != null) groupTrimHighs.setVisibility(switchFatigueEnable != null && switchFatigueEnable.isChecked() ? View.VISIBLE : View.GONE);
+        if (groupUltraBass != null) groupUltraBass.setVisibility(switchUltraBass != null && switchUltraBass.isChecked() ? View.VISIBLE : View.GONE);
     }
 
     private void updateFmVisualizer() {
@@ -1658,7 +1831,7 @@ public class MainActivity extends AppCompatActivity {
         e.putInt("Call_rsse_val", 10);
         e.putBoolean("Call_d1_en", false);
         e.putBoolean("Call_gala_enabled", false);
-        e.putInt("Call_gala_increment", 15);
+        e.putInt("Call_gala_increment", 20);
         e.putInt("Call_gala_min_speed", 0);
         e.putInt("Call_gala_max_adj", 12);
         e.putInt("Call_gala_fade_ms", 100);
@@ -1936,16 +2109,20 @@ public class MainActivity extends AppCompatActivity {
         int sg = p.getInt(name + "_sub_g", 0); seekSubGain.setValue((float) sg);
         String subText = "+" + sg;
         tvSubDb.setText(subText);
-        int subFreqIdx = p.getInt(name + "_sub_f", 5); // 5 is the default (80Hz)
+        // NO_SUB_INDEX is the fallback only for a preset that's never saved "_sub_f" at all - an
+        // existing saved preset always has its own real saved value here, so this changes nothing
+        // for existing users (see SUB_FREQS's doc).
+        int subFreqIdx = p.getInt(name + "_sub_f", NO_SUB_INDEX);
         if (subFreqIdx < 0 || subFreqIdx >= SUB_FREQS.length) {
-            subFreqIdx = 5; // Safety fallback
+            subFreqIdx = NO_SUB_INDEX; // Safety fallback
         }
         spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
         // setText(..., false) doesn't trigger the spinner's own OnItemClickListener - which is
         // the only other place Globals.currentSubFreqHz gets updated - so without this, the sub
         // overlay curve stays stuck on whatever frequency was last manually tapped instead of
         // following the frequency each preset actually loads.
-        Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[subFreqIdx]);
+        Globals.currentSubFreqHz = parseSubFreqHz(SUB_FREQS[subFreqIdx]);
+        updateSubDependentControlsEnabled(subFreqIdx == NO_SUB_INDEX);
         if (isFullyInitialized) {
             // Slider.setValue() only fires the OnChangeListener (which is what normally updates
             // these labels, see the "bl" listener in setupFilterControls()) when the new value
@@ -2001,6 +2178,7 @@ public class MainActivity extends AppCompatActivity {
             int ultraBassMaxDb = p.getInt(name + "_ultra_bass_max_db", 6);
             seekUltraBassMaxDb.setValue((float) ultraBassMaxDb);
             tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, ultraBassMaxDb));
+            updateFmGroupVisibility();
             seekDelayFl.setValue((float) p.getInt(name + "_d_fl", 0));
             seekDelayFr.setValue((float) p.getInt(name + "_d_fr", 0));
             seekDelayRl.setValue((float) p.getInt(name + "_d_rl", 0));
@@ -2018,11 +2196,17 @@ public class MainActivity extends AppCompatActivity {
             // instead of this preset's own keys when global mode is on.
             String galaNs = galaNamespace(name);
             switchGalaEnable.setChecked(p.getBoolean(galaNs + "_gala_enabled", false));
-            seekGalaInc.setValue((float) p.getInt(galaNs + "_gala_increment", 15));
-            tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc) + 5));
-            seekGalaMinSpeed.setValue((float) p.getInt(galaNs + "_gala_min_speed", 0));
-            tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed) * 5));
-            seekGalaMaxAdj.setValue((float) p.getInt(galaNs + "_gala_max_adj", 12));
+            // Rounded to the nearest valid step (0/10/20/30/40/50) - a preset saved before this
+            // slider used stepSize=10 can hold any raw int 0-45, which Slider.setValue() would
+            // otherwise throw on once it's actually laid out (value must land exactly on a step).
+            int galaIncRaw = p.getInt(galaNs + "_gala_increment", 20);
+            seekGalaInc.setValue((float) Math.max(10, Math.min(100, Math.round(galaIncRaw / 10f) * 10)));
+            tvGalaIncVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaInc)));
+            seekGalaMinSpeed.setValue((float) Math.max(0, Math.min(15, p.getInt(galaNs + "_gala_min_speed", 0))));
+            tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format, getIntSlider(seekGalaMinSpeed)));
+            // Clamped to the slider's new 0-16 range (was 0-32) - same reasoning as above, but for
+            // range instead of step: a value saved under the old range could be out of bounds now.
+            seekGalaMaxAdj.setValue((float) Math.max(0, Math.min(16, p.getInt(galaNs + "_gala_max_adj", 12))));
             tvGalaMaxAdjVal.setText(String.valueOf(getIntSlider(seekGalaMaxAdj)));
             seekGalaFadeMs.setValue((float) p.getInt(galaNs + "_gala_fade_ms", 100));    // Changed from 300ms
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
@@ -2057,9 +2241,10 @@ public class MainActivity extends AppCompatActivity {
         final View dly = findViewById(R.id.layout_delays);
         final View ftr = findViewById(R.id.layout_filters);
         final View gl = findViewById(R.id.layout_gala);
+        final View ac = findViewById(R.id.layout_audiocheck);
 
         // 2. Put them in an array for easy looping
-        final View[] allLayouts = {eq, fm, dly, ftr, gl};
+        final View[] allLayouts = {eq, fm, dly, ftr, gl, ac};
         final ViewGroup tabContainer = (ViewGroup) eq.getParent(); // shared parent of all tab layouts
 
         bn.setOnItemSelectedListener(it -> {
@@ -2072,6 +2257,7 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.nav_delays) target = dly;
             else if (id == R.id.nav_other) target = ftr;
             else if (id == R.id.nav_gala) target = gl;
+            else if (id == R.id.nav_audiocheck) target = ac;
 
             if (target != null) {
                 // Only animate an actual tab change. Without this guard, SelectTab()
@@ -2357,8 +2543,8 @@ public class MainActivity extends AppCompatActivity {
 
         Slider.OnChangeListener galal = (slider, value, fromUser) -> {
             int p = (int) value;
-            if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p + 5));
-            else if (slider == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p * 5));
+            if (slider == seekGalaInc) tvGalaIncVal.setText(getString(R.string.speed_kmh_format,p));
+            else if (slider == seekGalaMinSpeed) tvGalaMinSpeedVal.setText(getString(R.string.speed_kmh_format,p));
             else if (slider == seekGalaMaxAdj) tvGalaMaxAdjVal.setText(String.valueOf(p));
             else if (slider == seekGalaFadeMs) tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, p));
             else if (slider == seekGalaHoldMs) tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), p / 1000f));
@@ -2384,6 +2570,452 @@ public class MainActivity extends AppCompatActivity {
         seekGalaFadeMs.addOnChangeListener(galal);
         seekGalaHoldMs.addOnChangeListener(galal);
         seekSimulateSpeed.addOnChangeListener(galal);
+
+        // Advanced Settings disclosure (Standstill Speed/Fade Delay/Hold Timer/Simulate Speed) -
+        // pure visibility toggle, nothing saved here; those sliders already autosave themselves
+        // via galal above regardless of whether this section is open.
+        View advancedToggle = findViewById(R.id.row_gala_advanced_toggle);
+        View advancedPanel = findViewById(R.id.layout_gala_advanced);
+        ImageView advancedChevron = findViewById(R.id.iv_gala_advanced_chevron);
+        if (advancedToggle != null && advancedPanel != null) {
+            advancedToggle.setOnClickListener(v -> {
+                boolean expanding = advancedPanel.getVisibility() != View.VISIBLE;
+                advancedPanel.setVisibility(expanding ? View.VISIBLE : View.GONE);
+                if (advancedChevron != null) advancedChevron.setRotation(expanding ? 0f : 180f);
+            });
+        }
+    }
+
+    private void setupAudioCheckControls() {
+        switchAcBass = findViewById(R.id.switch_audiocheck_bass);
+        switchAcVocal = findViewById(R.id.switch_audiocheck_vocal);
+        switchAcDrums = findViewById(R.id.switch_audiocheck_drums);
+        switchAcMelody = findViewById(R.id.switch_audiocheck_melody);
+        switchAcOnlySub = findViewById(R.id.switch_audiocheck_only_sub);
+
+        switchAcBass.setOnCheckedChangeListener((bv, checked) -> acBass = toggleAcStem(acBass, checked, R.raw.audiocheck_bass));
+        switchAcVocal.setOnCheckedChangeListener((bv, checked) -> acVocal = toggleAcStem(acVocal, checked, R.raw.audiocheck_vocal));
+        switchAcDrums.setOnCheckedChangeListener((bv, checked) -> acDrums = toggleAcStem(acDrums, checked, R.raw.audiocheck_drums));
+        switchAcMelody.setOnCheckedChangeListener((bv, checked) -> acMelody = toggleAcStem(acMelody, checked, R.raw.audiocheck_melody));
+
+        switchAcPinkNoise = findViewById(R.id.switch_audiocheck_pink_noise);
+        switchAcSine = findViewById(R.id.switch_audiocheck_sine);
+        seekAcSineFreq = findViewById(R.id.seek_audiocheck_sine_freq);
+        tvAcSineFreqVal = findViewById(R.id.tv_audiocheck_sine_freq_val);
+
+        // Pink noise is cached/reused across toggles like a stem (see acPinkNoise's own doc).
+        switchAcPinkNoise.setOnCheckedChangeListener((bv, checked) -> {
+            if (acPinkNoise == null) acPinkNoise = buildPinkNoiseLoopTrack();
+            if (checked) {
+                acPinkNoise.track.play();
+                if (spectrumAnalyzer != null) spectrumAnalyzer.attachToSession(acPinkNoise.track.getAudioSessionId());
+            } else {
+                acPinkNoise.track.pause();
+            }
+        });
+
+        tvAcSineFreqVal.setText(getString(R.string.lbl_hz_fmt, String.valueOf(currentSineFreqHz())));
+        // Unlike pink noise, the sine's content depends on a value that can change while it's
+        // off (the slider), so it's always rebuilt fresh on toggle-on rather than reused.
+        switchAcSine.setOnCheckedChangeListener((bv, checked) -> {
+            if (pendingSineRebuild != null) { handler.removeCallbacks(pendingSineRebuild); pendingSineRebuild = null; }
+            if (acSine != null) { acSine.track.release(); acSine = null; }
+            if (checked) {
+                acSine = buildSineLoopTrack(currentSineFreqHz());
+                acSine.track.play();
+                if (spectrumAnalyzer != null) spectrumAnalyzer.attachToSession(acSine.track.getAudioSessionId());
+            }
+            // The trick: the RTA's own frequency-smoothing was exactly what was blurring/
+            // attenuating a narrowband test tone's true peak (see SpectrumAnalyzerView's
+            // smoothingDisabled doc) - now that there's a real sine generator to drive that case,
+            // disable it for exactly as long as the tone is actually playing.
+            if (spectrumAnalyzer != null) spectrumAnalyzer.setSmoothingDisabled(checked);
+        });
+        // No fromUser guard - this slider is pure runtime AudioCheck state (see its field doc),
+        // never set programmatically except by the step buttons below, which should restart the
+        // tone at the new frequency exactly the same way a drag does. value is the slider's own
+        // normalized 0..1 position, not Hz - see posToFreq()'s doc for why it's logarithmic. The
+        // label updates immediately on every tick for responsiveness; the actual audio rebuild is
+        // debounced (see scheduleSineRebuild()'s doc) so a drag doesn't pop dozens of times.
+        seekAcSineFreq.addOnChangeListener((slider, value, fromUser) -> {
+            int freq = Math.round(posToFreq(value));
+            tvAcSineFreqVal.setText(getString(R.string.lbl_hz_fmt, String.valueOf(freq)));
+            if (switchAcSine.isChecked()) scheduleSineRebuild(freq);
+        });
+        findViewById(R.id.btn_audiocheck_sine_minus10).setOnClickListener(v -> stepSineFreq(-10));
+        findViewById(R.id.btn_audiocheck_sine_minus1).setOnClickListener(v -> stepSineFreq(-1));
+        findViewById(R.id.btn_audiocheck_sine_plus1).setOnClickListener(v -> stepSineFreq(1));
+        findViewById(R.id.btn_audiocheck_sine_plus10).setOnClickListener(v -> stepSineFreq(10));
+
+        // Fader convention: _f_fr/_f_lr are 0..24, 12=center, LOW=rear/left, HIGH=front/right -
+        // confirmed from SpectrumAnalyzerView's frontWeight/rearWeight math (raw=0 zeroes
+        // frontWeight out entirely) and independently from the fader screen's own "+" step
+        // button, labeled btn_front, which moves the value up. (Originally wired backwards here -
+        // verified wrong on real hardware, fixed.)
+        findViewById(R.id.btn_audiocheck_fl).setOnClickListener(v -> handleSpeakerButton(R.id.btn_audiocheck_fl, R.raw.audiocheck_fl, 24, 0));
+        findViewById(R.id.btn_audiocheck_fr).setOnClickListener(v -> handleSpeakerButton(R.id.btn_audiocheck_fr, R.raw.audiocheck_fr, 24, 24));
+        findViewById(R.id.btn_audiocheck_rl).setOnClickListener(v -> handleSpeakerButton(R.id.btn_audiocheck_rl, R.raw.audiocheck_rl, 0, 0));
+        findViewById(R.id.btn_audiocheck_rr).setOnClickListener(v -> handleSpeakerButton(R.id.btn_audiocheck_rr, R.raw.audiocheck_rr, 0, 24));
+
+        switchAcOnlySub.setOnCheckedChangeListener((bv, checked) -> {
+            Intent intent = new Intent("com.radiorubka.wdsp.AUDIOCHECK_ONLY_SUB");
+            intent.setPackage(getPackageName());
+            intent.putExtra("enabled", checked);
+            sendBroadcast(intent);
+        });
+    }
+
+    /** Starts/stops one stem's gapless AudioTrack loop, joined in sync with whichever other
+     * stems are already playing. The 4 stem switches are independent and freely combinable
+     * (that's the point of having separate stems) - this just keeps them phase-locked when
+     * combined, since they're parallel tracks of the same song: a stem toggled on while others
+     * are already looping computes how far into the shared loop cycle those others currently
+     * are (elapsed real time since acStemLoopStartNanos, modulo this stem's own loop length) and
+     * starts there instead of at 0. When the last stem stops, the clock resets so the next fresh
+     * start begins a new sync epoch at 0. */
+    private LoopTrack toggleAcStem(LoopTrack lt, boolean play, int rawResId) {
+        if (lt == null) {
+            try {
+                lt = buildLoopTrack(loadWav(rawResId));
+            } catch (IOException e) {
+                Log.e(TAG, "Audio Check: failed to load stem " + rawResId, e);
+                return null;
+            }
+        }
+        if (!play) {
+            lt.track.pause();
+            if (!anyStemPlaying()) acStemLoopStartNanos = -1;
+            return lt;
+        }
+        if (acStemLoopStartNanos < 0) {
+            acStemLoopStartNanos = System.nanoTime();
+            lt.track.setPlaybackHeadPosition(0);
+            handler.postDelayed(acStemSyncWatchdog, AC_STEM_SYNC_CHECK_MS);
+        } else {
+            double elapsedSec = (System.nanoTime() - acStemLoopStartNanos) / 1_000_000_000.0;
+            int offsetFrames = (int) ((elapsedSec * lt.sampleRate) % lt.frames);
+            lt.track.pause();
+            lt.track.setPlaybackHeadPosition(offsetFrames);
+        }
+        lt.track.play();
+        if (spectrumAnalyzer != null) spectrumAnalyzer.attachToSession(lt.track.getAudioSessionId());
+        return lt;
+    }
+
+    private boolean anyStemPlaying() {
+        return isStemPlaying(acBass) || isStemPlaying(acVocal) || isStemPlaying(acDrums) || isStemPlaying(acMelody);
+    }
+
+    private boolean isStemPlaying(LoopTrack lt) {
+        return lt != null && lt.track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+    }
+
+    /** Self-rescheduling watchdog (see acStemSyncWatchdog's own doc for why this exists) - as long
+     * as 2+ stems are playing, re-derives each one's expected position in the loop from the shared
+     * clock and snaps any that have drifted past AC_STEM_SYNC_TOLERANCE_MS back into line. Stops
+     * rescheduling itself once fewer than 2 stems remain, so it dies out on its own rather than
+     * needing an explicit cancel from the stop/toggle-off paths (onDestroy()'s existing
+     * removeCallbacksAndMessages(null) still cancels a pending tick immediately if needed). */
+    private void checkAcStemSync() {
+        if (acStemLoopStartNanos >= 0 && countPlayingStems() >= 2) {
+            double elapsedSec = (System.nanoTime() - acStemLoopStartNanos) / 1_000_000_000.0;
+            resyncStemIfDrifted(acBass, elapsedSec);
+            resyncStemIfDrifted(acVocal, elapsedSec);
+            resyncStemIfDrifted(acDrums, elapsedSec);
+            resyncStemIfDrifted(acMelody, elapsedSec);
+        }
+        if (anyStemPlaying()) handler.postDelayed(acStemSyncWatchdog, AC_STEM_SYNC_CHECK_MS);
+    }
+
+    private int countPlayingStems() {
+        int n = 0;
+        if (isStemPlaying(acBass)) n++;
+        if (isStemPlaying(acVocal)) n++;
+        if (isStemPlaying(acDrums)) n++;
+        if (isStemPlaying(acMelody)) n++;
+        return n;
+    }
+
+    /** getPlaybackHeadPosition() keeps counting cumulatively across loop boundaries rather than
+     * wrapping at the buffer length (the same assumption toggleAcStem()'s own join-sync math
+     * relies on) - '% lt.frames' is what turns that into "where in the current loop iteration."
+     * Correcting via pause()+setPlaybackHeadPosition()+play() is a hard cut, same as the join-sync
+     * path, but only fires when actually drifted past tolerance, so in practice it's rare. */
+    private void resyncStemIfDrifted(LoopTrack lt, double elapsedSec) {
+        if (!isStemPlaying(lt)) return;
+        int expectedFrames = (int) ((elapsedSec * lt.sampleRate) % lt.frames);
+        int actualFrames = lt.track.getPlaybackHeadPosition() % lt.frames;
+        int diff = Math.abs(expectedFrames - actualFrames);
+        diff = Math.min(diff, lt.frames - diff);
+        int toleranceFrames = (int) (AC_STEM_SYNC_TOLERANCE_MS / 1000f * lt.sampleRate);
+        if (diff > toleranceFrames) {
+            lt.track.pause();
+            lt.track.setPlaybackHeadPosition(expectedFrames);
+            lt.track.play();
+        }
+    }
+
+    /** Parses a WAV resource's PCM data by walking its RIFF chunks directly (skipping any
+     * chunk that isn't "fmt "/"data", e.g. a DAW-exported "LIST"/"fact" chunk) instead of
+     * assuming a fixed 44-byte header - simple since WAV is already uncompressed PCM, no decoder
+     * needed. */
+    private WavPcm loadWav(int rawResId) throws IOException {
+        byte[] b;
+        try (InputStream in = getResources().openRawResource(rawResId)) {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int n;
+            while ((n = in.read(chunk)) != -1) buf.write(chunk, 0, n);
+            b = buf.toByteArray();
+        }
+        int sampleRate = 44100, channels = 2, bitsPerSample = 16;
+        byte[] data = null;
+        int pos = 12; // skip "RIFF" + size(4) + "WAVE"
+        while (pos + 8 <= b.length) {
+            String chunkId = new String(b, pos, 4, java.nio.charset.StandardCharsets.US_ASCII);
+            int chunkSize = (b[pos + 4] & 0xFF) | ((b[pos + 5] & 0xFF) << 8) | ((b[pos + 6] & 0xFF) << 16) | ((b[pos + 7] & 0xFF) << 24);
+            int chunkDataStart = pos + 8;
+            if ("fmt ".equals(chunkId)) {
+                channels = (b[chunkDataStart + 2] & 0xFF) | ((b[chunkDataStart + 3] & 0xFF) << 8);
+                sampleRate = (b[chunkDataStart + 4] & 0xFF) | ((b[chunkDataStart + 5] & 0xFF) << 8) | ((b[chunkDataStart + 6] & 0xFF) << 16) | ((b[chunkDataStart + 7] & 0xFF) << 24);
+                bitsPerSample = (b[chunkDataStart + 14] & 0xFF) | ((b[chunkDataStart + 15] & 0xFF) << 8);
+            } else if ("data".equals(chunkId)) {
+                data = new byte[chunkSize];
+                System.arraycopy(b, chunkDataStart, data, 0, chunkSize);
+                break;
+            }
+            pos = chunkDataStart + chunkSize + (chunkSize % 2); // chunks are word-aligned/padded to even size
+        }
+        if (data == null) throw new IOException("No data chunk in WAV resource " + rawResId);
+        return new WavPcm(sampleRate, channels, bitsPerSample, data);
+    }
+
+    /** Builds a MODE_STATIC AudioTrack holding the entire stem and configures it to loop the
+     * whole buffer forever (see toggleAcStem()'s own doc for why this, not MediaPlayer). Assumes
+     * 16-bit PCM, which is what these stems actually are - wDSP doesn't need to support anything
+     * else here. */
+    private LoopTrack buildLoopTrack(WavPcm wav) {
+        AudioTrack track = buildStaticLoopAudioTrack(wav.pcm, wav.sampleRate, wav.channels);
+        track.setLoopPoints(0, wav.frameCount, -1);
+        return new LoopTrack(track, wav.frameCount, wav.sampleRate);
+    }
+
+    private static final int AC_GEN_SAMPLE_RATE = 44100;
+
+    /** Shared AudioTrack construction for every Audio Check loop - stems, pink noise, and the
+     * sine generator all end up here. Static buffer, not streamed, which is what makes
+     * setLoopPoints() genuinely gapless (see toggleAcStem()'s doc). Caller still has to call
+     * setLoopPoints() itself once it knows the frame count. */
+    private AudioTrack buildStaticLoopAudioTrack(byte[] pcm, int sampleRate, int channels) {
+        AudioTrack track = new AudioTrack.Builder()
+                .setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build())
+                .setAudioFormat(new AudioFormat.Builder()
+                        .setSampleRate(sampleRate)
+                        .setChannelMask(channels == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO)
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .build())
+                .setBufferSizeInBytes(pcm.length)
+                .setTransferMode(AudioTrack.MODE_STATIC)
+                .build();
+        track.write(pcm, 0, pcm.length);
+        return track;
+    }
+
+    private static final float AC_SINE_MIN_HZ = 20f, AC_SINE_MAX_HZ = 20000f;
+
+    /** seek_audiocheck_sine_freq's raw value (0..1) is a position along a logarithmic frequency
+     * scale, not Hz directly - pitch/frequency perception is logarithmic (an octave is a
+     * doubling, not a fixed Hz step), same reasoning as AudioConfig.frequencyAt()'s EQ-band
+     * mapping, so a linear slider would waste almost all its travel on the top octave and leave
+     * the entire bass/midrange crammed into a sliver. pos 0 = 20Hz, pos 1 = 20000Hz, every equal
+     * step in between is an equal ratio (not an equal Hz difference). */
+    private float posToFreq(float pos) {
+        return AC_SINE_MIN_HZ * (float) Math.pow(AC_SINE_MAX_HZ / AC_SINE_MIN_HZ, pos);
+    }
+
+    /** Inverse of posToFreq() - used when a Hz value (from the step buttons, or clamping) needs
+     * to move the slider's thumb to match. */
+    private float freqToPos(float freqHz) {
+        return (float) (Math.log(freqHz / AC_SINE_MIN_HZ) / Math.log(AC_SINE_MAX_HZ / AC_SINE_MIN_HZ));
+    }
+
+    private int currentSineFreqHz() {
+        return Math.round(posToFreq(seekAcSineFreq.getValue()));
+    }
+
+    /** Adjusts the sine generator's frequency by delta Hz, clamped to [20, 20000] - setValue()
+     * re-fires seekAcSineFreq's own change listener (see setupAudioCheckControls()), which
+     * restarts the tone at the new frequency if it's currently playing, exactly like a manual
+     * drag would. Works in Hz, not slider position, so a tap always means "exactly delta Hz
+     * away" regardless of where the log scale puts that on the slider. */
+    private void stepSineFreq(int delta) {
+        int newFreq = Math.max((int) AC_SINE_MIN_HZ, Math.min((int) AC_SINE_MAX_HZ, currentSineFreqHz() + delta));
+        seekAcSineFreq.setValue(freqToPos(newFreq));
+    }
+
+    private static final int SINE_REBUILD_DEBOUNCE_MS = 80;
+
+    /** Debounces the sine generator's rebuild so a slider drag (which can fire this many times a
+     * second) only actually rebuilds once the value has settled for a moment, instead of on every
+     * intermediate tick - each rebuild is a real pop risk (see crossfadeToSineFreq()'s doc), so
+     * fewer rebuilds directly means fewer chances to hear one. */
+    private void scheduleSineRebuild(int freq) {
+        if (pendingSineRebuild != null) handler.removeCallbacks(pendingSineRebuild);
+        pendingSineRebuild = () -> { pendingSineRebuild = null; crossfadeToSineFreq(freq); };
+        handler.postDelayed(pendingSineRebuild, SINE_REBUILD_DEBOUNCE_MS);
+    }
+
+    /** Swaps to a new frequency with a short volume crossfade instead of a hard cut - the old
+     * buffer gets interrupted at an arbitrary point in its waveform (not necessarily a zero
+     * crossing), while the new one always starts at sin(0)=0, so a straight release()+play()
+     * is an audible amplitude discontinuity every single time. Ramping the old one out and the
+     * new one in over a few milliseconds hides that jump under the ramp instead of exposing it
+     * as a click. */
+    private void crossfadeToSineFreq(int freq) {
+        LoopTrack old = acSine;
+        LoopTrack fresh = buildSineLoopTrack(freq);
+        fresh.track.setVolume(0f);
+        fresh.track.play();
+        if (spectrumAnalyzer != null) spectrumAnalyzer.attachToSession(fresh.track.getAudioSessionId());
+        acSine = fresh;
+
+        int steps = 4;
+        int stepMs = 6;
+        for (int i = 1; i <= steps; i++) {
+            float t = i / (float) steps;
+            handler.postDelayed(() -> {
+                fresh.track.setVolume(t);
+                if (old != null) old.track.setVolume(1f - t);
+            }, (long) i * stepMs);
+        }
+        handler.postDelayed(() -> { if (old != null) { old.track.pause(); old.track.release(); } }, (long) (steps + 1) * stepMs);
+    }
+
+    /** Builds a seamless single-tone loop at freqHz: the buffer holds exactly a whole number of
+     * cycles (as close to 1 second as that allows), so the waveform's value AND slope both match
+     * at the loop seam - the standard trick for a genuinely click-free tone loop, unlike pink
+     * noise below where there's no "phase" to match. Mono, since a test tone has no reason to
+     * differ L/R, and at reduced amplitude since this is a reference tone, not a mix. */
+    private LoopTrack buildSineLoopTrack(int freqHz) {
+        int cycles = Math.max(1, Math.round(freqHz * 1.0f));
+        int frames = Math.round(cycles * AC_GEN_SAMPLE_RATE / (float) freqHz);
+        byte[] pcm = new byte[frames * 2]; // mono, 16-bit
+        double amplitude = 0.3 * Short.MAX_VALUE;
+        for (int i = 0; i < frames; i++) {
+            short s = (short) Math.round(amplitude * Math.sin(2 * Math.PI * freqHz * i / AC_GEN_SAMPLE_RATE));
+            pcm[i * 2] = (byte) (s & 0xFF);
+            pcm[i * 2 + 1] = (byte) ((s >> 8) & 0xFF);
+        }
+        AudioTrack track = buildStaticLoopAudioTrack(pcm, AC_GEN_SAMPLE_RATE, 1);
+        track.setLoopPoints(0, frames, -1);
+        return new LoopTrack(track, frames, AC_GEN_SAMPLE_RATE);
+    }
+
+    /** Pink noise via Paul Kellet's well-known refined 3-pole IIR approximation, driven by white
+     * noise - standard, cheap, good enough for a speaker-test signal (doesn't need to be
+     * mathematically exact pink noise, just close). A few seconds long so the loop point isn't
+     * rhythmically noticeable - unlike the sine above, random noise has no phase to match at the
+     * seam, so this just relies on being long enough that any discontinuity is inaudible under
+     * the signal itself. */
+    private LoopTrack buildPinkNoiseLoopTrack() {
+        int frames = AC_GEN_SAMPLE_RATE * 5;
+        byte[] pcm = new byte[frames * 2];
+        java.util.Random rnd = new java.util.Random();
+        float b0 = 0, b1 = 0, b2 = 0;
+        for (int i = 0; i < frames; i++) {
+            float white = rnd.nextFloat() * 2f - 1f;
+            b0 = 0.99765f * b0 + white * 0.0990460f;
+            b1 = 0.96300f * b1 + white * 0.2965164f;
+            b2 = 0.57000f * b2 + white * 1.0526913f;
+            float pink = (b0 + b1 + b2 + white * 0.1848f) * 0.1f;
+            pink = Math.max(-1f, Math.min(1f, pink));
+            short s = (short) Math.round(pink * Short.MAX_VALUE);
+            pcm[i * 2] = (byte) (s & 0xFF);
+            pcm[i * 2 + 1] = (byte) ((s >> 8) & 0xFF);
+        }
+        AudioTrack track = buildStaticLoopAudioTrack(pcm, AC_GEN_SAMPLE_RATE, 1);
+        track.setLoopPoints(0, frames, -1);
+        return new LoopTrack(track, frames, AC_GEN_SAMPLE_RATE);
+    }
+
+    /** Raw PCM + format pulled out of a WAV resource by loadWav(). */
+    private static class WavPcm {
+        final int sampleRate, channels, bitsPerSample;
+        final byte[] pcm;
+        final int frameCount;
+        WavPcm(int sampleRate, int channels, int bitsPerSample, byte[] pcm) {
+            this.sampleRate = sampleRate; this.channels = channels; this.bitsPerSample = bitsPerSample;
+            this.pcm = pcm;
+            this.frameCount = pcm.length / (channels * (bitsPerSample / 8));
+        }
+    }
+
+    /** Only one speaker-test file plays at a time (see activeSpeakerBtnId's doc) - tapping the
+     * currently-active button stops it early and clears the fader override (AUDIOCHECK_FADER
+     * with fr/lr -1 - see McuService's receiver); tapping a different one switches straight to
+     * it. One-shot (no loop): the OnCompletionListener clears the override on its own once
+     * playback finishes, so you don't have to tap again just to put the fader back. */
+    private void handleSpeakerButton(int btnId, int rawResId, int faderFr, int faderLr) {
+        if (mpAcSpeaker != null) { mpAcSpeaker.stop(); mpAcSpeaker.release(); mpAcSpeaker = null; }
+        boolean wasActive = activeSpeakerBtnId == btnId;
+        activeSpeakerBtnId = 0;
+
+        Intent intent = new Intent("com.radiorubka.wdsp.AUDIOCHECK_FADER");
+        intent.setPackage(getPackageName());
+        if (wasActive) {
+            intent.putExtra("fr", -1); intent.putExtra("lr", -1);
+            sendBroadcast(intent);
+            return;
+        }
+
+        activeSpeakerBtnId = btnId;
+        mpAcSpeaker = MediaPlayer.create(this, rawResId);
+        if (mpAcSpeaker != null) {
+            mpAcSpeaker.setOnCompletionListener(mp -> {
+                if (activeSpeakerBtnId == btnId) handleSpeakerButton(btnId, rawResId, faderFr, faderLr);
+            });
+            mpAcSpeaker.start();
+        }
+        intent.putExtra("fr", faderFr); intent.putExtra("lr", faderLr);
+        sendBroadcast(intent);
+    }
+
+    /** Stops every Audio Check loop and clears both runtime overrides via the stem/Only-Sub
+     * switches' own listeners (unchecking them) plus a direct fader-clear broadcast for the
+     * speaker buttons, which aren't backed by a switch. Deliberately NOT called on tab-switch or
+     * onPause() - a test is meant to keep running while you work on other tabs or briefly lose
+     * focus (a notification, a permission dialog). Called from onStop() (actually minimizing/
+     * leaving the app - see its own doc for why that's the line) and onDestroy(). */
+    private void stopAllAudioCheck() {
+        if (switchAcBass != null) switchAcBass.setChecked(false);
+        if (switchAcVocal != null) switchAcVocal.setChecked(false);
+        if (switchAcDrums != null) switchAcDrums.setChecked(false);
+        if (switchAcMelody != null) switchAcMelody.setChecked(false);
+        if (switchAcPinkNoise != null) switchAcPinkNoise.setChecked(false);
+        if (switchAcSine != null) switchAcSine.setChecked(false);
+        if (switchAcOnlySub != null) switchAcOnlySub.setChecked(false);
+
+        if (mpAcSpeaker != null) { mpAcSpeaker.stop(); mpAcSpeaker.release(); mpAcSpeaker = null; }
+        activeSpeakerBtnId = 0;
+        Intent faderIntent = new Intent("com.radiorubka.wdsp.AUDIOCHECK_FADER");
+        faderIntent.setPackage(getPackageName());
+        faderIntent.putExtra("fr", -1); faderIntent.putExtra("lr", -1);
+        sendBroadcast(faderIntent);
+    }
+
+    /** Actually frees the stems' native AudioTrack buffers - stopAllAudioCheck() above only
+     * pauses them (so resuming the Activity doesn't have to re-parse and re-write each WAV),
+     * so this is separate and only called from onDestroy(), not onPause(). */
+    private void releaseAudioCheckTracks() {
+        if (acBass != null) { acBass.track.release(); acBass = null; }
+        if (acVocal != null) { acVocal.track.release(); acVocal = null; }
+        if (acDrums != null) { acDrums.track.release(); acDrums = null; }
+        if (acMelody != null) { acMelody.track.release(); acMelody = null; }
+        if (acPinkNoise != null) { acPinkNoise.track.release(); acPinkNoise = null; }
+        if (acSine != null) { acSine.track.release(); acSine = null; }
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
@@ -2397,6 +3029,11 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
         if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+        // Deliberately not stopped until the Activity is actually destroyed, not merely paused
+        // (see stopAllAudioCheck()'s own doc) - a test should survive the app briefly losing
+        // foreground focus (a notification, switching apps) just as much as switching tabs.
+        stopAllAudioCheck();
+        releaseAudioCheckTracks();
         try {
             unregisterReceiver(serviceReceiver);
         }
@@ -2521,12 +3158,13 @@ public class MainActivity extends AppCompatActivity {
         tvFaderFrFrontVal.setText(fr > 12 ? String.valueOf(fr - 12) : "");
         tvFaderFrRearVal.setText(fr < 12 ? String.valueOf(12 - fr) : "");
         if (balancePointer != null) balancePointer.setBalance((lr - 12) / 12f, (fr - 12) / 12f);
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setFaderBalance((float) fr, (float) lr);
     }
 
     private void resetUiInternal() {
         isUpdatingUi = true; for (Slider s : gainSliders) s.setValue(6f); for (int i = 0; i<AudioConfig.NUM_BANDS; i++) updateDbLabel(i, 6);
         if (isFullyInitialized) {
-            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[5], false); Globals.currentSubFreqHz = Integer.parseInt(SUB_FREQS[5]);
+            for (ToggleButton t : qSwitches) t.setChecked(false); seekSubGain.setValue(0); spinnerSubFreq.setText(SUB_FREQS[NO_SUB_INDEX], false); Globals.currentSubFreqHz = parseSubFreqHz(SUB_FREQS[NO_SUB_INDEX]); updateSubDependentControlsEnabled(true);
             seekFaderLr.setValue(12); seekFaderFr.setValue(12); updateFaderLabels(); switchLoud.setChecked(false);
             switchFmEnable.setChecked(false); switchFatigueEnable.setChecked(false); switchFmSubComp.setChecked(false);
             seekFmCalVol.setValue(25); seekFmStrength.setValue(100);
@@ -2534,11 +3172,12 @@ public class MainActivity extends AppCompatActivity {
             switchUltraBass.setChecked(false);
             seekUltraBassStartVol.setValue(16); tvUltraBassStartVolVal.setText(String.valueOf(16));
             seekUltraBassMaxDb.setValue(6); tvUltraBassMaxDbVal.setText(getString(R.string.lbl_db_fmt, 6));
+            updateFmGroupVisibility();
 
             // GALA reset
             switchGalaEnable.setChecked(false);
             switchGalaDisableForPreset.setChecked(false);
-            seekGalaInc.setValue(15);
+            seekGalaInc.setValue(20);
             seekGalaMinSpeed.setValue(0);
 //            seekGalaMaxSpeed.setProgress(30);
             seekGalaMaxAdj.setValue(12);

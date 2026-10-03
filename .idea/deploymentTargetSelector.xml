@@ -7,7 +7,7 @@
       </SelectionState>
       <SelectionState runConfigName="wdsp_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-10-01T02:02:52.276984200Z">
+        <DropdownSelection timestamp="2026-10-03T11:31:46.962998500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\v\.android\avd\k706.avd" />

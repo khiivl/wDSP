@@ -340,20 +340,24 @@ public class FmVisualizerView extends View {
         // 4b. Sub LPF overlay curve (see AudioConfig.subFilterResponseDb()) - same x/frequency
         // sampling as the main curve above, drawn as a separate dashed line.
         subPath.reset();
-        for (int s = 0; s <= CURVE_SAMPLES; s++) {
-            float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
-            // See the main curve loop's own t comment above - unclamped so frequencyAt() can
-            // extrapolate past the first/last band instead of this pinning flat at the edges.
-            float t = (x - xCoords[0]) / (xCoords[AudioConfig.NUM_BANDS - 1] - xCoords[0]) * (AudioConfig.NUM_BANDS - 1);
+        // subCutoffHz <= 0 means "No Sub" (see MainActivity.SUB_FREQS's doc) - leave subPath
+        // empty (a no-op to draw) instead of plotting a curve for a sub that doesn't exist.
+        if (subCutoffHz > 0f) {
+            for (int s = 0; s <= CURVE_SAMPLES; s++) {
+                float x = bgLeft + (bgRight - bgLeft) * (s / (float) CURVE_SAMPLES);
+                // See the main curve loop's own t comment above - unclamped so frequencyAt() can
+                // extrapolate past the first/last band instead of this pinning flat at the edges.
+                float t = (x - xCoords[0]) / (xCoords[AudioConfig.NUM_BANDS - 1] - xCoords[0]) * (AudioConfig.NUM_BANDS - 1);
 
-            float freqHz = AudioConfig.frequencyAt(t);
-            float db = AudioConfig.subFilterResponseDb(freqHz, subCutoffHz, AudioConfig.SUB_FILTER_ORDER, subGainDb);
-            // Only the top is clamped - let a fully rolled-off point keep going down and get
-            // clipped by the plot rect below instead of pinning flat along the bottom grid line.
-            float value = Math.min(MAX_GAIN, 6f + db / 2f);
-            float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
+                float freqHz = AudioConfig.frequencyAt(t);
+                float db = AudioConfig.subFilterResponseDb(freqHz, subCutoffHz, AudioConfig.SUB_FILTER_ORDER, subGainDb);
+                // Only the top is clamped - let a fully rolled-off point keep going down and get
+                // clipped by the plot rect below instead of pinning flat along the bottom grid line.
+                float value = Math.min(MAX_GAIN, 6f + db / 2f);
+                float y = drawStartY + drawHeight - (value / MAX_GAIN) * drawHeight;
 
-            if (s == 0) subPath.moveTo(x, y); else subPath.lineTo(x, y);
+                if (s == 0) subPath.moveTo(x, y); else subPath.lineTo(x, y);
+            }
         }
 
         // 5. Prepare Fill Path (Aligned to wide edges)

@@ -610,6 +610,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="-10dp"
                             android:valueFrom="0"
                             android:valueTo="32"
                             android:stepSize="1"
@@ -646,6 +647,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="-10dp"
                             android:valueFrom="0"
                             android:valueTo="100"
                             android:stepSize="1"
@@ -682,6 +684,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="-10dp"
                             android:valueFrom="0"
                             android:valueTo="32"
                             android:stepSize="1"
@@ -718,6 +721,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="-10dp"
                             android:valueFrom="0"
                             android:valueTo="32"
                             android:stepSize="1"
@@ -754,6 +758,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="-10dp"
                             android:valueFrom="1"
                             android:valueTo="12"
                             android:stepSize="1"
@@ -1890,6 +1895,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="45"
                                 android:stepSize="1"
@@ -1925,6 +1931,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="60"
                                 android:stepSize="1"
@@ -1960,6 +1967,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="32"
                                 android:stepSize="1"
@@ -1995,6 +2003,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="2000"
                                 android:stepSize="100"
@@ -2030,6 +2039,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="10000"
                                 android:stepSize="500"
@@ -2084,6 +2094,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:layout_marginStart="-10dp"
                                 android:valueFrom="0"
                                 android:valueTo="200"
                                 android:stepSize="1"
@@ -2106,6 +2117,363 @@
                                 android:gravity="end"
                                 android:textColor="#FF5722" />
                         </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Audio Check Tab Content - internal hardware QA tool (looping stem playback +
+             per-speaker test tones + an EQ/filter override to isolate the sub), not meant for
+             end users, so its strings are English-only (see strings.xml). Same ids as the
+             landscape layout's own Audio Check tab - MainActivity's setupAudioCheckControls()
+             binds them once regardless of orientation. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_audiocheck"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_audiocheck_title"
+                style="@style/TextTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/margin_standard"
+                android:text="@string/audiocheck_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:fillViewport="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_audiocheck_title">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/padding_standard">
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/audiocheck_stems_label" />
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_bass" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_bass"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_vocal" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_vocal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_drums" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_drums"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/stem_melody" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_melody"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/audiocheck_pink_noise" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_pink_noise"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical">
+                            <TextView
+                                style="@style/TextLabel"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/audiocheck_sine_label" />
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_audiocheck_sine"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/audiocheck_sine_freq" />
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_audiocheck_sine_freq"
+                            app:thumbHeight="@dimen/thumb_height"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="-10dp"
+                            android:valueFrom="0"
+                            android:valueTo="1"
+                            android:value="0.56632"
+                            app:thumbRadius="10dp"
+                            app:haloRadius="24dp"
+                            app:haloColor="@color/transparent"
+                            app:thumbColor="@color/cyan_custom"
+                            app:tickColorActive="@color/tick_color_active"
+                            app:tickColorInactive="@color/tick_color_inactive"
+                            app:trackColorActive="@color/track_color_active"
+                            app:trackColorInactive="@color/track_color_inactive"
+                            app:trackHeight="@dimen/slider_track_height"
+                            app:labelBehavior="gone" />
+                        <TextView
+                            android:id="@+id/tv_audiocheck_sine_freq_val"
+                            style="@style/TextValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/value_default" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_minus10"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="-10"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_minus1"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="-1"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_plus1"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginEnd="@dimen/margin_tiny"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="+1"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sine_plus10"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="+10"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/audiocheck_speaker_label" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_fl"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:backgroundTint="@color/btn_rename_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_fl"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_fr"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_export_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_fr"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_rl"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_import_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_rl"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_rr"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="@dimen/button_top_height"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:backgroundTint="@color/btn_delete_bg"
+                            android:paddingHorizontal="@dimen/padding_small"
+                            android:text="@string/speaker_rr"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color_top"
+                            android:textColor="@color/colored_button_text"
+                            android:textSize="@dimen/text_size_small" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:gravity="center_vertical">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/audiocheck_only_sub" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_audiocheck_only_sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
 
                 </LinearLayout>

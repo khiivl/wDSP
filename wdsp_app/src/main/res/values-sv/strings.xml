@@ -12,12 +12,13 @@
 
     <!-- EQ Tab -->
     <string name="lbl_sub">Sub:</string>
+    <string name="no_sub">Av</string>
     <string name="q_high">4.7</string>
     <string name="q_low">2.2</string>
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">F-M Loudness-kurva</string>
-    <string name="enable_loudness">Aktivera Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Dämpa diskant</string>
     <string name="sub_tweaking">Sub-justering</string>
     <string name="show_loudness_on_main">Visa på huvudsidan</string>
@@ -65,6 +66,7 @@
     <string name="enable_gala_feature">Aktivera GALA-funktion</string>
     <string name="gala_global">Global</string>
     <string name="gala_disable_for_preset">Inaktivera för denna profil</string>
+    <string name="gala_advanced_settings">Avancerat</string>
     <string name="vol_step_every">Volymsteg per:</string>
     <string name="gps_speed_label">GPS-HASTIGHET</string>
     <string name="current_gps_speed">Nuvarande GPS-hastighet:</string>
