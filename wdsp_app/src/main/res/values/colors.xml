@@ -17,13 +17,13 @@
     <color name="card_bg_theme_aware">#59FFFFFF</color>
     <color name="link_blue">#1976D2</color>
 
-    <!-- Preset Button Colors (QFRadio gradient spectrum) -->
-    <color name="btn_auto_bg">#1FE7C4</color>
-    <color name="btn_add_bg">#00B4D8</color>
-    <color name="btn_rename_bg">#0077B6</color>
-    <color name="btn_export_bg">#6F70B4</color>
-    <color name="btn_import_bg">#9F5E9D</color>
-    <color name="btn_delete_bg">#E63946</color>
+    <!-- Preset Button Colors (Author's master palette) -->
+    <color name="btn_auto_bg">#028889</color>
+    <color name="btn_add_bg">#0085a4</color>
+    <color name="btn_rename_bg">#2b7db6</color>
+    <color name="btn_export_bg">#6f70b4</color>
+    <color name="btn_import_bg">#9f5e9d</color>
+    <color name="btn_delete_bg">#b95076</color>
     <color name="btn_lower_bg">#00000000</color>
 
     <!-- Slider Colors -->
