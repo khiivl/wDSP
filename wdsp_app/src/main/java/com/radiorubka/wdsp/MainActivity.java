@@ -199,6 +199,9 @@ public class MainActivity extends AppCompatActivity {
     
     // GALA Controls
     private MaterialButton switchGalaEnable, switchGalaGlobal;
+    // The head unit's buttons in our accent while this screen is shown (the author's 0.5; a
+    // switch in Settings, off by default).
+    private final ButtonBacklight buttonBacklight = new ButtonBacklight();
     private Slider seekGalaInc, seekGalaMinSpeed, seekSimulateSpeed, seekGalaMaxAdj;
     private Slider seekGalaFadeMs, seekGalaHoldMs;
   
@@ -515,12 +518,14 @@ public class MainActivity extends AppCompatActivity {
         checkAndStartSpectrumAnalyzer();
         updateSpectrumModeUi();
         checkRadioMicCalibrationInvite();
+        buttonBacklight.apply(this);
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         applyAppTheme();
+        buttonBacklight.apply(this);   // day/night flipped: the other theme's accent
         if (isFullyInitialized) {
             refreshAllUiValues();
             SelectTab();
@@ -1331,6 +1336,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         sendUiSignal(false);
+        buttonBacklight.restore();
     }
 
     private void sendUiSignal(boolean active) {

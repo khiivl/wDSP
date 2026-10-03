@@ -612,6 +612,7 @@ public class SettingsActivity extends AppCompatActivity {
         // Resuming the player (owner, 14.09.2026): two separate switches, one or the other or both.
         bindPrefToggle(R.id.btn_resume_after_reboot_toggle, PlayerResume.PREF_AFTER_REBOOT);
         bindPrefToggle(R.id.btn_resume_after_sleep_toggle, PlayerResume.PREF_AFTER_SLEEP);
+        bindPrefToggle(R.id.btn_button_backlight_toggle, ButtonBacklight.PREF_ENABLED);
         bindSleepWhitelistButton();
     }
 
@@ -659,6 +660,8 @@ public class SettingsActivity extends AppCompatActivity {
         if (reboot != null) styleOnOffButton(reboot, ThemeManager.prefs(this).getBoolean(PlayerResume.PREF_AFTER_REBOOT, false));
         TextView sleep = findViewById(R.id.btn_resume_after_sleep_toggle);
         if (sleep != null) styleOnOffButton(sleep, ThemeManager.prefs(this).getBoolean(PlayerResume.PREF_AFTER_SLEEP, false));
+        TextView backlight = findViewById(R.id.btn_button_backlight_toggle);
+        if (backlight != null) styleOnOffButton(backlight, ThemeManager.prefs(this).getBoolean(ButtonBacklight.PREF_ENABLED, false));
     }
 
     private void bindAccordion() {
@@ -3145,7 +3148,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_range_db,
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
             R.id.label_screensaver_enable, R.id.label_screensaver_cover_sb, R.id.label_screensaver_apps,
-            R.id.label_resume_after_reboot, R.id.label_resume_after_sleep
+            R.id.label_resume_after_reboot, R.id.label_resume_after_sleep, R.id.label_button_backlight
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -3174,7 +3177,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_system_report,
             R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_cover_sb, R.id.desc_screensaver_note,
-            R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep,
+            R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep, R.id.desc_button_backlight,
             R.id.label_screensaver_delay, R.id.label_screensaver_bg_day, R.id.label_screensaver_bg_night,
             R.id.label_screensaver_apps,
             R.id.label_screensaver_width, R.id.label_screensaver_height,
