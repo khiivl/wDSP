@@ -312,16 +312,16 @@ public class RadioMicCapture {
                                 "own stream: %s above 8 kHz (content, for the record); input device at %s",
                                 Float.isNaN(bw) ? "silence" : String.format(Locale.US, "%.1f dB", bw),
                                 deviceRate > 0 ? deviceRate + " Hz" : "unknown"));
-                        if (deviceRate > 0 && deviceRate < SAMPLE_RATE) {
+                        if (deviceRate > 0 && deviceRate < 32000) {
                             narrowBecause = "input device at " + deviceRate + " Hz";
-                        } else if (deviceRate >= SAMPLE_RATE && othersOnInputAtOpen > 0
+                        } else if (deviceRate >= 32000 && othersOnInputAtOpen > 0
                                 && !takeoverAttempted && RootAccess.hasRoot()) {
                             // Full band, but not ours: somebody opened the input before us, and the
                             // one who opens it sets it up (owner, 14.09.2026: with root, take it -
                             // "в любому випадку"). Without root this is left alone; a unit without
                             // root holds the microphone from start-up, so it is first anyway.
                             takeoverBecause = othersOnInputAtOpen + " recording(s) were on the input before us";
-                        } else if (deviceRate >= SAMPLE_RATE) {
+                        } else if (deviceRate >= 32000) {
                             healAttempted = false;
                             UnavailableListener l = unavailableListener;
                             if (l != null) l.onMicrophoneFullBand();

@@ -502,6 +502,7 @@ public class AudioSpectrumEngine {
     /** Main thread. */
     private synchronized void onMicrophoneFullBand() {
         if (toldMicUnavailable) Log.i(TAG, "microphone back at full band");
+        micUnavailable = false;
         toldMicUnavailable = false;
     }
 
@@ -2168,7 +2169,7 @@ public class AudioSpectrumEngine {
      * startInternal, with identical code that would have drifted the first time one was edited.
      */
     private boolean canRunMic() {
-        return !micUnavailable && appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+        return !micUnavailable && appContext != null;
     }
 
     private void startInternal(int sessionId) {

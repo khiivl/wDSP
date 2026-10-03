@@ -1029,18 +1029,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnSpectrumMic.setOnClickListener(v -> {
-            if (!RoomMeasurement.hasMicCompensation(this)) {
-                showMicCalibrationInviteDialog();
-                return;
-            }
-            // Held by another app at 16 kHz until it leaves a gap on the input: say so again rather
-            // than show a button that lights up and changes nothing.
             if (AudioSpectrumEngine.getInstance().isMicrophoneUnavailable()) {
                 Toaster.show(this, R.string.mic_busy_calculated);
                 return;
             }
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
             updateSpectrumModeUi();
+            if (!RoomMeasurement.hasMicCompensation(this) && !sPromptedMicCalibration) {
+                sPromptedMicCalibration = true;
+                showMicCalibrationInviteDialog();
+            }
         });
 
         updateSpectrumModeUi();
@@ -1048,21 +1046,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSpectrumModeUi() {
         View toggleLayout = findViewById(R.id.layout_spectrum_mode_toggle);
-        // A calibrated microphone is the only requirement; root is not (see
-        // AudioSpectrumEngine.canRunMic).
-        boolean isAvailable = RoomMeasurement.hasMicCompensation(this);
-
         if (toggleLayout != null) {
-            toggleLayout.setVisibility(isAvailable ? View.VISIBLE : View.GONE);
+            toggleLayout.setVisibility(View.VISIBLE);
         }
-
-        // 🔴 The person's choice is never switched here any more. This used to write "calc" over a
-        // chosen "mic" whenever the check failed - and it runs synchronously in onCreate, before the
-        // asynchronous root check has answered, so after every reinstall or update root read as
-        // absent and the spectrum silently became "calculated" (observed on the owner's unit
-        // 14.09.2026: the screen showed calc while the stored mode was still mic). When the
-        // microphone genuinely cannot run, the engine already falls back on its own and returns to
-        // the microphone by itself once it can; the stored choice stays what the person made it.
 
         if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
         boolean isNight = ThemeManager.isNight(this);
@@ -1073,8 +1059,6 @@ public class MainActivity extends AppCompatActivity {
         int substrate = ThemeManager.dockSubstrateColor(this, isNight);
 
         String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
-        // What is in force, not only what was chosen: while the microphone is held by another app
-        // the spectrum is calculated, and the pills say that (the stored choice stays).
         boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode)
                 && !AudioSpectrumEngine.getInstance().isMicrophoneUnavailable();
 
