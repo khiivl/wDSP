@@ -260,6 +260,8 @@
     <string name="resume_after_reboot_label">Відновлювати плеєр після перезавантаження</string>
     <string name="resume_after_reboot_desc">Якщо музика грала, коли магнітолу вимкнули або вона втратила живлення, wDSP після старту знову запускає той самий плеєр. Радіо відновлюється саме, його не чіпаємо.</string>
     <string name="resume_after_sleep_label">Відновлювати плеєр після сну</string>
+    <string name="button_backlight_label">Підсвітка кнопок кольором wDSP</string>
+    <string name="button_backlight_desc">Поки wDSP на екрані, кнопки магнітоли світяться акцентним кольором поточної теми — денної чи нічної — з тією ж яскравістю, що ви їм задали. Коли wDSP іде з екрана, повертається їхній власний колір.</string>
     <string name="resume_after_sleep_desc">Якщо музика грала, коли вимкнули запалювання, wDSP знову запускає той самий плеєр, щойно його ввімкнуть. Паузу, яку ви поставили самі, не знімаємо, і поверх того, що вже грає, нічого не запускаємо. Працює, лише якщо магнітола лишає wDSP живим під час сну.</string>
     <string name="resume_open_sleep_whitelist">Дозволити wDSP жити під час сну</string>
     <string name="resume_sleep_whitelist_unavailable">Магнітола не відкрила свій список сну.</string>

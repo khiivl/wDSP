@@ -2077,6 +2077,46 @@
                     android:text="@string/resume_open_sleep_whitelist"
                     android:textSize="@dimen/text_size_dense_label"
                     android:visibility="gone" />
+
+                <!-- The head unit's button backlight in wDSP's accent while wDSP is on screen
+                     (the author's 0.5); off unless the person turns it on (owner, 03.10.2026) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_button_backlight"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/button_backlight_label"
+                        android:textSize="@dimen/text_size_label"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_button_backlight_toggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/state_off"
+                        android:textSize="@dimen/text_size_dense_title"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/desc_button_backlight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/button_backlight_desc"
+                    android:textSize="@dimen/settings_note_text" />
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════

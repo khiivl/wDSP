@@ -277,6 +277,8 @@
     <string name="resume_after_reboot_label">Resume the player after a restart</string>
     <string name="resume_after_reboot_desc">If music was playing when the head unit was switched off or lost power, wDSP starts the same player again once it is up. Radio restores itself and is left alone.</string>
     <string name="resume_after_sleep_label">Resume the player after sleep</string>
+    <string name="button_backlight_label">Button backlight in wDSP colours</string>
+    <string name="button_backlight_desc">While wDSP is on screen, the head unit\'s buttons glow in the accent colour of the current day or night theme, at the brightness you set for them. When wDSP leaves the screen, their own colour comes back.</string>
     <string name="resume_after_sleep_desc">If music was playing when the ignition went off, wDSP starts the same player again when it comes back on. A pause you made yourself is kept, and nothing is started over something already playing. Works only if the head unit lets wDSP stay alive through sleep.</string>
     <string name="resume_open_sleep_whitelist">Let wDSP stay alive through sleep</string>
     <string name="resume_sleep_whitelist_unavailable">The head unit did not open its sleep list.</string>
