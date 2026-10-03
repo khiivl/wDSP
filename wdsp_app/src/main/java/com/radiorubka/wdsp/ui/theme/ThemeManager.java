@@ -357,6 +357,34 @@ public final class ThemeManager {
         clearFrostedCache();
     }
 
+    /**
+     * Повертає колір з ресурсів із гарантованим урахуванням теми (Day/Night) через ConfigurationContext.
+     */
+    public static int getThemedColor(Context ctx, boolean night, int colorRes) {
+        try {
+            Configuration config = new Configuration(ctx.getResources().getConfiguration());
+            config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK)
+                    | (night ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO);
+            return ContextCompat.getColor(ctx.createConfigurationContext(config), colorRes);
+        } catch (Exception e) {
+            return ContextCompat.getColor(ctx, colorRes);
+        }
+    }
+
+    /**
+     * Повертає Drawable з ресурсів із гарантованим урахуванням теми (Day/Night) через ConfigurationContext.
+     */
+    public static Drawable getThemedDrawable(Context ctx, boolean night, int drawableRes) {
+        try {
+            Configuration config = new Configuration(ctx.getResources().getConfiguration());
+            config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK)
+                    | (night ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO);
+            return ContextCompat.getDrawable(ctx.createConfigurationContext(config), drawableRes);
+        } catch (Exception e) {
+            return ContextCompat.getDrawable(ctx, drawableRes);
+        }
+    }
+
     public static Drawable wallpaperBackground(Context ctx) {
         return wallpaperBackground(ctx, isNight(ctx));
     }
@@ -364,7 +392,9 @@ public final class ThemeManager {
     public static Drawable wallpaperBackground(Context ctx, boolean night) {
         if (isClassic(ctx)) {
             try {
-                return ContextCompat.getDrawable(ctx, R.drawable.app_background);
+                Drawable d = getThemedDrawable(ctx, night, R.drawable.app_background);
+                if (d != null) return d;
+                return new ColorDrawable(night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY);
             } catch (Exception e) {
                 return new ColorDrawable(night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY);
             }
@@ -725,6 +755,8 @@ public final class ThemeManager {
             d.setShape(GradientDrawable.RECTANGLE);
             d.setCornerRadius(15f * density);
             d.setColor(night ? CLASSIC_CARD_BG_NIGHT : CLASSIC_CARD_BG_DAY);
+            int strokeColor = night ? Color.parseColor("#20FFFFFF") : Color.parseColor("#15000000");
+            d.setStroke(Math.max(1, (int)(1f * density)), strokeColor);
             return d;
         }
         int[] chroma = getWallpaperChromaticSpectrum(ctx, night);
@@ -779,12 +811,13 @@ public final class ThemeManager {
             float density = ctx.getResources().getDisplayMetrics().density;
             GradientDrawable d = new GradientDrawable();
             d.setShape(GradientDrawable.RECTANGLE);
-            d.setCornerRadius(15f * density);
+            d.setCornerRadius(10f * density);
             if (active) {
                 d.setColor(accent);
             } else {
-                d.setColor(Color.TRANSPARENT);
-                d.setStroke(Math.max(1, (int)(1f * density)), border);
+                d.setColor(night ? Color.parseColor("#1F33373B") : Color.parseColor("#15000000"));
+                int borderCol = night ? Color.parseColor("#44FFFFFF") : Color.parseColor("#44000000");
+                d.setStroke(Math.max(1, (int)(1f * density)), borderCol);
             }
             return d;
         }

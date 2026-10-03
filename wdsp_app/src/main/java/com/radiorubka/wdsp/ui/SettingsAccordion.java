@@ -65,6 +65,33 @@ public final class SettingsAccordion {
      * so itself, in desc_room_no_root, while there is no root. The lock glyph is still stripped below
      * in case a title carries one.
      */
+    private static int getSectionColor(Context ctx, int titleId, boolean night) {
+        if (!ThemeManager.isClassic(ctx)) {
+            return ThemeManager.accent(ctx, night);
+        }
+        int colorRes;
+        if (titleId == R.id.label_theme_section) {
+            colorRes = R.color.btn_auto_bg;
+        } else if (titleId == R.id.label_statusbar_section) {
+            colorRes = R.color.btn_add_bg;
+        } else if (titleId == R.id.label_vis_effects_section) {
+            colorRes = R.color.btn_rename_bg;
+        } else if (titleId == R.id.label_eq_vis_section) {
+            colorRes = R.color.btn_export_bg;
+        } else if (titleId == R.id.label_analyzer_section) {
+            colorRes = R.color.btn_import_bg;
+        } else if (titleId == R.id.label_permissions_section) {
+            colorRes = R.color.btn_delete_bg;
+        } else if (titleId == R.id.label_screensaver_section) {
+            colorRes = R.color.btn_rename_bg;
+        } else if (titleId == R.id.label_room_section) {
+            colorRes = R.color.btn_auto_bg;
+        } else {
+            colorRes = R.color.btn_delete_bg;
+        }
+        return ThemeManager.getThemedColor(ctx, night, colorRes);
+    }
+
     private static void setHeaderState(TextView title, View body, boolean open, int accent, int textPrimary) {
         Context ctx = title.getContext();
 
@@ -101,13 +128,17 @@ public final class SettingsAccordion {
             String prefix = open ? "▾ " : "▸ ";
             title.setText(prefix + s);
         }
+        boolean isClassic = ThemeManager.isClassic(ctx);
+        int sectionColor = getSectionColor(ctx, title.getId(), sNight);
+        int effectiveAccent = isClassic ? sectionColor : accent;
+
         int padH = Math.round(12 * ctx.getResources().getDisplayMetrics().density);
         int padV = Math.round(8 * ctx.getResources().getDisplayMetrics().density);
         if (open) {
-            int openBg = ColorUtils.setAlphaComponent(accent, sNight ? 30 : 25);
-            int openBorder = ColorUtils.setAlphaComponent(accent, sNight ? 75 : 60);
-            title.setBackground(ThemeManager.roundedDrawable(ctx, 12f, openBg, openBorder, 1.0f));
-            title.setTextColor(accent);
+            int openBg = ColorUtils.setAlphaComponent(effectiveAccent, sNight ? 38 : 28);
+            int openBorder = ColorUtils.setAlphaComponent(effectiveAccent, sNight ? 140 : 100);
+            title.setBackground(ThemeManager.roundedDrawable(ctx, 12f, openBg, openBorder, 1.2f));
+            title.setTextColor(effectiveAccent);
         } else {
             title.setBackground(null);
             title.setTextColor(textPrimary);

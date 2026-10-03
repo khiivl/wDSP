@@ -235,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
     //private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
     // Indices where each group starts: 0(20Hz), 3(80Hz), 5(200Hz), 7(500Hz), 10(2kHz), 13(8kHz)
     private final int[] GROUP_STARTS = {0, 3, 5, 7, 10, 13};
+    private Boolean mLastIsClassic = null;
 
 
     private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
@@ -666,28 +667,94 @@ public class MainActivity extends AppCompatActivity {
             ColorStateList csl = ColorStateList.valueOf(accent);
             ColorStateList cslTrack = ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 70));
 
-            // Dynamically tint all 16 EQ sliders and labels
-            for (Slider s : gainSliders) {
-                tintSlider(s, csl, cslTrack);
+            boolean isClassic = ThemeManager.isClassic(this);
+            if (mLastIsClassic != null && mLastIsClassic != isClassic) {
+                mLastIsClassic = isClassic;
+                setupEqBands();
+                if (isFullyInitialized) {
+                    refreshAllUiValues();
+                }
             }
+
+            // Dynamically tint all 16 EQ sliders and labels
+            if (isClassic) {
+                int[] groupColorRes = {
+                    R.color.btn_delete_bg, // 0..2 low bass
+                    R.color.btn_import_bg, // 3..4 bass
+                    R.color.btn_export_bg, // 5..6 mid-bass
+                    R.color.btn_rename_bg, // 7..9 mids
+                    R.color.btn_add_bg,    // 10..12 lower treble
+                    R.color.btn_auto_bg    // 13..15 upper treble
+                };
+                int[] groupStarts = {0, 3, 5, 7, 10, 13};
+                int tickActive = ThemeManager.getThemedColor(this, isNight, R.color.tick_color_active);
+                int tickInactive = ThemeManager.getThemedColor(this, isNight, R.color.tick_color_inactive);
+
+                for (int i = 0; i < gainSliders.size(); i++) {
+                    int groupIdx = 0;
+                    for (int g = 0; g < groupStarts.length; g++) {
+                        if (i >= groupStarts[g]) groupIdx = g;
+                    }
+                    int bandColor = ThemeManager.getThemedColor(this, isNight, groupColorRes[groupIdx]);
+                    Slider s = gainSliders.get(i);
+                    s.setThumbTintList(ColorStateList.valueOf(bandColor));
+                    s.setTrackActiveTintList(ColorStateList.valueOf(bandColor));
+                    s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(bandColor, 70)));
+                    s.setTickActiveTintList(ColorStateList.valueOf(tickActive));
+                    s.setTickInactiveTintList(ColorStateList.valueOf(tickInactive));
+                    s.setTrackStopIndicatorSize(0);
+                }
+            } else {
+                for (Slider s : gainSliders) {
+                    tintSlider(s, csl, cslTrack);
+                }
+            }
+
             int eqCardBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
-            int dbTextColor = ThemeManager.contrastText(primaryText, eqCardBg);
+            int dbTextColor = isClassic
+                    ? ThemeManager.getThemedColor(this, isNight, R.color.text_theme_aware)
+                    : ThemeManager.contrastText(primaryText, eqCardBg);
             for (TextView db : dbLabels) {
                 if (db != null) {
                     db.setTextColor(dbTextColor);
                 }
             }
-            int freqTextColor = ThemeManager.contrastText(secondaryText, eqCardBg);
+            int freqTextColor = isClassic ? Color.TRANSPARENT : ThemeManager.contrastText(secondaryText, eqCardBg);
             for (TextView l : freqLabels) {
                 if (l != null) {
                     l.setTextColor(freqTextColor);
                 }
             }
 
-            // Main EQ Card styling with FrostedGlassDrawable
+            // Main EQ Card styling: In Classic mode, author has NO floating card!
             View cardMainEq = findViewById(R.id.card_main_eq);
             if (cardMainEq != null) {
-                cardMainEq.setBackground(ThemeManager.cardDrawable(this, isNight, 18f));
+                if (isClassic) {
+                    cardMainEq.setBackground(null);
+                    cardMainEq.setPadding(0, 0, 0, 0);
+                    if (cardMainEq.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) cardMainEq.getLayoutParams();
+                        mlp.leftMargin = 0;
+                        mlp.rightMargin = 0;
+                        cardMainEq.setLayoutParams(mlp);
+                    }
+                } else {
+                    cardMainEq.setBackground(ThemeManager.cardDrawable(this, isNight, 18f));
+                    int p = (int) (6 * density);
+                    cardMainEq.setPadding(p, p, p, p);
+                    if (cardMainEq.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) cardMainEq.getLayoutParams();
+                        mlp.leftMargin = (int) (12 * density);
+                        mlp.rightMargin = (int) (12 * density);
+                        cardMainEq.setLayoutParams(mlp);
+                    }
+                }
+            }
+            View eqContainer = findViewById(R.id.eq_container);
+            if (eqContainer != null && eqContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) eqContainer.getLayoutParams();
+                mlp.leftMargin = isClassic ? 0 : (int) (32 * density);
+                eqContainer.setLayoutParams(mlp);
             }
 
             // All cards styling across tabs with FrostedGlassDrawable
@@ -721,8 +788,7 @@ public class MainActivity extends AppCompatActivity {
                 galaBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
-            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export)
-            boolean isClassic = ThemeManager.isClassic(this);
+            // Preset action buttons: keep pictograms, but color them with author's pastel palette
             int[] presetBtns = {
                 R.id.btn_auto_preset, R.id.btn_add_preset, R.id.btn_rename_preset,
                 R.id.btn_delete_preset, R.id.btn_import_presets, R.id.btn_export_presets
@@ -731,7 +797,7 @@ public class MainActivity extends AppCompatActivity {
                 R.color.btn_auto_bg, R.color.btn_add_bg, R.color.btn_rename_bg,
                 R.color.btn_delete_bg, R.color.btn_import_bg, R.color.btn_export_bg
             };
-            int coloredBtnText = ContextCompat.getColor(this, R.color.colored_button_text);
+            int coloredBtnText = ThemeManager.getThemedColor(this, isNight, R.color.colored_button_text);
             float btnRadiusDp = getResources().getDimension(R.dimen.toggle_height) / (2f * getResources().getDisplayMetrics().density);
 
             for (int i = 0; i < presetBtns.length; i++) {
@@ -741,8 +807,9 @@ public class MainActivity extends AppCompatActivity {
                     if (isClassic) {
                         GradientDrawable gd = new GradientDrawable();
                         gd.setShape(GradientDrawable.RECTANGLE);
-                        gd.setCornerRadius(14f * density);
-                        gd.setColor(ContextCompat.getColor(this, classicColors[i]));
+                        gd.setCornerRadius(8f * density);
+                        int col = ThemeManager.getThemedColor(this, isNight, classicColors[i]);
+                        gd.setColor(col);
                         b.setBackground(gd);
                         b.setImageTintList(ColorStateList.valueOf(coloredBtnText));
                     } else {
@@ -1386,6 +1453,8 @@ public class MainActivity extends AppCompatActivity {
         final int valueHeight = (int) (22 * dens);
         final int captionHeight = (int) (20 * dens);
         final float denseText = getResources().getDimension(R.dimen.text_size_dense_desc);
+        boolean isClassic = com.radiorubka.wdsp.ui.theme.ThemeManager.isClassic(this);
+        mLastIsClassic = isClassic;
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             final int idx = i;
@@ -1472,11 +1541,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            layout.addView(q);
-            layout.addView(db);
-            seekBox.addView(s);
-            layout.addView(seekBox);
-            layout.addView(label);
+            if (isClassic) {
+                View spacer = new View(this);
+                spacer.setLayoutParams(new LinearLayout.LayoutParams(-1, (int) (44 * dens)));
+                layout.addView(q);
+                layout.addView(db);
+                layout.addView(spacer);
+                seekBox.addView(s);
+                layout.addView(seekBox);
+            } else {
+                layout.addView(q);
+                layout.addView(db);
+                seekBox.addView(s);
+                layout.addView(seekBox);
+                layout.addView(label);
+            }
             container.addView(layout);
             updateDbLabel(i, 6);
         }
