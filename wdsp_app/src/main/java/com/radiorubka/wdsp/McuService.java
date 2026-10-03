@@ -83,9 +83,6 @@ public class McuService extends Service implements LocationListener {
     private int galaUserTrim = 0;
     private String lastPlayerSource = null;
     private Method getPropMethod;
-    private Object mcuManagerInstance;
-    private Method setEqDataMethod;
-    private Method setMcuMsgMethod;
 
     private String currentPresetName;
     private final int[] cachedGains = new int[16];
@@ -2485,33 +2482,9 @@ public class McuService extends Service implements LocationListener {
         byte[] cached = mcuCache.get(cmd);
         if (cached == null || !Arrays.equals(cached, data)) {
             try {
-                ensureMcuManager();
-                if (setEqDataMethod != null && mcuManagerInstance != null) {
-                    setEqDataMethod.invoke(mcuManagerInstance, (Object) data);
-                    mcuCache.put(cmd, data.clone());
-                }
+                if (McuLink.setEqData(data)) mcuCache.put(cmd, data.clone());
             } catch (Exception e) {
                 Log.e(TAG, "MCU Error: " + e.getMessage());
-            }
-        }
-    }
-
-    private void ensureMcuManager() throws Exception {
-        if (mcuManagerInstance == null) {
-            @SuppressLint("PrivateApi") Class<?> sm = Class.forName("android.os.ServiceManager");
-            IBinder binder = (IBinder) sm.getMethod("getService", String.class).invoke(null, "mcu_service");
-            if (binder != null) {
-                @SuppressLint("PrivateApi") Class<?> stub = Class.forName("android.qf.mcu.IMcuManager$Stub");
-                mcuManagerInstance = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
-
-                if (mcuManagerInstance != null) {
-                    // Existing EQ method
-                    setEqDataMethod = mcuManagerInstance.getClass().getMethod("RPC_SetEQData", byte[].class);
-
-                    // NEW: Reflect RPC_SendMcuMsgData(byte cmd, byte[] data, int length)
-                    setMcuMsgMethod = mcuManagerInstance.getClass().getMethod("RPC_SendMcuMsgData",
-                            byte.class, byte[].class, int.class);
-                }
             }
         }
     }
@@ -2523,14 +2496,11 @@ public class McuService extends Service implements LocationListener {
         backgroundHandler.post(() -> {
             byte[] bArr = {2, (byte) val}; // Sub-ID 2, followed by value
             try {
-                ensureMcuManager();
-                if (setMcuMsgMethod != null && mcuManagerInstance != null) {
-                    // Invoke: RPC_SendMcuMsgData((byte)24, bArr, 2)
-                    setMcuMsgMethod.invoke(mcuManagerInstance, (byte) 24, bArr, bArr.length);
+                if (McuLink.sendMsg((byte) 24, bArr)) {
                     Log.d(TAG, "PowerAmpVol set to: " + val);
                 }
                 else {
-                    Log.e(TAG, "setMcuMsgMethod or mcuManagerInstance is null, val:" + val);
+                    Log.e(TAG, "mcu_service not available, PowerAmpVol not sent, val:" + val);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to set PowerAmpVol: " + e.getMessage());
