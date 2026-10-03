@@ -558,4 +558,9 @@
     <string name="room_err_unknown">Unknown error</string>
     <string name="room_polarity_warning">Reversed polarity (+/-) on: %1$s. The speaker is wired in antiphase and cancels bass in the cabin. Check the wires at its terminals.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">UI Style</string>
+    <string name="settings_ui_style_desc">Switch between Original Classic Material 3 and Modern wDSP Mod theme</string>
+    <string name="settings_ui_style_classic">Classic (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>

@@ -545,4 +545,9 @@ Globale standaard: %1$s</string>
     <string name="room_err_unknown">Onbekende fout</string>
     <string name="room_polarity_warning">Omgekeerde polariteit (+/-) op: %1$s. De luidspreker is in tegenfase aangesloten en dooft de bas in de cabine uit. Controleer de bedrading op de aansluitingen.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">UI-stijl</string>
+    <string name="settings_ui_style_desc">Schakel tussen de klassieke Material 3 en de moderne wDSP Mod-stijl</string>
+    <string name="settings_ui_style_classic">Klassiek (Origineel)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>

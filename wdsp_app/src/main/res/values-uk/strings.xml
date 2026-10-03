@@ -541,5 +541,10 @@
     <string name="room_err_unknown">Невідома помилка</string>
     <string name="room_polarity_warning">Переплутано полярність (+/-): %1$s. Динамік підключений у протифазі й гасить баси в салоні. Перевірте дроти на його клемах.</string>
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стиль інтерфейсу</string>
+    <string name="settings_ui_style_desc">Перемикання між класичним стилем автора (Material 3) та стилем Modern wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класичний (Оригінал)</string>
+    <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
 </resources>
 

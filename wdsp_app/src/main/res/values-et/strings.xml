@@ -545,4 +545,9 @@
     <string name="room_err_unknown">Tundmatu viga</string>
     <string name="room_polarity_warning">Polaarsus (+/-) vahetuses kõlaril: %1$s. Kõlar on ühendatud vastasfaasis ja summutab salongi bassi. Kontrolli klemme.</string>
     <string name="room_wizard_delays_sub">Bassikõlar: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Kasutajaliidese stiil</string>
+    <string name="settings_ui_style_desc">Lülitu klassikalise Material 3 ja kaasaegse wDSP Mod vahel</string>
+    <string name="settings_ui_style_classic">Klassikaline (Originaal)</string>
+    <string name="settings_ui_style_modern">Kaasaegne (wDSP Mod)</string>
 </resources>

@@ -542,4 +542,9 @@
     <string name="room_err_unknown">Error desconocido</string>
     <string name="room_polarity_warning">Polaridad invertida (+/-) en: %1$s. El altavoz está conectado en antifase y cancela los graves en el habitáculo. Revise los terminales.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Estilo de interfaz</string>
+    <string name="settings_ui_style_desc">Cambiar entre el estilo clásico Material 3 y el estilo moderno wDSP Mod</string>
+    <string name="settings_ui_style_classic">Clásico (Original)</string>
+    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
 </resources>

@@ -545,4 +545,9 @@ Bendras numatytasis: %1$s</string>
     <string name="room_err_unknown">Nežinoma klaida</string>
     <string name="room_polarity_warning">Sukeistas poliškumas (+/-): %1$s. Garsiakalbis prijungtas priešfaze ir slopina žemus dažnius salone. Patikrinkite laidų gnybtus.</string>
     <string name="room_wizard_delays_sub">Žemų dažnių garsiakalbis: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Sąsajos stilius</string>
+    <string name="settings_ui_style_desc">Perjungti tarp klasikinio Material 3 ir modernaus wDSP Mod stiliaus</string>
+    <string name="settings_ui_style_classic">Klasikinis (Originalas)</string>
+    <string name="settings_ui_style_modern">Modernus (wDSP Mod)</string>
 </resources>

@@ -543,4 +543,9 @@
     <string name="room_err_unknown">Erro desconhecido</string>
     <string name="room_polarity_warning">Polaridade invertida (+/-) em: %1$s. A coluna está ligada em antifase e cancela os graves no habitáculo. Verifique os fios nos terminais.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Estilo de interface</string>
+    <string name="settings_ui_style_desc">Alternar entre o estilo clássico Material 3 e o estilo moderno wDSP Mod</string>
+    <string name="settings_ui_style_classic">Clássico (Original)</string>
+    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
 </resources>

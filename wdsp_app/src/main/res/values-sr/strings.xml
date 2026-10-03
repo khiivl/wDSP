@@ -545,4 +545,9 @@
     <string name="room_err_unknown">Непозната грешка</string>
     <string name="room_polarity_warning">Обрнут поларитет (+/-) на: %1$s. Звучник је повезан у противфази и поништава бас у кабини. Проверите жице на клемама.</string>
     <string name="room_wizard_delays_sub">Субвуфер: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стил интерфејса</string>
+    <string name="settings_ui_style_desc">Пребацивање између класичног стила Material 3 и модерног wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класично (Оригинал)</string>
+    <string name="settings_ui_style_modern">Модерно (wDSP Mod)</string>
 </resources>

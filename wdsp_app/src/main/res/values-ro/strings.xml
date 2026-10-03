@@ -545,4 +545,9 @@ Implicit global: %1$s</string>
     <string name="room_err_unknown">Eroare necunoscută</string>
     <string name="room_polarity_warning">Polaritate inversată (+/-) la: %1$s. Difuzorul este conectat în antifază și anulează basul în cabină. Verificați firele la terminale.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Stil interfață</string>
+    <string name="settings_ui_style_desc">Comutați între stilul clasic Material 3 și stilul modern wDSP Mod</string>
+    <string name="settings_ui_style_classic">Clasic (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>

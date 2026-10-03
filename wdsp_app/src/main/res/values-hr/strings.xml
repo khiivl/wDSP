@@ -545,5 +545,10 @@ Globalno zadano: %1$s</string>
     <string name="room_err_unknown">Nepoznata pogreška</string>
     <string name="room_polarity_warning">Obrnuti polaritet (+/-) na: %1$s. Zvučnik je spojen u protufazi i poništava bas u kabini. Provjerite žice na priključcima.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Stil sučelja</string>
+    <string name="settings_ui_style_desc">Prebacivanje između klasičnog stila Material 3 i modernog wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasično (Izvorno)</string>
+    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
 </resources>
 

@@ -545,4 +545,9 @@
     <string name="room_err_unknown">Άγνωστο σφάλμα</string>
     <string name="room_polarity_warning">Αντίστροφη πολικότητα (+/-) σε: %1$s. Το ηχείο είναι συνδεδεμένο σε αντίθετη φάση και ακυρώνει τα μπάσα στην καμπίνα. Ελέγξτε τα καλώδια στους ακροδέκτες.</string>
     <string name="room_wizard_delays_sub">Υπογούφερ: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Στυλ διεπαφής</string>
+    <string name="settings_ui_style_desc">Εναλλαγή μεταξύ του κλασικού Material 3 και του σύγχρονου θέματος wDSP Mod</string>
+    <string name="settings_ui_style_classic">Κλασικό (Πρωτότυπο)</string>
+    <string name="settings_ui_style_modern">Μοντέρνο (wDSP Mod)</string>
 </resources>

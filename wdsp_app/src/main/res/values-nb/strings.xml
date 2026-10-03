@@ -545,4 +545,9 @@ Global standard: %1$s</string>
     <string name="room_err_unknown">Ukjent feil</string>
     <string name="room_polarity_warning">Omvendt polaritet (+/-) på: %1$s. Høyttaleren er koblet i motfase og utligner bassen i kupeen. Sjekk ledningene på terminalene.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Brukergrensesnittstil</string>
+    <string name="settings_ui_style_desc">Bytt mellom opprinnelig klassisk Material 3 og moderne wDSP Mod-tema</string>
+    <string name="settings_ui_style_classic">Klassisk (Original)</string>
+    <string name="settings_ui_style_modern">Moderne (wDSP Mod)</string>
 </resources>

@@ -543,4 +543,9 @@
     <string name="room_err_unknown">Неизвестная ошибка</string>
     <string name="room_polarity_warning">Перепутана полярность (+/-): %1$s. Динамик подключен в противофазе и гасит бас в салоне. Проверьте провода на его клеммах.</string>
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стиль интерфейса</string>
+    <string name="settings_ui_style_desc">Переключение между классическим стилем автора (Material 3) и стилем Modern wDSP Mod</string>
+    <string name="settings_ui_style_classic">Классический (Оригинал)</string>
+    <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
 </resources>

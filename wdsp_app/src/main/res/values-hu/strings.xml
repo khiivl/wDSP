@@ -545,5 +545,10 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_err_unknown">Ismeretlen hiba</string>
     <string name="room_polarity_warning">Fordított polaritás (+/-) itt: %1$s. A hangszóró ellenfázisban van bekötve és kioltja a mélyhangokat. Ellenőrizze a csatlakozókat.</string>
     <string name="room_wizard_delays_sub">Mélynyomó: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Kezelőfelület stílusa</string>
+    <string name="settings_ui_style_desc">Váltás a klasszikus Material 3 és a modern wDSP Mod téma között</string>
+    <string name="settings_ui_style_classic">Klasszikus (Eredeti)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>
 

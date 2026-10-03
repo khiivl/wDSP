@@ -541,4 +541,9 @@
     <string name="room_err_unknown">Nieznany błąd</string>
     <string name="room_polarity_warning">Odwrócona polaryzacja (+/-) na: %1$s. Głośnik jest podłączony w przeciwfazie i wygasza basy w kabinie. Sprawdź przewody na jego złączach.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Styl interfejsu</string>
+    <string name="settings_ui_style_desc">Przełącz między klasycznym stylem Material 3 a nowoczesnym wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasyczny (Oryginał)</string>
+    <string name="settings_ui_style_modern">Nowoczesny (wDSP Mod)</string>
 </resources>

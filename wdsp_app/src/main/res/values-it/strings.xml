@@ -545,4 +545,9 @@ Predefinito globale: %1$s</string>
     <string name="room_err_unknown">Errore sconosciuto</string>
     <string name="room_polarity_warning">Polarità invertita (+/-) su: %1$s. L\'altoparlante è collegato in controfase e cancella i bassi nell\'abitacolo. Controlla i cavi ai terminali.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Stile interfaccia</string>
+    <string name="settings_ui_style_desc">Passa dallo stile classico Material 3 allo stile moderno wDSP Mod</string>
+    <string name="settings_ui_style_classic">Classico (Originale)</string>
+    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
 </resources>

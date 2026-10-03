@@ -545,4 +545,9 @@ Par défaut global : %1$s</string>
     <string name="room_err_unknown">Erreur inconnue</string>
     <string name="room_polarity_warning">Polarité inversée (+/-) sur : %1$s. Le haut-parleur est câblé en opposition de phase et annule les basses dans l\'habitacle. Vérifiez ses bornes.</string>
     <string name="room_wizard_delays_sub">Caisson de basses : %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Style d\'interface</string>
+    <string name="settings_ui_style_desc">Basculez entre le style classique Material 3 et le style moderne wDSP Mod</string>
+    <string name="settings_ui_style_classic">Classique (Original)</string>
+    <string name="settings_ui_style_modern">Moderne (wDSP Mod)</string>
 </resources>

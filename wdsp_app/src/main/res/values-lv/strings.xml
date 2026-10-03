@@ -545,4 +545,9 @@ Globāli noklusējums: %1$s</string>
     <string name="room_err_unknown">Nezināma kļūda</string>
     <string name="room_polarity_warning">Apgriezta polaritāte (+/-) uz: %1$s. Skaļrunis ir pievienots pretfāzē un slāpē basus salonā. Pārbaudiet spaiļu vadus.</string>
     <string name="room_wizard_delays_sub">Zemfrekvences skaļrunis: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Saskarnes stils</string>
+    <string name="settings_ui_style_desc">Pārslēgties starp klasisko Material 3 un moderno wDSP Mod tēmu</string>
+    <string name="settings_ui_style_classic">Klasiskais (Oriģināls)</string>
+    <string name="settings_ui_style_modern">Moderns (wDSP Mod)</string>
 </resources>

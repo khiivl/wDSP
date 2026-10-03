@@ -545,4 +545,9 @@ Globalno privzeto: %1$s</string>
     <string name="room_err_unknown">Neznana napaka</string>
     <string name="room_polarity_warning">Obrnjena polarnost (+/-) na: %1$s. Zvočnik je priključen v protifazi in zaduši nizke tone v kabini. Preverite kable na sponkah.</string>
     <string name="room_wizard_delays_sub">Nizkotonec: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Slog vmesnika</string>
+    <string name="settings_ui_style_desc">Preklapljanje med klasičnim slogom Material 3 in sodobnim wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasično (Izvirno)</string>
+    <string name="settings_ui_style_modern">Sodobno (wDSP Mod)</string>
 </resources>

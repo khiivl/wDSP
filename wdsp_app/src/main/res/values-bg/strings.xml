@@ -545,4 +545,9 @@
     <string name="room_err_unknown">Неизвестна грешка</string>
     <string name="room_polarity_warning">Обърната полярност (+/-) на: %1$s. Високоговорителят е свързан в противофаза и заглушава баса в купето. Проверете кабелите на клемите.</string>
     <string name="room_wizard_delays_sub">Субуфер: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стил на интерфейса</string>
+    <string name="settings_ui_style_desc">Превключване между класическия стил на автора (Material 3) и модерния стил wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класически (Оригинал)</string>
+    <string name="settings_ui_style_modern">Модерен (wDSP Mod)</string>
 </resources>

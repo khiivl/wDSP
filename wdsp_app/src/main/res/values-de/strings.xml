@@ -541,4 +541,9 @@
     <string name="room_err_unknown">Unbekannter Fehler</string>
     <string name="room_polarity_warning">Verpolung (+/-) bei: %1$s. Der Lautsprecher ist gegenphasig angeschlossen und löscht den Bass im Innenraum aus. Prüfen Sie die Anschlüsse.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">UI-Stil</string>
+    <string name="settings_ui_style_desc">Wechseln Sie zwischen dem klassischen Material 3 und dem modernen wDSP Mod-Design</string>
+    <string name="settings_ui_style_classic">Klassisch (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>

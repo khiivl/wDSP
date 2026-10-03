@@ -545,4 +545,9 @@ Globální výchozí: %1$s</string>
     <string name="room_err_unknown">Neznámá chyba</string>
     <string name="room_polarity_warning">Obrácená polarita (+/-) na: %1$s. Reproduktor je zapojen v protifázi a ruší basy v kabině. Zkontrolujte zapojení na svorkách.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Styl rozhraní</string>
+    <string name="settings_ui_style_desc">Přepínání mezi klasickým stylem Material 3 a moderním wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasický (Originál)</string>
+    <string name="settings_ui_style_modern">Moderní (wDSP Mod)</string>
 </resources>
