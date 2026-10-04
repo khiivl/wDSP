@@ -545,6 +545,9 @@ public class McuService extends Service implements LocationListener {
                 // itself is still caught, one tick late, exactly as before.
                 if ("com.qf.action.PHONE_CALL_START".equals(action)) {
                     callAnnounced = true;
+                    AudioSpectrumEngine.getInstance().setCallActive(true);
+                    RoomMeasurement.abort();
+                    MicrophoneGuard.releaseHold();
                     // The switch touches currentPresetName, presetBeforeCall and the MCU queue,
                     // all owned by the polling thread. Announce here, act there.
                     backgroundHandler.post(() -> {
@@ -2056,7 +2059,8 @@ public class McuService extends Service implements LocationListener {
         }
         // One reading of "is there a call" for this whole poll: the preset switch below and the
         // analyser pause here must never disagree about it.
-        boolean inCall = callAnnounced || CallState.isCallType(activeType);
+        // Rule: sys.qf.call_state=true, broadcast com.qf.action.PHONE_CALL_START, or btcall_type
+        boolean inCall = callAnnounced || CallState.isCallType(activeType) || CallState.isActive();
         AudioSpectrumEngine.getInstance().setCallActive(inCall);
         AudioSpectrumEngine.getInstance().checkSourceState();
         // The screensaver's own tick looks every two seconds; this poll sees the call within 100 ms,

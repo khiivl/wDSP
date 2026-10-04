@@ -140,6 +140,11 @@ public final class MicrophoneGuard {
      */
     public static Outcome ensureOurs(Context context) {
         Outcome outcome = new Outcome();
+        if (CallState.isActive()) {
+            outcome.unknown = true;
+            Log.w(TAG, "Cannot ensureOurs: phone call in progress");
+            return outcome;
+        }
         // Who opened the input is asked before a recorder of ours joins it - afterwards ours is
         // among the recordings and the question has no answer (owner, 14.09.2026: whoever is first
         // sets the input up; with root take it, without root a restart).

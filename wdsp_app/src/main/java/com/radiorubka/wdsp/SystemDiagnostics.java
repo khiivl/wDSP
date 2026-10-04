@@ -612,6 +612,7 @@ public final class SystemDiagnostics {
 
     @SuppressLint("MissingPermission")
     private static String probeSource(int source) {
+        if (CallState.isActive()) return "phone call in progress, mic probe skipped";
         final int rate = 48000;
         AudioRecord record = null;
         try {

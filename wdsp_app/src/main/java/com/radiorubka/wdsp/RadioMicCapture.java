@@ -211,8 +211,10 @@ public class RadioMicCapture {
         // Started, but the read loop is gone: the stream died underneath us. Give its recorder back
         // before opening a new one. This used to answer "already running" and do nothing.
         if (running) stop();
-        if (context == null || callback == null) return false;
-
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot start RadioMicCapture: phone call is active");
+            return false;
+        }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "RECORD_AUDIO permission not granted");
@@ -254,6 +256,10 @@ public class RadioMicCapture {
             final int logEvery = SAMPLE_RATE / CHUNK_SIZE;
 
             while (running) {
+                if (CallState.isActive()) {
+                    Log.i(TAG, "phone call detected in capture loop, stopping capture immediately");
+                    break;
+                }
                 AudioRecord rec = audioRecord;
                 if (rec == null || rec.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
                     break;
@@ -457,10 +463,16 @@ public class RadioMicCapture {
                 }
             }
           } finally {
-            // Nobody asked us to stop, yet the loop is over: from here isCapturing() says so, and
-            // the engine opens the microphone again on its next start or watchdog pass.
-            if (running && captureThread == Thread.currentThread()) {
-                Log.w(TAG, "capture loop ended by itself - the stream is dead until reopened");
+            // If the loop broke while still marked running (e.g. CallState active or read error),
+            // ensure the AudioRecord hardware resource is completely released.
+            synchronized (this) {
+                if (running) {
+                    releaseRecordLocked();
+                    running = false;
+                }
+            }
+            if (captureThread == Thread.currentThread()) {
+                captureThread = null;
             }
           }
         }, "wDSP_RadioMic");

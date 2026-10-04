@@ -2,17 +2,18 @@ package com.radiorubka.wdsp;
 
 /**
  * Whether a phone call is in progress. One predicate, used by everything that has to behave
- * differently during a call: the service preset switch, the spectrum analyser (paused), and the
- * screensaver (removed).
+ * differently during a call: the service preset switch, the spectrum analyser (paused & microphone released),
+ * and the screensaver (removed).
  *
- * <p>📻 Measured over four Bluetooth calls on 13.09.2026: {@code sys.current.vol.type} reads
- * {@code btcall_type} for the whole call, steady for 237 consecutive samples, and returns to the
- * previous type on hang-up. The Android audio mode does NOT change - it stays {@code NORMAL}
- * throughout - so {@code AudioManager.getMode()} cannot be used here, however natural it looks.
+ * <p>Contract mandate (AUDIO_PATH_AND_MODULE_CONTRACT.md, Ledger Item 7):
+ * Nobody holds the microphone during a call. On PHONE_CALL_START / sys.qf.call_state=true every app
+ * closes its own AudioRecord immediately. An ordinary capture (pcm device:2) alongside cellular voice
+ * stream (pcm device:5) crashes the Unisoc AGDSP (AGDSP_CMD_TIMEOUT / dsp_assert).
  *
- * <p>❓ SIM calls and third-party dialers are not covered by that measurement. Whether they set
- * {@code btcall_type} or only the audio mode is untested; if the answer is the mode, it belongs in
- * {@link #isCallType} or next to it - here, once - and not in any of the callers.
+ * <p>Signs of active call:
+ * 1) sys.qf.call_state = true (SIM dialer / telephony)
+ * 2) sys.current.vol.type = btcall_type (Bluetooth call / factory dialer)
+ * 3) broadcast com.qf.action.PHONE_CALL_START / _END
  */
 public final class CallState {
 
@@ -26,8 +27,11 @@ public final class CallState {
         return CALL_TYPE.equals(activeVolumeType);
     }
 
-    /** Reads the active volume type and applies {@link #isCallType}. */
+    /** Checks whether a call is active via system property sys.qf.call_state or active volume type. */
     public static boolean isActive() {
+        if ("true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.call_state"))) {
+            return true;
+        }
         return isCallType(VolumeHelper.getActivePlayerType());
     }
 }
