@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -393,6 +394,8 @@ public class McuService extends Service implements LocationListener {
      * and so is one seen as {@code btcall_type} without any broadcast.
      */
     private volatile boolean callAnnounced = false;
+    private volatile long callAnnouncedTimestamp = 0;
+    private static final long CALL_ANNOUNCED_WATCHDOG_MS = 6000;
 
     private boolean callSeenLastPoll;
 
@@ -545,21 +548,19 @@ public class McuService extends Service implements LocationListener {
                 // itself is still caught, one tick late, exactly as before.
                 if ("com.qf.action.PHONE_CALL_START".equals(action)) {
                     callAnnounced = true;
+                    callAnnouncedTimestamp = SystemClock.uptimeMillis();
                     AudioSpectrumEngine.getInstance().setCallActive(true);
                     RoomMeasurement.abort();
                     MicrophoneGuard.releaseHold();
-                    // The switch touches currentPresetName, presetBeforeCall and the MCU queue,
-                    // all owned by the polling thread. Announce here, act there.
-                    backgroundHandler.post(() -> {
-                        lastPlayerSource = "Call";
-                        processPlayerSwitch("Call");
-                    });
+                    // Announce here, act on background thread via checkPlayer()
+                    backgroundHandler.post(McuService.this::checkPlayer);
                     return;
                 }
                 if ("com.qf.action.PHONE_CALL_END".equals(action)) {
-                    // Only the flag. Restoring the previous preset is the poll's existing chain,
-                    // and being one tick late on the way out costs nothing - nobody is talking.
                     callAnnounced = false;
+                    callAnnouncedTimestamp = 0;
+                    // Trigger checkPlayer immediately on worker thread to restore previous preset without poll lag
+                    backgroundHandler.post(McuService.this::checkPlayer);
                     return;
                 }
                 if ("com.qf.action.ACC_ON".equals(action)
@@ -2057,6 +2058,21 @@ public class McuService extends Service implements LocationListener {
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);
         }
+        // Watchdog: If callAnnounced was set by PHONE_CALL_START broadcast, but neither sys.qf.call_state
+        // nor btcall_type is active after CALL_ANNOUNCED_WATCHDOG_MS, the broadcast was orphaned (e.g.
+        // missed PHONE_CALL_END, dialer crash, or test command). Clear it automatically.
+        if (callAnnounced && !CallState.isCallType(activeType) && !CallState.isActive()) {
+            long now = SystemClock.uptimeMillis();
+            if (callAnnouncedTimestamp == 0) {
+                callAnnouncedTimestamp = now;
+            } else if (now - callAnnouncedTimestamp > CALL_ANNOUNCED_WATCHDOG_MS) {
+                Log.w(TAG, "Watchdog: callAnnounced timed out (" + CALL_ANNOUNCED_WATCHDOG_MS
+                        + " ms) without active call state. Clearing callAnnounced.");
+                callAnnounced = false;
+                callAnnouncedTimestamp = 0;
+            }
+        }
+
         // One reading of "is there a call" for this whole poll: the preset switch below and the
         // analyser pause here must never disagree about it.
         // Rule: sys.qf.call_state=true, broadcast com.qf.action.PHONE_CALL_START, or btcall_type
@@ -2079,21 +2095,19 @@ public class McuService extends Service implements LocationListener {
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }
-        // If btcall_type, set the Player to be "Call".
-        if (inCall) {
-            lastPlayerSource = "Call";
-            processPlayerSwitch("Call");
-        }
+
+        String effectivePlayer = inCall ? "Call" : currentPlayer;
+
         // A measurement selects its own preset and must keep it: our own sweeps make this app
         // the active player, and a player-based switch would drop the flat preset half way
         // through and measure the user's equaliser instead.
-        else if (RoomMeasurement.isRunning()) {
+        if (RoomMeasurement.isRunning()) {
             // deliberately nothing
         }
-        // If the last Player doesn't match the new Player, process the switch.
-        else if (!Objects.equals(currentPlayer, lastPlayerSource)) {
-            lastPlayerSource = currentPlayer;
-            processPlayerSwitch(currentPlayer);
+        // Edge-triggered switch: only act when the effective player/call state actually changes.
+        else if (!Objects.equals(effectivePlayer, lastPlayerSource)) {
+            lastPlayerSource = effectivePlayer;
+            processPlayerSwitch(effectivePlayer);
         }
     }
 
