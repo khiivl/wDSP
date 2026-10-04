@@ -135,11 +135,15 @@ Gemini on experimental features — in a separate branch, ideally in a sandbox. 
 Восьме — собі: замовляючи, називати й те, що зробить результат непридатним. Не назвав — помилка
 замовника, не виконавця.
 
-## GALA is car-wide, never per preset (owner, 03.10.2026)
+## GALA: global by default, a per-preset opt-out accepted for the author (owner, 03.10 -> 05.10.2026)
+
+~~GALA is car-wide, never per preset~~ - superseded 05.10.2026: the owner accepted the author's per-preset opt-out
+in the end, "with reservations" (*«аксептував в результаті, з омовками»*), because the mod is being prepared for the
+author to take over (*«щоб він розвивав його далі сам, або ми парою»*). The reservations themselves are not written
+down yet - ask the owner before changing GALA again. The original rejection, kept for the reason behind it:
 
 The author's 26b8d14 lets each preset opt out of a shared GALA, and the call preset opts out by default. It was ported
 and reverted the same night. The owner: *«це ідіотизм ... гала це або є, або немає, а не по пресетах. Бо в дорозі
 дивно коли пресет для ютуб грає з гала, а пресет для споті без»*. Speed compensation answers road noise, which does
 not depend on which player is on. Our model stands: the global switch, when on, rules every preset; when off, the
-parameters live in the preset, and the global switch still has the last word. Do not take a per-preset GALA control
-from upstream again.
+parameters live in the preset, and the global switch still has the last word. (03.10; overruled 05.10.)
