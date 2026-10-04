@@ -800,6 +800,13 @@ public class MainActivity extends AppCompatActivity {
             if (fmVis != null) {
                 fmVis.setBackground(ThemeManager.cardDrawable(this, isNight, 14f));
             }
+            TextView tvFmVis = findViewById(R.id.tv_fm_visualizer_label);
+            if (tvFmVis != null) {
+                tvFmVis.setTextColor(ThemeManager.getThemedColor(this, isNight, R.color.text_theme_aware));
+            }
+            if (fmVisualizer != null) {
+                fmVisualizer.invalidate();
+            }
 
             View fmBadge = findViewById(R.id.layout_fm_status_badge);
             if (fmBadge != null) {
