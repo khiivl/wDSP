@@ -19,8 +19,6 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 
 ----------------------------------------------------------------------------------------------------------------------
 
-<img width="3072" height="4080" alt="Photo" src="https://github.com/user-attachments/assets/fa7350bd-d498-4407-be1d-725bb1247761" />
-
 <details>
 
 <summary>Screenshots</summary>
