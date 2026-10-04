@@ -18,7 +18,7 @@ from git, use the decompile only to cross-check.
 | feature (his files) | what it is | decision |
 |---|---|---|
 | **Live RTA** (`SpectrumAnalyzerView` 207 → 1048) | a 200-point log curve 20 Hz–20 kHz behind the EQ curve, drawn like FabFilter Pro-Q's analyser | **take his display model onto our analyser** — design below |
-| `SessionResolver`, `SessionProbe` | finding the player's audio session | **ours** (9a640bb, 19.08) copied with edits (25/76 lines): fold his edits back where they fix something |
+| `SessionResolver`, `SessionProbe` | finding the player's audio session | a shared origin: introduced in this branch (9a640bb, 19.08), carried by 1.0 with edits (25/76 lines) — fold back the edits that fix something |
 | `AudioConfig.typicalCarSpeakerFloorDb` | fixed rolloff of a 5.25–6.5" door speaker left after cabin gain: −1 dB at 80 Hz, −5 at 30, −8 at 20 | **take** — into the RTA's music-mode shift, and as an input to our cabin model (TODO 3️⃣) |
 | **Audio Check tab** (`MainActivity` +~700, `res/raw` 8 WAVs, 8.6 MB) | stems (bass/drums/melody/vocal), per-speaker test (sets the fader), pink noise, sine generator, sine sweep normalised to the hearing threshold, "only sub" | **take** — runtime overrides through broadcasts, never saved into the preset (his rule, keep it); his layout into Classic, ours in Modern |
 | `McuService` `AUDIOCHECK_FADER` / `AUDIOCHECK_ONLY_SUB` | test overrides of fader / sub-only, runtime only | **take**, gated by our audio-ownership and Call rules |
@@ -28,12 +28,12 @@ from git, use the decompile only to cross-check.
 
 ## The live RTA: his display model on our measurement
 
-His measurement path is weaker than ours, so it is **not** taken: one 1024-sample Visualizer block per
-50 ms callback (58 % of the audio missing; our `Stitcher` makes a continuous stream), the Visualizer's
-reported 44.1 kHz (wrong on QF, the samples are at 48 kHz — his bins sit 9 % off; ours read
-`PROPERTY_OUTPUT_SAMPLE_RATE`), and a 2× low-band splice where we run 8192 points below 800 Hz.
+The measurement stays this branch's, because of three things a real QF does (the table below has the
+evidence): the Visualizer callback carries 1024 samples every 50 ms, so a stitched stream is needed to see
+all of the audio; the Visualizer reports 44.1 kHz while delivering 48 kHz; and the bottom octaves want the
+8192-point window. Both views then show the same frequencies at the same place.
 
-What **is** taken — his audio reasoning and his numbers:
+What is taken — the author's audio reasoning and his numbers:
 1. 200 log-spaced points, each read by Catmull-Rom (Hermite) interpolation in dB through the four
    nearest bins — no overshoot "ears", no clamp.
 2. Triangular smoothing over ±4 points (fractional-octave-like), off while a sine tone plays.
@@ -50,20 +50,20 @@ Where it lives: the native analyser gains a 200-point curve output from the tran
 runs (8192 below 800 Hz, 1024 above); a Java helper `RtaCurve` does 2–5; `SpectrumAnalyzerView` draws
 curve or bars by a setting in the visualisation card. Classic draws it his way, Modern ours.
 
-## For the author: what the merge commit must explain (owner, 05.10.2026)
+## For the author: what the merge commit explains (owner, 05.10.2026)
 
 The owner: *«щоб його клауде зразу входив у курс справ, і давав автору розуміння, що ми не погіршуємо код, а
-покращуємо де можемо. Проблема автора в тому, що він працює з емулятором, а я з живим справжнім QF»*. So the
-merge commit (and the PR) carries: the decisions taken, where our approach differs and why, the defects found in
-his code, how each was fixed, and the evidence **from the wire on a real QF** — what an emulator forgives (CPU,
-broadcast storms, a dead output, a wrong rate) a head unit does not. Collect them here as they are found:
+покращуємо де можемо»*; on the tone: *«акуратно ... не образити, а по діловому і з аргументацією»*; and *«не путай
+наші вади, з його»*. The author develops on an emulator, this branch is tested on a real QF head unit, and some
+behaviour exists only on the real one. So the merge commit and the PR state the decisions taken, where the
+approaches differ and why, what a real QF does with a given piece of his code, and what was changed — each with
+its evidence: a measurement, a log line, a commit; no judgement of the person. **Only what was checked against
+his own code goes in** — faults of this branch's own features (the radio contract, the microphone) are ours and
+are not listed. Collected here as they are found:
 
-| his code did | on a real QF | what we do instead | evidence |
+| in the 1.0 code | on a real QF | change in this branch | evidence |
 |---|---|---|---|
-| `Visualizer(0)` on the output mix | silence: media plays on the `fast` output, the session-0 effect lands on the idle primary | the player's own session (`SessionResolver`, ours from 19.08 — he copied it) | memory `qf-visualizer-session0-dead`, dump 19.08 |
-| FFT at `Visualizer.getSamplingRate()` | reports 44.1 kHz, delivers 48 kHz: every frequency 8.8 % low | `PROPERTY_OUTPUT_SAMPLE_RATE` | 1 kHz + 10 kHz tone read 918.5 / 9187 Hz, 14.09 |
-| one 1024-sample block per 50 ms callback | 58 % of the audio never seen; nothing below the block rate means anything | polled `Stitcher`, continuous stream, 8192-point window below 800 Hz | ARCHITECTURE.md "Native analyzer"; `test_analyzer` |
-| polling the volume state every 100 ms | tens of framework log lines a second, a CPU cost on every tick | events, a slow check as a safety net | TODO 1️⃣➕, `8590462` |
-| early return in the mute branch of `checkVolumeAndGala()` | `QUERY` to the radio every ~103 ms while the amplifier is muted | the source remembered on every path | AUDIO_OWNERSHIP_CONTRACT, ~10/s before, 1 per 16 s after |
-| microphone left open during a phone call | the AGDSP crashes (`dsp timeout cmd:0x26`), the call has no audio | release on `PHONE_CALL_START`, synchronously | BitPerfect line 04.10, call to 1200 |
-| R8 / minify in a release build | hidden-API reflection into the QF framework breaks | debug builds only (`minifyEnabled false`) | AGENTS.md "Build" |
+| `Visualizer(0)` on the output mix (the class comment; the code now resolves a session) | session 0 processes silence: media plays on the `fast` output, an output-mix effect lands on the idle primary | the player's own session — `SessionResolver`, which 1.0 already carries | `media.audio_flinger` dump, 19.08.2026 |
+| FFT bins placed at `Visualizer.getSamplingRate()` | it reports 44.1 kHz while the samples are at 48 kHz, so every frequency reads 8.8 % low | the rate from `PROPERTY_OUTPUT_SAMPLE_RATE` | a 1 kHz + 10 kHz test tone read 918.5 / 9187 Hz, 14.09.2026 |
+| one FFT per 1024-sample callback, 20 per second | 21 ms of every 50 ms is seen; content between callbacks never reaches the analyser | a polled `Stitcher` rebuilds the continuous stream; 8192 points below 800 Hz | `.agents/ARCHITECTURE.md` "Native analyzer"; host test `test_analyzer` |
+| `McuService` polls `checkPlayer` and `checkVolumeAndGala` every 200 ms | ten framework calls a second, each logged by the framework, for state that changes a few times a minute | events, with a slow check kept as a safety net | TODO "polling → events", `8590462` |

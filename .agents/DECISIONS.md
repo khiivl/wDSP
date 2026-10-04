@@ -164,9 +164,11 @@ done until it is right in both styles, day and night, and an author's UI change 
 
 ## A push to the author explains itself (owner, 05.10.2026)
 
-Every commit that goes to the author - the merge into his master, the PR - states the decisions taken, how our
-approach differs, the defects found in his code and why and how each was fixed, with the evidence from a real QF.
-The owner: *«щоб його клауде зразу входив у курс справ, і давав автору розуміння, що ми не погіршуємо код, а
-покращуємо де можемо. Проблема автора в тому, що він працює з емулятором, а я з живим справжнім QF. І рішення, що
-ніби працюють, і емулятор прощає, справжня магнітолу може загнати в перевикористання ресурсів, шторм»*. The list
-of such defects is kept in [UPSTREAM_1_0.md](UPSTREAM_1_0.md) as they are found, so nothing is reconstructed at push time.
+Every commit that goes to the author - the merge into his master, the PR - states the decisions taken, where the
+approaches differ, what a real QF does with a given piece of his code and what was changed, each with its
+evidence. The owner: *«щоб його клауде зразу входив у курс справ, і давав автору розуміння, що ми не погіршуємо
+код, а покращуємо де можемо»*. The author develops on an emulator and this branch is tested on a real head unit,
+where resource use and broadcast storms show up that an emulator does not. Tone (owner): *«акуратно ... не
+образити, а по діловому і з аргументацією»*; *«не путай наші вади, з його»* - only what was checked against his
+code, never a fault of this branch's own features. The list is kept in [UPSTREAM_1_0.md](UPSTREAM_1_0.md) as items
+are found, and `.agents/` is pushed with the branch, so it is written for him to read.
