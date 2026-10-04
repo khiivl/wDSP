@@ -49,3 +49,21 @@ What **is** taken — his audio reasoning and his numbers:
 Where it lives: the native analyser gains a 200-point curve output from the transforms it already
 runs (8192 below 800 Hz, 1024 above); a Java helper `RtaCurve` does 2–5; `SpectrumAnalyzerView` draws
 curve or bars by a setting in the visualisation card. Classic draws it his way, Modern ours.
+
+## For the author: what the merge commit must explain (owner, 05.10.2026)
+
+The owner: *«щоб його клауде зразу входив у курс справ, і давав автору розуміння, що ми не погіршуємо код, а
+покращуємо де можемо. Проблема автора в тому, що він працює з емулятором, а я з живим справжнім QF»*. So the
+merge commit (and the PR) carries: the decisions taken, where our approach differs and why, the defects found in
+his code, how each was fixed, and the evidence **from the wire on a real QF** — what an emulator forgives (CPU,
+broadcast storms, a dead output, a wrong rate) a head unit does not. Collect them here as they are found:
+
+| his code did | on a real QF | what we do instead | evidence |
+|---|---|---|---|
+| `Visualizer(0)` on the output mix | silence: media plays on the `fast` output, the session-0 effect lands on the idle primary | the player's own session (`SessionResolver`, ours from 19.08 — he copied it) | memory `qf-visualizer-session0-dead`, dump 19.08 |
+| FFT at `Visualizer.getSamplingRate()` | reports 44.1 kHz, delivers 48 kHz: every frequency 8.8 % low | `PROPERTY_OUTPUT_SAMPLE_RATE` | 1 kHz + 10 kHz tone read 918.5 / 9187 Hz, 14.09 |
+| one 1024-sample block per 50 ms callback | 58 % of the audio never seen; nothing below the block rate means anything | polled `Stitcher`, continuous stream, 8192-point window below 800 Hz | ARCHITECTURE.md "Native analyzer"; `test_analyzer` |
+| polling the volume state every 100 ms | tens of framework log lines a second, a CPU cost on every tick | events, a slow check as a safety net | TODO 1️⃣➕, `8590462` |
+| early return in the mute branch of `checkVolumeAndGala()` | `QUERY` to the radio every ~103 ms while the amplifier is muted | the source remembered on every path | AUDIO_OWNERSHIP_CONTRACT, ~10/s before, 1 per 16 s after |
+| microphone left open during a phone call | the AGDSP crashes (`dsp timeout cmd:0x26`), the call has no audio | release on `PHONE_CALL_START`, synchronously | BitPerfect line 04.10, call to 1200 |
+| R8 / minify in a release build | hidden-API reflection into the QF framework breaks | debug builds only (`minifyEnabled false`) | AGENTS.md "Build" |

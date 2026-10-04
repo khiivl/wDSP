@@ -161,3 +161,12 @@ switch when merging the author's later work; the stored `show_loudness_on_main` 
 Modern is this project's interface; Classic emulates the author's and follows his master as it moves. The owner:
 *«вести тобі тепер прийдеться обидві теми як нашу власну так і емуляцію інтерфейса автора»*. So a UI change is not
 done until it is right in both styles, day and night, and an author's UI change merged in lands in Classic too.
+
+## A push to the author explains itself (owner, 05.10.2026)
+
+Every commit that goes to the author - the merge into his master, the PR - states the decisions taken, how our
+approach differs, the defects found in his code and why and how each was fixed, with the evidence from a real QF.
+The owner: *«щоб його клауде зразу входив у курс справ, і давав автору розуміння, що ми не погіршуємо код, а
+покращуємо де можемо. Проблема автора в тому, що він працює з емулятором, а я з живим справжнім QF. І рішення, що
+ніби працюють, і емулятор прощає, справжня магнітолу може загнати в перевикористання ресурсів, шторм»*. The list
+of such defects is kept in [UPSTREAM_1_0.md](UPSTREAM_1_0.md) as they are found, so nothing is reconstructed at push time.
