@@ -51,7 +51,7 @@ Other:
 - "Positioning" delays for careful tweaking of the sound center with 0.5ms step up to 5ms for all the speakers and subwoofer, also expressed in centimeters for convenience.
 or
 - "Surround" delays more suited for Haas effect, no subwoofer tweaking, max 10ms with 1ms step. "Rear fill enhancement", which i'm not sure if it does anything, but i have copied the control logic verbatim for a possible future MCU update.
-- Speaker balance adjustable with an XY controller and step buttons featuring my car, beloved Skoda Fabia mk1.
+- Speaker balance adjustable with an XY controller and step buttons featuring my car, beloved Škoda Fabia mk1.
 
 Presets:
 - All the settings in the app are saved to a preset that the user is able to duplicate, export, import and rename.
