@@ -13,6 +13,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
 //import android.graphics.drawable.GradientDrawable;
@@ -24,6 +25,8 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.transition.Fade;
 import android.transition.TransitionManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -32,6 +35,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -89,6 +93,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_PLAYER_MAP = "player_preset_map";
     private static final String PREF_DEFAULT_PRESET = "default_preset_name";
     private static final String PREF_GALA_GLOBAL_MODE = "gala_global_mode";
+    private static final String PREF_AC_SWEEP_START = "audiocheck_sweep_start";
+    private static final String PREF_AC_SWEEP_END = "audiocheck_sweep_end";
+    private static final String PREF_AC_SWEEP_DURATION = "audiocheck_sweep_duration";
+    private static final String PREF_AC_SWEEP_NORMALIZE = "audiocheck_sweep_normalize";
     // Not a real preset - just the "preset name" galaNamespace() resolves to when global mode
     // is on, so every GALA field (enable + all 5 sliders) reads/writes one shared bucket of the
     // exact same "<namespace>_gala_*" keys every preset already uses, instead of needing a
@@ -178,8 +186,12 @@ public class MainActivity extends AppCompatActivity {
     // to any preset and not loaded by loadPreset() - these are pure runtime state, on purpose.
     private SwitchCompat switchAcBass, switchAcVocal, switchAcDrums, switchAcMelody, switchAcOnlySub;
     private SwitchCompat switchAcPinkNoise, switchAcSine;
+    private SwitchCompat switchAcSweepNormalize;
     private Slider seekAcSineFreq;
     private TextView tvAcSineFreqVal;
+    private EditText editAcSweepStart, editAcSweepEnd, editAcSweepDuration;
+    private TextView btnAcSweepToggle;
+    private LoopTrack acSweep;
     // Pink noise and the sine generator are standalone signal sources, not stems of anything -
     // unlike acBass/acVocal/acDrums/acMelody above they don't participate in the stem sync clock
     // at all. Pink noise is cached/reused like a stem (same signal every time, so no reason to
@@ -209,6 +221,23 @@ public class MainActivity extends AppCompatActivity {
     private static final int AC_STEM_SYNC_CHECK_MS = 3000;
     private static final int AC_STEM_SYNC_TOLERANCE_MS = 40;
     private final Runnable acStemSyncWatchdog = this::checkAcStemSync;
+    // All Audio Check sources (stems, pink noise, sine) are independent AudioTracks, each of
+    // which otherwise gets its own distinct audio session from the system - a Visualizer can only
+    // ever listen to one session, so whichever source last called attachToSession() was the only
+    // one actually visualized while the others played silently as far as the RTA was concerned.
+    // Giving every Audio Check AudioTrack this same explicit session (via setSessionId() in
+    // buildStaticLoopAudioTrack()) makes them all mix into one session instead, so a single
+    // Visualizer attached to it sees all of them combined. Lazily generated on first use;
+    // -1 = not yet created.
+    private int acSharedSessionId = -1;
+
+    private int acAudioSessionId() {
+        if (acSharedSessionId <= 0) {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            acSharedSessionId = am.generateAudioSessionId();
+        }
+        return acSharedSessionId;
+    }
 
     // Speaker-test buttons stay plain MediaPlayer, one-shot (no loop) - a single playthrough has
     // no loop point, so none of the AudioTrack machinery above is needed here. Only one plays at
@@ -2628,8 +2657,8 @@ public class MainActivity extends AppCompatActivity {
             // The trick: the RTA's own frequency-smoothing was exactly what was blurring/
             // attenuating a narrowband test tone's true peak (see SpectrumAnalyzerView's
             // smoothingDisabled doc) - now that there's a real sine generator to drive that case,
-            // disable it for exactly as long as the tone is actually playing.
-            if (spectrumAnalyzer != null) spectrumAnalyzer.setSmoothingDisabled(checked);
+            // disable it for exactly as long as a tone (sine or sweep) is actually playing.
+            updateAcToneSmoothing();
         });
         // No fromUser guard - this slider is pure runtime AudioCheck state (see its field doc),
         // never set programmatically except by the step buttons below, which should restart the
@@ -2646,6 +2675,26 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_audiocheck_sine_minus1).setOnClickListener(v -> stepSineFreq(-1));
         findViewById(R.id.btn_audiocheck_sine_plus1).setOnClickListener(v -> stepSineFreq(1));
         findViewById(R.id.btn_audiocheck_sine_plus10).setOnClickListener(v -> stepSineFreq(10));
+
+        editAcSweepStart = findViewById(R.id.edit_audiocheck_sweep_start);
+        editAcSweepEnd = findViewById(R.id.edit_audiocheck_sweep_end);
+        editAcSweepDuration = findViewById(R.id.edit_audiocheck_sweep_duration);
+        bindPersistedTextField(editAcSweepStart, PREF_AC_SWEEP_START);
+        bindPersistedTextField(editAcSweepEnd, PREF_AC_SWEEP_END);
+        bindPersistedTextField(editAcSweepDuration, PREF_AC_SWEEP_DURATION);
+        btnAcSweepToggle = findViewById(R.id.btn_audiocheck_sweep_toggle);
+        btnAcSweepToggle.setOnClickListener(v -> toggleAcSweep());
+
+        switchAcSweepNormalize = findViewById(R.id.switch_audiocheck_sweep_normalize);
+        switchAcSweepNormalize.setChecked(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(PREF_AC_SWEEP_NORMALIZE, false));
+        switchAcSweepNormalize.setOnCheckedChangeListener((bv, checked) -> {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(PREF_AC_SWEEP_NORMALIZE, checked).apply();
+            // Mirrors audiocheck.net's own perceptual-sweep instructions (https://www.audiocheck.net/
+            // testtones_perceptualsinesweep.php): the per-frequency gain curve below only cancels
+            // out the ear's own threshold-of-hearing shape - it still relies on the listener playing
+            // quietly enough that they're near that threshold in the first place.
+            if (checked) Toaster.show(this, getString(R.string.toast_sweep_hearing_threshold), Toast.LENGTH_LONG);
+        });
 
         // Fader convention: _f_fr/_f_lr are 0..24, 12=center, LOW=rear/left, HIGH=front/right -
         // confirmed from SpectrumAnalyzerView's frontWeight/rearWeight math (raw=0 zeroes
@@ -2819,6 +2868,7 @@ public class MainActivity extends AppCompatActivity {
                         .build())
                 .setBufferSizeInBytes(pcm.length)
                 .setTransferMode(AudioTrack.MODE_STATIC)
+                .setSessionId(acAudioSessionId())
                 .build();
         track.write(pcm, 0, pcm.length);
         return track;
@@ -2854,6 +2904,67 @@ public class MainActivity extends AppCompatActivity {
     private void stepSineFreq(int delta) {
         int newFreq = Math.max((int) AC_SINE_MIN_HZ, Math.min((int) AC_SINE_MAX_HZ, currentSineFreqHz() + delta));
         seekAcSineFreq.setValue(freqToPos(newFreq));
+    }
+
+    /** Loads a sweep field's last-saved value (global, not per-preset - these describe a test
+     * signal, not a sound setting, so there's no reason they'd differ per preset) and saves it
+     * back on every edit, the same reactive-save pattern as switch_show_loudness_main and the FM
+     * disclosure panels' open/closed state. */
+    private void bindPersistedTextField(EditText field, String prefKey) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String saved = prefs.getString(prefKey, null);
+        if (saved != null) field.setText(saved);
+        field.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                prefs.edit().putString(prefKey, s.toString()).apply();
+            }
+        });
+    }
+
+    /** Starts/stops the logarithmic sweep. Unlike the sine generator, there's no slider to react
+     * to live - the 3 fields are only ever read at the moment Play is tapped, so editing them
+     * while the sweep is already running has no effect until it's stopped and restarted. */
+    private void toggleAcSweep() {
+        if (isStemPlaying(acSweep)) {
+            stopAcSweep();
+        } else {
+            float start = clampSweepHz(parseSweepField(editAcSweepStart, 100f));
+            float end = clampSweepHz(parseSweepField(editAcSweepEnd, 10000f));
+            float duration = Math.max(0.5f, Math.min(300f, parseSweepField(editAcSweepDuration, 10f)));
+            acSweep = buildSweepLoopTrack(start, end, duration, switchAcSweepNormalize.isChecked());
+            acSweep.track.play();
+            if (spectrumAnalyzer != null) spectrumAnalyzer.attachToSession(acSweep.track.getAudioSessionId());
+            btnAcSweepToggle.setText(getString(R.string.audiocheck_sweep_pause));
+        }
+        updateAcToneSmoothing();
+    }
+
+    private void stopAcSweep() {
+        if (acSweep != null) { acSweep.track.pause(); acSweep.track.release(); acSweep = null; }
+        if (btnAcSweepToggle != null) btnAcSweepToggle.setText(getString(R.string.audiocheck_sweep_play));
+    }
+
+    private float clampSweepHz(float hz) {
+        return Math.max(AC_SINE_MIN_HZ, Math.min(AC_SINE_MAX_HZ, hz));
+    }
+
+    /** Falls back to a sane default rather than refusing to start - this is a QA tool, not a form,
+     * so an empty or garbled field shouldn't block the test. */
+    private float parseSweepField(EditText field, float fallback) {
+        try {
+            return Float.parseFloat(field.getText().toString().trim());
+        } catch (NumberFormatException | NullPointerException e) {
+            return fallback;
+        }
+    }
+
+    /** Shared by the sine switch and the sweep button - either one playing disables RTA
+     * smoothing (see switchAcSine's own doc for why), so this re-derives the combined state from
+     * both instead of each one clobbering the other's intent. */
+    private void updateAcToneSmoothing() {
+        if (spectrumAnalyzer != null) spectrumAnalyzer.setSmoothingDisabled(switchAcSine.isChecked() || isStemPlaying(acSweep));
     }
 
     private static final int SINE_REBUILD_DEBOUNCE_MS = 80;
@@ -2912,6 +3023,125 @@ public class MainActivity extends AppCompatActivity {
         AudioTrack track = buildStaticLoopAudioTrack(pcm, AC_GEN_SAMPLE_RATE, 1);
         track.setLoopPoints(0, frames, -1);
         return new LoopTrack(track, frames, AC_GEN_SAMPLE_RATE);
+    }
+
+    /** Builds a logarithmic ("exponential") round-trip sweep: low to high, then back down to low,
+     * looped - so the loop seam joins low to low (same frequency) instead of snapping from high
+     * back to low every repeat. durationSec is the full up+down cycle, split evenly between the
+     * two legs. Frequency moves at a constant ratio-per-second rather than a constant Hz-per-
+     * second on each leg - same log reasoning as posToFreq() - so each leg's phase is the integral
+     * of its own exponentially-changing instantaneous frequency (the standard exponential-chirp
+     * formula), not a naive per-sample increment. The down leg's phase picks up exactly where the
+     * up leg's left off (phaseAtTurn), so the waveform stays continuous through the turnaround at
+     * the top, not just within each leg - the only remaining seam is the loop point itself, where
+     * frequency now matches but phase generally won't exactly, same residual the sine generator's
+     * own crossfade exists to hide (not applied here since this is one continuous loop, not a
+     * rebuild).
+     * <p>When normalize is set, each sample is additionally scaled by hearingThresholdGain() at
+     * that instant's frequency - see its own doc for what that compensates for and why it only
+     * ever attenuates, never boosts past the existing 0.3*full-scale ceiling. */
+    private LoopTrack buildSweepLoopTrack(float startHz, float endHz, float durationSec, boolean normalize) {
+        int halfFrames = Math.max(1, Math.round(durationSec * AC_GEN_SAMPLE_RATE / 2f));
+        int frames = halfFrames * 2;
+        byte[] pcm = new byte[frames * 2]; // mono, 16-bit
+        double amplitude = 0.3 * Short.MAX_VALUE;
+        float halfDuration = halfFrames / (float) AC_GEN_SAMPLE_RATE;
+        boolean constant = Math.abs(endHz - startHz) < 0.01f;
+        double kUp = constant ? 0 : Math.log(endHz / (double) startHz) / halfDuration;
+        double kDown = constant ? 0 : Math.log(startHz / (double) endHz) / halfDuration;
+        double tqMax = normalize ? hearingThresholdMaxDb(Math.min(startHz, endHz), Math.max(startHz, endHz)) : 0;
+
+        double phaseAtTurn = 0;
+        for (int i = 0; i < halfFrames; i++) {
+            double t = i / (double) AC_GEN_SAMPLE_RATE;
+            double fInstant = constant ? startHz : startHz * Math.exp(kUp * t);
+            double phase = constant
+                    ? 2 * Math.PI * startHz * t
+                    : 2 * Math.PI * startHz / kUp * (Math.exp(kUp * t) - 1);
+            phaseAtTurn = phase;
+            double amp = normalize ? amplitude * hearingThresholdGain(fInstant, tqMax) : amplitude;
+            short s = (short) Math.round(amp * Math.sin(phase));
+            pcm[i * 2] = (byte) (s & 0xFF);
+            pcm[i * 2 + 1] = (byte) ((s >> 8) & 0xFF);
+        }
+        for (int i = 0; i < halfFrames; i++) {
+            double t = i / (double) AC_GEN_SAMPLE_RATE;
+            double fInstant = constant ? endHz : endHz * Math.exp(kDown * t);
+            double legPhase = constant
+                    ? 2 * Math.PI * endHz * t
+                    : 2 * Math.PI * endHz / kDown * (Math.exp(kDown * t) - 1);
+            double amp = normalize ? amplitude * hearingThresholdGain(fInstant, tqMax) : amplitude;
+            short s = (short) Math.round(amp * Math.sin(phaseAtTurn + legPhase));
+            int idx = halfFrames + i;
+            pcm[idx * 2] = (byte) (s & 0xFF);
+            pcm[idx * 2 + 1] = (byte) ((s >> 8) & 0xFF);
+        }
+        AudioTrack track = buildStaticLoopAudioTrack(pcm, AC_GEN_SAMPLE_RATE, 1);
+        track.setLoopPoints(0, frames, -1);
+        return new LoopTrack(track, frames, AC_GEN_SAMPLE_RATE);
+    }
+
+    // ISO 226:2003 free-field threshold-of-hearing (0 phon) curve - dB SPL needed to just detect
+    // a tone at each listed Hz. This is the actual standardized, "well documented" human
+    // sensitivity data (superseding the older Fletcher-Munson/Robinson-Dadson determinations),
+    // the real-world source a genuine perceptual sweep is built from - not a formula
+    // approximation. The standard itself only defines points up to 12500Hz; 16000/20000 are a
+    // smooth, bounded extension past that (individual high-frequency thresholds vary hugely
+    // anyway) so a sweep reaching 20kHz still has a sane reference instead of undefined behavior.
+    private static final float[] ISO226_HZ = {
+            20, 25, 31.5f, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000,
+            1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000
+    };
+    private static final float[] ISO226_DB = {
+            74.3f, 65.0f, 56.3f, 48.4f, 41.7f, 35.5f, 29.8f, 25.1f, 20.7f, 16.8f, 13.8f, 11.2f,
+            8.9f, 7.2f, 6.0f, 5.0f, 4.4f, 4.2f, 3.7f, 2.6f, 1.0f, -1.2f, -3.6f, -3.9f, -1.1f, 6.6f,
+            15.3f, 16.4f, 11.6f, 20.0f, 40.0f
+    };
+
+    /** The ISO 226:2003 threshold-of-hearing curve, interpolated on a log-frequency axis between
+     * its standard table points (same log reasoning as posToFreq() - the curve's features are
+     * spaced by ratio, not by raw Hz). Frequencies outside the table's own range clamp to its
+     * nearest endpoint rather than extrapolating further. */
+    private static double hearingThresholdDb(double freqHz) {
+        float f = (float) Math.max(ISO226_HZ[0], Math.min(ISO226_HZ[ISO226_HZ.length - 1], freqHz));
+        int i = 0;
+        while (i < ISO226_HZ.length - 2 && ISO226_HZ[i + 1] < f) i++;
+        float f0 = ISO226_HZ[i], f1 = ISO226_HZ[i + 1];
+        double t = (Math.log(f) - Math.log(f0)) / (Math.log(f1) - Math.log(f0));
+        return ISO226_DB[i] + t * (ISO226_DB[i + 1] - ISO226_DB[i]);
+    }
+
+    /** The highest (least sensitive) point of the threshold-of-hearing curve within [loHz, hiHz] -
+     * sampled at 200 log-spaced points since the curve has a dip around 1-5kHz, so the max over an
+     * arbitrary sub-range isn't just its two endpoints. This is the anchor hearingThresholdGain()
+     * normalizes against: the frequency that needs the loudest signal to be heard at all keeps the
+     * sweep's existing full amplitude, and every more-sensitive frequency gets quieter relative to
+     * it - never the other way around, so normalizing can only ever reduce level, never risk
+     * clipping by boosting past what the sweep already plays at. */
+    private static double hearingThresholdMaxDb(float loHz, float hiHz) {
+        double max = Double.NEGATIVE_INFINITY;
+        int steps = 200;
+        double logLo = Math.log(loHz), logHi = Math.log(Math.max(hiHz, loHz * 1.0001));
+        for (int i = 0; i <= steps; i++) {
+            double f = Math.exp(logLo + (logHi - logLo) * i / steps);
+            max = Math.max(max, hearingThresholdDb(f));
+        }
+        return max;
+    }
+
+    /** Linear amplitude multiplier (<=1) that cancels out the ear's own threshold-of-hearing shape
+     * across the sweep - see the Background/Description on audiocheck.net's own Perceptual Sweep
+     * page (https://www.audiocheck.net/testtones_perceptualsinesweep.php), which this mirrors:
+     * playing this at the point where it's just barely audible is what actually makes it sound
+     * flat, since that's specifically where the threshold curve's shape (not a louder-listening
+     * equal-loudness contour) applies. No floor on the attenuation here - the real threshold
+     * curve's span can be 80dB+ edge to edge on a full-range sweep, and that's correctly
+     * representable in 16-bit PCM; what makes it audible is turning the playback volume up until
+     * the loudest part (tqMaxDb's frequency) is itself just barely audible, same as the source
+     * site instructs, not propping up the quiet parts artificially. */
+    private static double hearingThresholdGain(double freqHz, double tqMaxDb) {
+        double gainDb = hearingThresholdDb(freqHz) - tqMaxDb;
+        return Math.pow(10.0, gainDb / 20.0);
     }
 
     /** Pink noise via Paul Kellet's well-known refined 3-pole IIR approximation, driven by white
@@ -2997,6 +3227,8 @@ public class MainActivity extends AppCompatActivity {
         if (switchAcPinkNoise != null) switchAcPinkNoise.setChecked(false);
         if (switchAcSine != null) switchAcSine.setChecked(false);
         if (switchAcOnlySub != null) switchAcOnlySub.setChecked(false);
+        stopAcSweep();
+        updateAcToneSmoothing();
 
         if (mpAcSpeaker != null) { mpAcSpeaker.stop(); mpAcSpeaker.release(); mpAcSpeaker = null; }
         activeSpeakerBtnId = 0;
@@ -3016,6 +3248,7 @@ public class MainActivity extends AppCompatActivity {
         if (acMelody != null) { acMelody.track.release(); acMelody = null; }
         if (acPinkNoise != null) { acPinkNoise.track.release(); acPinkNoise = null; }
         if (acSine != null) { acSine.track.release(); acSine = null; }
+        if (acSweep != null) { acSweep.track.release(); acSweep = null; }
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }

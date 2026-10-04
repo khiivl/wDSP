@@ -103,6 +103,7 @@
     <string name="toast_imported">Importerad</string>
     <string name="toast_sub_comp_limit">Sub-komp begränsad till 80Hz</string>
     <string name="toast_loudness_sync_bass">Loudness aktiv. Bas-boost-frekvenser och nivåer fram/bak synkas. För bästa resultat, ställ in främre Bas-boost till 86Hz och kalibreringspunkten till ca 80dB.</string>
+    <string name="toast_sweep_hearing_threshold">Spela så tyst som möjligt - vid din hörtröskel, precis hörbart.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Låt wDSP köras</string>
@@ -144,6 +145,24 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Annat</string>
     <string name="GLtab">Fart</string>
+    <string name="ACtab">Ljudtest</string>
     <string name="lbl_pwr">Ampeffekt:</string>
+
+    <!-- Audio Check Tab (internal QA tool) -->
+    <string name="audiocheck_title">Ljudtest</string>
+    <string name="audiocheck_stems_label">Låtstreams (loop, valfri mix) och generatorer:</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_vocal">Sång</string>
+    <string name="stem_drums">Trummor</string>
+    <string name="stem_melody">Melodi</string>
+    <string name="audiocheck_pink_noise">Rosa Brus</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frekvens:</string>
+    <string name="audiocheck_speaker_label">Högtalartest (ställer fader, en i taget)</string>
+    <string name="audiocheck_only_sub">Endast Sub (EQ -12, filter 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Slut Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Tid (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalisera för Hörtröskel</string>
 
 </resources>

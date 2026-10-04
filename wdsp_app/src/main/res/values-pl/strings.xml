@@ -103,6 +103,7 @@
     <string name="toast_imported">Zaimportowano</string>
     <string name="toast_sub_comp_limit">Kompensacja subwoofera ograniczona do 80Hz</string>
     <string name="toast_loudness_sync_bass">Loudness aktywny. Częstotliwości i poziomy Wzmocnienia basu przód/tył są synchronizowane. Dla najlepszych efektów ustaw przednie Wzmocnienie basu na 86Hz, a Punkt kalibracji na ~80dB.</string>
+    <string name="toast_sweep_hearing_threshold">Odtwarzaj jak najciszej - na granicy słyszalności, ledwo słyszalnie.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Praca wDSP w tle</string>
@@ -144,5 +145,23 @@
     <string name="DLtab">Opóźnienia</string>
     <string name="OTtab">Inne</string>
     <string name="GLtab">GALA</string>
+    <string name="ACtab">Test Audio</string>
     <string name="lbl_pwr">Moc Ampa:</string>
+
+    <!-- Audio Check Tab (internal QA tool) -->
+    <string name="audiocheck_title">Test Audio</string>
+    <string name="audiocheck_stems_label">Ścieżki utworu (pętla, łącz swobodnie) i generatory:</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_vocal">Wokal</string>
+    <string name="stem_drums">Perkusja</string>
+    <string name="stem_melody">Melodia</string>
+    <string name="audiocheck_pink_noise">Szum Różowy</string>
+    <string name="audiocheck_sine_label">Generator Sinusoidalny</string>
+    <string name="audiocheck_sine_freq">Częstotliwość:</string>
+    <string name="audiocheck_speaker_label">Test Głośników (ustawia fader, pojedynczo)</string>
+    <string name="audiocheck_only_sub">Tylko Sub (EQ -12, filtry 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Koniec Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Czas (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizuj do Progu Słyszenia</string>
 </resources>

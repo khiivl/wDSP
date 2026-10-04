@@ -109,6 +109,7 @@
     <string name="toast_imported">Imported</string>
     <string name="toast_sub_comp_limit">Sub Comp limited to 80Hz</string>
     <string name="toast_loudness_sync_bass">Loudness active. Bass boost F/R frequencies and levels synchronised. For best results, set the front Bass Boost to 86Hz and the Calibration point to ~80dB.</string>
+    <string name="toast_sweep_hearing_threshold">Play as quietly as possible - at your hearing threshold, just barely audible.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Keep wDSP Running</string>
@@ -176,5 +177,12 @@
     <string name="speaker_rl" translatable="false">RL</string>
     <string name="speaker_rr" translatable="false">RR</string>
     <string name="audiocheck_only_sub">Only Sub (EQ -12, filters 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">End Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Dur (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalize for Hearing Threshold</string>
+    <!-- Universal play/pause glyphs, same convention as speaker_fl/fr/rl/rr above. -->
+    <string name="audiocheck_sweep_play" translatable="false">⏯</string>
+    <string name="audiocheck_sweep_pause" translatable="false">⏯</string>
 
 </resources>

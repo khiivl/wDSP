@@ -102,6 +102,7 @@
     <string name="toast_imported">Импортированно</string>
     <string name="toast_sub_comp_limit">Сабвуфер ограничен 80Гц</string>
     <string name="toast_loudness_sync_bass">Тонкомпенсация активна. Частоты и уровни усиления баса перед/зад синхронизированы. Для лучшего результата установите переднее усиление баса на 86Гц, а точку калибровки на ~80дБ.</string>
+    <string name="toast_sweep_hearing_threshold">Включите как можно тише - на пороге слышимости, едва слышно.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">Оставить wDSP работать в фоне</string>
@@ -145,8 +146,26 @@
     <string name="DLtab">Задержки</string>
     <string name="OTtab">Прочее</string>
     <string name="GLtab">Скорость</string>
+    <string name="ACtab">Аудиотест</string>
 
     <!-- PowerVolume -->
     <string name="lbl_pwr">Мощн. усилит.:</string>
+
+    <!-- Audio Check Tab (internal QA tool) -->
+    <string name="audiocheck_title">Аудиотест</string>
+    <string name="audiocheck_stems_label">Стемы трека (луп, свободно сочетаются) и генераторы:</string>
+    <string name="stem_bass">Бас</string>
+    <string name="stem_vocal">Вокал</string>
+    <string name="stem_drums">Барабаны</string>
+    <string name="stem_melody">Мелодия</string>
+    <string name="audiocheck_pink_noise">Розовый шум</string>
+    <string name="audiocheck_sine_label">Генератор синуса</string>
+    <string name="audiocheck_sine_freq">Частота:</string>
+    <string name="audiocheck_speaker_label">Тест динамиков (переключает фейдер, по одному)</string>
+    <string name="audiocheck_only_sub">Только сабвуфер (EQ -12, фильтры 250Гц, бост 0)</string>
+    <string name="audiocheck_sweep_start_hint">Нач. Гц</string>
+    <string name="audiocheck_sweep_end_hint">Кон. Гц</string>
+    <string name="audiocheck_sweep_duration_hint">Длит. с</string>
+    <string name="audiocheck_sweep_normalize">Нормализация по порогу слуха</string>
 
 </resources>

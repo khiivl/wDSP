@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -2125,9 +2125,10 @@
 
         <!-- Audio Check Tab Content - internal hardware QA tool (looping stem playback +
              per-speaker test tones + an EQ/filter override to isolate the sub), not meant for
-             end users, so its strings are English-only (see strings.xml). Same ids as the
-             landscape layout's own Audio Check tab - MainActivity's setupAudioCheckControls()
-             binds them once regardless of orientation. -->
+             end users - most of its strings are still English-only, though some (see
+             strings.xml) are translated like any other tab. Same ids as the landscape layout's
+             own Audio Check tab - MainActivity's setupAudioCheckControls() binds them once
+             regardless of orientation. -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_audiocheck"
             android:layout_width="match_parent"
@@ -2322,7 +2323,8 @@
                         android:orientation="horizontal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical">
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_audiocheck_sine_minus10"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -2378,6 +2380,99 @@
                             app:cornerRadius="@dimen/button_radius"
                             app:strokeWidth="@dimen/stroke_width"
                             app:strokeColor="@color/stroke_color" />
+
+                        <!-- Sweep generator: start/end/duration fields + play-pause, to the
+                             right of the sine step buttons above. -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                            android:layout_width="128dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/margin_standard"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom"
+                            android:hint="@string/audiocheck_sweep_start_hint">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/edit_audiocheck_sweep_start"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLength="5"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textSize="@dimen/text_size_label"
+                                android:text="100" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                            android:layout_width="128dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/margin_small"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom"
+                            android:hint="@string/audiocheck_sweep_end_hint">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/edit_audiocheck_sweep_end"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLength="5"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textSize="@dimen/text_size_label"
+                                android:text="10000" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                            android:layout_width="128dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/margin_small"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom"
+                            android:hint="@string/audiocheck_sweep_duration_hint">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/edit_audiocheck_sweep_duration"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"
+                                android:maxLength="4"
+                                android:textColor="@color/text_theme_aware_2"
+                                android:textSize="@dimen/text_size_label"
+                                android:text="10" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_audiocheck_sweep_toggle"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="@dimen/button_width"
+                            android:layout_height="@dimen/button_height"
+                            android:layout_marginStart="@dimen/margin_small"
+                            android:minWidth="0dp"
+                            android:padding="0dp"
+                            android:textColor="@color/cyan_custom"
+                            android:textSize="@dimen/text_size_button"
+                            android:text="@string/audiocheck_sweep_play"
+                            app:cornerRadius="@dimen/button_radius"
+                            app:strokeWidth="@dimen/stroke_width"
+                            app:strokeColor="@color/stroke_color" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_small"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            style="@style/TextLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/audiocheck_sweep_normalize" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_audiocheck_sweep_normalize"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="12dp"
+                            app:showText="false" />
                     </LinearLayout>
 
                     <TextView

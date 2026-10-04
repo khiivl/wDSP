@@ -102,6 +102,7 @@
     <string name="toast_imported">Importiert</string>
     <string name="toast_sub_comp_limit">Sub-Kompensation auf 80Hz begrenzt</string>
     <string name="toast_loudness_sync_bass">Loudness aktiv. Bass-Boost-Frequenzen und -Pegel vorne/hinten werden synchronisiert. Für beste Ergebnisse den vorderen Bass-Boost auf 86Hz und den Kalibrationspunkt auf ca. 80dB einstellen.</string>
+    <string name="toast_sweep_hearing_threshold">So leise wie möglich abspielen - an deiner Hörschwelle, gerade noch hörbar.</string>
 
     <!-- Battery Optimization Dialog -->
     <string name="battery_dialog_title">wDSP im Hintergrund ausführen</string>
@@ -163,4 +164,8 @@
     <string name="speaker_rl" translatable="false">RL</string>
     <string name="speaker_rr" translatable="false">RR</string>
     <string name="audiocheck_only_sub">Nur Sub (EQ -12, Filter 250Hz, Boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Ende Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Dauer (s)</string>
+    <string name="audiocheck_sweep_normalize">Für Hörschwelle normalisieren</string>
 </resources>

@@ -216,6 +216,7 @@ public class SpectrumAnalyzerView extends View {
     private float drawHeightRatio = 0.82608696f;
 
     private Visualizer visualizer;
+    private int attachedSessionId = -1;
 
     // On stock QF/K706 policies (no BitPerfect-style Magisk module reconfiguring primary vs fast
     // output routing - see SessionResolver's doc), SessionResolver has to resolve a per-track
@@ -506,9 +507,14 @@ public class SpectrumAnalyzerView extends View {
      * that first attach. Call with the source's own getAudioSessionId() right after starting it -
      * that's a known-good session, so this skips SessionResolver's heuristic guessing entirely.
      * Releasing-then-reattaching (not just skipping if already attached) also covers switching
-     * from one Audio Check source to a different one, not just the "RTA never attached" case. */
+     * from one Audio Check source to a different one, not just the "RTA never attached" case -
+     * except when sessionId is the one already attached, which is a genuine no-op (Audio Check's
+     * sources now all share one session - see acSharedSessionId's doc in MainActivity - so most
+     * calls here are already-attached repeats, not actual switches, and releasing/reattaching the
+     * Visualizer on every single one would needlessly glitch the RTA each time another stem
+     * toggles on). */
     public void attachToSession(int sessionId) {
-        if (sessionId <= 0) return;
+        if (sessionId <= 0 || sessionId == attachedSessionId) return;
         if (visualizer != null) {
             try {
                 visualizer.setEnabled(false);
@@ -613,6 +619,7 @@ public class SpectrumAnalyzerView extends View {
 
             v.setEnabled(true);
             visualizer = v;
+            attachedSessionId = sessionId;
             Log.d(TAG, "Spectrum analyzer attached to session " + sessionId + ", captureSize=" + captureSize);
 
             if (!frameCallbackActive) {
@@ -622,6 +629,7 @@ public class SpectrumAnalyzerView extends View {
         } catch (Throwable t) {
             Log.w(TAG, "Spectrum analyzer session " + sessionId + " unavailable: " + t);
             visualizer = null;
+            attachedSessionId = -1;
             if (sessionId != 0) attachVisualizer(0);
         }
     }
@@ -724,6 +732,7 @@ public class SpectrumAnalyzerView extends View {
             Log.w(TAG, "Error releasing spectrum analyzer: " + t);
         } finally {
             visualizer = null;
+            attachedSessionId = -1;
         }
 
         frameCallbackActive = false;

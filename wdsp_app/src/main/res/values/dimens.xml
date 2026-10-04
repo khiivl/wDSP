@@ -19,6 +19,7 @@
     <dimen name="slider_margin_top">8dp</dimen>
     <dimen name="slider_margin_bottom">6dp</dimen>
     <dimen name="audiocheck_switches">1dp</dimen>
+    <dimen name="button_offset">2dp</dimen>
 
     <!-- Component Sizes -->
     <dimen name="slider_max_width">300dp</dimen>
