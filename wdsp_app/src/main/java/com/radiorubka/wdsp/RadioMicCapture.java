@@ -61,16 +61,21 @@ import java.util.Locale;
  * and the spectrum goes to calculated (owner's decision, 14.09.2026) - a narrow stream is never shown
  * as the cabin - until {@link MicInputWindow} sees the input free and the capture is opened again.
  *
- * <h2>Effects are not ours to operate</h2>
+ * <h2>Effects: off only while the input is ours alone</h2>
  *
- * <p>The capture opens {@code UNPROCESSED}, the source the platform attaches no pre-processing to
- * (on this unit {@code /vendor/etc/audio_effects.xml} gives AEC and NS to {@code mic},
- * {@code voice_communication} and {@code voice_recognition}, nothing to {@code unprocessed}), and
- * then leaves the effects alone. It used to switch AEC and NS off on its session. On a shared
- * input only one session's chain is applied - the dump of 14.09.2026 showed ours active and the
- * assistant's AEC and NS suspended - so switching ours off switched them off for the assistant too.
- * Owner, 14.09.2026: "ці ефекти важливі асистенту, дзвінкам. Ми маємо тупо сідати на потік без
- * ефектів, а не оперувати ними".
+ * <p>The capture asks for {@code UNPROCESSED}, but the QF {@code libaudioclient} turns source 9 into
+ * MIC for every app, and the BitPerfect {@code audio_effects.xml} gives {@code mic} AEC and NS (AEC
+ * back on {@code mic} since 03.10.2026, as in 4.18). Read from the wire on 05.10.2026: AEC
+ * ({@code sprd cvs}) and NS enabled on this capture's session. An echo canceller learns to remove
+ * what the speakers play - exactly what this capture listens to - so the spectrum faded away.
+ *
+ * <p>On a shared input only one session's chain is applied (the dump of 14.09.2026 showed ours
+ * active and the assistant's suspended), so switching ours off can switch them off for the
+ * assistant too. Owner, 14.09.2026: "ці ефекти важливі асистенту, дзвінкам. Ми маємо тупо сідати на
+ * потік без ефектів, а не оперувати ними". Owner, 05.10.2026, on the proposal to switch them off
+ * only while nobody else records and give them back the moment another recording appears: "роби".
+ * That is {@link #applyPreprocessingPolicy}: the platform's recording callback decides, and the
+ * effects are handed back before the recorder is released.
  *
  * <p>Versions 0.4.9 to 0.4.9.6 did something else here: they set the assistant's RECORD_AUDIO
  * app-op to "ignore", permanently. That does not make it share - it makes it deaf, and the mode
@@ -168,6 +173,13 @@ public class RadioMicCapture {
      * on 14.09.2026 that left our session with the echo canceller and noise suppressor active.
      */
     private volatile int othersOnInputAtOpen = 0;
+    /**
+     * The platform pre-processing switched off on our session while nobody else records; null when
+     * it is as the platform set it. Guarded by {@link #effectsLock}: the recording callback on the
+     * main thread and the release on the capture or call path both touch it.
+     */
+    private MicProbe.Suspension preprocessingOff;
+    private final Object effectsLock = new Object();
     private AudioManager audioManager;
     private AudioManager.AudioRecordingCallback recordingCallback;
 
@@ -568,7 +580,51 @@ public class RadioMicCapture {
             releaseRecordLocked();
             return false;
         }
+        // The callback fires only on a change, so the state at open is decided here.
+        AudioManager am = appContext != null
+                ? (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE) : null;
+        if (am != null) {
+            try {
+                applyPreprocessingPolicy(am.getActiveRecordingConfigurations());
+            } catch (Throwable t) {
+                Log.w(TAG, "recordings could not be listed, effects left as the platform set them: " + t);
+            }
+        }
         return true;
+    }
+
+    /**
+     * Switches AEC/NS/AGC off on our session while no other app records, and gives them back the
+     * moment one does - see the class notes for why both halves matter. Our placeholder in
+     * {@link MicrophoneGuard} is ours and does not count as another app.
+     */
+    private void applyPreprocessingPolicy(List<AudioRecordingConfiguration> configs) {
+        AudioRecord rec = audioRecord;
+        if (rec == null || configs == null) return;
+        final int session;
+        try {
+            session = rec.getAudioSessionId();
+        } catch (Throwable t) {
+            return;
+        }
+        final int holder = MicrophoneGuard.holderSessionId();
+        int others = 0;
+        for (AudioRecordingConfiguration config : configs) {
+            int s = config.getClientAudioSessionId();
+            if (s == session || (s != 0 && s == holder)) continue;
+            others++;
+        }
+        synchronized (effectsLock) {
+            if (audioRecord != rec) return;
+            if (others == 0 && preprocessingOff == null) {
+                Log.i(TAG, "alone on the input - switching the platform pre-processing off on session " + session);
+                preprocessingOff = MicProbe.suspendCapturePreprocessing(session, TAG);
+            } else if (others > 0 && preprocessingOff != null) {
+                Log.i(TAG, others + " other recording(s) on the input - giving the pre-processing back");
+                preprocessingOff.restore();
+                preprocessingOff = null;
+            }
+        }
     }
 
     /**
@@ -583,6 +639,7 @@ public class RadioMicCapture {
             @Override
             public void onRecordingConfigChanged(List<AudioRecordingConfiguration> configs) {
                 checkDeviceRate(configs);
+                if (running) applyPreprocessingPolicy(configs);
             }
         };
         try {
@@ -687,14 +744,27 @@ public class RadioMicCapture {
         Log.i(TAG, "RadioMicCapture stopped");
     }
 
-    /** Lets the recorder go. There is no pre-processing state of ours to hand back any more. */
+    /**
+     * Lets the recorder go, then hands back the pre-processing it had switched off. The recorder
+     * goes first: on a call start the input must be closed before anything else (see stop()), and
+     * the effects belong to a session that is ending anyway - giving them back is courtesy, the
+     * closed input is not. Only the hand-over of both fields is under the lock, so the call path
+     * never waits for a callback's binder calls on the input itself.
+     */
     private void releaseRecordLocked() {
-        safeReleaseRecord();
+        MicProbe.Suspension effects;
+        AudioRecord rec;
+        synchronized (effectsLock) {
+            effects = preprocessingOff;
+            preprocessingOff = null;
+            rec = audioRecord;
+            audioRecord = null;
+        }
+        safeReleaseRecord(rec);
+        if (effects != null) effects.restore();
     }
 
-    private void safeReleaseRecord() {
-        AudioRecord rec = audioRecord;
-        audioRecord = null;
+    private static void safeReleaseRecord(AudioRecord rec) {
         if (rec != null) {
             try {
                 if (rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {

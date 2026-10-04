@@ -293,6 +293,11 @@ public final class MicrophoneGuard {
     /** The placeholder's session, kept after release - see {@link #inputSetUpByAnother}. */
     private static volatile int holderSessionId;
 
+    /** The placeholder's session, 0 when none was ever held - ours, never another app's recording. */
+    static int holderSessionId() {
+        return holderSessionId;
+    }
+
     private static void holdOpen() {
         releaseHold();
         AudioRecord candidate = openCaptureRecord();
