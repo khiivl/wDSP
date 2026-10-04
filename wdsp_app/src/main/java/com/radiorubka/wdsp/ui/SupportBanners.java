@@ -33,8 +33,9 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
  * <h2>🔴 The order is deliberate and is the owner's instruction</h2>
  *
  * <p>The upstream author's capsule comes <b>first</b>, above this fork's own. wDSP is his project;
- * everything here stands on it, and the fork is called "wDSP kostyamat mod" precisely so that the
- * two are not confused. Do not reorder them to put the fork on top.
+ * everything here stands on it, and this build's capsule is headed "wDSP kostyamat mod" so that the
+ * two are not confused. Do not reorder them to put the fork on top. The app itself is called wDSP
+ * again (owner, 05.10.2026: the mod is being handed back to the author, not kept as a fork).
  *
  * <h2>One tap does both things</h2>
  *
