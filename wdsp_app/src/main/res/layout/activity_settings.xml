@@ -311,6 +311,7 @@
                 android:text="@string/settings_reset_palette"
                 android:textSize="@dimen/text_size_dense_title"
                 android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Блок Шпалер -->
             <LinearLayout
@@ -525,7 +526,6 @@
                     </LinearLayout>
 
                 </LinearLayout>
-            </LinearLayout>
             </LinearLayout>
 
             <!-- ════════════════════════════════════════════════════════════
