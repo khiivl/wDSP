@@ -703,7 +703,7 @@ public class McuService extends Service implements LocationListener {
                     // be inspected; src picks the audio source, 6 is VOICE_RECOGNITION.
                     MicProbe.probeAsync(getApplicationContext(),
                             intent.getIntExtra("src",
-                                    android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION),
+                                    MicrophoneGuard.CAPTURE_AUDIO_SOURCE),
                             intent.getIntExtra("ms", 4000));
                 }
                 else if ("com.radiorubka.wdsp.SETTINGS_RESTORED".equals(action)) {

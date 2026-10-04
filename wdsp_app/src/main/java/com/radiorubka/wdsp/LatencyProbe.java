@@ -513,10 +513,12 @@ public final class LatencyProbe {
         private volatile int fallbackStamps;
 
         MicWatcher() {
-            int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-            record = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 4);
+            int minBytes = AudioRecord.getMinBufferSize(MicrophoneGuard.SAMPLE_RATE,
+                    MicrophoneGuard.CHANNEL_CONFIG, MicrophoneGuard.AUDIO_FORMAT);
+            record = MicrophoneGuard.openCaptureRecord(minBytes * 4);
+            if (record == null) {
+                throw new IllegalStateException("Failed to open microphone via MicrophoneGuard SSOT");
+            }
             buffer = new short[minBytes];
             Log.i(TAG, "mic opened state=" + record.getState() + " rate=" + record.getSampleRate()
                     + " minBytes=" + minBytes);

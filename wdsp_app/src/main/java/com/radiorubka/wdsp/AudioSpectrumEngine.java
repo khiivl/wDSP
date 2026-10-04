@@ -458,7 +458,7 @@ public class AudioSpectrumEngine {
         // A held microphone nobody was drawing is lost quietly: the spectrum on screen is the
         // calculated one already, and there is nothing to fall back from.
         final boolean wasAnalysed = analysingMicrophone();
-        if (appContext != null && !toldMicUnavailable && wasAnalysed) {
+        if (appContext != null && !toldMicUnavailable && wasAnalysed && !CallState.isActive()) {
             toldMicUnavailable = true;
             // Daily use: the spectrum is decoration and an instrument, not a reason to restart the
             // car (owner, 14.09.2026). Calibration asks differently, and is not this path.

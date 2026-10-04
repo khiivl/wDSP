@@ -95,9 +95,9 @@ public class RadioMicCapture {
     }
 
     /** The rate this capture asks for, and the rate its analyser is built at. */
-    static final int SAMPLE_RATE = 48000;
-    private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
-    private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    static final int SAMPLE_RATE = MicrophoneGuard.SAMPLE_RATE;
+    private static final int CHANNEL_CONFIG = MicrophoneGuard.CHANNEL_CONFIG;
+    private static final int AUDIO_FORMAT = MicrophoneGuard.AUDIO_FORMAT;
     public static final int CHUNK_SIZE = 512;
 
     /** How much of our own stream is heard before deciding whether it has a top end. */
@@ -223,7 +223,7 @@ public class RadioMicCapture {
         appContext = context.getApplicationContext();
 
         int minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
-        bufferSize = Math.max(minBuf, CHUNK_SIZE * 4);
+        bufferSize = Math.max(minBuf * 8, CHUNK_SIZE * 4);
 
         if (!openRecordLocked()) return false;
 
@@ -479,7 +479,8 @@ public class RadioMicCapture {
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
         captureThread.start();
-        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (Adaptive AGC enabled)");
+        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz source="
+                + MicrophoneGuard.CAPTURE_AUDIO_SOURCE + " (Adaptive AGC enabled)");
         return true;
     }
 
@@ -545,39 +546,16 @@ public class RadioMicCapture {
         return NativeSweep.bandwidthRatioDb(samples, n, SAMPLE_RATE);
     }
 
-    /** Creates and starts the recorder. Its effects are left exactly as the platform set them. */
+    /** Creates and starts the recorder via MicrophoneGuard SSOT. */
     private boolean openRecordLocked() {
-        othersOnInputAtOpen = activeRecordingsNow();
-        AudioRecord rec;
-        try {
-            rec = new AudioRecord(
-                    MediaRecorder.AudioSource.UNPROCESSED,
-                    SAMPLE_RATE,
-                    CHANNEL_CONFIG,
-                    AUDIO_FORMAT,
-                    bufferSize
-            );
-        } catch (Throwable t) {
-            Log.w(TAG, "AudioRecord(UNPROCESSED) failed, trying DEFAULT: " + t);
-            try {
-                rec = new AudioRecord(
-                        MediaRecorder.AudioSource.DEFAULT,
-                        SAMPLE_RATE,
-                        CHANNEL_CONFIG,
-                        AUDIO_FORMAT,
-                        bufferSize
-                );
-            } catch (Throwable t2) {
-                Log.e(TAG, "Failed to create AudioRecord: " + t2);
-                return false;
-            }
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot start RadioMicCapture: phone call is active");
+            return false;
         }
-
-        if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
-            Log.e(TAG, "AudioRecord not initialized");
-            try {
-                rec.release();
-            } catch (Throwable ignored) {}
+        othersOnInputAtOpen = activeRecordingsNow();
+        AudioRecord rec = MicrophoneGuard.openCaptureRecord(bufferSize);
+        if (rec == null) {
+            Log.e(TAG, "Failed to create AudioRecord via MicrophoneGuard SSOT");
             return false;
         }
 
