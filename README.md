@@ -7,7 +7,7 @@ This is a free and open-source DSP app designed to fully replace the stock DSP a
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
 Compatible with vertical and horizontal head units with the BU32107 chip.
 
-Made in Germany. 
+Made in Germany 🇩🇪
 
 I have to give credits to the people who taught me a lot i know about sound for free: oratory1990 (legend), Crinacle (headphone), Underbelly from YSAP (Uncle Joe) and, of course, Dan Worall (the trustworthy British accent). Credits to Sam from LMNC for making me interested in audio circuits.
 
