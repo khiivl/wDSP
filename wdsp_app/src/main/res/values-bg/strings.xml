@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Авто-профил</string>
@@ -424,8 +424,6 @@
     <string name="banner_trc20">Криптовалута — TRC-20 (Tron)</string>
     <string name="banner_ton">Криптовалута — TON (портфейл Telegram)</string>
     <string name="banner_copied">Копирано в клипборда</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Включено</string>
     <string name="state_off">Изключено</string>
     <string name="pref_radio_mic_visualizer_title">FM Радио визуализатор (тест)</string>
@@ -549,9 +547,9 @@
     <string name="room_wizard_delays_sub">Субуфер: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Стил на интерфейса</string>
-    <string name="settings_ui_style_desc">Превключване между класическия стил на автора (Material 3) и модерния стил wDSP Mod</string>
+    <string name="settings_ui_style_desc">Превключване между класическия стил на автора (Material 3) и модерния стил wDSP</string>
     <string name="settings_ui_style_classic">Класически (Оригинал)</string>
-    <string name="settings_ui_style_modern">Модерен (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Модерен</string>
 
     <string name="gala_disable_for_preset">Изкл. за този профил</string>
     <string name="button_backlight_label">Подсветка на бутоните в цветовете на wDSP</string>

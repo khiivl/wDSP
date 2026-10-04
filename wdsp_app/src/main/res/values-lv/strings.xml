@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Iestatījums</string>
@@ -424,8 +424,6 @@ Globāli noklusējums: %1$s</string>
     <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Kripto — TON (Telegram maks)</string>
     <string name="banner_copied">Nokopēts starpliktuvē</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Ieslēgts</string>
     <string name="state_off">Izslēgts</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Globāli noklusējums: %1$s</string>
     <string name="room_wizard_delays_sub">Zemfrekvences skaļrunis: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Saskarnes stils</string>
-    <string name="settings_ui_style_desc">Pārslēgties starp klasisko Material 3 un moderno wDSP Mod tēmu</string>
+    <string name="settings_ui_style_desc">Pārslēgties starp klasisko Material 3 un moderno wDSP tēmu</string>
     <string name="settings_ui_style_classic">Klasiskais (Oriģināls)</string>
-    <string name="settings_ui_style_modern">Moderns (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Moderns</string>
 
     <string name="gala_disable_for_preset">Izslēgt šim profilam</string>
     <string name="button_backlight_label">Pogu apgaismojums wDSP krāsās</string>

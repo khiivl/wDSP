@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Авто</string>
@@ -427,8 +427,6 @@
     <string name="banner_trc20">Криптовалюта — TRC-20 (Tron)</string>
     <string name="banner_ton">Криптовалюта — TON (кошелёк Telegram)</string>
     <string name="banner_copied">Скопировано в буфер обмена</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Вкл</string>
     <string name="state_off">Выкл</string>
     <string name="perm_wizard_item_root_title">Права суперпользователя (Root)</string>
@@ -550,9 +548,9 @@
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Стиль интерфейса</string>
-    <string name="settings_ui_style_desc">Переключение между классическим стилем автора (Material 3) и стилем Modern wDSP Mod</string>
+    <string name="settings_ui_style_desc">Переключение между классическим стилем автора (Material 3) и стилем Modern wDSP</string>
     <string name="settings_ui_style_classic">Классический (Оригинал)</string>
-    <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Модерн</string>
 
     <string name="button_backlight_label">Подсветка кнопок в цветах wDSP</string>
     <string name="button_backlight_desc">Пока wDSP на экране, кнопки светятся акцентным цветом текущей дневной или ночной темы. Когда wDSP сворачивается, возвращается их родной цвет.</string>

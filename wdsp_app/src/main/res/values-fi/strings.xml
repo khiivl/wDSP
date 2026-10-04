@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Esiasetus</string>
@@ -424,8 +424,6 @@ Yleinen oletus: %1$s</string>
     <string name="banner_trc20">Krypto — TRC-20 (Tron)</string>
     <string name="banner_ton">Krypto — TON (Telegram-lompakko)</string>
     <string name="banner_copied">Kopioitu leikepöydälle</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Päällä</string>
     <string name="state_off">Pois</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Yleinen oletus: %1$s</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Käyttöliittymätyyli</string>
-    <string name="settings_ui_style_desc">Vaihda klassisen Material 3 ja modernin wDSP Mod -teeman välillä</string>
+    <string name="settings_ui_style_desc">Vaihda klassisen Material 3 ja modernin wDSP -teeman välillä</string>
     <string name="settings_ui_style_classic">Klassinen (Alkuperäinen)</string>
-    <string name="settings_ui_style_modern">Moderni (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Moderni</string>
 
     <string name="gala_disable_for_preset">Pois profiilista</string>
     <string name="button_backlight_label">Painikkeiden taustavalo wDSP-väreissä</string>

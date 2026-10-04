@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto</string>
@@ -422,8 +422,6 @@
     <string name="banner_trc20">Cripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Cripto — TON (billetera de Telegram)</string>
     <string name="banner_copied">Copiado al portapapeles</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Activado</string>
     <string name="state_off">Desactivado</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -547,9 +545,9 @@
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Estilo de interfaz</string>
-    <string name="settings_ui_style_desc">Cambiar entre el estilo clásico Material 3 y el estilo moderno wDSP Mod</string>
+    <string name="settings_ui_style_desc">Cambiar entre el estilo clásico Material 3 y el estilo moderno wDSP</string>
     <string name="settings_ui_style_classic">Clásico (Original)</string>
-    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Moderno</string>
 
     <string name="button_backlight_label">Retroiluminación en colores wDSP</string>
     <string name="button_backlight_desc">Mientras wDSP está en pantalla, los botones se iluminan con el color de acento del tema actual. Al salir de wDSP, recuperan su color original.</string>

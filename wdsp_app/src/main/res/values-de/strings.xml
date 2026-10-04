@@ -154,7 +154,7 @@
     <string name="DLtab">Delays</string>
     <string name="OTtab">Andere</string>
     <string name="GLtab">GALA</string>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
     <string name="lbl_pwr">Amp Power:</string>
     <string name="hint_sub_freq">Freq</string>
 
@@ -421,8 +421,6 @@
     <string name="banner_trc20">Krypto — TRC-20 (Tron)</string>
     <string name="banner_ton">Krypto — TON (Telegram-Wallet)</string>
     <string name="banner_copied">In die Zwischenablage kopiert</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Ein</string>
     <string name="state_off">Aus</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -546,9 +544,9 @@
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">UI-Stil</string>
-    <string name="settings_ui_style_desc">Wechseln Sie zwischen dem klassischen Material 3 und dem modernen wDSP Mod-Design</string>
+    <string name="settings_ui_style_desc">Wechseln Sie zwischen dem klassischen Material 3 und dem modernen wDSP-Design</string>
     <string name="settings_ui_style_classic">Klassisch (Original)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 
     <string name="button_backlight_label">Tastenbeleuchtung in wDSP-Farben</string>
     <string name="button_backlight_desc">Solange wDSP auf dem Bildschirm ist, leuchten die Tasten in der Akzentfarbe des aktuellen Designs. Wird wDSP verlassen, kehrt die Originalfarbe zurück.</string>

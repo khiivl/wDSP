@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Preset Automatico</string>
@@ -424,8 +424,6 @@ Predefinito globale: %1$s</string>
     <string name="banner_trc20">Crypto — TRC-20 (Tron)</string>
     <string name="banner_ton">Crypto — TON (portafoglio Telegram)</string>
     <string name="banner_copied">Copiato negli appunti</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Attivo</string>
     <string name="state_off">Disattivo</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Predefinito globale: %1$s</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Stile interfaccia</string>
-    <string name="settings_ui_style_desc">Passa dallo stile classico Material 3 allo stile moderno wDSP Mod</string>
+    <string name="settings_ui_style_desc">Passa dallo stile classico Material 3 allo stile moderno wDSP</string>
     <string name="settings_ui_style_classic">Classico (Originale)</string>
-    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Moderno</string>
 
     <string name="gala_disable_for_preset">Disattiva per profilo</string>
     <string name="button_backlight_label">Retroilluminazione tasti nei colori wDSP</string>

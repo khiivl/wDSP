@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Otomatik Profil</string>
@@ -424,8 +424,6 @@ Genel Varsayılan: %1$s</string>
     <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Kripto — TON (Telegram cüzdanı)</string>
     <string name="banner_copied">Panoya kopyalandı</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Açık</string>
     <string name="state_off">Kapalı</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Genel Varsayılan: %1$s</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Arayüz Stili</string>
-    <string name="settings_ui_style_desc">Klasik Material 3 ile Modern wDSP Mod teması arasında geçiş yapın</string>
+    <string name="settings_ui_style_desc">Klasik Material 3 ile Modern wDSP teması arasında geçiş yapın</string>
     <string name="settings_ui_style_classic">Klasik (Orijinal)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 
     <string name="gala_disable_for_preset">Bu profil için kapat</string>
     <string name="button_backlight_label">wDSP renklerinde tuş aydınlatması</string>

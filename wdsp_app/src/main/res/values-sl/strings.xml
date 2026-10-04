@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Samodejna prednastavitev</string>
@@ -424,8 +424,6 @@ Globalno privzeto: %1$s</string>
     <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Kripto — TON (denarnica Telegram)</string>
     <string name="banner_copied">Kopirano v odložišče</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Vklopljeno</string>
     <string name="state_off">Izklopljeno</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Globalno privzeto: %1$s</string>
     <string name="room_wizard_delays_sub">Nizkotonec: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Slog vmesnika</string>
-    <string name="settings_ui_style_desc">Preklapljanje med klasičnim slogom Material 3 in sodobnim wDSP Mod</string>
+    <string name="settings_ui_style_desc">Preklapljanje med klasičnim slogom Material 3 in sodobnim wDSP</string>
     <string name="settings_ui_style_classic">Klasično (Izvirno)</string>
-    <string name="settings_ui_style_modern">Sodobno (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Sodobno</string>
 
     <string name="gala_disable_for_preset">Izklopi za profil</string>
     <string name="button_backlight_label">Osvetlitev gumbov v barvah wDSP</string>

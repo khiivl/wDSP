@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Preset</string>
@@ -424,8 +424,6 @@ Implicit global: %1$s</string>
     <string name="banner_trc20">Cripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Cripto — TON (portofel Telegram)</string>
     <string name="banner_copied">Copiat în clipboard</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Activat</string>
     <string name="state_off">Dezactivat</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Implicit global: %1$s</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Stil interfață</string>
-    <string name="settings_ui_style_desc">Comutați între stilul clasic Material 3 și stilul modern wDSP Mod</string>
+    <string name="settings_ui_style_desc">Comutați între stilul clasic Material 3 și stilul modern wDSP</string>
     <string name="settings_ui_style_classic">Clasic (Original)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 
     <string name="gala_disable_for_preset">Dezactivat în profil</string>
     <string name="button_backlight_label">Iluminare butoane în culorile wDSP</string>

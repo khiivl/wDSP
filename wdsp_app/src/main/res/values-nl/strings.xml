@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Voorinstelling</string>
@@ -424,8 +424,6 @@ Globale standaard: %1$s</string>
     <string name="banner_trc20">Crypto — TRC-20 (Tron)</string>
     <string name="banner_ton">Crypto — TON (Telegram-portemonnee)</string>
     <string name="banner_copied">Gekopieerd naar het klembord</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Aan</string>
     <string name="state_off">Uit</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Globale standaard: %1$s</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">UI-stijl</string>
-    <string name="settings_ui_style_desc">Schakel tussen de klassieke Material 3 en de moderne wDSP Mod-stijl</string>
+    <string name="settings_ui_style_desc">Schakel tussen de klassieke Material 3 en de moderne wDSP-stijl</string>
     <string name="settings_ui_style_classic">Klassiek (Origineel)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 
     <string name="gala_disable_for_preset">Uit voor dit profiel</string>
     <string name="button_backlight_label">Knopverlichting in wDSP-kleuren</string>

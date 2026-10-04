@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Išankstinis nustatymas</string>
@@ -424,8 +424,6 @@ Bendras numatytasis: %1$s</string>
     <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Kripto — TON (Telegram piniginė)</string>
     <string name="banner_copied">Nukopijuota į iškarpinę</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Įjungta</string>
     <string name="state_off">Išjungta</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Bendras numatytasis: %1$s</string>
     <string name="room_wizard_delays_sub">Žemų dažnių garsiakalbis: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Sąsajos stilius</string>
-    <string name="settings_ui_style_desc">Perjungti tarp klasikinio Material 3 ir modernaus wDSP Mod stiliaus</string>
+    <string name="settings_ui_style_desc">Perjungti tarp klasikinio Material 3 ir modernaus wDSP stiliaus</string>
     <string name="settings_ui_style_classic">Klasikinis (Originalas)</string>
-    <string name="settings_ui_style_modern">Modernus (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modernus</string>
 
     <string name="gala_disable_for_preset">Išjungti profiliui</string>
     <string name="button_backlight_label">Mygtukų apšvietimas wDSP spalvomis</string>

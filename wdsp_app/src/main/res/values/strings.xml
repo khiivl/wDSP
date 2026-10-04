@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Common toggle states -->
     <string name="state_on">On</string>
@@ -535,8 +535,6 @@
     <string name="banner_trc20">Crypto — TRC-20 (Tron)</string>
     <string name="banner_ton">Crypto — TON (Telegram wallet)</string>
     <string name="banner_copied">Copied to the clipboard</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
     <string name="room_stage_progress">Step %1$d/%2$d: %3$s</string>
     <string name="room_stage_noise">Background noise</string>
@@ -563,7 +561,7 @@
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">UI Style</string>
-    <string name="settings_ui_style_desc">Switch between Original Classic Material 3 and Modern wDSP Mod theme</string>
+    <string name="settings_ui_style_desc">Switch between the author’s classic Material 3 style and the modern one</string>
     <string name="settings_ui_style_classic">Classic (Original)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 </resources>

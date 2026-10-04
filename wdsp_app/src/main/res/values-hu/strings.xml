@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Presets -->
     <string name="btn_auto">Auto-Előbeállítás</string>
@@ -386,8 +386,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="banner_trc20">Kripto — TRC-20 (Tron)</string>
     <string name="banner_ton">Kripto — TON (Telegram tárca)</string>
     <string name="banner_copied">Másolva a vágólapra</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <string name="state_on">Bekapcsolva</string>
     <string name="state_off">Kikapcsolva</string>
     <string name="pref_radio_mic_visualizer_title">FM Radio Visualizer (test)</string>
@@ -549,9 +547,9 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_wizard_delays_sub">Mélynyomó: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Kezelőfelület stílusa</string>
-    <string name="settings_ui_style_desc">Váltás a klasszikus Material 3 és a modern wDSP Mod téma között</string>
+    <string name="settings_ui_style_desc">Váltás a klasszikus Material 3 és a modern wDSP téma között</string>
     <string name="settings_ui_style_classic">Klasszikus (Eredeti)</string>
-    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Modern</string>
 
     <string name="gala_disable_for_preset">Kikapcs. a profilnál</string>
     <string name="button_backlight_label">Gombok háttérvilágítása wDSP színekben</string>

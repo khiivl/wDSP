@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">wDSP kostyamat mod</string>
+    <string name="app_name">wDSP</string>
 
     <!-- Common toggle states -->
     <string name="state_on">Увімкнено</string>
@@ -518,8 +518,6 @@
     <string name="banner_trc20">Криптовалюта — TRC-20 (Tron)</string>
     <string name="banner_ton">Криптовалюта — TON (гаманець Telegram)</string>
     <string name="banner_copied">Скопійовано в буфер обміну</string>
-    <!-- Вузький заголовок біля логотипа: повне ім я не влазить на 600dp-панелях -->
-    <string name="app_title_short">wDSP</string>
     <!-- Вимір салону: етапи, збої, полярність (02.10.2026) -->
     <string name="room_stage_progress">Етап %1$d/%2$d: %3$s</string>
     <string name="room_stage_noise">Замір фону тиші</string>
@@ -546,9 +544,9 @@
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Стиль інтерфейсу</string>
-    <string name="settings_ui_style_desc">Перемикання між класичним стилем автора (Material 3) та стилем Modern wDSP Mod</string>
+    <string name="settings_ui_style_desc">Перемикання між класичним стилем автора (Material 3) і сучасним</string>
     <string name="settings_ui_style_classic">Класичний (Оригінал)</string>
-    <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
+    <string name="settings_ui_style_modern">Модерн</string>
     <string name="btn_minus">－</string>
     <string name="btn_plus">＋</string>
     <string name="btn_left">←L</string>
