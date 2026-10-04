@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Диагностичен суип: %1$s</string>
     <string name="room_config_change_warning">Промяната на конфигурацията (купе/субуфер) изисква ново измерване. Междинните данни ще се обновят при следващия суип. (Запазените профили НЕ се изтриват).</string>
     <string name="spectrum_mode_label">Спектър:</string>
-    <string name="spectrum_mode_calc">Изчислен</string>
+        <string name="spectrum_mode_off">Изкл.</string>
+    <string name="spectrum_mode_music">Музика</string>
+<string name="spectrum_mode_calc">Изчислен</string>
     <string name="spectrum_mode_mic">Микрофон</string>
     <string name="spectrum_mic_uncalibrated_title">Калибриране на микрофона</string>
     <string name="spectrum_mic_uncalibrated_msg">За точно показване на радио спектъра през микрофона е необходимо калибриране в раздела за акустика. Отваряне на калибрирането сега?</string>
@@ -545,4 +547,13 @@
     <string name="room_err_unknown">Неизвестна грешка</string>
     <string name="room_polarity_warning">Обърната полярност (+/-) на: %1$s. Високоговорителят е свързан в противофаза и заглушава баса в купето. Проверете кабелите на клемите.</string>
     <string name="room_wizard_delays_sub">Субуфер: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стил на интерфейса</string>
+    <string name="settings_ui_style_desc">Превключване между класическия стил на автора (Material 3) и модерния стил wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класически (Оригинал)</string>
+    <string name="settings_ui_style_modern">Модерен (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Изкл. за този профил</string>
+    <string name="button_backlight_label">Подсветка на бутоните в цветовете на wDSP</string>
+    <string name="button_backlight_desc">Докато wDSP е на екрана, бутоните светят в акцентния цвят на дневната или нощната тема. Когато приложението се скрие, се връща оригиналният цвят.</string>
 </resources>

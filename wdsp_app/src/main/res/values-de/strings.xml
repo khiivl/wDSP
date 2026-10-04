@@ -27,8 +27,8 @@
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Auf Hauptseite zeigen</string>
-    <string name="sync_delay_front">Vorne zusammen bewegen</string>
-    <string name="sync_delay_rear">Hinten zusammen bewegen</string>
+    <string name="sync_delay_front">Vorne zusammen</string>
+    <string name="sync_delay_rear">Hinten zusammen</string>
     <string name="sync_bass_fr">Wie vorne</string>
     <string name="hint_sync_delay_front">Vorne links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>
     <string name="hint_sync_delay_rear">Hinten links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>
@@ -66,6 +66,7 @@
     <string name="enable_gala">GALA aktivieren</string>
     <string name="enable_gala_feature">GALA-Funktion aktivieren</string>
     <string name="gala_global">Global</string>
+    <string name="gala_disable_for_preset">Für dieses Preset deaktivieren</string>
     <string name="vol_step_every">Lautstärke-Schritt alle:</string>
     <string name="gps_speed_label">GPS GESCHWINDIGKEIT</string>
     <string name="current_gps_speed">Aktuelle GPS-Geschw.:</string>
@@ -446,7 +447,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Aus</string>
+    <string name="spectrum_mode_music">Musik</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -541,4 +544,12 @@
     <string name="room_err_unknown">Unbekannter Fehler</string>
     <string name="room_polarity_warning">Verpolung (+/-) bei: %1$s. Der Lautsprecher ist gegenphasig angeschlossen und löscht den Bass im Innenraum aus. Prüfen Sie die Anschlüsse.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">UI-Stil</string>
+    <string name="settings_ui_style_desc">Wechseln Sie zwischen dem klassischen Material 3 und dem modernen wDSP Mod-Design</string>
+    <string name="settings_ui_style_classic">Klassisch (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="button_backlight_label">Tastenbeleuchtung in wDSP-Farben</string>
+    <string name="button_backlight_desc">Solange wDSP auf dem Bildschirm ist, leuchten die Tasten in der Akzentfarbe des aktuellen Designs. Wird wDSP verlassen, kehrt die Originalfarbe zurück.</string>
 </resources>

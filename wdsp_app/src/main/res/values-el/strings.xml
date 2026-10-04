@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Διαγνωστικό sweep: %1$s</string>
     <string name="room_config_change_warning">Η αλλαγή διαμόρφωσης του οχήματος (τύπος αμαξώματος/subwoofer) απαιτεί νέα μέτρηση. Τα ενδιάμεσα δεδομένα θα ενημερωθούν στο επόμενο sweep. (Οι αποθηκευμένες προεπιλογές ΔΕΝ διαγράφονται).</string>
     <string name="spectrum_mode_label">Φάσμα:</string>
-    <string name="spectrum_mode_calc">Υπολογισμένο</string>
+        <string name="spectrum_mode_off">Ανενεργό</string>
+    <string name="spectrum_mode_music">Μουσική</string>
+<string name="spectrum_mode_calc">Υπολογισμένο</string>
     <string name="spectrum_mode_mic">Μικρόφωνο</string>
     <string name="spectrum_mic_uncalibrated_title">Βαθμονόμηση μικροφώνου</string>
     <string name="spectrum_mic_uncalibrated_msg">Για την ακριβή απεικόνιση του φάσματος ραδιοφώνου μέσω μικροφώνου απαιτείται βαθμονόμηση στην καρτέλα ακουστικής. Άνοιγμα βαθμονόμησης τώρα;</string>
@@ -545,4 +547,13 @@
     <string name="room_err_unknown">Άγνωστο σφάλμα</string>
     <string name="room_polarity_warning">Αντίστροφη πολικότητα (+/-) σε: %1$s. Το ηχείο είναι συνδεδεμένο σε αντίθετη φάση και ακυρώνει τα μπάσα στην καμπίνα. Ελέγξτε τα καλώδια στους ακροδέκτες.</string>
     <string name="room_wizard_delays_sub">Υπογούφερ: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Στυλ διεπαφής</string>
+    <string name="settings_ui_style_desc">Εναλλαγή μεταξύ του κλασικού Material 3 και του σύγχρονου θέματος wDSP Mod</string>
+    <string name="settings_ui_style_classic">Κλασικό (Πρωτότυπο)</string>
+    <string name="settings_ui_style_modern">Μοντέρνο (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Απενεργ. στο προφίλ</string>
+    <string name="button_backlight_label">Φωτισμός πλήκτρων σε χρώματα wDSP</string>
+    <string name="button_backlight_desc">Όσο το wDSP είναι στην οθόνη, τα πλήκτρα φωτίζονται στο χρώμα του τρέχοντος θέματος. Όταν το wDSP κλείσει, επιστρέφει το αρχικό τους χρώμα.</string>
 </resources>

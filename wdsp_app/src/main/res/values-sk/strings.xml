@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Sila korekcie:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Zobraziť na hlavnej</string>
-    <string name="sync_delay_front">Predné posúvať spolu</string>
-    <string name="sync_delay_rear">Zadné posúvať spolu</string>
+    <string name="sync_delay_front">Predné spolu</string>
+    <string name="sync_delay_rear">Zadné spolu</string>
     <string name="sync_bass_fr">Ako vpredu</string>
     <string name="hint_sync_delay_front">Predný ľavý a pravý sa teraz posúvajú spolu, rozdiel medzi nimi zostáva zachovaný.</string>
     <string name="hint_sync_delay_rear">Zadný ľavý a pravý sa teraz posúvajú spolu, rozdiel medzi nimi zostáva zachovaný.</string>
@@ -450,7 +450,9 @@ Globálne predvolené: %1$s</string>
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Vypnuté</string>
+    <string name="spectrum_mode_music">Hudba</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@ Globálne predvolené: %1$s</string>
     <string name="room_err_unknown">Neznáma chyba</string>
     <string name="room_polarity_warning">Obrátená polarita (+/-) na: %1$s. Reproduktor je zapojený v protifáze a tlmí basy v kabíne. Skontrolujte vodiče na svorkách.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Styl rozhraní</string>
+    <string name="settings_ui_style_desc">Prepínanie medzi klasickým štýlom Material 3 a moderným wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasický (Originál)</string>
+    <string name="settings_ui_style_modern">Moderný (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Vypnúť pre profil</string>
+    <string name="button_backlight_label">Podsvietenie tlačidiel vo farbách wDSP</string>
+    <string name="button_backlight_desc">Kým je wDSP na obrazovke, tlačidlá svietia v akcentnej farbe aktuálnej témy. Po opustení wDSP sa vráti ich pôvodná farba.</string>
 </resources>

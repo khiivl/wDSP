@@ -3,16 +3,20 @@ package com.radiorubka.wdsp;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
 import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.Choreographer;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
@@ -91,6 +95,15 @@ public class EqVisualizerView extends View {
             "-12", "-10", "-8", "-6", "-4", "-2", "0", "+2", "+4", "+6", "+8", "+10", "+12"
     };
 
+    private Paint boxPaint;
+    private final RectF rect = new RectF();
+    private static final String[] FREQ_LABELS = {
+            "20", "31.5", "50", "80", "125", "200", "315", "500",
+            "800", "1.25k", "2k", "3.15k", "5k", "8k", "12.5k", "20k"
+    };
+    private static final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
+    private static final int[][] GROUP_RANGES = {{0, 2}, {3, 4}, {5, 6}, {7, 9}, {10, 12}, {13, 15}};
+
     private final Choreographer.FrameCallback animCallback = new Choreographer.FrameCallback() {
         @Override
         public void doFrame(long frameTimeNanos) {
@@ -127,6 +140,10 @@ public class EqVisualizerView extends View {
         gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gridPaint.setColor(Color.parseColor("#18FFFFFF"));
         gridPaint.setStrokeWidth(1.2f * density);
+
+        boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        boxPaint.setStyle(Paint.Style.STROKE);
+        boxPaint.setStrokeWidth(1f * density);
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextSize(9.5f * density);
@@ -274,14 +291,19 @@ public class EqVisualizerView extends View {
         float totalH = getHeight();
         if (w == 0 || totalH == 0) return;
 
+        boolean isClassic = ThemeManager.isClassic(getContext());
+        boolean isNight = ThemeManager.isNight(getContext());
         float density = getResources().getDisplayMetrics().density;
-        int accent = ThemeManager.accent(getContext());
+        int accent = ThemeManager.accent(getContext(), isNight);
 
-        float leftMargin = 32 * density; // Space for left dB scale numbers
+        float leftMargin = isClassic ? 0f : (32 * density); // Space for left dB scale numbers
         float activeWidth = w - leftMargin;
 
-        float topArea = totalH * TOP_OFFSET_RATIO;
-        float sliderAreaH = totalH * DRAW_HEIGHT_RATIO;
+        float topOffsetRatio = isClassic ? 0.25555555555555f : TOP_OFFSET_RATIO;
+        float drawHeightRatio = isClassic ? 0.72222222222222f : DRAW_HEIGHT_RATIO;
+
+        float topArea = totalH * topOffsetRatio;
+        float sliderAreaH = totalH * drawHeightRatio;
         float drawStartY = topArea + thumbRadiusOffset;
         float drawHeight = sliderAreaH - (thumbRadiusOffset * 2);
         float gridBottom = drawStartY + drawHeight;
@@ -294,7 +316,6 @@ public class EqVisualizerView extends View {
             xCoords[i] = leftMargin + (i + 0.5f) * stepX;
         }
 
-        boolean isNight = ThemeManager.isNight(getContext());
         int gridColorNormal = isNight ? Color.parseColor("#20FFFFFF") : Color.parseColor("#25000000");
         int gridColorZero = androidx.core.graphics.ColorUtils.setAlphaComponent(accent, isNight ? 85 : 120);
         int textNormalColor = ThemeManager.contrastText(
@@ -313,14 +334,84 @@ public class EqVisualizerView extends View {
                 gridPaint.setStrokeWidth(1.0f * density);
             }
             canvas.drawLine(leftMargin, y, w, y, gridPaint);
-            if (i == 6) {
-                textPaint.setColor(accent);
+            if (!isClassic) {
+                if (i == 6) {
+                    textPaint.setColor(accent);
+                    textPaint.setFakeBoldText(true);
+                } else {
+                    textPaint.setColor(textNormalColor);
+                    textPaint.setFakeBoldText(false);
+                }
+                textPaint.setTextAlign(Paint.Align.RIGHT);
+                canvas.drawText(DB_LABELS[i], leftMargin - (6 * density), y + (textPaint.getTextSize() / 3f), textPaint);
+            }
+        }
+
+        // --- Frequency Band Labels and Group Boxes (Classic mode only) ---
+        if (isClassic) {
+            float boxHeight = 20 * density;
+            float marginToGrid = 10 * density;
+            float groupNameBottomY = drawStartY - marginToGrid;
+            float edgeMargin = 15 * density;
+            float boxPaddingDynamic = stepX * 0.42f;
+
+            float boxBottom = groupNameBottomY - (14 * density);
+            float boxTop = boxBottom - boxHeight;
+            float boxCornerRadius = getResources().getDimension(R.dimen.button_radius);
+
+            int[] groupColors = {
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_delete_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_import_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_export_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_rename_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_add_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_auto_bg)
+            };
+
+            int bandLabelColor = ThemeManager.getThemedColor(getContext(), isNight, R.color.band_label);
+
+            textPaint.setTextAlign(Paint.Align.CENTER);
+
+            for (int g = 0; g < GROUP_RANGES.length; g++) {
+                int startIdx = GROUP_RANGES[g][0];
+                int endIdx = GROUP_RANGES[g][1];
+                int color = groupColors[g];
+
+                float left = xCoords[startIdx] - boxPaddingDynamic;
+                float right = xCoords[endIdx] + boxPaddingDynamic;
+
+                if (g == 0) {
+                    left = Math.min(Math.max(left, edgeMargin), xCoords[startIdx] - boxPaddingDynamic * 0.88f);
+                }
+                if (g == GROUP_RANGES.length - 1) {
+                    right = Math.max(Math.min(right, w - edgeMargin), xCoords[endIdx] + boxPaddingDynamic * 0.88f);
+                }
+
+                boxPaint.setColor(color);
+                boxPaint.setAlpha(200);
+                rect.set(left, boxTop, right, boxBottom);
+                canvas.drawRoundRect(rect, boxCornerRadius, boxCornerRadius, boxPaint);
+
+                // Frequency labels inside the box
+                textPaint.setColor(bandLabelColor);
+                textPaint.setTextSize(getResources().getDimension(R.dimen.text_size_small));
+                textPaint.setFakeBoldText(false);
+                float labelY = boxTop + (boxHeight / 2f) + (textPaint.getTextSize() / 3f);
+
+                for (int i = startIdx; i <= endIdx; i++) {
+                    canvas.drawText(FREQ_LABELS[i], xCoords[i], labelY, textPaint);
+                }
+
+                // Group name below the box
+                textPaint.setColor(color);
+                textPaint.setAlpha(200);
                 textPaint.setFakeBoldText(true);
-            } else {
-                textPaint.setColor(textNormalColor);
+                float groupNamePaddingTop = 15 * density;
+                float groupNameY = boxBottom + groupNamePaddingTop;
+
+                canvas.drawText(GROUP_NAMES[g], (left + right) / 2f, groupNameY, textPaint);
                 textPaint.setFakeBoldText(false);
             }
-            canvas.drawText(DB_LABELS[i], leftMargin - (6 * density), y + (textPaint.getTextSize() / 3f), textPaint);
         }
 
         // 3. Vertical slider tracks
@@ -378,10 +469,43 @@ public class EqVisualizerView extends View {
         fillPath.lineTo(leftMargin, gridBottom);
         fillPath.close();
 
-        int fillTopColor = Color.argb(55, Color.red(accent), Color.green(accent), Color.blue(accent));
-        int fillBottomColor = Color.argb(0, Color.red(accent), Color.green(accent), Color.blue(accent));
-        fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom, fillTopColor, fillBottomColor, Shader.TileMode.CLAMP));
-        linePaint.setColor(accent);
+        if (isClassic) {
+            int[] groupColors = {
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_delete_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_import_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_export_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_rename_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_add_bg),
+                    ThemeManager.getThemedColor(getContext(), isNight, R.color.btn_auto_bg)
+            };
+            float totalW = Math.max(1f, activeWidth);
+            float[] positions = new float[groupColors.length];
+            int[] fillColors = new int[groupColors.length];
+            int fillAlpha = isNight ? 128 : 64;
+            for (int g = 0; g < GROUP_RANGES.length; g++) {
+                int startIdx = GROUP_RANGES[g][0];
+                int endIdx = GROUP_RANGES[g][1];
+                float midX = (xCoords[startIdx] + xCoords[endIdx]) / 2f;
+                positions[g] = Math.max(0f, Math.min(1f, (midX - leftMargin) / totalW));
+                int c = groupColors[g];
+                fillColors[g] = Color.argb(fillAlpha, Color.red(c), Color.green(c), Color.blue(c));
+            }
+            Shader lineShader = new LinearGradient(leftMargin, 0, w, 0,
+                    groupColors, positions, Shader.TileMode.CLAMP);
+            linePaint.setShader(lineShader);
+
+            Shader fillColorShader = new LinearGradient(leftMargin, 0, w, 0,
+                    fillColors, positions, Shader.TileMode.CLAMP);
+            Shader fadeMaskShader = new LinearGradient(0, drawStartY, 0, gridBottom,
+                    Color.BLACK, Color.TRANSPARENT, Shader.TileMode.CLAMP);
+            fillPaint.setShader(new ComposeShader(fillColorShader, fadeMaskShader, PorterDuff.Mode.DST_IN));
+        } else {
+            linePaint.setShader(null);
+            linePaint.setColor(accent);
+            int fillTopColor = Color.argb(55, Color.red(accent), Color.green(accent), Color.blue(accent));
+            int fillBottomColor = Color.argb(0, Color.red(accent), Color.green(accent), Color.blue(accent));
+            fillPaint.setShader(new LinearGradient(0, drawStartY, 0, gridBottom, fillTopColor, fillBottomColor, Shader.TileMode.CLAMP));
+        }
         subLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(textNormalColor, 210));
         rearBassLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(textNormalColor, 150));
         int loudnessColor = isNight ? 0xFFFFB74D : 0xFFE67E22;

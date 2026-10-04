@@ -14,7 +14,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
-//import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
-    private TextView btnSpectrumCalc, btnSpectrumMic;
+    private TextView btnSpectrumOff, btnSpectrumCalc, btnSpectrumMic;
     private static boolean sPromptedMicCalibration = false;
 
     private Slider seekSubGain;
@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
 
     // F-M Curve
     private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass;
-    private MaterialButton switchShowLoudnessMain;
     /** Pair locks, app-wide (the author's 0.5): delays keep their difference, the bass stage copies. */
     private MaterialButton switchSyncDelayFront, switchSyncDelayRear, switchSyncBass;
     private final java.util.Map<Slider, Float> lastSliderValue = new java.util.HashMap<>();
@@ -198,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
-    private MaterialButton switchGalaEnable, switchGalaGlobal;
+    private MaterialButton switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset;
     // The head unit's buttons in our accent while this screen is shown (the author's 0.5; a
     // switch in Settings, off by default).
     private final ButtonBacklight buttonBacklight = new ButtonBacklight();
@@ -235,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
     //private final String[] GROUP_NAMES = {"low bass", "bass", "mid-bass", "mids", "lower treble", "upper treble"};
     // Indices where each group starts: 0(20Hz), 3(80Hz), 5(200Hz), 7(500Hz), 10(2kHz), 13(8kHz)
     private final int[] GROUP_STARTS = {0, 3, 5, 7, 10, 13};
+    private Boolean mLastIsClassic = null;
 
 
     private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
@@ -543,20 +543,27 @@ public class MainActivity extends AppCompatActivity {
     private void tintSlider(Slider s, ColorStateList csl, ColorStateList cslTrack) {
         if (s == null) return;
         boolean isNight = ThemeManager.isNight(this);
+        boolean isClassic = ThemeManager.isClassic(this);
         float density = getResources().getDisplayMetrics().density;
         s.setThumbTintList(csl);
         s.setTrackActiveTintList(csl);
         s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(isNight)));
         s.setHaloRadius(0);
-        s.setTrackHeight((int) (5 * density));
-        s.setThumbRadius((int) (10 * density));
-        s.setThumbWidth((int) (20 * density));
-        s.setThumbHeight((int) (20 * density));
+        if (isClassic) {
+            s.setTrackHeight((int) (4 * density));
+            s.setThumbWidth((int) (4 * density));
+            s.setThumbHeight((int) (20 * density));
+        } else {
+            s.setTrackHeight((int) (5 * density));
+            s.setThumbRadius((int) (10 * density));
+            s.setThumbWidth((int) (20 * density));
+            s.setThumbHeight((int) (20 * density));
+        }
         s.setTrackStopIndicatorSize(0);
         s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
 
-    private void updateToggleStyle(View v) {
+    public void updateToggleStyle(View v) {
         if (v == null) return;
         boolean isNight = com.radiorubka.wdsp.ui.theme.ThemeManager.isNight(this);
         int accent = com.radiorubka.wdsp.ui.theme.ThemeManager.accent(this, isNight);
@@ -568,16 +575,31 @@ public class MainActivity extends AppCompatActivity {
 
         if (v instanceof MaterialButton) {
             MaterialButton mb = (MaterialButton) v;
+            mb.setToggleCheckedStateOnClick(true);
             boolean checked = mb.isChecked();
-            mb.setBackgroundTintList(null);
-            mb.setStrokeWidth(0);
-            mb.setRippleColor(null);
-            mb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            if (com.radiorubka.wdsp.ui.theme.ThemeManager.isClassic(this)) {
+                float density = getResources().getDisplayMetrics().density;
+                int uncheckedBg = isNight ? Color.parseColor("#1F33373B") : Color.parseColor("#15000000");
+                int uncheckedBorder = isNight ? Color.parseColor("#44FFFFFF") : Color.parseColor("#33000000");
+                int bg = checked ? accent : uncheckedBg;
+                int strokeCol = checked ? accent : uncheckedBorder;
+                mb.setBackgroundTintList(ColorStateList.valueOf(bg));
+                mb.setStrokeColor(ColorStateList.valueOf(strokeCol));
+                mb.setStrokeWidth(Math.max(1, (int)(1.2f * density)));
+                mb.setCornerRadius((int)(10 * density));
+                mb.setRippleColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 40)));
+            } else {
+                mb.setBackgroundTintList(null);
+                mb.setStrokeWidth(0);
+                mb.setRippleColor(null);
+                mb.setBackground(com.radiorubka.wdsp.ui.theme.ThemeManager.pillDrawable(this, checked, isNight, 14f, accent, border));
+            }
             int userFg = checked ? onAccentColor : textPrimary;
             int fg = checked ? userFg : com.radiorubka.wdsp.ui.theme.ThemeManager.contrastText(userFg, substrate);
             mb.setTextColor(fg);
             mb.setTypeface(null, Typeface.BOLD);
             mb.getPaint().setFakeBoldText(true);
+            mb.setAlpha(mb.isEnabled() ? 1.0f : 0.45f);
             return;
         }
 
@@ -666,28 +688,97 @@ public class MainActivity extends AppCompatActivity {
             ColorStateList csl = ColorStateList.valueOf(accent);
             ColorStateList cslTrack = ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 70));
 
-            // Dynamically tint all 16 EQ sliders and labels
-            for (Slider s : gainSliders) {
-                tintSlider(s, csl, cslTrack);
+            boolean isClassic = ThemeManager.isClassic(this);
+            if (mLastIsClassic != null && mLastIsClassic != isClassic) {
+                mLastIsClassic = isClassic;
+                setupEqBands();
+                if (isFullyInitialized) {
+                    refreshAllUiValues();
+                }
             }
+
+            // Dynamically tint all 16 EQ sliders and labels
+            if (isClassic) {
+                int[] groupColorRes = {
+                    R.color.btn_delete_bg, // 0..2 low bass
+                    R.color.btn_import_bg, // 3..4 bass
+                    R.color.btn_export_bg, // 5..6 mid-bass
+                    R.color.btn_rename_bg, // 7..9 mids
+                    R.color.btn_add_bg,    // 10..12 lower treble
+                    R.color.btn_auto_bg    // 13..15 upper treble
+                };
+                int[] groupStarts = {0, 3, 5, 7, 10, 13};
+                int tickActive = ThemeManager.getThemedColor(this, isNight, R.color.tick_color_active);
+                int tickInactive = ThemeManager.getThemedColor(this, isNight, R.color.tick_color_inactive);
+
+                for (int i = 0; i < gainSliders.size(); i++) {
+                    int groupIdx = 0;
+                    for (int g = 0; g < groupStarts.length; g++) {
+                        if (i >= groupStarts[g]) groupIdx = g;
+                    }
+                    int bandColor = ThemeManager.getThemedColor(this, isNight, groupColorRes[groupIdx]);
+                    Slider s = gainSliders.get(i);
+                    s.setThumbTintList(ColorStateList.valueOf(bandColor));
+                    s.setTrackActiveTintList(ColorStateList.valueOf(bandColor));
+                    s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(bandColor, 70)));
+                    s.setTickActiveTintList(ColorStateList.valueOf(tickActive));
+                    s.setTickInactiveTintList(ColorStateList.valueOf(tickInactive));
+                    s.setTrackStopIndicatorSize(0);
+                    s.setTrackHeight((int) (4 * density));
+                    s.setThumbWidth((int) (4 * density));
+                    s.setThumbHeight((int) (20 * density));
+                }
+            } else {
+                for (Slider s : gainSliders) {
+                    tintSlider(s, csl, cslTrack);
+                }
+            }
+
             int eqCardBg = isNight ? Color.parseColor("#330A141A") : Color.parseColor("#E6FFFFFF");
-            int dbTextColor = ThemeManager.contrastText(primaryText, eqCardBg);
+            int dbTextColor = isClassic
+                    ? ThemeManager.getThemedColor(this, isNight, R.color.text_theme_aware)
+                    : ThemeManager.contrastText(primaryText, eqCardBg);
             for (TextView db : dbLabels) {
                 if (db != null) {
                     db.setTextColor(dbTextColor);
                 }
             }
-            int freqTextColor = ThemeManager.contrastText(secondaryText, eqCardBg);
+            int freqTextColor = isClassic ? Color.TRANSPARENT : ThemeManager.contrastText(secondaryText, eqCardBg);
             for (TextView l : freqLabels) {
                 if (l != null) {
                     l.setTextColor(freqTextColor);
                 }
             }
 
-            // Main EQ Card styling with FrostedGlassDrawable
+            // Main EQ Card styling: In Classic mode, author has NO floating card!
             View cardMainEq = findViewById(R.id.card_main_eq);
             if (cardMainEq != null) {
-                cardMainEq.setBackground(ThemeManager.cardDrawable(this, isNight, 18f));
+                if (isClassic) {
+                    cardMainEq.setBackground(null);
+                    cardMainEq.setPadding(0, 0, 0, 0);
+                    if (cardMainEq.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) cardMainEq.getLayoutParams();
+                        mlp.leftMargin = 0;
+                        mlp.rightMargin = 0;
+                        cardMainEq.setLayoutParams(mlp);
+                    }
+                } else {
+                    cardMainEq.setBackground(ThemeManager.cardDrawable(this, isNight, 18f));
+                    int p = (int) (6 * density);
+                    cardMainEq.setPadding(p, p, p, p);
+                    if (cardMainEq.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) cardMainEq.getLayoutParams();
+                        mlp.leftMargin = (int) (12 * density);
+                        mlp.rightMargin = (int) (12 * density);
+                        cardMainEq.setLayoutParams(mlp);
+                    }
+                }
+            }
+            View eqContainer = findViewById(R.id.eq_container);
+            if (eqContainer != null && eqContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) eqContainer.getLayoutParams();
+                mlp.leftMargin = isClassic ? 0 : (int) (32 * density);
+                eqContainer.setLayoutParams(mlp);
             }
 
             // All cards styling across tabs with FrostedGlassDrawable
@@ -710,6 +801,13 @@ public class MainActivity extends AppCompatActivity {
             if (fmVis != null) {
                 fmVis.setBackground(ThemeManager.cardDrawable(this, isNight, 14f));
             }
+            TextView tvFmVis = findViewById(R.id.tv_fm_visualizer_label);
+            if (tvFmVis != null) {
+                tvFmVis.setTextColor(ThemeManager.getThemedColor(this, isNight, R.color.text_theme_aware));
+            }
+            if (fmVisualizer != null) {
+                fmVisualizer.invalidate();
+            }
 
             View fmBadge = findViewById(R.id.layout_fm_status_badge);
             if (fmBadge != null) {
@@ -721,18 +819,34 @@ public class MainActivity extends AppCompatActivity {
                 galaBadge.setBackground(ThemeManager.cardDrawable(this, isNight, 10f));
             }
 
-            // Preset action buttons (Auto, Duplicate, Rename, Delete, Import, Export) - round buttons
+            // Preset action buttons: keep pictograms, but color them with author's pastel palette
             int[] presetBtns = {
                 R.id.btn_auto_preset, R.id.btn_add_preset, R.id.btn_rename_preset,
                 R.id.btn_delete_preset, R.id.btn_import_presets, R.id.btn_export_presets
             };
+            int[] classicColors = {
+                R.color.btn_auto_bg, R.color.btn_add_bg, R.color.btn_rename_bg,
+                R.color.btn_delete_bg, R.color.btn_import_bg, R.color.btn_export_bg
+            };
+            int coloredBtnText = ThemeManager.getThemedColor(this, isNight, R.color.colored_button_text);
             float btnRadiusDp = getResources().getDimension(R.dimen.toggle_height) / (2f * getResources().getDisplayMetrics().density);
-            for (int id : presetBtns) {
-                View v = findViewById(id);
+
+            for (int i = 0; i < presetBtns.length; i++) {
+                View v = findViewById(presetBtns[i]);
                 if (v instanceof androidx.appcompat.widget.AppCompatImageButton) {
                     androidx.appcompat.widget.AppCompatImageButton b = (androidx.appcompat.widget.AppCompatImageButton) v;
-                    b.setBackground(ThemeManager.buttonDrawable(this, isNight, btnRadiusDp));
-                    b.setImageTintList(ColorStateList.valueOf(secondaryText));
+                    if (isClassic) {
+                        GradientDrawable gd = new GradientDrawable();
+                        gd.setShape(GradientDrawable.RECTANGLE);
+                        gd.setCornerRadius(8f * density);
+                        int col = ThemeManager.getThemedColor(this, isNight, classicColors[i]);
+                        gd.setColor(col);
+                        b.setBackground(gd);
+                        b.setImageTintList(ColorStateList.valueOf(coloredBtnText));
+                    } else {
+                        b.setBackground(ThemeManager.buttonDrawable(this, isNight, btnRadiusDp));
+                        b.setImageTintList(ColorStateList.valueOf(secondaryText));
+                    }
                 }
             }
 
@@ -789,12 +903,12 @@ public class MainActivity extends AppCompatActivity {
             if (switchFatigueEnable == null) switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
             if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
             if (switchUltraBass == null) switchUltraBass = findViewById(R.id.switch_ultra_bass);
-            if (switchShowLoudnessMain == null) switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
             if (switchSyncDelayFront == null) switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
             if (switchSyncDelayRear == null) switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
             if (switchSyncBass == null) switchSyncBass = findViewById(R.id.switch_sync_bass);
             if (switchGalaEnable == null) switchGalaEnable = findViewById(R.id.switch_gala_enable);
             if (switchGalaGlobal == null) switchGalaGlobal = findViewById(R.id.switch_gala_global);
+            if (switchGalaDisableForPreset == null) switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
 
             // Style all toggle buttons
             updateToggleStyle(switchLoud);
@@ -804,12 +918,12 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFatigueEnable);
             updateToggleStyle(switchFmSubComp);
             updateToggleStyle(switchUltraBass);
-            updateToggleStyle(switchShowLoudnessMain);
             updateToggleStyle(switchSyncDelayFront);
             updateToggleStyle(switchSyncDelayRear);
             updateToggleStyle(switchSyncBass);
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
+            updateToggleStyle(switchGalaDisableForPreset);
 
             // Spectrum Mode toggle
             updateSpectrumModeUi();
@@ -954,6 +1068,7 @@ public class MainActivity extends AppCompatActivity {
             View topBar = findViewById(R.id.layout_presets);
             if (topBar != null) {
                 topBar.setBackground(ThemeManager.presetsDockBackground(this, isNight));
+                topBar.setElevation(isClassic ? 0f : (6f * density));
                 topBar.setPadding(0, 0, 0, 0);
             }
 
@@ -961,6 +1076,7 @@ public class MainActivity extends AppCompatActivity {
             View bottomBar = findViewById(R.id.bottom_navigation_bar);
             if (bottomBar != null) {
                 bottomBar.setBackground(ThemeManager.dockBackground(this, isNight));
+                bottomBar.setElevation(isClassic ? 0f : (6f * density));
                 bottomBar.setPadding(0, 0, 0, 0);
             }
             SegmentedPillNavView bottomNav = findViewById(R.id.bottom_navigation);
@@ -974,7 +1090,11 @@ public class MainActivity extends AppCompatActivity {
 
             ImageView carView = findViewById(R.id.imageView);
             if (carView != null) {
-                carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+                if (isClassic) {
+                    carView.setImageResource(R.drawable.car);
+                } else {
+                    carView.setImageResource(isNight ? R.drawable.ic_car_cabriolet_night : R.drawable.ic_car_cabriolet_day);
+                }
             }
 
             if (eqVisualizer != null) eqVisualizer.invalidate();
@@ -986,6 +1106,11 @@ public class MainActivity extends AppCompatActivity {
     // --- Spectrum analyzer (pre-EQ, visual-only; see SpectrumAnalyzerView javadoc) ---
     private void checkAndStartSpectrumAnalyzer() {
         if (spectrumAnalyzer == null) return;
+        String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
+        if (AudioSpectrumEngine.SPECTRUM_MODE_OFF.equals(mode)) {
+            spectrumAnalyzer.stop();
+            return;
+        }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             spectrumAnalyzer.start();
         } else {
@@ -994,31 +1119,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSpectrumModeToggle() {
+        btnSpectrumOff = findViewById(R.id.btn_spectrum_off);
         btnSpectrumCalc = findViewById(R.id.btn_spectrum_calc);
         btnSpectrumMic = findViewById(R.id.btn_spectrum_mic);
-        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        if (btnSpectrumOff == null || btnSpectrumCalc == null || btnSpectrumMic == null) return;
 
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumOff);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumCalc);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumMic);
 
+        btnSpectrumOff.setOnClickListener(v -> {
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_OFF);
+            if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+            updateSpectrumModeUi();
+        });
+
         btnSpectrumCalc.setOnClickListener(v -> {
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            checkAndStartSpectrumAnalyzer();
             updateSpectrumModeUi();
         });
 
         btnSpectrumMic.setOnClickListener(v -> {
-            if (!RoomMeasurement.hasMicCompensation(this)) {
-                showMicCalibrationInviteDialog();
-                return;
-            }
-            // Held by another app at 16 kHz until it leaves a gap on the input: say so again rather
-            // than show a button that lights up and changes nothing.
             if (AudioSpectrumEngine.getInstance().isMicrophoneUnavailable()) {
                 Toaster.show(this, R.string.mic_busy_calculated);
                 return;
             }
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
+            checkAndStartSpectrumAnalyzer();
             updateSpectrumModeUi();
+            if (!RoomMeasurement.hasMicCompensation(this) && !sPromptedMicCalibration) {
+                sPromptedMicCalibration = true;
+                showMicCalibrationInviteDialog();
+            }
         });
 
         updateSpectrumModeUi();
@@ -1026,23 +1159,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSpectrumModeUi() {
         View toggleLayout = findViewById(R.id.layout_spectrum_mode_toggle);
-        // A calibrated microphone is the only requirement; root is not (see
-        // AudioSpectrumEngine.canRunMic).
-        boolean isAvailable = RoomMeasurement.hasMicCompensation(this);
-
         if (toggleLayout != null) {
-            toggleLayout.setVisibility(isAvailable ? View.VISIBLE : View.GONE);
+            toggleLayout.setVisibility(View.VISIBLE);
         }
 
-        // 🔴 The person's choice is never switched here any more. This used to write "calc" over a
-        // chosen "mic" whenever the check failed - and it runs synchronously in onCreate, before the
-        // asynchronous root check has answered, so after every reinstall or update root read as
-        // absent and the spectrum silently became "calculated" (observed on the owner's unit
-        // 14.09.2026: the screen showed calc while the stored mode was still mic). When the
-        // microphone genuinely cannot run, the engine already falls back on its own and returns to
-        // the microphone by itself once it can; the stored choice stays what the person made it.
-
-        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        if (btnSpectrumOff == null || btnSpectrumCalc == null || btnSpectrumMic == null) return;
         boolean isNight = ThemeManager.isNight(this);
         int accent = ThemeManager.accent(this, isNight);
         int border = ThemeManager.panelBorder(this, isNight);
@@ -1051,18 +1172,19 @@ public class MainActivity extends AppCompatActivity {
         int substrate = ThemeManager.dockSubstrateColor(this, isNight);
 
         String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
-        // What is in force, not only what was chosen: while the microphone is held by another app
-        // the spectrum is calculated, and the pills say that (the stored choice stays).
+        boolean isOff = AudioSpectrumEngine.SPECTRUM_MODE_OFF.equals(mode);
         boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode)
                 && !AudioSpectrumEngine.getInstance().isMicrophoneUnavailable();
+        boolean isCalc = !isOff && !isMic;
 
-        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, !isMic, isNight, 10f, accent, border));
-        int fgCalc = !isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
-        btnSpectrumCalc.setTextColor(fgCalc);
+        btnSpectrumOff.setBackground(ThemeManager.pillDrawable(this, isOff, isNight, 10f, accent, border));
+        btnSpectrumOff.setTextColor(isOff ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
+
+        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, isCalc, isNight, 10f, accent, border));
+        btnSpectrumCalc.setTextColor(isCalc ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
 
         btnSpectrumMic.setBackground(ThemeManager.pillDrawable(this, isMic, isNight, 10f, accent, border));
-        int fgMic = isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
-        btnSpectrumMic.setTextColor(fgMic);
+        btnSpectrumMic.setTextColor(isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
     }
 
     private void showMicCalibrationInviteDialog() {
@@ -1264,7 +1386,6 @@ public class MainActivity extends AppCompatActivity {
         seekFmStrength = findViewById(R.id.seek_fm_strength);
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
         switchUltraBass = findViewById(R.id.switch_ultra_bass);
-        switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
         switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
         switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
         switchSyncBass = findViewById(R.id.switch_sync_bass);
@@ -1285,8 +1406,9 @@ public class MainActivity extends AppCompatActivity {
         // GALA
         switchGalaEnable = findViewById(R.id.switch_gala_enable);
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
+        switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
 
-        // Tactile touch attachment for all 8 toggles (shift down-right & shadow depression)
+        // Tactile touch attachment for toggles (shift down-right & shadow depression)
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLoud);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchPreciseEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLegacyEnable);
@@ -1294,7 +1416,6 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
-        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchShowLoudnessMain);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayFront);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayRear);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncBass);
@@ -1305,10 +1426,11 @@ public class MainActivity extends AppCompatActivity {
         // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
         // included (owner, 02.10.2026: «навчи RowFit стискати ряд без повзунка»).
         com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.layout_fm_toggles), null, 0,
-                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp, switchShowLoudnessMain,
+                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp,
                 switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaDisableForPreset);
         seekGalaInc = findViewById(R.id.seek_gala_increment);
         tvGalaIncVal = findViewById(R.id.tv_gala_increment_val);
         tvGalaSpeed = findViewById(R.id.tv_gala_speed);
@@ -1380,6 +1502,8 @@ public class MainActivity extends AppCompatActivity {
         final int valueHeight = (int) (22 * dens);
         final int captionHeight = (int) (20 * dens);
         final float denseText = getResources().getDimension(R.dimen.text_size_dense_desc);
+        boolean isClassic = com.radiorubka.wdsp.ui.theme.ThemeManager.isClassic(this);
+        mLastIsClassic = isClassic;
 
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             final int idx = i;
@@ -1434,21 +1558,26 @@ public class MainActivity extends AppCompatActivity {
             s.setValueTo(12f);
             s.setStepSize(1f);
             float density = getResources().getDisplayMetrics().density;
-            s.setThumbHeight((int) (20 * density));
-            s.setThumbWidth((int) (20 * density));
-            s.setThumbRadius((int) (10 * density));
+            if (isClassic) {
+                s.setThumbWidth((int) (4 * density));
+                s.setThumbHeight((int) (20 * density));
+                s.setTrackHeight((int) (4 * density));
+            } else {
+                s.setThumbHeight((int) (20 * density));
+                s.setThumbWidth((int) (20 * density));
+                s.setThumbRadius((int) (10 * density));
+                s.setTrackHeight((int) (5 * density));
+            }
             s.setHaloRadius(0);
             s.setHaloTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             s.setThumbTintList(ColorStateList.valueOf(accentColor));
             s.setTrackActiveTintList(ColorStateList.valueOf(accentColor));
             s.setTrackInactiveTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(accentColor, 70)));
-            s.setTrackHeight((int) (5 * density));
             s.setRotation(270f);
             s.setTrackStopIndicatorSize(0);
             s.setLabelBehavior(LabelFormatter.LABEL_GONE);
 
             FrameLayout seekBox = new FrameLayout(this);
-            seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(1000, -2);
             lp.gravity = Gravity.CENTER; s.setLayoutParams(lp);
 
@@ -1466,11 +1595,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            layout.addView(q);
-            layout.addView(db);
-            seekBox.addView(s);
-            layout.addView(seekBox);
-            layout.addView(label);
+            if (isClassic) {
+                layout.setWeightSum(1.0f);
+                q.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+                db.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.08f));
+                View spacer = new View(this);
+                spacer.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.09555555f));
+                seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.72222222f));
+                View bottomSpacer = new View(this);
+                bottomSpacer.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 0.02222223f));
+
+                layout.addView(q);
+                layout.addView(db);
+                layout.addView(spacer);
+                seekBox.addView(s);
+                layout.addView(seekBox);
+                layout.addView(bottomSpacer);
+            } else {
+                seekBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
+                layout.addView(q);
+                layout.addView(db);
+                seekBox.addView(s);
+                layout.addView(seekBox);
+                layout.addView(label);
+            }
             container.addView(layout);
             updateDbLabel(i, 6);
         }
@@ -1495,11 +1643,8 @@ public class MainActivity extends AppCompatActivity {
         engine.setFmOffsets(offs);
     }
 
-    /** App-wide, not per preset: whether the main EQ curve shows what loudness is doing (author's 0.5). */
-    private static final String PREF_SHOW_LOUDNESS_ON_MAIN = "show_loudness_on_main";
-
     private boolean showLoudnessOnMain() {
-        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, false);
+        return switchFmEnable != null && switchFmEnable.isChecked();
     }
 
     /**
@@ -1923,15 +2068,6 @@ public class MainActivity extends AppCompatActivity {
                 updateFmVisualizer();
             }
         });
-        // App-wide, not per preset (the author's 0.5): a display choice for the main curve only.
-        switchShowLoudnessMain.setChecked(showLoudnessOnMain());
-        updateToggleStyle(switchShowLoudnessMain);
-        switchShowLoudnessMain.addOnCheckedChangeListener((bv, checked) -> {
-            updateToggleStyle(bv);
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                    .putBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, checked).apply();
-            updateVisualizer();
-        });
         updateToggleStyle(switchUltraBass);
         switchUltraBass.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
@@ -2206,6 +2342,11 @@ public class MainActivity extends AppCompatActivity {
             savePreset(defaultPreset);
         }
 
+        if (!presetNames.contains(CallPreset.NAME)) {
+            presetNames.add(CallPreset.NAME);
+        }
+        Collections.sort(presetNames);
+
         // Use themed QFRadio-styled layout for preset items
         presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
         spinnerPresets.setAdapter(presetAdapter);
@@ -2228,10 +2369,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureCallPresetExists() {
-        if (!presetNames.contains("Call")) {
-            presetNames.add("Call");
+        if (!presetNames.contains(CallPreset.NAME)) {
+            presetNames.add(CallPreset.NAME);
             Collections.sort(presetNames);
-            presetAdapter.notifyDataSetChanged();
+            presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
+            spinnerPresets.setAdapter(presetAdapter);
         }
     }
 
@@ -2539,6 +2681,7 @@ public class MainActivity extends AppCompatActivity {
                 e.putInt(name + "_gala_fade_ms", getIntSlider(seekGalaFadeMs));
                 e.putInt(name + "_gala_hold_ms", getIntSlider(seekGalaHoldMs));
             }
+            e.putBoolean(name + "_gala_disabled_for_preset", isChecked(switchGalaDisableForPreset));
         }
         e.apply();
     }
@@ -2669,6 +2812,9 @@ public class MainActivity extends AppCompatActivity {
             tvGalaFadeMsVal.setText(getString(R.string.gala_ms_fmt, getIntSlider(seekGalaFadeMs)));
             seekGalaHoldMs.setValue((float) p.getInt(gKeyHoldMs, 1000));
             tvGalaHoldMsVal.setText(String.format(Locale.getDefault(), getString(R.string.gala_s_fmt), getIntSlider(seekGalaHoldMs) / 1000f));
+            switchGalaDisableForPreset.setChecked(p.getBoolean(name + "_gala_disabled_for_preset", false));
+            updateToggleStyle(switchGalaDisableForPreset);
+            updateGalaDisableForPresetEnabled(galaGlobalMode);
         }
         isUpdatingUi = false;
         applyServicePresetLock(name);
@@ -2721,13 +2867,15 @@ public class MainActivity extends AppCompatActivity {
         for (int id : new int[]{R.id.btn_minus, R.id.btn_plus, R.id.btn_center,
                 R.id.btn_pwr_vol_minus, R.id.btn_pwr_vol_plus,
                 R.id.btn_fader_lr_minus, R.id.btn_fader_lr_plus,
-                R.id.btn_fader_fr_minus, R.id.btn_fader_fr_plus}) {
+                R.id.btn_fader_fr_minus, R.id.btn_fader_fr_plus,
+                R.id.btn_rename_preset, R.id.btn_delete_preset}) {
             controls.add(findViewById(id));
         }
         if (!galaGlobalMode) {
             Collections.addAll(controls, switchGalaEnable, seekGalaInc, seekGalaMinSpeed,
                     seekGalaMaxAdj, seekGalaFadeMs, seekGalaHoldMs);
         }
+        controls.add(switchGalaDisableForPreset);
         for (View v : controls) {
             if (v == null || stateBeforeServiceLock.containsKey(v)) continue;
             stateBeforeServiceLock.put(v, new float[]{v.isEnabled() ? 1f : 0f, v.getAlpha()});
@@ -3115,6 +3263,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateGalaDisableForPresetEnabled(boolean enabled) {
+        if (switchGalaDisableForPreset != null) {
+            switchGalaDisableForPreset.setEnabled(enabled);
+            updateToggleStyle(switchGalaDisableForPreset);
+        }
+    }
+
     private void setupGalaControls() {
         updateToggleStyle(switchGalaEnable);
         switchGalaEnable.addOnCheckedChangeListener((bv, checked) -> { 
@@ -3122,17 +3277,25 @@ public class MainActivity extends AppCompatActivity {
             if (!isUpdatingUi) { autoSaveCurrent(); } 
         });
 
+        updateToggleStyle(switchGalaDisableForPreset);
+        switchGalaDisableForPreset.addOnCheckedChangeListener((bv, checked) -> {
+            updateToggleStyle(bv);
+            if (!isUpdatingUi) { autoSaveCurrent(); }
+        });
+
         // Global GALA: not tied to any preset, so it's loaded/wired once here rather than
         // in loadPreset(). When on, switchGalaEnable's on/off state is shared across every
         // preset (saved/read from PREF_GALA_GLOBAL_ENABLED instead of a per-preset key) -
         // see the GALA sections of savePreset()/loadPreset().
         updateGalaGlobalModeFromPrefs();
+        updateGalaDisableForPresetEnabled(galaGlobalMode);
         switchGalaGlobal.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
             if (isUpdatingUi) return;
             galaGlobalMode = checked;
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                     .edit().putBoolean(PREF_GALA_GLOBAL_MODE, checked).apply();
+            updateGalaDisableForPresetEnabled(checked);
             // Whichever way the switch went, write what is on screen into the place that is now
             // authoritative. Turning it on seeds the shared keys instead of silently resetting GALA
             // to off; turning it off puts the same values into the current preset, so the sound the
@@ -3171,7 +3334,11 @@ public class MainActivity extends AppCompatActivity {
         seekSimulateSpeed.addOnChangeListener(galal);
     }
 
-    private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
+    private void savePresetList() {
+        Set<String> toSave = new HashSet<>(presetNames);
+        toSave.remove(CallPreset.NAME);
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, toSave).apply();
+    }
     /**
      * Persists whatever the user has just changed on screen.
      *
@@ -3402,6 +3569,8 @@ public class MainActivity extends AppCompatActivity {
             
             // GALA reset
             switchGalaEnable.setChecked(false);
+            switchGalaDisableForPreset.setChecked(false);
+            updateToggleStyle(switchGalaDisableForPreset);
             seekGalaInc.setValue(15);
             seekGalaMinSpeed.setValue(0);
 //            seekGalaMaxSpeed.setProgress(30);

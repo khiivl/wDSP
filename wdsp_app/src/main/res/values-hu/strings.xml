@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Korrekció erőssége:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Mutatás a főoldalon</string>
-    <string name="sync_delay_front">Elsők mozgatása együtt</string>
-    <string name="sync_delay_rear">Hátsók mozgatása együtt</string>
+    <string name="sync_delay_front">Elsők együtt</string>
+    <string name="sync_delay_rear">Hátsók együtt</string>
     <string name="sync_bass_fr">Mint elöl</string>
     <string name="hint_sync_delay_front">Az első bal és jobb mostantól együtt mozog, a köztük lévő különbség megmarad.</string>
     <string name="hint_sync_delay_rear">A hátsó bal és jobb mostantól együtt mozog, a köztük lévő különbség megmarad.</string>
@@ -437,7 +437,9 @@ Globális alapértelmezett: %1$s</string>
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Ki</string>
+    <string name="spectrum_mode_music">Zene</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,5 +547,14 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_err_unknown">Ismeretlen hiba</string>
     <string name="room_polarity_warning">Fordított polaritás (+/-) itt: %1$s. A hangszóró ellenfázisban van bekötve és kioltja a mélyhangokat. Ellenőrizze a csatlakozókat.</string>
     <string name="room_wizard_delays_sub">Mélynyomó: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Kezelőfelület stílusa</string>
+    <string name="settings_ui_style_desc">Váltás a klasszikus Material 3 és a modern wDSP Mod téma között</string>
+    <string name="settings_ui_style_classic">Klasszikus (Eredeti)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Kikapcs. a profilnál</string>
+    <string name="button_backlight_label">Gombok háttérvilágítása wDSP színekben</string>
+    <string name="button_backlight_desc">Amíg a wDSP látható, a gombok az aktuális téma kiemelő színében világítanak. Kilépéskor visszaáll az eredeti színük.</string>
 </resources>
 

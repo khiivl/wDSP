@@ -1,14 +1,18 @@
 package com.radiorubka.wdsp.ui.theme;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.ColorStateList;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
+import com.radiorubka.wdsp.MainActivity;
 import com.radiorubka.wdsp.R;
 
 /**
@@ -22,6 +26,16 @@ public final class TouchGlow {
     private static final Handler UI = new Handler(Looper.getMainLooper());
 
     private TouchGlow() {
+    }
+
+    private static MainActivity findMainActivity(Context ctx) {
+        while (ctx instanceof ContextWrapper) {
+            if (ctx instanceof MainActivity) {
+                return (MainActivity) ctx;
+            }
+            ctx = ((ContextWrapper) ctx).getBaseContext();
+        }
+        return null;
     }
 
     @SuppressWarnings("ClickableViewAccessibility")
@@ -94,6 +108,14 @@ public final class TouchGlow {
                 mb.setTextColor(look.glowText);
                 mb.setStrokeColor(look.glowStroke);
             } else {
+                if (mb.isCheckable()) {
+                    mb.setTag(R.id.tag_glow_color, null);
+                    MainActivity act = findMainActivity(mb.getContext());
+                    if (act != null) {
+                        act.updateToggleStyle(mb);
+                    }
+                    return;
+                }
                 // Back to exactly what the theme painted, the way the TextView branch below does
                 // it. The release used to paint its own colours - a fixed dark #20121820 behind,
                 // the accent on the text and icon - so on a light theme every button sank into
@@ -104,6 +126,18 @@ public final class TouchGlow {
                     mb.setTag(R.id.tag_glow_color, null);
                 } else {
                     mb.setStrokeColor(ColorStateList.valueOf(border));
+                }
+            }
+            return;
+        }
+
+        if (v instanceof CompoundButton) {
+            CompoundButton cb = (CompoundButton) v;
+            if (!on) {
+                cb.setTag(R.id.tag_glow_color, null);
+                MainActivity act = findMainActivity(cb.getContext());
+                if (act != null) {
+                    act.updateToggleStyle(cb);
                 }
             }
             return;

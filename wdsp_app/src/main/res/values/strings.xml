@@ -40,8 +40,8 @@
     <string name="lbl_correction_strength">Correction Strength:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Show on Main</string>
-    <string name="sync_delay_front">Move fronts together</string>
-    <string name="sync_delay_rear">Move rears together</string>
+    <string name="sync_delay_front">Fronts together</string>
+    <string name="sync_delay_rear">Rears together</string>
     <string name="sync_bass_fr">Same as front</string>
     <string name="hint_sync_delay_front">Front left and right now move together; the difference between them is kept.</string>
     <string name="hint_sync_delay_rear">Rear left and right now move together; the difference between them is kept.</string>
@@ -83,6 +83,7 @@
     <string name="enable_gala">Enable GALA</string>
     <string name="enable_gala_feature">Enable GALA Feature</string>
     <string name="gala_global">Global</string>
+    <string name="gala_disable_for_preset">Disable for this preset</string>
     <string name="vol_step_every">Speed step:</string>
     <string name="gps_speed_label">GPS Speed</string>
     <string name="current_gps_speed">GPS Speed:</string>
@@ -363,7 +364,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Off</string>
+    <string name="spectrum_mode_music">Music</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -558,4 +561,9 @@
     <string name="room_err_unknown">Unknown error</string>
     <string name="room_polarity_warning">Reversed polarity (+/-) on: %1$s. The speaker is wired in antiphase and cancels bass in the cabin. Check the wires at its terminals.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">UI Style</string>
+    <string name="settings_ui_style_desc">Switch between Original Classic Material 3 and Modern wDSP Mod theme</string>
+    <string name="settings_ui_style_classic">Classic (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
 </resources>

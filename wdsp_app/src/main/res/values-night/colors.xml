@@ -11,7 +11,7 @@
     <color name="band_label">#80FFFFFF</color>
     <color name="q_switch_text">#1FE7C4</color>
     <color name="seek_track">#33808080</color>
-    <color name="colored_button_text">#FFFFFF</color>
+    <color name="colored_button_text">#000000</color>
     <color name="transparent">#00000000</color>
 
     <color name="tick_color_inactive">#80FFFFFF</color>
@@ -30,12 +30,12 @@
     <color name="stroke_color">#4D1FE7C4</color>
     <color name="stroke_color_top">#801FE7C4</color>
 
-    <color name="btn_auto_bg">#1FE7C4</color>
-    <color name="btn_add_bg">#00B4D8</color>
-    <color name="btn_rename_bg">#0077B6</color>
-    <color name="btn_export_bg">#6F70B4</color>
-    <color name="btn_import_bg">#9F5E9D</color>
-    <color name="btn_delete_bg">#E63946</color>
+    <color name="btn_auto_bg">#79bcbd</color>
+    <color name="btn_add_bg">#61a9c2</color>
+    <color name="btn_rename_bg">#6593bf</color>
+    <color name="btn_export_bg">#7b79ae</color>
+    <color name="btn_import_bg">#8f5d8d</color>
+    <color name="btn_delete_bg">#944460</color>
     <color name="btn_lower_bg">#00000000</color>
 
     <!-- Toast Colors -->

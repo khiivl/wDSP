@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Снага корекције:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Прикажи на главном</string>
-    <string name="sync_delay_front">Померај предње заједно</string>
-    <string name="sync_delay_rear">Померај задње заједно</string>
+    <string name="sync_delay_front">Предњи заједно</string>
+    <string name="sync_delay_rear">Задњи заједно</string>
     <string name="sync_bass_fr">Као спреда</string>
     <string name="hint_sync_delay_front">Предњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>
     <string name="hint_sync_delay_rear">Задњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>
@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Искључено</string>
+    <string name="spectrum_mode_music">Музика</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@
     <string name="room_err_unknown">Непозната грешка</string>
     <string name="room_polarity_warning">Обрнут поларитет (+/-) на: %1$s. Звучник је повезан у противфази и поништава бас у кабини. Проверите жице на клемама.</string>
     <string name="room_wizard_delays_sub">Субвуфер: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стил интерфејса</string>
+    <string name="settings_ui_style_desc">Пребацивање између класичног стила Material 3 и модерног wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класично (Оригинал)</string>
+    <string name="settings_ui_style_modern">Модерно (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Искључи за профил</string>
+    <string name="button_backlight_label">Осветљење тастера у бојама wDSP-а</string>
+    <string name="button_backlight_desc">Док је wDSP на екрану, тастери светле у акцентној боји тренутне теме. Када напустите wDSP, враћа се њихова оригинална боја.</string>
 </resources>

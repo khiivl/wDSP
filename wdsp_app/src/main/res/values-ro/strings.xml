@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Putere corecție:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Afișează pe principal</string>
-    <string name="sync_delay_front">Mută fața împreună</string>
-    <string name="sync_delay_rear">Mută spatele împreună</string>
-    <string name="sync_bass_fr">La fel ca în față</string>
+    <string name="sync_delay_front">Fața împreună</string>
+    <string name="sync_delay_rear">Spatele împreună</string>
+    <string name="sync_bass_fr">Ca în față</string>
     <string name="hint_sync_delay_front">Canalele stânga și dreapta față se mișcă acum împreună; diferența dintre ele este păstrată.</string>
     <string name="hint_sync_delay_rear">Canalele stânga și dreapta spate se mișcă acum împreună; diferența dintre ele este păstrată.</string>
     <string name="toast_loudness_sync_bass">Loudness este activat: basul din spate îl urmărește pe cel din față. Cel mai bun rezultat: basul față la 86 Hz.</string>
@@ -450,7 +450,9 @@ Implicit global: %1$s</string>
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Oprit</string>
+    <string name="spectrum_mode_music">Muzică</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@ Implicit global: %1$s</string>
     <string name="room_err_unknown">Eroare necunoscută</string>
     <string name="room_polarity_warning">Polaritate inversată (+/-) la: %1$s. Difuzorul este conectat în antifază și anulează basul în cabină. Verificați firele la terminale.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Stil interfață</string>
+    <string name="settings_ui_style_desc">Comutați între stilul clasic Material 3 și stilul modern wDSP Mod</string>
+    <string name="settings_ui_style_classic">Clasic (Original)</string>
+    <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Dezactivat în profil</string>
+    <string name="button_backlight_label">Iluminare butoane în culorile wDSP</string>
+    <string name="button_backlight_desc">Cât timp wDSP este pe ecran, butoanele luminează în culoarea de accent a temei curente. La părăsirea wDSP, revine culoarea lor originală.</string>
 </resources>

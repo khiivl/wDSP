@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Kuva pealehel</string>
-    <string name="sync_delay_front">Liiguta esimesi koos</string>
-    <string name="sync_delay_rear">Liiguta tagumisi koos</string>
+    <string name="sync_delay_front">Esimesed koos</string>
+    <string name="sync_delay_rear">Tagumised koos</string>
     <string name="sync_bass_fr">Nagu ees</string>
     <string name="hint_sync_delay_front">Eesmine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>
     <string name="hint_sync_delay_rear">Tagumine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>
@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Väljas</string>
+    <string name="spectrum_mode_music">Muusika</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@
     <string name="room_err_unknown">Tundmatu viga</string>
     <string name="room_polarity_warning">Polaarsus (+/-) vahetuses kõlaril: %1$s. Kõlar on ühendatud vastasfaasis ja summutab salongi bassi. Kontrolli klemme.</string>
     <string name="room_wizard_delays_sub">Bassikõlar: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Kasutajaliidese stiil</string>
+    <string name="settings_ui_style_desc">Lülitu klassikalise Material 3 ja kaasaegse wDSP Mod vahel</string>
+    <string name="settings_ui_style_classic">Klassikaline (Originaal)</string>
+    <string name="settings_ui_style_modern">Kaasaegne (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Keela sellel profiilil</string>
+    <string name="button_backlight_label">Nuppude taustavalgus wDSP värvides</string>
+    <string name="button_backlight_desc">Kui wDSP on ekraanil, helendavad nupud praeguse teema aktsentvärvis. Rakendusest lahkudes taastub nuppude esialgne värv.</string>
 </resources>

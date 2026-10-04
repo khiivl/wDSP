@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Intensidade da Correção:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Mostrar na principal</string>
-    <string name="sync_delay_front">Mover frontais juntos</string>
-    <string name="sync_delay_rear">Mover traseiros juntos</string>
-    <string name="sync_bass_fr">Igual à frente</string>
+    <string name="sync_delay_front">Dianteiros juntos</string>
+    <string name="sync_delay_rear">Traseiros juntos</string>
+    <string name="sync_bass_fr">Como à frente</string>
     <string name="hint_sync_delay_front">Os dianteiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
     <string name="hint_sync_delay_rear">Os traseiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
     <string name="toast_loudness_sync_bass">Loudness ativado: os graves traseiros acompanham os dianteiros. O ideal é definir os graves frontais em 86 Hz.</string>
@@ -448,7 +448,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Desligado</string>
+    <string name="spectrum_mode_music">Música</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -543,4 +545,13 @@
     <string name="room_err_unknown">Erro desconhecido</string>
     <string name="room_polarity_warning">Polaridade invertida (+/-) em: %1$s. O alto-falante está ligado em antifase e cancela os graves na cabine. Verifique os fios nos terminais.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Estilo de interface</string>
+    <string name="settings_ui_style_desc">Alternar entre o estilo clássico Material 3 e o estilo moderno wDSP Mod</string>
+    <string name="settings_ui_style_classic">Clássico (Original)</string>
+    <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Desativar no perfil</string>
+    <string name="button_backlight_label">Iluminação dos botões nas cores wDSP</string>
+    <string name="button_backlight_desc">Enquanto o wDSP estiver na tela, os botões acendem na cor de destaque do tema atual. Ao sair do wDSP, a cor original volta.</string>
 </resources>

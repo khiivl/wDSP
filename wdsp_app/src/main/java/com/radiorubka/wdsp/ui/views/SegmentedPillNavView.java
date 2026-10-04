@@ -52,6 +52,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
 
     private final List<NavItemViewHolder> mHolders = new ArrayList<>();
     private final List<View> mDividers = new ArrayList<>();
+    private final List<View> mDeadZones = new ArrayList<>();
 
     private static class NavItemViewHolder {
         MenuItem menuItem;
@@ -117,6 +118,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
         mContentContainer.removeAllViews();
         mHolders.clear();
         mDividers.clear();
+        mDeadZones.clear();
 
         PopupMenu popup = new PopupMenu(getContext(), this);
         popup.inflate(menuResId);
@@ -157,6 +159,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
                 deadZone.addView(divider);
                 mContentContainer.addView(deadZone);
                 mDividers.add(divider);
+                mDeadZones.add(deadZone);
             }
 
             // 2. Сегмент таба (клікабельний на ВСЮ ширину - велика тач-зона)
@@ -289,38 +292,106 @@ public class SegmentedPillNavView extends HorizontalScrollView {
         mSelectedItemId = id;
         float density = getResources().getDisplayMetrics().density;
         boolean night = ThemeManager.isNight(getContext());
+        boolean isClassic = ThemeManager.isClassic(getContext());
+
+        if (isClassic) {
+            mContentContainer.setPadding(0, 0, 0, 0);
+            for (View dz : mDeadZones) {
+                dz.setVisibility(View.GONE);
+            }
+        } else {
+            int padX = (int) (6 * density);
+            int padTop = (int) (5 * density);
+            int padBottom = (int) (7.5f * density);
+            mContentContainer.setPadding(padX, padTop, padX, padBottom);
+            for (View dz : mDeadZones) {
+                dz.setVisibility(View.VISIBLE);
+            }
+        }
+
         int accentColor = ThemeManager.accent(getContext(), night);
         int onAccentColor = ThemeManager.onAccent(getContext(), night);
         int substrateColor = ThemeManager.dockSubstrateColor(getContext(), night);
         int baseInactive = getInactiveTextColor();
-        int inactiveColor = ThemeManager.contrastText(baseInactive, substrateColor);
+        int inactiveColor = isClassic
+                ? (night ? ThemeManager.CLASSIC_SECONDARY_TEXT_COLOR_NIGHT : ThemeManager.CLASSIC_SECONDARY_TEXT_COLOR_DAY)
+                : ThemeManager.contrastText(baseInactive, substrateColor);
 
         for (NavItemViewHolder holder : mHolders) {
             boolean isSelected = (holder.menuItem.getItemId() == id);
-            if (isSelected) {
-                // Замальовування активної кнопки капсулою з акцентного скла (FrostedGlassDrawable)
-                com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable activeBg =
-                        com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable.createAccentPill(
-                                getContext(),
-                                night,
-                                25f,
-                                accentColor
-                        );
-
+            if (isClassic) {
+                // Авторський плоский Material 3 стиль (khiivl / master)
+                GradientDrawable rippleMask = new GradientDrawable();
+                rippleMask.setShape(GradientDrawable.RECTANGLE);
+                rippleMask.setCornerRadius(15f * density);
+                rippleMask.setColor(Color.WHITE);
                 RippleDrawable ripple = new RippleDrawable(
-                        ColorStateList.valueOf(Color.parseColor("#33FFFFFF")),
-                        activeBg,
-                        activeBg
+                        ColorStateList.valueOf(night ? 0x26FFFFFF : 0x1F000000),
+                        null,
+                        rippleMask
                 );
                 holder.itemView.setBackground(ripple);
-                holder.indicatorFrame.setBackground(null);
 
-                // Чіткий контрастний значок та надпис (onAccent)
-                holder.iconView.setImageTintList(ColorStateList.valueOf(onAccentColor));
-                holder.textView.setTextColor(onAccentColor);
-                holder.textView.setTypeface(null, Typeface.BOLD);
+                if (isSelected) {
+                    // IndicatorSquare (15dp кути, колір custom_square #15757575 / #15BDBDBD)
+                    GradientDrawable indSquare = new GradientDrawable();
+                    indSquare.setShape(GradientDrawable.RECTANGLE);
+                    indSquare.setCornerRadius(15f * density);
+                    indSquare.setColor(night ? 0x15BDBDBD : 0x15757575);
+                    holder.indicatorFrame.setBackground(indSquare);
 
-                // Автоматичне доведення скролу (якщо таб частково за межами екрана у Split-Screen)
+                    holder.iconView.setImageTintList(ColorStateList.valueOf(accentColor));
+                    holder.textView.setTextColor(accentColor);
+                    holder.textView.setTypeface(null, Typeface.NORMAL);
+                } else {
+                    holder.indicatorFrame.setBackground(null);
+                    holder.iconView.setImageTintList(ColorStateList.valueOf(inactiveColor));
+                    holder.textView.setTextColor(inactiveColor);
+                    holder.textView.setTypeface(null, Typeface.NORMAL);
+                }
+            } else {
+                // Модерн wDSP Mod: акцентне матове скло та розділювачі
+                if (isSelected) {
+                    com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable activeBg =
+                            com.radiorubka.wdsp.ui.theme.FrostedGlassDrawable.createAccentPill(
+                                    getContext(),
+                                    night,
+                                    25f,
+                                    accentColor
+                            );
+
+                    RippleDrawable ripple = new RippleDrawable(
+                            ColorStateList.valueOf(Color.parseColor("#33FFFFFF")),
+                            activeBg,
+                            activeBg
+                    );
+                    holder.itemView.setBackground(ripple);
+                    holder.indicatorFrame.setBackground(null);
+
+                    holder.iconView.setImageTintList(ColorStateList.valueOf(onAccentColor));
+                    holder.textView.setTextColor(onAccentColor);
+                    holder.textView.setTypeface(null, Typeface.BOLD);
+                } else {
+                    GradientDrawable mask = new GradientDrawable();
+                    mask.setShape(GradientDrawable.RECTANGLE);
+                    mask.setCornerRadius(25 * density);
+                    mask.setColor(Color.WHITE);
+
+                    RippleDrawable ripple = new RippleDrawable(
+                            ColorStateList.valueOf(night ? Color.parseColor("#26FFFFFF") : Color.parseColor("#1F000000")),
+                            null,
+                            mask
+                    );
+                    holder.itemView.setBackground(ripple);
+                    holder.indicatorFrame.setBackground(null);
+
+                    holder.iconView.setImageTintList(ColorStateList.valueOf(inactiveColor));
+                    holder.textView.setTextColor(inactiveColor);
+                    holder.textView.setTypeface(null, Typeface.NORMAL);
+                }
+            }
+
+            if (isSelected) {
                 post(() -> {
                     int left = holder.itemView.getLeft();
                     int right = holder.itemView.getRight();
@@ -332,24 +403,6 @@ public class SegmentedPillNavView extends HorizontalScrollView {
                         smoothScrollTo(right - width + (int) (16 * density), 0);
                     }
                 });
-            } else {
-                // Неактивна кнопка: прозора підкладка з м'яким ripple
-                GradientDrawable mask = new GradientDrawable();
-                mask.setShape(GradientDrawable.RECTANGLE);
-                mask.setCornerRadius(25 * density);
-                mask.setColor(Color.WHITE);
-
-                RippleDrawable ripple = new RippleDrawable(
-                        ColorStateList.valueOf(night ? Color.parseColor("#26FFFFFF") : Color.parseColor("#1F000000")),
-                        null,
-                        mask
-                );
-                holder.itemView.setBackground(ripple);
-                holder.indicatorFrame.setBackground(null);
-
-                holder.iconView.setImageTintList(ColorStateList.valueOf(inactiveColor));
-                holder.textView.setTextColor(inactiveColor);
-                holder.textView.setTypeface(null, Typeface.NORMAL);
             }
         }
     }
@@ -374,6 +427,7 @@ public class SegmentedPillNavView extends HorizontalScrollView {
     }
 
     public void updateTheme(boolean isNight) {
+        boolean isClassic = ThemeManager.isClassic(getContext());
         int divColor = ThemeManager.navDividerColor(isNight);
         float density = getResources().getDisplayMetrics().density;
         for (View div : mDividers) {
@@ -382,6 +436,17 @@ public class SegmentedPillNavView extends HorizontalScrollView {
             divGd.setCornerRadius(1 * density);
             divGd.setColor(divColor);
             div.setBackground(divGd);
+        }
+        for (View dz : mDeadZones) {
+            dz.setVisibility(isClassic ? View.GONE : View.VISIBLE);
+        }
+        if (isClassic) {
+            mContentContainer.setPadding(0, 0, 0, 0);
+        } else {
+            int padX = (int) (6 * density);
+            int padTop = (int) (5 * density);
+            int padBottom = (int) (7.5f * density);
+            mContentContainer.setPadding(padX, padTop, padX, padBottom);
         }
         refreshHolderStates();
     }

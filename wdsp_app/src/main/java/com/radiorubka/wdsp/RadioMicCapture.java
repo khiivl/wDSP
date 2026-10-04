@@ -95,9 +95,9 @@ public class RadioMicCapture {
     }
 
     /** The rate this capture asks for, and the rate its analyser is built at. */
-    static final int SAMPLE_RATE = 48000;
-    private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
-    private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    static final int SAMPLE_RATE = MicrophoneGuard.SAMPLE_RATE;
+    private static final int CHANNEL_CONFIG = MicrophoneGuard.CHANNEL_CONFIG;
+    private static final int AUDIO_FORMAT = MicrophoneGuard.AUDIO_FORMAT;
     public static final int CHUNK_SIZE = 512;
 
     /** How much of our own stream is heard before deciding whether it has a top end. */
@@ -211,8 +211,10 @@ public class RadioMicCapture {
         // Started, but the read loop is gone: the stream died underneath us. Give its recorder back
         // before opening a new one. This used to answer "already running" and do nothing.
         if (running) stop();
-        if (context == null || callback == null) return false;
-
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot start RadioMicCapture: phone call is active");
+            return false;
+        }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "RECORD_AUDIO permission not granted");
@@ -221,7 +223,7 @@ public class RadioMicCapture {
         appContext = context.getApplicationContext();
 
         int minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
-        bufferSize = Math.max(minBuf, CHUNK_SIZE * 4);
+        bufferSize = Math.max(minBuf * 8, CHUNK_SIZE * 4);
 
         if (!openRecordLocked()) return false;
 
@@ -254,6 +256,10 @@ public class RadioMicCapture {
             final int logEvery = SAMPLE_RATE / CHUNK_SIZE;
 
             while (running) {
+                if (CallState.isActive()) {
+                    Log.i(TAG, "phone call detected in capture loop, stopping capture immediately");
+                    break;
+                }
                 AudioRecord rec = audioRecord;
                 if (rec == null || rec.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
                     break;
@@ -312,16 +318,16 @@ public class RadioMicCapture {
                                 "own stream: %s above 8 kHz (content, for the record); input device at %s",
                                 Float.isNaN(bw) ? "silence" : String.format(Locale.US, "%.1f dB", bw),
                                 deviceRate > 0 ? deviceRate + " Hz" : "unknown"));
-                        if (deviceRate > 0 && deviceRate < SAMPLE_RATE) {
+                        if (deviceRate > 0 && deviceRate < 32000) {
                             narrowBecause = "input device at " + deviceRate + " Hz";
-                        } else if (deviceRate >= SAMPLE_RATE && othersOnInputAtOpen > 0
+                        } else if (deviceRate >= 32000 && othersOnInputAtOpen > 0
                                 && !takeoverAttempted && RootAccess.hasRoot()) {
                             // Full band, but not ours: somebody opened the input before us, and the
                             // one who opens it sets it up (owner, 14.09.2026: with root, take it -
                             // "в любому випадку"). Without root this is left alone; a unit without
                             // root holds the microphone from start-up, so it is first anyway.
                             takeoverBecause = othersOnInputAtOpen + " recording(s) were on the input before us";
-                        } else if (deviceRate >= SAMPLE_RATE) {
+                        } else if (deviceRate >= 32000) {
                             healAttempted = false;
                             UnavailableListener l = unavailableListener;
                             if (l != null) l.onMicrophoneFullBand();
@@ -457,17 +463,24 @@ public class RadioMicCapture {
                 }
             }
           } finally {
-            // Nobody asked us to stop, yet the loop is over: from here isCapturing() says so, and
-            // the engine opens the microphone again on its next start or watchdog pass.
-            if (running && captureThread == Thread.currentThread()) {
-                Log.w(TAG, "capture loop ended by itself - the stream is dead until reopened");
+            // If the loop broke while still marked running (e.g. CallState active or read error),
+            // ensure the AudioRecord hardware resource is completely released.
+            synchronized (this) {
+                if (running) {
+                    releaseRecordLocked();
+                    running = false;
+                }
+            }
+            if (captureThread == Thread.currentThread()) {
+                captureThread = null;
             }
           }
         }, "wDSP_RadioMic");
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
         captureThread.start();
-        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz UNPROCESSED (Adaptive AGC enabled)");
+        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz source="
+                + MicrophoneGuard.CAPTURE_AUDIO_SOURCE + " (Adaptive AGC enabled)");
         return true;
     }
 
@@ -533,39 +546,16 @@ public class RadioMicCapture {
         return NativeSweep.bandwidthRatioDb(samples, n, SAMPLE_RATE);
     }
 
-    /** Creates and starts the recorder. Its effects are left exactly as the platform set them. */
+    /** Creates and starts the recorder via MicrophoneGuard SSOT. */
     private boolean openRecordLocked() {
-        othersOnInputAtOpen = activeRecordingsNow();
-        AudioRecord rec;
-        try {
-            rec = new AudioRecord(
-                    MediaRecorder.AudioSource.UNPROCESSED,
-                    SAMPLE_RATE,
-                    CHANNEL_CONFIG,
-                    AUDIO_FORMAT,
-                    bufferSize
-            );
-        } catch (Throwable t) {
-            Log.w(TAG, "AudioRecord(UNPROCESSED) failed, trying DEFAULT: " + t);
-            try {
-                rec = new AudioRecord(
-                        MediaRecorder.AudioSource.DEFAULT,
-                        SAMPLE_RATE,
-                        CHANNEL_CONFIG,
-                        AUDIO_FORMAT,
-                        bufferSize
-                );
-            } catch (Throwable t2) {
-                Log.e(TAG, "Failed to create AudioRecord: " + t2);
-                return false;
-            }
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot start RadioMicCapture: phone call is active");
+            return false;
         }
-
-        if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
-            Log.e(TAG, "AudioRecord not initialized");
-            try {
-                rec.release();
-            } catch (Throwable ignored) {}
+        othersOnInputAtOpen = activeRecordingsNow();
+        AudioRecord rec = MicrophoneGuard.openCaptureRecord(bufferSize);
+        if (rec == null) {
+            Log.e(TAG, "Failed to create AudioRecord via MicrophoneGuard SSOT");
             return false;
         }
 
@@ -677,18 +667,23 @@ public class RadioMicCapture {
     public synchronized void stop() {
         running = false;
         unregisterRecordingCallbackLocked();
+        // 🔴 P0 CRITICAL: Release the AudioRecord hardware resource IMMEDIATELY!
+        // Calling stop() + release() signals audioserver/HAL to close the stream in < 1 ms.
+        // It must NOT wait for captureThread or any thread join, otherwise telephony voice call
+        // collides on Unisoc AGDSP resulting in cmd:0x26 dsp timeout / dsp assert.
+        releaseRecordLocked();
+
         Thread t = captureThread;
         captureThread = null;
         if (t != null) {
             t.interrupt();
             try {
-                t.join(300);
+                t.join(50);
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
         }
 
-        releaseRecordLocked();
         Log.i(TAG, "RadioMicCapture stopped");
     }
 
@@ -698,14 +693,15 @@ public class RadioMicCapture {
     }
 
     private void safeReleaseRecord() {
-        if (audioRecord != null) {
+        AudioRecord rec = audioRecord;
+        audioRecord = null;
+        if (rec != null) {
             try {
-                if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-                    audioRecord.stop();
+                if (rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                    rec.stop();
                 }
-                audioRecord.release();
+                rec.release();
             } catch (Throwable ignored) {}
-            audioRecord = null;
         }
     }
 

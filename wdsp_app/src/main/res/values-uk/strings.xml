@@ -33,8 +33,8 @@
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
     <string name="ultra_bass">Ультра-бас</string>
     <string name="show_loudness_on_main">Показати на головній</string>
-    <string name="sync_delay_front">Передні рухати разом</string>
-    <string name="sync_delay_rear">Задні рухати разом</string>
+    <string name="sync_delay_front">Передні разом</string>
+    <string name="sync_delay_rear">Задні разом</string>
     <string name="sync_bass_fr">Як спереду</string>
     <string name="hint_sync_delay_front">Передній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
     <string name="hint_sync_delay_rear">Задній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
@@ -72,6 +72,7 @@
     <string name="enable_gala">Увімкнути GALA</string>
     <string name="enable_gala_feature">Активувати функцію GALA</string>
     <string name="gala_global">Глобально</string>
+    <string name="gala_disable_for_preset">Вимкнути для цього пресету</string>
     <string name="vol_step_every">Крок швидкості:</string>
     <string name="gps_speed_label">Швидкість GPS</string>
     <string name="current_gps_speed">Швидкість GPS:</string>
@@ -338,7 +339,9 @@
     <string name="debug_sweep_running">Діагностичний свіп: %1$s</string>
     <string name="room_config_change_warning">Зміна конфігурації авто (кузов/сабвуфер) вимагає нового акустичного виміру. Проміжні дані калібрування буде оновлено під час наступного свіпу. (Ваші збережені пресети НЕ видаляються).</string>
     <string name="spectrum_mode_label">Спектр:</string>
-    <string name="spectrum_mode_calc">Розрахунковий</string>
+        <string name="spectrum_mode_off">Вимкнено</string>
+    <string name="spectrum_mode_music">Музика</string>
+<string name="spectrum_mode_calc">Розрахунковий</string>
     <string name="spectrum_mode_mic">Мікрофон</string>
     <string name="spectrum_mic_uncalibrated_title">Калібрування мікрофона</string>
     <string name="spectrum_mic_uncalibrated_msg">Для точного відображення спектра радіо через мікрофон необхідно виконати калібрування у вкладці акустики салону. Відкрити калібрування зараз?</string>
@@ -541,5 +544,18 @@
     <string name="room_err_unknown">Невідома помилка</string>
     <string name="room_polarity_warning">Переплутано полярність (+/-): %1$s. Динамік підключений у протифазі й гасить баси в салоні. Перевірте дроти на його клемах.</string>
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Стиль інтерфейсу</string>
+    <string name="settings_ui_style_desc">Перемикання між класичним стилем автора (Material 3) та стилем Modern wDSP Mod</string>
+    <string name="settings_ui_style_classic">Класичний (Оригінал)</string>
+    <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
+    <string name="btn_minus">－</string>
+    <string name="btn_plus">＋</string>
+    <string name="btn_left">←L</string>
+    <string name="btn_right">R→</string>
+    <string name="btn_front">F↑</string>
+    <string name="btn_rear">↓R</string>
+    <string name="btn_center">０</string>
+    <string name="eqc">"EQ:"</string>
 </resources>
 

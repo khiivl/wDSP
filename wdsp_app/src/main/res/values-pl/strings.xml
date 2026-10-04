@@ -28,8 +28,8 @@
     <string name="lbl_correction_strength">Siła korekcji:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Pokaż na głównym</string>
-    <string name="sync_delay_front">Przesuwaj przednie razem</string>
-    <string name="sync_delay_rear">Przesuwaj tylne razem</string>
+    <string name="sync_delay_front">Przednie razem</string>
+    <string name="sync_delay_rear">Tylne razem</string>
     <string name="sync_bass_fr">Jak z przodu</string>
     <string name="hint_sync_delay_front">Przedni lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>
     <string name="hint_sync_delay_rear">Tylny lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>
@@ -67,6 +67,7 @@
     <string name="enable_gala">Włącz GALA</string>
     <string name="enable_gala_feature">Aktywuj funkcję GALA</string>
     <string name="gala_global">Globalne</string>
+    <string name="gala_disable_for_preset">Wyłącz dla tego profilu</string>
     <string name="vol_step_every">Krok głośności co:</string>
     <string name="gps_speed_label">PRĘDKOŚĆ GPS</string>
     <string name="current_gps_speed">Aktualna prędkość GPS:</string>
@@ -446,7 +447,9 @@
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Wył.</string>
+    <string name="spectrum_mode_music">Muzyka</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -541,4 +544,12 @@
     <string name="room_err_unknown">Nieznany błąd</string>
     <string name="room_polarity_warning">Odwrócona polaryzacja (+/-) na: %1$s. Głośnik jest podłączony w przeciwfazie i wygasza basy w kabinie. Sprawdź przewody na jego złączach.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Styl interfejsu</string>
+    <string name="settings_ui_style_desc">Przełącz między klasycznym stylem Material 3 a nowoczesnym wDSP Mod</string>
+    <string name="settings_ui_style_classic">Klasyczny (Oryginał)</string>
+    <string name="settings_ui_style_modern">Nowoczesny (wDSP Mod)</string>
+
+    <string name="button_backlight_label">Podświetlenie przycisków w kolorach wDSP</string>
+    <string name="button_backlight_desc">Gdy wDSP jest na ekranie, przyciski świecą kolorem akcentu bieżącego motywu. Po opuszczeniu wDSP przywracany jest ich pierwotny kolor.</string>
 </resources>

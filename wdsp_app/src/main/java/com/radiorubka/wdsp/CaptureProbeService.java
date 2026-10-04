@@ -86,6 +86,10 @@ public class CaptureProbeService extends Service {
             Log.e(TAG, "consent produced no projection");
             return;
         }
+        if (CallState.isActive()) {
+            Log.w(TAG, "phone call in progress, capture probe cancelled");
+            return;
+        }
 
         StringBuilder report = new StringBuilder();
         report.append("capture probe  ").append(new java.util.Date()).append('\n');

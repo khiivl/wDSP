@@ -574,13 +574,17 @@ public final class HardwareProfile {
         return value == null || value.isEmpty() ? "?" : value;
     }
 
+    private static java.lang.reflect.Method mSystemPropertyGet;
+
     /** Package-visible: {@link SystemDiagnostics} reads a long list of these for its report. */
     static String systemProperty(String key) {
         try {
-            @SuppressWarnings("PrivateApi")
-            Class<?> systemProperties = Class.forName("android.os.SystemProperties");
-            Object value = systemProperties.getMethod("get", String.class, String.class)
-                    .invoke(null, key, "");
+            if (mSystemPropertyGet == null) {
+                @SuppressWarnings("PrivateApi")
+                Class<?> systemProperties = Class.forName("android.os.SystemProperties");
+                mSystemPropertyGet = systemProperties.getMethod("get", String.class, String.class);
+            }
+            Object value = mSystemPropertyGet.invoke(null, key, "");
             if (value instanceof String && !((String) value).isEmpty()) return (String) value;
         } catch (Throwable t) {
             Log.w(TAG, "could not read " + key + ": " + t);

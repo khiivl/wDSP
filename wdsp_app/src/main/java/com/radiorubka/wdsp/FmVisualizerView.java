@@ -85,15 +85,12 @@ public class FmVisualizerView extends View {
     private float lastLineGradLeft = -1;
     private float lastLineGradRight = -1;
 
-    private Drawable customBackground;
-
     public FmVisualizerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
     private void init() {
-        customBackground = ContextCompat.getDrawable(getContext(), R.drawable.ui_bg_layer);
         float density = getContext().getResources().getDisplayMetrics().density;
 
         int colorLine = ContextCompat.getColor(getContext(), R.color.visualizer_line);
@@ -220,19 +217,16 @@ public class FmVisualizerView extends View {
         float bgTop = -shiftUp;
         float bgBottom = totalH - shiftUp;
 
-        // 3. Draw Background with Rounded Corners
+        // 3. Grid lines with rounded plot bounds
         canvas.save(); // paired with the unconditional restore at the end (the author's 0.5 fix)
-        if (customBackground != null) {
-            // Create a rounded path for the background
-            bgPath.reset();
-            bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
-            canvas.clipPath(bgPath); // This "cuts" the drawable into a rounded shape
+        bgPath.reset();
+        bgPath.addRoundRect(bgLeft, bgTop, bgRight, bgBottom, cornerRadius, cornerRadius, Path.Direction.CW);
+        canvas.clipPath(bgPath);
 
-            customBackground.setBounds((int)bgLeft, 0, (int)bgRight, (int)bgBottom);
-            customBackground.draw(canvas);
-        }
-
-        gridPaint.setAlpha(8);
+        boolean isNight = ThemeManager.isNight(getContext());
+        int gridColor = isNight ? Color.parseColor("#20FFFFFF") : Color.parseColor("#25000000");
+        gridPaint.setColor(gridColor);
+        gridPaint.setStrokeWidth(1f * density);
 
         // Loop from 0 to 12 to create a line at every 1dB increment
         for (int i = 0; i <= 12; i++) {
@@ -316,7 +310,6 @@ public class FmVisualizerView extends View {
         canvas.drawPath(fillPath, fillPaint);
         canvas.drawPath(fullPath, linePaint);
         if (drawSub) {
-            boolean isNight = ThemeManager.isNight(getContext());
             int subColor = ThemeManager.contrastText(ThemeManager.textSecondary(getContext(), isNight),
                     isNight ? 0xFF12161B : 0xFFFFFFFF);
             subLinePaint.setColor(androidx.core.graphics.ColorUtils.setAlphaComponent(subColor, 210));
@@ -324,7 +317,9 @@ public class FmVisualizerView extends View {
         }
         canvas.restore();
 
-        // 8. Draw Text/Warnings (unchanged)
+        // 8. Draw Text/Warnings
+        int colorLine = ThemeManager.getThemedColor(getContext(), isNight, R.color.visualizer_line);
+        textPaint.setColor(colorLine);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             if (offsets != null) {
                 float val = offsets[i];

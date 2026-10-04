@@ -139,18 +139,22 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         float totalH = getHeight();
         if (w == 0 || totalH == 0) return;
 
+        float density = getResources().getDisplayMetrics().density;
+
         boolean enabled = ThemeManager.prefs(getContext()).getBoolean("pref_eq_visualizer_enabled", true);
         if (!enabled) return;
 
         int mode = ThemeManager.prefs(getContext()).getInt("pref_eq_visualizer_mode", MODE_SPECTRUM);
 
-        float density = getResources().getDisplayMetrics().density;
-        float leftMargin = 32 * density;
+        boolean isClassic = ThemeManager.isClassic(getContext());
+        float leftMargin = isClassic ? 0f : (32 * density);
         float activeWidth = w - leftMargin;
 
+        float topOffsetRatio = isClassic ? 0.25555555555555f : TOP_OFFSET_RATIO;
+        float drawHeightRatio = isClassic ? 0.72222222222222f : DRAW_HEIGHT_RATIO;
         float thumbInset = 10 * density;
-        float drawStartY = totalH * TOP_OFFSET_RATIO + thumbInset;
-        float drawHeight = totalH * DRAW_HEIGHT_RATIO - 2 * thumbInset;
+        float drawStartY = totalH * topOffsetRatio + thumbInset;
+        float drawHeight = totalH * drawHeightRatio - 2 * thumbInset;
         float gridBottom = drawStartY + drawHeight;
 
         // The average of the bands that have sound, in display-level units; a difference of levels

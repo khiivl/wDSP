@@ -892,6 +892,24 @@ public final class RoomMeasurement {
     private static final long PRESET_SETTLE_MS = 450;
 
     private static volatile boolean running;
+    private static volatile boolean aborted;
+    private static volatile AudioRecord activeRecord;
+
+    public static void abort() {
+        if (!running) return;
+        aborted = true;
+        AudioRecord rec = activeRecord;
+        activeRecord = null;
+        if (rec != null) {
+            try {
+                if (rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                    rec.stop();
+                }
+                rec.release();
+            } catch (Throwable ignored) {}
+        }
+        MicrophoneGuard.releaseHold();
+    }
     /**
      * Diagnostic: play every sweep through the same routing.
      *
@@ -1559,6 +1577,12 @@ public final class RoomMeasurement {
                                   CarBodyType bodyType, int listeningDistanceCm,
                                   Listener listener, boolean isMicCalibrationOnly) {
         Result result = new Result();
+        if (CallState.isActive()) {
+            result.error = "phone call in progress";
+            Log.w(TAG, "cannot measure room: " + result.error);
+            return result;
+        }
+        aborted = false;
         result.hasSubwoofer = hasSubwoofer;
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
@@ -1866,6 +1890,7 @@ public final class RoomMeasurement {
             Log.i(TAG, "audio focus for the sweep: " + result.focus);
 
             record = openMicrophone();
+            activeRecord = record;
             // Only now, with a second client already on the same input, does the placeholder go.
             // Released before the null check on purpose: if the real open failed we are abandoning
             // the pass anyway, and leaving a recorder running would be worse than the failure.
@@ -1935,6 +1960,11 @@ public final class RoomMeasurement {
             router.start();
 
             while (got < recordLen) {
+                if (aborted || CallState.isActive()) {
+                    Log.w(TAG, "measurement aborted due to active phone call");
+                    result.error = "phone call interrupted measurement";
+                    break;
+                }
                 int read = record.read(captured, got, recordLen - got);
                 if (read <= 0) {
                     Log.w(TAG, "read returned " + read);
@@ -1955,6 +1985,7 @@ public final class RoomMeasurement {
         } finally {
             if (effects != null) effects.restore();
             closeQuietly(track);
+            activeRecord = null;
             closeQuietly(record);
             // Reset scratch routing and filters back to neutral
             prefs.edit()

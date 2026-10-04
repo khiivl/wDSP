@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Intensité de correction :</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Afficher sur l\'accueil</string>
-    <string name="sync_delay_front">Déplacer l\'avant ensemble</string>
-    <string name="sync_delay_rear">Déplacer l\'arrière ensemble</string>
-    <string name="sync_bass_fr">Comme à l\'avant</string>
+    <string name="sync_delay_front">Avants ensemble</string>
+    <string name="sync_delay_rear">Arrières ensemble</string>
+    <string name="sync_bass_fr">Comme devant</string>
     <string name="hint_sync_delay_front">Les haut-parleurs avant gauche et droit bougent désormais ensemble ; la différence entre eux est conservée.</string>
     <string name="hint_sync_delay_rear">Les haut-parleurs arrière gauche et droit bougent désormais ensemble ; la différence entre eux est conservée.</string>
     <string name="toast_loudness_sync_bass">Loudness activé : les basses arrière suivent les avant. Idéalement, réglez les basses avant sur 86 Hz.</string>
@@ -450,7 +450,9 @@ Par défaut global : %1$s</string>
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Désactivé</string>
+    <string name="spectrum_mode_music">Musique</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@ Par défaut global : %1$s</string>
     <string name="room_err_unknown">Erreur inconnue</string>
     <string name="room_polarity_warning">Polarité inversée (+/-) sur : %1$s. Le haut-parleur est câblé en opposition de phase et annule les basses dans l\'habitacle. Vérifiez ses bornes.</string>
     <string name="room_wizard_delays_sub">Caisson de basses : %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Style d\'interface</string>
+    <string name="settings_ui_style_desc">Basculez entre le style classique Material 3 et le style moderne wDSP Mod</string>
+    <string name="settings_ui_style_classic">Classique (Original)</string>
+    <string name="settings_ui_style_modern">Moderne (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Désactiver ce profil</string>
+    <string name="button_backlight_label">Rétroéclairage des touches aux couleurs wDSP</string>
+    <string name="button_backlight_desc">Tant que wDSP est affiché, les boutons s\'illuminent avec la couleur d\'accent du thème actuel. En quittant wDSP, leur couleur d\'origine revient.</string>
 </resources>

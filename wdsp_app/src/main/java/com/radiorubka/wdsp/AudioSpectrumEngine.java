@@ -208,6 +208,7 @@ public class AudioSpectrumEngine {
     public static final String PREF_RANGE_DB = "spec_range_db";
     public static final String PREF_RADIO_MIC_VISUALIZER = "pref_radio_mic_visualizer";
     public static final String PREF_SPECTRUM_MODE = "pref_spectrum_mode";
+    public static final String SPECTRUM_MODE_OFF = "off";
     public static final String SPECTRUM_MODE_CALC = "calc";
     public static final String SPECTRUM_MODE_MIC = "mic";
 
@@ -457,7 +458,7 @@ public class AudioSpectrumEngine {
         // A held microphone nobody was drawing is lost quietly: the spectrum on screen is the
         // calculated one already, and there is nothing to fall back from.
         final boolean wasAnalysed = analysingMicrophone();
-        if (appContext != null && !toldMicUnavailable && wasAnalysed) {
+        if (appContext != null && !toldMicUnavailable && wasAnalysed && !CallState.isActive()) {
             toldMicUnavailable = true;
             // Daily use: the spectrum is decoration and an instrument, not a reason to restart the
             // car (owner, 14.09.2026). Calibration asks differently, and is not this path.
@@ -502,6 +503,7 @@ public class AudioSpectrumEngine {
     /** Main thread. */
     private synchronized void onMicrophoneFullBand() {
         if (toldMicUnavailable) Log.i(TAG, "microphone back at full band");
+        micUnavailable = false;
         toldMicUnavailable = false;
     }
 
@@ -999,6 +1001,9 @@ public class AudioSpectrumEngine {
     public void initContext(Context context) {
         if (context == null) return;
         this.appContext = context.getApplicationContext();
+        if (CallState.isActive()) {
+            this.pausedForCall = true;
+        }
         this.audioManager = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
         this.sessionResolver = SessionResolver.getInstance(appContext);
         this.sessionResolver.start();
@@ -1369,7 +1374,7 @@ public class AudioSpectrumEngine {
         try {
             if (analysis != null) {
                 analysis.interrupt();
-                analysis.join(200);
+                analysis.join(50);
             }
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
@@ -1803,11 +1808,25 @@ public class AudioSpectrumEngine {
 
     public synchronized void setCallActive(boolean active) {
         if (active == pausedForCall) return;
+        if (!active && CallState.isActive()) {
+            // HAL or telephony hasn't finished clearing call state yet; defer resume
+            return;
+        }
         pausedForCall = active;
         if (active) {
-            Log.i(TAG, "call in progress: analyser paused, capture and microphone kept");
+            Log.i(TAG, "call in progress: releasing microphone and pausing analyser");
+            micHoldHandler.removeCallbacks(micHoldTick);
+            // 🔴 P0 CRITICAL: Release hardware AudioRecord FIRST and SYNCHRONOUSLY!
+            // Must happen at 0 ms before any other teardown or thread join, otherwise
+            // audioserver/HAL RecordThread collides with telephony on Unisoc AGDSP.
+            stopRadioMicCapture(true);
+            stopMicAnalysis();
         } else {
             Log.i(TAG, "call ended: analyser resumed");
+            if (holdMicrophone) {
+                micHoldHandler.removeCallbacks(micHoldTick);
+                micHoldTick.run();
+            }
             if (!listeners.isEmpty() && visualizer == null && !isMicPipelineRunning()) start();
         }
     }
@@ -1915,6 +1934,7 @@ public class AudioSpectrumEngine {
      * pipeline is doing - that one is left alone and becomes the reference (option (b)).
      */
     private void startRadioMicPipeline() {
+        if (pausedForCall) return;
         stopMicAnalysis();
         // The capture is NOT closed and reopened here any more. A held microphone (no root) is
         // simply analysed from now on; and closing it only to open it again was a moment in which
@@ -2007,10 +2027,16 @@ public class AudioSpectrumEngine {
      * analysis has stopped.
      */
     private void stopRadioMicCapture() {
-        if (holdMicrophone && !micUnavailable) return;
-        if (radioMicCapture.isRunning()) {
-            radioMicCapture.stop();
-        }
+        stopRadioMicCapture(false);
+    }
+
+    /**
+     * Forcefully or conditionally releases the microphone capture.
+     * When force is true (e.g. during a phone call), AudioRecord is unconditionally stopped and released.
+     */
+    private void stopRadioMicCapture(boolean force) {
+        if (!force && holdMicrophone && !micUnavailable) return;
+        radioMicCapture.stop();
     }
 
     /**
@@ -2086,7 +2112,9 @@ public class AudioSpectrumEngine {
                 }
                 micHoldHandler.removeCallbacks(micHoldTick);
                 if (holdMicrophone) {
-                    micHoldTick.run();
+                    if (!pausedForCall) {
+                        micHoldTick.run();
+                    }
                 } else if (was) {
                     // Root has appeared: a held capture nobody analyses is let go.
                     synchronized (AudioSpectrumEngine.this) {
@@ -2168,10 +2196,11 @@ public class AudioSpectrumEngine {
      * startInternal, with identical code that would have drifted the first time one was edited.
      */
     private boolean canRunMic() {
-        return !micUnavailable && appContext != null && RoomMeasurement.hasMicCompensation(appContext);
+        return !micUnavailable && appContext != null;
     }
 
     private void startInternal(int sessionId) {
+        if (pausedForCall) return;
         boolean isRadio = isRadioSourceNow();
         boolean wantMic = wantsMicPipeline(isRadio);
 

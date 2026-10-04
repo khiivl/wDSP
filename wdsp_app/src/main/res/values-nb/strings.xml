@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Korreksjonsstyrke:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Vis på hovedskjerm</string>
-    <string name="sync_delay_front">Flytt fremre sammen</string>
-    <string name="sync_delay_rear">Flytt bakre sammen</string>
+    <string name="sync_delay_front">Fremre sammen</string>
+    <string name="sync_delay_rear">Bakre sammen</string>
     <string name="sync_bass_fr">Som foran</string>
     <string name="hint_sync_delay_front">Venstre og høyre foran flyttes nå sammen; forskjellen mellom dem beholdes.</string>
     <string name="hint_sync_delay_rear">Venstre og høyre bak flyttes nå sammen; forskjellen mellom dem beholdes.</string>
@@ -450,7 +450,9 @@ Global standard: %1$s</string>
     <string name="debug_sweep_running">Diagnostic sweep: %1$s</string>
     <string name="room_config_change_warning">Changing vehicle configuration (body type/subwoofer) requires a fresh acoustic sweep. Intermediate calibration data will be updated during the next sweep. (Your saved presets are NOT deleted).</string>
     <string name="spectrum_mode_label">Spectrum:</string>
-    <string name="spectrum_mode_calc">Calculated</string>
+        <string name="spectrum_mode_off">Av</string>
+    <string name="spectrum_mode_music">Musikk</string>
+<string name="spectrum_mode_calc">Calculated</string>
     <string name="spectrum_mode_mic">Microphone</string>
     <string name="spectrum_mic_uncalibrated_title">Microphone Calibration</string>
     <string name="spectrum_mic_uncalibrated_msg">To accurately display radio spectrum via microphone, cabin acoustic calibration is required. Open calibration wizard now?</string>
@@ -545,4 +547,13 @@ Global standard: %1$s</string>
     <string name="room_err_unknown">Ukjent feil</string>
     <string name="room_polarity_warning">Omvendt polaritet (+/-) på: %1$s. Høyttaleren er koblet i motfase og utligner bassen i kupeen. Sjekk ledningene på terminalene.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
+    <!-- UI Style switcher (Classic / Modern) -->
+    <string name="settings_ui_style_title">Brukergrensesnittstil</string>
+    <string name="settings_ui_style_desc">Bytt mellom opprinnelig klassisk Material 3 og moderne wDSP Mod-tema</string>
+    <string name="settings_ui_style_classic">Klassisk (Original)</string>
+    <string name="settings_ui_style_modern">Moderne (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Deaktiver for profil</string>
+    <string name="button_backlight_label">Knappebelysning i wDSP-farger</string>
+    <string name="button_backlight_desc">Mens wDSP er på skjermen, lyser knappene i aksentfargen til det gjeldende temaet. Når wDSP forlates, gjenopprettes den opprinnelige fargen.</string>
 </resources>

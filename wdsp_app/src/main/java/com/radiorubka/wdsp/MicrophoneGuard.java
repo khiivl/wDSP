@@ -53,7 +53,16 @@ import java.util.Locale;
 public final class MicrophoneGuard {
     private static final String TAG = "wDSP_MicGuard";
 
-    private static final int SAMPLE_RATE = 48000;
+    /**
+     * Single Source of Truth (SSOT) for microphone capture across wDSP.
+     * Architectural contract with BitPerfect: UNPROCESSED (9) at 48000 Hz mono PCM 16-bit.
+     * Modifying this value changes the capture source application-wide.
+     */
+    public static final int CAPTURE_AUDIO_SOURCE = MediaRecorder.AudioSource.UNPROCESSED;
+    public static final int SAMPLE_RATE = 48000;
+    public static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
+    public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+
     /** How long the platform is given to list a recording that has just started. */
     private static final long RATE_WAIT_MS = 500;
     /**
@@ -140,6 +149,11 @@ public final class MicrophoneGuard {
      */
     public static Outcome ensureOurs(Context context) {
         Outcome outcome = new Outcome();
+        if (CallState.isActive()) {
+            outcome.unknown = true;
+            Log.w(TAG, "Cannot ensureOurs: phone call in progress");
+            return outcome;
+        }
         // Who opened the input is asked before a recorder of ours joins it - afterwards ours is
         // among the recordings and the question has no answer (owner, 14.09.2026: whoever is first
         // sets the input up; with root take it, without root a restart).
@@ -309,43 +323,73 @@ public final class MicrophoneGuard {
     }
 
     /**
-     * Opens a capture the way this app measures with - one place, so that what the guard holds and
-     * what the measurement records are the same kind of stream.
+     * Opens a capture the way this app records and measures - the Single Source of Truth (SSOT).
      *
-     * <p>UNPROCESSED first because it is absent from the preprocess list in
-     * {@code audio_effects.xml} and so carries no echo cancellation or noise suppression;
-     * VOICE_RECOGNITION as a fallback, because a unit that cannot offer the first is better
-     * measured imperfectly than not at all. Callers ask the returned record which one they got.
+     * <p>Uses {@link #CAPTURE_AUDIO_SOURCE} (UNPROCESSED 9) at 48000 Hz mono PCM 16-bit.
+     * Guaranteed to obey {@link CallState#isActive()} to release the microphone during phone calls.
      */
     public static AudioRecord openCaptureRecord() {
-        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT);
-        if (minBytes <= 0) return null;
-        AudioRecord record = tryOpenCapture(MediaRecorder.AudioSource.UNPROCESSED, minBytes);
-        if (record == null) {
-            Log.w(TAG, "UNPROCESSED unavailable, falling back to VOICE_RECOGNITION - "
-                    + "the platform will attach AEC/NS to this capture");
-            record = tryOpenCapture(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBytes);
-        }
-        return record;
+        return openCaptureRecord(0);
     }
 
-    private static AudioRecord tryOpenCapture(int source, int minBytes) {
-        try {
-            AudioRecord record = new AudioRecord(source, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBytes * 8);
-            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-                record.release();
-                return null;
-            }
-            Log.i(TAG, "capture opened with source " + source
-                    + (source == MediaRecorder.AudioSource.UNPROCESSED
-                       ? " (UNPROCESSED - no policy preprocessing)" : ""));
-            return record;
-        } catch (Throwable t) {
-            Log.w(TAG, "could not open capture source " + source + ": " + t);
+    /**
+     * Opens a capture with a requested minimum buffer size.
+     */
+    public static AudioRecord openCaptureRecord(int minBufferSize) {
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot open capture: phone call is active");
             return null;
         }
+        int minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
+        if (minBytes <= 0) {
+            Log.e(TAG, "AudioRecord.getMinBufferSize refused format: rate=" + SAMPLE_RATE);
+            return null;
+        }
+        int bufferBytes = Math.max(minBytes * 8, minBufferSize);
+        return tryOpenCapture(CAPTURE_AUDIO_SOURCE, bufferBytes);
+    }
+
+    public static AudioRecord tryOpenCapture(int source, int bufferBytes) {
+        if (CallState.isActive()) {
+            Log.w(TAG, "Cannot open capture: phone call is active");
+            return null;
+        }
+        AudioRecord record = null;
+        try {
+            AudioFormat format = new AudioFormat.Builder()
+                    .setEncoding(AUDIO_FORMAT)
+                    .setSampleRate(SAMPLE_RATE)
+                    .setChannelMask(CHANNEL_CONFIG)
+                    .build();
+            record = new AudioRecord.Builder()
+                    .setAudioSource(source)
+                    .setAudioFormat(format)
+                    .setBufferSizeInBytes(bufferBytes)
+                    .build();
+        } catch (Throwable t) {
+            Log.w(TAG, "AudioRecord.Builder failed for source=" + source + " (" + t + "), trying constructor");
+            try {
+                record = new AudioRecord(source, SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT, bufferBytes);
+            } catch (Throwable t2) {
+                Log.e(TAG, "AudioRecord constructor failed for source=" + source + ": " + t2);
+                return null;
+            }
+        }
+
+        if (record == null || record.getState() != AudioRecord.STATE_INITIALIZED) {
+            Log.w(TAG, "AudioRecord not initialized for source=" + source + " (record=" + record + ")");
+            if (record != null) {
+                try { record.release(); } catch (Throwable ignored) {}
+            }
+            return null;
+        }
+
+        Log.i(TAG, "capture opened with source=" + source
+                + (source == MediaRecorder.AudioSource.UNPROCESSED
+                   ? " (UNPROCESSED - raw input, no policy preprocessing)" : "")
+                + " rate=" + record.getSampleRate()
+                + " bufferBytes=" + bufferBytes);
+        return record;
     }
 
     /**
