@@ -339,7 +339,9 @@
     <string name="debug_sweep_running">Діагностичний свіп: %1$s</string>
     <string name="room_config_change_warning">Зміна конфігурації авто (кузов/сабвуфер) вимагає нового акустичного виміру. Проміжні дані калібрування буде оновлено під час наступного свіпу. (Ваші збережені пресети НЕ видаляються).</string>
     <string name="spectrum_mode_label">Спектр:</string>
-    <string name="spectrum_mode_calc">Розрахунковий</string>
+        <string name="spectrum_mode_off">Вимкнено</string>
+    <string name="spectrum_mode_music">Музика</string>
+<string name="spectrum_mode_calc">Розрахунковий</string>
     <string name="spectrum_mode_mic">Мікрофон</string>
     <string name="spectrum_mic_uncalibrated_title">Калібрування мікрофона</string>
     <string name="spectrum_mic_uncalibrated_msg">Для точного відображення спектра радіо через мікрофон необхідно виконати калібрування у вкладці акустики салону. Відкрити калібрування зараз?</string>

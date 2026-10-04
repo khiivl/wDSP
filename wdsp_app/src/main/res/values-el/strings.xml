@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Διαγνωστικό sweep: %1$s</string>
     <string name="room_config_change_warning">Η αλλαγή διαμόρφωσης του οχήματος (τύπος αμαξώματος/subwoofer) απαιτεί νέα μέτρηση. Τα ενδιάμεσα δεδομένα θα ενημερωθούν στο επόμενο sweep. (Οι αποθηκευμένες προεπιλογές ΔΕΝ διαγράφονται).</string>
     <string name="spectrum_mode_label">Φάσμα:</string>
-    <string name="spectrum_mode_calc">Υπολογισμένο</string>
+        <string name="spectrum_mode_off">Ανενεργό</string>
+    <string name="spectrum_mode_music">Μουσική</string>
+<string name="spectrum_mode_calc">Υπολογισμένο</string>
     <string name="spectrum_mode_mic">Μικρόφωνο</string>
     <string name="spectrum_mic_uncalibrated_title">Βαθμονόμηση μικροφώνου</string>
     <string name="spectrum_mic_uncalibrated_msg">Για την ακριβή απεικόνιση του φάσματος ραδιοφώνου μέσω μικροφώνου απαιτείται βαθμονόμηση στην καρτέλα ακουστικής. Άνοιγμα βαθμονόμησης τώρα;</string>

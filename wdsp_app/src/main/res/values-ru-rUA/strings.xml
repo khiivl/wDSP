@@ -451,7 +451,9 @@
     <string name="debug_sweep_running">Диагностический свип: %1$s</string>
     <string name="room_config_change_warning">Изменение конфигурации авто (кузов/сабвуфер) требует нового акустического замера. Промежуточные данные калибровки будут обновлены во время следующего свипа. (Ваши сохраненные пресеты НЕ удаляются).</string>
     <string name="spectrum_mode_label">Спектр:</string>
-    <string name="spectrum_mode_calc">Расчетный</string>
+        <string name="spectrum_mode_off">Выкл</string>
+    <string name="spectrum_mode_music">Музыка</string>
+<string name="spectrum_mode_calc">Расчетный</string>
     <string name="spectrum_mode_mic">Микрофон</string>
     <string name="spectrum_mic_uncalibrated_title">Калибровка микрофона</string>
     <string name="spectrum_mic_uncalibrated_msg">Для точного отображения спектра радио через микрофон необходимо выполнить калибровку во вкладке акустики салона. Открыть калибровку сейчас?</string>

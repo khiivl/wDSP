@@ -450,7 +450,9 @@
     <string name="debug_sweep_running">Диагностичен суип: %1$s</string>
     <string name="room_config_change_warning">Промяната на конфигурацията (купе/субуфер) изисква ново измерване. Междинните данни ще се обновят при следващия суип. (Запазените профили НЕ се изтриват).</string>
     <string name="spectrum_mode_label">Спектър:</string>
-    <string name="spectrum_mode_calc">Изчислен</string>
+        <string name="spectrum_mode_off">Изкл.</string>
+    <string name="spectrum_mode_music">Музика</string>
+<string name="spectrum_mode_calc">Изчислен</string>
     <string name="spectrum_mode_mic">Микрофон</string>
     <string name="spectrum_mic_uncalibrated_title">Калибриране на микрофона</string>
     <string name="spectrum_mic_uncalibrated_msg">За точно показване на радио спектъра през микрофона е необходимо калибриране в раздела за акустика. Отваряне на калибрирането сега?</string>
