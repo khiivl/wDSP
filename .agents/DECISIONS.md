@@ -147,3 +147,17 @@ and reverted the same night. The owner: *«це ідіотизм ... гала ц
 дивно коли пресет для ютуб грає з гала, а пресет для споті без»*. Speed compensation answers road noise, which does
 not depend on which player is on. Our model stands: the global switch, when on, rules every preset; when off, the
 parameters live in the preset, and the global switch still has the last word. (03.10; overruled 05.10.)
+
+## Loudness is drawn on the main graph whenever it is on - no separate switch (owner, 05.10.2026)
+
+The author's 0.5 has an app-wide switch "show loudness on main" (off by default) that decides whether the main EQ
+graph draws what Loudness adds. The 0.5 merge (Gemini, c2259a2/4f11559) removed it: the graph draws Loudness's part
+whenever the preset's Loudness is on. That was the owner's call, not Gemini's taste: *«це костиль, автор запхав де
+міг, це моє імхо, а не дж. я вважаю логічно показувати автоматично коли лоуднес увімкнутий»*. Do not restore the
+switch when merging the author's later work; the stored `show_loudness_on_main` key is dead and harmless.
+
+## Two UI styles: ours and an emulation of the author's (owner, 05.10.2026)
+
+Modern is this project's interface; Classic emulates the author's and follows his master as it moves. The owner:
+*«вести тобі тепер прийдеться обидві теми як нашу власну так і емуляцію інтерфейса автора»*. So a UI change is not
+done until it is right in both styles, day and night, and an author's UI change merged in lands in Classic too.

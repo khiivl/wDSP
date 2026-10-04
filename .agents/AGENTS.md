@@ -91,8 +91,8 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
   prior knowledge, not hypotheses awaiting our confirmation. And do not chase precision the hardware lacks: 16 bands,
   2 dB a step, a fixed `Q = 2.2`.
 - **A stale document is worse than none.** If the code moves, move the file.
-- **A new control is done only when the theme reaches it**: the theme is applied by id lists
-  ([ARCHITECTURE.md](ARCHITECTURE.md), "UI"); add the ids in the same commit, look in both themes.
+- **A UI change is done only in both styles and both themes**: Modern (ours), Classic (the author's UI, following
+  his master), day and night; ids by list ([ARCHITECTURE.md](ARCHITECTURE.md)).
 - Read a file before editing it; preserve existing code verbatim; propagate a signature change to **every** call site
   in the same change. The owner is the architect — ask rather than invent a design.
 
