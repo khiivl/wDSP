@@ -1374,7 +1374,7 @@ public class AudioSpectrumEngine {
         try {
             if (analysis != null) {
                 analysis.interrupt();
-                analysis.join(200);
+                analysis.join(50);
             }
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
@@ -1816,8 +1816,11 @@ public class AudioSpectrumEngine {
         if (active) {
             Log.i(TAG, "call in progress: releasing microphone and pausing analyser");
             micHoldHandler.removeCallbacks(micHoldTick);
-            stopMicAnalysis();
+            // 🔴 P0 CRITICAL: Release hardware AudioRecord FIRST and SYNCHRONOUSLY!
+            // Must happen at 0 ms before any other teardown or thread join, otherwise
+            // audioserver/HAL RecordThread collides with telephony on Unisoc AGDSP.
             stopRadioMicCapture(true);
+            stopMicAnalysis();
         } else {
             Log.i(TAG, "call ended: analyser resumed");
             if (holdMicrophone) {
@@ -2033,9 +2036,7 @@ public class AudioSpectrumEngine {
      */
     private void stopRadioMicCapture(boolean force) {
         if (!force && holdMicrophone && !micUnavailable) return;
-        if (radioMicCapture.isRunning()) {
-            radioMicCapture.stop();
-        }
+        radioMicCapture.stop();
     }
 
     /**

@@ -667,18 +667,23 @@ public class RadioMicCapture {
     public synchronized void stop() {
         running = false;
         unregisterRecordingCallbackLocked();
+        // 🔴 P0 CRITICAL: Release the AudioRecord hardware resource IMMEDIATELY!
+        // Calling stop() + release() signals audioserver/HAL to close the stream in < 1 ms.
+        // It must NOT wait for captureThread or any thread join, otherwise telephony voice call
+        // collides on Unisoc AGDSP resulting in cmd:0x26 dsp timeout / dsp assert.
+        releaseRecordLocked();
+
         Thread t = captureThread;
         captureThread = null;
         if (t != null) {
             t.interrupt();
             try {
-                t.join(300);
+                t.join(50);
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
         }
 
-        releaseRecordLocked();
         Log.i(TAG, "RadioMicCapture stopped");
     }
 
@@ -688,14 +693,15 @@ public class RadioMicCapture {
     }
 
     private void safeReleaseRecord() {
-        if (audioRecord != null) {
+        AudioRecord rec = audioRecord;
+        audioRecord = null;
+        if (rec != null) {
             try {
-                if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-                    audioRecord.stop();
+                if (rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                    rec.stop();
                 }
-                audioRecord.release();
+                rec.release();
             } catch (Throwable ignored) {}
-            audioRecord = null;
         }
     }
 

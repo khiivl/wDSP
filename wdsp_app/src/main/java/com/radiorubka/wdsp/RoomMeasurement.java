@@ -893,10 +893,21 @@ public final class RoomMeasurement {
 
     private static volatile boolean running;
     private static volatile boolean aborted;
+    private static volatile AudioRecord activeRecord;
 
     public static void abort() {
         if (!running) return;
         aborted = true;
+        AudioRecord rec = activeRecord;
+        activeRecord = null;
+        if (rec != null) {
+            try {
+                if (rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                    rec.stop();
+                }
+                rec.release();
+            } catch (Throwable ignored) {}
+        }
         MicrophoneGuard.releaseHold();
     }
     /**
@@ -1879,6 +1890,7 @@ public final class RoomMeasurement {
             Log.i(TAG, "audio focus for the sweep: " + result.focus);
 
             record = openMicrophone();
+            activeRecord = record;
             // Only now, with a second client already on the same input, does the placeholder go.
             // Released before the null check on purpose: if the real open failed we are abandoning
             // the pass anyway, and leaving a recorder running would be worse than the failure.
@@ -1973,6 +1985,7 @@ public final class RoomMeasurement {
         } finally {
             if (effects != null) effects.restore();
             closeQuietly(track);
+            activeRecord = null;
             closeQuietly(record);
             // Reset scratch routing and filters back to neutral
             prefs.edit()

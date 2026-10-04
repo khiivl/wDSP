@@ -18,8 +18,17 @@ package com.radiorubka.wdsp;
 public final class CallState {
 
     private static final String CALL_TYPE = "btcall_type";
+    private static volatile boolean callAnnounced = false;
 
     private CallState() {
+    }
+
+    public static void setCallAnnounced(boolean announced) {
+        callAnnounced = announced;
+    }
+
+    public static boolean isCallAnnounced() {
+        return callAnnounced;
     }
 
     /** The predicate itself, for a caller that has already read the active volume type this poll. */
@@ -27,11 +36,19 @@ public final class CallState {
         return CALL_TYPE.equals(activeVolumeType);
     }
 
-    /** Checks whether a call is active via system property sys.qf.call_state or active volume type. */
-    public static boolean isActive() {
+    /** Checks whether a call is physically active on hardware via sys.qf.call_state or active volume type. */
+    public static boolean isPhysicalCallActive() {
         if ("true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.call_state"))) {
             return true;
         }
         return isCallType(VolumeHelper.getActivePlayerType());
+    }
+
+    /** Checks whether a call is active via broadcast announcement or hardware state. */
+    public static boolean isActive() {
+        if (callAnnounced) {
+            return true;
+        }
+        return isPhysicalCallActive();
     }
 }

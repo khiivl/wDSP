@@ -549,6 +549,7 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.PHONE_CALL_START".equals(action)) {
                     callAnnounced = true;
                     callAnnouncedTimestamp = SystemClock.uptimeMillis();
+                    CallState.setCallAnnounced(true);
                     AudioSpectrumEngine.getInstance().setCallActive(true);
                     RoomMeasurement.abort();
                     MicrophoneGuard.releaseHold();
@@ -559,6 +560,8 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.PHONE_CALL_END".equals(action)) {
                     callAnnounced = false;
                     callAnnouncedTimestamp = 0;
+                    CallState.setCallAnnounced(false);
+                    AudioSpectrumEngine.getInstance().setCallActive(false);
                     // Trigger checkPlayer immediately on worker thread to restore previous preset without poll lag
                     backgroundHandler.post(McuService.this::checkPlayer);
                     return;
@@ -2061,7 +2064,7 @@ public class McuService extends Service implements LocationListener {
         // Watchdog: If callAnnounced was set by PHONE_CALL_START broadcast, but neither sys.qf.call_state
         // nor btcall_type is active after CALL_ANNOUNCED_WATCHDOG_MS, the broadcast was orphaned (e.g.
         // missed PHONE_CALL_END, dialer crash, or test command). Clear it automatically.
-        if (callAnnounced && !CallState.isCallType(activeType) && !CallState.isActive()) {
+        if (callAnnounced && !CallState.isCallType(activeType) && !CallState.isPhysicalCallActive()) {
             long now = SystemClock.uptimeMillis();
             if (callAnnouncedTimestamp == 0) {
                 callAnnouncedTimestamp = now;
@@ -2070,13 +2073,13 @@ public class McuService extends Service implements LocationListener {
                         + " ms) without active call state. Clearing callAnnounced.");
                 callAnnounced = false;
                 callAnnouncedTimestamp = 0;
+                CallState.setCallAnnounced(false);
             }
         }
 
         // One reading of "is there a call" for this whole poll: the preset switch below and the
         // analyser pause here must never disagree about it.
-        // Rule: sys.qf.call_state=true, broadcast com.qf.action.PHONE_CALL_START, or btcall_type
-        boolean inCall = callAnnounced || CallState.isCallType(activeType) || CallState.isActive();
+        boolean inCall = CallState.isActive() || CallState.isCallType(activeType);
         AudioSpectrumEngine.getInstance().setCallActive(inCall);
         AudioSpectrumEngine.getInstance().checkSourceState();
         // The screensaver's own tick looks every two seconds; this poll sees the call within 100 ms,
