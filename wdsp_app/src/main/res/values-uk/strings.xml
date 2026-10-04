@@ -33,8 +33,8 @@
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
     <string name="ultra_bass">Ультра-бас</string>
     <string name="show_loudness_on_main">Показати на головній</string>
-    <string name="sync_delay_front">Передні разом</string>
-    <string name="sync_delay_rear">Задні разом</string>
+    <string name="sync_delay_front">Передні рухати разом</string>
+    <string name="sync_delay_rear">Задні рухати разом</string>
     <string name="sync_bass_fr">Як спереду</string>
     <string name="hint_sync_delay_front">Передній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
     <string name="hint_sync_delay_rear">Задній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
