@@ -103,7 +103,7 @@ public final class MicProbe {
             return;
         }
 
-        Log.i(TAG, "opened source=" + sourceName(source)
+        Log.i(TAG, "opened source=" + SystemDiagnostics.sourceName(source)
                 + " lowLatency=" + lowLatency
                 + " rate=" + record.getSampleRate()
                 + " channels=" + record.getChannelCount()
@@ -112,7 +112,7 @@ public final class MicProbe {
         Suspension effects = suspendCapturePreprocessing(record.getAudioSessionId(), TAG);
 
         File out = new File(context.getExternalFilesDir(null),
-                "mic_" + sourceName(source).toLowerCase(Locale.US) + "_" + SAMPLE_RATE + ".wav");
+                "mic_" + SystemDiagnostics.sourceName(source).toLowerCase(Locale.US) + "_" + SAMPLE_RATE + ".wav");
         short[] buffer = new short[bufferBytes / 4];
         long wanted = (long) SAMPLE_RATE * durationMs / 1000;
         long got = 0;
@@ -153,7 +153,7 @@ public final class MicProbe {
         double peakDb = peak > 0 ? 20 * Math.log10((double) peak / Short.MAX_VALUE) : -120;
         Log.i(TAG, String.format(Locale.US,
                 "done source=%s frames=%d rms=%.1f dBFS peak=%.1f dBFS file=%s",
-                sourceName(source), got, rmsDb, peakDb, out.getAbsolutePath()));
+                SystemDiagnostics.sourceName(source), got, rmsDb, peakDb, out.getAbsolutePath()));
     }
 
     /**
@@ -284,16 +284,5 @@ public final class MicProbe {
 
     private static void putLe16(byte[] target, int offset, int value) {
         for (int i = 0; i < 2; i++) target[offset + i] = (byte) ((value >> (8 * i)) & 0xFF);
-    }
-
-    private static String sourceName(int source) {
-        switch (source) {
-            case MediaRecorder.AudioSource.MIC: return "MIC";
-            case MediaRecorder.AudioSource.CAMCORDER: return "CAMCORDER";
-            case MediaRecorder.AudioSource.VOICE_RECOGNITION: return "VOICE_RECOGNITION";
-            case MediaRecorder.AudioSource.UNPROCESSED: return "UNPROCESSED";
-            case MediaRecorder.AudioSource.VOICE_COMMUNICATION: return "VOICE_COMMUNICATION";
-            default: return "SOURCE_" + source;
-        }
     }
 }

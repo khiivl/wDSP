@@ -57,8 +57,19 @@ public final class MicrophoneGuard {
      * Single Source of Truth (SSOT) for microphone capture across wDSP.
      * Architectural contract with BitPerfect: UNPROCESSED (9) at 48000 Hz mono PCM 16-bit.
      * Modifying this value changes the capture source application-wide.
+     *
+     * <p>🔬 What is requested is not what is recorded on QF: the vendor {@code libaudioclient.so}
+     * ({@code AudioRecord::set}) turns 9 into MIC for every app, so the HAL opens
+     * {@code Music\Handsfree\Record} and the policy attaches the {@code mic} pre-processing.
+     * 📻 05.10.2026: AEC {@code sprd cvs} and NS enabled on our session. {@code getAudioSource()}
+     * still answers 9 - it reports the Java request.
      */
     public static final int CAPTURE_AUDIO_SOURCE = MediaRecorder.AudioSource.UNPROCESSED;
+    /**
+     * For a unit that refuses UNPROCESSED: measured imperfectly is better than not at all. The
+     * policy gives it AEC and NS, which the capture's owner switches off on its session where it may.
+     */
+    public static final int FALLBACK_AUDIO_SOURCE = MediaRecorder.AudioSource.VOICE_RECOGNITION;
     public static final int SAMPLE_RATE = 48000;
     public static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
     public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
@@ -330,8 +341,10 @@ public final class MicrophoneGuard {
     /**
      * Opens a capture the way this app records and measures - the Single Source of Truth (SSOT).
      *
-     * <p>Uses {@link #CAPTURE_AUDIO_SOURCE} (UNPROCESSED 9) at 48000 Hz mono PCM 16-bit.
-     * Guaranteed to obey {@link CallState#isActive()} to release the microphone during phone calls.
+     * <p>Asks for {@link #CAPTURE_AUDIO_SOURCE} (UNPROCESSED 9) at 48000 Hz mono PCM 16-bit, and for
+     * {@link #FALLBACK_AUDIO_SOURCE} when the unit refuses it; callers ask the returned record which
+     * one they got. Guaranteed to obey {@link CallState#isActive()} to release the microphone during
+     * phone calls.
      */
     public static AudioRecord openCaptureRecord() {
         return openCaptureRecord(0);
@@ -351,7 +364,13 @@ public final class MicrophoneGuard {
             return null;
         }
         int bufferBytes = Math.max(minBytes * 8, minBufferSize);
-        return tryOpenCapture(CAPTURE_AUDIO_SOURCE, bufferBytes);
+        AudioRecord record = tryOpenCapture(CAPTURE_AUDIO_SOURCE, bufferBytes);
+        if (record == null && !CallState.isActive()) {
+            Log.w(TAG, "UNPROCESSED refused, falling back to " + SystemDiagnostics.sourceName(FALLBACK_AUDIO_SOURCE)
+                    + " - the policy attaches AEC/NS to it");
+            record = tryOpenCapture(FALLBACK_AUDIO_SOURCE, bufferBytes);
+        }
+        return record;
     }
 
     public static AudioRecord tryOpenCapture(int source, int bufferBytes) {
@@ -389,9 +408,12 @@ public final class MicrophoneGuard {
             return null;
         }
 
-        Log.i(TAG, "capture opened with source=" + source
+        // The request, not the outcome: on QF the client library records UNPROCESSED as MIC, with
+        // the policy's mic pre-processing (see CAPTURE_AUDIO_SOURCE). What sits on the session is
+        // logged by whoever switches it off (MicProbe.suspendCapturePreprocessing).
+        Log.i(TAG, "capture opened, requested source=" + SystemDiagnostics.sourceName(source)
                 + (source == MediaRecorder.AudioSource.UNPROCESSED
-                   ? " (UNPROCESSED - raw input, no policy preprocessing)" : "")
+                   ? " (QF firmware records it as MIC, with the policy's mic AEC/NS)" : "")
                 + " rate=" + record.getSampleRate()
                 + " bufferBytes=" + bufferBytes);
         return record;

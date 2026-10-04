@@ -593,15 +593,16 @@ public final class SystemDiagnostics {
      * usually held by the voice assistant's hotword listener; one that opens but delivers silence
      * is a routing or amplifier problem; one that opens and delivers signal is fine.
      *
-     * <p>The cabin measurement opens {@code UNPROCESSED} - that is the whole point of it, since
-     * UNPROCESSED is absent from the preprocess list in {@code audio_effects.xml} and so carries
-     * no echo cancellation or noise suppression. This text used to say VOICE_RECOGNITION, which
-     * stopped being true when the measurement changed, and would have had a reader discount a
-     * perfectly good sweep as filtered.
+     * <p>The cabin measurement asks for {@code UNPROCESSED}, absent from the preprocess list in
+     * {@code audio_effects.xml}. On QF the firmware records it as MIC, which is on that list, so the
+     * measurement switches AEC/NS off on its own session; the effects lines say whether that took.
+     * This text used to say UNPROCESSED carried no pre-processing, which stopped being true on the
+     * wire (05.10.2026).
      */
     public static String microphoneProbe() {
         StringBuilder sb = new StringBuilder("MICROPHONE\n");
-        sb.append("  the cabin measurement uses UNPROCESSED (no policy AEC/NS); "
+        sb.append("  the cabin measurement asks for UNPROCESSED (QF records it as MIC, with AEC/NS "
+                + "that the measurement switches off); "
                 + "the rest are for comparison\n");
         for (int source : MIC_SOURCES) {
             sb.append(String.format(Locale.US, "  %-20s %s%n", sourceName(source), probeSource(source)));
@@ -868,7 +869,8 @@ public final class SystemDiagnostics {
         }
     }
 
-    private static String sourceName(int source) {
+    /** Capture source by name - the one spelling the logs and reports share. */
+    static String sourceName(int source) {
         switch (source) {
             case MediaRecorder.AudioSource.MIC: return "MIC";
             case MediaRecorder.AudioSource.CAMCORDER: return "CAMCORDER";

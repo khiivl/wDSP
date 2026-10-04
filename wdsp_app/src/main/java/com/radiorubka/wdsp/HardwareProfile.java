@@ -276,8 +276,9 @@ public final class HardwareProfile {
      * <p>The three effect flags are {@code isAvailable()} - what the platform can attach to a
      * capture, not what it attached to ours. Read as "AEC and NS were on during the sweep" it
      * says the measurement was filtered by the two effects built to remove exactly what a sweep
-     * is, which would discredit the whole report; the room measurement in fact opens
-     * UNPROCESSED, which the policy does not preprocess, and it prints the source it got.
+     * is, which would discredit the whole report; the room measurement asks for UNPROCESSED
+     * (on QF recorded as MIC, see {@link MicrophoneGuard#CAPTURE_AUDIO_SOURCE}), switches the
+     * effects off on its own session and prints what it found and what it got.
      */
     public static String describe() {
         return String.format(Locale.US,

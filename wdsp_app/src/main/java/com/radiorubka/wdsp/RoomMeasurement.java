@@ -1128,8 +1128,9 @@ public final class RoomMeasurement {
          *
          * <p>The header line above it lists the effects the PLATFORM offers, which is not the
          * same question and reads as though the sweep had been run through echo cancellation.
-         * Whether it was depends entirely on this: UNPROCESSED is absent from the preprocess
-         * list in {@code audio_effects.xml}, VOICE_RECOGNITION is in it.
+         * Whether it was depends on this and on the effects lines: on QF the firmware records
+         * UNPROCESSED as MIC (see {@link MicrophoneGuard#CAPTURE_AUDIO_SOURCE}), and MIC is in the
+         * preprocess list of {@code audio_effects.xml} - so the source alone does not answer it.
          */
         public String captureSource = "";
         /**
@@ -3130,15 +3131,20 @@ public final class RoomMeasurement {
      *   &lt;/preprocess&gt;
      * </pre>
      *
-     * {@code unprocessed} is absent from that list, and that is the whole reason to use it.
-     * Measured on the wire, {@code dumpsys media.audio_flinger} during a capture:
+     * {@code unprocessed} is absent from that list, and that was the whole reason to use it.
+     * ~~It gets no pre-processing~~ - 📻 05.10.2026: the QF client library turns 9 into MIC, and
+     * the session carried AEC {@code sprd cvs} and NS, both enabled (see
+     * {@link MicrophoneGuard#CAPTURE_AUDIO_SOURCE}). Measured earlier, {@code dumpsys
+     * media.audio_flinger} during a capture:
      *
      * <pre>
      *   VOICE_RECOGNITION   Noise Suppression   State 003 (ACTIVE)   Enabled=y
      *   UNPROCESSED         AEC + NS            State 000 (INIT)     Enabled=n
      * </pre>
      *
-     * 🪤 Suspending the effects from here does not help, and it is worth knowing why: our
+     * 🪤 ~~Suspending the effects from here does not help~~ - 📻 05.10.2026 it does: the AEC on
+     * our session listed two clients, audioserver and us, and after our {@code setEnabled(false)}
+     * read {@code Enabled=n}. The earlier finding, kept for its reasoning: our
      * {@code NoiseSuppressor.create(session)} hands back our own handle, and disabling it leaves
      * the one the policy attached still running. The app logged "NS was off, now off" while
      * AudioFlinger reported the chain ACTIVE — both true, about different objects.
@@ -3163,7 +3169,8 @@ public final class RoomMeasurement {
         if (record == null) return "";
         final int source = record.getAudioSource();
         if (source == MediaRecorder.AudioSource.UNPROCESSED) {
-            return "UNPROCESSED - the policy attaches no AEC/NS to this source";
+            return "UNPROCESSED requested - QF firmware records it as MIC, which the policy gives "
+                    + "AEC and NS; whether they stayed on is in the effects lines of this report";
         }
         if (source == MediaRecorder.AudioSource.VOICE_RECOGNITION) {
             return "VOICE_RECOGNITION - the policy DOES attach AEC and NS to this source, "

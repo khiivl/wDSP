@@ -25,9 +25,9 @@ import java.util.Locale;
  * (hardware channel 2), completely bypassing Android AudioFlinger PCM stream. Android's Visualizer
  * effect therefore receives only silence.
  *
- * <p>This capture uses {@link MediaRecorder.AudioSource#UNPROCESSED} at 48000 Hz 16-bit mono.
- * Hardware inspection on UIS7862 confirmed that the unprocessed stream carries the full acoustic
- * spectrum from sub-bass (20 Hz) to treble without high-pass cutoff or DSP voice suppression.
+ * <p>This capture asks for {@link MediaRecorder.AudioSource#UNPROCESSED} at 48000 Hz 16-bit mono
+ * through {@link MicrophoneGuard}; on QF the firmware records it as MIC with the policy's mic
+ * pre-processing - see "Effects" below for what this capture does about it.
  *
  * <p>Includes built-in adaptive AGC (Automatic Gain Control):
  * <ul>
@@ -491,8 +491,10 @@ public class RadioMicCapture {
 
         captureThread.setPriority(Thread.MAX_PRIORITY - 1);
         captureThread.start();
-        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz source="
-                + MicrophoneGuard.CAPTURE_AUDIO_SOURCE + " (Adaptive AGC enabled)");
+        AudioRecord opened = audioRecord;
+        Log.i(TAG, "RadioMicCapture started at " + SAMPLE_RATE + " Hz, requested source="
+                + (opened != null ? SystemDiagnostics.sourceName(opened.getAudioSource()) : "?")
+                + " (Adaptive AGC enabled)");
         return true;
     }
 
