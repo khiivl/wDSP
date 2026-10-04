@@ -1,41 +1,36 @@
 # HANDOFF — зріз wDSP (Пісочниця gemini_ui_dev)
 
-**04.10.2026, ~20:30, сесія Antigravity (Gemini).** Файл перезаписується; старі зрізи не переносяться.
+**04.10.2026, ~23:00, сесія Antigravity (Gemini).** Файл перезаписується; старі зрізи не переносяться.
 
 ## Де все стоїть
 
 - **Пісочниця:** `D:\gemini\wdsp_test`, гілка `gemini_ui_dev`.
 - **Останні коміти:**
+  - `60780d6`: `audio: централізація джерела мікрофона до SSOT UNPROCESSED`
+  - `6c3a6f8`: `docs: оновлено зріз HANDOFF після закриття дефекту мікрофона`
   - `bfe03c8`: `audio: звільнення мікрофона на час дзвінків за контрактом BitPerfect`
   - `ff904b2`: `docs: створено розгорнутий звіт UPSTREAM_MERGE_REPORT`
   - `45a3f74`: `res: повна синхронізація перекладів у 28 локалях`
-  - `c3a6074`: `docs: оновлено зріз HANDOFF після реорганізації RTA та Call`
-  - `c2259a2`: `ui: реалізовано 3-позиційний селектор RTA та відображення Call пресету`
-  - `4f11559`: `res: оновлено селектор RTA на 3 позиції та вилучено перемикач Loudness`
-  - `5d8038c`: `ui: реалізовано вимкнення GALA для окремих пресетів у глобальному режимі`
-- **Головний проект:** `C:\Users\kosty\AndroidStudioProjects\wDSP` — 🔴 НЕ ЧІПАЛИ, жодних змін!
-- **Тестовий стенд:** Android 11 Емулятор (`emulator-5554`) — збірка успішна, встановлено, верифіковано наживо.
+- **Головний проект:** `C:\Users\kosty\AndroidStudioProjects\wDSP` — 🔴 НЕ ЧІПАЛИ, жодних git операцій!
+- **Збірка:** `gradlew assembleDebug` успішна (70 tasks, BUILD SUCCESSFUL).
 
 ## ✅ Виконано
 
-1. **Контракт BitPerfect (пункт 7, P0 #1323) — безумовне звільнення мікрофона під час дзвінка**:
-   - `CallState`: додано читання системної властивості `sys.qf.call_state` поруч із `btcall_type` (із кешуванням рефлексії в `HardwareProfile`).
-   - `AudioSpectrumEngine`: у `setCallActive(true)` тепер негайно й безумовно зупиняється `RadioMicCapture` (`stop()` + повне вивільнення `AudioRecord`), скасовується опитування `micHoldTick`, блокується повторний старт захоплення до завершення виклику. Відновлення аналізу відкладено до повного очищення стану дзвінка.
-   - `McuService`: на системний бродкаст `com.qf.action.PHONE_CALL_START` синхронно викликається `setCallActive(true)`, перериваються акустичні виміри `RoomMeasurement.abort()` та вивільняється `MicrophoneGuard.releaseHold()`.
-   - `RadioMicCapture`, `MicrophoneGuard`, `RoomMeasurement`, `CaptureProbeService`, `SystemDiagnostics`: додано захисні бар'єри перевірки `CallState.isActive()`.
-   - Оновлено відомість у канонічному контракті `C:\APPS_Contacts\wDSP--BitPerfect\AUDIO_PATH_AND_MODULE_CONTRACT.md`.
-2. **Звіт для автора (Володимира Чебаненка)**:
-   - Створено докладний документ `UPSTREAM_MERGE_REPORT.md` з аргументацією власних рішень (GALA per-preset, сабвуфер 250 Гц, захист пресету Call, 3-позиційний RTA, кнопка підсвічування).
-3. **Повна синхронізація перекладів (30 мов)**:
-   - Всі 28 локалей (`values-*`) синхронізовано з вичиткою та XML-екрануванням.
-4. **Реорганізація спектроаналізатора та Loudness**:
-   - 3-позиційний перемикач `[ Вимкнено | Музика | Мікрофон ]` в обох темах (Мод і Авторська).
+1. **Централізація захоплення мікрофона в єдиний SSOT (завдання #1346/#1348, TODO 0а)**:
+   - `MicrophoneGuard`: визначено константи `CAPTURE_AUDIO_SOURCE` (`UNPROCESSED` = 9), `SAMPLE_RATE` (48000), `CHANNEL_CONFIG` (`CHANNEL_IN_MONO`), `AUDIO_FORMAT` (`ENCODING_PCM_16BIT`). Фабрику `openCaptureRecord(int minBufferSize)` та `tryOpenCapture` уніфіковано із підтримкою `AudioRecord.Builder` та захистом від дзвінків `CallState.isActive()`.
+   - `RadioMicCapture`: ліквідовано острівне створення `AudioRecord` та прихований fallback на `DEFAULT` (`MIC`). Захоплення делеговано до `MicrophoneGuard.openCaptureRecord(bufferSize)`.
+   - `LatencyProbe`: `MicWatcher` переведено на канонічну фабрику `MicrophoneGuard.openCaptureRecord()`.
+   - `McuService`: дефолтне джерело `PROBE_MIC` переведено на `MicrophoneGuard.CAPTURE_AUDIO_SOURCE`.
+   - `AudioSpectrumEngine`: придушено Toast під час телефонних викликів.
+2. **Контракт BitPerfect (пункт 7, P0 #1323) — звільнення мікрофона під час дзвінка**:
+   - `CallState`, `AudioSpectrumEngine`, `McuService`: верифіковано на стенді (`bfe03c8`), дзвінки на 1200 успішні, DSP живий, звук є.
 
 ## ⏳ У роботі
 
-- Відповідь на дошці Agent Bridge сесії BitPerfect (reply to #1323).
+- Координація та верифікація на стенді через Agent Bridge.
+- Очікування від сесії `0c0b138e` розкопки ремапінгу джерела 9 у прошивці QF (#1347/#1348).
 
 ## 📋 План дій
 
-1. Надіслати відповідь сесії BitPerfect через Agent Bridge.
-2. Продемонструвати результати власнику.
+1. Скоординувати сесію на дошці Agent Bridge щодо adb для тестування APK.
+2. Зняти вихідні параметри: `dumpsys media.audio_policy` та логи HAL.
