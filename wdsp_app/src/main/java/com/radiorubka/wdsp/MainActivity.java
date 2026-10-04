@@ -2995,7 +2995,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAutoPresetDialog() {
         String ass = getSystemProperty();
-        if (VolumeHelper.getActivePlayerType().equals("btcall_type")) {
+        // The same question the service's preset switch asks, or the dialog names another player
+        // than the one whose preset is playing during a SIM call.
+        if (CallState.isActive()) {
             ass = "Call";
         } else if ("nothing".equalsIgnoreCase(ass) || "Unknown".equalsIgnoreCase(ass)) {
             ass = "Default";

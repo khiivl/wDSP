@@ -387,16 +387,6 @@ public class McuService extends Service implements LocationListener {
     private boolean isBootStart = true;
     private String presetBeforeCall;
     /** Whether the previous checkPlayer poll saw a call - so its start is acted on once. Worker thread. */
-    /**
-     * Set by the vendor broadcast {@code com.qf.action.PHONE_CALL_START} and cleared by
-     * {@code _END}. Written on the main thread, read by the polling thread, hence volatile. It
-     * only ever <b>adds</b> to the type check below: a call announced by a broadcast is a call,
-     * and so is one seen as {@code btcall_type} without any broadcast.
-     */
-    private volatile boolean callAnnounced = false;
-    private volatile long callAnnouncedTimestamp = 0;
-    private static final long CALL_ANNOUNCED_WATCHDOG_MS = 6000;
-
     private boolean callSeenLastPoll;
 
     /**
@@ -547,9 +537,7 @@ public class McuService extends Service implements LocationListener {
                 // The type check stays as the fallback in the poll: a call that never announces
                 // itself is still caught, one tick late, exactly as before.
                 if ("com.qf.action.PHONE_CALL_START".equals(action)) {
-                    callAnnounced = true;
-                    callAnnouncedTimestamp = SystemClock.uptimeMillis();
-                    CallState.setCallAnnounced(true);
+                    CallState.announce(true);
                     AudioSpectrumEngine.getInstance().setCallActive(true);
                     RoomMeasurement.abort();
                     MicrophoneGuard.releaseHold();
@@ -558,9 +546,7 @@ public class McuService extends Service implements LocationListener {
                     return;
                 }
                 if ("com.qf.action.PHONE_CALL_END".equals(action)) {
-                    callAnnounced = false;
-                    callAnnouncedTimestamp = 0;
-                    CallState.setCallAnnounced(false);
+                    CallState.announce(false);
                     AudioSpectrumEngine.getInstance().setCallActive(false);
                     // Trigger checkPlayer immediately on worker thread to restore previous preset without poll lag
                     backgroundHandler.post(McuService.this::checkPlayer);
@@ -2061,21 +2047,7 @@ public class McuService extends Service implements LocationListener {
         if (statusBarManager != null) {
             statusBarManager.setAudioGating(channel, isMuted);
         }
-        // Watchdog: If callAnnounced was set by PHONE_CALL_START broadcast, but neither sys.qf.call_state
-        // nor btcall_type is active after CALL_ANNOUNCED_WATCHDOG_MS, the broadcast was orphaned (e.g.
-        // missed PHONE_CALL_END, dialer crash, or test command). Clear it automatically.
-        if (callAnnounced && !CallState.isCallType(activeType) && !CallState.isPhysicalCallActive()) {
-            long now = SystemClock.uptimeMillis();
-            if (callAnnouncedTimestamp == 0) {
-                callAnnouncedTimestamp = now;
-            } else if (now - callAnnouncedTimestamp > CALL_ANNOUNCED_WATCHDOG_MS) {
-                Log.w(TAG, "Watchdog: callAnnounced timed out (" + CALL_ANNOUNCED_WATCHDOG_MS
-                        + " ms) without active call state. Clearing callAnnounced.");
-                callAnnounced = false;
-                callAnnouncedTimestamp = 0;
-                CallState.setCallAnnounced(false);
-            }
-        }
+        CallState.expireOrphanedAnnouncement(activeType);
 
         // One reading of "is there a call" for this whole poll: the preset switch below and the
         // analyser pause here must never disagree about it.

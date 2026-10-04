@@ -1,5 +1,8 @@
 package com.radiorubka.wdsp;
 
+import android.os.SystemClock;
+import android.util.Log;
+
 /**
  * Whether a phone call is in progress. One predicate, used by everything that has to behave
  * differently during a call: the service preset switch, the spectrum analyser (paused & microphone released),
@@ -16,19 +19,51 @@ package com.radiorubka.wdsp;
  * 3) broadcast com.qf.action.PHONE_CALL_START / _END
  */
 public final class CallState {
+    private static final String TAG = "wDSP_CallState";
 
     private static final String CALL_TYPE = "btcall_type";
+    /**
+     * How long an announcement stands without the hardware confirming a call. Past it the broadcast
+     * is taken as orphaned (a missed PHONE_CALL_END, a dialer crash, a test command).
+     */
+    private static final long ANNOUNCED_WATCHDOG_MS = 6000;
+
+    /**
+     * Set by {@code com.qf.action.PHONE_CALL_START}, cleared by {@code _END} or the watchdog. Written
+     * on the main thread, read by the poll and the capture threads, hence volatile. It only ever
+     * adds to the hardware signs: an announced call is a call, and so is one seen without a broadcast.
+     */
     private static volatile boolean callAnnounced = false;
+    /** Uptime of the announcement, 0 when none stands. */
+    private static volatile long announcedAt = 0;
 
     private CallState() {
     }
 
-    public static void setCallAnnounced(boolean announced) {
-        callAnnounced = announced;
+    /** The vendor broadcast: PHONE_CALL_START ({@code true}) or PHONE_CALL_END ({@code false}). */
+    public static void announce(boolean start) {
+        announcedAt = start ? SystemClock.uptimeMillis() : 0;
+        callAnnounced = start;
     }
 
     public static boolean isCallAnnounced() {
         return callAnnounced;
+    }
+
+    /**
+     * Clears an announcement the hardware has not confirmed within {@link #ANNOUNCED_WATCHDOG_MS}.
+     * Called from the service poll with the volume type it already read this tick.
+     */
+    public static void expireOrphanedAnnouncement(String activeVolumeType) {
+        if (!callAnnounced || isCallType(activeVolumeType) || isPhysicalCallActive()) return;
+        long now = SystemClock.uptimeMillis();
+        if (announcedAt == 0) {
+            announcedAt = now;
+        } else if (now - announcedAt > ANNOUNCED_WATCHDOG_MS) {
+            Log.w(TAG, "Watchdog: callAnnounced timed out (" + ANNOUNCED_WATCHDOG_MS
+                    + " ms) without active call state. Clearing callAnnounced.");
+            announce(false);
+        }
     }
 
     /** The predicate itself, for a caller that has already read the active volume type this poll. */
