@@ -1649,9 +1649,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * The main curve's overlays, from the same functions the service sends with - so the picture
-     * is what the chip gets. "Show on main" (the author's 0.5) decides whether loudness's part -
-     * the EQ drive, the subwoofer's compensation, the bass shelf's share - is drawn; Ultra Bass is
-     * a real effect of its own and always is.
+     * is what the chip gets. Loudness's part - the EQ drive, the subwoofer's compensation, the bass
+     * shelf's share - is drawn whenever the preset's Loudness is on; the author's separate "show on
+     * main" switch is not kept (owner, 05.10.2026, .agents/DECISIONS.md). Ultra Bass is a real
+     * effect of its own and always is.
      */
     private void updateMainOverlays(int[] gs, float[] offs) {
         if (eqVisualizer == null || !isFullyInitialized || seekSubGain == null) return;
