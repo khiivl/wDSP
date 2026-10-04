@@ -628,12 +628,12 @@ public class SettingsActivity extends AppCompatActivity {
             TouchGlow.attach(btnUiStyleModern);
             btnUiStyleClassic.setOnClickListener(v -> {
                 ThemeManager.setUiStyle(this, ThemeManager.UI_STYLE_CLASSIC);
-                updateUiStyleButtons();
+                loadSettings();
                 applyTheme();
             });
             btnUiStyleModern.setOnClickListener(v -> {
                 ThemeManager.setUiStyle(this, ThemeManager.UI_STYLE_MODERN);
-                updateUiStyleButtons();
+                loadSettings();
                 applyTheme();
             });
         }

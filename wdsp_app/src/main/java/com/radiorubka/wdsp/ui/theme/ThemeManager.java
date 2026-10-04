@@ -54,6 +54,10 @@ public final class ThemeManager {
     public static final String PREF_WALLPAPER_NIGHT = "theme_wallpaper_night";
     public static final String PREF_SOLID_PREFIX = "theme_solid_enabled_";
     public static final String PREF_SOLID_COLOR_PREFIX = "theme_solid_color_";
+    public static final String PREF_CLASSIC_WALLPAPER_DAY = "theme_classic_wallpaper_day";
+    public static final String PREF_CLASSIC_WALLPAPER_NIGHT = "theme_classic_wallpaper_night";
+    public static final String PREF_CLASSIC_SOLID_PREFIX = "theme_classic_solid_enabled_";
+    public static final String PREF_CLASSIC_SOLID_COLOR_PREFIX = "theme_classic_solid_color_";
 
     // Авторська класична палітра з upstream master (khiivl / Volodymyr Chebanenko)
     public static final int CLASSIC_ACCENT_COLOR_NIGHT = 0xFF79BCBD;
@@ -325,35 +329,54 @@ public final class ThemeManager {
         return night ? Color.parseColor("#2A343D") : Color.parseColor("#B0BEC5");
     }
 
+    public static String wallpaperKey(Context ctx, boolean night) {
+        boolean classic = isClassic(ctx);
+        if (classic) {
+            return night ? PREF_CLASSIC_WALLPAPER_NIGHT : PREF_CLASSIC_WALLPAPER_DAY;
+        } else {
+            return night ? PREF_WALLPAPER_NIGHT : PREF_WALLPAPER_DAY;
+        }
+    }
+
+    public static String solidKey(Context ctx, boolean night) {
+        boolean classic = isClassic(ctx);
+        String prefix = classic ? PREF_CLASSIC_SOLID_PREFIX : PREF_SOLID_PREFIX;
+        return prefix + (night ? "night" : "day");
+    }
+
+    public static String solidColorKey(Context ctx, boolean night) {
+        boolean classic = isClassic(ctx);
+        String prefix = classic ? PREF_CLASSIC_SOLID_COLOR_PREFIX : PREF_SOLID_COLOR_PREFIX;
+        return prefix + (night ? "night" : "day");
+    }
+
     public static boolean isSolidWallpaper(Context ctx, boolean night) {
-        String key = PREF_SOLID_PREFIX + (night ? "night" : "day");
-        return prefs(ctx).getBoolean(key, false);
+        return prefs(ctx).getBoolean(solidKey(ctx, night), false);
     }
 
     public static void setSolidWallpaper(Context ctx, boolean night, boolean solid) {
-        String key = PREF_SOLID_PREFIX + (night ? "night" : "day");
-        prefs(ctx).edit().putBoolean(key, solid).apply();
+        prefs(ctx).edit().putBoolean(solidKey(ctx, night), solid).apply();
         clearFrostedCache();
     }
 
     public static int getSolidWallpaperColor(Context ctx, boolean night) {
-        String key = PREF_SOLID_COLOR_PREFIX + (night ? "night" : "day");
-        int def = night ? Color.parseColor("#101418") : Color.parseColor("#e0e4e8");
-        return prefs(ctx).getInt(key, def);
+        int def = isClassic(ctx)
+                ? (night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY)
+                : (night ? Color.parseColor("#101418") : Color.parseColor("#e0e4e8"));
+        return prefs(ctx).getInt(solidColorKey(ctx, night), def);
     }
 
     public static void setSolidWallpaperColor(Context ctx, boolean night, int color) {
-        String key = PREF_SOLID_COLOR_PREFIX + (night ? "night" : "day");
-        prefs(ctx).edit().putInt(key, color).apply();
+        prefs(ctx).edit().putInt(solidColorKey(ctx, night), color).apply();
         clearFrostedCache();
     }
 
     public static String getWallpaperUri(Context ctx, boolean night) {
-        return prefs(ctx).getString(night ? PREF_WALLPAPER_NIGHT : PREF_WALLPAPER_DAY, null);
+        return prefs(ctx).getString(wallpaperKey(ctx, night), null);
     }
 
     public static void setWallpaperUri(Context ctx, boolean night, String uri) {
-        prefs(ctx).edit().putString(night ? PREF_WALLPAPER_NIGHT : PREF_WALLPAPER_DAY, uri).apply();
+        prefs(ctx).edit().putString(wallpaperKey(ctx, night), uri).apply();
         clearFrostedCache();
     }
 
@@ -390,6 +413,22 @@ public final class ThemeManager {
     }
 
     public static Drawable wallpaperBackground(Context ctx, boolean night) {
+        if (isSolidWallpaper(ctx, night)) {
+            return new ColorDrawable(getSolidWallpaperColor(ctx, night));
+        }
+
+        String uriStr = getWallpaperUri(ctx, night);
+        if (uriStr != null) {
+            Bitmap bmp = loadWallpaper(ctx, uriStr);
+            if (bmp != null) {
+                BitmapDrawable img = new BitmapDrawable(ctx.getResources(), bmp);
+                int scrim = isClassic(ctx)
+                        ? (night ? 0x66000000 : 0x40FFFFFF)
+                        : ((background(night) & 0x00FFFFFF) | 0x8C000000);
+                return new LayerDrawable(new Drawable[]{img, new ColorDrawable(scrim)});
+            }
+        }
+
         if (isClassic(ctx)) {
             try {
                 Drawable d = getThemedDrawable(ctx, night, R.drawable.app_background);
@@ -399,31 +438,13 @@ public final class ThemeManager {
                 return new ColorDrawable(night ? CLASSIC_BACKGROUND_NIGHT : CLASSIC_BACKGROUND_DAY);
             }
         }
-        if (isSolidWallpaper(ctx, night)) {
-            return new ColorDrawable(getSolidWallpaperColor(ctx, night));
-        }
 
-        String uriStr = getWallpaperUri(ctx, night);
-        if (uriStr == null) {
-            int resId = night ? R.drawable.bg_night : R.drawable.bg_day;
-            try {
-                return ContextCompat.getDrawable(ctx, resId);
-            } catch (Exception e) {
-                return new ColorDrawable(background(night));
-            }
+        int resId = night ? R.drawable.bg_night : R.drawable.bg_day;
+        try {
+            return ContextCompat.getDrawable(ctx, resId);
+        } catch (Exception e) {
+            return new ColorDrawable(background(night));
         }
-        Bitmap bmp = loadWallpaper(ctx, uriStr);
-        if (bmp == null) {
-            int resId = night ? R.drawable.bg_night : R.drawable.bg_day;
-            try {
-                return ContextCompat.getDrawable(ctx, resId);
-            } catch (Exception e) {
-                return new ColorDrawable(background(night));
-            }
-        }
-        BitmapDrawable img = new BitmapDrawable(ctx.getResources(), bmp);
-        int scrim = (background(night) & 0x00FFFFFF) | 0x8C000000;
-        return new LayerDrawable(new Drawable[]{img, new ColorDrawable(scrim)});
     }
 
     public static synchronized Bitmap getWallpaperBitmap(Context ctx, boolean night) {
@@ -435,12 +456,21 @@ public final class ThemeManager {
             Bitmap bmp = loadWallpaper(ctx, uriStr);
             if (bmp != null) return bmp;
         }
-        String resKey = night ? "default_res_night" : "default_res_day";
+        String resKey = (isClassic(ctx) ? "classic_" : "modern_") + (night ? "res_night" : "res_day");
         if (resKey.equals(cachedWallpaperKey) && cachedWallpaper != null && !cachedWallpaper.isRecycled()) {
             return cachedWallpaper;
         }
         try {
-            int resId = night ? R.drawable.bg_night : R.drawable.bg_day;
+            int resId = isClassic(ctx) ? R.drawable.app_background : (night ? R.drawable.bg_night : R.drawable.bg_day);
+            Drawable d = isClassic(ctx) ? getThemedDrawable(ctx, night, resId) : ContextCompat.getDrawable(ctx, resId);
+            if (d instanceof BitmapDrawable) {
+                Bitmap bmp = ((BitmapDrawable) d).getBitmap();
+                if (bmp != null) {
+                    cachedWallpaperKey = resKey;
+                    cachedWallpaper = bmp;
+                    return bmp;
+                }
+            }
             BitmapFactory.Options opts = new BitmapFactory.Options();
             opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
             Bitmap bmp = BitmapFactory.decodeResource(ctx.getResources(), resId, opts);
