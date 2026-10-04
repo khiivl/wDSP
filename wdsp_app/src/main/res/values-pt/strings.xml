@@ -550,4 +550,8 @@
     <string name="settings_ui_style_desc">Alternar entre o estilo clássico Material 3 e o estilo moderno wDSP Mod</string>
     <string name="settings_ui_style_classic">Clássico (Original)</string>
     <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Desativar no perfil</string>
+    <string name="button_backlight_label">Retroiluminação dos botões nas cores wDSP</string>
+    <string name="button_backlight_desc">Enquanto o wDSP estiver no ecrã, os botões iluminam-se na cor de destaque do tema atual. Ao sair do wDSP, regressa a sua cor original.</string>
 </resources>

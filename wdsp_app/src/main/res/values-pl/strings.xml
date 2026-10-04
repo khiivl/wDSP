@@ -549,4 +549,7 @@
     <string name="settings_ui_style_desc">Przełącz między klasycznym stylem Material 3 a nowoczesnym wDSP Mod</string>
     <string name="settings_ui_style_classic">Klasyczny (Oryginał)</string>
     <string name="settings_ui_style_modern">Nowoczesny (wDSP Mod)</string>
+
+    <string name="button_backlight_label">Podświetlenie przycisków w kolorach wDSP</string>
+    <string name="button_backlight_desc">Gdy wDSP jest na ekranie, przyciski świecą kolorem akcentu bieżącego motywu. Po opuszczeniu wDSP przywracany jest ich pierwotny kolor.</string>
 </resources>

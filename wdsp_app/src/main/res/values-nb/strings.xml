@@ -552,4 +552,8 @@ Global standard: %1$s</string>
     <string name="settings_ui_style_desc">Bytt mellom opprinnelig klassisk Material 3 og moderne wDSP Mod-tema</string>
     <string name="settings_ui_style_classic">Klassisk (Original)</string>
     <string name="settings_ui_style_modern">Moderne (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Deaktiver for profil</string>
+    <string name="button_backlight_label">Knappebelysning i wDSP-farger</string>
+    <string name="button_backlight_desc">Mens wDSP er på skjermen, lyser knappene i aksentfargen til det gjeldende temaet. Når wDSP forlates, gjenopprettes den opprinnelige fargen.</string>
 </resources>

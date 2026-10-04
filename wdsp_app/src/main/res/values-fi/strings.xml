@@ -552,4 +552,8 @@ Yleinen oletus: %1$s</string>
     <string name="settings_ui_style_desc">Vaihda klassisen Material 3 ja modernin wDSP Mod -teeman välillä</string>
     <string name="settings_ui_style_classic">Klassinen (Alkuperäinen)</string>
     <string name="settings_ui_style_modern">Moderni (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Pois profiilista</string>
+    <string name="button_backlight_label">Painikkeiden taustavalo wDSP-väreissä</string>
+    <string name="button_backlight_desc">Kun wDSP on näytöllä, painikkeet hehkuvat valitun teeman korostusvärissä. Kun wDSP suljetaan, alkuperäinen väri palautuu.</string>
 </resources>

@@ -552,4 +552,8 @@ Globální výchozí: %1$s</string>
     <string name="settings_ui_style_desc">Přepínání mezi klasickým stylem Material 3 a moderním wDSP Mod</string>
     <string name="settings_ui_style_classic">Klasický (Originál)</string>
     <string name="settings_ui_style_modern">Moderní (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Vypnout pro preset</string>
+    <string name="button_backlight_label">Podsvícení tlačítek v barvách wDSP</string>
+    <string name="button_backlight_desc">Zatímco je wDSP na obrazovce, tlačítka svítí v akcentní barvě denního nebo nočního motivu. Po zavření wDSP se vrátí jejich původní barva.</string>
 </resources>

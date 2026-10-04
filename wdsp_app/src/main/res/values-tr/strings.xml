@@ -552,4 +552,8 @@ Genel Varsayılan: %1$s</string>
     <string name="settings_ui_style_desc">Klasik Material 3 ile Modern wDSP Mod teması arasında geçiş yapın</string>
     <string name="settings_ui_style_classic">Klasik (Orijinal)</string>
     <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Bu profil için kapat</string>
+    <string name="button_backlight_label">wDSP renklerinde tuş aydınlatması</string>
+    <string name="button_backlight_desc">wDSP ekrandayken, tuşlar geçerli temanın vurgu renginde aydınlatılır. wDSP kapatıldığında tuşlar orijinal rengine döner.</string>
 </resources>

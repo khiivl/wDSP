@@ -552,4 +552,8 @@ Bendras numatytasis: %1$s</string>
     <string name="settings_ui_style_desc">Perjungti tarp klasikinio Material 3 ir modernaus wDSP Mod stiliaus</string>
     <string name="settings_ui_style_classic">Klasikinis (Originalas)</string>
     <string name="settings_ui_style_modern">Modernus (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Išjungti profiliui</string>
+    <string name="button_backlight_label">Mygtukų apšvietimas wDSP spalvomis</string>
+    <string name="button_backlight_desc">Kol wDSP rodomas ekrane, mygtukai šviečia dabartinės temos akcento spalva. Išėjus iš wDSP, grįžta jų pradinė spalva.</string>
 </resources>

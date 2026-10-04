@@ -552,5 +552,9 @@ Globális alapértelmezett: %1$s</string>
     <string name="settings_ui_style_desc">Váltás a klasszikus Material 3 és a modern wDSP Mod téma között</string>
     <string name="settings_ui_style_classic">Klasszikus (Eredeti)</string>
     <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Kikapcs. a profilnál</string>
+    <string name="button_backlight_label">Gombok háttérvilágítása wDSP színekben</string>
+    <string name="button_backlight_desc">Amíg a wDSP látható, a gombok az aktuális téma kiemelő színében világítanak. Kilépéskor visszaáll az eredeti színük.</string>
 </resources>
 

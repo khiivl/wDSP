@@ -552,5 +552,9 @@ Globalno zadano: %1$s</string>
     <string name="settings_ui_style_desc">Prebacivanje između klasičnog stila Material 3 i modernog wDSP Mod</string>
     <string name="settings_ui_style_classic">Klasično (Izvorno)</string>
     <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Isključi za profil</string>
+    <string name="button_backlight_label">Osvjetljenje tipki u bojama wDSP-a</string>
+    <string name="button_backlight_desc">Dok je wDSP na zaslonu, tipke svijetle u naglašenoj boji trenutne teme. Kada izađete iz wDSP-a, vraća se njihova izvorna boja.</string>
 </resources>
 

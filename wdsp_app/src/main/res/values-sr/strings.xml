@@ -552,4 +552,8 @@
     <string name="settings_ui_style_desc">Пребацивање између класичног стила Material 3 и модерног wDSP Mod</string>
     <string name="settings_ui_style_classic">Класично (Оригинал)</string>
     <string name="settings_ui_style_modern">Модерно (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Искључи за профил</string>
+    <string name="button_backlight_label">Осветљење тастера у бојама wDSP-а</string>
+    <string name="button_backlight_desc">Док је wDSP на екрану, тастери светле у акцентној боји тренутне теме. Када напустите wDSP, враћа се њихова оригинална боја.</string>
 </resources>

@@ -552,4 +552,8 @@ Predefinito globale: %1$s</string>
     <string name="settings_ui_style_desc">Passa dallo stile classico Material 3 allo stile moderno wDSP Mod</string>
     <string name="settings_ui_style_classic">Classico (Originale)</string>
     <string name="settings_ui_style_modern">Moderno (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Disattiva per profilo</string>
+    <string name="button_backlight_label">Retroilluminazione tasti nei colori wDSP</string>
+    <string name="button_backlight_desc">Mentre wDSP è sullo schermo, i tasti si illuminano con il colore di accento del tema attuale. Uscendo da wDSP, torna il loro colore originale.</string>
 </resources>

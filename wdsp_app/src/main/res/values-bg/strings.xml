@@ -552,4 +552,8 @@
     <string name="settings_ui_style_desc">Превключване между класическия стил на автора (Material 3) и модерния стил wDSP Mod</string>
     <string name="settings_ui_style_classic">Класически (Оригинал)</string>
     <string name="settings_ui_style_modern">Модерен (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Изкл. за този профил</string>
+    <string name="button_backlight_label">Подсветка на бутоните в цветовете на wDSP</string>
+    <string name="button_backlight_desc">Докато wDSP е на екрана, бутоните светят в акцентния цвят на дневната или нощната тема. Когато приложението се скрие, се връща оригиналният цвят.</string>
 </resources>

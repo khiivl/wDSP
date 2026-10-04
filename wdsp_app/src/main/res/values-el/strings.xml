@@ -552,4 +552,8 @@
     <string name="settings_ui_style_desc">Εναλλαγή μεταξύ του κλασικού Material 3 και του σύγχρονου θέματος wDSP Mod</string>
     <string name="settings_ui_style_classic">Κλασικό (Πρωτότυπο)</string>
     <string name="settings_ui_style_modern">Μοντέρνο (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Απενεργ. στο προφίλ</string>
+    <string name="button_backlight_label">Φωτισμός πλήκτρων σε χρώματα wDSP</string>
+    <string name="button_backlight_desc">Όσο το wDSP είναι στην οθόνη, τα πλήκτρα φωτίζονται στο χρώμα του τρέχοντος θέματος. Όταν το wDSP κλείσει, επιστρέφει το αρχικό τους χρώμα.</string>
 </resources>

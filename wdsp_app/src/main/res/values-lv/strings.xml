@@ -552,4 +552,8 @@ Globāli noklusējums: %1$s</string>
     <string name="settings_ui_style_desc">Pārslēgties starp klasisko Material 3 un moderno wDSP Mod tēmu</string>
     <string name="settings_ui_style_classic">Klasiskais (Oriģināls)</string>
     <string name="settings_ui_style_modern">Moderns (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Izslēgt šim profilam</string>
+    <string name="button_backlight_label">Pogu apgaismojums wDSP krāsās</string>
+    <string name="button_backlight_desc">Kamēr wDSP ir ekrānā, pogas izgaismojas pašreizējās tēmas akcenta krāsā. Aizejot no wDSP, atgriežas to sākotnējā krāsa.</string>
 </resources>

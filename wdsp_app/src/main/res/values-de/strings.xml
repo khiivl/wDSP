@@ -549,4 +549,7 @@
     <string name="settings_ui_style_desc">Wechseln Sie zwischen dem klassischen Material 3 und dem modernen wDSP Mod-Design</string>
     <string name="settings_ui_style_classic">Klassisch (Original)</string>
     <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="button_backlight_label">Tastenbeleuchtung in wDSP-Farben</string>
+    <string name="button_backlight_desc">Solange wDSP auf dem Bildschirm ist, leuchten die Tasten in der Akzentfarbe des aktuellen Designs. Wird wDSP verlassen, kehrt die Originalfarbe zurück.</string>
 </resources>

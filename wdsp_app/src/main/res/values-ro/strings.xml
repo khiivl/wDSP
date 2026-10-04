@@ -552,4 +552,8 @@ Implicit global: %1$s</string>
     <string name="settings_ui_style_desc">Comutați între stilul clasic Material 3 și stilul modern wDSP Mod</string>
     <string name="settings_ui_style_classic">Clasic (Original)</string>
     <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Dezactivat în profil</string>
+    <string name="button_backlight_label">Iluminare butoane în culorile wDSP</string>
+    <string name="button_backlight_desc">Cât timp wDSP este pe ecran, butoanele luminează în culoarea de accent a temei curente. La părăsirea wDSP, revine culoarea lor originală.</string>
 </resources>

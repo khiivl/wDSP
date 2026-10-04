@@ -552,4 +552,8 @@
     <string name="settings_ui_style_desc">Lülitu klassikalise Material 3 ja kaasaegse wDSP Mod vahel</string>
     <string name="settings_ui_style_classic">Klassikaline (Originaal)</string>
     <string name="settings_ui_style_modern">Kaasaegne (wDSP Mod)</string>
+
+    <string name="gala_disable_for_preset">Keela sellel profiilil</string>
+    <string name="button_backlight_label">Nuppude taustavalgus wDSP värvides</string>
+    <string name="button_backlight_desc">Kui wDSP on ekraanil, helendavad nupud praeguse teema aktsentvärvis. Rakendusest lahkudes taastub nuppude esialgne värv.</string>
 </resources>

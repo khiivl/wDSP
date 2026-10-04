@@ -549,4 +549,7 @@
     <string name="settings_ui_style_desc">Växla mellan ursprunglig klassisk Material 3 och modernt wDSP Mod-tema</string>
     <string name="settings_ui_style_classic">Klassisk (Original)</string>
     <string name="settings_ui_style_modern">Modern (wDSP Mod)</string>
+
+    <string name="button_backlight_label">Knappbelysning i wDSP-färger</string>
+    <string name="button_backlight_desc">När wDSP visas på skärmen lyser knapparna i accentfärgen för det aktuella temat. När wDSP lämnas återgår de till sin ursprungliga färg.</string>
 </resources>
