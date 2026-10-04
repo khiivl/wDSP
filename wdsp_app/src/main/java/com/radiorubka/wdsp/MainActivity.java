@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     private AutoCompleteTextView spinnerPresets;
     private EqVisualizerView eqVisualizer;
     private SpectrumAnalyzerView spectrumAnalyzer;
-    private TextView btnSpectrumCalc, btnSpectrumMic;
+    private TextView btnSpectrumOff, btnSpectrumCalc, btnSpectrumMic;
     private static boolean sPromptedMicCalibration = false;
 
     private Slider seekSubGain;
@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
 
     // F-M Curve
     private MaterialButton switchFmEnable, switchFatigueEnable, switchFmSubComp, switchUltraBass;
-    private MaterialButton switchShowLoudnessMain;
     /** Pair locks, app-wide (the author's 0.5): delays keep their difference, the bass stage copies. */
     private MaterialButton switchSyncDelayFront, switchSyncDelayRear, switchSyncBass;
     private final java.util.Map<Slider, Float> lastSliderValue = new java.util.HashMap<>();
@@ -904,7 +903,6 @@ public class MainActivity extends AppCompatActivity {
             if (switchFatigueEnable == null) switchFatigueEnable = findViewById(R.id.switch_fatigue_enable);
             if (switchFmSubComp == null) switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
             if (switchUltraBass == null) switchUltraBass = findViewById(R.id.switch_ultra_bass);
-            if (switchShowLoudnessMain == null) switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
             if (switchSyncDelayFront == null) switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
             if (switchSyncDelayRear == null) switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
             if (switchSyncBass == null) switchSyncBass = findViewById(R.id.switch_sync_bass);
@@ -920,7 +918,6 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchFatigueEnable);
             updateToggleStyle(switchFmSubComp);
             updateToggleStyle(switchUltraBass);
-            updateToggleStyle(switchShowLoudnessMain);
             updateToggleStyle(switchSyncDelayFront);
             updateToggleStyle(switchSyncDelayRear);
             updateToggleStyle(switchSyncBass);
@@ -1109,6 +1106,11 @@ public class MainActivity extends AppCompatActivity {
     // --- Spectrum analyzer (pre-EQ, visual-only; see SpectrumAnalyzerView javadoc) ---
     private void checkAndStartSpectrumAnalyzer() {
         if (spectrumAnalyzer == null) return;
+        String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
+        if (AudioSpectrumEngine.SPECTRUM_MODE_OFF.equals(mode)) {
+            spectrumAnalyzer.stop();
+            return;
+        }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             spectrumAnalyzer.start();
         } else {
@@ -1117,15 +1119,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSpectrumModeToggle() {
+        btnSpectrumOff = findViewById(R.id.btn_spectrum_off);
         btnSpectrumCalc = findViewById(R.id.btn_spectrum_calc);
         btnSpectrumMic = findViewById(R.id.btn_spectrum_mic);
-        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        if (btnSpectrumOff == null || btnSpectrumCalc == null || btnSpectrumMic == null) return;
 
+        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumOff);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumCalc);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(btnSpectrumMic);
 
+        btnSpectrumOff.setOnClickListener(v -> {
+            AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_OFF);
+            if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+            updateSpectrumModeUi();
+        });
+
         btnSpectrumCalc.setOnClickListener(v -> {
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_CALC);
+            checkAndStartSpectrumAnalyzer();
             updateSpectrumModeUi();
         });
 
@@ -1135,6 +1146,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             AudioSpectrumEngine.getInstance().setSpectrumMode(AudioSpectrumEngine.SPECTRUM_MODE_MIC);
+            checkAndStartSpectrumAnalyzer();
             updateSpectrumModeUi();
             if (!RoomMeasurement.hasMicCompensation(this) && !sPromptedMicCalibration) {
                 sPromptedMicCalibration = true;
@@ -1151,7 +1163,7 @@ public class MainActivity extends AppCompatActivity {
             toggleLayout.setVisibility(View.VISIBLE);
         }
 
-        if (btnSpectrumCalc == null || btnSpectrumMic == null) return;
+        if (btnSpectrumOff == null || btnSpectrumCalc == null || btnSpectrumMic == null) return;
         boolean isNight = ThemeManager.isNight(this);
         int accent = ThemeManager.accent(this, isNight);
         int border = ThemeManager.panelBorder(this, isNight);
@@ -1160,16 +1172,19 @@ public class MainActivity extends AppCompatActivity {
         int substrate = ThemeManager.dockSubstrateColor(this, isNight);
 
         String mode = AudioSpectrumEngine.getInstance().getSpectrumMode();
+        boolean isOff = AudioSpectrumEngine.SPECTRUM_MODE_OFF.equals(mode);
         boolean isMic = AudioSpectrumEngine.SPECTRUM_MODE_MIC.equals(mode)
                 && !AudioSpectrumEngine.getInstance().isMicrophoneUnavailable();
+        boolean isCalc = !isOff && !isMic;
 
-        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, !isMic, isNight, 10f, accent, border));
-        int fgCalc = !isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
-        btnSpectrumCalc.setTextColor(fgCalc);
+        btnSpectrumOff.setBackground(ThemeManager.pillDrawable(this, isOff, isNight, 10f, accent, border));
+        btnSpectrumOff.setTextColor(isOff ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
+
+        btnSpectrumCalc.setBackground(ThemeManager.pillDrawable(this, isCalc, isNight, 10f, accent, border));
+        btnSpectrumCalc.setTextColor(isCalc ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
 
         btnSpectrumMic.setBackground(ThemeManager.pillDrawable(this, isMic, isNight, 10f, accent, border));
-        int fgMic = isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate);
-        btnSpectrumMic.setTextColor(fgMic);
+        btnSpectrumMic.setTextColor(isMic ? onAccentColor : ThemeManager.contrastText(textPrimary, substrate));
     }
 
     private void showMicCalibrationInviteDialog() {
@@ -1371,7 +1386,6 @@ public class MainActivity extends AppCompatActivity {
         seekFmStrength = findViewById(R.id.seek_fm_strength);
         tvFmStrengthVal = findViewById(R.id.tv_fm_strength_val);
         switchUltraBass = findViewById(R.id.switch_ultra_bass);
-        switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
         switchSyncDelayFront = findViewById(R.id.switch_sync_delay_front);
         switchSyncDelayRear = findViewById(R.id.switch_sync_delay_rear);
         switchSyncBass = findViewById(R.id.switch_sync_bass);
@@ -1394,7 +1408,7 @@ public class MainActivity extends AppCompatActivity {
         switchGalaGlobal = findViewById(R.id.switch_gala_global);
         switchGalaDisableForPreset = findViewById(R.id.switch_gala_disable_for_preset);
 
-        // Tactile touch attachment for all 8 toggles (shift down-right & shadow depression)
+        // Tactile touch attachment for toggles (shift down-right & shadow depression)
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLoud);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchPreciseEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchLegacyEnable);
@@ -1402,7 +1416,6 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFatigueEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchFmSubComp);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchUltraBass);
-        com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchShowLoudnessMain);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayFront);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncDelayRear);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchSyncBass);
@@ -1413,7 +1426,7 @@ public class MainActivity extends AppCompatActivity {
         // 1024x600 and cut them on a 640dp split screen. The whole row shrinks instead, captions
         // included (owner, 02.10.2026: «навчи RowFit стискати ряд без повзунка»).
         com.radiorubka.wdsp.ui.RowFit.attach(findViewById(R.id.layout_fm_toggles), null, 0,
-                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp, switchShowLoudnessMain,
+                switchFmEnable, switchLoud, switchFatigueEnable, switchFmSubComp,
                 switchUltraBass);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaEnable);
         com.radiorubka.wdsp.ui.theme.TouchGlow.attach(switchGalaGlobal);
@@ -1630,11 +1643,8 @@ public class MainActivity extends AppCompatActivity {
         engine.setFmOffsets(offs);
     }
 
-    /** App-wide, not per preset: whether the main EQ curve shows what loudness is doing (author's 0.5). */
-    private static final String PREF_SHOW_LOUDNESS_ON_MAIN = "show_loudness_on_main";
-
     private boolean showLoudnessOnMain() {
-        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, false);
+        return switchFmEnable != null && switchFmEnable.isChecked();
     }
 
     /**
@@ -2058,15 +2068,6 @@ public class MainActivity extends AppCompatActivity {
                 updateFmVisualizer();
             }
         });
-        // App-wide, not per preset (the author's 0.5): a display choice for the main curve only.
-        switchShowLoudnessMain.setChecked(showLoudnessOnMain());
-        updateToggleStyle(switchShowLoudnessMain);
-        switchShowLoudnessMain.addOnCheckedChangeListener((bv, checked) -> {
-            updateToggleStyle(bv);
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                    .putBoolean(PREF_SHOW_LOUDNESS_ON_MAIN, checked).apply();
-            updateVisualizer();
-        });
         updateToggleStyle(switchUltraBass);
         switchUltraBass.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
@@ -2341,6 +2342,11 @@ public class MainActivity extends AppCompatActivity {
             savePreset(defaultPreset);
         }
 
+        if (!presetNames.contains(CallPreset.NAME)) {
+            presetNames.add(CallPreset.NAME);
+        }
+        Collections.sort(presetNames);
+
         // Use themed QFRadio-styled layout for preset items
         presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
         spinnerPresets.setAdapter(presetAdapter);
@@ -2363,10 +2369,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureCallPresetExists() {
-        if (!presetNames.contains("Call")) {
-            presetNames.add("Call");
+        if (!presetNames.contains(CallPreset.NAME)) {
+            presetNames.add(CallPreset.NAME);
             Collections.sort(presetNames);
-            presetAdapter.notifyDataSetChanged();
+            presetAdapter = new ThemeManager.ThemedDropdownAdapter<>(this, presetNames);
+            spinnerPresets.setAdapter(presetAdapter);
         }
     }
 
@@ -2860,7 +2867,8 @@ public class MainActivity extends AppCompatActivity {
         for (int id : new int[]{R.id.btn_minus, R.id.btn_plus, R.id.btn_center,
                 R.id.btn_pwr_vol_minus, R.id.btn_pwr_vol_plus,
                 R.id.btn_fader_lr_minus, R.id.btn_fader_lr_plus,
-                R.id.btn_fader_fr_minus, R.id.btn_fader_fr_plus}) {
+                R.id.btn_fader_fr_minus, R.id.btn_fader_fr_plus,
+                R.id.btn_rename_preset, R.id.btn_delete_preset}) {
             controls.add(findViewById(id));
         }
         if (!galaGlobalMode) {
@@ -3326,7 +3334,11 @@ public class MainActivity extends AppCompatActivity {
         seekSimulateSpeed.addOnChangeListener(galal);
     }
 
-    private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
+    private void savePresetList() {
+        Set<String> toSave = new HashSet<>(presetNames);
+        toSave.remove(CallPreset.NAME);
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, toSave).apply();
+    }
     /**
      * Persists whatever the user has just changed on screen.
      *

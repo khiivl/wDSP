@@ -208,6 +208,7 @@ public class AudioSpectrumEngine {
     public static final String PREF_RANGE_DB = "spec_range_db";
     public static final String PREF_RADIO_MIC_VISUALIZER = "pref_radio_mic_visualizer";
     public static final String PREF_SPECTRUM_MODE = "pref_spectrum_mode";
+    public static final String SPECTRUM_MODE_OFF = "off";
     public static final String SPECTRUM_MODE_CALC = "calc";
     public static final String SPECTRUM_MODE_MIC = "mic";
 
