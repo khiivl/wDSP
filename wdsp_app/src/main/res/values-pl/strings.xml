@@ -28,8 +28,8 @@
     <string name="lbl_correction_strength">Siła korekcji:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Pokaż na głównym</string>
-    <string name="sync_delay_front">Przesuwaj przednie razem</string>
-    <string name="sync_delay_rear">Przesuwaj tylne razem</string>
+    <string name="sync_delay_front">Przednie razem</string>
+    <string name="sync_delay_rear">Tylne razem</string>
     <string name="sync_bass_fr">Jak z przodu</string>
     <string name="hint_sync_delay_front">Przedni lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>
     <string name="hint_sync_delay_rear">Tylny lewy i prawy poruszają się teraz razem, różnica między nimi jest zachowana.</string>

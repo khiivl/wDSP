@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Intensità correzione:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Mostra nella principale</string>
-    <string name="sync_delay_front">Muovi anteriori insieme</string>
-    <string name="sync_delay_rear">Muovi posteriori insieme</string>
+    <string name="sync_delay_front">Anteriori insieme</string>
+    <string name="sync_delay_rear">Posteriori insieme</string>
     <string name="sync_bass_fr">Come davanti</string>
     <string name="hint_sync_delay_front">Anteriore sinistro e destro ora si muovono insieme; la differenza tra loro viene mantenuta.</string>
     <string name="hint_sync_delay_rear">Posteriore sinistro e destro ora si muovono insieme; la differenza tra loro viene mantenuta.</string>

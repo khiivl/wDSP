@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Sila korekcie:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Zobraziť na hlavnej</string>
-    <string name="sync_delay_front">Predné posúvať spolu</string>
-    <string name="sync_delay_rear">Zadné posúvať spolu</string>
+    <string name="sync_delay_front">Predné spolu</string>
+    <string name="sync_delay_rear">Zadné spolu</string>
     <string name="sync_bass_fr">Ako vpredu</string>
     <string name="hint_sync_delay_front">Predný ľavý a pravý sa teraz posúvajú spolu, rozdiel medzi nimi zostáva zachovaný.</string>
     <string name="hint_sync_delay_rear">Zadný ľavý a pravý sa teraz posúvajú spolu, rozdiel medzi nimi zostáva zachovaný.</string>

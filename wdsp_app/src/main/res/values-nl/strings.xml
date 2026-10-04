@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Correctiesterkte:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Op hoofdscherm tonen</string>
-    <string name="sync_delay_front">Voorzijde samen bewegen</string>
-    <string name="sync_delay_rear">Achterzijde samen bewegen</string>
-    <string name="sync_bass_fr">Als voorzijde</string>
+    <string name="sync_delay_front">Voor samen</string>
+    <string name="sync_delay_rear">Achter samen</string>
+    <string name="sync_bass_fr">Als voor</string>
     <string name="hint_sync_delay_front">Linksvoor en rechtsvoor bewegen nu samen; het verschil ertussen blijft behouden.</string>
     <string name="hint_sync_delay_rear">Linksachter en rechtsachter bewegen nu samen; het verschil ertussen blijft behouden.</string>
     <string name="toast_loudness_sync_bass">Loudness actief: bas achter volgt de voorzijde. Het beste resultaat bereik je met bas voorzijde op 86 Hz.</string>

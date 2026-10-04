@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Intensidade da Correção:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Mostrar na principal</string>
-    <string name="sync_delay_front">Mover frontais juntos</string>
-    <string name="sync_delay_rear">Mover traseiros juntos</string>
-    <string name="sync_bass_fr">Igual à frente</string>
+    <string name="sync_delay_front">Dianteiros juntos</string>
+    <string name="sync_delay_rear">Traseiros juntos</string>
+    <string name="sync_bass_fr">Como à frente</string>
     <string name="hint_sync_delay_front">Os dianteiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
     <string name="hint_sync_delay_rear">Os traseiros esquerdo e direito agora se movem juntos; a diferença entre eles é mantida.</string>
     <string name="toast_loudness_sync_bass">Loudness ativado: os graves traseiros acompanham os dianteiros. O ideal é definir os graves frontais em 86 Hz.</string>

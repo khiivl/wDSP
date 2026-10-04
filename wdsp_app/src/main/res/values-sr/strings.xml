@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Снага корекције:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Прикажи на главном</string>
-    <string name="sync_delay_front">Померај предње заједно</string>
-    <string name="sync_delay_rear">Померај задње заједно</string>
+    <string name="sync_delay_front">Предњи заједно</string>
+    <string name="sync_delay_rear">Задњи заједно</string>
     <string name="sync_bass_fr">Као спреда</string>
     <string name="hint_sync_delay_front">Предњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>
     <string name="hint_sync_delay_rear">Задњи леви и десни сада се померају заједно, разлика између њих се задржава.</string>

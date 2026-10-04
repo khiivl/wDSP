@@ -27,8 +27,8 @@
     <string name="lbl_correction_strength">Anpassungsstärke:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Auf Hauptseite zeigen</string>
-    <string name="sync_delay_front">Vorne zusammen bewegen</string>
-    <string name="sync_delay_rear">Hinten zusammen bewegen</string>
+    <string name="sync_delay_front">Vorne zusammen</string>
+    <string name="sync_delay_rear">Hinten zusammen</string>
     <string name="sync_bass_fr">Wie vorne</string>
     <string name="hint_sync_delay_front">Vorne links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>
     <string name="hint_sync_delay_rear">Hinten links und rechts bewegen sich nun zusammen; der Abstand zueinander bleibt erhalten.</string>

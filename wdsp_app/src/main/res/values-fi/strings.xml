@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Korjauksen voimakkuus:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Näytä päänäytöllä</string>
-    <string name="sync_delay_front">Etukaiuttimet yhdessä</string>
-    <string name="sync_delay_rear">Takakaiuttimet yhdessä</string>
+    <string name="sync_delay_front">Etu yhdessä</string>
+    <string name="sync_delay_rear">Taka yhdessä</string>
     <string name="sync_bass_fr">Kuten edessä</string>
     <string name="hint_sync_delay_front">Etuvasen ja etuoikea liikkuvat nyt yhdessä; niiden välinen ero säilytetään.</string>
     <string name="hint_sync_delay_rear">Takavasen ja takaoikea liikkuvat nyt yhdessä; niiden välinen ero säilytetään.</string>

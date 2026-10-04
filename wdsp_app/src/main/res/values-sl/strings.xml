@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Moč korekcije:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Prikaži na glavnem</string>
-    <string name="sync_delay_front">Premakni sprednje skupaj</string>
-    <string name="sync_delay_rear">Premakni zadnje skupaj</string>
-    <string name="sync_bass_fr">Enako kot spredaj</string>
+    <string name="sync_delay_front">Spredaj skupaj</string>
+    <string name="sync_delay_rear">Zadaj skupaj</string>
+    <string name="sync_bass_fr">Kot spredaj</string>
     <string name="hint_sync_delay_front">Sprednji levi in desni se zdaj premikata skupaj, razlika med njima se ohranja.</string>
     <string name="hint_sync_delay_rear">Zadnji levi in desni se zdaj premikata skupaj, razlika med njima se ohranja.</string>
     <string name="toast_loudness_sync_bass">Loudness je vklopljen: zadnji nizki toni sledijo sprednjim. Najboljši rezultat: sprednji nizki toni na 86 Hz.</string>

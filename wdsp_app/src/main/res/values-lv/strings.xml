@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Korekcijas stiprums:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Rādīt galvenajā</string>
-    <string name="sync_delay_front">Priekšējos pārvietot kopā</string>
-    <string name="sync_delay_rear">Aizmugurējos pārvietot kopā</string>
+    <string name="sync_delay_front">Priekšējie kopā</string>
+    <string name="sync_delay_rear">Aizmugurējie kopā</string>
     <string name="sync_bass_fr">Kā priekšā</string>
     <string name="hint_sync_delay_front">Priekšējais kreisais un labais tagad pārvietojas kopā, starpība starp tiem tiek saglabāta.</string>
     <string name="hint_sync_delay_rear">Aizmugurējais kreisais un labais tagad pārvietojas kopā, starpība starp tiem tiek saglabāta.</string>

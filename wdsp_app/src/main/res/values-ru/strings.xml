@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Сила коррекции:</string>
     <string name="ultra_bass">Ультра-бас</string>
     <string name="show_loudness_on_main">Показать на главной</string>
-    <string name="sync_delay_front">Передние двигать вместе</string>
-    <string name="sync_delay_rear">Задние двигать вместе</string>
+    <string name="sync_delay_front">Передние вместе</string>
+    <string name="sync_delay_rear">Задние вместе</string>
     <string name="sync_bass_fr">Как спереди</string>
     <string name="hint_sync_delay_front">Передний левый и правый теперь двигаются вместе, разница между ними сохраняется.</string>
     <string name="hint_sync_delay_rear">Задний левый и правый теперь двигаются вместе, разница между ними сохраняется.</string>

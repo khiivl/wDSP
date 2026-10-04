@@ -30,9 +30,9 @@
     <string name="lbl_correction_strength">Putere corecție:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Afișează pe principal</string>
-    <string name="sync_delay_front">Mută fața împreună</string>
-    <string name="sync_delay_rear">Mută spatele împreună</string>
-    <string name="sync_bass_fr">La fel ca în față</string>
+    <string name="sync_delay_front">Fața împreună</string>
+    <string name="sync_delay_rear">Spatele împreună</string>
+    <string name="sync_bass_fr">Ca în față</string>
     <string name="hint_sync_delay_front">Canalele stânga și dreapta față se mișcă acum împreună; diferența dintre ele este păstrată.</string>
     <string name="hint_sync_delay_rear">Canalele stânga și dreapta spate se mișcă acum împreună; diferența dintre ele este păstrată.</string>
     <string name="toast_loudness_sync_bass">Loudness este activat: basul din spate îl urmărește pe cel din față. Cel mai bun rezultat: basul față la 86 Hz.</string>

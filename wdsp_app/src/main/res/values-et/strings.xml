@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Kompensatsiooni tugevus:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Kuva pealehel</string>
-    <string name="sync_delay_front">Liiguta esimesi koos</string>
-    <string name="sync_delay_rear">Liiguta tagumisi koos</string>
+    <string name="sync_delay_front">Esimesed koos</string>
+    <string name="sync_delay_rear">Tagumised koos</string>
     <string name="sync_bass_fr">Nagu ees</string>
     <string name="hint_sync_delay_front">Eesmine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>
     <string name="hint_sync_delay_rear">Tagumine vasak ja parem liiguvad nüüd koos, nendevaheline erinevus säilitatakse.</string>

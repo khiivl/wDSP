@@ -28,8 +28,8 @@
     <string name="lbl_correction_strength">Korrigeringsstyrka:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Visa på huvudskärmen</string>
-    <string name="sync_delay_front">Flytta främre tillsammans</string>
-    <string name="sync_delay_rear">Flytta bakre tillsammans</string>
+    <string name="sync_delay_front">Främre tillsammans</string>
+    <string name="sync_delay_rear">Bakre tillsammans</string>
     <string name="sync_bass_fr">Samma som fram</string>
     <string name="hint_sync_delay_front">Vänster och höger fram rör sig nu tillsammans; skillnaden mellan dem behålls.</string>
     <string name="hint_sync_delay_rear">Vänster och höger bak rör sig nu tillsammans; skillnaden mellan dem behålls.</string>

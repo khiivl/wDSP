@@ -33,8 +33,8 @@
     <string name="lbl_correction_strength">Інтенсивність корекції:</string>
     <string name="ultra_bass">Ультра-бас</string>
     <string name="show_loudness_on_main">Показати на головній</string>
-    <string name="sync_delay_front">Передні рухати разом</string>
-    <string name="sync_delay_rear">Задні рухати разом</string>
+    <string name="sync_delay_front">Передні разом</string>
+    <string name="sync_delay_rear">Задні разом</string>
     <string name="sync_bass_fr">Як спереду</string>
     <string name="hint_sync_delay_front">Передній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
     <string name="hint_sync_delay_rear">Задній лівий і правий тепер рухаються разом, різниця між ними зберігається.</string>
@@ -549,5 +549,13 @@
     <string name="settings_ui_style_desc">Перемикання між класичним стилем автора (Material 3) та стилем Modern wDSP Mod</string>
     <string name="settings_ui_style_classic">Класичний (Оригінал)</string>
     <string name="settings_ui_style_modern">Модерн (wDSP Mod)</string>
+    <string name="btn_minus">－</string>
+    <string name="btn_plus">＋</string>
+    <string name="btn_left">←L</string>
+    <string name="btn_right">R→</string>
+    <string name="btn_front">F↑</string>
+    <string name="btn_rear">↓R</string>
+    <string name="btn_center">０</string>
+    <string name="eqc">"EQ:"</string>
 </resources>
 

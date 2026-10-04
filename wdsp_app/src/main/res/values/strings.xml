@@ -40,8 +40,8 @@
     <string name="lbl_correction_strength">Correction Strength:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Show on Main</string>
-    <string name="sync_delay_front">Move fronts together</string>
-    <string name="sync_delay_rear">Move rears together</string>
+    <string name="sync_delay_front">Fronts together</string>
+    <string name="sync_delay_rear">Rears together</string>
     <string name="sync_bass_fr">Same as front</string>
     <string name="hint_sync_delay_front">Front left and right now move together; the difference between them is kept.</string>
     <string name="hint_sync_delay_rear">Rear left and right now move together; the difference between them is kept.</string>

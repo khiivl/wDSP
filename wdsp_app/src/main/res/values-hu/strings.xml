@@ -30,8 +30,8 @@
     <string name="lbl_correction_strength">Korrekció erőssége:</string>
     <string name="ultra_bass">Ultra Bass</string>
     <string name="show_loudness_on_main">Mutatás a főoldalon</string>
-    <string name="sync_delay_front">Elsők mozgatása együtt</string>
-    <string name="sync_delay_rear">Hátsók mozgatása együtt</string>
+    <string name="sync_delay_front">Elsők együtt</string>
+    <string name="sync_delay_rear">Hátsók együtt</string>
     <string name="sync_bass_fr">Mint elöl</string>
     <string name="hint_sync_delay_front">Az első bal és jobb mostantól együtt mozog, a köztük lévő különbség megmarad.</string>
     <string name="hint_sync_delay_rear">A hátsó bal és jobb mostantól együtt mozog, a köztük lévő különbség megmarad.</string>
