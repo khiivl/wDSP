@@ -66,6 +66,7 @@
     <string name="enable_gala">Вкл. GALA:</string>
     <string name="enable_gala_feature">Использование GALA</string>
     <string name="gala_global">Глобально</string>
+    <string name="gala_disable_for_preset">Отключить для этого пресета</string>
     <string name="vol_step_every">Шаг громк. каждые:</string>
     <string name="gps_speed_label">Скорость GPS</string>
     <string name="current_gps_speed">Текущ. скор. GPS:</string>

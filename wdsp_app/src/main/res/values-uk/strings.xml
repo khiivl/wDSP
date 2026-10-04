@@ -72,6 +72,7 @@
     <string name="enable_gala">Увімкнути GALA</string>
     <string name="enable_gala_feature">Активувати функцію GALA</string>
     <string name="gala_global">Глобально</string>
+    <string name="gala_disable_for_preset">Вимкнути для цього пресету</string>
     <string name="vol_step_every">Крок швидкості:</string>
     <string name="gps_speed_label">Швидкість GPS</string>
     <string name="current_gps_speed">Швидкість GPS:</string>

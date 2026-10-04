@@ -66,6 +66,7 @@
     <string name="enable_gala">GALA aktivieren</string>
     <string name="enable_gala_feature">GALA-Funktion aktivieren</string>
     <string name="gala_global">Global</string>
+    <string name="gala_disable_for_preset">Für dieses Preset deaktivieren</string>
     <string name="vol_step_every">Lautstärke-Schritt alle:</string>
     <string name="gps_speed_label">GPS GESCHWINDIGKEIT</string>
     <string name="current_gps_speed">Aktuelle GPS-Geschw.:</string>
