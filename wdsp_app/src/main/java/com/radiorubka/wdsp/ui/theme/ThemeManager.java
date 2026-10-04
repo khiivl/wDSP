@@ -102,8 +102,10 @@ public final class ThemeManager {
         return PreferenceManager.getDefaultSharedPreferences(ctx);
     }
 
+    /** Modern unless the store says Classic: a backup from another version may carry anything else. */
     public static int getUiStyle(Context ctx) {
-        return prefs(ctx).getInt(PREF_UI_STYLE, UI_STYLE_MODERN);
+        return prefs(ctx).getInt(PREF_UI_STYLE, UI_STYLE_MODERN) == UI_STYLE_CLASSIC
+                ? UI_STYLE_CLASSIC : UI_STYLE_MODERN;
     }
 
     public static void setUiStyle(Context ctx, int style) {

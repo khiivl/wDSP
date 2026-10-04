@@ -3490,7 +3490,11 @@ public class MainActivity extends AppCompatActivity {
                 String rawKey = entry.getKey();
                 Object value = entry.getValue();
 
-                if ("is_single_preset".equals(rawKey) || "preset_name_label".equals(rawKey)) continue;
+                // File metadata, not preset values: without this they landed as "<name>_app" and
+                // "<name>_versionCode" keys in the preset store.
+                if ("is_single_preset".equals(rawKey) || "preset_name_label".equals(rawKey)
+                        || "app".equals(rawKey) || "versionCode".equals(rawKey)
+                        || "versionName".equals(rawKey)) continue;
 
                 String suffix;
                 if (rawKey.startsWith("_")) {
@@ -3514,6 +3518,17 @@ public class MainActivity extends AppCompatActivity {
                 } else if (value instanceof String) {
                     editor.putString(targetKey, (String) value);
                 }
+            }
+
+            // A file exported before the per-preset GALA opt-out (0.5) has no such key. Imported over
+            // a preset of the same name, the target's old opt-out would otherwise survive and switch
+            // GALA off for a preset whose file never asked for it.
+            boolean fileHasGalaOptOut = false;
+            for (String k : importedMap.keySet()) {
+                if (k.endsWith("_gala_disabled_for_preset")) { fileHasGalaOptOut = true; break; }
+            }
+            if (!fileHasGalaOptOut) {
+                editor.putBoolean(newPresetName + "_gala_disabled_for_preset", false);
             }
 
             if (!presetNames.contains(newPresetName)) {

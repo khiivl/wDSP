@@ -298,16 +298,33 @@ public class AudioSpectrumEngine {
         barAgcFloorDb = prefs.getInt(PREF_AGC_BAR_FLOOR, -50);
         latencyTrimMs = prefs.getInt(PREF_LATENCY_TRIM, 0);
         nativeRangeDb = prefs.getInt(PREF_RANGE_DB, 60);
-        spectrumMode = prefs.getString(PREF_SPECTRUM_MODE, SPECTRUM_MODE_CALC);
+        String oldMode = spectrumMode;
+        spectrumMode = knownSpectrumMode(prefs.getString(PREF_SPECTRUM_MODE, SPECTRUM_MODE_CALC));
         boolean oldRadioMic = radioMicVisualizerEnabled;
         radioMicVisualizerEnabled = prefs.getBoolean(PREF_RADIO_MIC_VISUALIZER, true);
         int storedBase = prefs.getInt(PREF_LATENCY_BASE, -1);
         float base = storedBase >= 0 ? storedBase : declaredLatencyMs();
         nativeLatencyMs = Math.max(0f, base + latencyTrimMs);
         applyNativeSettings();
-        if (oldRadioMic != radioMicVisualizerEnabled) {
+        // A restored backup can change the mode as well: switching the microphone on or off is
+        // decided in checkSourceState, not by whoever wrote the preference.
+        if (oldRadioMic != radioMicVisualizerEnabled || !spectrumMode.equals(oldMode)) {
             checkSourceState();
         }
+    }
+
+    /**
+     * The stored mode, or calculated when it is none this version knows: a backup from another
+     * version, or a hand-edited file. "off" arrived with the three-position selector (0.5); an older
+     * backup simply has no key and gets the same default.
+     */
+    private static String knownSpectrumMode(String stored) {
+        if (SPECTRUM_MODE_OFF.equals(stored) || SPECTRUM_MODE_CALC.equals(stored)
+                || SPECTRUM_MODE_MIC.equals(stored)) {
+            return stored;
+        }
+        Log.w(TAG, "unknown spectrum mode \"" + stored + "\" - calculated");
+        return SPECTRUM_MODE_CALC;
     }
 
     /**

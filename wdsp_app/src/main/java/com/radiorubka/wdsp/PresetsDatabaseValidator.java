@@ -359,6 +359,9 @@ public final class PresetsDatabaseValidator {
         clampInt(editor, prefs, pName + "_gala_max_adj", GALA_MAX_ADJ_MIN, GALA_MAX_ADJ_MAX, GALA_MAX_ADJ_DEFAULT, res);
         clampInt(editor, prefs, pName + "_gala_fade_ms", GALA_FADE_MS_MIN, GALA_FADE_MS_MAX, GALA_FADE_MS_DEFAULT, res);
         clampInt(editor, prefs, pName + "_gala_hold_ms", GALA_HOLD_MS_MIN, GALA_HOLD_MS_MAX, GALA_HOLD_MS_DEFAULT, res);
+        // The per-preset opt-out (0.5). Absent in presets saved before it existed: those ran under
+        // GALA as configured, so the default is "not opted out".
+        ensureBoolean(editor, prefs, pName + "_gala_disabled_for_preset", false, res);
 
         return res;
     }
