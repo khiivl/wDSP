@@ -23,15 +23,17 @@ If you want to buy me a coffee or otherwise support me financially, use this lin
 
 <summary>Screenshots</summary>
 
-<img width="1024" height="600" alt="Screenshot_20260531_220710" src="https://github.com/user-attachments/assets/009e54f0-6bab-433e-bf0a-d837e69970f3" />
+<img width="1024" height="600" alt="Screenshot_20261005_005940" src="https://github.com/user-attachments/assets/09721a9f-3791-4137-a185-770a3648caf9" />
 
-<img width="1024" height="600" alt="Screenshot_20260531_220716" src="https://github.com/user-attachments/assets/1a3dea59-97b6-4a31-8bc0-b4fe709b7fa9" />
+<img width="1024" height="600" alt="Screenshot_20261005_005954" src="https://github.com/user-attachments/assets/6c704193-b5e7-4991-b266-04a1b7f4f289" />
 
-<img width="1024" height="600" alt="Screenshot_20260531_220719" src="https://github.com/user-attachments/assets/32da504c-c540-469c-9679-902174cb4cc0" />
+<img width="1024" height="600" alt="Screenshot_20261005_010001" src="https://github.com/user-attachments/assets/e0c89c59-40c6-44c6-a871-062c8d1eec62" />
 
-<img width="1024" height="600" alt="Screenshot_20260531_220724" src="https://github.com/user-attachments/assets/37ff2c4a-df97-4209-9a51-da6a6e68fe2b" />
+<img width="1024" height="600" alt="Screenshot_20261005_010007" src="https://github.com/user-attachments/assets/c65fb258-926d-4663-9780-54b7c099f088" />
 
-<img width="1024" height="600" alt="Screenshot_20260531_220728" src="https://github.com/user-attachments/assets/1055af53-7c7b-43cc-9975-af0a485cb8b5" />
+<img width="1024" height="600" alt="Screenshot_20261005_010015" src="https://github.com/user-attachments/assets/9f2a6137-e363-4f0f-bcc1-a7ba70bb4b2e" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_010021" src="https://github.com/user-attachments/assets/614a968c-a940-4f0e-b8dd-ca9f7e2c109e" />
 
 </details>
 
