@@ -2752,6 +2752,31 @@
                             android:textSize="@dimen/eq_value_text"
                             android:textStyle="bold"
                             android:checkable="true" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/switch_gala_disable_for_preset"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/toggle_height"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:cornerRadius="10dp"
+                            app:strokeWidth="1.2dp"
+                            app:strokeColor="@color/panel_border_theme_aware"
+                            android:backgroundTint="@color/card_bg_theme_aware"
+                            android:text="@string/gala_disable_for_preset"
+                            android:textAllCaps="false"
+                            android:textSize="@dimen/eq_value_text"
+                            android:textStyle="bold"
+                            android:checkable="true" />
                     </LinearLayout>
 
                     <!-- Symmetrical 2-Column Cards Grid -->
