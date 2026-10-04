@@ -56,7 +56,12 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
         dspCurve_[i] = 0.0f;
     }
     frameRing_.resize(kFrameRingSize);
-    for (auto& frame : frameRing_) frame.assign(kBands, -120.0f);
+    // A frame carries the bands, then the curve: one ring, so both are held back by the same latency.
+    for (auto& frame : frameRing_) frame.assign(kBands + kCurvePoints, -120.0f);
+    for (int j = 0; j < kCurvePoints; j++) {
+        curveHz_[j] = 20.0f * std::pow(1000.0f, static_cast<float>(j) / (kCurvePoints - 1));
+        longCurveDb_[j] = -120.0f;
+    }
     buildBandPlan();
 }
 
@@ -318,8 +323,32 @@ void Analyzer::processFrame(bool haveLong) {
     float attack = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.attackMs));
     float release = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.releaseMs));
 
+    // The live curve. Below the crossover from the long transform when it ran this frame, held
+    // otherwise, exactly as the bands there are; above it from the short one. Each point is the
+    // density at its frequency times a third of an octave's width there, so the curve and the bands
+    // read the same level and pink noise reads flat - the author tilts +3 dB/octave for the same end.
+    const float longBin = static_cast<float>(sampleRate_) / kLongFft;
+    const float shortBin = static_cast<float>(sampleRate_) / kShortFft;
+    const float thirdOctave = std::pow(2.0f, 1.0f / 6.0f) - std::pow(2.0f, -1.0f / 6.0f);
+    float curveDb[kCurvePoints];
+    for (int j = 0; j < kCurvePoints; j++) {
+        const float hz = curveHz_[j];
+        const float widthDb = 10.0f * std::log10(thirdOctave * hz);
+        if (hz < kCrossoverHz) {
+            if (haveLong) {
+                longCurveDb_[j] = hermiteDensityDb(longPower_.data(), kLongFft / 2 + 1, longBin, hz)
+                        + widthDb;
+            }
+            curveDb[j] = longCurveDb_[j];
+        } else {
+            curveDb[j] = hermiteDensityDb(shortPower_.data(), kShortFft / 2 + 1, shortBin, hz)
+                    + widthDb;
+        }
+    }
+
     std::lock_guard<std::mutex> publish(mutex_);
     std::vector<float>& frame = frameRing_[static_cast<size_t>(frameWrite_)];
+    for (int j = 0; j < kCurvePoints; j++) frame[static_cast<size_t>(kBands + j)] = curveDb[j];
     for (int i = 0; i < kBands; i++) {
         float power = bandPower_[i];
         // Only quiet frames teach the floor. The branch that used to stand here learned outside
@@ -351,6 +380,27 @@ void Analyzer::processFrame(bool haveLong) {
     frameCount_++;
 }
 
+float Analyzer::hermiteDensityDb(const float* power, int binCount, float binWidth, float freqHz) {
+    const float pos = freqHz / binWidth;
+    const int i = static_cast<int>(std::floor(pos));
+    const float t = pos - static_cast<float>(i);
+    auto at = [&](int bin) {
+        // Bin 0 is DC, never content; the last bin is Nyquist.
+        bin = std::max(1, std::min(binCount - 1, bin));
+        return toDb(power[bin] / binWidth);
+    };
+    const float p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    return 0.5f * (2.0f * p1 + (p2 - p0) * t + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t
+                   + (3.0f * p1 - p0 - 3.0f * p2 + p3) * t * t * t);
+}
+
+void Analyzer::getCurveDb(float* outCurve) {
+    if (outCurve == nullptr) return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    const std::vector<float>& frame = frameRing_[static_cast<size_t>(delayedFrameIndex())];
+    for (int j = 0; j < kCurvePoints; j++) outCurve[j] = frame[static_cast<size_t>(kBands + j)];
+}
+
 float Analyzer::frameRate() const {
     return static_cast<float>(sampleRate_) / static_cast<float>(hop_);
 }
@@ -362,11 +412,14 @@ void Analyzer::getLevelsDb(float* out32) {
 }
 
 void Analyzer::readDelayedFrame(float* out32) const {
+    const std::vector<float>& frame = frameRing_[static_cast<size_t>(delayedFrameIndex())];
+    for (int i = 0; i < kBands; i++) out32[i] = frame[static_cast<size_t>(i)];
+}
 
+int Analyzer::delayedFrameIndex() const {
     // Hold the display back by the playback latency. What we just captured has not reached the
     // speakers yet, so showing it immediately puts the picture ahead of the sound.
     float framePeriodMs = 1000.0f * static_cast<float>(hop_) / static_cast<float>(sampleRate_);
-    (void) 0;
     int delayFrames = static_cast<int>(config_.latencyMs / std::max(1.0f, framePeriodMs) + 0.5f);
     if (delayFrames < 0) delayFrames = 0;
     if (delayFrames > kFrameRingSize - 2) delayFrames = kFrameRingSize - 2;
@@ -374,8 +427,7 @@ void Analyzer::readDelayedFrame(float* out32) const {
 
     int index = frameWrite_ - 1 - delayFrames;
     while (index < 0) index += kFrameRingSize;
-    const std::vector<float>& frame = frameRing_[static_cast<size_t>(index)];
-    for (int i = 0; i < kBands; i++) out32[i] = frame[static_cast<size_t>(i)];
+    return index;
 }
 
 void Analyzer::foldTo16Db(const float* db32, float* out16Db) {

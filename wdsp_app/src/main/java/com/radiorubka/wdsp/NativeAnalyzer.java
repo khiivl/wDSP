@@ -147,6 +147,23 @@ public final class NativeAnalyzer {
         if (handle != 0) nativeGetLevelsDb16(handle, out16);
     }
 
+    /** Points of the live RTA curve, log-spaced 20 Hz .. 20 kHz - kCurvePoints in analyzer.h. */
+    public static final int CURVE_POINTS = 200;
+
+    /**
+     * The live curve, held back by the playback latency like the bands: {@link #CURVE_POINTS} values
+     * in dB, each the power in a third of an octave around its point - pink noise reads level - with
+     * no correction curve and no noise floor applied; the caller adds what its mode needs.
+     */
+    public void getCurveDb(float[] outCurve) {
+        if (handle != 0) nativeGetCurveDb(handle, outCurve);
+    }
+
+    /** Frequency of curve point {@code j}, the same log spacing the native side uses. */
+    public static float curveHz(int j) {
+        return (float) (20.0 * Math.pow(1000.0, j / (double) (CURVE_POINTS - 1)));
+    }
+
     /** A shift in dB added to a consumer's bands before they are scaled; 0 in a new analyser. */
     public void setLevelOffsetDb(int consumer, float offsetDb) {
         if (handle != 0) nativeSetLevelOffsetDb(handle, consumer, offsetDb);
@@ -225,6 +242,8 @@ public final class NativeAnalyzer {
     private static native void nativeGetLevelsDb(long handle, float[] out32);
 
     private static native void nativeGetLevelsDb16(long handle, float[] out16);
+
+    private static native void nativeGetCurveDb(long handle, float[] outCurve);
 
     private static native void nativeSetLevelOffsetDb(long handle, int consumer, float offsetDb);
 

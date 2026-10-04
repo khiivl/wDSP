@@ -15,6 +15,11 @@ namespace wdsp {
 constexpr int kHwBands = 16;
 /** Analysis bands: every hardware band split in two, so folding pairs back is exact. */
 constexpr int kBands = 32;
+/**
+ * Points of the live RTA curve, log-spaced from 20 Hz to 20 kHz - the author's 1.0 display model
+ * (200 points, `SpectrumAnalyzerView` in his master), read from this analyser's own transforms.
+ */
+constexpr int kCurvePoints = 200;
 
 /** Centre frequency of each hardware equaliser band, shared with the room measurement. */
 extern const float kHwCenters[kHwBands];
@@ -149,6 +154,14 @@ public:
      * uses - without any consumer's offset or gain. For comparing two analysers on one scale.
      */
     void getLevelsDb16(float* out16);
+
+    /**
+     * The live curve, held back by the playback latency like the bands: kCurvePoints values in dB,
+     * each the power in a third of an octave around its point (so pink noise reads level, as the
+     * bands do), with no correction curve and no noise floor applied - the display adds what its
+     * mode needs. -120 until the first frame.
+     */
+    void getCurveDb(float* outCurve);
     /**
      * A shift in dB added to every band before a consumer's levels are scaled - for drawing one
      * analyser on another's scale (the microphone on the calculated spectrum's). 0 in a new analyser.
@@ -180,9 +193,16 @@ private:
     void processFrame(bool haveLong);
     /** Body of getLevelsDb, for callers that already hold the lock. */
     void readDelayedFrame(float* out32) const;
+    /** The ring slot the display reads: the newest frame held back by the playback latency. */
+    int delayedFrameIndex() const;
     /** 32 third-octave bands in dB onto the 16 equaliser bands in dB - the only fold there is. */
     static void foldTo16Db(const float* db32, float* out16Db);
     void accumulate(const float* power, int binCount, float binWidth, bool longFft);
+    /**
+     * One curve point from a power spectrum: Catmull-Rom through the four nearest bins in dB (the
+     * author's interpolation - passes through every bin, no overshoot at peaks), as power per hertz.
+     */
+    static float hermiteDensityDb(const float* power, int binCount, float binWidth, float freqHz);
 
     int sampleRate_;
     int hop_;
@@ -204,6 +224,9 @@ private:
     float noiseFloor_[kBands];
     bool noiseFloorEnabled_ = false;
     float dspCurve_[kBands];
+    /** The curve's frequencies, and the long transform's points held between its runs. */
+    float curveHz_[kCurvePoints];
+    float longCurveDb_[kCurvePoints];
 
     // Ring of finished frames, so the display can be held back by the playback latency.
     std::vector<std::vector<float>> frameRing_;

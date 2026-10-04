@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
+#include <functional>
 #include <random>
 #include <vector>
 
@@ -100,7 +101,8 @@ std::vector<float> makeSine(int samples, float freqHz, float amplitude = 0.5f,
  * does not accumulate. So each read advances by a whole number of milliseconds around the poll
  * interval, and the timestamp handed over carries its own scatter on top.
  */
-int64_t feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRead) {
+int64_t feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePerRead,
+             const std::function<void(int64_t)>& afterEachPoll = nullptr) {
     const int msSamples = kSampleRate / 1000;
     std::mt19937 rng(77);
     std::uniform_int_distribution<int> pollScatterMs(-1, 1);
@@ -116,6 +118,7 @@ int64_t feed(wdsp::Analyzer& analyzer, std::vector<float> signal, int advancePer
         taken += analyzer.pushWaveform(block.data(), kCaptureSize, timeNs);
         // Analysis now lives on its own thread in the app; drain it synchronously here.
         analyzer.waitAndProcess(0);
+        if (afterEachPoll) afterEachPoll(position);
     }
     return taken - kCaptureSize;   // the first read is taken whole
 }
@@ -282,6 +285,59 @@ int runTestFile() {
     return (whole && both) ? 0 : 1;
 }
 
+/**
+ * The live curve (the author's 1.0 display model on this analyser): pink noise averaged over every
+ * poll after the first two seconds must read level within +-1.5 dB from 40 Hz to 16 kHz - the
+ * points are third-octave powers, as the bands are - and a tone must peak on the point nearest it.
+ */
+int runCurve() {
+    printf("\nLive curve, %d points:\n", wdsp::kCurvePoints);
+    auto hz = [](int j) {
+        return 20.0f * std::pow(1000.0f, static_cast<float>(j) / (wdsp::kCurvePoints - 1));
+    };
+    int failures = 0;
+    {
+        wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
+        std::vector<double> sum(wdsp::kCurvePoints, 0.0);
+        int reads = 0;
+        float curve[wdsp::kCurvePoints];
+        feed(analyzer, makePinkNoise(kSampleRate * 12), 480, [&](int64_t position) {
+            if (position < kSampleRate * 2) return;
+            analyzer.getCurveDb(curve);
+            for (int j = 0; j < wdsp::kCurvePoints; j++) sum[j] += std::pow(10.0, curve[j] / 10.0);
+            reads++;
+        });
+        float minDb = 1e9f, maxDb = -1e9f;
+        int minJ = 0, maxJ = 0;
+        for (int j = 0; j < wdsp::kCurvePoints; j++) {
+            if (hz(j) < 40.0f || hz(j) > 16000.0f) continue;
+            float db = static_cast<float>(10.0 * std::log10(sum[j] / std::max(1, reads)));
+            if (db < minDb) { minDb = db; minJ = j; }
+            if (db > maxDb) { maxDb = db; maxJ = j; }
+        }
+        bool level = reads > 0 && maxDb - minDb <= 3.0f;
+        printf("  pink noise, %d reads: %.1f dB at %.0f Hz .. %.1f dB at %.0f Hz, spread %.1f dB -> %s\n",
+               reads, minDb, hz(minJ), maxDb, hz(maxJ), maxDb - minDb, level ? "PASS" : "FAIL");
+        if (!level) failures++;
+    }
+    for (float tone : {50.0f, 1000.0f, 10000.0f}) {
+        wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
+        feed(analyzer, makeSine(kSampleRate * 4, tone), 480);
+        float curve[wdsp::kCurvePoints];
+        analyzer.getCurveDb(curve);
+        int peak = 0, nearest = 0;
+        for (int j = 1; j < wdsp::kCurvePoints; j++) {
+            if (curve[j] > curve[peak]) peak = j;
+            if (std::fabs(std::log(hz(j) / tone)) < std::fabs(std::log(hz(nearest) / tone))) nearest = j;
+        }
+        bool ok = std::abs(peak - nearest) <= 1;
+        printf("  %.0f Hz tone: peak at point %d (%.0f Hz), nearest point %d (%.0f Hz) -> %s\n",
+               tone, peak, hz(peak), nearest, hz(nearest), ok ? "PASS" : "FAIL");
+        if (!ok) failures++;
+    }
+    return failures;
+}
+
 } // namespace
 
 int main() {
@@ -292,6 +348,7 @@ int main() {
     failures += runTone(440.0f, 14);   // a period that is not a whole number of samples
     failures += runTone(10000.0f, 28); // band 28 is 10 kHz; a period of exactly 4.8 samples
     failures += runTestFile();
+    failures += runCurve();
     printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES PRESENT");
     return failures;
 }

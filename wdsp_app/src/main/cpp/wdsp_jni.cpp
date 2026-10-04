@@ -228,6 +228,18 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetLevelsDb16(JNIEnv* env, jclass,
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetCurveDb(JNIEnv* env, jclass, jlong handle,
+                                                         jfloatArray outCurve) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr || outCurve == nullptr) return;
+    if (env->GetArrayLength(outCurve) < wdsp::kCurvePoints) return;
+
+    float db[wdsp::kCurvePoints];
+    analyzer->getCurveDb(db);
+    env->SetFloatArrayRegion(outCurve, 0, wdsp::kCurvePoints, db);
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetLevelOffsetDb(JNIEnv*, jclass, jlong handle,
                                                                jint consumer, jfloat offsetDb) {
     auto* analyzer = asAnalyzer(handle);
