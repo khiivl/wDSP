@@ -114,6 +114,7 @@ public final class CallPreset {
             case "_sub_comp":
             case "_d_en":
             case "_d1_en":    return false;
+            case "_gala_disabled_for_preset": return true;
             default:          return null;
         }
     }

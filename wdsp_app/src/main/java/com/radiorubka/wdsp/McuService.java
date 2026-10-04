@@ -116,7 +116,9 @@ public class McuService extends Service implements LocationListener {
     private int cachedGalaMaxAdj;
     private int cachedGalaFadeDelayMs; // ms between each ±1 fade step (default 100)
     private int cachedGalaHoldMs;      // ms a tier must be stable before being applied (default 1000)
-
+    // Per-preset override - forces GALA off for this preset even while global mode is on for
+    // every other preset.
+    private boolean cachedGalaDisabledForPreset;
 
     // When galaGlobalMode is on, GALA's on/off state is shared across all presets
     // (galaGlobalEnabled) instead of read from cachedGalaEn per-preset - see isGalaEnabled().
@@ -1091,6 +1093,7 @@ public class McuService extends Service implements LocationListener {
         cachedGalaMaxAdj = prefs.getInt(gKeyMaxAdj, 12);
         cachedGalaFadeDelayMs = prefs.getInt(gKeyFadeMs, 100);
         cachedGalaHoldMs = prefs.getInt(gKeyHoldMs, 1000);
+        cachedGalaDisabledForPreset = presetPrefs().getBoolean(preset + "_gala_disabled_for_preset", false);
     }
 
     @Override
@@ -1533,8 +1536,9 @@ public class McuService extends Service implements LocationListener {
 
     // True/false state actually used by GALA processing - the shared global switch when
     // galaGlobalMode is on, otherwise whatever the current preset has stored.
+    // cachedGalaDisabledForPreset is a per-preset override that disables GALA for that preset.
     private boolean isGalaEnabled() {
-        return galaGlobalMode ? galaGlobalEnabled : cachedGalaEn;
+        return (galaGlobalMode ? galaGlobalEnabled : cachedGalaEn) && !cachedGalaDisabledForPreset;
     }
 
     // THIS IS VERY FUCKED UP. IT WORKS??? MAYBE.

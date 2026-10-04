@@ -381,10 +381,10 @@ public class EqVisualizerView extends View {
                 float right = xCoords[endIdx] + boxPaddingDynamic;
 
                 if (g == 0) {
-                    left = Math.max(left, edgeMargin);
+                    left = Math.min(Math.max(left, edgeMargin), xCoords[startIdx] - boxPaddingDynamic * 0.88f);
                 }
                 if (g == GROUP_RANGES.length - 1) {
-                    right = Math.min(right, w - edgeMargin);
+                    right = Math.max(Math.min(right, w - edgeMargin), xCoords[endIdx] + boxPaddingDynamic * 0.88f);
                 }
 
                 boxPaint.setColor(color);
