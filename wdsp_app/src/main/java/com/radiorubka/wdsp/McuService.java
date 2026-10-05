@@ -89,6 +89,13 @@ public class McuService extends Service implements LocationListener {
     private final int[] cachedGains = new int[16];
     private byte cachedQByte1, cachedQByte2;
     private int cachedSubFreq, cachedSubGain;
+    /**
+     * Audio Check's runtime overrides (the author's 1.0): the fader turned to one speaker, or only the
+     * subwoofer playing; -1 / false = none. Never written to a preset - a test cannot be overwritten
+     * by an unrelated save and cannot corrupt a preset if the app dies mid-test - and cleared on a call.
+     */
+    private volatile int audioCheckFaderFr = -1, audioCheckFaderLr = -1;
+    private volatile boolean audioCheckOnlySub = false;
 
     private boolean cachedSubComp, cachedFmEn, cachedFatEn;
     private int cachedFmCal, cachedFmStr, cachedFatStartVol;
@@ -536,8 +543,24 @@ public class McuService extends Service implements LocationListener {
                 //
                 // The type check stays as the fallback in the poll: a call that never announces
                 // itself is still caught, one tick late, exactly as before.
+                if (AudioCheck.ACTION_FADER.equals(action)) {
+                    audioCheckFaderFr = intent.getIntExtra("fr", -1);
+                    audioCheckFaderLr = intent.getIntExtra("lr", -1);
+                    backgroundHandler.post(McuService.this::applyCurrentSettings);
+                    return;
+                }
+                if (AudioCheck.ACTION_ONLY_SUB.equals(action)) {
+                    audioCheckOnlySub = intent.getBooleanExtra("enabled", false);
+                    backgroundHandler.post(McuService.this::applyCurrentSettings);
+                    return;
+                }
                 if ("com.qf.action.PHONE_CALL_START".equals(action)) {
                     CallState.announce(true);
+                    // A call takes the sound: the test stops and its overrides go, the fader first.
+                    audioCheckFaderFr = -1;
+                    audioCheckFaderLr = -1;
+                    audioCheckOnlySub = false;
+                    new Handler(Looper.getMainLooper()).post(() -> AudioCheck.get(McuService.this).stopAll());
                     AudioSpectrumEngine.getInstance().setCallActive(true);
                     RoomMeasurement.abort();
                     MicrophoneGuard.releaseHold();
@@ -971,6 +994,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.qf.action.ACC_OFF");
         controlFilter.addAction("com.qf.action.PHONE_CALL_START");
         controlFilter.addAction("com.qf.action.PHONE_CALL_END");
+        controlFilter.addAction(AudioCheck.ACTION_FADER);
+        controlFilter.addAction(AudioCheck.ACTION_ONLY_SUB);
         // Sent before ACC_OFF, ahead of the platform stopping apps for sleep (Gemini's reading of
         // QFSleepWakeup, references/18-MEDIA-SESSION-AND-SLEEP-RESUMPTION.md) - where PlayerResume
         // takes its note of what was playing, if it comes first.
@@ -2198,6 +2223,10 @@ public class McuService extends Service implements LocationListener {
         // The sliders plus the curve, pre-warped together while the curve acts (the author's 0.5,
         // see LoudnessCurve.eqDriveDb); with no curve the sliders go out byte for byte as before.
         float[] driveDb = LoudnessCurve.eqDriveDb(cachedGains, fmOffsets);
+        if (audioCheckOnlySub) {
+            // Audio Check "only sub": every band at the EQ's floor, past loudness and pre-warp.
+            Arrays.fill(driveDb, -12f);
+        }
 
         for (int i = 0; i < 8; i++) {
             int b1 = i * 2;
@@ -2240,8 +2269,8 @@ public class McuService extends Service implements LocationListener {
         // doors stop playing below their crossover the way the chip's do. And no subwoofer path for a
         // car that has none: a model adding a subwoofer that is not connected drew +3 dB of bass
         // nobody hears.
-        int hpfFront = presetPrefs().getInt(currentPresetName + "_bf_f", 0);
-        int hpfRear = presetPrefs().getInt(currentPresetName + "_bf_r", 0);
+        int hpfFront = doorHpfCode(true);
+        int hpfRear = doorHpfCode(false);
         int subFreq = RoomMeasurement.hasSubwoofer(this) && !DspResponse.isSubOff(cachedSubFreq)
                 ? cachedSubFreq : -1;
         AudioSpectrumEngine.getInstance().setDspState(
@@ -2281,13 +2310,17 @@ public class McuService extends Service implements LocationListener {
      * resent on volume changes and goes through its own throttle like the EQ and the subwoofer.
      */
     private void applyBassBoost(int currentVol) {
-        LoudnessCurve.BassShelf shelf = LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr,
-                cachedFmEn, cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR);
+        LoudnessCurve.BassShelf shelf = audioCheckOnlySub
+                // Audio Check "only sub": no boost on the doors (the author's override).
+                ? LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr, false,
+                        cachedBassFreqF, 0, cachedBassFreqR, 0)
+                : LoudnessCurve.bassShelf(currentVol, cachedFmCal, cachedFmStr,
+                        cachedFmEn, cachedBassFreqF, cachedBassGainF, cachedBassFreqR, cachedBassGainR);
         effectiveBassShelf = shelf;   // what the spectrum model draws the doors with
         byte[] bbData = new byte[]{(byte) 0x88,
                 (byte) (((shelf.freqIdxFront + 8) << 4) | (shelf.gainFront & 0x0F)),
                 (byte) (((shelf.freqIdxRear + 8) << 4) | (shelf.gainRear & 0x0F)),
-                (byte) ((presetPrefs().getInt(currentPresetName + "_bf_f", 0) << 4) | (presetPrefs().getInt(currentPresetName + "_bf_r", 0) & 0x0F))};
+                (byte) ((doorHpfCode(true) << 4) | (doorHpfCode(false) & 0x0F))};
         if (lastComputedBassBoostData == null || !Arrays.equals(lastComputedBassBoostData, bbData)) {
             lastComputedBassBoostData = bbData;
             sendBassBoostThrottled(bbData);
@@ -2297,10 +2330,22 @@ public class McuService extends Service implements LocationListener {
         publishDspStateToSpectrum();
     }
 
+    /**
+     * The door high-pass code a pair gets - the preset's, or 250 Hz (the table's top, code 11) while
+     * Audio Check plays only the subwoofer. One reading for the packet and the spectrum's model.
+     */
+    private int doorHpfCode(boolean front) {
+        if (audioCheckOnlySub) return DspResponse.DOOR_HPF_HZ.length - 1;
+        return presetPrefs().getInt(currentPresetName + (front ? "_bf_f" : "_bf_r"), 0);
+    }
+
     private void applyFaderLoud() {
+        // Audio Check's speaker test turns the fader to one speaker; the preset's own otherwise.
+        int lr = audioCheckFaderLr >= 0 ? audioCheckFaderLr : presetPrefs().getInt(currentPresetName + "_f_lr", 12);
+        int fr = audioCheckFaderFr >= 0 ? audioCheckFaderFr : presetPrefs().getInt(currentPresetName + "_f_fr", 12);
         sendToHardware(new byte[]{(byte) 0x81,
-                (byte) (presetPrefs().getInt(currentPresetName + "_f_lr", 12) & 0xFF),
-                (byte) (presetPrefs().getInt(currentPresetName + "_f_fr", 12) & 0xFF),
+                (byte) (lr & 0xFF),
+                (byte) (fr & 0xFF),
                 (byte) (presetPrefs().getBoolean(currentPresetName + "_loud", false) ? 1 : 0)});
     }
 

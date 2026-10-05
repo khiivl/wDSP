@@ -3195,9 +3195,10 @@ public final class RoomMeasurement {
      * Held for the whole measurement, so the platform treats us as the player that owns the sound.
      *
      * <p>Static because the pass is static, and there is only ever one measurement at a time -
-     * {@link #isRunning()} guarantees it.
+     * {@link #isRunning()} guarantees it. The request itself is {@link PlaybackFocus}, shared with
+     * Audio Check.
      */
-    private static android.media.AudioFocusRequest focusRequest;
+    private static final PlaybackFocus focus = new PlaybackFocus(TAG);
 
 
     /**
@@ -3211,66 +3212,22 @@ public final class RoomMeasurement {
 
     /** @return what the platform answered, in words, for the report. */
     private static String requestFocus(Context context) {
-        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        if (am == null) return "no AudioManager";
         focusLostDuringPass = null;
-        try {
-            // 🔴 The listener is not optional decoration. setWillPauseWhenDucked - and
-            // setAcceptsDelayedFocusGain with it - make build() throw IllegalStateException
-            // unless a listener was set, and the throw is what the first version of this did:
-            // every report carried "audio focus: could not ask: java.lang.IllegalStateException:
-            // Can't use delayed focus or pause on duck without a listener", the pass ran with no
-            // focus at all, and the fix for "the first measurement fails" was never once in
-            // effect. Measured on the owner's own unit, 26.08.2026.
-            //
-            // GAIN rather than one of the transient kinds: a transient grant tells everyone else
-            // to duck and come back, and what is wanted here is for this to be the player for the
-            // next half minute. Anything that was playing should stop, not lower itself into the
-            // measurement.
-            AudioManager.OnAudioFocusChangeListener listener = change -> {
-                String what;
-                switch (change) {
-                    case AudioManager.AUDIOFOCUS_LOSS: what = "taken away"; break;
-                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: what = "taken briefly"; break;
-                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: what = "asked to duck"; break;
-                    case AudioManager.AUDIOFOCUS_GAIN: what = null; break;
-                    default: what = "change " + change; break;
-                }
-                if (what != null && isRunning()) focusLostDuringPass = what;
-                Log.i(TAG, "audio focus changed during the pass: " + change);
-            };
-            focusRequest = new android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build())
-                    .setWillPauseWhenDucked(true)
-                    .setOnAudioFocusChangeListener(listener,
-                            new Handler(Looper.getMainLooper()))
-                    .build();
-            int answer = am.requestAudioFocus(focusRequest);
-            switch (answer) {
-                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED: return "granted";
-                case AudioManager.AUDIOFOCUS_REQUEST_DELAYED: return "delayed";
-                case AudioManager.AUDIOFOCUS_REQUEST_FAILED: return "REFUSED";
-                default: return "answer " + answer;
+        return focus.request(context, change -> {
+            String what;
+            switch (change) {
+                case AudioManager.AUDIOFOCUS_LOSS: what = "taken away"; break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: what = "taken briefly"; break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: what = "asked to duck"; break;
+                case AudioManager.AUDIOFOCUS_GAIN: what = null; break;
+                default: what = "change " + change; break;
             }
-        } catch (Throwable t) {
-            focusRequest = null;
-            return "could not ask: " + t;
-        }
+            if (what != null && isRunning()) focusLostDuringPass = what;
+        });
     }
 
     private static void abandonFocus(Context context) {
-        android.media.AudioFocusRequest request = focusRequest;
-        focusRequest = null;
-        if (request == null) return;
-        try {
-            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) am.abandonAudioFocusRequest(request);
-        } catch (Throwable t) {
-            Log.w(TAG, "could not give the focus back", t);
-        }
+        focus.abandon(context);
     }
 
     /**
