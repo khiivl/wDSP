@@ -7,65 +7,92 @@ This is a free and open-source DSP app designed to fully replace the stock DSP a
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
 Compatible with vertical and horizontal head units with the BU32107 chip.
 
-Telegram group for discussion: https://t.me/wDSPapp
+Made in Germany, by a Ukrainian guy.
 
-If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp
+I have to give credits to the people who taught me a lot i know about sound for free: oratory1990 (legend), Crinacle (headphone), Underbelly from YSAP (Uncle Joe) and, of course, Dan Worrall (the trustworthy British accent). Credits to Sam Battle from LMNC for making me interested in audio circuits. Many thanks to Kostyantyn Matviyevskyy for mentoring, contributions, insides into the inner workings of the head unit and the inspiration for this project and making difficult things simple. Try his mod of wDSP if you want something different, because everyone has their own preferences and vision.
 
-----------------------------------------------------------------------------------------------------------------------
+Measure accurately, correct surgically, and stop trying to boost acoustic nulls.
 
-### ✨ Features (kostyamat mod v0.4.2):
+Telegram group for discussion and bug reporting (also use Issues on GitHub): https://t.me/wDSPapp
 
-#### 🎛️ Equalization & Sound Tuning:
-- **True-to-hardware 16-band EQ** with 2dB step (-12dB .. +12dB), precise Q-factor controls (2.2 / 4.7) per band.
-- **Subwoofer Control**: Discrete crossover frequency selection (25 Hz to 250 Hz) and independent Subwoofer Gain (+0dB to +12dB).
-- **Loudness & Dynamic Fletcher-Munson (ISO 226)**: Realistic low-volume loudness curve with automatic Subwoofer low-frequency compensation.
-- **Bass Filters & Bass Boost**: Front and rear independent high-pass filters and bass enhancement with accurate cutoff frequencies.
-- **Power Volume Amp Control**: Hardware pre-amplifier gain adjustment.
-
-#### 🚗 Time Alignment & Spatial Balance:
-- **Speaker Fader & Balance**: Precision 4-channel balance with intuitive cabriolet acoustic diagram and hollow quick-tap speaker buttons.
-- **Positioning Delays**: 0.5 ms fine adjustment step (up to 5.0 ms) for FL, FR, RL, RR, and Subwoofer (calculated in ms and cm).
-- **Surround / Haas Effect**: Up to 10 ms delay and RSSE surround widening.
-- **Speed-Compensated Volume (GALA)**: Adaptive speed volume control with min speed, increment, maximum adjustment, and smooth fade/hold timings.
-
-#### 🌈 Visualizers & Spectrum Analysis:
-- **Physical Optical Dispersion Spectrum**: 16 frequency bands mapped to true physical optical wavelengths (700 nm Deep Red at 20 Hz down to 390 nm Pure Deep Violet at 20 kHz).
-- **Real-time Live Audio Spectrum Analyzer**: Smooth peak decay, rounded capsules, and dynamic height scaling.
-- **Dynamic Fletcher-Munson Response Curve**: Live gradient visualizer showing real-time acoustic loudness compensation.
-- **Status Bar Overlay Visualizer**: Highly customizable top status bar visualizer (width %, center position %, hue angle rotation, and presets: Physical Spectrum, EQ Groups, Auto Day/Night, Fire, Neon, Monochrome).
-
-#### 🎨 Modern Design & Theme Engine:
-- **Theme Modes**: Day, Night, and Auto (automatic switching with car illumination).
-- **Custom Color Palette**: 4 interactive circular Hue Wheels with brightness sliders (Accent, Primary Text, Secondary Labels, On-Accent).
-- **Wallpaper System**: Built-in dark/light background textures, custom user photo picker via SAF, or procedural solid color generator.
-- **Animated Accordion Settings**: Smooth collapsible/expandable cards in Settings with interactive touch-glow effects.
-
-#### 💾 Presets, Full Backup & Restore:
-- **Preset Management**: Create, duplicate, rename, auto-switch based on audio source (Media, Radio, AUX, BT Calls), and export/import individual presets (.json).
-- **Full Settings Backup & Restore**: One-click export/import of all appearance preferences, theme colors, wallpapers, visualizer configurations, and complete preset databases.
-- **Robust Persistence**: Key prefix normalization on import and auto-save state flushing.
-
-#### 🌍 Multi-language Localization:
-- Complete support for 30 languages with fully spelled-out headers and labels across all screens.
+If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp. If you don't want to support me specifically, but want to make a donation for the good, please use this link to support the soldiers who are currently defending Ukraine from the russian aggression: https://www.sternenkofund.org/en/donate
 
 ----------------------------------------------------------------------------------------------------------------------
 
-### 📖 How to use:
+<details>
 
-1. Install, launch, grant required permissions (Audio Record, GPS Location, Battery Optimization), and add to the sleep whitelist in system factory settings (password `8888`).
-2. Do not use the stock DSP app, as launching it may overwrite hardware registers with stock settings.
-3. If you want to disable the stock DSP app, run:
-   ```bash
-   adb shell pm disable com.qf.soundeffect
-   ```
-   To enable it back:
-   ```bash
-   adb shell pm enable com.qf.soundeffect
-   ```
-4. *(Root only)* You can install `wDSP-Proxy` as an update to the stock DSP app to open wDSP from the system quick settings panel. (Requires `PMPatch3` Magisk module).
+<summary>Screenshots</summary>
+
+<img width="1024" height="600" alt="Screenshot_20261005_005940" src="https://github.com/user-attachments/assets/09721a9f-3791-4137-a185-770a3648caf9" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_005954" src="https://github.com/user-attachments/assets/6c704193-b5e7-4991-b266-04a1b7f4f289" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_010001" src="https://github.com/user-attachments/assets/e0c89c59-40c6-44c6-a871-062c8d1eec62" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_010007" src="https://github.com/user-attachments/assets/c65fb258-926d-4663-9780-54b7c099f088" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_010015" src="https://github.com/user-attachments/assets/9f2a6137-e363-4f0f-bcc1-a7ba70bb4b2e" />
+
+<img width="1024" height="600" alt="Screenshot_20261005_010021" src="https://github.com/user-attachments/assets/614a968c-a940-4f0e-b8dd-ca9f7e2c109e" />
+
+</details>
 
 ----------------------------------------------------------------------------------------------------------------------
 
-Written in Java, targeting Android 10 (API 29). Reverse-engineered proprietary MCU communication protocol via reflections.
+Features:
 
-Licensed under **GPLv3**.
+Equalization:
+- EQ that is true-to-hardware (16 bands with 2dB per step), correctly labeled with true curve visualization, with a fixed Q of 2.2. Subwoofer control on the same page. Amp gain control.
+- Visualization of every filter, every setting, all on the same page, a curve that follows the shape of all the filters (self-developed approximation algorithm) with a self-developed RTA (1024-sample, Hann-windowed STFT, ~50% overlap, radix-2 Cooley-Tukey FFT, Catmull-Rom spectral interpolation, 0.45-octave triangular smoothing, plus an asymmetric attack/release envelope follower for the temporal ballistics)
+- ISO 226 Loudness Correction curve which uses all the settings available to compensate for the non-linearity of hearing at low volumes. Self-developed anti-ripple algorithm for the EQ (2.2Q bell filters cause ripple!), Bass Boost for the low frequencies, dynamic subwoofer gain tweaking, Ultra Bass function to compensate for the head unit not scaling subwoofer gain correctly with the volume. All done to make music sound as perceptually "flat" as possible at all volumes, true to the coloring settings set by the user.
+- Bass filtering and boost just like in the stock DSP, but with correctly labeled values.
+
+Other:
+- "Positioning" delays for careful tweaking of the sound center with 0.5ms step up to 5ms for all the speakers and subwoofer, also expressed in centimeters for convenience.
+or
+- "Surround" delays more suited for Haas effect, no subwoofer tweaking, max 10ms with 1ms step. "Rear fill enhancement", which i'm not sure if it does anything, but i have copied the control logic verbatim for a possible future MCU update.
+- Speaker balance adjustable with an XY controller and step buttons featuring my car, beloved Škoda Fabia mk1.
+
+Presets:
+- All the settings in the app are saved to a preset that the user is able to duplicate, export, import and rename.
+- Automatic preset switching system that makes it possible to apply presets to different audio types, like Media, AUX, Radio and Bluetooth calls. Default Call preset with optimized values.
+
+GALA:
+- Uses GPS data to read vehicle speed and calculates a volume boost based on the parameters the user sets. Just like on VAG radios, or in the Nightrunners demo.
+
+Soundcheck:
+- Theme song loop that i composed that allows you to play the bass, drums, melody and vocals separately or combined in stems for a repeatable tuning reference.
+- Pink noise generator.
+- Sine wave generator with precise control, sweep function and a perceptual normalization at 0 phon (hearing threshold) which can be really quiet and expose the distortion of the DSP or the amp.
+- Test buttons for all the speakers
+- Sub-only toggle to make everything apart from the sub as quiet as possible.
+
+----------------------------------------------------------------------------------------------------------------------
+
+How to use:
+
+1. Install, launch, give all the permissions, add to sleep whitelist in 8888. Ready to use. Don't use the stock DSP app, since it will reset your settings if launched and closed, if that happens - restart wDSP.
+2. If you want to disable the stock DSP app (recommended!), run the 'adb shell pm disable com.qf.soundeffect' command to disable it. Use 'adb shell pm enable com.qf.soundeffect' to enable it back.
+3. (Root only) You can install the wDSP-Proxy as an update to the stock DSP app to have the button in the quick settings open wDSP. You need to have PMPatch3.zip Magisk module installed, if you have disabled it, you need to enable it again. https://github.com/vova7878-modules/PMPatch/releases
+
+My recommendations:
+1. You have to know that the 2.2Q filters on the EQ don't tolerate shelving. The inter-frequency interaction (in the worst case - ripple) can:
+- Destroy the phase at high frequencies, making everything sound "smeared" even on high-end setups.
+- Furthermore, they can affect the phase of the bass and make the interaction between the sub and the door speakers unpredictable, destroying the linearity of the sound and even causing gaps in the frequency response.
+Therefore:
+- Cut, not boost. Boosting can cause DSP clipping if overdone and cause ripple if too many bands are adjusted at the same time. Surgical cuts (like at the lower treble region, where the hearing is the most sensitive, or at the resonance points of the cabin/speaker setup) can make all the difference in the world.
+- If you have to boost the bass, adjust the sub or the bass boost sliders. That's generally all you need.
+2. If you have a sub, a generous crossover is recommended. Start by setting the sub freq to 63Hz and the HPF (Bass filter) freq of the front and rear speakers to 100Hz. If you have door rattle, that will tame it as well. Adjust if needed. Also turn on Ultra Bass, because the sub gets quieter as you adjust the master volume (QF platform quirk). Adjust if needed, rinse and repeat. Look at the RTA and the curves on the EQ screen for clues. If using the Loudness feature, try Sub tweaking, it will boost the sub at low volumes.
+3. Turn on the Loudness, Sub tweaking, Trim Highs and Show on main. Set the Loudness calibration volume to roughly 80db (Freight train at 50ft, food blender, highway car interior). That is the point where the hearing is the flattest. The Loudness curve will be applied to the sound below that level. Don't treat as gospel, adjust by taste afterwards. Be aware that Loudness causes some inter-frequency ripple that can't be avoided. Don't use the feature if that bothers you or if you always listen to music at the same volume.
+4. GALA feature is used to compensate for road noise at higher speeds. Set the values conservatively, i recommend a max adjustment of 6 and a step every 50km/h for a start, reduce if it gets too loud, increase if it gets too quiet. Only touch the Advanced settings if you have specific issues.
+
+Report, report and report bugs again. It is crucial to me that you share what doesn't work so i can keep improving the app.
+
+----------------------------------------------------------------------------------------------------------------------
+
+Written on Java, set to target API29. Reverse-engineered proprietary MCU communication protocol. Communicates with the framework.jar service using reflections.
+
+The app is licensed with the GPLv3 license. 
+If you improve the program and share it, you must share the source code too.
+
+License rights belong to Volodymyr Chebanenko, the creator and the maintainer.
