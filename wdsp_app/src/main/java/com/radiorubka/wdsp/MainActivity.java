@@ -199,6 +199,8 @@ public class MainActivity extends AppCompatActivity {
     
     // GALA Controls
     private MaterialButton switchGalaEnable, switchGalaGlobal, switchGalaDisableForPreset;
+    /** The Audio Check tab (the author's 1.0); the sound itself is AudioCheck's. */
+    private AudioCheckPanel audioCheckPanel;
     // The head unit's buttons in our accent while this screen is shown (the author's 0.5; a
     // switch in Settings, off by default).
     private final ButtonBacklight buttonBacklight = new ButtonBacklight();
@@ -791,7 +793,10 @@ public class MainActivity extends AppCompatActivity {
                 R.id.card_delays_legacy,
                 R.id.card_filters_container,
                 R.id.card_gala_c1,
-                R.id.card_gala_c2
+                R.id.card_gala_c2,
+                R.id.card_audiocheck_c1,
+                R.id.card_audiocheck_c2,
+                R.id.card_audiocheck_c3
             };
             for (int id : cards16dp) {
                 View c = findViewById(id);
@@ -927,6 +932,9 @@ public class MainActivity extends AppCompatActivity {
             updateToggleStyle(switchGalaEnable);
             updateToggleStyle(switchGalaGlobal);
             updateToggleStyle(switchGalaDisableForPreset);
+            if (audioCheckPanel != null) {
+                for (View b : audioCheckPanel.buttons()) updateToggleStyle(b);
+            }
 
             // Spectrum Mode toggle
             updateSpectrumModeUi();
@@ -958,7 +966,8 @@ public class MainActivity extends AppCompatActivity {
 
             // 1. Main Page Titles (24sp BOLD - чітко видно з відстані 1 м на 7" екрані)
             int[] mainPageTitles = {
-                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title
+                R.id.tv_app_logo_title, R.id.tv_fm_title, R.id.tv_delays_title, R.id.tv_gala_title,
+                R.id.tv_audiocheck_title
             };
             for (int id : mainPageTitles) {
                 TextView tv = findViewById(id);
@@ -973,7 +982,8 @@ public class MainActivity extends AppCompatActivity {
             // 2. Subtitles / Section Headers (18sp BOLD - однаковий розмір, трохи більший за елементи)
             int[] subTitles = {
                 R.id.fm_controls_title, R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
-                R.id.gala_c1_title, R.id.gala_c2_title
+                R.id.gala_c1_title, R.id.gala_c2_title,
+                R.id.tv_audiocheck_stems_label, R.id.tv_audiocheck_speaker_label
             };
             for (int id : subTitles) {
                 TextView tv = findViewById(id);
@@ -1038,7 +1048,10 @@ public class MainActivity extends AppCompatActivity {
                 R.id.card_delays_legacy,
                 R.id.card_filters_container,
                 R.id.card_gala_c1,
-                R.id.card_gala_c2
+                R.id.card_gala_c2,
+                R.id.card_audiocheck_c1,
+                R.id.card_audiocheck_c2,
+                R.id.card_audiocheck_c3
             };
             for (int cid : containersToStyle) {
                 View cv = findViewById(cid);
@@ -1046,6 +1059,8 @@ public class MainActivity extends AppCompatActivity {
                     applyThemeToContainer(cv, primaryText, secondaryText, valueColor, border, valueIdSet, titleIdSet);
                 }
             }
+            // The sweep's number fields: their hints kept the platform's grey, unreadable at night.
+            if (audioCheckPanel != null) audioCheckPanel.tintFields(primaryText, secondaryText);
 
             // Action Buttons styling (fader arrows, volume buttons, plus, minus, center, apply)
             int[] actionButtons = {
@@ -1298,6 +1313,7 @@ public class MainActivity extends AppCompatActivity {
         setupDelayControls();
         setupDelay1Controls();
         setupGalaControls();
+        audioCheckPanel = new AudioCheckPanel(this);
         checkStatusBarHeightCalibration();
 
         findViewById(R.id.btn_minus).setOnClickListener(v -> adjustAllBands(-1));
@@ -1460,6 +1476,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        // Leaving the screen ends a test, as in the author's 1.0 - a tab switch does not.
+        AudioCheck.get(this).stopAll();
         sendUiSignal(false);
         buttonBacklight.restore();
     }
@@ -2922,9 +2940,10 @@ public class MainActivity extends AppCompatActivity {
         final View dly = findViewById(R.id.layout_delays);
         final View ftr = findViewById(R.id.layout_filters);
         final View gl = findViewById(R.id.layout_gala);
+        final View ac = findViewById(R.id.layout_audiocheck);
 
         // 2. Put them in an array for easy looping
-        final View[] allLayouts = {eq, fm, dly, ftr, gl};
+        final View[] allLayouts = {eq, fm, dly, ftr, gl, ac};
         final ViewGroup tabContainer = (ViewGroup) eq.getParent(); // shared parent of all tab layouts
 
         bn.setOnItemSelectedListener(it -> {
@@ -2937,6 +2956,7 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.nav_delays) target = dly;
             else if (id == R.id.nav_other) target = ftr;
             else if (id == R.id.nav_gala) target = gl;
+            else if (id == R.id.nav_audiocheck) target = ac;
             else if (id == R.id.nav_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return false;
@@ -3394,6 +3414,8 @@ public class MainActivity extends AppCompatActivity {
     @Override protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
+        AudioCheck.get(this).setListener(null);
+        AudioCheck.get(this).release();
         if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
         try {
             unregisterReceiver(serviceReceiver);
