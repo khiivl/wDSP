@@ -240,6 +240,14 @@ Java_com_radiorubka_wdsp_NativeAnalyzer_nativeGetCurveDb(JNIEnv* env, jclass, jl
 }
 
 JNIEXPORT void JNICALL
+Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetCurveFraction(JNIEnv*, jclass, jlong handle,
+                                                               jint octaveFraction) {
+    auto* analyzer = asAnalyzer(handle);
+    if (analyzer == nullptr) return;
+    analyzer->setCurveFraction(octaveFraction);
+}
+
+JNIEXPORT void JNICALL
 Java_com_radiorubka_wdsp_NativeAnalyzer_nativeSetLevelOffsetDb(JNIEnv*, jclass, jlong handle,
                                                                jint consumer, jfloat offsetDb) {
     auto* analyzer = asAnalyzer(handle);

@@ -370,6 +370,30 @@ int runCurve() {
                tone, first, last, width, middle, nearest, hz(nearest), ok ? "PASS" : "FAIL");
         if (!ok) failures++;
     }
+    {
+        // A test tone with the curve at a twenty-fourth of an octave (Audio Check's sine): at 10 kHz
+        // the plateau must shrink from 7 points to at most 3, still centred on the tone.
+        wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
+        analyzer.setCurveFraction(24);
+        const float tone = 10000.0f;
+        feed(analyzer, makeSine(kSampleRate * 4, tone), 480);
+        float curve[wdsp::kCurvePoints];
+        analyzer.getCurveDb(curve);
+        int peak = 0, nearest = 0;
+        for (int j = 1; j < wdsp::kCurvePoints; j++) {
+            if (curve[j] > curve[peak]) peak = j;
+            if (std::fabs(std::log(hz(j) / tone)) < std::fabs(std::log(hz(nearest) / tone))) nearest = j;
+        }
+        int first = peak, last = peak;
+        while (first > 0 && curve[first - 1] >= curve[peak] - 1.0f) first--;
+        while (last < wdsp::kCurvePoints - 1 && curve[last + 1] >= curve[peak] - 1.0f) last++;
+        float middle = 0.5f * static_cast<float>(first + last);
+        int width = last - first + 1;
+        bool ok = std::fabs(middle - static_cast<float>(nearest)) <= 1.0f && width <= 3;
+        printf("  10000 Hz tone, 1/24 octave: plateau %d..%d (%d wide), nearest point %d -> %s\n",
+               first, last, width, nearest, ok ? "PASS" : "FAIL");
+        if (!ok) failures++;
+    }
     return failures;
 }
 

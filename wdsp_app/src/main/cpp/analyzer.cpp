@@ -59,10 +59,8 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
     // A frame carries the bands, then the curve: one ring, so both are held back by the same latency.
     for (auto& frame : frameRing_) frame.assign(kBands + kCurvePoints, -120.0f);
     buildBandPlan();
-    for (int j = 0; j < kCurvePoints; j++) {
-        curvePlan_[j] = makePlan(20.0f * std::pow(1000.0f, static_cast<float>(j) / (kCurvePoints - 1)));
-        longCurveDb_[j] = -120.0f;
-    }
+    buildCurvePlan(curveFractionBuilt_);
+    for (int j = 0; j < kCurvePoints; j++) longCurveDb_[j] = -120.0f;
 }
 
 Analyzer::~Analyzer() = default;
@@ -121,9 +119,21 @@ void Analyzer::buildBandPlan() {
     }
 }
 
-Analyzer::BandPlan Analyzer::makePlan(float center) const {
-    // A third-octave band spans a sixth of an octave either side of its centre.
-    const float sixth = std::pow(2.0f, 1.0f / 6.0f);
+void Analyzer::buildCurvePlan(int octaveFraction) {
+    for (int j = 0; j < kCurvePoints; j++) {
+        curvePlan_[j] = makePlan(20.0f * std::pow(1000.0f, static_cast<float>(j) / (kCurvePoints - 1)),
+                                 octaveFraction);
+    }
+    curveFractionBuilt_ = octaveFraction;
+}
+
+void Analyzer::setCurveFraction(int octaveFraction) {
+    curveFractionWanted_.store(octaveFraction < 1 ? 3 : octaveFraction);
+}
+
+Analyzer::BandPlan Analyzer::makePlan(float center, int octaveFraction) const {
+    // A 1/n-octave band spans half of that either side of its centre: a third-octave band a sixth.
+    const float sixth = std::pow(2.0f, 1.0f / (2.0f * static_cast<float>(octaveFraction)));
     const float nyquist = static_cast<float>(sampleRate_) * 0.5f;
     float low = center / sixth;
     float high = center * sixth;
@@ -332,6 +342,12 @@ void Analyzer::processFrame(bool haveLong) {
     // this frame, held otherwise, exactly as the bands there are. So a point on a band centre reads
     // that band, pink noise reads level as the bands do, and the curve needs no smoothing on top:
     // a sliding third of an octave already is the fractional-octave smoothing the author applies in dB.
+    const int wanted = curveFractionWanted_.load();
+    if (wanted != curveFractionBuilt_) {
+        // A new width: the held long-window points belong to the old one.
+        buildCurvePlan(wanted);
+        for (int j = 0; j < kCurvePoints; j++) longCurveDb_[j] = -120.0f;
+    }
     float curveDb[kCurvePoints];
     for (int j = 0; j < kCurvePoints; j++) {
         const BandPlan& p = curvePlan_[j];

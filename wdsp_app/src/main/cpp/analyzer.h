@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <memory>
@@ -164,6 +165,14 @@ public:
      * smoothing in time applied: the display adds what its mode needs. -120 until the first frame.
      */
     void getCurveDb(float* outCurve);
+
+    /**
+     * How wide each curve point is: 3 = a third of an octave (the default, the bands' width), 24 = a
+     * twenty-fourth for a test tone - a third of an octave turns a sine into a plateau, and the
+     * author turns his smoothing off while his sine generator plays for the same reason. Taken by
+     * the analysis thread on its next frame.
+     */
+    void setCurveFraction(int octaveFraction);
     /**
      * A shift in dB added to every band before a consumer's levels are scaled - for drawing one
      * analyser on another's scale (the microphone on the calculated spectrum's). 0 in a new analyser.
@@ -201,7 +210,9 @@ private:
     static void foldTo16Db(const float* db32, float* out16Db);
     void accumulate(const float* power, int binCount, float binWidth, bool longFft);
     /** A third of an octave around centerHz: its edges, its transform and its bins. */
-    BandPlan makePlan(float centerHz) const;
+    BandPlan makePlan(float centerHz, int octaveFraction = 3) const;
+    /** Rebuilds the curve's plan at a new width; analysis thread only. */
+    void buildCurvePlan(int octaveFraction);
     /** The energy a plan holds in a power spectrum - one function for the bands and the curve. */
     static float planEnergy(const BandPlan& p, const float* power, int binCount);
 
@@ -228,6 +239,9 @@ private:
     /** The curve's thirds of an octave, and the long transform's points held between its runs. */
     BandPlan curvePlan_[kCurvePoints];
     float longCurveDb_[kCurvePoints];
+    /** Width asked for (setCurveFraction) and width the plan is built at (analysis thread). */
+    std::atomic<int> curveFractionWanted_{3};
+    int curveFractionBuilt_ = 3;
 
     // Ring of finished frames, so the display can be held back by the playback latency.
     std::vector<std::vector<float>> frameRing_;

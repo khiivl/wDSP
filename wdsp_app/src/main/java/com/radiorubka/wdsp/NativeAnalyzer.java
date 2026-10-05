@@ -159,6 +159,14 @@ public final class NativeAnalyzer {
         if (handle != 0) nativeGetCurveDb(handle, outCurve);
     }
 
+    /**
+     * The curve points' width as a fraction of an octave: 3 (the bands' third, the default) or 24
+     * for a test tone, which a third would spread into a plateau.
+     */
+    public void setCurveFraction(int octaveFraction) {
+        if (handle != 0) nativeSetCurveFraction(handle, octaveFraction);
+    }
+
     /** Frequency of curve point {@code j}, the same log spacing the native side uses. */
     public static float curveHz(int j) {
         return (float) (20.0 * Math.pow(1000.0, j / (double) (CURVE_POINTS - 1)));
@@ -244,6 +252,8 @@ public final class NativeAnalyzer {
     private static native void nativeGetLevelsDb16(long handle, float[] out16);
 
     private static native void nativeGetCurveDb(long handle, float[] outCurve);
+
+    private static native void nativeSetCurveFraction(long handle, int octaveFraction);
 
     private static native void nativeSetLevelOffsetDb(long handle, int consumer, float offsetDb);
 

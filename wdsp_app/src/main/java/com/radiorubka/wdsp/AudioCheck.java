@@ -222,6 +222,7 @@ final class AudioCheck {
         } else {
             giveBackIfIdle();
         }
+        updateCurveWidth();
     }
 
     /** A new frequency, clamped to 20 Hz .. 20 kHz; a playing tone follows it after the debounce. */
@@ -269,12 +270,14 @@ final class AudioCheck {
         float duration = Math.max(0.5f, Math.min(300f, durationSec));
         sweep = buildSweep(start, end, duration, normalize);
         sweep.track.play();
+        updateCurveWidth();
     }
 
     void stopSweep() {
         releaseLoop(sweep);
         sweep = null;
         giveBackIfIdle();
+        updateCurveWidth();
     }
 
     private static float clampHz(float hz) {
@@ -372,6 +375,7 @@ final class AudioCheck {
         stopSpeaker();
         setOnlySub(false);
         giveBackIfIdle();
+        updateCurveWidth();
     }
 
     /** Frees the buffers as well - the stems hold a few megabytes each while paused. */
@@ -407,8 +411,16 @@ final class AudioCheck {
                 return false;
             }
         }
-        announceSession(true);
+        if (!sessionAnnounced) {
+            announceSession(true);
+            AudioSpectrumEngine.getInstance().resolveForOwnPlayback();
+        }
         return true;
+    }
+
+    /** The spectrum reads narrow while a tone plays - see AudioSpectrumEngine.setCurveNarrow. */
+    private void updateCurveWidth() {
+        AudioSpectrumEngine.getInstance().setCurveNarrow(isTonePlaying());
     }
 
     private void giveBackIfIdle() {

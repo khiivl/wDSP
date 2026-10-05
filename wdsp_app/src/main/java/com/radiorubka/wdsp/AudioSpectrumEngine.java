@@ -829,11 +829,32 @@ public class AudioSpectrumEngine {
                 rtaCorrectionStale = false;   // before the build: a change during it marks it again
                 buildRtaCorrections();
             }
+            analyzer.setCurveFraction(curveNarrow ? 24 : 3);
             analyzer.getCurveDb(contentDb);
             System.arraycopy(analyzer.isAcoustic() ? rtaCorrectionMic : rtaCorrectionTap, 0,
                     correctionDb, 0, NativeAnalyzer.CURVE_POINTS);
             return true;
         }
+    }
+
+    /**
+     * A test tone is playing (Audio Check's sine or sweep): the curve reads a twenty-fourth of an
+     * octave instead of a third, so the tone stands as a peak, not a plateau. Kept here and handed to
+     * whichever analyser is shown on its next read.
+     */
+    private volatile boolean curveNarrow;
+
+    public void setCurveNarrow(boolean narrow) {
+        curveNarrow = narrow;
+    }
+
+    /**
+     * Our own test signal started (Audio Check): find its session now rather than waiting for the
+     * previous one to go quiet. The test announces the session the standard way first, and the
+     * resolver tries an announced session before anything else.
+     */
+    public void resolveForOwnPlayback() {
+        requestResolve("Audio Check started");
     }
 
     /** Both curve corrections from the same state {@link #getDspCurve} and the bands use. */
