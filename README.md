@@ -15,7 +15,7 @@ Measure accurately, correct surgically, and stop trying to boost acoustic nulls.
 
 Telegram group for discussion and bug reporting (also use Issues on GitHub): https://t.me/wDSPapp
 
-If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp. If you don't want to support me specifically, but want to make a donation for the good, please use this link to support the soldiers who are currently defending Ukraine from the Russian aggression: https://www.sternenkofund.org/en/donate
+If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp. If you don't want to support me specifically, but want to make a donation for the good, please use this link to support the soldiers who are currently defending Ukraine from the russian aggression: https://www.sternenkofund.org/en/donate
 
 ----------------------------------------------------------------------------------------------------------------------
 
