@@ -50,7 +50,9 @@ public final class PresetsDatabaseValidator {
     public static final int SUB_GAIN_DEFAULT = 0;
 
     public static final int SUB_FREQ_MIN = 0;
-    public static final int SUB_FREQ_MAX = 10;
+    /** Up to the author's "No Sub", which must survive the clamp - clamped to 10 it would turn his
+     * subwoofer-less presets into a 250 Hz subwoofer. */
+    public static final int SUB_FREQ_MAX = DspResponse.SUB_OFF_IDX;
     public static final int SUB_FREQ_DEFAULT = 5; // 80 Hz
 
     public static final int POWER_VOL_MIN = 0;

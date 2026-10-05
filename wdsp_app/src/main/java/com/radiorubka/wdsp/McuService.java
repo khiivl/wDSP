@@ -2242,7 +2242,8 @@ public class McuService extends Service implements LocationListener {
         // nobody hears.
         int hpfFront = presetPrefs().getInt(currentPresetName + "_bf_f", 0);
         int hpfRear = presetPrefs().getInt(currentPresetName + "_bf_r", 0);
-        int subFreq = RoomMeasurement.hasSubwoofer(this) ? cachedSubFreq : -1;
+        int subFreq = RoomMeasurement.hasSubwoofer(this) && !DspResponse.isSubOff(cachedSubFreq)
+                ? cachedSubFreq : -1;
         AudioSpectrumEngine.getInstance().setDspState(
                 effectiveGainIdx, q, subFreq, effectiveSubGainIdx, hpfFront, hpfRear, effectiveBassShelf);
     }
@@ -2254,15 +2255,19 @@ public class McuService extends Service implements LocationListener {
 
     private void updateSubwoofer(int currentVol) {
         subData[0] = (byte) 0x8B;
+        // The author's "No Sub": the packet has no off bit, so the lowest crossover at 0 dB, as he
+        // sends it - and nothing that would lift it (loudness's share, Ultra Bass).
+        final boolean subOff = DspResponse.isSubOff(cachedSubFreq);
         float subOffset = LoudnessCurve.subOffset(currentVol, cachedFmCal, cachedFmStr,
                 cachedFmEn, cachedSubComp, cachedSubFreq);
 
-        float ultraBassOffset = LoudnessCurve.ultraBassOffset(currentVol, cachedUltraBassEn,
+        float ultraBassOffset = subOff ? 0f : LoudnessCurve.ultraBassOffset(currentVol, cachedUltraBassEn,
                 cachedUltraBassStartVol, cachedUltraBassMaxDb);
 
-        int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
+        int finalGainIdx = subOff ? 0
+                : Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
         effectiveSubGainIdx = finalGainIdx;
-        subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));
+        subData[1] = (byte) (((subOff ? 0 : cachedSubFreq) << 4) | (finalGainIdx & 0x0F));
         if (lastComputedSubData == null || !Arrays.equals(lastComputedSubData, subData)) {
             lastComputedSubData = subData.clone();
             sendSubThrottled(subData);

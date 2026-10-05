@@ -32,6 +32,19 @@ public final class DspResponse {
      */
     public static final int SUB_LPF_DEFAULT_IDX = 5;
 
+    /**
+     * The author's "No Sub" (his 1.0): one past the last crossover, a preset that plays without a
+     * subwoofer. The 0x8B packet has no off bit, so on the wire it is the lowest crossover at 0 dB,
+     * as in his McuService; in the model there is no subwoofer path at all - an index past the table
+     * already reads that way here. Kept at his index so his presets mean the same thing in both.
+     */
+    public static final int SUB_OFF_IDX = SUB_FREQS_HZ.length;
+
+    /** Whether a stored "_sub_f" is the author's "No Sub". */
+    public static boolean isSubOff(int subFreqIdx) {
+        return subFreqIdx == SUB_OFF_IDX;
+    }
+
     /** The chip's code for the subwoofer low-pass nearest to {@code hz}. */
     public static int nearestSubLpfIndex(float hz) {
         int best = SUB_LPF_DEFAULT_IDX;

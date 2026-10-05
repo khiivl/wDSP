@@ -139,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
      * thirty locales - and worse, the parsing code compares the spinner's text against these
      * entries, so a translated build would have failed to match at all.
      */
-    private final String[] SUB_FREQS = new String[DspResponse.SUB_FREQS_HZ.length];
+    /** The crossovers, then the author's "Off" (No Sub) at {@link DspResponse#SUB_OFF_IDX}. */
+    private final String[] SUB_FREQS = new String[DspResponse.SUB_FREQS_HZ.length + 1];
 
     // Filter controls
     private Slider seekBassFilterFront, seekBassBoostFront, seekBassFilterRear, seekBassBoostRear;
@@ -314,6 +315,8 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < DspResponse.SUB_FREQS_HZ.length; i++) {
             SUB_FREQS[i] = getString(R.string.unit_hz, String.valueOf(DspResponse.SUB_FREQS_HZ[i]));
         }
+        // The author's "No Sub" - the same translated "Off" the bass boost list starts with.
+        SUB_FREQS[DspResponse.SUB_OFF_IDX] = getString(R.string.freq_off);
         // Index 0 is the "no boost" entry rather than a frequency, so it is a word, translated.
         BASS_BOOST_FREQS_SHOWN[0] = getString(R.string.freq_off);
         for (int i = 1; i < BASS_BOOST_FREQS.length; i++) {
@@ -1801,7 +1804,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Update the global value for other calculations
-            Globals.currentSubFreqHz = DspResponse.SUB_FREQS_HZ[pos];
+            Globals.currentSubFreqHz = subHzOf(pos);
+            updateSubDependentControlsEnabled(DspResponse.isSubOff(pos));
         });
 
         // 4. Seek Gain logic remains largely the same
@@ -2192,7 +2196,7 @@ public class MainActivity extends AppCompatActivity {
         }
         currentFmSubOffset = LoudnessCurve.subOffset(vol, cal, str, switchFmEnable.isChecked(),
                 switchFmSubComp != null && switchFmSubComp.isChecked(),
-                subFreqIndexOf(Globals.currentSubFreqHz));
+                currentSubFreqIndex());
         return offs;
     }
 
@@ -2207,12 +2211,35 @@ public class MainActivity extends AppCompatActivity {
                 : resolveBassBoostFreqIndex(spinnerBassFreqFront.getText().toString());
     }
 
-    /** The crossover the subwoofer spinner is on, as an index into {@link DspResponse#SUB_FREQS_HZ}. */
-    private int subFreqIndexOf(int hz) {
-        for (int i = 0; i < DspResponse.SUB_FREQS_HZ.length; i++) {
-            if (DspResponse.SUB_FREQS_HZ[i] == hz) return i;
+    /**
+     * The crossover on screen as "_sub_f" stores it - {@link DspResponse#SUB_OFF_IDX} for the
+     * author's "Off". Read from the spinner, not from a frequency: "Off" has none, and looking it
+     * up by hertz found nothing and fell back to 80 Hz.
+     */
+    private int currentSubFreqIndex() {
+        int idx = spinnerSubFreq == null ? -1 : resolveSubFreqIndex(spinnerSubFreq.getText().toString());
+        return idx >= 0 ? idx : DspResponse.SUB_LPF_DEFAULT_IDX;
+    }
+
+    /** Hz for a stored crossover index; 0 for "Off", which every curve reads as no subwoofer. */
+    private static int subHzOf(int subFreqIdx) {
+        return subFreqIdx >= 0 && subFreqIdx < DspResponse.SUB_FREQS_HZ.length
+                ? DspResponse.SUB_FREQS_HZ[subFreqIdx] : 0;
+    }
+
+    /**
+     * The author's 1.0: with "Off" the controls that only mean something with a subwoofer are greyed
+     * out and the gain shown at 0, which is what the service sends. Null-checked because a preset
+     * can load before every control is bound.
+     */
+    private void updateSubDependentControlsEnabled(boolean subOff) {
+        if (seekSubGain != null) {
+            seekSubGain.setEnabled(!subOff);
+            if (subOff) seekSubGain.setValue(0f);
         }
-        return -1;
+        if (subOff && tvSubDb != null) tvSubDb.setText("+0");
+        if (switchFmSubComp != null) switchFmSubComp.setEnabled(!subOff);
+        if (switchUltraBass != null) switchUltraBass.setEnabled(!subOff);
     }
 
     /**
@@ -2234,7 +2261,7 @@ public class MainActivity extends AppCompatActivity {
         LoudnessCheck.Result r = LoudnessCheck.inspect(
                 gains,
                 getIntSlider(seekSubGain),
-                subFreqIndexOf(Globals.currentSubFreqHz),
+                currentSubFreqIndex(),
                 bassBoost,
                 switchFmEnable != null && switchFmEnable.isChecked(),
                 switchFatigueEnable != null && switchFatigueEnable.isChecked(),
@@ -2722,7 +2749,8 @@ public class MainActivity extends AppCompatActivity {
             subFreqIdx = DspResponse.SUB_LPF_DEFAULT_IDX;
         }
         spinnerSubFreq.setText(SUB_FREQS[subFreqIdx], false);
-        Globals.currentSubFreqHz = DspResponse.SUB_FREQS_HZ[subFreqIdx];
+        Globals.currentSubFreqHz = subHzOf(subFreqIdx);
+        updateSubDependentControlsEnabled(DspResponse.isSubOff(subFreqIdx));
 
         // Power Volume
         showPowerVol(p.getInt(name + "_power_vol", 0));

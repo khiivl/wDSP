@@ -255,6 +255,8 @@ public final class LoudnessCurve {
      * It stays as a deliberate extra for when the bass is short - the owner, 15.09.2026.
      */
     public static float maxSubBoost(int subFreqIdx) {
+        // No subwoofer in the preset, nothing to compensate on it - hzOf would read 80 Hz.
+        if (DspResponse.isSubOff(subFreqIdx)) return 0f;
         float crossoverHz = hzOf(subFreqIdx);
         int atCrossover = -1;
         for (int i = 0; i < AudioConfig.NUM_BANDS && AudioConfig.BAND_CENTER_HZ[i] <= crossoverHz; i++) {
