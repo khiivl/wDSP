@@ -26,6 +26,8 @@ public final class CabinDefect {
         CLIPPING,
         /** A speaker the person said the car has stayed silent. */
         DECLARED_NOT_HEARD,
+        /** Two speakers arrive as if each stood in the other's place: swapped wires, or a wrong dot. */
+        CHANNELS_SWAPPED,
         /** A main speaker reads inverted while the others do not. */
         POLARITY,
         /** A channel needs more delay than the chip can apply. */
@@ -45,14 +47,21 @@ public final class CabinDefect {
     public final String where;
     /** The speaker's name for the screen, 0 when the fault is not one speaker's. */
     public final int whereRes;
-    /** The number that goes with it - samples, Hz - or NaN when none. */
+    /** The second speaker's name when the fault is between two, else 0. */
+    public final int pairRes;
+    /** The number that goes with it - samples, Hz, ms - or NaN when none. */
     public final float value;
 
     public CabinDefect(Kind kind, Certainty certainty, String where, int whereRes, float value) {
+        this(kind, certainty, where, whereRes, 0, value);
+    }
+
+    public CabinDefect(Kind kind, Certainty certainty, String where, int whereRes, int pairRes, float value) {
         this.kind = kind;
         this.certainty = certainty;
         this.where = where != null ? where : "";
         this.whereRes = whereRes;
+        this.pairRes = pairRes;
         this.value = value;
     }
 
@@ -68,6 +77,11 @@ public final class CabinDefect {
             case DECLARED_NOT_HEARD:
                 return sure + at + "declared but not heard. Check that the speaker is connected and plays; "
                         + "if the car has none there, untick it in the speaker layout.";
+            case CHANNELS_SWAPPED:
+                return sure + at + String.format(Locale.US, "the arrival times fit the cabin only with these two "
+                        + "swapped (%.2f ms off as wired). If the microphone stood where the dot says, their "
+                        + "wires are swapped - at the speakers or in the harness. Fix this first: every other "
+                        + "finding names a speaker by the output that drives it.", value);
             case POLARITY:
                 return sure + at + "reads inverted while the other main speakers do not - most likely "
                         + "connected the wrong way round. Check the two wires at that speaker.";

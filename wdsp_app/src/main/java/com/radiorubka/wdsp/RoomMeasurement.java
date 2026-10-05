@@ -1253,6 +1253,8 @@ public final class RoomMeasurement {
         public boolean hasPolarityInversion = false;
         /** What the screen says about it, in the person's language. */
         public String wiringWarning = null;
+        /** Arrival order against the cabin's geometry; null when fewer than two door speakers were heard directly. */
+        public ChannelSwapCheck.Verdict channelOrder;
         /** The measurement's main answer: the faults found, in the list's order (collectDefects). */
         public final List<CabinDefect> defects = new ArrayList<>();
 
@@ -1740,6 +1742,7 @@ public final class RoomMeasurement {
                             app.getString(R.string.room_stage_delays_detail), 85);
                 }
                 computeDelays(result, result.soundstageMode);
+                judgeChannelOrder(result);
 
                 if (listener != null) {
                     listener.onProgress(4, 5, app.getString(R.string.room_stage_autoeq),
@@ -3181,9 +3184,9 @@ public final class RoomMeasurement {
 
     /**
      * The measurement's main answer (owner, 02.10.2026): every detector's verdict as a record, in the
-     * list's order. It reads what the detectors already decided - clipping, the declared layout,
-     * polarity (judgePolarity), delays (computeDelays), the midbass roll-off, direct versus reflected
-     * sound - and decides nothing of its own.
+     * list's order. It reads what the detectors already decided - clipping, the declared layout, the
+     * arrival order (judgeChannelOrder), polarity (judgePolarity), delays (computeDelays), the midbass
+     * roll-off, direct versus reflected sound - and decides nothing of its own.
      */
     private static void collectDefects(Result result) {
         result.defects.clear();
@@ -3197,6 +3200,13 @@ public final class RoomMeasurement {
                 Channel ch = Channel.values()[i];
                 result.defects.add(new CabinDefect(CabinDefect.Kind.DECLARED_NOT_HEARD,
                         CabinDefect.Certainty.LIKELY, ch.label, ch.nameRes, Float.NaN));
+            }
+        }
+        if (result.channelOrder != null) {
+            for (Channel[] pair : result.channelOrder.swapped) {
+                result.defects.add(new CabinDefect(CabinDefect.Kind.CHANNELS_SWAPPED, CabinDefect.Certainty.LIKELY,
+                        ChannelSwapCheck.pairLabel(pair), pair[0].nameRes, pair[1].nameRes,
+                        result.channelOrder.asWiredMs));
             }
         }
         if (result.hasPolarityInversion) {
@@ -3220,6 +3230,26 @@ public final class RoomMeasurement {
                         CabinDefect.Certainty.POSSIBLE, c.label, c.nameRes, Float.NaN));
             }
         }
+    }
+
+    /**
+     * Whether the door speakers arrive in the order the cabin's geometry says they should, or only
+     * with two of them swapped (ChannelSwapCheck). Runs after the delays, when the phantoms are gone.
+     * Only a direct arrival is a distance: a channel heard mainly through the cabin stays out.
+     */
+    private static void judgeChannelOrder(Result result) {
+        final Channel[] all = Channel.values();
+        final float[] mic = micPosition(result);
+        final float[] arrivalMs = new float[all.length];
+        final float[] flightMs = new float[all.length];
+        for (int i = 0; i < all.length; i++) {
+            final ChannelResult c = i < result.channels.length ? result.channels[i] : null;
+            arrivalMs[i] = (c != null && c.ok && c.confident) ? c.arrivalMs : Float.NaN;
+            flightMs[i] = (float) (CabinGeometry.distanceCm(speakerPosition(result, all[i]), mic)
+                    / CabinGeometry.SOUND_CM_PER_MS);
+        }
+        result.channelOrder = ChannelSwapCheck.judge(arrivalMs, flightMs);
+        if (result.channelOrder != null) Log.i(TAG, result.channelOrder.describe());
     }
 
     private static String invertedLabels(Result result) {
@@ -3638,6 +3668,7 @@ public final class RoomMeasurement {
                         + "colouring was charged to the car")
               .append("\n\n");
             sb.append(wiringVerdict(result));
+            if (result.channelOrder != null) sb.append(result.channelOrder.describe()).append('\n');
             sb.append("Soundstage mode: ").append(result.soundstageMode != null ? result.soundstageMode.title : "Default").append("\n");
             sb.append("Target sound curve: ").append(result.targetCurve != null ? result.targetCurve.title : "Harman Reference").append("\n");
             if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
