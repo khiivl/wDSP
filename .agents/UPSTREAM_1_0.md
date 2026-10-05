@@ -34,9 +34,16 @@ all of the audio; the Visualizer reports 44.1 kHz while delivering 48 kHz; and t
 8192-point window. Both views then show the same frequencies at the same place.
 
 What is taken — the author's audio reasoning and his numbers:
-1. 200 log-spaced points, each read by Catmull-Rom (Hermite) interpolation in dB through the four
-   nearest bins — no overshoot "ears", no clamp.
-2. Triangular smoothing over ±4 points (fractional-octave-like), off while a sine tone plays.
+1. 200 log-spaced points. His point is read from the four nearest FFT bins (Catmull-Rom in dB) and then
+   smoothed over ±4 points in dB to stand in for fractional-octave smoothing. Here each point is measured
+   as the energy of a third of an octave around it by the bands' own function (`planEnergy`), which
+   *is* fractional-octave smoothing, done in power: a point on a band centre reads that band to 0.27 dB
+   (pink noise, `test_analyzer`), so the curve and the bars are one measurement. His ±4-point pass is
+   therefore not applied on top — it would blur the curve to two thirds of an octave. Owner, 05.10:
+   *«в нас же натив 32, це ж насправді точніше»*.
+2. A pure tone becomes a plateau a third of an octave wide, as it does in the bands. His sine
+   generator wants a sharp peak (he turns his smoothing off while it plays) — a narrow-band reading for
+   that case comes with Audio Check.
 3. Ballistics per point: attack 1.0, release 0.15; a presence gate `(smoothed − (−20)) / 3 dB`, so the EQ
    shift shows only where there is content.
 4. Music mode only: the shift by the calculated chain — EQ (`compositeResponseDb`), loudness correction,
@@ -47,7 +54,7 @@ What is taken — the author's audio reasoning and his numbers:
    back in; `Choreographer` interpolates between captures.
 
 Where it lives: the native analyser gains a 200-point curve output from the transforms it already
-runs (8192 below 800 Hz, 1024 above); a Java helper `RtaCurve` does 2–5; `SpectrumAnalyzerView` draws
+runs (8192 below 800 Hz, 1024 above); a Java helper `RtaCurve` does 3–5; `SpectrumAnalyzerView` draws
 curve or bars by a setting in the visualisation card. Classic draws it his way, Modern ours.
 
 ## For the author: what the merge commit explains (owner, 05.10.2026)
