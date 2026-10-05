@@ -929,6 +929,15 @@ public final class RoomMeasurement {
     }
 
     /** The slider values this run is stepping through, whichever delay line is being tested. */
+    private static boolean anyHeard(Result result, Channel... chs) {
+        if (result.channels == null) return false;
+        for (Channel ch : chs) {
+            int i = ch.ordinal();
+            if (i < result.channels.length && result.channels[i] != null && result.channels[i].ok) return true;
+        }
+        return false;
+    }
+
     private static int[] delayTestSteps() {
         return delayTest == 2 ? SURROUND_TEST_STEPS : DELAY_TEST_STEPS;
     }
@@ -1212,6 +1221,8 @@ public final class RoomMeasurement {
 
         // Auto-EQ & Soundstage extensions
         public boolean hasSubwoofer;
+        /** The door pairs the person said the car has (CabinProfile); only those are swept. */
+        public boolean hasFrontPair = true, hasRearPair = true;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
         public TargetCurve targetCurve = TargetCurve.HARMAN;
         public CarBodyType bodyType = CarBodyType.SEDAN;
@@ -1247,12 +1258,39 @@ public final class RoomMeasurement {
         /** Where the subwoofer stands. -1 = nobody has said, and the boot is assumed. */
         public int subPlace = -1;
 
+        /**
+         * Every speaker the person said the car has was heard. A channel nobody declared is not
+         * swept and stays null - "не чує = немає" (owner, 13.09.2026) holds for it by construction;
+         * a declared one that stayed silent is what {@link #declaredButUnheard} names.
+         */
         public boolean isUsable() {
             if (channels == null || channels.length == 0) return false;
-            for (ChannelResult c : channels) {
-                if (c == null || !c.ok) return false;
+            int heard = 0;
+            for (int i = 0; i < channels.length; i++) {
+                if (!isDeclared(i)) continue;
+                if (channels[i] == null || !channels[i].ok) return false;
+                heard++;
             }
-            return true;
+            return heard > 0;
+        }
+
+        /** Whether the speaker at this channel index is part of the layout the person declared. */
+        boolean isDeclared(int index) {
+            if (index == Channel.SUBWOOFER.ordinal()) return hasSubwoofer;
+            if (index == Channel.FRONT_LEFT.ordinal() || index == Channel.FRONT_RIGHT.ordinal()) return hasFrontPair;
+            return hasRearPair;
+        }
+
+        /** Speakers the person declared and the measurement did not hear, for the log and the report. */
+        public String declaredButUnheard() {
+            StringBuilder sb = new StringBuilder();
+            if (channels == null) return "";
+            for (int i = 0; i < channels.length && i < Channel.values().length; i++) {
+                if (!isDeclared(i) || (channels[i] != null && channels[i].ok)) continue;
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(Channel.values()[i].label);
+            }
+            return sb.toString();
         }
     }
 
@@ -1553,6 +1591,8 @@ public final class RoomMeasurement {
         }
         aborted = false;
         result.hasSubwoofer = hasSubwoofer;
+        result.hasFrontPair = CabinProfile.hasFrontPair(context);
+        result.hasRearPair = CabinProfile.hasRearPair(context);
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
         result.bodyType = bodyType != null ? bodyType : CarBodyType.SEDAN;
@@ -1769,9 +1809,14 @@ public final class RoomMeasurement {
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
                                    NativeSweep sweep, NativeSweep subSweep, float amplitude,
                                    Result result, Listener listener, boolean isMicCalibrationOnly) {
-        final Channel[] channels = result.hasSubwoofer ? Channel.values() : new Channel[]{
-                Channel.REAR_LEFT, Channel.REAR_RIGHT, Channel.FRONT_LEFT, Channel.FRONT_RIGHT
-        };
+        // Only what the person said the car has (CabinProfile). Results are kept by the channel's
+        // own index, never by its place in this list: everything downstream reads FRONT_LEFT and
+        // the others by ordinal, and an undeclared speaker simply stays null - absent.
+        final java.util.List<Channel> declared = new java.util.ArrayList<>();
+        for (Channel ch : Channel.values()) {
+            if (result.isDeclared(ch.ordinal())) declared.add(ch);
+        }
+        final Channel[] channels = declared.toArray(new Channel[0]);
         final int sweepLen = sweep.length();
         final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
         final int lead = (int) (LEAD_SECONDS * SAMPLE_RATE);
@@ -2042,16 +2087,18 @@ public final class RoomMeasurement {
         // that window was cut for.
         final int windowLen = lead + sweepLen + (int) (1.0f * SAMPLE_RATE);
         float[] analysis = new float[NativeSweep.RESULT_SIZE];
-        float[][] channelImpulses = new float[channels.length][];
+        float[][] channelImpulses = new float[result.channels.length][];
 
         for (int k = 0; k < channels.length; k++) {
+            // k is the sweep's place in the recording; ord is where its result lives.
+            final int ord = channels[k].ordinal();
             ChannelResult cr = new ChannelResult();
             cr.label = channels[k].label;
             cr.nameRes = channels[k].nameRes;
             cr.recordedPeak = passPeak;
             cr.recordedRms = passRms;
             cr.bandwidthDb = passBandwidth;
-            result.channels[k] = cr;
+            result.channels[ord] = cr;
 
             final int from = k * period;
             final int len = Math.min(windowLen, got - from);
@@ -2096,8 +2143,8 @@ public final class RoomMeasurement {
             float[] impBuf = new float[len];
             int impLen = played.deconvolve(window, len, impBuf);
             if (impLen > 0) {
-                channelImpulses[k] = new float[impLen];
-                System.arraycopy(impBuf, 0, channelImpulses[k], 0, impLen);
+                channelImpulses[ord] = new float[impLen];
+                System.arraycopy(impBuf, 0, channelImpulses[ord], 0, impLen);
             }
 
             // Clarity decides, not prominence. Prominence compares the loudest instant of the
@@ -2142,7 +2189,7 @@ public final class RoomMeasurement {
             if (delayTest != 0 && k > 0 && result.channels[0] != null) {
                 // What the hardware actually did, against what the slider claims it would do.
                 final float moved = cr.arrivalMs - result.channels[0].arrivalMs;
-                final int steps = delayTestSteps()[k];
+                final int steps = delayTestSteps()[ord];
                 Log.i(TAG, String.format(Locale.US,
                         "delay test: %2d steps moved the arrival by %+.3f ms  (%.4f ms per step; "
                                 + "the slider is labelled %.1f)",
@@ -2183,7 +2230,7 @@ public final class RoomMeasurement {
         if (refIdx >= 0 && channelImpulses[refIdx] != null) {
             ChannelResult anchor = result.channels[refIdx];
             float[] refImp = channelImpulses[refIdx];
-            for (int k = 0; k < channels.length; k++) {
+            for (int k = 0; k < result.channels.length; k++) {
                 ChannelResult cr = result.channels[k];
                 if (cr == null || channelImpulses[k] == null) continue;
                 if (k == refIdx) {
@@ -2211,7 +2258,7 @@ public final class RoomMeasurement {
             final float[] envelopeSnr16 = new float[NativeSweep.BAND_COUNT];
             final float[] worstClean16 = new float[NativeSweep.BAND_COUNT];
             final float[] meanClean16 = new float[NativeSweep.BAND_COUNT];
-            final float[] bestClean16 = bestChannelEnvelope(result, channels.length, envelopeSnr16,
+            final float[] bestClean16 = bestChannelEnvelope(result, result.channels.length, envelopeSnr16,
                     worstClean16, meanClean16);
             result.micBandStatus16 = new int[NativeSweep.BAND_COUNT];
             // The mounting's own curve comes from MicProfile - the one class that knows what the
@@ -2397,6 +2444,14 @@ public final class RoomMeasurement {
      */
     private static void computeDelays(Result result, SoundstageMode mode) {
         if (mode == null) mode = SoundstageMode.DRIVER;
+        // The front-centre stage aligns the front pair to each other; with no front speaker heard its
+        // arithmetic runs to infinity. The driver's seat is the honest fallback, and the result says
+        // which stage was actually used.
+        if (mode == SoundstageMode.FRONT_CENTER && !anyHeard(result, Channel.FRONT_LEFT, Channel.FRONT_RIGHT)) {
+            Log.w(TAG, "front-centre stage needs a front speaker heard; aligning to the driver instead");
+            mode = SoundstageMode.DRIVER;
+            result.soundstageMode = mode;
+        }
         final int anchorIdx = arrivalAnchor(result);
         if (anchorIdx < 0) {
             result.fail(MeasurementFailure.NOTHING_HEARD);
@@ -3763,6 +3818,7 @@ public final class RoomMeasurement {
                     delaySteps, c.polarity));
         }
         if (!result.isUsable()) {
+            Log.w(TAG, "declared but not heard: " + result.declaredButUnheard());
             Log.w(TAG, "at least one channel was not heard clearly. Turn the volume up a little, "
                     + "make sure the engine is off and the doors are shut, and check that nothing "
                     + "else is holding the microphone - an assistant hotword will take it and cap "
