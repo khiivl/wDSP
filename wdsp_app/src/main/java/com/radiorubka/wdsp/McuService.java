@@ -83,6 +83,8 @@ public class McuService extends Service implements LocationListener {
     private int lastGalaCommandVol = -1;
     private int galaUserTrim = 0;
     private String lastPlayerSource = null;
+    /** The last player that was actually heard playing - it keeps its preset while nothing plays. */
+    private String lastPlayingPlayer = null;
     private Method getPropMethod;
 
     private String currentPresetName;
@@ -2041,7 +2043,6 @@ public class McuService extends Service implements LocationListener {
     }
 
     private void checkPlayer() {
-        String currentPlayer = getSystemProperty();
         String activeType = VolumeHelper.getActivePlayerType();
 
         // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
@@ -2087,11 +2088,18 @@ public class McuService extends Service implements LocationListener {
         }
         callSeenLastPoll = inCall;
 
-        // Process the naming convention for the "unknown" preset.
-        if (isPlayingMedia && NowPlaying.getInstance(this).playerPackage() != null
-                && !NowPlaying.getInstance(this).playerPackage().isEmpty()) {
-            currentPlayer = NowPlaying.getInstance(this).playerPackage();
-        }
+        // The preset follows the player that is actually PLAYING (owner, 06.10.2026: «мав би
+        // перемкнутися саме коли той плеєр заграє, бо попередник ще в фоні грає, і я можу
+        // передумати, бінд не до того пропа»). sys.qf.last_audio_src is written on audio-focus events
+        // only (MediaFocusControl.recordAudioSource): opening a player, an assistant speaking, a call
+        // ringing - not playback. On 05.10 it turned to com.km.roco_ai at 23:57:58 while YouTube Music
+        // was the one playing. So a session that plays names the player, a tuner with no session
+        // playing is the radio, and while nothing plays the last player that did keeps its preset -
+        // the focus property is read only until something has played since the service started.
+        String playing = playingPlayer(isRadio);
+        if (playing != null) lastPlayingPlayer = playing;
+        String currentPlayer = playing != null ? playing
+                : lastPlayingPlayer != null ? lastPlayingPlayer : getSystemProperty();
         if ("nothing".equalsIgnoreCase(currentPlayer) || "Unknown".equalsIgnoreCase(currentPlayer)) {
             currentPlayer = "Default";
         }
@@ -2109,6 +2117,22 @@ public class McuService extends Service implements LocationListener {
             lastPlayerSource = effectivePlayer;
             processPlayerSwitch(effectivePlayer);
         }
+    }
+
+    /**
+     * Who is making sound right now, or null when nobody is: the media session that plays, else the
+     * tuner (no PCM, maybe no session) under the radio app's name - the focus property's when it is a
+     * radio app, our own radio's otherwise.
+     */
+    private String playingPlayer(boolean tunerPlaying) {
+        NowPlaying np = NowPlaying.getInstance(this);
+        String pkg = np.playerPackage();
+        if (np.isPlaying() && pkg != null && !pkg.isEmpty()) return pkg;
+        if (tunerPlaying) {
+            String src = getSystemProperty();
+            return NowPlaying.isRadioPackage(src) ? src : RADIO_PACKAGE;
+        }
+        return null;
     }
 
     private void processPlayerSwitch(String currentPlayer) {
