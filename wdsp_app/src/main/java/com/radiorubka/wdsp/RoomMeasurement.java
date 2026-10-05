@@ -540,10 +540,17 @@ public final class RoomMeasurement {
     // =====================================================================================
 
     /**
-     * Half the cabin width used to turn the dragged dot into centimetres: the door card is about
-     * this far from the centre line, and the dot's ±1 means "against the door".
+     * How far a door speaker sits inside the cabin's own half-width: the door card's thickness. The
+     * half-width itself is the person's answer (CabinProfile), measured at shoulder height; until
+     * 06.10.2026 it was two constants that disagreed - 80 cm for the microphone's dot and 70 cm for
+     * the doors - in a cabin nobody had been asked about.
      */
-    private static final float CABIN_HALF_WIDTH_CM = 80f;
+    private static final float DOOR_CARD_INSET_CM = 5f;
+
+    /** Half the cabin's width: the microphone dot's ±1 means "against the door". */
+    private static float cabinHalfWidthCm(Result result) {
+        return result.cabinWidthCm / 2f;
+    }
 
     /** Loudspeaker heights, same ear-line origin. 🧩 Door cards sit well below the ears. */
     private static final float SPEAKER_Z_DOOR_CM = -25f;
@@ -1223,6 +1230,8 @@ public final class RoomMeasurement {
         public boolean hasSubwoofer;
         /** The door pairs the person said the car has (CabinProfile); only those are swept. */
         public boolean hasFrontPair = true, hasRearPair = true;
+        /** The cabin's width the person gave (CabinProfile) - the doors and the microphone dot sit in it. */
+        public int cabinWidthCm = CabinProfile.DEFAULT_WIDTH_CM;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
         public TargetCurve targetCurve = TargetCurve.HARMAN;
         public CarBodyType bodyType = CarBodyType.SEDAN;
@@ -1595,6 +1604,7 @@ public final class RoomMeasurement {
         result.hasSubwoofer = hasSubwoofer;
         result.hasFrontPair = CabinProfile.hasFrontPair(context);
         result.hasRearPair = CabinProfile.hasRearPair(context);
+        result.cabinWidthCm = CabinProfile.widthCm(context);
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
         result.bodyType = bodyType != null ? bodyType : CarBodyType.SEDAN;
@@ -2353,14 +2363,15 @@ public final class RoomMeasurement {
         ed.apply();
     }
 
-    private static float getSpeakerX(Channel ch) {
+    private static float getSpeakerX(Channel ch, float cabinHalfWidthCm) {
+        final float door = Math.max(0f, cabinHalfWidthCm - DOOR_CARD_INSET_CM);
         switch (ch) {
             case FRONT_LEFT:
             case REAR_LEFT:
-                return -70f;
+                return -door;
             case FRONT_RIGHT:
             case REAR_RIGHT:
-                return 70f;
+                return door;
             case SUBWOOFER:
             default:
                 return 0f;
@@ -2539,7 +2550,7 @@ public final class RoomMeasurement {
             // the back seat. Clamped, because a saved value from an older build may be anything.
             float lr = Math.max(-1f, Math.min(1f, result.micSpotLr));
             float fr = Math.max(-1f, Math.min(1f, result.micSpotFr));
-            micX = lr * CABIN_HALF_WIDTH_CM;
+            micX = lr * cabinHalfWidthCm(result);
             micY = (1f - fr) * 0.5f * (distListen + 95f);
             micZ = MicProfile.heightCm(result.micPlace);
         }
@@ -2570,7 +2581,7 @@ public final class RoomMeasurement {
                 continue;
             }
             Channel ch = allChannels[i];
-            float sx = getSpeakerX(ch);
+            float sx = getSpeakerX(ch, cabinHalfWidthCm(result));
             float sy = getSpeakerY(ch, distListen, result.subPlace);
             float sz = getSpeakerZ(ch, result.subPlace);
 
