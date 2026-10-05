@@ -237,6 +237,9 @@
     <string name="settings_app_details">App Details</string>
     <string name="eq_vis_color_mode_label">Visualizer color mode:</string>
     <string name="eq_vis_mode_monochrome">Solid Accent</string>
+    <string name="eq_vis_shape_label">Spectrum shape:</string>
+    <string name="eq_vis_shape_curve">Live curve</string>
+    <string name="eq_vis_shape_bars">Bars</string>
     <string name="eq_vis_mode_spectrum">Frequency - Color</string>
     <string name="eq_vis_enable_label">Display spectrum bars</string>
 

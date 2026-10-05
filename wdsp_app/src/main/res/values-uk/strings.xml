@@ -220,6 +220,9 @@
     <string name="settings_app_details">Про додаток</string>
     <string name="eq_vis_color_mode_label">Режим кольору візуалізатора:</string>
     <string name="eq_vis_mode_monochrome">Однотонний акцент</string>
+    <string name="eq_vis_shape_label">Форма спектра:</string>
+    <string name="eq_vis_shape_curve">Жива крива</string>
+    <string name="eq_vis_shape_bars">Смуги</string>
     <string name="eq_vis_mode_spectrum">Частота - Колір</string>
     <string name="eq_vis_enable_label">Відображати стовпчики спектру</string>
 
