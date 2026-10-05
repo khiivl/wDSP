@@ -2221,6 +2221,7 @@ public final class RoomMeasurement {
             // "behind a hole in a panel" while the calibration built the curve for a bare capsule.
             NativeSweep.estimateMicCompensation(bestClean16, worstClean16, meanClean16,
                     envelopeSnr16, MicProfile.mountingCurve(context),
+                    CabinProfile.expectedRiseCurve(context),
                     result.micCompensation16, result.micBandStatus16);
             StringBuilder snrLog = new StringBuilder("envelope SNR (the winning channel per band):");
             for (float v : envelopeSnr16) {

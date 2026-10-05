@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 #include "sweep.h"
 
 using namespace wdsp;
@@ -34,6 +35,18 @@ static const float kAvgSnr[16] =
 // read), and this harness replays the run as it was - if the live row ever changes, this one must
 // not follow it, or the replay stops being the 20.09 run.
 static const float kPinhole[16] = {0,0,0,2.0f,0,0,0,0,0,0,-1.5f,-5.0f,-1.0f,3.5f,7.0f,10.0f};
+
+// What CabinProfile.expectedRiseCurve gives for its default, a closed D-class sedan 290 cm long:
+// 12 dB/oct below c/(2L) = 59.1 Hz (host check CabinCheck, 06.10.2026). A FIXTURE, as kPinhole is.
+static const float kSedanRise[16] = {18.77f,10.91f,2.91f,0,0,0,0,0,0,0,0,0,0,0,0,0};
+// Open space - the bench, a cabriolet: no rise.
+static const float kOpenSpace[16] = {0};
+
+static void printStatus(const int* st) {
+    printf("%-22s", "status");
+    for (int b = 0; b < 16; b++) printf(" %6s", st[b] == 1 ? "UNKN" : st[b] == 2 ? "trim" : "-");
+    printf("\n");
+}
 
 static void printRow(const char* label, const float* v) {
     printf("%-22s", label);
@@ -67,13 +80,35 @@ int main() {
 
     float comp[16];
     int status[16];
-    SweepMeasurement::estimateMicCompensation(best, worst, mean, snr, kPinhole, comp, status);
+    SweepMeasurement::estimateMicCompensation(best, worst, mean, snr, kPinhole, nullptr, comp, status);
     printf("\n");
     printRow("mic curve 20.09", kOldCurve);
     printRow("mic curve now", comp);
-    printf("%-22s", "status");
-    for (int b = 0; b < 16; b++) printf(" %6s", status[b] == 1 ? "UNKN" : status[b] == 2 ? "trim" : "-");
-    printf("\n\n");
+    printStatus(status);
+    printf("\n");
+
+    // TODO 3 step 2, criteria written before the change: open space gives today's curve byte for
+    // byte; a closed D-sedan changes nothing at or above its transition (bands 3.., 80 Hz up).
+    float compOpen[16], compSedan[16];
+    int statusOpen[16], statusSedan[16];
+    SweepMeasurement::estimateMicCompensation(best, worst, mean, snr, kPinhole, kOpenSpace, compOpen, statusOpen);
+    SweepMeasurement::estimateMicCompensation(best, worst, mean, snr, kPinhole, kSedanRise, compSedan, statusSedan);
+    printRow("open space", compOpen);
+    printStatus(statusOpen);
+    printRow("closed D-sedan", compSedan);
+    printStatus(statusSedan);
+    int fails = 0;
+    if (std::memcmp(comp, compOpen, sizeof comp) != 0 || std::memcmp(status, statusOpen, sizeof status) != 0) {
+        printf("FAIL: open space differs from no cabin answers\n");
+        fails++;
+    }
+    for (int b = 3; b < 16; b++) {
+        if (std::memcmp(&compSedan[b], &comp[b], sizeof(float)) != 0 || statusSedan[b] != status[b]) {
+            printf("FAIL: band %d changed by the sedan's rise\n", b);
+            fails++;
+        }
+    }
+    printf("%s\n\n", fails == 0 ? "cabin criteria: ALL PASS" : "cabin criteria: FAILED");
 
     // The preset each curve produces, with the door high-pass at 100 Hz, which is what the report says.
     int gains[16], subGain = 0;

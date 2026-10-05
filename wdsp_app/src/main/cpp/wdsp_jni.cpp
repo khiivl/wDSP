@@ -428,6 +428,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
                                                                    jfloatArray meanClean16,
                                                                    jfloatArray snr16,
                                                                    jfloatArray mountingDb16,
+                                                                   jfloatArray cabinRiseDb16,
                                                                    jfloatArray outCompensation16,
                                                                    jintArray outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
@@ -452,6 +453,11 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     if (mountingDb16 != nullptr && env->GetArrayLength(mountingDb16) >= wdsp::kHwBands) {
         mountingData = env->GetFloatArrayElements(mountingDb16, nullptr);
     }
+    // Optional: no cabin answers expect the bottom flat to the midband, as from 21.09.2026.
+    jfloat* cabinData = nullptr;
+    if (cabinRiseDb16 != nullptr && env->GetArrayLength(cabinRiseDb16) >= wdsp::kHwBands) {
+        cabinData = env->GetFloatArrayElements(cabinRiseDb16, nullptr);
+    }
     jfloat* worstData = nullptr;
     if (worstClean16 != nullptr && env->GetArrayLength(worstClean16) >= wdsp::kHwBands) {
         worstData = env->GetFloatArrayElements(worstClean16, nullptr);
@@ -460,7 +466,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     float comp[wdsp::kHwBands];
     int status[wdsp::kHwBands];
     wdsp::SweepMeasurement::estimateMicCompensation(avgData, worstData, meanData, snrData,
-                                                    mountingData, comp, status);
+                                                    mountingData, cabinData, comp, status);
     env->ReleaseFloatArrayElements(avgClean16, avgData, JNI_ABORT);
     if (snrData != nullptr) env->ReleaseFloatArrayElements(snr16, snrData, JNI_ABORT);
     if (worstData != nullptr) env->ReleaseFloatArrayElements(worstClean16, worstData, JNI_ABORT);
@@ -468,6 +474,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeEstimateMicCompensation(JNIEnv* env, 
     if (mountingData != nullptr) {
         env->ReleaseFloatArrayElements(mountingDb16, mountingData, JNI_ABORT);
     }
+    if (cabinData != nullptr) env->ReleaseFloatArrayElements(cabinRiseDb16, cabinData, JNI_ABORT);
 
     env->SetFloatArrayRegion(outCompensation16, 0, wdsp::kHwBands, comp);
     // Optional: a caller that does not care which bands were refused passes null and gets the

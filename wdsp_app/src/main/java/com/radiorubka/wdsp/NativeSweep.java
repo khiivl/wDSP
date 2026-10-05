@@ -146,11 +146,11 @@ public final class NativeSweep implements AutoCloseable {
      */
     public static void estimateMicCompensation(float[] envelope16, float[] worstEnvelope16,
                                                float[] meanEnvelope16, float[] snr16,
-                                               float[] mountingDb16, float[] outCompensation16,
-                                               int[] outStatus16) {
+                                               float[] mountingDb16, float[] cabinRiseDb16,
+                                               float[] outCompensation16, int[] outStatus16) {
         if (isAvailable() && envelope16 != null && outCompensation16 != null) {
             nativeEstimateMicCompensation(envelope16, worstEnvelope16, meanEnvelope16, snr16,
-                    mountingDb16, outCompensation16, outStatus16);
+                    mountingDb16, cabinRiseDb16, outCompensation16, outStatus16);
         }
     }
 
@@ -264,6 +264,7 @@ public final class NativeSweep implements AutoCloseable {
                                                             float[] meanEnvelope16,
                                                             float[] snr16,
                                                             float[] mountingDb16,
+                                                            float[] cabinRiseDb16,
                                                             float[] outCompensation16,
                                                             int[] outStatus16);
 

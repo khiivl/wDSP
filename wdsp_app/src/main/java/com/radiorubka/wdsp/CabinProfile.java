@@ -184,6 +184,20 @@ public final class CabinProfile {
         return expectedRiseDb(hz, transitionHz(lengthCm(context)), isClosed(context));
     }
 
+    /**
+     * {@link #expectedRiseDb(Context, float)} at the sixteen band centres - what the microphone
+     * estimate expects the cabin itself to add there; zeros in open space.
+     */
+    public static float[] expectedRiseCurve(Context context) {
+        final float[] out = new float[AudioConfig.NUM_BANDS];
+        final float transition = transitionHz(lengthCm(context));
+        final boolean closed = isClosed(context);
+        for (int b = 0; b < out.length; b++) {
+            out[b] = expectedRiseDb(AudioConfig.BAND_CENTER_HZ[b], transition, closed);
+        }
+        return out;
+    }
+
     /** For the measurement report, in English as the rest of it. */
     public static String describe(Context context) {
         StringBuilder layout = new StringBuilder();

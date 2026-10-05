@@ -146,12 +146,18 @@ public:
      * MicProfile on the Java side - this file keeps no table of its own (21.09.2026). May be null,
      * which starts the estimate from zero.
      *
+     * cabinRiseDb16 is what the cabin itself adds at each band's centre, from the person's
+     * answers - CabinProfile on the Java side: the pressure-zone rise below c/(2L) in a closed
+     * cabin, zeros in open space. The bottom bands are expected that much above the midband.
+     * May be null, which expects them flat to it - the estimate as it was from 21.09.2026.
+     *
      * outStatus16 (optional) says what happened to each band, so the report can tell a figure
      * that was measured from one that was refused: see kMicBand* above.
      */
     static void estimateMicCompensation(const float* avgClean16, const float* worstClean16,
                                        const float* meanClean16,
                                        const float* snr16, const float* mountingDb16,
+                                       const float* cabinRiseDb16,
                                        float* outCompensation16,
                                        int* outStatus16 = nullptr);
 

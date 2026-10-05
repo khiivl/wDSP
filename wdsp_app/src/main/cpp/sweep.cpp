@@ -518,32 +518,21 @@ float SweepMeasurement::snrConfidence(float snrDb) {
 }
 
 /**
- * The cabin gain anchor, and why it is back.
+ * The cabin gain anchor - asked for, not assumed.
  *
- * A car is not a room. Below the frequency whose wavelength exceeds the cabin, wave propagation
- * stops and the cabin behaves as a pressure vessel: cone movement modulates static pressure
- * directly, and sound pressure RISES going down - the reason a car has bass without a large box.
- * The owner's reference document puts the ideal at 12 dB/oct below a transition frequency of
- * 565/L(feet) - about 47 Hz for a 12 ft cabin - and then says plainly that in practice the roll-on
- * begins higher, at 70..90 Hz, and that the ideal 12 dB/oct is rarely reached because energy leaks
- * through panels, glass and vents.
+ * A car is not a room. Below the frequency whose half-wavelength is the cabin's acoustic length, a
+ * sealed cabin behaves as a pressure vessel and sound pressure RISES going down (CABIN_MODEL.md
+ * §4.1). That rise is what makes calibration without a reference possible: the estimate expects it
+ * at the bottom, and a spectrum that is flat or falling there is the proof that a high-pass sits in
+ * the microphone path - the size of the discrepancy is that filter's attenuation.
  *
- * So: 80 Hz, the middle of the practical range the document gives, and 6 dB/oct, half the ideal,
- * as the leakage allowance. Both are the document's own figures rather than a fit to any one car.
- *
- * 🔴 This expectation was deleted on 12.09.2026 and that was the wrong repair. The bug it was
- * blamed for was real - the calibration pass swept the doors with the subwoofer silent, so the
- * car's bass shortfall was charged to the capsule - but the fault was in the MEASUREMENT, not in
- * the physics, and the measurement is what got fixed on 13.09 (the subwoofer is swept, and the
- * estimate takes the best channel per band instead of the average of them). Removing the anchor
- * as well drove the curve to zeros, and zeros are what the owner then heard: a microphone
- * reporting no bass in a car whose bass he could hear perfectly well.
- *
- * What the anchor is FOR, in the document's words: the algorithm expects to see a rise at the
- * bottom. A measured spectrum that is flat or falling there is not an absence of information -
- * it is the proof that a high-pass sits in the microphone path, and the size of the discrepancy
- * is that filter's attenuation. That is the whole method, and it is what "calibration without a
- * reference" means.
+ * The expectation came and went: 12 dB/oct, then 6 dB/oct below a fixed 80 Hz; deleted on 12.09.2026
+ * for a fault that was really in the measurement (the subwoofer silent during the pass) and put back;
+ * deleted again on 21.09 (5ad92ae) for a real reason - it holds only in a SEALED cabin, the bench and
+ * a cabriolet are open space, and nobody had been asked which theirs is. Since 06.10.2026 it is asked:
+ * CabinProfile holds the space and the length and hands this function the rise per band - the ideal
+ * 12 dB/oct below c/(2L) in a closed cabin, nothing in open space. The answer is the person's; this
+ * file keeps no model of the car.
  */
 /**
  * 🔴 The table of mounting curves that used to stand here is gone (owner, 21.09.2026).
@@ -587,6 +576,7 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
                                                const float* meanClean16,
                                                const float* snr16,
                                                const float* mountingDb16,
+                                               const float* cabinRiseDb16,
                                                float* outCompensation16,
                                                int* outStatus16) {
     if (avgClean16 == nullptr || outCompensation16 == nullptr) return;
@@ -605,34 +595,13 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     const float refMid = midbandReference(avgClean16);
     if (std::isnan(refMid)) return;
 
-    // 1. Low-frequency roll-off & cabin gain compensation below 160 Hz (bands 0..4: 20, 31.5, 50, 80, 125 Hz)
-    // Head unit mic hardware (pinhole cavity and input AC coupling capacitors) rolls off steeply below 150 Hz.
-    // In a sealed passenger cabin, acoustic energy is maintained or boosted by cabin gain (+12 dB/oct below 80 Hz).
-    // 🔴 The "+6 dB/oct cabin gain expectation" that used to stand here has been removed, and this
-    // is a change to the numbers, not a tidy-up.
-    //
-    // What it did: below 80 Hz it expected the measurement to be LOUDER than the midband, by 6 dB
-    // per octave, and charged every decibel of shortfall to the microphone. The car's own bass
-    // shortfall was measured, attributed to the capsule, and then subtracted from every later
-    // cabin measurement as though it were a microphone fault - the same quantity counted twice,
-    // in opposite directions. On this unit it saturated the cap in three bands at once: the
-    // owner's curve read +16.0 +16.0 +16.0 at 20, 31.5 and 50 Hz, and a saturated estimate is
-    // not a measurement of anything.
-    //
-    // 🔴 Why the shortfall was the car's: until 13.09.2026 a calibration pass swept the door
-    // speakers with the subwoofer switched off - calibrateMicAsync passed hasSubwoofer = false,
-    // on the argument that a subwoofer has nothing to say about a microphone's own response.
-    // The capsule does not care, but the ESTIMATE does: what it sees is the product of the
-    // microphone and whatever was driven, and with the sub silent the only things playing at 80
-    // and 125 Hz were doors, which give very little there. Removing the cabin-gain expectation
-    // and capping the result treated the symptom; the owner found the cause. The pass now sweeps
-    // the subwoofer when the car has one, and the Java side hands this function the best channel
-    // per band rather than the average of them - an average of four doors and one subwoofer
-    // dilutes the only source that can reach these bands fivefold. See bestChannelEnvelope.
-    //
-    // What replaces it: expect the capsule to be flat to the midband and correct only what falls
-    // below that. The capsule's real roll-off is still recovered - that is what the deficit is - but
-    // nothing is invented about what the room ought to be doing.
+    // 1. Below 160 Hz (bands 0..4: 20, 31.5, 50, 80 and 125 Hz): what the microphone path takes off.
+    // The bottom is expected at the midband plus what the cabin itself adds there (cabinRiseDb16,
+    // from the person's answers - the anchor block above); the shortfall against that is the
+    // microphone's. Two lessons from 12-13.09.2026 stand: the shortfall was once the car's, because
+    // the pass swept the doors with the subwoofer silent - the pass now sweeps the subwoofer, and
+    // this function gets the best channel per band rather than the average (bestChannelEnvelope);
+    // and an estimate that runs into the bound below is not a measurement.
     // 🔴 Bands 0..2 - 20, 31.5 and 50 Hz - are left at zero on purpose, and this is a refusal to
     // guess rather than an omission.
     //
@@ -684,27 +653,14 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
     // no bass boost in it at all. Leaving the band at the mounting's own figure and saying so in
     // the report is the honest answer: the microphone's share down there is UNKNOWN on this
     // measurement, not zero and not 52.8.
-    // 🔴 The cabin-gain expectation is gone from this estimate (owner, 21.09.2026: "the microphone
-    // hears bass well even when it is not in a cabin, and the Harman comes out slightly
-    // bass-heavy - perhaps the microphone deserves a little more trust"). It used to expect the
-    // bottom to be LOUDER than the midband by 6 dB an octave below 80 Hz and to charge every
-    // missing decibel to the capsule. That expectation is only true in a SEALED cabin: this bench
-    // is an open space, a cabriolet is an open space, and a long bus is not the sedan the
-    // reference document describes. We do not ask which of those the person is in, so we cannot
-    // assume any of it - and an assumption in this direction invents microphone deficit out of a
-    // room that was never going to produce the rise.
-    //
-    // On his own 20.09 numbers it was eight decibels of the estimate at 31.5 Hz and four at 50.
-    // What remains is what the measurement itself shows below the midband, still bounded by what
-    // the input path could do and still refused when it saturates that bound.
-    //
-    // ⚠️ To bring it back properly the space has to be asked for, not guessed: closed or open, and
-    // how long - the document puts the transition at about 565 / (longest dimension in feet), with
-    // a slope that leaks away from the theoretical 12 dB per octave. We already ask for a body
-    // type, but it is a seating-distance question and says nothing about whether the roof is on.
+    // The cabin's rise is expected only where the person said the cabin is closed; open space hands
+    // zeros and the bottom is expected flat to the midband, as it was from 21.09.2026 (the anchor
+    // block above says why it was out and how it came back).
     for (int b = 0; b < 5; b++) {
         const float freq = kHwCenters[b];
-        const float expected = refMid;
+        const float rise = cabinRiseDb16 != nullptr && std::isfinite(cabinRiseDb16[b])
+                ? cabinRiseDb16[b] : 0.0f;
+        const float expected = refMid + rise;
         const float deficit = expected - avgClean16[b];
         if (deficit <= 0.0f) continue;
         const float ceiling = pathMaxAttenDb(freq);
