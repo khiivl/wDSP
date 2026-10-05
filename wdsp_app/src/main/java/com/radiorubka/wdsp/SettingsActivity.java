@@ -1702,6 +1702,7 @@ public class SettingsActivity extends AppCompatActivity {
             wireMicBody();
             wireHasSubwoofer();
             wireSubPlace();
+            wireCabin();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_left, -MIC_NUDGE, 0f);
@@ -2131,6 +2132,74 @@ public class SettingsActivity extends AppCompatActivity {
             CabinProfile.setHasSubwoofer(this, checked);
             showSubPlace(placeRow, checked);
         });
+    }
+
+    /**
+     * The cabin the measurement happens in (CabinProfile, owner 02.10.2026): closed or open space,
+     * and its length, width and height. The length runs front to back like the car picture above, so
+     * its slider stands upright beside the car; width and height are rows under it. The ranges are
+     * CabinProfile's, set here rather than in the layout, so they live in one place.
+     */
+    private void wireCabin() {
+        TextView closed = findViewById(R.id.btn_room_space_closed);
+        TextView open = findViewById(R.id.btn_room_space_open);
+        if (closed != null && open != null) {
+            closed.setOnClickListener(v -> { CabinProfile.setClosed(this, true); updateCabinSpaceHighlights(); });
+            open.setOnClickListener(v -> { CabinProfile.setClosed(this, false); updateCabinSpaceHighlights(); });
+            updateCabinSpaceHighlights();
+        }
+        bindCabinSlider(R.id.seek_room_cabin_length, R.id.tv_room_cabin_length_val,
+                CabinProfile.MIN_LENGTH_CM, CabinProfile.MAX_LENGTH_CM, CabinProfile.lengthCm(this));
+        bindCabinSlider(R.id.seek_room_cabin_width, R.id.tv_room_cabin_width_val,
+                CabinProfile.MIN_WIDTH_CM, CabinProfile.MAX_WIDTH_CM, CabinProfile.widthCm(this));
+        bindCabinSlider(R.id.seek_room_cabin_height, R.id.tv_room_cabin_height_val,
+                CabinProfile.MIN_HEIGHT_CM, CabinProfile.MAX_HEIGHT_CM, CabinProfile.heightCm(this));
+        // Upright like the EQ's band sliders: the rotated slider is as long as its box is tall.
+        View box = findViewById(R.id.box_room_cabin_length);
+        Slider length = findViewById(R.id.seek_room_cabin_length);
+        if (box != null && length != null) {
+            box.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+                int h = b - t;
+                if (h > 0 && length.getWidth() != h) {
+                    ViewGroup.LayoutParams lp = length.getLayoutParams();
+                    lp.width = h;
+                    length.setLayoutParams(lp);
+                }
+            });
+        }
+    }
+
+    private static final float CABIN_STEP_CM = 5f;
+
+    private void bindCabinSlider(int sliderId, int valueId, int minCm, int maxCm, int cm) {
+        Slider s = findViewById(sliderId);
+        TextView value = findViewById(valueId);
+        if (s == null) return;
+        s.setValueFrom(minCm);
+        s.setValueTo(maxCm);
+        s.setStepSize(CABIN_STEP_CM);
+        // A stored value off the step grid would make the slider throw; snap it onto the grid.
+        float v = minCm + Math.round((cm - minCm) / CABIN_STEP_CM) * CABIN_STEP_CM;
+        s.setValue(Math.max(minCm, Math.min(maxCm, v)));
+        if (value != null) value.setText(getString(R.string.room_cabin_cm_fmt, Math.round(s.getValue())));
+        s.addOnChangeListener((slider, val, fromUser) -> {
+            if (value != null) value.setText(getString(R.string.room_cabin_cm_fmt, Math.round(val)));
+            if (fromUser) saveCabinDimensions();
+        });
+    }
+
+    private void saveCabinDimensions() {
+        Slider l = findViewById(R.id.seek_room_cabin_length);
+        Slider w = findViewById(R.id.seek_room_cabin_width);
+        Slider h = findViewById(R.id.seek_room_cabin_height);
+        if (l == null || w == null || h == null) return;
+        CabinProfile.setDimensionsCm(this, Math.round(l.getValue()), Math.round(w.getValue()), Math.round(h.getValue()));
+    }
+
+    private void updateCabinSpaceHighlights() {
+        boolean closed = CabinProfile.isClosed(this);
+        styleToggleButton(findViewById(R.id.btn_room_space_closed), closed);
+        styleToggleButton(findViewById(R.id.btn_room_space_open), !closed);
     }
 
     private static void showSubPlace(View placeRow, boolean hasSub) {
@@ -3208,7 +3277,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_room_measure, R.id.label_room_mic_spot, R.id.label_system_report,
             R.id.label_screensaver_enable, R.id.label_screensaver_cover_sb, R.id.label_screensaver_apps,
             R.id.label_resume_after_reboot, R.id.label_resume_after_sleep, R.id.label_button_backlight,
-            R.id.label_ui_style
+            R.id.label_ui_style, R.id.label_room_cabin_space
         };
         for (int id : primaryLabels) {
             TextView tv = findViewById(id);
@@ -3234,7 +3303,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_no_root, R.id.desc_room_mic_spot,
-            R.id.desc_system_report,
+            R.id.desc_system_report, R.id.desc_room_cabin,
             R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_cover_sb, R.id.desc_screensaver_note,
             R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep, R.id.desc_button_backlight,
@@ -3256,7 +3325,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Parameter row labels for sliders (16sp normal for high visibility from 1m)
         int[] sliderLabels = {
-            R.id.label_agc_bar_strength
+            R.id.label_agc_bar_strength,
+            R.id.label_room_cabin_length, R.id.label_room_cabin_width, R.id.label_room_cabin_height
         };
         for (int id : sliderLabels) {
             TextView tv = findViewById(id);
@@ -3273,6 +3343,10 @@ public class SettingsActivity extends AppCompatActivity {
         if (tvStatusBarWidth != null) tvStatusBarWidth.setTextColor(valueColor);
         if (tvStatusBarPos != null) tvStatusBarPos.setTextColor(valueColor);
         if (tvStatusBarHue != null) tvStatusBarHue.setTextColor(valueColor);
+        for (int id : new int[]{R.id.tv_room_cabin_length_val, R.id.tv_room_cabin_width_val, R.id.tv_room_cabin_height_val}) {
+            TextView tv = findViewById(id);
+            if (tv != null) tv.setTextColor(valueColor);
+        }
         if (tvStatusBarHeight != null) tvStatusBarHeight.setTextColor(valueColor);
         if (tvStatusBarOffsetY != null) tvStatusBarOffsetY.setTextColor(valueColor);
         if (tvStatusBarAlpha != null) tvStatusBarAlpha.setTextColor(valueColor);
@@ -3332,6 +3406,9 @@ public class SettingsActivity extends AppCompatActivity {
         tintSlider(seekAgcBarStrength, accent);
         tintSlider(seekLatencyTrim, accent);
         tintSlider(seekRangeDb, accent);
+        tintSlider(findViewById(R.id.seek_room_cabin_length), accent);
+        tintSlider(findViewById(R.id.seek_room_cabin_width), accent);
+        tintSlider(findViewById(R.id.seek_room_cabin_height), accent);
 
         // Update wheel brightness backgrounds
         updateWheelBrightnessGradient(pickerAccentWheel, pickerAccentBrightness);
@@ -3437,6 +3514,7 @@ public class SettingsActivity extends AppCompatActivity {
         int eqVisMode = ThemeManager.prefs(this).getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
         updateEqVisShapeHighlights(SpectrumAnalyzerView.shapeOf(ThemeManager.prefs(this)));
+        updateCabinSpaceHighlights();
         updatePermissionButtons();
         SharedPreferences prefs = ThemeManager.prefs(this);
         StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
