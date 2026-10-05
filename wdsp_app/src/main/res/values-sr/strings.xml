@@ -318,6 +318,14 @@
     <string name="screensaver_apps_pick">Izaberi</string>
     <string name="screensaver_note">Navigacija se nikad ne prekriva.</string>
     <string name="room_mic_spot_label">Gde se nalazi mikrofon</string>
+    <string name="room_cabin_space_label">Кабина</string>
+    <string name="room_cabin_desc">Затворена кабина подиже бас испод фреквенције одређене њеном дужином; отворен простор не, па провера микрофона очекује то подизање само у затвореној кабини. Дужина се мери од ногу до преграде пртљажника (седан) или задњих врата.</string>
+    <string name="room_cabin_space_closed">Затворена (ауто)</string>
+    <string name="room_cabin_space_open">Отворена (стенд, кабриолет)</string>
+    <string name="room_cabin_length">Дужина</string>
+    <string name="room_cabin_width">Ширина</string>
+    <string name="room_cabin_height">Висина</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Prevucite tačku na mesto gde se mikrofon zapravo nalazi. To ne menja ništa u merenju - samo nam govori kako da pročitamo rezultat, a bez toga mikrofon postavljen na jedan zvučnik izgleda tačno kao tri pokvarena.</string>
     <string name="room_root_blocked">Magisk одбија root за wDSP. Да бисте га дозволили: отворите Magisk → Superuser, пронађите wDSP и подесите на Дозволи (или Питај, па дозволите кад пита).</string>
     <string name="screensaver_info_h">Трака песме</string>

@@ -308,6 +308,14 @@
     <string name="screensaver_apps_pick">Elegir</string>
     <string name="screensaver_note">La navegación nunca se cubre.</string>
     <string name="room_mic_spot_label">Dónde está el micrófono</string>
+    <string name="room_cabin_space_label">Habitáculo</string>
+    <string name="room_cabin_desc">Un habitáculo cerrado realza los graves por debajo de una frecuencia fijada por su longitud; el espacio abierto no, por lo que la prueba del micrófono solo espera ese realce en un habitáculo cerrado. La longitud va desde los pies hasta el mamparo del maletero (sedán) o el portón.</string>
+    <string name="room_cabin_space_closed">Cerrado (coche)</string>
+    <string name="room_cabin_space_open">Abierto (banco, descapotable)</string>
+    <string name="room_cabin_length">Longitud</string>
+    <string name="room_cabin_width">Anchura</string>
+    <string name="room_cabin_height">Altura</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Arrastra el punto a donde realmente está el micrófono. No cambia nada en la medición: nos dice cómo leer el resultado, y sin ello un micrófono apoyado en un altavoz parece exactamente como tres estropeados.</string>
     <string name="room_root_blocked">Magisk deniega root a wDSP. Para permitirlo: abre Magisk → Superuser, busca wDSP y establécelo en Permitir (o Preguntar, y permítelo cuando pregunte).</string>
     <string name="screensaver_info_h">Banda de pista</string>

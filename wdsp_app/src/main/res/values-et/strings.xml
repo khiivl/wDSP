@@ -318,6 +318,14 @@
     <string name="screensaver_apps_pick">Vali</string>
     <string name="screensaver_note">Navigatsiooni ei kaeta kunagi.</string>
     <string name="room_mic_spot_label">Kus mikrofon asub</string>
+    <string name="room_cabin_space_label">Salong</string>
+    <string name="room_cabin_desc">Suletud salong tõstab bassi sagedusest allpool, mille määrab selle pikkus; avatud ruum mitte, seega eeldab mikrofonikontroll seda tõusu vaid suletud salongis. Pikkust mõõdetakse jalgadest pagasiruumi vaheseinani (sedaan) või tagaluugini.</string>
+    <string name="room_cabin_space_closed">Suletud (auto)</string>
+    <string name="room_cabin_space_open">Avatud (stend, kabriolett)</string>
+    <string name="room_cabin_length">Pikkus</string>
+    <string name="room_cabin_width">Laius</string>
+    <string name="room_cabin_height">Kõrgus</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Lohistage punkt sinna, kus mikrofon tegelikult asub. See ei muuda mõõtmise juures midagi – see ütleb meile, kuidas tulemust lugeda, ja ilma selleta näeb ühel kõlaril lebav mikrofon välja täpselt nagu kolm katkist kõlarit.</string>
     <string name="room_root_blocked">Magisk keelab wDSP-le rooti. Lubamiseks: avage Magisk → Superuser, leidke wDSP ja määrake see valikule Luba (või Küsi ja lubage, kui see küsib).</string>
     <string name="screensaver_info_h">Loo riba</string>

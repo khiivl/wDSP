@@ -318,6 +318,14 @@ Globāli noklusējums: %1$s</string>
     <string name="screensaver_apps_pick">Izvēlēties</string>
     <string name="screensaver_note">Navigācija netiek aizsegta.</string>
     <string name="room_mic_spot_label">Kur atrodas mikrofons</string>
+    <string name="room_cabin_space_label">Salons</string>
+    <string name="room_cabin_desc">Slēgts salons pastiprina basus zem frekvences, ko nosaka tā garums; atvērta telpa to nedara, tāpēc mikrofona pārbaude šo pieaugumu gaida tikai slēgtā salonā. Garumu mēra no kājām līdz bagāžnieka starpsienai (sedans) vai aizmugurējām durvīm.</string>
+    <string name="room_cabin_space_closed">Slēgts (auto)</string>
+    <string name="room_cabin_space_open">Atvērts (stends, kabriolets)</string>
+    <string name="room_cabin_length">Garums</string>
+    <string name="room_cabin_width">Platums</string>
+    <string name="room_cabin_height">Augstums</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Velciet punktu uz to vietu, kur faktiski atrodas mikrofons. Mērījumos tas neko nemaina - tas tikai norāda, kā nolasīt rezultātu, un bez tā mikrofons, kas uzlikts uz viena skaļruņa, izskatās tieši tāpat kā trīs bojāti.</string>
     <string name="room_root_blocked">Magisk liedz wDSP root piekļuvi. Lai to atļautu: atveriet Magisk → Superuser, atrodiet wDSP un iestatiet to uz Atļaut (vai Jautāt, un atļaujiet, kad tas jautā).</string>
     <string name="screensaver_info_h">Dziesmas josla</string>

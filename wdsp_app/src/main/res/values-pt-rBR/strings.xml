@@ -316,6 +316,14 @@
     <string name="screensaver_apps_pick">Escolher</string>
     <string name="screensaver_note">A navegação nunca é coberta.</string>
     <string name="room_mic_spot_label">Onde o microfone está</string>
+    <string name="room_cabin_space_label">Cabine</string>
+    <string name="room_cabin_desc">Uma cabine fechada eleva os graves abaixo de uma frequência definida pelo seu comprimento; o espaço aberto não, portanto o teste do microfone só espera essa elevação em uma cabine fechada. O comprimento vai do espaço dos pés à divisória do porta-malas (sedan) ou à tampa traseira.</string>
+    <string name="room_cabin_space_closed">Fechada (carro)</string>
+    <string name="room_cabin_space_open">Aberta (bancada, conversível)</string>
+    <string name="room_cabin_length">Comprimento</string>
+    <string name="room_cabin_width">Largura</string>
+    <string name="room_cabin_height">Altura</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Arraste o ponto para onde o microfone realmente está. Isso não muda nada na medição - apenas nos diz como ler o resultado e, sem isso, um microfone apoiado em um alto-falante parece exatamente com três quebrados.</string>
     <string name="room_root_blocked">O Magisk nega root ao wDSP. Para permitir: abra o Magisk → Superuser, encontre o wDSP e defina-o como Permitir (ou Perguntar, e permita quando ele perguntar).</string>
     <string name="screensaver_info_h">Faixa da música</string>

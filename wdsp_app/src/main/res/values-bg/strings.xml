@@ -318,6 +318,14 @@
     <string name="screensaver_apps_pick">Избери</string>
     <string name="screensaver_note">Навигацията никога не се покрива.</string>
     <string name="room_mic_spot_label">Къде е микрофонът</string>
+    <string name="room_cabin_space_label">Купе</string>
+    <string name="room_cabin_desc">Затвореното купе повдига баса под честота, определена от дължината му; откритото пространство не го прави, така че тестът на микрофона очаква това повдигане само в затворено купе. Дължината се мери от краката до преградата на багажника (седан) или задната врата.</string>
+    <string name="room_cabin_space_closed">Затворено (авто)</string>
+    <string name="room_cabin_space_open">Отворено (стенд, кабрио)</string>
+    <string name="room_cabin_length">Дължина</string>
+    <string name="room_cabin_width">Ширина</string>
+    <string name="room_cabin_height">Височина</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Плъзнете точката там, където всъщност е микрофонът. Това не променя нищо в измерването - просто ни казва как да четем резултата. Без нея микрофон, поставен върху един говорител, изглежда точно като три счупени.</string>
     <string name="room_root_blocked">Magisk отказва root на wDSP. За да го разрешите: отворете Magisk → Superuser, намерете wDSP и му дайте разрешение (или задайте да пита и разрешете, когато попита).</string>
     <string name="screensaver_info_h">Лента на песента</string>

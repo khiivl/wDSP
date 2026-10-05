@@ -318,6 +318,14 @@ Genel Varsayılan: %1$s</string>
     <string name="screensaver_apps_pick">Seç</string>
     <string name="screensaver_note">Navigasyon asla kapatılmaz.</string>
     <string name="room_mic_spot_label">Mikrofon nerede</string>
+    <string name="room_cabin_space_label">Kabin</string>
+    <string name="room_cabin_desc">Kapalı bir kabin, uzunluğunun belirlediği bir frekansın altındaki basları güçlendirir; açık alan ise güçlendirmez, bu nedenle mikrofon kontrolü bu artışı yalnızca kapalı bir kabinde bekler. Uzunluk, ayak bölmesinden bagaj bölmesine (sedan) veya bagaj kapağına kadar ölçülür.</string>
+    <string name="room_cabin_space_closed">Kapalı (araç)</string>
+    <string name="room_cabin_space_open">Açık (tezgah, üstü açık)</string>
+    <string name="room_cabin_length">Uzunluk</string>
+    <string name="room_cabin_width">Genişlik</string>
+    <string name="room_cabin_height">Yükseklik</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Noktayı mikrofonun gerçekte bulunduğu yere sürükleyin. Ölçümle ilgili hiçbir şeyi değiştirmez - bize sonucu nasıl okuyacağımızı söyler ve bu olmadan tek bir hoparlörün üzerinde duran bir mikrofon tamamen üç bozuk hoparlör gibi görünür.</string>
     <string name="room_root_blocked">Magisk, wDSP\'ye root iznini reddediyor. İzin vermek için: Magisk → Superuser\'ı açın, wDSP\'yi bulun ve İzin Ver olarak ayarlayın (veya Sor\'a ayarlayın ve sorduğunda izin verin).</string>
     <string name="screensaver_info_h">Parça şeridi</string>

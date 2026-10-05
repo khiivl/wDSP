@@ -318,6 +318,14 @@ Global standard: %1$s</string>
     <string name="screensaver_apps_pick">Vælg</string>
     <string name="screensaver_note">Navigation dækkes aldrig.</string>
     <string name="room_mic_spot_label">Hvor mikrofonen er</string>
+    <string name="room_cabin_space_label">Kabine</string>
+    <string name="room_cabin_desc">En lukket kabine løfter bassen under en frekvens bestemt af dens længde; åbent rum gør det ikke, så mikrofontesten forventer kun løftet i en lukket kabine. Længden måles fra fodrummet til bagagerumsvæggen (sedan) eller bagklappen.</string>
+    <string name="room_cabin_space_closed">Lukket (bil)</string>
+    <string name="room_cabin_space_open">Åben (bænk, cabriolet)</string>
+    <string name="room_cabin_length">Længde</string>
+    <string name="room_cabin_width">Bredde</string>
+    <string name="room_cabin_height">Højde</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Træk prikken til der, hvor mikrofonen faktisk sidder. Det ændrer intet ved selve målingen - det fortæller os, hvordan vi skal læse resultatet, og uden det ser en mikrofon, der ligger på én højttaler, ud præcis som tre ødelagte.</string>
     <string name="room_root_blocked">Magisk nægter wDSP root. Sådan tillader du det: åbn Magisk → Superuser, find wDSP, og indstil den til Tillad (eller Spørg, og tillad det, når den spørger).</string>
     <string name="screensaver_info_h">Nummer-stribe</string>

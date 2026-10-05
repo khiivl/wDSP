@@ -318,6 +318,14 @@ Global standard: %1$s</string>
     <string name="screensaver_apps_pick">Velg</string>
     <string name="screensaver_note">Navigasjonen dekkes aldri.</string>
     <string name="room_mic_spot_label">Hvor mikrofonen er</string>
+    <string name="room_cabin_space_label">Kupé</string>
+    <string name="room_cabin_desc">En lukket kupé hever bassen under en frekvens bestemt av lengden; åpent rom gjør det ikke, så mikrofonsjekken forventer kun dette løftet i en lukket kupé. Lengden måles fra fotbrønnen til bagasjeromsveggen (sedan) eller bakluken.</string>
+    <string name="room_cabin_space_closed">Lukket (bil)</string>
+    <string name="room_cabin_space_open">Åpen (benk, kabriolet)</string>
+    <string name="room_cabin_length">Lengde</string>
+    <string name="room_cabin_width">Bredde</string>
+    <string name="room_cabin_height">Høyde</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Dra prikken til der mikrofonen faktisk sitter. Det endrer ingenting ved selve målingen - det forteller oss hvordan vi skal lese resultatet, og uten det ser en mikrofon som ligger på én høyttaler ut nøyaktig som tre ødelagte.</string>
     <string name="room_root_blocked">Magisk nekter wDSP root. Slik tillater du det: åpne Magisk → Superuser, finn wDSP og sett den til Tillat (eller Spør, og tillat når den spør).</string>
     <string name="screensaver_info_h">Sporstripe</string>

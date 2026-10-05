@@ -318,6 +318,14 @@ Implicit global: %1$s</string>
     <string name="screensaver_apps_pick">Alege</string>
     <string name="screensaver_note">Navigația nu este acoperită.</string>
     <string name="room_mic_spot_label">Unde se află microfonul</string>
+    <string name="room_cabin_space_label">Habitaclu</string>
+    <string name="room_cabin_desc">Un habitaclu închis amplifică basul sub o frecvență determinată de lungimea sa; spațiul deschis nu, astfel că testul de microfon așteaptă această creștere doar într-un habitaclu închis. Lungimea se măsoară de la spațiul pentru picioare până la peretele portbagajului (sedan) sau hayon.</string>
+    <string name="room_cabin_space_closed">Închis (mașină)</string>
+    <string name="room_cabin_space_open">Deschis (banc, decapotabilă)</string>
+    <string name="room_cabin_length">Lungime</string>
+    <string name="room_cabin_width">Lățime</string>
+    <string name="room_cabin_height">Înălțime</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Trageți punctul acolo unde se află de fapt microfonul. Nu schimbă cu nimic măsurătoarea - ne spune cum să citim rezultatul, iar fără el un microfon așezat pe un difuzor arată exact ca trei defecte.</string>
     <string name="room_root_blocked">Magisk refuză root pentru wDSP. Pentru a-l permite: deschideți Magisk → Superuser, găsiți wDSP și setați-l la Permiteți (sau Întrebați și permiteți-l când vă întreabă).</string>
     <string name="screensaver_info_h">Banda piesei</string>

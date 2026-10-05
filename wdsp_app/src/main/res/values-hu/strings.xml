@@ -318,6 +318,14 @@ Globális alapértelmezett: %1$s</string>
     <string name="screensaver_apps_pick">Válassz</string>
     <string name="screensaver_note">A navigációt sosem takarja el.</string>
     <string name="room_mic_spot_label">Hol van a mikrofon</string>
+    <string name="room_cabin_space_label">Utastér</string>
+    <string name="room_cabin_desc">A zárt utastér kiemeli a mélyhangokat a hossza által meghatározott frekvencia alatt; a nyitott tér nem, így a mikrofonteszt csak zárt térben várja ezt a kiemelést. A hossz a lábtértől a csomagtartó faláig (szedán) vagy a csomagtérajtóig tart.</string>
+    <string name="room_cabin_space_closed">Zárt (autó)</string>
+    <string name="room_cabin_space_open">Nyitott (pad, kabrió)</string>
+    <string name="room_cabin_length">Hossz</string>
+    <string name="room_cabin_width">Szélesség</string>
+    <string name="room_cabin_height">Magasság</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Húzd a pontot oda, ahol a mikrofon ténylegesen van. Magán a mérésen nem változtat semmit - csak megmondja, hogyan kell olvasni az eredményt, e nélkül egyetlen hangszórón lévő mikrofon pontosan úgy néz ki, mintha három rossz lenne.</string>
     <string name="room_root_blocked">A Magisk megtagadja a rootot a wDSP-től. Engedélyezéshez: nyissa meg a Magisk → Superuser menüt, keresse meg a wDSP-t, és állítsa Engedélyezésre (vagy Kérdezzen, és engedélyezze, amikor kéri).</string>
     <string name="screensaver_info_h">Szám sávja</string>

@@ -318,6 +318,14 @@ Par défaut global : %1$s</string>
     <string name="screensaver_apps_pick">Choisir</string>
     <string name="screensaver_note">La navigation n\'est jamais recouverte.</string>
     <string name="room_mic_spot_label">Où se trouve le micro</string>
+    <string name="room_cabin_space_label">Habitacle</string>
+    <string name="room_cabin_desc">Un habitacle fermé amplifie les basses sous une fréquence définie par sa longueur ; l\'espace ouvert non, le test micro n\'attend donc cette hausse qu\'en habitacle fermé. La longueur va du plancher des pieds à la cloison du coffre (berline) ou au hayon.</string>
+    <string name="room_cabin_space_closed">Fermé (voiture)</string>
+    <string name="room_cabin_space_open">Ouvert (banc, cabriolet)</string>
+    <string name="room_cabin_length">Longueur</string>
+    <string name="room_cabin_width">Largeur</string>
+    <string name="room_cabin_height">Hauteur</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Faites glisser le point là où se trouve réellement le micro. Cela ne change rien à la mesure, cela nous indique comment lire le résultat, et sans cela, un micro posé sur un haut-parleur ressemble exactement à trois haut-parleurs cassés.</string>
     <string name="room_root_blocked">Magisk refuse le root à wDSP. Pour l\'autoriser : ouvrez Magisk → Superuser, trouvez wDSP, et réglez-le sur Autoriser (ou Demander, et autorisez-le quand il le demande).</string>
     <string name="screensaver_info_h">Bande de piste</string>

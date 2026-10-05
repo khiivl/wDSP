@@ -318,6 +318,14 @@
     <string name="screensaver_apps_pick">Επιλογή</string>
     <string name="screensaver_note">Η πλοήγηση δεν καλύπτεται ποτέ.</string>
     <string name="room_mic_spot_label">Πού βρίσκεται το μικρόφωνο</string>
+    <string name="room_cabin_space_label">Καμπίνα</string>
+    <string name="room_cabin_desc">Μια κλειστή καμπίνα ενισχύει τα μπάσα κάτω από μια συχνότητα που καθορίζεται από το μήκος της. Ο ανοιχτός χώρος όχι, επομένως ο έλεγχος μικροφώνου αναμένει αυτή την ενίσχυση μόνο σε κλειστή καμπίνα. Το μήκος μετράται από τα πόδια έως το χώρισμα του πορτμπαγκάζ (sedan) ή την πίσω πόρτα.</string>
+    <string name="room_cabin_space_closed">Κλειστή (αυτοκίνητο)</string>
+    <string name="room_cabin_space_open">Ανοιχτή (πάγκος, cabrio)</string>
+    <string name="room_cabin_length">Μήκος</string>
+    <string name="room_cabin_width">Πλάτος</string>
+    <string name="room_cabin_height">Ύψος</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Σύρετε την κουκκίδα εκεί όπου πραγματικά βρίσκεται το μικρόφωνο. Δεν αλλάζει τίποτα στη μέτρηση - μας λέει πώς να διαβάσουμε το αποτέλεσμα, και χωρίς αυτό, ένα μικρόφωνο πάνω σε ένα ηχείο μοιάζει ακριβώς με τρία χαλασμένα.</string>
     <string name="room_root_blocked">Το Magisk αρνείται το root στο wDSP. Για να το επιτρέψετε: ανοίξτε το Magisk → Superuser, βρείτε το wDSP και ορίστε το σε Να επιτρέπεται (ή Ερώτηση, και επιτρέψτε το όταν ρωτήσει).</string>
     <string name="screensaver_info_h">Λωρίδα κομματιού</string>

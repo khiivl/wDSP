@@ -318,6 +318,14 @@ Globale standaard: %1$s</string>
     <string name="screensaver_apps_pick">Kiezen</string>
     <string name="screensaver_note">Navigatie wordt nooit bedekt.</string>
     <string name="room_mic_spot_label">Waar de microfoon is</string>
+    <string name="room_cabin_space_label">Cabine</string>
+    <string name="room_cabin_desc">Een gesloten cabine versterkt de bas onder een frequentie die door de lengte wordt bepaald; een open ruimte niet, dus de microfooncontrole verwacht deze toename alleen in een gesloten cabine. De lengte loopt van de voetenruimte tot het kofferbakschot (sedan) of de achterklep.</string>
+    <string name="room_cabin_space_closed">Gesloten (auto)</string>
+    <string name="room_cabin_space_open">Open (werkbank, cabriolet)</string>
+    <string name="room_cabin_length">Lengte</string>
+    <string name="room_cabin_width">Breedte</string>
+    <string name="room_cabin_height">Hoogte</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Sleep de stip naar de plek waar de microfoon zich daadwerkelijk bevindt. Het verandert niets aan de meting - het vertelt ons hoe we het resultaat moeten lezen, en zonder dat lijkt een microfoon die op één luidspreker ligt precies op drie kapotte.</string>
     <string name="room_root_blocked">Magisk weigert wDSP root. Zo staat u het toe: open Magisk → Superuser, zoek wDSP en zet het op Toestaan (of Vragen, en sta het toe wanneer erom wordt gevraagd).</string>
     <string name="screensaver_info_h">Nummerstrook</string>

@@ -318,6 +318,14 @@ Bendras numatytasis: %1$s</string>
     <string name="screensaver_apps_pick">Rinktis</string>
     <string name="screensaver_note">Navigacija niekada neuždengiama.</string>
     <string name="room_mic_spot_label">Kur yra mikrofonas</string>
+    <string name="room_cabin_space_label">Salonas</string>
+    <string name="room_cabin_desc">Uždaras salonas paryškina žemus dažnius žemiau dažnio, kurį lemia jo ilgis; atvira erdvė to nedaro, todėl mikrofono patikra tikisi šio pakilimo tik uždarame salone. Ilgis matuojamas nuo kojų iki bagažinės pertvaros (sedanas) arba galinių durelių.</string>
+    <string name="room_cabin_space_closed">Uždaras (automobilis)</string>
+    <string name="room_cabin_space_open">Atviras (stendas, kabrioletas)</string>
+    <string name="room_cabin_length">Ilgis</string>
+    <string name="room_cabin_width">Plotis</string>
+    <string name="room_cabin_height">Aukštis</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Vilkite tašką ten, kur iš tikrųjų yra mikrofonas. Tai nieko nekeičia pačiame matavime - tai tik nurodo mums, kaip nuskaityti rezultatą, o be to mikrofonas, padėtas ant vieno garsiakalbio, atrodo lygiai taip pat kaip trys sugedę.</string>
     <string name="room_root_blocked">Magisk neleidžia wDSP naudoti root. Kad leistumėte: atidarykite Magisk → Superuser, raskite wDSP ir nustatykite Leisti (arba Klausti, ir leiskite, kai paklaus).</string>
     <string name="screensaver_info_h">Kūrinio juosta</string>

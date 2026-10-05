@@ -318,6 +318,14 @@ Globální výchozí: %1$s</string>
     <string name="screensaver_apps_pick">Vybrat</string>
     <string name="screensaver_note">Navigace není nikdy překryta.</string>
     <string name="room_mic_spot_label">Kde je mikrofon</string>
+    <string name="room_cabin_space_label">Kabina</string>
+    <string name="room_cabin_desc">Uzavřená kabina zvedá basy pod frekvencí danou její délkou; otevřený prostor ne, takže test mikrofonu očekává toto zvýšení pouze v uzavřené kabině. Délka se měří od nohou k přepážce kufru (sedan) nebo pátým dveřím.</string>
+    <string name="room_cabin_space_closed">Zavřená (auto)</string>
+    <string name="room_cabin_space_open">Otevřená (stojánek, kabriolet)</string>
+    <string name="room_cabin_length">Délka</string>
+    <string name="room_cabin_width">Šířka</string>
+    <string name="room_cabin_height">Výška</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Přetáhněte bod tam, kde se mikrofon skutečně nachází. Měření to nijak nezmění - jen nám to řekne, jak číst výsledek, bez toho mikrofon ležící na jednom reproduktoru vypadá přesně jako tři rozbité.</string>
     <string name="room_root_blocked">Magisk odepírá wDSP root. Povolení: otevřete Magisk → Superuser, najděte wDSP a nastavte na Povolit (nebo Dotázat se a povolte, až se zeptá).</string>
     <string name="screensaver_info_h">Pruh skladby</string>

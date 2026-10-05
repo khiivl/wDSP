@@ -307,6 +307,14 @@
     <string name="screensaver_apps_pick">Wählen</string>
     <string name="screensaver_note">Navigation wird nie überdeckt.</string>
     <string name="room_mic_spot_label">Wo sich das Mikrofon befindet</string>
+    <string name="room_cabin_space_label">Fahrgastraum</string>
+    <string name="room_cabin_desc">Ein geschlossener Raum hebt den Bass unterhalb einer durch die Länge bestimmten Frequenz an; ein offener Raum nicht. Daher erwartet die Mikrofonprüfung diesen Anstieg nur im geschlossenen Raum. Die Länge reicht vom Fußraum bis zur Kofferraumwand (Limousine) oder Heckklappe.</string>
+    <string name="room_cabin_space_closed">Geschlossen (Auto)</string>
+    <string name="room_cabin_space_open">Offen (Stand, Cabrio)</string>
+    <string name="room_cabin_length">Länge</string>
+    <string name="room_cabin_width">Breite</string>
+    <string name="room_cabin_height">Höhe</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Ziehe den Punkt dorthin, wo das Mikrofon tatsächlich sitzt. Es ändert nichts an der Messung - es sagt uns nur, wie das Ergebnis zu lesen ist. Ohne dies sieht ein Mikrofon auf einem Lautsprecher genau wie drei kaputte aus.</string>
     <string name="room_root_blocked">Magisk verweigert wDSP den Root-Zugriff. So erlauben Sie ihn: Öffnen Sie Magisk → Superuser, suchen Sie wDSP und stellen Sie es auf Zulassen (oder Nachfragen, und erlauben Sie es, wenn es fragt).</string>
     <string name="screensaver_info_h">Titel-Streifen</string>

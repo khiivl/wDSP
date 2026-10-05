@@ -307,6 +307,14 @@
     <string name="screensaver_apps_pick">Wybierz</string>
     <string name="screensaver_note">Nawigacja nigdy nie jest zasłaniana.</string>
     <string name="room_mic_spot_label">Gdzie znajduje się mikrofon</string>
+    <string name="room_cabin_space_label">Kabina</string>
+    <string name="room_cabin_desc">Zamknięta kabina podbija bas poniżej częstotliwości zależnej od jej długości; otwarta przestrzeń nie, więc test mikrofonu oczekuje tego podbicia tylko w zamkniętej kabinie. Długość mierzy się od stóp do przegrody bagażnika (sedan) lub klapy.</string>
+    <string name="room_cabin_space_closed">Zamknięta (auto)</string>
+    <string name="room_cabin_space_open">Otwarta (stanowisko, cabrio)</string>
+    <string name="room_cabin_length">Długość</string>
+    <string name="room_cabin_width">Szerokość</string>
+    <string name="room_cabin_height">Wysokość</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Przeciągnij kropkę w miejsce, gdzie faktycznie znajduje się mikrofon. To niczego nie zmienia w samym pomiarze - po prostu mówi nam, jak odczytać wynik, a bez tego mikrofon leżący na jednym głośniku wygląda dokładnie jak trzy zepsute.</string>
     <string name="room_root_blocked">Magisk odmawia wDSP roota. Aby zezwolić: otwórz Magisk → Superuser, znajdź wDSP i ustaw na Zezwól (lub Zapytaj i zezwól, gdy zapyta).</string>
     <string name="screensaver_info_h">Pasek utworu</string>

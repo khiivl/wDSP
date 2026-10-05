@@ -318,6 +318,14 @@ Predefinito globale: %1$s</string>
     <string name="screensaver_apps_pick">Scegli</string>
     <string name="screensaver_note">La navigazione non viene mai coperta.</string>
     <string name="room_mic_spot_label">Dov\'è il microfono</string>
+    <string name="room_cabin_space_label">Abitacolo</string>
+    <string name="room_cabin_desc">Un abitacolo chiuso esalta i bassi al di sotto di una frequenza determinata dalla sua lunghezza; lo spazio aperto no, quindi il test del microfono prevede questo incremento solo in un abitacolo chiuso. La lunghezza va dal vano piedi alla paratia del bagagliaio (berlina) o al portellone.</string>
+    <string name="room_cabin_space_closed">Chiuso (auto)</string>
+    <string name="room_cabin_space_open">Aperto (banco, cabriolet)</string>
+    <string name="room_cabin_length">Lunghezza</string>
+    <string name="room_cabin_width">Larghezza</string>
+    <string name="room_cabin_height">Altezza</string>
+    <string name="room_cabin_cm_fmt">%d cm</string>
     <string name="room_mic_spot_desc">Trascina il punto dove si trova effettivamente il microfono. Non cambia nulla nella misurazione: ci dice come leggere il risultato e, senza di esso, un microfono appoggiato su un altoparlante sembra esattamente come tre rotti.</string>
     <string name="room_root_blocked">Magisk nega il root a wDSP. Per consentirlo: apri Magisk → Superuser, trova wDSP e impostalo su Consenti (o Chiedi, e consentilo quando lo chiede).</string>
     <string name="screensaver_info_h">Striscia traccia</string>
