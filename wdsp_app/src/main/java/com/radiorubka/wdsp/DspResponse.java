@@ -132,7 +132,7 @@ public final class DspResponse {
             if (fmOffsets != null && inRange(i, fmOffsets.length)) {
                 eqDb += fmOffsets[i];
             }
-            out[i] = chainDb(probeHz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf);
+            out[i] = chainDb(probeHz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf, 0f);
         }
     }
 
@@ -140,35 +140,43 @@ public final class DspResponse {
      * The same response as {@link #compute}, at any frequencies instead of the band centres - what
      * the live RTA curve adds in the calculated mode, one point per frequency. The loudness offsets
      * are per band and read between bands by {@link AudioConfig#bandValueAt}, so at a band centre the
-     * two agree exactly.
+     * two agree exactly (with {@code doorSpeakers} off).
+     *
+     * @param doorSpeakers add the door speakers' own low-end roll-off to the door paths
+     *                     ({@link AudioConfig#typicalCarSpeakerFloorDb}, the author's 1.0 model): the
+     *                     RTA over music shows what a car plays, not only what the chip sends. The
+     *                     subwoofer path stays as the chip makes it.
      */
     public static void computeAt(float[] freqsHz, int[] gains, float[] fmOffsets,
                                  int subFreqIdx, int subGainIdx, int hpfFrontCode, int hpfRearCode,
-                                 LoudnessCurve.BassShelf shelf, float[] out) {
+                                 LoudnessCurve.BassShelf shelf, boolean doorSpeakers, float[] out) {
         if (freqsHz == null || out == null) return;
         final boolean offsets = fmOffsets != null && fmOffsets.length >= AudioConfig.NUM_BANDS;
         for (int j = 0; j < freqsHz.length && j < out.length; j++) {
             final float hz = freqsHz[j];
             float eqDb = gains != null ? AudioConfig.compositeResponseDb(gains, hz) : 0f;
             if (offsets) eqDb += AudioConfig.bandValueAt(fmOffsets, hz);
-            out[j] = chainDb(hz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf);
+            float floorDb = doorSpeakers ? AudioConfig.typicalCarSpeakerFloorDb(hz) : 0f;
+            out[j] = chainDb(hz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf, floorDb);
         }
     }
 
     /**
      * The chip's chain at one frequency, given the equaliser's response there: the split into the
-     * doors and the subwoofer, in the chip's order.
+     * doors and the subwoofer, in the chip's order. {@code doorFloorDb} is what the door speakers
+     * themselves take off at this frequency, 0 for the chip alone.
      */
     private static float chainDb(float probeHz, float eqDb, int subFreqIdx, int subGainIdx,
-                                 int hpfFrontCode, int hpfRearCode, LoudnessCurve.BassShelf shelf) {
+                                 int hpfFrontCode, int hpfRearCode, LoudnessCurve.BassShelf shelf,
+                                 float doorFloorDb) {
         final boolean hasSub = subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length;
 
         // Doors: front and rear through their own high-pass and bass shelf (the author's model,
         // AudioConfig.bassShapingResponseDb), averaged as power.
-        double front = Math.pow(10.0, doorDb(probeHz, doorHpfHz(hpfFrontCode),
-                shelf != null ? shelf.frontHz() : 0f, shelf != null ? shelf.gainFront : 0) / 10.0);
-        double rear = Math.pow(10.0, doorDb(probeHz, doorHpfHz(hpfRearCode),
-                shelf != null ? shelf.rearHz() : 0f, shelf != null ? shelf.gainRear : 0) / 10.0);
+        double front = Math.pow(10.0, (doorDb(probeHz, doorHpfHz(hpfFrontCode),
+                shelf != null ? shelf.frontHz() : 0f, shelf != null ? shelf.gainFront : 0) + doorFloorDb) / 10.0);
+        double rear = Math.pow(10.0, (doorDb(probeHz, doorHpfHz(hpfRearCode),
+                shelf != null ? shelf.rearHz() : 0f, shelf != null ? shelf.gainRear : 0) + doorFloorDb) / 10.0);
         float doorsDb = eqDb + (float) (10.0 * Math.log10((front + rear) / 2.0));
 
         // Subwoofer: the same equalised signal, at its gain, through its low-pass.

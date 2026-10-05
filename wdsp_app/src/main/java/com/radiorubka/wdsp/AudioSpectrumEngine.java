@@ -862,11 +862,11 @@ public class AudioSpectrumEngine {
         synchronized (dspGainIdx) {
             if (hasServiceDspState) {
                 DspResponse.computeAt(RTA_HZ, dspGainIdx, null, dspSubFreqIdx, dspSubGainIdx,
-                        dspHpfFrontCode, dspHpfRearCode, dspShelf, rtaCorrectionTap);
+                        dspHpfFrontCode, dspHpfRearCode, dspShelf, true, rtaCorrectionTap);
             } else {
                 synchronized (gains) {
                     synchronized (fmOffsets) {
-                        DspResponse.computeAt(RTA_HZ, gains, fmOffsets, -1, 0, 0, 0, null,
+                        DspResponse.computeAt(RTA_HZ, gains, fmOffsets, -1, 0, 0, 0, null, true,
                                 rtaCorrectionTap);
                     }
                 }
