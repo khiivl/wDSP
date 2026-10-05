@@ -962,19 +962,44 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_licence_card"
-                        android:padding="14dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="14dp"
                         android:layout_marginTop="10dp"
                         app:layout_constraintTop_toBottomOf="@id/fm_visualizer_container">
 
-                        <TextView
-                            android:id="@+id/fm_controls_title"
-                            style="@style/TextHeader"
+
+                        <!-- The author's 1.0: each feature's sliders form a group titled by that feature's own switch, shown only while the switch is on (they mean nothing otherwise) and folded under its title (ui/Disclosure remembers it). The verdict at the bottom stays outside the groups. -->
+                        <LinearLayout
+                            android:id="@+id/row_loudness_toggle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/fm_controls_title"
+                            android:layout_marginTop="14dp"
+                            android:minHeight="@dimen/toggle_height"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent" />
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <TextView
+                                android:id="@+id/tv_loudness_group_title"
+                                style="@style/TextHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/enable_loudness" />
+
+                            <ImageView
+                                android:id="@+id/iv_loudness_chevron"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/ic_chevron"
+                                android:importantForAccessibility="no" />
+                        </LinearLayout>
 
                         <!-- Row 1: Точка калібрування -->
                         <TextView
@@ -984,7 +1009,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/lbl_calibration_point"
-                            app:layout_constraintTop_toBottomOf="@id/fm_controls_title"
+                            app:layout_constraintTop_toBottomOf="@id/row_loudness_toggle"
                             app:layout_constraintStart_toStartOf="parent" />
 
                         <!-- Row 2: Інтенсивність корекції -->
@@ -1090,14 +1115,46 @@
 
                         <!-- Rows 3-5, the author's 0.5: where Trim Highs starts, where Ultra Bass
                              starts and how far it goes. Same pattern as the two rows above. -->
+                        <!-- Trim Highs group. -->
+                        <LinearLayout
+                            android:id="@+id/row_trim_highs_toggle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:minHeight="@dimen/toggle_height"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fm_strength"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <TextView
+                                android:id="@+id/tv_trim_highs_group_title"
+                                style="@style/TextHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/trim_highs" />
+
+                            <ImageView
+                                android:id="@+id/iv_trim_highs_chevron"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/ic_chevron"
+                                android:importantForAccessibility="no" />
+                        </LinearLayout>
+
                         <TextView
                             android:id="@+id/lbl_fat_start_vol"
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
+                            android:layout_marginTop="12dp"
                             android:text="@string/lbl_trim_highs_start_vol"
-                            app:layout_constraintTop_toBottomOf="@id/seek_fm_strength"
+                            app:layout_constraintTop_toBottomOf="@id/row_trim_highs_toggle"
                             app:layout_constraintStart_toStartOf="parent" />
 
                         <com.google.android.material.slider.Slider
@@ -1140,14 +1197,46 @@
                             app:layout_constraintTop_toTopOf="@id/lbl_fat_start_vol"
                             app:layout_constraintBottom_toBottomOf="@id/lbl_fat_start_vol" />
 
+                        <!-- Ultra Bass group. -->
+                        <LinearLayout
+                            android:id="@+id/row_ultra_bass_toggle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:minHeight="@dimen/toggle_height"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
+                            app:layout_constraintTop_toBottomOf="@id/seek_fat_start_vol"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <TextView
+                                android:id="@+id/tv_ultra_bass_group_title"
+                                style="@style/TextHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ultra_bass" />
+
+                            <ImageView
+                                android:id="@+id/iv_ultra_bass_chevron"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/ic_chevron"
+                                android:importantForAccessibility="no" />
+                        </LinearLayout>
+
                         <TextView
                             android:id="@+id/lbl_ultra_bass_start_vol"
                             style="@style/TextLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
+                            android:layout_marginTop="12dp"
                             android:text="@string/lbl_ultra_bass_start_vol"
-                            app:layout_constraintTop_toBottomOf="@id/seek_fat_start_vol"
+                            app:layout_constraintTop_toBottomOf="@id/row_ultra_bass_toggle"
                             app:layout_constraintStart_toStartOf="parent" />
 
                         <com.google.android.material.slider.Slider
@@ -1246,43 +1335,68 @@
                             app states what is wrong with the pair they have and offers the pair it
                             would use. LoudnessCheck does the arithmetic; this only shows it.
                         -->
-                        <TextView
-                            android:id="@+id/tv_loud_check"
-                            style="@style/TextLabel"
+                        <LinearLayout
+                            android:id="@+id/layout_loud_check"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="14dp"
-                            android:lineSpacingExtra="2dp"
-                            android:text="@string/loud_check_ok"
+                            android:orientation="vertical"
                             app:layout_constraintTop_toBottomOf="@id/seek_ultra_bass_max_db"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent" />
+                            app:layout_constraintEnd_toEndOf="parent">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_loud_fix"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            <TextView
+                                android:id="@+id/tv_loud_check"
+                                style="@style/TextLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:lineSpacingExtra="2dp"
+                                android:text="@string/loud_check_ok" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_loud_fix"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_marginTop="10dp"
+                                android:paddingHorizontal="14dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/loud_check_fix"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+                        </LinearLayout>
+
+                        <androidx.constraintlayout.widget.Group
+                            android:id="@+id/panel_loudness"
                             android:layout_width="wrap_content"
-                            android:layout_height="@dimen/toggle_height"
-                            android:layout_marginTop="10dp"
-                            android:paddingHorizontal="14dp"
-                            android:paddingVertical="0dp"
-                            android:minWidth="0dp"
-                            android:minHeight="0dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:insetLeft="0dp"
-                            android:insetRight="0dp"
-                            app:cornerRadius="10dp"
-                            app:strokeWidth="1.2dp"
-                            app:strokeColor="@color/panel_border_theme_aware"
-                            android:backgroundTint="@color/card_bg_theme_aware"
-                            android:text="@string/loud_check_fix"
-                            android:textAllCaps="false"
-                            android:textSize="@dimen/eq_value_text"
-                            android:textStyle="bold"
-                            android:visibility="gone"
-                            app:layout_constraintTop_toBottomOf="@id/tv_loud_check"
-                            app:layout_constraintStart_toStartOf="parent" />
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="lbl_cal_vol,seek_fm_cal_vol,tv_fm_cal_vol_val,lbl_strength,seek_fm_strength,tv_fm_strength_val" />
+
+                        <androidx.constraintlayout.widget.Group
+                            android:id="@+id/panel_trim_highs"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="lbl_fat_start_vol,seek_fat_start_vol,tv_fat_start_vol_val" />
+
+                        <androidx.constraintlayout.widget.Group
+                            android:id="@+id/panel_ultra_bass"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="lbl_ultra_bass_start_vol,seek_ultra_bass_start_vol,tv_ultra_bass_start_vol_val,lbl_ultra_bass_max_db,seek_ultra_bass_max_db,tv_ultra_bass_max_db_val" />
+
+
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -2808,15 +2922,6 @@
                                 app:layout_constraintStart_toStartOf="parent" />
 
                             <!-- Row 2: Поріг активації -->
-                            <TextView
-                                android:id="@+id/tv_lbl_gala_minspeed"
-                                style="@style/TextLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
-                                android:text="@string/standstill_speed"
-                                app:layout_constraintTop_toBottomOf="@id/seek_gala_increment"
-                                app:layout_constraintStart_toStartOf="parent" />
 
                             <!-- Row 3: Макс. підсилення -->
                             <TextView
@@ -2826,7 +2931,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="@string/max_adjustment"
-                                app:layout_constraintTop_toBottomOf="@id/seek_gala_minspeed"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_increment"
                                 app:layout_constraintStart_toStartOf="parent" />
 
                             <!-- Dynamic Barrier for Card 1 Labels -->
@@ -2835,7 +2940,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 app:barrierDirection="end"
-                                app:constraint_referenced_ids="tv_lbl_gala_inc,tv_lbl_gala_minspeed,tv_lbl_gala_max_adj" />
+                                app:constraint_referenced_ids="tv_lbl_gala_inc,tv_lbl_gala_max_adj" />
 
                             <!-- Slider 1 -->
                             <com.google.android.material.slider.Slider
@@ -2877,43 +2982,8 @@
                                 app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_inc" />
 
                             <!-- Slider 2 -->
-                            <com.google.android.material.slider.Slider
-                                android:id="@+id/seek_gala_minspeed"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:valueFrom="0"
-                                android:valueTo="40"
-                                android:stepSize="1"
-                                android:value="0"
-                                app:thumbHeight="@dimen/thumb_height"
-                                app:thumbRadius="10dp"
-                                app:haloRadius="24dp"
-                                app:haloColor="@color/transparent"
-                                app:thumbColor="@color/cyan_custom"
-                                app:tickColorActive="@color/tick_color_active"
-                                app:tickColorInactive="@color/tick_color_inactive"
-                                app:trackColorActive="@color/track_color_active"
-                                app:trackColorInactive="@color/track_color_inactive"
-                                app:trackHeight="@dimen/slider_track_height"
-                                app:labelBehavior="gone"
-                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c1"
-                                app:layout_constraintEnd_toStartOf="@id/tv_gala_minspeed_val"
-                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
-                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
 
                             <!-- Value 2 -->
-                            <TextView
-                                android:id="@+id/tv_gala_minspeed_val"
-                                style="@style/TextValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:minWidth="48dp"
-                                android:gravity="end"
-                                android:text="@string/value_default"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
-                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
 
                             <!-- Slider 3 -->
                             <com.google.android.material.slider.Slider
@@ -2966,15 +3036,82 @@
                             android:padding="10dp"
                             android:layout_marginStart="6dp">
 
-                            <TextView
-                                android:id="@+id/gala_c2_title"
-                                style="@style/TextHeader"
+                            <!-- The author's 1.0 "Advanced": what is tuned once and rarely touched again - standstill speed, fade and hold timing, the speed simulator - folds away (closed on every start, as his). The telemetry he keeps here is already in this tab's header badge. -->
+                            <LinearLayout
+                                android:id="@+id/row_gala_advanced_toggle"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="@string/gala_section_smoothing_sim"
+                                android:layout_marginTop="0dp"
+                                android:minHeight="@dimen/toggle_height"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackground"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent" />
+                                app:layout_constraintEnd_toEndOf="parent">
+
+                                <TextView
+                                    android:id="@+id/tv_gala_advanced_title"
+                                    style="@style/TextHeader"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/gala_advanced_settings" />
+
+                                <ImageView
+                                    android:id="@+id/iv_gala_advanced_chevron"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:layout_marginStart="8dp"
+                                    android:src="@drawable/ic_chevron"
+                                    android:importantForAccessibility="no" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tv_lbl_gala_minspeed"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="@string/standstill_speed"
+                                app:layout_constraintTop_toBottomOf="@id/row_gala_advanced_toggle"
+                                app:layout_constraintStart_toStartOf="parent" />
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_gala_minspeed"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:valueFrom="0"
+                                android:valueTo="40"
+                                android:stepSize="1"
+                                android:value="0"
+                                app:thumbHeight="@dimen/thumb_height"
+                                app:thumbRadius="10dp"
+                                app:haloRadius="24dp"
+                                app:haloColor="@color/transparent"
+                                app:thumbColor="@color/cyan_custom"
+                                app:tickColorActive="@color/tick_color_active"
+                                app:tickColorInactive="@color/tick_color_inactive"
+                                app:trackColorActive="@color/track_color_active"
+                                app:trackColorInactive="@color/track_color_inactive"
+                                app:trackHeight="@dimen/slider_track_height"
+                                app:labelBehavior="gone"
+                                app:layout_constraintStart_toEndOf="@id/barrier_gala_c2"
+                                app:layout_constraintEnd_toStartOf="@id/tv_gala_minspeed_val"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
+                            <TextView
+                                android:id="@+id/tv_gala_minspeed_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                android:gravity="end"
+                                android:text="@string/value_default"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/tv_lbl_gala_minspeed"
+                                app:layout_constraintBottom_toBottomOf="@id/tv_lbl_gala_minspeed" />
 
                             <!-- Row 1: Плавність переходу -->
                             <TextView
@@ -2984,7 +3121,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="@string/gala_fade_delay"
-                                app:layout_constraintTop_toBottomOf="@id/gala_c2_title"
+                                app:layout_constraintTop_toBottomOf="@id/seek_gala_minspeed"
                                 app:layout_constraintStart_toStartOf="parent" />
 
                             <!-- Row 2: Час утримання -->
@@ -3015,7 +3152,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 app:barrierDirection="end"
-                                app:constraint_referenced_ids="tv_lbl_gala_fade,tv_lbl_gala_hold,tv_lbl_simulate_speed" />
+                                app:constraint_referenced_ids="tv_lbl_gala_minspeed,tv_lbl_gala_fade,tv_lbl_gala_hold,tv_lbl_simulate_speed" />
+
+                            <androidx.constraintlayout.widget.Group
+                                android:id="@+id/panel_gala_advanced"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:constraint_referenced_ids="tv_lbl_gala_minspeed,seek_gala_minspeed,tv_gala_minspeed_val,tv_lbl_gala_fade,seek_gala_fade_ms,tv_gala_fade_ms_val,tv_lbl_gala_hold,seek_gala_hold_ms,tv_gala_hold_ms_val,tv_lbl_simulate_speed,seek_simulate_speed,tv_simulate_speed_val" />
 
                             <!-- Slider 1 -->
                             <com.google.android.material.slider.Slider
