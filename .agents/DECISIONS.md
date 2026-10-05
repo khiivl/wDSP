@@ -173,10 +173,13 @@ where resource use and broadcast storms show up that an emulator does not. Tone 
 code, never a fault of this branch's own features. The list is kept in [UPSTREAM_1_0.md](UPSTREAM_1_0.md) as items
 are found, and `.agents/` is pushed with the branch, so it is written for him to read.
 
-## GALA standstill speed: the author's 1.0 meaning (owner, 05.10.2026)
+## GALA stays this branch's: algorithm, units and ranges (owner, 05.10.2026)
 
-`_gala_min_speed` is the author's "Standstill speed" in km/h, 0..15. His 1.0 dropped the ×5 of his 0.5, whose
-slider reached 300 km/h; this branch had fixed the same scale its own way ("Activation threshold", ×5, up to
-200 km/h). The owner chose the author's meaning, so a preset file means the same in both builds. Stored values
-are read as his build reads them - clamped to 15 and taken as km/h, no conversion (a stored 12, which was
-60 km/h here, becomes 12 km/h).
+The author's 1.0 rescaled two GALA numbers in the preset: `_gala_min_speed` became km/h 0..15 ("Standstill
+speed", his 0.5 slider reached 300 km/h), and `_gala_increment` is shown as km/h 10..100 while his service
+still adds 5 to it. His GALA algorithm itself did not change. The owner keeps ours whole - the GALA this
+branch worked out, with its own units and ranges (threshold ×5 up to 200 km/h, step +5): *«у нас власний
+алгоритм ГАЛА, який ми ж з тобою і вистрадали, чи варто брати спрощений автора»*. A label is judged by
+whether the user understands the setting, not by matching his wording: *«головне щоб юзер розумів суть
+налаштування»*. Preset files: the step means the same in both services; the threshold differs when
+non-zero - to be explained to him, with his UI/service mismatch on the step.
