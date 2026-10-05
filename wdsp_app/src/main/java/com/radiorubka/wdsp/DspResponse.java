@@ -113,38 +113,59 @@ public final class DspResponse {
         final int bands = AudioConfig.NUM_BANDS;
         if (out == null || out.length < bands) return;
 
-        final float frontHz = doorHpfHz(hpfFrontCode);
-        final float rearHz = doorHpfHz(hpfRearCode);
-        final boolean hasSub = subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length;
-        final float crossoverHz = hasSub ? SUB_FREQS_HZ[subFreqIdx] : 0f;
-        final float subGainDb = Math.max(0, Math.min(12, subGainIdx));
-
         for (int i = 0; i < bands; i++) {
-            // 1. Equaliser: all 16 bells summed, the author's model.
             final float probeHz = AudioConfig.BAND_CENTER_HZ[i];
             float eqDb = gains != null ? AudioConfig.compositeResponseDb(gains, probeHz) : 0f;
             if (fmOffsets != null && inRange(i, fmOffsets.length)) {
                 eqDb += fmOffsets[i];
             }
-
-            // 2. Doors: front and rear through their own high-pass and bass shelf (the author's
-            //    model, AudioConfig.bassShapingResponseDb), averaged as power.
-            double front = Math.pow(10.0, doorDb(probeHz, frontHz,
-                    shelf != null ? shelf.frontHz() : 0f, shelf != null ? shelf.gainFront : 0) / 10.0);
-            double rear = Math.pow(10.0, doorDb(probeHz, rearHz,
-                    shelf != null ? shelf.rearHz() : 0f, shelf != null ? shelf.gainRear : 0) / 10.0);
-            float doorsDb = eqDb + (float) (10.0 * Math.log10((front + rear) / 2.0));
-
-            // 3. Subwoofer: the same equalised signal, at its gain, through its low-pass.
-            if (hasSub) {
-                float lowPassDb = lowPass2Db(probeHz, crossoverHz);
-                if (lowPassDb >= -30f) { // negligible this far above the crossover
-                    out[i] = powerSumDb(doorsDb, eqDb + subGainDb + lowPassDb);
-                    continue;
-                }
-            }
-            out[i] = doorsDb;
+            out[i] = chainDb(probeHz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf);
         }
+    }
+
+    /**
+     * The same response as {@link #compute}, at any frequencies instead of the band centres - what
+     * the live RTA curve adds in the calculated mode, one point per frequency. The loudness offsets
+     * are per band and read between bands by {@link AudioConfig#bandValueAt}, so at a band centre the
+     * two agree exactly.
+     */
+    public static void computeAt(float[] freqsHz, int[] gains, float[] fmOffsets,
+                                 int subFreqIdx, int subGainIdx, int hpfFrontCode, int hpfRearCode,
+                                 LoudnessCurve.BassShelf shelf, float[] out) {
+        if (freqsHz == null || out == null) return;
+        final boolean offsets = fmOffsets != null && fmOffsets.length >= AudioConfig.NUM_BANDS;
+        for (int j = 0; j < freqsHz.length && j < out.length; j++) {
+            final float hz = freqsHz[j];
+            float eqDb = gains != null ? AudioConfig.compositeResponseDb(gains, hz) : 0f;
+            if (offsets) eqDb += AudioConfig.bandValueAt(fmOffsets, hz);
+            out[j] = chainDb(hz, eqDb, subFreqIdx, subGainIdx, hpfFrontCode, hpfRearCode, shelf);
+        }
+    }
+
+    /**
+     * The chip's chain at one frequency, given the equaliser's response there: the split into the
+     * doors and the subwoofer, in the chip's order.
+     */
+    private static float chainDb(float probeHz, float eqDb, int subFreqIdx, int subGainIdx,
+                                 int hpfFrontCode, int hpfRearCode, LoudnessCurve.BassShelf shelf) {
+        final boolean hasSub = subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length;
+
+        // Doors: front and rear through their own high-pass and bass shelf (the author's model,
+        // AudioConfig.bassShapingResponseDb), averaged as power.
+        double front = Math.pow(10.0, doorDb(probeHz, doorHpfHz(hpfFrontCode),
+                shelf != null ? shelf.frontHz() : 0f, shelf != null ? shelf.gainFront : 0) / 10.0);
+        double rear = Math.pow(10.0, doorDb(probeHz, doorHpfHz(hpfRearCode),
+                shelf != null ? shelf.rearHz() : 0f, shelf != null ? shelf.gainRear : 0) / 10.0);
+        float doorsDb = eqDb + (float) (10.0 * Math.log10((front + rear) / 2.0));
+
+        // Subwoofer: the same equalised signal, at its gain, through its low-pass.
+        if (hasSub) {
+            float lowPassDb = lowPass2Db(probeHz, SUB_FREQS_HZ[subFreqIdx]);
+            if (lowPassDb >= -30f) { // negligible this far above the crossover
+                return powerSumDb(doorsDb, eqDb + Math.max(0, Math.min(12, subGainIdx)) + lowPassDb);
+            }
+        }
+        return doorsDb;
     }
 
     /** One door pair: its high-pass (0 = through) and its bass shelf (0 Hz = off). */

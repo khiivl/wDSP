@@ -3,8 +3,13 @@ package com.radiorubka.wdsp;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.Choreographer;
 import android.view.View;
@@ -19,6 +24,19 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
 
     public static final int MODE_SPECTRUM = 0;
     public static final int MODE_MONOCHROME = 1;
+
+    /**
+     * The shape of the main spectrum: the live curve (the author's 1.0 RTA model, {@link RtaCurve})
+     * or the bars. Owner, 05.10.2026: a switch in the visualisation settings. App-wide, not per preset.
+     */
+    public static final String PREF_SHAPE = "pref_eq_visualizer_shape";
+    public static final int SHAPE_CURVE = 0;
+    public static final int SHAPE_BARS = 1;
+
+    /** Reads the stored shape; anything but bars is the curve, the default. */
+    public static int shapeOf(android.content.SharedPreferences prefs) {
+        return prefs.getInt(PREF_SHAPE, SHAPE_CURVE) == SHAPE_BARS ? SHAPE_BARS : SHAPE_CURVE;
+    }
 
     // 16-band base colors following the physical optical spectrum (700 nm Red -> 390 nm Violet)
     private static final int[] SPECTRUM_BASE_COLORS = {
@@ -58,6 +76,7 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
             for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
                 renderLevels[i] = prevLevels[i] + (displayLevels[i] - prevLevels[i]) * t;
             }
+            if (shapeOf(ThemeManager.prefs(getContext())) == SHAPE_CURVE) updateCurve(frameTimeNanos);
             invalidate();
             Choreographer.getInstance().postFrameCallback(this);
         }
@@ -65,6 +84,31 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
 
     private Paint barPaint;
     private final RectF barRect = new RectF();
+
+    // The live curve. Its points sit on the equaliser's axis: band position + half a slot, as the
+    // bars' centres do, so a point and the slider of its frequency are on one vertical.
+    private static final float[] CURVE_SLOT = new float[RtaCurve.POINTS];
+    static {
+        for (int j = 0; j < CURVE_SLOT.length; j++) {
+            CURVE_SLOT[j] = AudioConfig.bandPositionOf(NativeAnalyzer.curveHz(j)) + 0.5f;
+        }
+    }
+    /** The author's ALPHA_RISE_SMOOTHING / ALPHA_FALL_SMOOTHING per 50 ms capture, as time constants. */
+    private static final float ALPHA_RISE_TAU_MS = (float) (-50.0 / Math.log(1.0 - 0.4));
+    private static final float ALPHA_FALL_TAU_MS = (float) (-50.0 / Math.log(1.0 - 0.08));
+    private final RtaCurve rta = new RtaCurve();
+    private final float[] curveContent = new float[RtaCurve.POINTS];
+    private final float[] curveCorrection = new float[RtaCurve.POINTS];
+    private float curveAlpha = 0f;
+    private long lastCurveNanos = 0;
+    private final Path curvePath = new Path();
+    private final Path curveFillPath = new Path();
+    private Paint curveLinePaint;
+    private Paint curveFillPaint;
+    // What the shaders were built for; rebuilt only when one of these changes.
+    private float shaderW = -1f, shaderTop = -1f, shaderBottom = -1f, shaderLeft = -1f;
+    private int shaderMode = -1, shaderAccent = 0;
+    private boolean shaderClassic;
 
     public SpectrumAnalyzerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -74,6 +118,28 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
     private void init() {
         barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         barPaint.setStyle(Paint.Style.FILL);
+        curveLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        curveLinePaint.setStyle(Paint.Style.STROKE);
+        curveLinePaint.setStrokeCap(Paint.Cap.ROUND);
+        curveLinePaint.setStrokeJoin(Paint.Join.ROUND);
+        curveFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        curveFillPaint.setStyle(Paint.Style.FILL);
+    }
+
+    /**
+     * One display frame of the live curve: the engine's measurement through {@link RtaCurve}, and the
+     * fade the author gives it - in while there is sound, out in silence.
+     */
+    private void updateCurve(long frameTimeNanos) {
+        AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
+        boolean sound = engine.readCurve(curveContent, curveCorrection)
+                && rta.update(curveContent, curveCorrection, engine.getDisplayRangeDb(), false,
+                frameTimeNanos);
+        float dtMs = lastCurveNanos == 0 ? 0f : (frameTimeNanos - lastCurveNanos) / 1_000_000f;
+        lastCurveNanos = frameTimeNanos;
+        float target = sound ? 1f : 0f;
+        float tau = target > curveAlpha ? ALPHA_RISE_TAU_MS : ALPHA_FALL_TAU_MS;
+        curveAlpha += (target - curveAlpha) * (float) (1.0 - Math.exp(-Math.max(0f, dtMs) / tau));
     }
 
     public void setGains(int[] newGains) {
@@ -100,6 +166,9 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
             displayLevels[i] = 0f;
             prevLevels[i] = 0f;
         }
+        rta.reset();
+        curveAlpha = 0f;
+        lastCurveNanos = 0;
         invalidate();
     }
 
@@ -157,6 +226,12 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         float drawHeight = totalH * drawHeightRatio - 2 * thumbInset;
         float gridBottom = drawStartY + drawHeight;
 
+        if (shapeOf(ThemeManager.prefs(getContext())) == SHAPE_CURVE) {
+            drawCurve(canvas, w, leftMargin, activeWidth / (float) AudioConfig.NUM_BANDS,
+                    drawStartY, drawHeight, gridBottom, isClassic, mode, density);
+            return;
+        }
+
         // The average of the bands that have sound, in display-level units; a difference of levels
         // times the display range is a difference in decibels.
         float sum = 0f;
@@ -203,5 +278,86 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
             barRect.set(left, top, right, gridBottom);
             canvas.drawRoundRect(barRect, barCornerRadius, barCornerRadius, barPaint);
         }
+    }
+
+    /**
+     * The live curve on the equaliser's grid, in the equaliser's decibels relative to the average of
+     * what has sound - the bars' reading. The look is the author's: a line coloured along the
+     * frequency axis and a fill that fades towards the bottom; Classic uses his line weight.
+     */
+    private void drawCurve(Canvas canvas, float w, float leftMargin, float stepX, float drawStartY,
+                           float drawHeight, float gridBottom, boolean isClassic, int mode,
+                           float density) {
+        int alpha = Math.round(255f * Math.max(0f, Math.min(1f, curveAlpha)));
+        if (alpha <= 0) return;
+
+        final float[] rel = rta.relativeDb();
+        // A loud point may rise half a grid above the top, as in the author's view; clipped below.
+        final float limit = GRID_HALF_RANGE_DB * 1.5f;
+        curvePath.reset();
+        float firstX = 0f, lastX = 0f;
+        for (int j = 0; j < RtaCurve.POINTS; j++) {
+            float x = leftMargin + CURVE_SLOT[j] * stepX;
+            float db = Math.max(-limit, Math.min(limit, rel[j]));
+            float y = gridBottom - drawHeight * (0.5f + db / (2f * GRID_HALF_RANGE_DB));
+            if (j == 0) {
+                curvePath.moveTo(x, y);
+                firstX = x;
+            } else {
+                curvePath.lineTo(x, y);
+            }
+            lastX = x;
+        }
+        curveFillPath.set(curvePath);
+        curveFillPath.lineTo(lastX, gridBottom);
+        curveFillPath.lineTo(firstX, gridBottom);
+        curveFillPath.close();
+
+        int accent = ThemeManager.accent(getContext());
+        if (w != shaderW || drawStartY != shaderTop || gridBottom != shaderBottom
+                || leftMargin != shaderLeft || mode != shaderMode || accent != shaderAccent
+                || isClassic != shaderClassic) {
+            int[] colors;
+            float[] positions;
+            if (mode == MODE_MONOCHROME) {
+                colors = new int[]{accent, accent};
+                positions = null;
+            } else {
+                colors = SPECTRUM_BASE_COLORS.clone();
+                positions = new float[colors.length];
+                for (int i = 0; i < colors.length; i++) {
+                    positions[i] = Math.max(0f, Math.min(1f, (leftMargin + (i + 0.5f) * stepX) / w));
+                }
+            }
+            int fillAlpha = isClassic ? 110 : 80;
+            int[] fillColors = new int[colors.length];
+            for (int i = 0; i < colors.length; i++) {
+                fillColors[i] = Color.argb(fillAlpha, Color.red(colors[i]), Color.green(colors[i]),
+                        Color.blue(colors[i]));
+            }
+            curveLinePaint.setShader(new LinearGradient(0, 0, w, 0, colors, positions,
+                    Shader.TileMode.CLAMP));
+            Shader fillColor = new LinearGradient(0, 0, w, 0, fillColors, positions,
+                    Shader.TileMode.CLAMP);
+            Shader fade = new LinearGradient(0, drawStartY, 0, gridBottom, Color.BLACK,
+                    Color.TRANSPARENT, Shader.TileMode.CLAMP);
+            curveFillPaint.setShader(new ComposeShader(fillColor, fade, PorterDuff.Mode.DST_IN));
+            curveLinePaint.setStrokeWidth((isClassic ? 2.5f : 2f) * density);
+            shaderW = w;
+            shaderTop = drawStartY;
+            shaderBottom = gridBottom;
+            shaderLeft = leftMargin;
+            shaderMode = mode;
+            shaderAccent = accent;
+            shaderClassic = isClassic;
+        }
+        curveLinePaint.setAlpha(alpha * 200 / 255);
+        curveFillPaint.setAlpha(alpha);
+
+        canvas.save();
+        canvas.clipRect(leftMargin, 0, w, gridBottom);
+        canvas.drawPath(curveFillPath, curveFillPaint);
+        canvas.drawPath(curvePath, curveLinePaint);
+        canvas.restore();
     }
 }

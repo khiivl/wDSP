@@ -308,4 +308,34 @@ public class AudioConfig {
         float frac = t - lo;
         return (float) (loHz * Math.pow(hiHz / loHz, frac));
     }
+
+    /**
+     * The inverse of {@link #frequencyAt}: the continuous band position of {@code freqHz}, extended
+     * past the first and last band with the same edge spacing. Where the live RTA curve puts a
+     * frequency on the equaliser's axis, so a point and the slider of the same frequency line up.
+     */
+    public static float bandPositionOf(float freqHz) {
+        if (freqHz <= 0f) return 0f;
+        int lo;
+        if (freqHz < BAND_CENTER_HZ[0]) lo = 0;
+        else if (freqHz > BAND_CENTER_HZ[NUM_BANDS - 1]) lo = NUM_BANDS - 2;
+        else {
+            lo = 0;
+            while (lo < NUM_BANDS - 2 && freqHz > BAND_CENTER_HZ[lo + 1]) lo++;
+        }
+        double frac = Math.log(freqHz / BAND_CENTER_HZ[lo])
+                / Math.log(BAND_CENTER_HZ[lo + 1] / BAND_CENTER_HZ[lo]);
+        return (float) (lo + frac);
+    }
+
+    /**
+     * A per-band value read at any frequency: linear in band position between the two nearest
+     * bands, the edge band's value past either end. At a band centre it is that band's value.
+     */
+    public static float bandValueAt(float[] perBand, float freqHz) {
+        float t = Math.max(0f, Math.min(NUM_BANDS - 1, bandPositionOf(freqHz)));
+        int lo = Math.min(NUM_BANDS - 2, (int) t);
+        float frac = t - lo;
+        return perBand[lo] + (perBand[lo + 1] - perBand[lo]) * frac;
+    }
 }

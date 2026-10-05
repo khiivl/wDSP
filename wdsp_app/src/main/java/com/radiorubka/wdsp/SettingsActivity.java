@@ -139,6 +139,7 @@ public class SettingsActivity extends AppCompatActivity {
     // EQ Visualizer
     private TextView btnEqVisToggle;
     private TextView btnEqVisSpectrum, btnEqVisMonochrome;
+    private TextView btnEqVisCurve, btnEqVisBars;
 
     // Permissions & Backup
     private TextView btnPermissionsWizard, btnAppDetails;
@@ -546,9 +547,13 @@ public class SettingsActivity extends AppCompatActivity {
         btnEqVisToggle = findViewById(R.id.btn_eq_vis_toggle);
         btnEqVisSpectrum = findViewById(R.id.btn_eq_vis_spectrum);
         btnEqVisMonochrome = findViewById(R.id.btn_eq_vis_monochrome);
+        btnEqVisCurve = findViewById(R.id.btn_eq_vis_curve);
+        btnEqVisBars = findViewById(R.id.btn_eq_vis_bars);
 
         TouchGlow.attach(btnEqVisSpectrum);
         TouchGlow.attach(btnEqVisMonochrome);
+        TouchGlow.attach(btnEqVisCurve);
+        TouchGlow.attach(btnEqVisBars);
 
         if (btnEqVisToggle != null) {
             btnEqVisToggle.setOnClickListener(v -> {
@@ -576,6 +581,18 @@ public class SettingsActivity extends AppCompatActivity {
         btnEqVisMonochrome.setOnClickListener(v -> {
             ThemeManager.prefs(this).edit().putInt("pref_eq_visualizer_mode", 1).apply();
             updateEqVisModeHighlights(1);
+        });
+
+        btnEqVisCurve.setOnClickListener(v -> {
+            ThemeManager.prefs(this).edit()
+                    .putInt(SpectrumAnalyzerView.PREF_SHAPE, SpectrumAnalyzerView.SHAPE_CURVE).apply();
+            updateEqVisShapeHighlights(SpectrumAnalyzerView.SHAPE_CURVE);
+        });
+
+        btnEqVisBars.setOnClickListener(v -> {
+            ThemeManager.prefs(this).edit()
+                    .putInt(SpectrumAnalyzerView.PREF_SHAPE, SpectrumAnalyzerView.SHAPE_BARS).apply();
+            updateEqVisShapeHighlights(SpectrumAnalyzerView.SHAPE_BARS);
         });
 
         // Permissions & Backup (4 buttons: 2x2 grid)
@@ -1310,6 +1327,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
         int eqVisMode = p.getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
+        updateEqVisShapeHighlights(SpectrumAnalyzerView.shapeOf(p));
 
         loadAnalyzerSettings(p);
         loadScreensaverSettings();
@@ -2786,6 +2804,11 @@ public class SettingsActivity extends AppCompatActivity {
         styleToggleButton(btnEqVisMonochrome, mode == 1);
     }
 
+    private void updateEqVisShapeHighlights(int shape) {
+        styleToggleButton(btnEqVisCurve, shape == SpectrumAnalyzerView.SHAPE_CURVE);
+        styleToggleButton(btnEqVisBars, shape == SpectrumAnalyzerView.SHAPE_BARS);
+    }
+
     private void loadColorToWheel(int color, HueWheelView wheel, SeekBar brightness) {
         float[] hsv = new float[3];
         Color.colorToHSV(color, hsv);
@@ -3177,7 +3200,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_vis_oscillo_persistence,
             R.id.label_wallpaper, R.id.label_status_bar_vis_enable,
             R.id.label_status_bar_bands, R.id.label_status_bar_theme, R.id.label_eq_vis_enable,
-            R.id.label_eq_vis_mode,
+            R.id.label_eq_vis_mode, R.id.label_eq_vis_shape,
             R.id.label_sb_vis_normalization,
             R.id.label_sb_vis_peaks, R.id.label_sb_vis_mirror,
             R.id.label_latency_trim, R.id.label_sync_measure,
@@ -3203,7 +3226,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.label_label_wheel, R.id.label_on_accent_wheel,
             R.id.wallpaper_name, R.id.label_solid_hue, R.id.label_solid_val,
             R.id.label_status_bar_width, R.id.label_status_bar_pos,
-            R.id.label_status_bar_hue, R.id.label_eq_vis_mode,
+            R.id.label_status_bar_hue, R.id.label_eq_vis_mode, R.id.label_eq_vis_shape,
             R.id.label_status_bar_height, R.id.label_status_bar_offset_y,
             R.id.label_status_bar_alpha, R.id.tv_status_bar_placement_hint,
             R.id.desc_sb_vis_peaks, R.id.desc_sb_vis_mirror,
@@ -3413,6 +3436,7 @@ public class SettingsActivity extends AppCompatActivity {
         updateThemeButtonHighlights(currentTheme);
         int eqVisMode = ThemeManager.prefs(this).getInt("pref_eq_visualizer_mode", 0);
         updateEqVisModeHighlights(eqVisMode);
+        updateEqVisShapeHighlights(SpectrumAnalyzerView.shapeOf(ThemeManager.prefs(this)));
         updatePermissionButtons();
         SharedPreferences prefs = ThemeManager.prefs(this);
         StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);

@@ -68,7 +68,22 @@ public class AudioSpectrumEngine {
         dspCurveDirty = true;
         nativeCurveStale = true;
         micCurveStale = true;
+        rtaCorrectionStale = true;
     }
+
+    /**
+     * The live RTA's corrections, one value per curve point: the chip's response for the tap (the
+     * calculated mode), the microphone's compensation for the microphone - the same two curves the
+     * bands get, at the curve's own frequencies. Rebuilt on the display thread when a change marked
+     * them, never per frame.
+     */
+    private static final float[] RTA_HZ = new float[NativeAnalyzer.CURVE_POINTS];
+    static {
+        for (int j = 0; j < RTA_HZ.length; j++) RTA_HZ[j] = NativeAnalyzer.curveHz(j);
+    }
+    private final float[] rtaCorrectionTap = new float[NativeAnalyzer.CURVE_POINTS];
+    private final float[] rtaCorrectionMic = new float[NativeAnalyzer.CURVE_POINTS];
+    private volatile boolean rtaCorrectionStale = true;
 
     // State parameters for Post-DSP synthesis
     private final int[] gains = new int[NUM_BANDS_16];
@@ -793,6 +808,53 @@ public class AudioSpectrumEngine {
                 dspCurveDirty = false;
             }
             return dspCurveDb;
+        }
+    }
+
+    /**
+     * The live RTA's input for one display frame: the shown analyser's curve as measured
+     * ({@code contentDb}, see {@link NativeAnalyzer#getCurveDb}) and the correction its mode adds
+     * ({@code correctionDb}): the chip's response in the calculated mode, the microphone's
+     * compensation in the microphone mode. Kept apart so the display can smooth the content and add
+     * the correction after - a slider that moves shows at once, as in the author's 1.0.
+     *
+     * @return false when nothing is being analysed, and nothing was written
+     */
+    public boolean readCurve(float[] contentDb, float[] correctionDb) {
+        if (analysisPaused()) return false;
+        synchronized (analyzerLock) {
+            NativeAnalyzer analyzer = shownAnalyzer();
+            if (analyzer == null || !analyzer.isValid()) return false;
+            if (rtaCorrectionStale) {
+                rtaCorrectionStale = false;   // before the build: a change during it marks it again
+                buildRtaCorrections();
+            }
+            analyzer.getCurveDb(contentDb);
+            System.arraycopy(analyzer.isAcoustic() ? rtaCorrectionMic : rtaCorrectionTap, 0,
+                    correctionDb, 0, NativeAnalyzer.CURVE_POINTS);
+            return true;
+        }
+    }
+
+    /** Both curve corrections from the same state {@link #getDspCurve} and the bands use. */
+    private void buildRtaCorrections() {
+        synchronized (dspGainIdx) {
+            if (hasServiceDspState) {
+                DspResponse.computeAt(RTA_HZ, dspGainIdx, null, dspSubFreqIdx, dspSubGainIdx,
+                        dspHpfFrontCode, dspHpfRearCode, dspShelf, rtaCorrectionTap);
+            } else {
+                synchronized (gains) {
+                    synchronized (fmOffsets) {
+                        DspResponse.computeAt(RTA_HZ, gains, fmOffsets, -1, 0, 0, 0, null,
+                                rtaCorrectionTap);
+                    }
+                }
+            }
+        }
+        float[] mic = appContext != null ? RoomMeasurement.getMicCompensationCurve(appContext) : null;
+        for (int j = 0; j < RTA_HZ.length; j++) {
+            rtaCorrectionMic[j] = mic != null && mic.length >= AudioConfig.NUM_BANDS
+                    ? AudioConfig.bandValueAt(mic, RTA_HZ[j]) : 0f;
         }
     }
 
