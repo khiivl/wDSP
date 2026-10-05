@@ -24,7 +24,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Compensation Curve</string>
-    <string name="enable_loudness">Enable Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Trim Highs</string>
     <!-- A toggle, not a way into settings: it adds the loudness curve's bass boost to the
          subwoofer. The old wording, "Sub Tweaking" / "Налаштування сабвуфера", read like a menu
@@ -101,6 +101,7 @@
     <string name="simulate_speed">Speed simulation:</string>
     <string name="gala_fade_delay">Fade smoothing:</string>
     <string name="gala_hold_timer">Hold timer:</string>
+    <string name="gala_advanced_settings">Advanced</string>
     <string name="gala_ms_fmt">%d ms</string>
     <string name="gala_s_fmt">%.1f s</string>
     <string name="gala_section_speed_gain">Speed &amp; Compensation</string>

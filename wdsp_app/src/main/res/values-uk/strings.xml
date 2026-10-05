@@ -22,7 +22,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Тонкомпенсація (Крива Флетчера-Менсона)</string>
-    <string name="enable_loudness">Увімкнути Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Послабити ВЧ</string>
     <string name="sub_tweaking">Компенсація саба</string>
     <string name="fm_visualizer_label">Попередній перегляд корекції</string>
@@ -90,6 +90,7 @@
     <string name="simulate_speed">Симуляція швидкості:</string>
     <string name="gala_fade_delay">Плавність переходу:</string>
     <string name="gala_hold_timer">Час утримання:</string>
+    <string name="gala_advanced_settings">Додатково</string>
     <string name="gala_ms_fmt">%d мс</string>
     <string name="gala_s_fmt">%.1f с</string>
     <string name="gala_section_speed_gain">Швидкість та компенсація</string>
