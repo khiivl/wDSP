@@ -38,6 +38,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 | [SCREEN_MATRIX.md](SCREEN_MATRIX.md) | ЕКРАНИ ПЛАТФОРМИ QF — заводська матриця 132 панелей («屏参描述对照表»), реальні UI-геометрії в dp, поведінка статусбару QF та правила адаптації розмітки |
 | [BITPERFECT_MODULE_CONTRACT.md](BITPERFECT_MODULE_CONTRACT.md) | who answers for the module that rewrites the audio path, and who for the application that measures it — the handover of 29.09.2026, the facts the incoming session should not re-derive, and the rule that a claim about the module is confirmed on the wire and never by wDSP's own analyser. **Mirror**; the canon is `C:\APPS_Contacts\wDSP--BitPerfect\` |
 | [AUDIO_OWNERSHIP_CONTRACT.md](AUDIO_OWNERSHIP_CONTRACT.md) | who owns the volume, the channel and the EQ when radio and wDSP share one MCU path — the signal that ends the race, and why `volume` in it is advisory. **Agreed 26.08.2026; both sides implemented and jointly tested 26–31.08, wDSP's half committed** |
+| [CONTRACTS_MAP.md](CONTRACTS_MAP.md) | for the author and his agent: the agreements with the other apps and the rules the code keeps, one line each with its pointer |
 
 The standard automotive developer-support component (`ShimmerBadgeLayout` + `SupportDialog`) is documented in the
 `automotive-support-badge` skill, not here.
