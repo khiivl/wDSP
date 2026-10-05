@@ -57,6 +57,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.radiorubka.wdsp.ui.PermissionsWizard;
+import com.radiorubka.wdsp.ui.Disclosure;
 import com.radiorubka.wdsp.ui.ThemedDialog;
 import com.radiorubka.wdsp.ui.views.SegmentedPillNavView;
 import com.google.android.material.slider.LabelFormatter;
@@ -195,6 +196,9 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton btnLoudFix;
     /** The last verdict drawn, so the fix button applies exactly what the person was shown. */
     private LoudnessCheck.Result lastLoudnessResult;
+    // The author's 1.0 folding titles: one per loudness feature, gated by its switch
+    // (updateFmGroups), and GALA's "Advanced".
+    private Disclosure fmLoudnessGroup, fmTrimHighsGroup, fmUltraBassGroup, galaAdvanced;
     private FmVisualizerView fmVisualizer;
     
     // GALA Controls
@@ -981,8 +985,9 @@ public class MainActivity extends AppCompatActivity {
 
             // 2. Subtitles / Section Headers (18sp BOLD - однаковий розмір, трохи більший за елементи)
             int[] subTitles = {
-                R.id.fm_controls_title, R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
-                R.id.gala_c1_title, R.id.gala_c2_title,
+                R.id.tv_loudness_group_title, R.id.tv_trim_highs_group_title, R.id.tv_ultra_bass_group_title,
+                R.id.tv_front_bass_title, R.id.tv_rear_bass_title,
+                R.id.gala_c1_title, R.id.tv_gala_advanced_title,
                 R.id.tv_audiocheck_stems_label, R.id.tv_audiocheck_speaker_label
             };
             for (int id : subTitles) {
@@ -993,6 +998,16 @@ public class MainActivity extends AppCompatActivity {
                     tv.getPaint().setFakeBoldText(true);
                     tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
                 }
+            }
+
+            // The fold marks of those titles (ui/Disclosure) take the titles' colour.
+            int[] chevrons = {
+                R.id.iv_loudness_chevron, R.id.iv_trim_highs_chevron, R.id.iv_ultra_bass_chevron,
+                R.id.iv_gala_advanced_chevron
+            };
+            for (int id : chevrons) {
+                ImageView iv = findViewById(id);
+                if (iv != null) iv.setImageTintList(ColorStateList.valueOf(primaryText));
             }
 
             // 3. Secondary Labels / Elements below (16sp NORMAL - без болду, комфортно для очей)
@@ -2042,6 +2057,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFmControls() {
+        // Built before any switch listener below, which all end in updateFmGroups(). The keys
+        // are the author's, so his build and ours remember the same thing.
+        android.content.SharedPreferences ui = com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(this);
+        fmLoudnessGroup = new Disclosure(findViewById(R.id.row_loudness_toggle), findViewById(R.id.panel_loudness),
+                findViewById(R.id.iv_loudness_chevron), ui, "fm_panel_loudness_open");
+        fmTrimHighsGroup = new Disclosure(findViewById(R.id.row_trim_highs_toggle), findViewById(R.id.panel_trim_highs),
+                findViewById(R.id.iv_trim_highs_chevron), ui, "fm_panel_trim_highs_open");
+        fmUltraBassGroup = new Disclosure(findViewById(R.id.row_ultra_bass_toggle), findViewById(R.id.panel_ultra_bass),
+                findViewById(R.id.iv_ultra_bass_chevron), ui, "fm_panel_ultra_bass_open");
         updateToggleStyle(switchFmEnable);
         // The curve and the built-in loudness are not rivals and never were: the curve is our own
         // equaliser offsets, sent as gain indices in 0x80 and 0x8B, while the built-in one is a
@@ -2052,6 +2076,7 @@ public class MainActivity extends AppCompatActivity {
         // by the time this one ran, so the screen showed offsets the preset no longer held.
         switchFmEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
+            updateFmGroups();
             if (!isUpdatingUi) {
                 // The author's 0.5: say why the rear shelf stops following its own sliders.
                 if (checked) Toaster.show(MainActivity.this, getString(R.string.toast_loudness_sync_bass));
@@ -2070,6 +2095,7 @@ public class MainActivity extends AppCompatActivity {
         updateToggleStyle(switchFatigueEnable);
         switchFatigueEnable.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
+            updateFmGroups();
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -2094,6 +2120,7 @@ public class MainActivity extends AppCompatActivity {
         updateToggleStyle(switchUltraBass);
         switchUltraBass.addOnCheckedChangeListener((bv, checked) -> {
             updateToggleStyle(bv);
+            updateFmGroups();
             if (!isUpdatingUi) {
                 autoSaveCurrent();
                 updateFmVisualizer();
@@ -2114,6 +2141,28 @@ public class MainActivity extends AppCompatActivity {
         seekFmCalVol.addOnChangeListener(fml); seekFmStrength.addOnChangeListener(fml);
         seekFatStartVol.addOnChangeListener(fml);
         seekUltraBassStartVol.addOnChangeListener(fml); seekUltraBassMaxDb.addOnChangeListener(fml);
+        updateFmGroups();
+    }
+
+    /**
+     * The author's 1.0: a feature's sliders are on screen only while its switch is on - they mean
+     * nothing otherwise - and the card goes when no feature is on. Called from the switches' own
+     * listeners, which also run while a preset is loaded, so this follows the preset too. The
+     * verdict speaks about the curve and Trim Highs (LoudnessCheck stays silent without both), so it
+     * is shown while either is on and never folds away.
+     */
+    private void updateFmGroups() {
+        if (fmLoudnessGroup == null) return;
+        boolean loud = switchFmEnable.isChecked();
+        boolean trim = switchFatigueEnable.isChecked();
+        boolean ultra = switchUltraBass.isChecked();
+        fmLoudnessGroup.setShown(loud);
+        fmTrimHighsGroup.setShown(trim);
+        fmUltraBassGroup.setShown(ultra);
+        View verdict = findViewById(R.id.layout_loud_check);
+        if (verdict != null) verdict.setVisibility(loud || trim ? View.VISIBLE : View.GONE);
+        View card = findViewById(R.id.card_fm_controls);
+        if (card != null) card.setVisibility(loud || trim || ultra ? View.VISIBLE : View.GONE);
     }
 
     private void updateFmVisualizer() {
@@ -3383,6 +3432,10 @@ public class MainActivity extends AppCompatActivity {
         seekGalaFadeMs.addOnChangeListener(galal);
         seekGalaHoldMs.addOnChangeListener(galal);
         seekSimulateSpeed.addOnChangeListener(galal);
+        // No key: closed on every start, as the author's. Its sliders save themselves via galal
+        // whether it is open or not.
+        galaAdvanced = new Disclosure(findViewById(R.id.row_gala_advanced_toggle), findViewById(R.id.panel_gala_advanced),
+                findViewById(R.id.iv_gala_advanced_chevron), null, null);
     }
 
     private void savePresetList() {
