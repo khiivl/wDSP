@@ -299,12 +299,20 @@ int runCurve() {
     {
         wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
         std::vector<double> sum(wdsp::kCurvePoints, 0.0);
+        std::vector<double> bandSum(wdsp::kBands, 0.0);
         int reads = 0;
         float curve[wdsp::kCurvePoints];
+        float bands[wdsp::kBands];
+        wdsp::Analyzer::Config fast;
+        fast.attackMs = 1.0f;   // the bands unsmoothed in time, as the curve is
+        fast.releaseMs = 1.0f;
+        analyzer.setConfig(fast);
         feed(analyzer, makePinkNoise(kSampleRate * 12), 480, [&](int64_t position) {
             if (position < kSampleRate * 2) return;
             analyzer.getCurveDb(curve);
+            analyzer.getLevelsDb(bands);
             for (int j = 0; j < wdsp::kCurvePoints; j++) sum[j] += std::pow(10.0, curve[j] / 10.0);
+            for (int b = 0; b < wdsp::kBands; b++) bandSum[b] += std::pow(10.0, bands[b] / 10.0);
             reads++;
         });
         float minDb = 1e9f, maxDb = -1e9f;
@@ -319,20 +327,47 @@ int runCurve() {
         printf("  pink noise, %d reads: %.1f dB at %.0f Hz .. %.1f dB at %.0f Hz, spread %.1f dB -> %s\n",
                reads, minDb, hz(minJ), maxDb, hz(maxJ), maxDb - minDb, level ? "PASS" : "FAIL");
         if (!level) failures++;
+
+        // The same noise through the bands, averaged the same way: where the curve crosses a band
+        // centre it must read that band - the two are one measurement at different places.
+        float worst = 0.0f;
+        int worstBand = 0;
+        for (int b = 2; b < wdsp::kBands - 1; b++) {
+            const float centre = 1000.0f * std::pow(2.0f, static_cast<float>(b - 18) / 3.0f);
+            int nearest = 0;
+            for (int j = 1; j < wdsp::kCurvePoints; j++) {
+                if (std::fabs(std::log(hz(j) / centre)) < std::fabs(std::log(hz(nearest) / centre))) nearest = j;
+            }
+            float curveDb = static_cast<float>(10.0 * std::log10(sum[nearest] / std::max(1, reads)));
+            float bandDb = static_cast<float>(10.0 * std::log10(bandSum[b] / std::max(1, reads)));
+            if (std::fabs(curveDb - bandDb) > worst) { worst = std::fabs(curveDb - bandDb); worstBand = b; }
+        }
+        bool agree = worst <= 1.0f;
+        printf("  curve vs bands at the band centres 40 Hz..16 kHz: worst %.2f dB (%s Hz) -> %s\n",
+               worst, kBandNames[worstBand], agree ? "PASS" : "FAIL");
+        if (!agree) failures++;
     }
     for (float tone : {50.0f, 1000.0f, 10000.0f}) {
         wdsp::Analyzer analyzer(kSampleRate, kCaptureSize);
         feed(analyzer, makeSine(kSampleRate * 4, tone), 480);
         float curve[wdsp::kCurvePoints];
         analyzer.getCurveDb(curve);
+        // A tone lights every point whose third of an octave holds it, as it lights a band: a
+        // plateau a third of an octave wide (6.6 points) centred on the tone. Its middle must sit on
+        // the tone's point, and it must be no wider than a third plus a point either side.
         int peak = 0, nearest = 0;
         for (int j = 1; j < wdsp::kCurvePoints; j++) {
             if (curve[j] > curve[peak]) peak = j;
             if (std::fabs(std::log(hz(j) / tone)) < std::fabs(std::log(hz(nearest) / tone))) nearest = j;
         }
-        bool ok = std::abs(peak - nearest) <= 1;
-        printf("  %.0f Hz tone: peak at point %d (%.0f Hz), nearest point %d (%.0f Hz) -> %s\n",
-               tone, peak, hz(peak), nearest, hz(nearest), ok ? "PASS" : "FAIL");
+        int first = peak, last = peak;
+        while (first > 0 && curve[first - 1] >= curve[peak] - 1.0f) first--;
+        while (last < wdsp::kCurvePoints - 1 && curve[last + 1] >= curve[peak] - 1.0f) last++;
+        float middle = 0.5f * static_cast<float>(first + last);
+        int width = last - first + 1;
+        bool ok = std::fabs(middle - static_cast<float>(nearest)) <= 1.0f && width <= 9;
+        printf("  %.0f Hz tone: plateau points %d..%d (%d wide, middle %.1f), nearest point %d (%.0f Hz) -> %s\n",
+               tone, first, last, width, middle, nearest, hz(nearest), ok ? "PASS" : "FAIL");
         if (!ok) failures++;
     }
     return failures;

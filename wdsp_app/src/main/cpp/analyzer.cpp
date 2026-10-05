@@ -58,11 +58,11 @@ Analyzer::Analyzer(int sampleRate, int captureSize)
     frameRing_.resize(kFrameRingSize);
     // A frame carries the bands, then the curve: one ring, so both are held back by the same latency.
     for (auto& frame : frameRing_) frame.assign(kBands + kCurvePoints, -120.0f);
+    buildBandPlan();
     for (int j = 0; j < kCurvePoints; j++) {
-        curveHz_[j] = 20.0f * std::pow(1000.0f, static_cast<float>(j) / (kCurvePoints - 1));
+        curvePlan_[j] = makePlan(20.0f * std::pow(1000.0f, static_cast<float>(j) / (kCurvePoints - 1)));
         longCurveDb_[j] = -120.0f;
     }
-    buildBandPlan();
 }
 
 Analyzer::~Analyzer() = default;
@@ -116,29 +116,32 @@ void Analyzer::buildBandPlan() {
     // band, 20-25 kHz, was always empty - on the owner's unit the Visualizer tap ran at 44.1 kHz and
     // that bar read -16 dB on pink noise, pulling the 20 kHz hardware bar down with it. Owner:
     // "сітку стандартну".
+    for (int i = 0; i < kBands; i++) {
+        plan_[i] = makePlan(1000.0f * std::pow(2.0f, static_cast<float>(i - 18) / 3.0f));
+    }
+}
+
+Analyzer::BandPlan Analyzer::makePlan(float center) const {
+    // A third-octave band spans a sixth of an octave either side of its centre.
     const float sixth = std::pow(2.0f, 1.0f / 6.0f);
     const float nyquist = static_cast<float>(sampleRate_) * 0.5f;
+    float low = center / sixth;
+    float high = center * sixth;
+    if (high > nyquist) high = nyquist;
+    if (low >= high) low = high * 0.99f;
 
-    for (int i = 0; i < kBands; i++) {
-        float center = 1000.0f * std::pow(2.0f, static_cast<float>(i - 18) / 3.0f);
-        // A third-octave band spans a sixth of an octave either side of its centre.
-        float low = center / sixth;
-        float high = center * sixth;
-        if (high > nyquist) high = nyquist;
-        if (low >= high) low = high * 0.99f;
+    BandPlan p;
+    p.lowHz = low;
+    p.highHz = high;
+    p.useLongFft = center < kCrossoverHz;
 
-        BandPlan& p = plan_[i];
-        p.lowHz = low;
-        p.highHz = high;
-        p.useLongFft = center < kCrossoverHz;
-
-        int fftSize = p.useLongFft ? kLongFft : kShortFft;
-        float binWidth = static_cast<float>(sampleRate_) / static_cast<float>(fftSize);
-        p.lowBin = std::max(1, static_cast<int>(std::ceil(low / binWidth)));
-        p.highBin = std::min(fftSize / 2, static_cast<int>(std::floor(high / binWidth)));
-        p.expectedBins = (high - low) / binWidth;
-        if (p.expectedBins < 0.01f) p.expectedBins = 0.01f;
-    }
+    int fftSize = p.useLongFft ? kLongFft : kShortFft;
+    float binWidth = static_cast<float>(sampleRate_) / static_cast<float>(fftSize);
+    p.lowBin = std::max(1, static_cast<int>(std::ceil(low / binWidth)));
+    p.highBin = std::min(fftSize / 2, static_cast<int>(std::floor(high / binWidth)));
+    p.expectedBins = (high - low) / binWidth;
+    if (p.expectedBins < 0.01f) p.expectedBins = 0.01f;
+    return p;
 }
 
 void Analyzer::setConfig(const Config& config) {
@@ -254,30 +257,31 @@ void Analyzer::pushPcm16(const int16_t* samples, int count, int channels, float 
 }
 
 void Analyzer::accumulate(const float* power, int binCount, float binWidth, bool longFft) {
+    (void) binWidth;
     for (int i = 0; i < kBands; i++) {
-        BandPlan& p = plan_[i];
-        if (p.useLongFft != longFft) continue;
-
-        double sum = 0.0;
-        int count = 0;
-        for (int bin = p.lowBin; bin <= p.highBin && bin < binCount; bin++) {
-            sum += power[bin];
-            count++;
-        }
-
-        double density;
-        if (count > 0) {
-            density = sum / count;
-        } else {
-            // Band narrower than one bin: take the nearest bin as the local density rather than
-            // reporting nothing. Scaling by the band's own width below keeps it energy-consistent.
-            int bin = std::min(binCount - 1, std::max(1, p.lowBin));
-            density = power[bin];
-        }
-        (void) binWidth;
-
-        bandPower_[i] = static_cast<float>(density * p.expectedBins);
+        if (plan_[i].useLongFft != longFft) continue;
+        bandPower_[i] = planEnergy(plan_[i], power, binCount);
     }
+}
+
+float Analyzer::planEnergy(const BandPlan& p, const float* power, int binCount) {
+    double sum = 0.0;
+    int count = 0;
+    for (int bin = p.lowBin; bin <= p.highBin && bin < binCount; bin++) {
+        sum += power[bin];
+        count++;
+    }
+
+    double density;
+    if (count > 0) {
+        density = sum / count;
+    } else {
+        // Band narrower than one bin: take the nearest bin as the local density rather than
+        // reporting nothing. Scaling by the band's own width below keeps it energy-consistent.
+        int bin = std::min(binCount - 1, std::max(1, p.lowBin));
+        density = power[bin];
+    }
+    return static_cast<float>(density * p.expectedBins);
 }
 
 void Analyzer::processFrame(bool haveLong) {
@@ -323,26 +327,19 @@ void Analyzer::processFrame(bool haveLong) {
     float attack = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.attackMs));
     float release = 1.0f - std::exp(-framePeriodMs / std::max(1.0f, config.releaseMs));
 
-    // The live curve. Below the crossover from the long transform when it ran this frame, held
-    // otherwise, exactly as the bands there are; above it from the short one. Each point is the
-    // density at its frequency times a third of an octave's width there, so the curve and the bands
-    // read the same level and pink noise reads flat - the author tilts +3 dB/octave for the same end.
-    const float longBin = static_cast<float>(sampleRate_) / kLongFft;
-    const float shortBin = static_cast<float>(sampleRate_) / kShortFft;
-    const float thirdOctave = std::pow(2.0f, 1.0f / 6.0f) - std::pow(2.0f, -1.0f / 6.0f);
+    // The live curve: every point a third of an octave around it, measured by the bands' own
+    // function (planEnergy) on the same transforms - below the crossover the long one when it ran
+    // this frame, held otherwise, exactly as the bands there are. So a point on a band centre reads
+    // that band, pink noise reads level as the bands do, and the curve needs no smoothing on top:
+    // a sliding third of an octave already is the fractional-octave smoothing the author applies in dB.
     float curveDb[kCurvePoints];
     for (int j = 0; j < kCurvePoints; j++) {
-        const float hz = curveHz_[j];
-        const float widthDb = 10.0f * std::log10(thirdOctave * hz);
-        if (hz < kCrossoverHz) {
-            if (haveLong) {
-                longCurveDb_[j] = hermiteDensityDb(longPower_.data(), kLongFft / 2 + 1, longBin, hz)
-                        + widthDb;
-            }
+        const BandPlan& p = curvePlan_[j];
+        if (p.useLongFft) {
+            if (haveLong) longCurveDb_[j] = toDb(planEnergy(p, longPower_.data(), kLongFft / 2 + 1));
             curveDb[j] = longCurveDb_[j];
         } else {
-            curveDb[j] = hermiteDensityDb(shortPower_.data(), kShortFft / 2 + 1, shortBin, hz)
-                    + widthDb;
+            curveDb[j] = toDb(planEnergy(p, shortPower_.data(), kShortFft / 2 + 1));
         }
     }
 
@@ -378,20 +375,6 @@ void Analyzer::processFrame(bool haveLong) {
 
     frameWrite_ = (frameWrite_ + 1) % kFrameRingSize;
     frameCount_++;
-}
-
-float Analyzer::hermiteDensityDb(const float* power, int binCount, float binWidth, float freqHz) {
-    const float pos = freqHz / binWidth;
-    const int i = static_cast<int>(std::floor(pos));
-    const float t = pos - static_cast<float>(i);
-    auto at = [&](int bin) {
-        // Bin 0 is DC, never content; the last bin is Nyquist.
-        bin = std::max(1, std::min(binCount - 1, bin));
-        return toDb(power[bin] / binWidth);
-    };
-    const float p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
-    return 0.5f * (2.0f * p1 + (p2 - p0) * t + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t
-                   + (3.0f * p1 - p0 - 3.0f * p2 + p3) * t * t * t);
 }
 
 void Analyzer::getCurveDb(float* outCurve) {

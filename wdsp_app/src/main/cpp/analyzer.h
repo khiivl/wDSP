@@ -17,7 +17,9 @@ constexpr int kHwBands = 16;
 constexpr int kBands = 32;
 /**
  * Points of the live RTA curve, log-spaced from 20 Hz to 20 kHz - the author's 1.0 display model
- * (200 points, `SpectrumAnalyzerView` in his master), read from this analyser's own transforms.
+ * (200 points, `SpectrumAnalyzerView` in his master). Each point is measured exactly as a band is:
+ * the energy of a third of an octave around it, so the curve is the bands' measurement read at
+ * 200 places instead of 32.
  */
 constexpr int kCurvePoints = 200;
 
@@ -157,9 +159,9 @@ public:
 
     /**
      * The live curve, held back by the playback latency like the bands: kCurvePoints values in dB,
-     * each the power in a third of an octave around its point (so pink noise reads level, as the
-     * bands do), with no correction curve and no noise floor applied - the display adds what its
-     * mode needs. -120 until the first frame.
+     * each the energy of a third of an octave around its point, computed by the bands' own function
+     * - a point on a band centre reads that band - with no correction curve, no noise floor and no
+     * smoothing in time applied: the display adds what its mode needs. -120 until the first frame.
      */
     void getCurveDb(float* outCurve);
     /**
@@ -198,11 +200,10 @@ private:
     /** 32 third-octave bands in dB onto the 16 equaliser bands in dB - the only fold there is. */
     static void foldTo16Db(const float* db32, float* out16Db);
     void accumulate(const float* power, int binCount, float binWidth, bool longFft);
-    /**
-     * One curve point from a power spectrum: Catmull-Rom through the four nearest bins in dB (the
-     * author's interpolation - passes through every bin, no overshoot at peaks), as power per hertz.
-     */
-    static float hermiteDensityDb(const float* power, int binCount, float binWidth, float freqHz);
+    /** A third of an octave around centerHz: its edges, its transform and its bins. */
+    BandPlan makePlan(float centerHz) const;
+    /** The energy a plan holds in a power spectrum - one function for the bands and the curve. */
+    static float planEnergy(const BandPlan& p, const float* power, int binCount);
 
     int sampleRate_;
     int hop_;
@@ -224,8 +225,8 @@ private:
     float noiseFloor_[kBands];
     bool noiseFloorEnabled_ = false;
     float dspCurve_[kBands];
-    /** The curve's frequencies, and the long transform's points held between its runs. */
-    float curveHz_[kCurvePoints];
+    /** The curve's thirds of an octave, and the long transform's points held between its runs. */
+    BandPlan curvePlan_[kCurvePoints];
     float longCurveDb_[kCurvePoints];
 
     // Ring of finished frames, so the display can be held back by the playback latency.
