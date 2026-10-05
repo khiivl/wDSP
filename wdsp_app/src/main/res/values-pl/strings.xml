@@ -550,4 +550,22 @@
 
     <string name="button_backlight_label">Podświetlenie przycisków w kolorach wDSP</string>
     <string name="button_backlight_desc">Gdy wDSP jest na ekranie, przyciski świecą kolorem akcentu bieżącego motywu. Po opuszczeniu wDSP przywracany jest ich pierwotny kolor.</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Test Audio</string>
+    <string name="audiocheck_title">Test Audio</string>
+    <string name="audiocheck_stems_label">Ścieżki utworu (pętla, łącz swobodnie) i generatory:</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_vocal">Wokal</string>
+    <string name="stem_drums">Perkusja</string>
+    <string name="stem_melody">Melodia</string>
+    <string name="audiocheck_pink_noise">Szum Różowy</string>
+    <string name="audiocheck_sine_label">Generator Sinusoidalny</string>
+    <string name="audiocheck_sine_freq">Częstotliwość:</string>
+    <string name="audiocheck_speaker_label">Test Głośników (ustawia fader, pojedynczo)</string>
+    <string name="audiocheck_only_sub">Tylko Sub (EQ -12, filtry 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Koniec Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Czas (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizuj do Progu Słyszenia</string>
+    <string name="toast_sweep_hearing_threshold">Odtwarzaj jak najciszej - na granicy słyszalności, ledwo słyszalnie.</string>
 </resources>

@@ -567,4 +567,28 @@
     <string name="settings_ui_style_desc">Switch between the author’s classic Material 3 style and the modern one</string>
     <string name="settings_ui_style_classic">Classic (Original)</string>
     <string name="settings_ui_style_modern">Modern</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Audio Check</string>
+    <string name="audiocheck_title">Audio Check</string>
+    <string name="audiocheck_stems_label">Theme Song Stems (loop, mix freely) and generators:</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_vocal">Vocal</string>
+    <string name="stem_drums">Drums</string>
+    <string name="stem_melody">Melody</string>
+    <string name="audiocheck_pink_noise">Pink Noise</string>
+    <string name="audiocheck_sine_label">Sine Generator</string>
+    <string name="audiocheck_sine_freq">Frequency:</string>
+    <string name="audiocheck_speaker_label">Speaker Test (sets fader, one at a time)</string>
+    <string name="audiocheck_only_sub">Only Sub (EQ -12, filters 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">End Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Dur (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalize for Hearing Threshold</string>
+    <string name="toast_sweep_hearing_threshold">Play as quietly as possible - at your hearing threshold, just barely audible.</string>
+    <string name="audiocheck_sweep_play" translatable="false">⏯</string>
+    <string name="audiocheck_sweep_pause" translatable="false">⏯</string>
+    <string name="speaker_fl" translatable="false">FL</string>
+    <string name="speaker_fr" translatable="false">FR</string>
+    <string name="speaker_rl" translatable="false">RL</string>
+    <string name="speaker_rr" translatable="false">RR</string>
 </resources>

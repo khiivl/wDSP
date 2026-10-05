@@ -554,4 +554,22 @@
 
     <string name="button_backlight_label">Подсветка кнопок в цветах wDSP</string>
     <string name="button_backlight_desc">Пока wDSP на экране, кнопки светятся акцентным цветом текущей дневной или ночной темы. Когда wDSP сворачивается, возвращается их родной цвет.</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Аудиотест</string>
+    <string name="audiocheck_title">Аудиотест</string>
+    <string name="audiocheck_stems_label">Стемы трека (луп, свободно сочетаются) и генераторы:</string>
+    <string name="stem_bass">Бас</string>
+    <string name="stem_vocal">Вокал</string>
+    <string name="stem_drums">Барабаны</string>
+    <string name="stem_melody">Мелодия</string>
+    <string name="audiocheck_pink_noise">Розовый шум</string>
+    <string name="audiocheck_sine_label">Генератор синуса</string>
+    <string name="audiocheck_sine_freq">Частота:</string>
+    <string name="audiocheck_speaker_label">Тест динамиков (переключает фейдер, по одному)</string>
+    <string name="audiocheck_only_sub">Только сабвуфер (EQ -12, фильтры 250Гц, бост 0)</string>
+    <string name="audiocheck_sweep_start_hint">Нач. Гц</string>
+    <string name="audiocheck_sweep_end_hint">Кон. Гц</string>
+    <string name="audiocheck_sweep_duration_hint">Длит. с</string>
+    <string name="audiocheck_sweep_normalize">Нормализация по порогу слуха</string>
+    <string name="toast_sweep_hearing_threshold">Включите как можно тише - на пороге слышимости, едва слышно.</string>
 </resources>

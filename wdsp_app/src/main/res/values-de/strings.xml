@@ -550,4 +550,22 @@
 
     <string name="button_backlight_label">Tastenbeleuchtung in wDSP-Farben</string>
     <string name="button_backlight_desc">Solange wDSP auf dem Bildschirm ist, leuchten die Tasten in der Akzentfarbe des aktuellen Designs. Wird wDSP verlassen, kehrt die Originalfarbe zurück.</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Audio-Check</string>
+    <string name="audiocheck_title">Audio-Check</string>
+    <string name="audiocheck_stems_label">Titelsong-Stems (Loop, frei kombinierbar) und Generatoren:</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_vocal">Gesang</string>
+    <string name="stem_drums">Schlagzeug</string>
+    <string name="stem_melody">Melodie</string>
+    <string name="audiocheck_pink_noise">Rosa Rauschen</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frequenz:</string>
+    <string name="audiocheck_speaker_label">Lautsprechertest (stellt Fader ein, einzeln)</string>
+    <string name="audiocheck_only_sub">Nur Sub (EQ -12, Filter 250Hz, Boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Ende Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Dauer (s)</string>
+    <string name="audiocheck_sweep_normalize">Für Hörschwelle normalisieren</string>
+    <string name="toast_sweep_hearing_threshold">So leise wie möglich abspielen - an deiner Hörschwelle, gerade noch hörbar.</string>
 </resources>

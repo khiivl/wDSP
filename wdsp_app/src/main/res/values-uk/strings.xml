@@ -558,5 +558,23 @@
     <string name="btn_rear">↓R</string>
     <string name="btn_center">０</string>
     <string name="eqc">"EQ:"</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Аудіотест</string>
+    <string name="audiocheck_title">Аудіотест</string>
+    <string name="audiocheck_stems_label">Стеми треку (луп, вільно поєднуються) та генератори:</string>
+    <string name="stem_bass">Бас</string>
+    <string name="stem_vocal">Вокал</string>
+    <string name="stem_drums">Барабани</string>
+    <string name="stem_melody">Мелодія</string>
+    <string name="audiocheck_pink_noise">Рожевий шум</string>
+    <string name="audiocheck_sine_label">Генератор синуса</string>
+    <string name="audiocheck_sine_freq">Частота:</string>
+    <string name="audiocheck_speaker_label">Тест динаміків (перемикає фейдер, по одному)</string>
+    <string name="audiocheck_only_sub">Тільки сабвуфер (EQ -12, фільтри 250Гц, буст 0)</string>
+    <string name="audiocheck_sweep_start_hint">Поч. Гц</string>
+    <string name="audiocheck_sweep_end_hint">Кін. Гц</string>
+    <string name="audiocheck_sweep_duration_hint">Трив. с</string>
+    <string name="audiocheck_sweep_normalize">Нормалізація за порогом слуху</string>
+    <string name="toast_sweep_hearing_threshold">Відтворюйте якомога тихіше - на межі чутності, щойно чутно.</string>
 </resources>
 

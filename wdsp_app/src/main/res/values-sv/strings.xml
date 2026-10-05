@@ -550,4 +550,22 @@
 
     <string name="button_backlight_label">Knappbelysning i wDSP-färger</string>
     <string name="button_backlight_desc">När wDSP visas på skärmen lyser knapparna i accentfärgen för det aktuella temat. När wDSP lämnas återgår de till sin ursprungliga färg.</string>
+    <!-- Audio Check - the author's 1.0, his texts -->
+    <string name="ACtab">Ljudtest</string>
+    <string name="audiocheck_title">Ljudtest</string>
+    <string name="audiocheck_stems_label">Låtstreams (loop, valfri mix) och generatorer:</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_vocal">Sång</string>
+    <string name="stem_drums">Trummor</string>
+    <string name="stem_melody">Melodi</string>
+    <string name="audiocheck_pink_noise">Rosa Brus</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frekvens:</string>
+    <string name="audiocheck_speaker_label">Högtalartest (ställer fader, en i taget)</string>
+    <string name="audiocheck_only_sub">Endast Sub (EQ -12, filter 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Slut Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Tid (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalisera för Hörtröskel</string>
+    <string name="toast_sweep_hearing_threshold">Spela så tyst som möjligt - vid din hörtröskel, precis hörbart.</string>
 </resources>

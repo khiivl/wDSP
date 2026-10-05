@@ -3139,6 +3139,641 @@
                 </LinearLayout>
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Audio Check Tab Content: the author's 1.0 test signals, in this layout's own cards.
+             The sound engine is AudioCheck; this is only its controls. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_audiocheck"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_margin="@dimen/margin_standard"
+            android:layout_height="match_parent">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/bottom_nav_clearance">
+
+                <LinearLayout
+                    android:id="@+id/card_audiocheck_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextTitle"
+                        android:id="@+id/tv_audiocheck_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/audiocheck_title" />
+
+                    <LinearLayout
+                        android:id="@+id/card_audiocheck_c1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_licence_card"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:id="@+id/tv_audiocheck_stems_label"
+                            style="@style/TextHeader"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/audiocheck_stems_label" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_bass"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/stem_bass"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_vocal"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/stem_vocal"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_drums"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/stem_drums"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_melody"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/stem_melody"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_pink_noise"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/audiocheck_pink_noise"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_sine"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/audiocheck_sine_label"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_lbl_audiocheck_sine_freq"
+                                style="@style/TextLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/audiocheck_sine_freq" />
+
+                            <com.google.android.material.slider.Slider
+                                android:id="@+id/seek_audiocheck_sine_freq"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:valueFrom="0.0"
+                                android:valueTo="1.0"
+                                android:value="0.5"
+                                app:labelBehavior="gone" />
+
+                            <TextView
+                                android:id="@+id/tv_audiocheck_sine_freq_val"
+                                style="@style/TextValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minWidth="64dp"
+                                android:gravity="end"
+                                android:text="@string/value_default" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_sine_minus10"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="-10"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="false" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_sine_minus1"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="-1"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="false" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_sine_plus1"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="+1"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="false" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_sine_plus10"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="+10"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="false" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/card_audiocheck_c2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_licence_card"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/edit_audiocheck_sweep_start"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_icon_button"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="0dp"
+                                android:gravity="center"
+                                android:hint="@string/audiocheck_sweep_start_hint"
+                                android:importantForAutofill="no"
+                                android:inputType="numberDecimal"
+                                android:maxLines="1"
+                                android:textSize="@dimen/eq_value_text" />
+
+                            <EditText
+                                android:id="@+id/edit_audiocheck_sweep_end"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_icon_button"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="0dp"
+                                android:gravity="center"
+                                android:hint="@string/audiocheck_sweep_end_hint"
+                                android:importantForAutofill="no"
+                                android:inputType="numberDecimal"
+                                android:maxLines="1"
+                                android:textSize="@dimen/eq_value_text" />
+
+                            <EditText
+                                android:id="@+id/edit_audiocheck_sweep_duration"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_icon_button"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="0dp"
+                                android:gravity="center"
+                                android:hint="@string/audiocheck_sweep_duration_hint"
+                                android:importantForAutofill="no"
+                                android:inputType="numberDecimal"
+                                android:maxLines="1"
+                                android:textSize="@dimen/eq_value_text" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_sweep_toggle"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/audiocheck_sweep_play"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_sweep_normalize"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/audiocheck_sweep_normalize"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/card_audiocheck_c3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_licence_card"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:id="@+id/tv_audiocheck_speaker_label"
+                            style="@style/TextHeader"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/audiocheck_speaker_label" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_fl"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/speaker_fl"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_fr"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/speaker_fr"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_rl"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/speaker_rl"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_audiocheck_rr"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/speaker_rr"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/switch_audiocheck_only_sub"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toggle_height"
+                                android:layout_weight="1"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:insetLeft="0dp"
+                                android:insetRight="0dp"
+                                app:cornerRadius="10dp"
+                                app:strokeWidth="1.2dp"
+                                app:strokeColor="@color/panel_border_theme_aware"
+                                android:backgroundTint="@color/card_bg_theme_aware"
+                                android:text="@string/audiocheck_only_sub"
+                                android:textAllCaps="false"
+                                android:textSize="@dimen/eq_value_text"
+                                android:textStyle="bold"
+                                android:checkable="true" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
 
