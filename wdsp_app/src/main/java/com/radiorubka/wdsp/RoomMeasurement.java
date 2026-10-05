@@ -539,24 +539,26 @@ public final class RoomMeasurement {
     // Height, and what the microphone is built into - two axes the dot cannot carry
     // =====================================================================================
 
-    /**
-     * How far a door speaker sits inside the cabin's own half-width: the door card's thickness. The
-     * half-width itself is the person's answer (CabinProfile), measured at shoulder height; until
-     * 06.10.2026 it was two constants that disagreed - 80 cm for the microphone's dot and 70 cm for
-     * the doors - in a cabin nobody had been asked about.
-     */
-    private static final float DOOR_CARD_INSET_CM = 5f;
-
     /** Half the cabin's width: the microphone dot's ±1 means "against the door". */
     private static float cabinHalfWidthCm(Result result) {
         return result.cabinWidthCm / 2f;
     }
 
-    /** Loudspeaker heights, same ear-line origin. 🧩 Door cards sit well below the ears. */
-    private static final float SPEAKER_Z_DOOR_CM = -25f;
-    private static final float SPEAKER_Z_SUB_CM = -35f;
-    /** A parcel shelf is about at window height, not down on the floor. */
-    private static final float SPEAKER_Z_SHELF_CM = -5f;
+    /** Dash to the listener's ear line, in centimetres: the person's answer, or the default. */
+    private static float listeningDistanceCm(Result result) {
+        return result.listeningDistanceCm > 0 ? (float) result.listeningDistanceCm : (float) DEFAULT_LISTENING_DIST_CM;
+    }
+
+    /** Where the microphone was, in {@link CabinGeometry}'s coordinates. */
+    private static float[] micPosition(Result result) {
+        return CabinGeometry.mic(result.micPlace, result.micSpotLr, result.micSpotFr,
+                cabinHalfWidthCm(result), listeningDistanceCm(result));
+    }
+
+    /** Where a loudspeaker is, in {@link CabinGeometry}'s coordinates. */
+    private static float[] speakerPosition(Result result, Channel ch) {
+        return CabinGeometry.speaker(ch, cabinHalfWidthCm(result), listeningDistanceCm(result), result.subPlace);
+    }
 
     /**
      * Where the subwoofer is, which is a question about path length rather than about tone.
@@ -935,7 +937,7 @@ public final class RoomMeasurement {
         delayTest = mode;
     }
 
-    /** The slider values this run is stepping through, whichever delay line is being tested. */
+    /** True when at least one of these speakers was heard. */
     private static boolean anyHeard(Result result, Channel... chs) {
         if (result.channels == null) return false;
         for (Channel ch : chs) {
@@ -945,6 +947,7 @@ public final class RoomMeasurement {
         return false;
     }
 
+    /** The slider values this run is stepping through, whichever delay line is being tested. */
     private static int[] delayTestSteps() {
         return delayTest == 2 ? SURROUND_TEST_STEPS : DELAY_TEST_STEPS;
     }
@@ -977,7 +980,7 @@ public final class RoomMeasurement {
      * table below is the corrected one; before this it named every result mirror-image front to
      * back. The arrival times themselves were never affected, only the labels on them.
      */
-    private enum Channel {
+    enum Channel {
         REAR_LEFT("rear left", R.string.rear_left, FADER_MIN, FADER_MIN),
         REAR_RIGHT("rear right", R.string.rear_right, FADER_MAX, FADER_MIN),
         FRONT_LEFT("front left", R.string.front_left, FADER_MIN, FADER_MAX),
@@ -1010,22 +1013,15 @@ public final class RoomMeasurement {
         /** Sample at which the sound arrived, counted from the start of the recording. */
         public int arrivalSamples;
         /**
-         * Time of flight in milliseconds, measured on the monotonic clock.
+         * When the sound arrived, in milliseconds from the start of this speaker's window.
          *
-         * Not simply the arrival sample divided by the sample rate. Each channel gets its own
-         * recording and its own playback, and the gap between "recording started" and "the first
-         * sample of the sweep actually left" is different every time - measured at up to seven
-         * milliseconds of variation between runs on a bench where nothing moved. A car is only
-         * nine milliseconds wide, so that jitter would have swamped the answer.
-         *
-         * Both ends therefore report through the platform's own timestamps, which were shown to be
-         * honest on this hardware while the picture-to-sound delay was being measured. What
-         * remains is the sound's own journey plus a constant that every channel shares, and the
-         * delays are differences, so the constant falls out.
+         * <p>The whole pass is one playback and one recording, and each speaker's window is cut at a
+         * fixed offset from it. Separate recordings per speaker once gave up to seven milliseconds of
+         * start jitter on a bench where nothing moved - a car is only nine milliseconds wide. So what
+         * an arrival holds is the sound's own journey plus a constant every channel shares; delays
+         * and arrival order are differences, and the constant falls out.
          */
         public float arrivalMs;
-        /** True when the timestamps were available; without them the delays are not trustworthy. */
-        public boolean clockLocked;
         /** How far the arrival stood above everything else. Under ten means nothing was heard. */
         public float prominence;
         /** +1 normal, -1 wired backwards, 0 not determined. */
@@ -2142,7 +2138,6 @@ public final class RoomMeasurement {
             cr.arrivalSamples = Math.round(analysis[NativeSweep.ARRIVAL]);
             // Sub-sample arrival time in ms
             cr.arrivalMs = analysis[NativeSweep.ARRIVAL] * 1000f / SAMPLE_RATE;
-            cr.clockLocked = true;
             cr.prominence = analysis[NativeSweep.PROMINENCE];
             cr.polarity = (int) analysis[NativeSweep.POLARITY];
             cr.clarityDb = analysis[NativeSweep.CLARITY];
@@ -2363,93 +2358,6 @@ public final class RoomMeasurement {
         ed.apply();
     }
 
-    private static float getSpeakerX(Channel ch, float cabinHalfWidthCm) {
-        final float door = Math.max(0f, cabinHalfWidthCm - DOOR_CARD_INSET_CM);
-        switch (ch) {
-            case FRONT_LEFT:
-            case REAR_LEFT:
-                return -door;
-            case FRONT_RIGHT:
-            case REAR_RIGHT:
-                return door;
-            case SUBWOOFER:
-            default:
-                return 0f;
-        }
-    }
-
-    /**
-     * Loudspeaker height above the listener's ear line, in centimetres.
-     *
-     * 🧩 Door cards put a woofer well below the ears in every ordinary car, and a boot subwoofer
-     * lower still. The values are approximate on purpose: they change a path length by a few
-     * centimetres, which is a few hundredths of a millisecond - small, but it is the difference
-     * between a model that knows the speaker is under the window and one that thinks it is in it.
-     */
-    private static float getSpeakerZ(Channel ch, int subPlace) {
-        switch (ch) {
-            case SUBWOOFER:
-                // A parcel shelf sits at about window height; a boot floor and an under-seat
-                // enclosure are both down near the carpet.
-                return (subPlace == SUB_PLACE_SHELF) ? SPEAKER_Z_SHELF_CM : SPEAKER_Z_SUB_CM;
-            case FRONT_LEFT:
-            case FRONT_RIGHT:
-            case REAR_LEFT:
-            case REAR_RIGHT:
-            default:
-                return SPEAKER_Z_DOOR_CM;
-        }
-    }
-
-    private static float getSpeakerY(Channel ch, float distListen, int subPlace) {
-        switch (ch) {
-            case FRONT_LEFT:
-            case FRONT_RIGHT:
-                return 15f;
-            case REAR_LEFT:
-            case REAR_RIGHT:
-                return distListen + 95f;
-            case SUBWOOFER:
-                return subwooferY(distListen, subPlace);
-            default:
-                return 15f;
-        }
-    }
-
-    /**
-     * How far behind the listener the subwoofer is, by where its owner said it is.
-     *
-     * 🔴 Until 13.09.2026 this was the single expression {@code distListen + 165}, applied
-     * whatever the answer. The setting was offered in Settings, saved, copied into the result
-     * and printed in the report - and read by nothing. The comment above {@link #SUB_PLACES}
-     * spelled out why it mattered ("a boot and an under-seat enclosure are more than a metre
-     * apart, which is three milliseconds - six steps of the delay slider") and then the wire
-     * to the geometry was never run. Asking somebody a question and discarding the answer is
-     * worse than not asking: they believe the measurement knows.
-     *
-     * <p>The figures are approximate on the same terms as the rest of this model, and they
-     * are measured from the ear line, so they follow the seat when the listening distance
-     * changes. What matters is that they differ from each other in the right direction and
-     * by roughly the right amount; the old behaviour is preserved exactly for the boot, which
-     * is what an unanswered setting still means.
-     */
-    private static float subwooferY(float distListen, int subPlace) {
-        switch (subPlace) {
-            case SUB_PLACE_UNDER_SEAT:
-                // Under the front seats: just ahead of the ear line, not behind it at all.
-                // This is the case the old constant got most wrong - by about two and a half
-                // metres, which is seven milliseconds of delay applied to a box that needed
-                // almost none.
-                return distListen - 15f;
-            case SUB_PLACE_SHELF:
-                // Parcel shelf: behind the rear seat backs, nearer than the boot floor.
-                return distListen + 135f;
-            case SUB_PLACE_BOOT:
-            default:
-                return distListen + 165f;
-        }
-    }
-
     /**
      * Turns arrival times into delay settings.
      *
@@ -2526,40 +2434,17 @@ public final class RoomMeasurement {
         // ===================================================================================
         // Cabin Geometry & Ray Tracing: Re-project from microphone to listening position
         // ===================================================================================
-        final float distListen = result.listeningDistanceCm > 0 ? (float) result.listeningDistanceCm : (float) DEFAULT_LISTENING_DIST_CM;
-        final float speedOfSoundCmMs = 34.3f; // 343 m/s = 34.3 cm/ms
+        final float distListen = listeningDistanceCm(result);
 
-        // 1. Physical microphone position in cabin coordinates. Origin (0,0) is the head unit on
-        //    the dash for the plan, and the listener's EAR LINE for height - the scene is built for
-        //    a head, not for a microphone, so the number that matters most is zero by construction.
-        //
-        //    Until 12.09.2026 this threw the owner's answer away: every place except the headrest
-        //    collapsed to (0,0), so the dot dragged across the car picture changed the report and
-        //    nothing else. It is read properly now - see micSpotLr/micSpotFr and MIC_PLACE_HEIGHT_CM.
-        final float micX;
-        final float micY;
-        final float micZ;
-        if (result.micPlace == 9) {
-            // Driver headrest: the microphone was put where the ears are, which is the one case
-            // where no re-projection is needed at all.
-            micX = (result.micSpotLr > 0.2f) ? 35f : -35f;
-            micY = distListen;
-            micZ = 0f;
-        } else {
-            // The dot, in centimetres: +1 is against the door, +1 front is the dash, -1 front is
-            // the back seat. Clamped, because a saved value from an older build may be anything.
-            float lr = Math.max(-1f, Math.min(1f, result.micSpotLr));
-            float fr = Math.max(-1f, Math.min(1f, result.micSpotFr));
-            micX = lr * cabinHalfWidthCm(result);
-            micY = (1f - fr) * 0.5f * (distListen + 95f);
-            micZ = MicProfile.heightCm(result.micPlace);
-        }
+        // 1. Physical microphone position in cabin coordinates (CabinGeometry: the plan from the
+        //    head unit on the dash, height from the listener's ear line).
+        final float[] mic = micPosition(result);
 
         // 2. Determine target listener listening position (Xt, Yt)
         final float targetX;
         final float targetY;
         if (mode == SoundstageMode.DRIVER) {
-            targetX = (result.micSpotLr > 0.2f) ? 35f : -35f;
+            targetX = (result.micSpotLr > 0.2f) ? CabinGeometry.DRIVER_EAR_X_CM : -CabinGeometry.DRIVER_EAR_X_CM;
             targetY = distListen;
         } else if (mode == SoundstageMode.CABIN_CENTER) {
             targetX = 0f;
@@ -2570,7 +2455,8 @@ public final class RoomMeasurement {
             targetY = distListen; // centered between driver and passenger
         }
 
-        // 3. Re-project each channel arrival to listener position
+        // 3. Re-project each channel arrival to listener position; the listener's ears are z = 0.
+        final float[] target = {targetX, targetY, 0f};
         float[] projectedArrivalMs = new float[result.channels.length];
         Channel[] allChannels = Channel.values();
 
@@ -2580,20 +2466,15 @@ public final class RoomMeasurement {
                 projectedArrivalMs[i] = Float.NEGATIVE_INFINITY;
                 continue;
             }
-            Channel ch = allChannels[i];
-            float sx = getSpeakerX(ch, cabinHalfWidthCm(result));
-            float sy = getSpeakerY(ch, distListen, result.subPlace);
-            float sz = getSpeakerZ(ch, result.subPlace);
+            final float[] speaker = speakerPosition(result, allChannels[i]);
 
             // Three dimensions, not two. A dome-light microphone is 45 cm above the ears and a door
             // woofer 25 cm below them: in plan those are the same point and the height is the whole
-            // of the difference. The ear line is z = 0, so the listener's own z is zero as well.
-            double dMic = Math.sqrt((sx - micX) * (sx - micX) + (sy - micY) * (sy - micY)
-                    + (sz - micZ) * (sz - micZ));
-            double dTarget = Math.sqrt((sx - targetX) * (sx - targetX) + (sy - targetY) * (sy - targetY)
-                    + sz * sz);
+            // of the difference.
+            double dMic = CabinGeometry.distanceCm(speaker, mic);
+            double dTarget = CabinGeometry.distanceCm(speaker, target);
             float deltaDistCm = (float) (dTarget - dMic);
-            float deltaTMs = deltaDistCm / speedOfSoundCmMs;
+            float deltaTMs = deltaDistCm / CabinGeometry.SOUND_CM_PER_MS;
 
             // Acoustic Ray Tracing & Subwoofer Phase Alignment:
             // For front speakers: sound travels rearward towards the listener, hitting mic at (0,0) first,
