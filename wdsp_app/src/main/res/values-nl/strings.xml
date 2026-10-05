@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Compensatiecurve</string>
-    <string name="enable_loudness">Loudness inschakelen</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Hoge tonen dempen</string>
     <string name="sub_tweaking">Subwoofer-compensatie</string>
     <string name="fm_visualizer_label">Real-time compensatievoorbeeld</string>
@@ -554,4 +554,25 @@ Globale standaard: %1$s</string>
     <string name="gala_disable_for_preset">Uit voor dit profiel</string>
     <string name="button_backlight_label">Knopverlichting in wDSP-kleuren</string>
     <string name="button_backlight_desc">Zolang wDSP op het scherm staat, lichten de knoppen op in de accentkleur van het huidige thema. Bij het verlaten keert de originele kleur terug.</string>
+    <string name="ACtab">Audiotest</string>
+    <string name="audiocheck_title">Audiotest</string>
+    <string name="audiocheck_stems_label">Nummertracks (loop, vrije mix) en generatoren:</string>
+    <string name="stem_drums">Drums</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_melody">Melodie</string>
+    <string name="stem_vocal">Zang</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frequentie:</string>
+    <string name="audiocheck_speaker_label">Luidsprekertest (stelt fader in, één voor één)</string>
+    <string name="audiocheck_only_sub">Alleen Sub (EQ -12, filters 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Eind Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Duur (s)</string>
+    <string name="audiocheck_sweep_normalize">Normaliseren voor gehoordrempel</string>
+    <string name="toast_sweep_hearing_threshold">Speel zo zacht mogelijk af – op je gehoordrempel, nauwelijks hoorbaar.</string>
+    <string name="audiocheck_pink_noise">Roze ruis</string>
+    <string name="gala_advanced_settings">Geavanceerd</string>
+    <string name="eq_vis_shape_label">Spectrumvorm:</string>
+    <string name="eq_vis_shape_curve">Live curve</string>
+    <string name="eq_vis_shape_bars">Balken</string>
 </resources>

@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness kompensācijas līkne</string>
-    <string name="enable_loudness">Iespējot Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Augsto frekvenču apgriešana</string>
     <string name="sub_tweaking">Zemfrekvences kompensācija</string>
     <string name="fm_visualizer_label">Kompensācijas priekšskatījums reāllaikā</string>
@@ -554,4 +554,25 @@ Globāli noklusējums: %1$s</string>
     <string name="gala_disable_for_preset">Izslēgt šim profilam</string>
     <string name="button_backlight_label">Pogu apgaismojums wDSP krāsās</string>
     <string name="button_backlight_desc">Kamēr wDSP ir ekrānā, pogas izgaismojas pašreizējās tēmas akcenta krāsā. Aizejot no wDSP, atgriežas to sākotnējā krāsa.</string>
+    <string name="ACtab">Audio tests</string>
+    <string name="audiocheck_title">Audio tests</string>
+    <string name="audiocheck_stems_label">Dziesmas celiņi (cilpa, brīvs mikss) un ģeneratori:</string>
+    <string name="stem_drums">Bungas</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_melody">Melodija</string>
+    <string name="stem_vocal">Vokāls</string>
+    <string name="audiocheck_sine_label">Sinusa ģenerators</string>
+    <string name="audiocheck_sine_freq">Frekvence:</string>
+    <string name="audiocheck_speaker_label">Skaļruņu tests (iestata fader, pa vienam)</string>
+    <string name="audiocheck_only_sub">Tikai Sub (EQ -12, filtri 250Hz, pastiprinājums 0)</string>
+    <string name="audiocheck_sweep_start_hint">Sākums Hz</string>
+    <string name="audiocheck_sweep_end_hint">Beigas Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Ilgums (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizēt dzirdamības slieksnim</string>
+    <string name="toast_sweep_hearing_threshold">Atskaņojiet pēc iespējas klusāk – uz dzirdamības sliekšņa, tikko dzirdami.</string>
+    <string name="audiocheck_pink_noise">Rozā troksnis</string>
+    <string name="gala_advanced_settings">Paplašināti</string>
+    <string name="eq_vis_shape_label">Spektra forma:</string>
+    <string name="eq_vis_shape_curve">Dzīvā līkne</string>
+    <string name="eq_vis_shape_bars">Stabiņi</string>
 </resources>

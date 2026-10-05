@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Fiziológiai hangerő kompenzációs görbe (Loudness)</string>
-    <string name="enable_loudness">Loudness bekapcsolása</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Magashang vágás</string>
     <string name="sub_tweaking">Mélynyomó kompenzáció</string>
     <string name="fm_visualizer_label">Valós idejű kompenzációs előnézet</string>
@@ -554,5 +554,26 @@ Globális alapértelmezett: %1$s</string>
     <string name="gala_disable_for_preset">Kikapcs. a profilnál</string>
     <string name="button_backlight_label">Gombok háttérvilágítása wDSP színekben</string>
     <string name="button_backlight_desc">Amíg a wDSP látható, a gombok az aktuális téma kiemelő színében világítanak. Kilépéskor visszaáll az eredeti színük.</string>
+    <string name="ACtab">Audioteszt</string>
+    <string name="audiocheck_title">Audioteszt</string>
+    <string name="audiocheck_stems_label">Sávok (hurok, szabad mix) és generátorok:</string>
+    <string name="stem_drums">Dobok</string>
+    <string name="stem_bass">Basszus</string>
+    <string name="stem_melody">Dallam</string>
+    <string name="stem_vocal">Ének</string>
+    <string name="audiocheck_sine_label">Szinuszgenerátor</string>
+    <string name="audiocheck_sine_freq">Frekvencia:</string>
+    <string name="audiocheck_speaker_label">Hangszóróteszt (fader beállítása, egyenként)</string>
+    <string name="audiocheck_only_sub">Csak Sub (EQ -12, szűrők 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Kezdet Hz</string>
+    <string name="audiocheck_sweep_end_hint">Vég Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Időt. (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizálás hallásküszöbhöz</string>
+    <string name="toast_sweep_hearing_threshold">Játssza le a lehető leghalkabban – a hallásküszöbön, alig hallhatóan.</string>
+    <string name="audiocheck_pink_noise">Rózsaszín zaj</string>
+    <string name="gala_advanced_settings">Haladó</string>
+    <string name="eq_vis_shape_label">Spektrum alakja:</string>
+    <string name="eq_vis_shape_curve">Élő görbe</string>
+    <string name="eq_vis_shape_bars">Sávok</string>
 </resources>
 

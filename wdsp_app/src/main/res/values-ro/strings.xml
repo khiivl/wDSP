@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Curbă de compensare Loudness</string>
-    <string name="enable_loudness">Activare Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Atenuare Înalte</string>
     <string name="sub_tweaking">Compensare subwoofer</string>
     <string name="fm_visualizer_label">Previzualizare compensare în timp real</string>
@@ -554,4 +554,25 @@ Implicit global: %1$s</string>
     <string name="gala_disable_for_preset">Dezactivat în profil</string>
     <string name="button_backlight_label">Iluminare butoane în culorile wDSP</string>
     <string name="button_backlight_desc">Cât timp wDSP este pe ecran, butoanele luminează în culoarea de accent a temei curente. La părăsirea wDSP, revine culoarea lor originală.</string>
+    <string name="ACtab">Test Audio</string>
+    <string name="audiocheck_title">Test Audio</string>
+    <string name="audiocheck_stems_label">Piese separate (buclă, mixare liberă) și generatoare:</string>
+    <string name="stem_drums">Tobe</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_melody">Melodie</string>
+    <string name="stem_vocal">Voce</string>
+    <string name="audiocheck_sine_label">Generator sinusoidal</string>
+    <string name="audiocheck_sine_freq">Frecvență:</string>
+    <string name="audiocheck_speaker_label">Test difuzoare (setează faderul, câte unul)</string>
+    <string name="audiocheck_only_sub">Doar Sub (EQ -12, filtre 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Sfârșit Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Dur. (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizare pentru pragul auditiv</string>
+    <string name="toast_sweep_hearing_threshold">Redați cât mai încet posibil – la pragul auzului, abia perceptibil.</string>
+    <string name="audiocheck_pink_noise">Zgomot roz</string>
+    <string name="gala_advanced_settings">Avansat</string>
+    <string name="eq_vis_shape_label">Forma spectrului:</string>
+    <string name="eq_vis_shape_curve">Curbă live</string>
+    <string name="eq_vis_shape_bars">Bare</string>
 </resources>

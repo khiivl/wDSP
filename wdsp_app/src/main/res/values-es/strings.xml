@@ -16,7 +16,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Curva de Compensación de Loudness</string>
-    <string name="enable_loudness">Habilitar Compensación de Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Recorte de Agudos</string>
     <string name="sub_tweaking">Compensación de subwoofer</string>
     <string name="fm_visualizer_label">Vista Previa de la Compensación en Tiempo Real</string>
@@ -569,4 +569,8 @@
     <string name="audiocheck_sweep_duration_hint">Dur (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizar para Umbral Auditivo</string>
     <string name="toast_sweep_hearing_threshold">Reproduce lo más bajo posible: en tu umbral auditivo, apenas audible.</string>
+    <string name="gala_advanced_settings">Avanzado</string>
+    <string name="eq_vis_shape_label">Forma del espectro:</string>
+    <string name="eq_vis_shape_curve">Curva en vivo</string>
+    <string name="eq_vis_shape_bars">Barras</string>
 </resources>

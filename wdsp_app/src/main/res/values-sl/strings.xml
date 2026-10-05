@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Krivulja kompenzacije glasnosti (Loudness)</string>
-    <string name="enable_loudness">Omogoči Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Prireži visoke tone</string>
     <string name="sub_tweaking">Kompenzacija nizkotonca</string>
     <string name="fm_visualizer_label">Predogled kompenzacije v realnem času</string>
@@ -554,4 +554,25 @@ Globalno privzeto: %1$s</string>
     <string name="gala_disable_for_preset">Izklopi za profil</string>
     <string name="button_backlight_label">Osvetlitev gumbov v barvah wDSP</string>
     <string name="button_backlight_desc">Dokler je wDSP na zaslonu, gumbi svetijo v poudarjeni barvi trenutne teme. Ob izhodu iz wDSP se povrne njihova prvotna barva.</string>
+    <string name="ACtab">Zvočni test</string>
+    <string name="audiocheck_title">Zvočni test</string>
+    <string name="audiocheck_stems_label">Sledi skladbe (zanka, prosto mešanje) in generatorji:</string>
+    <string name="stem_drums">Bobni</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_melody">Melodija</string>
+    <string name="stem_vocal">Vokal</string>
+    <string name="audiocheck_sine_label">Sinusni generator</string>
+    <string name="audiocheck_sine_freq">Frekvenca:</string>
+    <string name="audiocheck_speaker_label">Test zvočnikov (nastavi fader, enega za drugim)</string>
+    <string name="audiocheck_only_sub">Samo Sub (EQ -12, filtri 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Začetek Hz</string>
+    <string name="audiocheck_sweep_end_hint">Konec Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Čas (s)</string>
+    <string name="audiocheck_sweep_normalize">Normaliziraj za prag slišnosti</string>
+    <string name="toast_sweep_hearing_threshold">Predvajajte čim tišje – na pragu slišnosti, komaj slišno.</string>
+    <string name="audiocheck_pink_noise">Rožnati šum</string>
+    <string name="gala_advanced_settings">Napredno</string>
+    <string name="eq_vis_shape_label">Oblika spektra:</string>
+    <string name="eq_vis_shape_curve">Krivulja v živo</string>
+    <string name="eq_vis_shape_bars">Stolpci</string>
 </resources>

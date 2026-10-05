@@ -17,7 +17,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Korekcja fizjologiczna (Krzywa F-M)</string>
-    <string name="enable_loudness">Włącz Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Ogranicz wysokie tony</string>
     <string name="sub_tweaking">Kompensacja subwoofera</string>
     <string name="fm_visualizer_label">Podgląd korekcji w czasie rzeczywistym</string>
@@ -568,4 +568,8 @@
     <string name="audiocheck_sweep_duration_hint">Czas (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizuj do Progu Słyszenia</string>
     <string name="toast_sweep_hearing_threshold">Odtwarzaj jak najciszej - na granicy słyszalności, ledwo słyszalnie.</string>
+    <string name="gala_advanced_settings">Zaawansowane</string>
+    <string name="eq_vis_shape_label">Kształt widma:</string>
+    <string name="eq_vis_shape_curve">Żywa krzywa</string>
+    <string name="eq_vis_shape_bars">Słupki</string>
 </resources>

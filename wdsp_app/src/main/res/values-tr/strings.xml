@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Dengeleme Eğrisi</string>
-    <string name="enable_loudness">Loudness\'ı Etkinleştir</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Tizleri Kırp</string>
     <string name="sub_tweaking">Subwoofer telafisi</string>
     <string name="fm_visualizer_label">Gerçek Zamanlı Dengeleme Önizlemesi</string>
@@ -554,4 +554,25 @@ Genel Varsayılan: %1$s</string>
     <string name="gala_disable_for_preset">Bu profil için kapat</string>
     <string name="button_backlight_label">wDSP renklerinde tuş aydınlatması</string>
     <string name="button_backlight_desc">wDSP ekrandayken, tuşlar geçerli temanın vurgu renginde aydınlatılır. wDSP kapatıldığında tuşlar orijinal rengine döner.</string>
+    <string name="ACtab">Ses Testi</string>
+    <string name="audiocheck_title">Ses Testi</string>
+    <string name="audiocheck_stems_label">Parça kanalları (döngü, serbest miks) ve jeneratörler:</string>
+    <string name="stem_drums">Davul</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_melody">Melodi</string>
+    <string name="stem_vocal">Vokal</string>
+    <string name="audiocheck_sine_label">Sinüs Jeneratörü</string>
+    <string name="audiocheck_sine_freq">Frekans:</string>
+    <string name="audiocheck_speaker_label">Hoparlör Testi (fader ayarlar, teker teker)</string>
+    <string name="audiocheck_only_sub">Yalnızca Sub (EQ -12, filtreler 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Başlangıç Hz</string>
+    <string name="audiocheck_sweep_end_hint">Bitiş Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Süre (sn)</string>
+    <string name="audiocheck_sweep_normalize">İşitme eşiğine göre normalleştir</string>
+    <string name="toast_sweep_hearing_threshold">Mümkün olduğunca sessiz çalın – işitme eşiğinizde, zar zor duyulabilir.</string>
+    <string name="audiocheck_pink_noise">Pembe Gürültü</string>
+    <string name="gala_advanced_settings">Gelişmiş</string>
+    <string name="eq_vis_shape_label">Spektrum biçimi:</string>
+    <string name="eq_vis_shape_curve">Canlı eğri</string>
+    <string name="eq_vis_shape_bars">Çubuklar</string>
 </resources>

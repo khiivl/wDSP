@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Curva de Compensación de Loudness</string>
-    <string name="enable_loudness">Activar Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Atenuar Agudos</string>
     <string name="sub_tweaking">Compensación de subwoofer</string>
     <string name="fm_visualizer_label">Vista Previa de Compensación en Tiempo Real</string>
@@ -550,4 +550,25 @@
     <string name="gala_disable_for_preset">Desactivar en perfil</string>
     <string name="button_backlight_label">Retroiluminación en colores wDSP</string>
     <string name="button_backlight_desc">Mientras wDSP está en pantalla, los botones se iluminan con el color de acento del tema actual. Al salir de wDSP, recuperan su color original.</string>
+    <string name="ACtab">Prueba Audio</string>
+    <string name="audiocheck_only_sub">Solo Sub (EQ -12, filtros 250Hz, boost 0)</string>
+    <string name="audiocheck_pink_noise">Ruido Rosa</string>
+    <string name="audiocheck_sine_freq">Frecuencia:</string>
+    <string name="audiocheck_sine_label">Generador de Seno</string>
+    <string name="audiocheck_speaker_label">Prueba de Altavoces (ajusta el fader, uno a la vez)</string>
+    <string name="audiocheck_stems_label">Pistas del tema (bucle, combinables) y generadores:</string>
+    <string name="audiocheck_sweep_duration_hint">Dur (s)</string>
+    <string name="audiocheck_sweep_end_hint">Fin Hz</string>
+    <string name="audiocheck_sweep_normalize">Normalizar para Umbral Auditivo</string>
+    <string name="audiocheck_sweep_start_hint">Inicio Hz</string>
+    <string name="audiocheck_title">Comprobación de Audio</string>
+    <string name="gala_advanced_settings">Avanzado</string>
+    <string name="stem_bass">Bajo</string>
+    <string name="stem_drums">Batería</string>
+    <string name="stem_melody">Melodía</string>
+    <string name="stem_vocal">Voz</string>
+    <string name="toast_sweep_hearing_threshold">Reproduce lo más bajo posible: en tu umbral auditivo, apenas audible.</string>
+    <string name="eq_vis_shape_label">Forma del espectro:</string>
+    <string name="eq_vis_shape_curve">Curva en vivo</string>
+    <string name="eq_vis_shape_bars">Barras</string>
 </resources>

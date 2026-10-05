@@ -16,7 +16,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Gehörrichtige Lautstärkekorrektur</string>
-    <string name="enable_loudness">Loudness aktivieren</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Höhen reduzieren</string>
     <string name="sub_tweaking">Subwoofer-Kompensation</string>
     <string name="fm_visualizer_label">Echtzeit-Korrekturvorschau</string>
@@ -568,4 +568,8 @@
     <string name="audiocheck_sweep_duration_hint">Dauer (s)</string>
     <string name="audiocheck_sweep_normalize">Für Hörschwelle normalisieren</string>
     <string name="toast_sweep_hearing_threshold">So leise wie möglich abspielen - an deiner Hörschwelle, gerade noch hörbar.</string>
+    <string name="gala_advanced_settings">Erweitert</string>
+    <string name="eq_vis_shape_label">Spektrumform:</string>
+    <string name="eq_vis_shape_curve">Live-Kurve</string>
+    <string name="eq_vis_shape_bars">Balken</string>
 </resources>

@@ -17,7 +17,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">F-M Loudness-kurva</string>
-    <string name="enable_loudness">Aktivera Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Dämpa diskant</string>
     <string name="sub_tweaking">Sub-kompensation</string>
     <string name="fm_visualizer_label">Realtidsvy korrigering</string>
@@ -568,4 +568,8 @@
     <string name="audiocheck_sweep_duration_hint">Tid (s)</string>
     <string name="audiocheck_sweep_normalize">Normalisera för Hörtröskel</string>
     <string name="toast_sweep_hearing_threshold">Spela så tyst som möjligt - vid din hörtröskel, precis hörbart.</string>
+    <string name="gala_advanced_settings">Avancerat</string>
+    <string name="eq_vis_shape_label">Spektrumform:</string>
+    <string name="eq_vis_shape_curve">Livekurva</string>
+    <string name="eq_vis_shape_bars">Staplar</string>
 </resources>

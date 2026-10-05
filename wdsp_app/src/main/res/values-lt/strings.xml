@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness kompensavimo kreivė</string>
-    <string name="enable_loudness">Įjungti Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Aukštų dažnių apkarpymas</string>
     <string name="sub_tweaking">Žemų dažnių kompensavimas</string>
     <string name="fm_visualizer_label">Kompensavimo peržiūra realiuoju laiku</string>
@@ -554,4 +554,25 @@ Bendras numatytasis: %1$s</string>
     <string name="gala_disable_for_preset">Išjungti profiliui</string>
     <string name="button_backlight_label">Mygtukų apšvietimas wDSP spalvomis</string>
     <string name="button_backlight_desc">Kol wDSP rodomas ekrane, mygtukai šviečia dabartinės temos akcento spalva. Išėjus iš wDSP, grįžta jų pradinė spalva.</string>
+    <string name="ACtab">Garso testas</string>
+    <string name="audiocheck_title">Garso testas</string>
+    <string name="audiocheck_stems_label">Kūrinio takeliai (kilpa, laisvas miksavimas) ir generatoriai:</string>
+    <string name="stem_drums">Būgnai</string>
+    <string name="stem_bass">Bosas</string>
+    <string name="stem_melody">Melodija</string>
+    <string name="stem_vocal">Vokalas</string>
+    <string name="audiocheck_sine_label">Sinuso generatorius</string>
+    <string name="audiocheck_sine_freq">Dažnis:</string>
+    <string name="audiocheck_speaker_label">Garsiakalbių testas (nustato faderį, po vieną)</string>
+    <string name="audiocheck_only_sub">Tik žemadažnis (EQ -12, filtrai 250Hz, stiprinimas 0)</string>
+    <string name="audiocheck_sweep_start_hint">Pradžia Hz</string>
+    <string name="audiocheck_sweep_end_hint">Pabaiga Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Trukmė (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizuoti pagal girdimumo slenkstį</string>
+    <string name="toast_sweep_hearing_threshold">Groti kuo tyliau – ties girdimumo slenksčiu, vos girdimai.</string>
+    <string name="audiocheck_pink_noise">Rausvasis triukšmas</string>
+    <string name="gala_advanced_settings">Išplėstiniai</string>
+    <string name="eq_vis_shape_label">Spektro forma:</string>
+    <string name="eq_vis_shape_curve">Gyva kreivė</string>
+    <string name="eq_vis_shape_bars">Stulpeliai</string>
 </resources>

@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness-kompensaatiokäyrä</string>
-    <string name="enable_loudness">Ota Loudness käyttöön</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Diskantin vaimennus</string>
     <string name="sub_tweaking">Subwooferin kompensointi</string>
     <string name="fm_visualizer_label">Rereaaliaikainen kompensaation esikatselu</string>
@@ -554,4 +554,25 @@ Yleinen oletus: %1$s</string>
     <string name="gala_disable_for_preset">Pois profiilista</string>
     <string name="button_backlight_label">Painikkeiden taustavalo wDSP-väreissä</string>
     <string name="button_backlight_desc">Kun wDSP on näytöllä, painikkeet hehkuvat valitun teeman korostusvärissä. Kun wDSP suljetaan, alkuperäinen väri palautuu.</string>
+    <string name="ACtab">Äänitesti</string>
+    <string name="audiocheck_title">Äänitesti</string>
+    <string name="audiocheck_stems_label">Kappaleen raidat (luuppi, vapaa miksaus) ja generaattorit:</string>
+    <string name="stem_drums">Rummut</string>
+    <string name="stem_bass">Basso</string>
+    <string name="stem_melody">Melodia</string>
+    <string name="stem_vocal">Laulu</string>
+    <string name="audiocheck_sine_label">Sinigeneraattori</string>
+    <string name="audiocheck_sine_freq">Taajuus:</string>
+    <string name="audiocheck_speaker_label">Kaiutintesti (asettaa faderin, yksi kerrallaan)</string>
+    <string name="audiocheck_only_sub">Vain Sub (EQ -12, suodattimet 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Alku Hz</string>
+    <string name="audiocheck_sweep_end_hint">Loppu Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Kesto (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalisoi kuulokynnykselle</string>
+    <string name="toast_sweep_hearing_threshold">Toista mahdollisimman hiljaa – kuulokynnyksellä, tuskin kuultavissa.</string>
+    <string name="audiocheck_pink_noise">Vaaleanpunainen kohina</string>
+    <string name="gala_advanced_settings">Lisäasetukset</string>
+    <string name="eq_vis_shape_label">Spektrin muoto:</string>
+    <string name="eq_vis_shape_curve">Reaaliaikainen käyrä</string>
+    <string name="eq_vis_shape_bars">Pylväät</string>
 </resources>

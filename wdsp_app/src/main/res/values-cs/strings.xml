@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Křivka fyziologické regulace (Loudness)</string>
-    <string name="enable_loudness">Zapnout Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Oříznutí výšek</string>
     <string name="sub_tweaking">Kompenzace subwooferu</string>
     <string name="fm_visualizer_label">Náhled kompenzace v reálném čase</string>
@@ -554,4 +554,25 @@ Globální výchozí: %1$s</string>
     <string name="gala_disable_for_preset">Vypnout pro preset</string>
     <string name="button_backlight_label">Podsvícení tlačítek v barvách wDSP</string>
     <string name="button_backlight_desc">Zatímco je wDSP na obrazovce, tlačítka svítí v akcentní barvě denního nebo nočního motivu. Po zavření wDSP se vrátí jejich původní barva.</string>
+    <string name="ACtab">Audio test</string>
+    <string name="audiocheck_title">Audio test</string>
+    <string name="audiocheck_stems_label">Stopy skladby (smyčka, libovolný mix) a generátory:</string>
+    <string name="stem_drums">Bicí</string>
+    <string name="stem_bass">Basa</string>
+    <string name="stem_melody">Melodie</string>
+    <string name="stem_vocal">Vokál</string>
+    <string name="audiocheck_sine_label">Sinusový generátor</string>
+    <string name="audiocheck_sine_freq">Frekvence:</string>
+    <string name="audiocheck_speaker_label">Test reproduktorů (nastaví fader, po jednom)</string>
+    <string name="audiocheck_only_sub">Pouze Sub (EQ -12, filtry 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Konec Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Doba (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizovat pro práh slyšení</string>
+    <string name="toast_sweep_hearing_threshold">Přehrávejte co nejtišeji – na prahu slyšitelnosti, sotva slyšitelné.</string>
+    <string name="audiocheck_pink_noise">Růžový šum</string>
+    <string name="gala_advanced_settings">Rozšířené</string>
+    <string name="eq_vis_shape_label">Tvar spektra:</string>
+    <string name="eq_vis_shape_curve">Živá křivka</string>
+    <string name="eq_vis_shape_bars">Sloupce</string>
 </resources>

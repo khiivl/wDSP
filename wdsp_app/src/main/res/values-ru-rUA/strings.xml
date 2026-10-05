@@ -572,4 +572,8 @@
     <string name="audiocheck_sweep_duration_hint">Длит. с</string>
     <string name="audiocheck_sweep_normalize">Нормализация по порогу слуха</string>
     <string name="toast_sweep_hearing_threshold">Включите как можно тише - на пороге слышимости, едва слышно.</string>
+    <string name="gala_advanced_settings">Дополнительно</string>
+    <string name="eq_vis_shape_label">Форма спектра:</string>
+    <string name="eq_vis_shape_curve">Живая кривая</string>
+    <string name="eq_vis_shape_bars">Полосы</string>
 </resources>

@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness kompensatsioonikõver</string>
-    <string name="enable_loudness">Luba Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Kõrgete helide kärpimine</string>
     <string name="sub_tweaking">Bassikõlari kompensatsioon</string>
     <string name="fm_visualizer_label">Kompensatsiooni reaalajas eelvaade</string>
@@ -554,4 +554,25 @@
     <string name="gala_disable_for_preset">Keela sellel profiilil</string>
     <string name="button_backlight_label">Nuppude taustavalgus wDSP värvides</string>
     <string name="button_backlight_desc">Kui wDSP on ekraanil, helendavad nupud praeguse teema aktsentvärvis. Rakendusest lahkudes taastub nuppude esialgne värv.</string>
+    <string name="ACtab">Helitest</string>
+    <string name="audiocheck_title">Helitest</string>
+    <string name="audiocheck_stems_label">Loo rajad (kordus, vaba miks) ja generaatorid:</string>
+    <string name="stem_drums">Trummid</string>
+    <string name="stem_bass">Bass</string>
+    <string name="stem_melody">Meloodia</string>
+    <string name="stem_vocal">Vokaal</string>
+    <string name="audiocheck_sine_label">Siinusgeneraator</string>
+    <string name="audiocheck_sine_freq">Sagedus:</string>
+    <string name="audiocheck_speaker_label">Kõlarite test (faderi seadistus, ükshaaval)</string>
+    <string name="audiocheck_only_sub">Ainult Sub (EQ -12, filtrid 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Algus Hz</string>
+    <string name="audiocheck_sweep_end_hint">Lõpp Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Kestus (s)</string>
+    <string name="audiocheck_sweep_normalize">Normaliseeri kuulmislävele</string>
+    <string name="toast_sweep_hearing_threshold">Mängi nii vaikselt kui võimalik – kuulmislävel, vaevukuuldav.</string>
+    <string name="audiocheck_pink_noise">Roosa müra</string>
+    <string name="gala_advanced_settings">Täpsemalt</string>
+    <string name="eq_vis_shape_label">Spektri kuju:</string>
+    <string name="eq_vis_shape_curve">Reaalajas kõver</string>
+    <string name="eq_vis_shape_bars">Tulbad</string>
 </resources>

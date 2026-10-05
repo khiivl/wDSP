@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Krivka fyziologickej regulácie (Loudness)</string>
-    <string name="enable_loudness">Zapnúť Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Orezanie výšok</string>
     <string name="sub_tweaking">Kompenzácia subwoofera</string>
     <string name="fm_visualizer_label">Náhľad kompenzácie v reálnom čase</string>
@@ -554,4 +554,25 @@ Globálne predvolené: %1$s</string>
     <string name="gala_disable_for_preset">Vypnúť pre profil</string>
     <string name="button_backlight_label">Podsvietenie tlačidiel vo farbách wDSP</string>
     <string name="button_backlight_desc">Kým je wDSP na obrazovke, tlačidlá svietia v akcentnej farbe aktuálnej témy. Po opustení wDSP sa vráti ich pôvodná farba.</string>
+    <string name="ACtab">Audio test</string>
+    <string name="audiocheck_title">Audio test</string>
+    <string name="audiocheck_stems_label">Stopy skladby (slučka, voľný mix) a generátory:</string>
+    <string name="stem_drums">Bicie</string>
+    <string name="stem_bass">Basa</string>
+    <string name="stem_melody">Melódia</string>
+    <string name="stem_vocal">Vokál</string>
+    <string name="audiocheck_sine_label">Sínusový generátor</string>
+    <string name="audiocheck_sine_freq">Frekvencia:</string>
+    <string name="audiocheck_speaker_label">Test reproduktorov (nastavuje fader, po jednom)</string>
+    <string name="audiocheck_only_sub">Iba Sub (EQ -12, filtre 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Štart Hz</string>
+    <string name="audiocheck_sweep_end_hint">Koniec Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Trv. (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizovať pre prah počuteľnosti</string>
+    <string name="toast_sweep_hearing_threshold">Prehrávajte čo najtichšie – na prahu počuteľnosti, sotva počuteľné.</string>
+    <string name="audiocheck_pink_noise">Ružový šum</string>
+    <string name="gala_advanced_settings">Rozšírené</string>
+    <string name="eq_vis_shape_label">Tvar spektra:</string>
+    <string name="eq_vis_shape_curve">Živá krivka</string>
+    <string name="eq_vis_shape_bars">Stĺpce</string>
 </resources>

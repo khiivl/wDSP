@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Καμπύλη αντιστάθμισης Loudness</string>
-    <string name="enable_loudness">Ενεργοποίηση Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Περικοπή πρίμων</string>
     <string name="sub_tweaking">Αντιστάθμιση subwoofer</string>
     <string name="fm_visualizer_label">Προεπισκόπηση αντιστάθμισης σε πραγματικό χρόνο</string>
@@ -554,4 +554,25 @@
     <string name="gala_disable_for_preset">Απενεργ. στο προφίλ</string>
     <string name="button_backlight_label">Φωτισμός πλήκτρων σε χρώματα wDSP</string>
     <string name="button_backlight_desc">Όσο το wDSP είναι στην οθόνη, τα πλήκτρα φωτίζονται στο χρώμα του τρέχοντος θέματος. Όταν το wDSP κλείσει, επιστρέφει το αρχικό τους χρώμα.</string>
+    <string name="ACtab">Έλεγχος ήχου</string>
+    <string name="audiocheck_title">Έλεγχος ήχου</string>
+    <string name="audiocheck_stems_label">Κανάλια κομματιού (loop, ελεύθερη μίξη) και γεννήτριες:</string>
+    <string name="stem_drums">Τύμπανα</string>
+    <string name="stem_bass">Μπάσο</string>
+    <string name="stem_melody">Μελωδία</string>
+    <string name="stem_vocal">Φωνητικά</string>
+    <string name="audiocheck_sine_label">Γεννήτρια ημιτόνου</string>
+    <string name="audiocheck_sine_freq">Συχνότητα:</string>
+    <string name="audiocheck_speaker_label">Δοκιμή ηχείων (ρύθμιση fader, ένα κάθε φορά)</string>
+    <string name="audiocheck_only_sub">Μόνο Sub (EQ -12, φίλτρα 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Έναρξη Hz</string>
+    <string name="audiocheck_sweep_end_hint">Τέλος Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Διάρκ. (s)</string>
+    <string name="audiocheck_sweep_normalize">Κανονικοποίηση για ουδό ακοής</string>
+    <string name="toast_sweep_hearing_threshold">Αναπαραγωγή όσο πιο σιγά γίνεται - στο όριο ακοής, μόλις ακουστό.</string>
+    <string name="audiocheck_pink_noise">Ροζ θόρυβος</string>
+    <string name="gala_advanced_settings">Για προχωρημένους</string>
+    <string name="eq_vis_shape_label">Μορφή φάσματος:</string>
+    <string name="eq_vis_shape_curve">Ζωντανή καμπύλη</string>
+    <string name="eq_vis_shape_bars">Μπάρες</string>
 </resources>

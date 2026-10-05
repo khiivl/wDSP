@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Curva di Compensazione Loudness</string>
-    <string name="enable_loudness">Attiva Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Taglio Alti</string>
     <string name="sub_tweaking">Compensazione subwoofer</string>
     <string name="fm_visualizer_label">Anteprima compensazione in tempo reale</string>
@@ -554,4 +554,25 @@ Predefinito globale: %1$s</string>
     <string name="gala_disable_for_preset">Disattiva per profilo</string>
     <string name="button_backlight_label">Retroilluminazione tasti nei colori wDSP</string>
     <string name="button_backlight_desc">Mentre wDSP è sullo schermo, i tasti si illuminano con il colore di accento del tema attuale. Uscendo da wDSP, torna il loro colore originale.</string>
+    <string name="ACtab">Test Audio</string>
+    <string name="audiocheck_title">Test Audio</string>
+    <string name="audiocheck_stems_label">Tracce del brano (loop, mix libero) e generatori:</string>
+    <string name="stem_drums">Batteria</string>
+    <string name="stem_bass">Basso</string>
+    <string name="stem_melody">Melodia</string>
+    <string name="stem_vocal">Voce</string>
+    <string name="audiocheck_sine_label">Generatore sinusoidale</string>
+    <string name="audiocheck_sine_freq">Frequenza:</string>
+    <string name="audiocheck_speaker_label">Test altoparlanti (imposta il fader, uno alla volta)</string>
+    <string name="audiocheck_only_sub">Solo Sub (EQ -12, filtri 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Inizio Hz</string>
+    <string name="audiocheck_sweep_end_hint">Fine Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Durata (s)</string>
+    <string name="audiocheck_sweep_normalize">Normalizza per soglia uditiva</string>
+    <string name="toast_sweep_hearing_threshold">Riproduci il più piano possibile – alla soglia uditiva, appena udibile.</string>
+    <string name="audiocheck_pink_noise">Rumore rosa</string>
+    <string name="gala_advanced_settings">Avanzate</string>
+    <string name="eq_vis_shape_label">Forma spettro:</string>
+    <string name="eq_vis_shape_curve">Curva live</string>
+    <string name="eq_vis_shape_bars">Barre</string>
 </resources>

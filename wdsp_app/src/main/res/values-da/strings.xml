@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Loudness Kompensationskurve</string>
-    <string name="enable_loudness">Aktiver Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Dæmp diskant</string>
     <string name="sub_tweaking">Sub-kompensation</string>
     <string name="fm_visualizer_label">Kompensationsforhåndsvisning i realtid</string>
@@ -554,4 +554,25 @@ Global standard: %1$s</string>
     <string name="gala_disable_for_preset">Deaktivér for profil</string>
     <string name="button_backlight_label">Knapbaggrundsbelysning i wDSP-farver</string>
     <string name="button_backlight_desc">Mens wDSP er på skærmen, lyser knapperne i accentfarven for det aktuelle tema. Når wDSP forlades, gendannes deres oprindelige farve.</string>
+    <string name="ACtab">Lydtest</string>
+    <string name="audiocheck_title">Lydtest</string>
+    <string name="audiocheck_stems_label">Sangstems (loop, fri mix) og generatorer:</string>
+    <string name="stem_drums">Trommer</string>
+    <string name="stem_bass">Bas</string>
+    <string name="stem_melody">Melodi</string>
+    <string name="stem_vocal">Vokal</string>
+    <string name="audiocheck_sine_label">Sinusgenerator</string>
+    <string name="audiocheck_sine_freq">Frekvens:</string>
+    <string name="audiocheck_speaker_label">Højttalertest (justerer fader, en ad gangen)</string>
+    <string name="audiocheck_only_sub">Kun Sub (EQ -12, filtre 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Start Hz</string>
+    <string name="audiocheck_sweep_end_hint">Slut Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Var. (s)</string>
+    <string name="audiocheck_sweep_normalize">Normaliser til høretærskel</string>
+    <string name="toast_sweep_hearing_threshold">Afspil så stille som muligt – ved din høretærskel, knap hørbar.</string>
+    <string name="audiocheck_pink_noise">Lyserød støj</string>
+    <string name="gala_advanced_settings">Avanceret</string>
+    <string name="eq_vis_shape_label">Spektrumform:</string>
+    <string name="eq_vis_shape_curve">Live kurve</string>
+    <string name="eq_vis_shape_bars">Søjler</string>
 </resources>

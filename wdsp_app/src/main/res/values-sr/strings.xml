@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Крива тонкомпензације (Loudness)</string>
-    <string name="enable_loudness">Омогући Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Подрезивање високих</string>
     <string name="sub_tweaking">Компензација субвуфера</string>
     <string name="fm_visualizer_label">Преглед компензације у реалном времену</string>
@@ -554,4 +554,25 @@
     <string name="gala_disable_for_preset">Искључи за профил</string>
     <string name="button_backlight_label">Осветљење тастера у бојама wDSP-а</string>
     <string name="button_backlight_desc">Док је wDSP на екрану, тастери светле у акцентној боји тренутне теме. Када напустите wDSP, враћа се њихова оригинална боја.</string>
+    <string name="ACtab">Аудио тест</string>
+    <string name="audiocheck_title">Аудио тест</string>
+    <string name="audiocheck_stems_label">Канали песме (петља, слободан микс) и генератори:</string>
+    <string name="stem_drums">Бубњеви</string>
+    <string name="stem_bass">Бас</string>
+    <string name="stem_melody">Мелодија</string>
+    <string name="stem_vocal">Вокал</string>
+    <string name="audiocheck_sine_label">Синусни генератор</string>
+    <string name="audiocheck_sine_freq">Фреквенција:</string>
+    <string name="audiocheck_speaker_label">Тест звучника (подешава фејдер, један по један)</string>
+    <string name="audiocheck_only_sub">Само Sub (EQ -12, филтери 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Почетак Hz</string>
+    <string name="audiocheck_sweep_end_hint">Крај Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Трај. (s)</string>
+    <string name="audiocheck_sweep_normalize">Нормализуј за праг чујности</string>
+    <string name="toast_sweep_hearing_threshold">Пуштајте што тише – на прагу чујности, једва чујно.</string>
+    <string name="audiocheck_pink_noise">Ружичасти шум</string>
+    <string name="gala_advanced_settings">Напредно</string>
+    <string name="eq_vis_shape_label">Облик спектра:</string>
+    <string name="eq_vis_shape_curve">Крива уживо</string>
+    <string name="eq_vis_shape_bars">Ступци</string>
 </resources>

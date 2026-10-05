@@ -19,7 +19,7 @@
 
     <!-- F-M Curve Tab -->
     <string name="fm_title">Courbe de compensation physiologique (Loudness)</string>
-    <string name="enable_loudness">Activer le Loudness</string>
+    <string name="enable_loudness">Loudness</string>
     <string name="trim_highs">Atténuation des aigus</string>
     <string name="sub_tweaking">Compensation du caisson</string>
     <string name="fm_visualizer_label">Aperçu de la compensation en temps réel</string>
@@ -554,4 +554,25 @@ Par défaut global : %1$s</string>
     <string name="gala_disable_for_preset">Désactiver ce profil</string>
     <string name="button_backlight_label">Rétroéclairage des touches aux couleurs wDSP</string>
     <string name="button_backlight_desc">Tant que wDSP est affiché, les boutons s\'illuminent avec la couleur d\'accent du thème actuel. En quittant wDSP, leur couleur d\'origine revient.</string>
+    <string name="ACtab">Test Audio</string>
+    <string name="audiocheck_title">Test Audio</string>
+    <string name="audiocheck_stems_label">Pistes du morceau (boucle, mix libre) et générateurs :</string>
+    <string name="stem_drums">Batterie</string>
+    <string name="stem_bass">Basse</string>
+    <string name="stem_melody">Mélodie</string>
+    <string name="stem_vocal">Voix</string>
+    <string name="audiocheck_sine_label">Générateur sinusoïdal</string>
+    <string name="audiocheck_sine_freq">Fréquence :</string>
+    <string name="audiocheck_speaker_label">Test haut-parleurs (règle le fader, un par un)</string>
+    <string name="audiocheck_only_sub">Sub uniquement (EQ -12, filtres 250Hz, boost 0)</string>
+    <string name="audiocheck_sweep_start_hint">Début Hz</string>
+    <string name="audiocheck_sweep_end_hint">Fin Hz</string>
+    <string name="audiocheck_sweep_duration_hint">Durée (s)</string>
+    <string name="audiocheck_sweep_normalize">Normaliser pour le seuil d\'audition</string>
+    <string name="toast_sweep_hearing_threshold">Jouez aussi doucement que possible – à votre seuil d\'audition, à peine audible.</string>
+    <string name="audiocheck_pink_noise">Bruit rose</string>
+    <string name="gala_advanced_settings">Avancé</string>
+    <string name="eq_vis_shape_label">Forme du spectre :</string>
+    <string name="eq_vis_shape_curve">Courbe en direct</string>
+    <string name="eq_vis_shape_bars">Barres</string>
 </resources>
