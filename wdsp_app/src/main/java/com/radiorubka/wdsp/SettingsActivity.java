@@ -2000,7 +2000,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> dialog.dismiss());
 
         btnStart.setOnClickListener(v -> {
-            boolean hasSub = RoomMeasurement.hasSubwoofer(this);
+            boolean hasSub = CabinProfile.hasSubwoofer(this);
             RoomMeasurement.SoundstageMode mode = RoomMeasurement.SoundstageMode.DRIVER;
             int selectedId = rgStage.getCheckedRadioButtonId();
             if (selectedId == R.id.rb_stage_front_center) {
@@ -2040,7 +2040,7 @@ public class SettingsActivity extends AppCompatActivity {
             final RoomMeasurement.CarBodyType selectedBody = bodyType;
             final int selectedDistance = currentDist[0];
 
-            RoomMeasurement.setHasSubwoofer(this, hasSub);
+            CabinProfile.setHasSubwoofer(this, hasSub);
             RoomMeasurement.setSoundstageMode(this, selectedMode);
             RoomMeasurement.setTargetCurve(this, selectedTarget);
             RoomMeasurement.setBodyType(this, selectedBody);
@@ -2114,7 +2114,7 @@ public class SettingsActivity extends AppCompatActivity {
      * gets charged to the capsule. Meanwhile this screen asked where the subwoofer stands without
      * anybody having said there was one.
      *
-     * <p>Same preference the wizard writes and the same one hasSubwoofer() reads, so this is a
+     * <p>Same preference the wizard writes and the same one CabinProfile.hasSubwoofer() reads, so this is a
      * second door to one fact and not a second copy of it. Unchecking it hides the placement row
      * rather than leaving a question standing that has no subject.
      */
@@ -2125,10 +2125,10 @@ public class SettingsActivity extends AppCompatActivity {
         int cardBg = ThemeManager.cardBackground(this);
         box.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg));
         box.setButtonTintList(android.content.res.ColorStateList.valueOf(ThemeManager.accent(this)));
-        box.setChecked(RoomMeasurement.hasSubwoofer(this));
+        box.setChecked(CabinProfile.hasSubwoofer(this));
         showSubPlace(placeRow, box.isChecked());
         box.setOnCheckedChangeListener((button, checked) -> {
-            RoomMeasurement.setHasSubwoofer(this, checked);
+            CabinProfile.setHasSubwoofer(this, checked);
             showSubPlace(placeRow, checked);
         });
     }
@@ -2154,7 +2154,7 @@ public class SettingsActivity extends AppCompatActivity {
                 RoomMeasurement.setSubPlace(this, position));
         // Visibility belongs to wireHasSubwoofer, which runs first; repeated here only so that the
         // row cannot be left showing by a path that reaches this method without that one.
-        showSubPlace(findViewById(R.id.layout_room_sub_place), RoomMeasurement.hasSubwoofer(this));
+        showSubPlace(findViewById(R.id.layout_room_sub_place), CabinProfile.hasSubwoofer(this));
     }
 
     private void wireMicNudge(BalancePointerView pointer, int buttonId, float dLr, float dFr) {
@@ -2307,16 +2307,16 @@ public class SettingsActivity extends AppCompatActivity {
         // and remains the place to change the answer. Both entry points to calibration - the
         // button and the "not calibrated yet" dialog - come through here, so this is the whole
         // of "before a calibration".
-        if (!RoomMeasurement.isSubwooferAnswered(this)) {
+        if (!CabinProfile.isSubwooferAnswered(this)) {
             ThemedDialog.builder(this)
                     .setTitle(R.string.room_wizard_subwoofer_title)
                     .setMessage(R.string.room_wizard_subwoofer_desc)
                     .setPositiveButton(android.R.string.yes, (d, w) -> {
-                        RoomMeasurement.setHasSubwoofer(this, true);
+                        CabinProfile.setHasSubwoofer(this, true);
                         startMicCalibration();
                     })
                     .setNegativeButton(android.R.string.no, (d, w) -> {
-                        RoomMeasurement.setHasSubwoofer(this, false);
+                        CabinProfile.setHasSubwoofer(this, false);
                         startMicCalibration();
                     })
                     .show();

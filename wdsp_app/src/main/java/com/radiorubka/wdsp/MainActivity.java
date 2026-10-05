@@ -1711,7 +1711,7 @@ public class MainActivity extends AppCompatActivity {
 
     /** The subwoofer's low-pass for drawing; 0 when there is no subwoofer, and nothing is drawn. */
     private float subFilterHz() {
-        return RoomMeasurement.hasSubwoofer(this) ? Globals.currentSubFreqHz : 0f;
+        return CabinProfile.hasSubwoofer(this) ? Globals.currentSubFreqHz : 0f;
     }
 
     /**

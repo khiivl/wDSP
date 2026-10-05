@@ -645,41 +645,9 @@ public final class RoomMeasurement {
                 .apply();
     }
 
-    public static final String PREF_ROOM_HAS_SUBWOOFER = "room_has_subwoofer";
     public static final String PREF_ROOM_SOUNDSTAGE = "room_soundstage";
     public static final String PREF_ROOM_TARGET_CURVE = "room_target_curve";
     public static final String PREF_LAST_AUTOEQ_PRESET = "room_last_autoeq_preset";
-
-    public static boolean hasSubwoofer(Context context) {
-        if (context == null) return true;
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getBoolean(PREF_ROOM_HAS_SUBWOOFER, true);
-    }
-
-    /**
-     * Whether anybody has actually answered the subwoofer question, as opposed to inheriting
-     * the default.
-     *
-     * <p>{@link #hasSubwoofer(Context)} answers true when unset, which is the safe default -
-     * sweeping a subwoofer output that is not connected costs one silent channel, while
-     * skipping one that IS connected costs the microphone calibration its only source below
-     * 160 Hz. But "true because nobody said" and "true because somebody said" are different
-     * facts, and only this can tell them apart. Used to decide whether to ask before a
-     * calibration pass rather than after it, in the wizard, which is where the question used
-     * to live - the presence of a subwoofer is a property of the car, not of a preset.
-     */
-    public static boolean isSubwooferAnswered(Context context) {
-        if (context == null) return false;
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .contains(PREF_ROOM_HAS_SUBWOOFER);
-    }
-
-    public static void setHasSubwoofer(Context context, boolean hasSub) {
-        if (context == null) return;
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-                .putBoolean(PREF_ROOM_HAS_SUBWOOFER, hasSub)
-                .apply();
-    }
 
     public static SoundstageMode getSoundstageMode(Context context) {
         if (context == null) return SoundstageMode.DRIVER;
@@ -1501,10 +1469,10 @@ public final class RoomMeasurement {
                 // cap on 13.09, which is a saturated estimate, not a measurement.
                 //
                 // Whether there is a subwoofer is a fact about the car, not about a preset, and
-                // hasSubwoofer() is the one function that owns it. A literal here was a third
+                // CabinProfile.hasSubwoofer() is the one function that owns it. A literal here was a third
                 // road to the same fact, hidden inside an overload.
                 result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS,
-                        hasSubwoofer(context),
+                        CabinProfile.hasSubwoofer(context),
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
                         getBodyType(context), getListeningDistanceCm(context), listener, true);
             } catch (Throwable t) {
@@ -1534,7 +1502,7 @@ public final class RoomMeasurement {
     public static void measureAsync(final Context context, final float amplitude,
                                     final float seconds, final Listener listener) {
         measureAsync(context, amplitude, seconds,
-                hasSubwoofer(context), getSoundstageMode(context), getTargetCurve(context),
+                CabinProfile.hasSubwoofer(context), getSoundstageMode(context), getTargetCurve(context),
                 getBodyType(context), getListeningDistanceCm(context), listener);
     }
     public static void measureAsync(final Context context, final boolean hasSubwoofer,

@@ -2271,7 +2271,7 @@ public class McuService extends Service implements LocationListener {
         // nobody hears.
         int hpfFront = doorHpfCode(true);
         int hpfRear = doorHpfCode(false);
-        int subFreq = RoomMeasurement.hasSubwoofer(this) && !DspResponse.isSubOff(cachedSubFreq)
+        int subFreq = CabinProfile.hasSubwoofer(this) && !DspResponse.isSubOff(cachedSubFreq)
                 ? cachedSubFreq : -1;
         AudioSpectrumEngine.getInstance().setDspState(
                 effectiveGainIdx, q, subFreq, effectiveSubGainIdx, hpfFront, hpfRear, effectiveBassShelf);
