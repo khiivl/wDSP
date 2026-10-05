@@ -440,6 +440,14 @@
     <string name="screensaver_apps_pick">Вибрати</string>
     <string name="screensaver_note">Навігація ніколи не перекривається.</string>
     <string name="room_mic_spot_label">Де стоїть мікрофон</string>
+    <string name="room_cabin_space_label">Салон</string>
+    <string name="room_cabin_desc">Закритий салон піднімає бас нижче частоти, яку задає його довжина; відкритий простір — ні, тож перевірка мікрофона чекає цього підйому лише в закритому. Довжина — від ніг водія до перегородки багажника (седан) або до задніх дверей.</string>
+    <string name="room_cabin_space_closed">Закритий (авто)</string>
+    <string name="room_cabin_space_open">Відкритий (стенд, кабріолет)</string>
+    <string name="room_cabin_length">Довжина</string>
+    <string name="room_cabin_width">Ширина</string>
+    <string name="room_cabin_height">Висота</string>
+    <string name="room_cabin_cm_fmt">%d см</string>
     <string name="room_mic_spot_desc">Перетягніть крапку туди, де мікрофон насправді. На свіп це не впливає — це підказує, як читати результат: без неї мікрофон, що лежить на одному динаміку, виглядає точно як три несправні.</string>
     <string name="room_root_blocked">Magisk відмовляє wDSP у руті. Щоб дозволити: Magisk → Суперкористувач, знайдіть wDSP і поставте «Дозволити» (або «Питати» й дозвольте, коли спитає).</string>
     <string name="room_mic_place_hint">Де він у салоні</string>

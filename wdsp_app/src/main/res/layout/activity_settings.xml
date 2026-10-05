@@ -3042,7 +3042,174 @@
                         app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
                         app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
 
+                    <!-- The cabin's length stands upright beside the car, front to back like the car itself: a
+                         rotated slider as long as its box is tall, the same as the EQ's band sliders. -->
+                    <TextView
+                        android:id="@+id/label_room_cabin_length"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/room_cabin_length"
+                        android:textSize="@dimen/text_size_dense_label"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
+                        app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+
+                    <FrameLayout
+                        android:id="@+id/box_room_cabin_length"
+                        android:layout_width="44dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="16dp"
+                        app:layout_constraintStart_toEndOf="@id/btn_room_mic_right"
+                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car">
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/seek_room_cabin_length"
+                            style="@style/CustomSliderStyle"
+                            android:layout_width="200dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:rotation="270"
+                            android:valueFrom="0"
+                            android:valueTo="1000"
+                            android:stepSize="5"
+                            android:value="0"
+                            app:labelBehavior="gone" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_room_cabin_length_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_dense_label"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
+                        app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- The cabin (CabinProfile, owner 02.10.2026): closed or open space, then its width and
+                     height; the length is the upright slider beside the car above. -->
+                <TextView
+                    android:id="@+id/label_room_cabin_space"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/room_cabin_space_label"
+                    android:textSize="@dimen/settings_subtitle_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/desc_room_cabin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/room_cabin_desc"
+                    android:textSize="@dimen/settings_note_text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_room_space_closed"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/room_cabin_space_closed"
+                        android:textSize="@dimen/text_size_dense_label" />
+
+                    <TextView
+                        android:id="@+id/btn_room_space_open"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:background="@null"
+                        android:text="@string/room_cabin_space_open"
+                        android:textSize="@dimen/text_size_dense_label" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_room_cabin_width"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="80dp"
+                        android:text="@string/room_cabin_width"
+                        android:textSize="@dimen/text_size_dense_label" />
+
+                    <!-- Range and step come from CabinProfile in code, not from here. -->
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_room_cabin_width"
+                        style="@style/CustomSliderStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:valueFrom="0"
+                        android:valueTo="1000"
+                        android:stepSize="5"
+                        android:value="0"
+                        app:labelBehavior="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_room_cabin_width_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="64dp"
+                        android:gravity="end"
+                        android:textSize="@dimen/text_size_dense_label" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_room_cabin_height"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="80dp"
+                        android:text="@string/room_cabin_height"
+                        android:textSize="@dimen/text_size_dense_label" />
+
+                    <!-- Range and step come from CabinProfile in code, not from here. -->
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/seek_room_cabin_height"
+                        style="@style/CustomSliderStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:valueFrom="0"
+                        android:valueTo="1000"
+                        android:stepSize="5"
+                        android:value="0"
+                        app:labelBehavior="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_room_cabin_height_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="64dp"
+                        android:gravity="end"
+                        android:textSize="@dimen/text_size_dense_label" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
