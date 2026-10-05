@@ -1248,6 +1248,8 @@ public final class RoomMeasurement {
         public boolean hasPolarityInversion = false;
         /** What the screen says about it, in the person's language. */
         public String wiringWarning = null;
+        /** The measurement's main answer: the faults found, in the list's order (collectDefects). */
+        public final List<CabinDefect> defects = new ArrayList<>();
 
         // Microphone placement & cavity awareness
         public float micSpotLr = -0.5f;
@@ -1740,6 +1742,7 @@ public final class RoomMeasurement {
                 analyzeAcousticsAndSynthesize(app, result);
 
                 result.sweepTopHz = topHz;
+                collectDefects(result);
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
 
                 if (listener != null) {
@@ -1748,6 +1751,7 @@ public final class RoomMeasurement {
                 }
             } else {
                 result.sweepTopHz = topHz;
+                collectDefects(result);
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
 
                 if (listener != null) {
@@ -3283,6 +3287,49 @@ public final class RoomMeasurement {
         Log.w(TAG, "POLARITY WARNING: inverted on " + invertedLabels(result));
     }
 
+    /**
+     * The measurement's main answer (owner, 02.10.2026): every detector's verdict as a record, in the
+     * list's order. It reads what the detectors already decided - clipping, the declared layout,
+     * polarity (judgePolarity), delays (computeDelays), the midbass roll-off, direct versus reflected
+     * sound - and decides nothing of its own.
+     */
+    private static void collectDefects(Result result) {
+        result.defects.clear();
+        if (result.clippedSamples > 0) {
+            result.defects.add(new CabinDefect(CabinDefect.Kind.CLIPPING, CabinDefect.Certainty.SURE,
+                    "", 0, result.clippedSamples));
+        }
+        if (result.channels != null) {
+            for (int i = 0; i < result.channels.length && i < Channel.values().length; i++) {
+                if (!result.isDeclared(i) || (result.channels[i] != null && result.channels[i].ok)) continue;
+                Channel ch = Channel.values()[i];
+                result.defects.add(new CabinDefect(CabinDefect.Kind.DECLARED_NOT_HEARD,
+                        CabinDefect.Certainty.LIKELY, ch.label, ch.nameRes, Float.NaN));
+            }
+        }
+        if (result.hasPolarityInversion) {
+            for (ChannelResult c : result.invertedChannels) {
+                result.defects.add(new CabinDefect(CabinDefect.Kind.POLARITY, CabinDefect.Certainty.LIKELY,
+                        c.label, c.nameRes, Float.NaN));
+            }
+        }
+        if (result.beyondHardware) {
+            result.defects.add(new CabinDefect(CabinDefect.Kind.DELAY_BEYOND_HARDWARE,
+                    CabinDefect.Certainty.SURE, "", 0, Float.NaN));
+        }
+        if (result.midbassHpfFreqHz > 0) {
+            result.defects.add(new CabinDefect(CabinDefect.Kind.MIDBASS_ROLLOFF, CabinDefect.Certainty.LIKELY,
+                    "", 0, result.midbassHpfFreqHz));
+        }
+        if (result.channels != null) {
+            for (ChannelResult c : result.channels) {
+                if (c == null || !c.ok || c.confident) continue;
+                result.defects.add(new CabinDefect(CabinDefect.Kind.REFLECTIONS_ONLY,
+                        CabinDefect.Certainty.POSSIBLE, c.label, c.nameRes, Float.NaN));
+            }
+        }
+    }
+
     private static String invertedLabels(Result result) {
         StringBuilder sb = new StringBuilder();
         for (ChannelResult c : result.invertedChannels) {
@@ -3544,6 +3591,15 @@ public final class RoomMeasurement {
             sb.append("soundstage: ").append(result.soundstageMode.title).append('\n');
             sb.append("cabin body: ").append(result.bodyType.title)
                     .append(", listening distance: ").append(result.listeningDistanceCm).append(" cm\n");
+            // The profile the measurement was taken under: the microphone estimate depends on it.
+            sb.append("cabin: ").append(CabinProfile.describe(context)).append('\n');
+            // The main answer first (owner, 02.10.2026): what was found, where, how sure, what to do.
+            if (!result.defects.isEmpty()) {
+                sb.append("FINDINGS:\n");
+                for (CabinDefect d : result.defects) sb.append("  - ").append(d.reportLine()).append('\n');
+            } else if (result.error == null) {
+                sb.append("FINDINGS: none\n");
+            }
             // The screen shows the user "measurement failed" and nothing else. If they send the
             // archive anyway - and they do - the report has to say what went wrong, or the
             // failure has to be diagnosed by reading the recordings, which is what happened the
