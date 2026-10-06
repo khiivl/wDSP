@@ -146,7 +146,7 @@
     <string name="OTtab">Inne</string>
     <string name="GLtab">GALA</string>
     <string name="ACtab">Test Audio</string>
-    <string name="lbl_pwr">Moc Ampa:</string>
+    <string name="lbl_pwr">Wzmocnienie:</string>
 
     <!-- Audio Check Tab (internal QA tool) -->
     <string name="audiocheck_title">Test Audio</string>

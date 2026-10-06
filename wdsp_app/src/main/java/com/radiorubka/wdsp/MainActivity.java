@@ -1310,7 +1310,7 @@ public class MainActivity extends AppCompatActivity {
             tvSubDb.setText(text);
             updateVisualizer();
             if (fromUser && !isUpdatingUi) {
-                autoSaveCurrent();
+                saveSubGain();
             }
         });
     }
@@ -3255,6 +3255,17 @@ public class MainActivity extends AppCompatActivity {
     private void autoSaveCurrent() {
         String n = spinnerPresets.getText().toString();
         savePreset(n);
+    }
+
+    /** Writes only the one key the sub gain slider actually owns, instead of autoSaveCurrent()'s
+     * full savePreset() (every field on every preset, re-derived from live widgets and written in
+     * one Editor.apply() - which persists the ENTIRE SharedPreferences file to disk every single
+     * call, not just the changed key). A slider drag fires many rapid ticks, each one otherwise a
+     * full-file disk write for a single int - this is what the sub slider specifically should do
+     * instead. */
+    private void saveSubGain() {
+        String n = spinnerPresets.getText().toString();
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(n + "_sub_g", getIntSlider(seekSubGain)).apply();
     }
     private int getSystemVolume() { return VolumeHelper.getVolume(); }
 
