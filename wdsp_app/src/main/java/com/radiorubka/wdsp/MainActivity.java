@@ -553,6 +553,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         sendBroadcast(new Intent("com.radiorubka.wdsp.UI_INACTIVE").setPackage(getPackageName()));
         if (spectrumAnalyzer != null) spectrumAnalyzer.stop();
+        flushPendingAutoSave();
     }
 
     // --- Spectrum analyzer (pre-EQ, visual-only; see SpectrumAnalyzerView javadoc) ---
@@ -649,6 +650,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_fader_fr_plus).setOnClickListener(v -> adjustFaderStep(seekFaderFr, 1));
         findViewById(R.id.btn_apply).setOnClickListener(v -> {
             autoSaveCurrent();
+            flushPendingAutoSave(); // explicit "commit now" action - the toast below says it's done
 //            applyAllToMcu();
             Toaster.show(this, getString(R.string.toast_settings_applied));
         });
@@ -1310,7 +1312,7 @@ public class MainActivity extends AppCompatActivity {
             tvSubDb.setText(text);
             updateVisualizer();
             if (fromUser && !isUpdatingUi) {
-                saveSubGain();
+                autoSaveCurrent();
             }
         });
     }
@@ -3252,21 +3254,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePresetList() { getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putStringSet(PREF_PRESET_NAMES, new HashSet<>(presetNames)).apply(); }
+    // Debounces autoSaveCurrent()'s actual write - see its own doc for why narrowing which keys
+    // go INTO the Editor (an earlier attempt at this) doesn't help: SharedPreferences.apply()
+    // always re-serializes its entire backing map to the XML file on disk, regardless of how many
+    // keys changed in that one transaction, so the only real lever is how often apply() gets
+    // called at all. A slider drag fires many onChange ticks a second, each currently calling
+    // autoSaveCurrent() - this collapses a whole burst of those into one write, shortly after the
+    // user actually stops moving something.
+    private static final int AUTOSAVE_DEBOUNCE_MS = 300;
+    private Runnable pendingAutoSave;
+
+    /** Saves the current preset's full state - called from every slider/switch/spinner listener
+     * in the app, so this fires constantly (e.g. on every tick of a slider drag, not just on
+     * release). Debounced (see AUTOSAVE_DEBOUNCE_MS's doc) rather than writing synchronously every
+     * time, since each actual write is a full-file disk rewrite. flushPendingAutoSave() is called
+     * from onPause() so a change never gets lost if the app is backgrounded mid-debounce.
+     * <p>The target preset name is captured right now, NOT read lazily when the debounced write
+     * actually fires - if the user switched to editing a different preset in those 300ms, this
+     * still has to land on the ORIGINAL preset the change was actually made to, not whatever the
+     * spinner happens to say by the time this runs. */
     private void autoSaveCurrent() {
-        String n = spinnerPresets.getText().toString();
-        savePreset(n);
+        if (pendingAutoSave != null) handler.removeCallbacks(pendingAutoSave);
+        String targetPreset = spinnerPresets.getText().toString();
+        pendingAutoSave = () -> {
+            pendingAutoSave = null;
+            savePreset(targetPreset);
+        };
+        handler.postDelayed(pendingAutoSave, AUTOSAVE_DEBOUNCE_MS);
     }
 
-    /** Writes only the one key the sub gain slider actually owns, instead of autoSaveCurrent()'s
-     * full savePreset() (every field on every preset, re-derived from live widgets and written in
-     * one Editor.apply() - which persists the ENTIRE SharedPreferences file to disk every single
-     * call, not just the changed key). A slider drag fires many rapid ticks, each one otherwise a
-     * full-file disk write for a single int - this is what the sub slider specifically should do
-     * instead. */
-    private void saveSubGain() {
-        String n = spinnerPresets.getText().toString();
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putInt(n + "_sub_g", getIntSlider(seekSubGain)).apply();
+    /** Runs any debounced autoSaveCurrent() write immediately instead of waiting out the rest of
+     * its delay - call before anything that could end the process (onPause()) so a change made
+     * right before backgrounding/closing the app isn't silently dropped. */
+    private void flushPendingAutoSave() {
+        if (pendingAutoSave != null) {
+            handler.removeCallbacks(pendingAutoSave);
+            pendingAutoSave.run();
+        }
     }
+
     private int getSystemVolume() { return VolumeHelper.getVolume(); }
 
     @Override protected void onDestroy() {
