@@ -379,8 +379,6 @@ public class McuService extends Service implements LocationListener {
         IntentFilter controlFilter = getIntentFilter();
 
         registerReceiver(controlReceiver, controlFilter);
-
-        applyCurrentSettings();
     }
 
     @NonNull
