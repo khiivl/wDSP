@@ -550,6 +550,7 @@
     <string name="room_err_output_open">Не вдалося відкрити звуковий вихід.</string>
     <string name="room_err_nothing_heard">Жодного динаміка не почуто. Перевірте гучність і чи не закритий мікрофон.</string>
     <string name="room_err_too_few_heard">Почуто динаміків: %1$d - вирівнювати нема відносно чого. Перевірте гучність і де стоїть мікрофон.</string>
+    <string name="room_err_layout_mismatch">Жодного динаміка з вашої комплектації не чути, зате грають ті, яких ви не позначили. Перевірте комплектацію динаміків і поміряйте ще раз.</string>
     <string name="room_err_unexpected">Несподівана помилка: %1$s</string>
     <string name="room_err_unknown">Невідома помилка</string>
     <string name="room_polarity_warning">Переплутано полярність (+/-): %1$s. Динамік підключений у протифазі й гасить баси в салоні. Перевірте дроти на його клемах.</string>

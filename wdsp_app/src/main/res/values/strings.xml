@@ -567,6 +567,7 @@
     <string name="room_err_output_open">The audio output could not be opened.</string>
     <string name="room_err_nothing_heard">No speaker was heard at all. Check the volume and that the microphone is not covered.</string>
     <string name="room_err_too_few_heard">Only %1$d speaker(s) were heard - nothing to align against. Check the volume and the microphone placement.</string>
+    <string name="room_err_layout_mismatch">None of the speakers in your layout was heard, but speakers you did not declare played. Check the speaker layout and measure again.</string>
     <string name="room_err_unexpected">Unexpected error: %1$s</string>
     <string name="room_err_unknown">Unknown error</string>
     <string name="room_polarity_warning">Reversed polarity (+/-) on: %1$s. The speaker is wired in antiphase and cancels bass in the cabin. Check the wires at its terminals.</string>
