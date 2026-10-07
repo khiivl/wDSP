@@ -195,8 +195,10 @@ order (absent = `null` / `ok=false` — results are read back by position). What
 - **no sub**: door high-pass to Through, a gentler bass shelf (✅ `synthesizeAutoEq16`);
 - **stated but not heard** is a defect; **heard but not stated** is a defect (wiring or the answer).
 
-Today (✅): `runOnePass` sweeps 5 channels with a sub and 4 without; a missing speaker is only inferred
-(`heardAtAll`: peak ≥ −40 dBFS and median SNR ≥ 10 dB) and `isUsable()` still demands all four.
+Today (✅ 06.10): `runOnePass` sweeps only what is stated (`CabinProfile`), results stay by ordinal, and
+"stated, not heard" is a FINDINGS entry. 📋 "Heard, not stated" needs sound on the outputs nobody
+declared: a short probe of each undeclared channel in the same pass (owner, 07.10.2026: «так»),
+judged by the same presence rule (`heardAtAll` + phantom check).
 
 ## 8. The list of defects (the product)
 
@@ -211,8 +213,9 @@ us stays as it is.
 | blocked or damaged woofer | 6–10 dB broad drop over 80–315 Hz on one channel against its mirror, timing normal | 📋 |
 | mismatch inside a pair (general) | beyond the **geometric** difference computed from the microphone spot and the cabin size (§14: a driver-side mic hears the near side 3–6 dB louder below 500 Hz, 2–4 dB above); front ↔ rear 4–8 dB lower plus 3–6 dB more above 2 kHz is **normal** and is said to be | 📋 |
 | resonance | narrow peak/dip below ~200 Hz. **The same frequency for every speaker** → cabin mode (Q 4–8), not treatable, not a defect; **one speaker only**, with a long ringing tail in that channel's impulse → door panel or mounting (adapter ring ~40 Hz, panel ~80 Hz, Q 10–40, 6–10 dB) — add damping, check the fixings | 📋 |
-| channels swapped / mic blocked | arrival order or broadband level contradicting the geometry from the microphone spot (not a fixed "left-hand drive" rule — right-hand-drive cars and a centre-console microphone exist) | 📋 |
-| layout mismatch | stated not heard; heard not stated; arrival order contradicting the geometry → channels swapped | 📋 |
+| channels swapped | arrival order contradicting the geometry from the microphone spot (not a fixed "left-hand drive" rule — right-hand-drive cars and a centre-console microphone exist): every stated wiring and every pairwise swap of door speakers is fitted with its own shared constant; a swap is named when it fits within 0.45 ms RMS and beats the stated wiring by 0.35 ms. Direct arrivals only, never the sub; broadband level is not used (sensitivity and aiming differ by as much as the 3 dB a nearer door adds). A microphone on the centre line cannot tell left from right and says nothing | ✅ `ChannelSwapCheck` (`c0c4559`), geometry in `CabinGeometry` |
+| mic blocked | one channel far later than the geometry with no swap explaining it | 🟡 covered by "heard only through the cabin" (clarity); the misfit numbers are in the report |
+| layout mismatch | stated not heard ✅; heard not stated 📋 (probe, §7) | 🟡 |
 | midbass roll-off | where the doors stop delivering (→ door high-pass) | ✅ `detectMidbassRollOff` |
 | sub | polarity / phase at the crossover, delay | 🟡 |
 | clipping, channel heard only by reflection, delay beyond the hardware, noise (air-con +12..15 dB in 80 Hz–1.25 kHz) | ✅ in the report; 📋 into the list, noise warning before the sweep (`TODO.md`) |
