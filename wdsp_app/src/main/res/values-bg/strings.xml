@@ -499,7 +499,6 @@
     <string name="room_wizard_progress_title">Извършва се акустично калибриране</string>
     <string name="room_wizard_progress_warning">Затворете вратите, изключете двигателя и пазете тишина!</string>
     <string name="room_wizard_report_title">Резултати от калибрирането и Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ ВНИМАНИЕ: ПОЛЯРИТЕТ НА ГОВОРИТЕЛИТЕ!</string>
     <string name="room_wizard_crossover_title">Акустичен кросоувър</string>
     <string name="room_wizard_crossover_hpf">Мидбас HPF: %1$d Hz (механична защита)</string>
     <string name="room_wizard_crossover_hpf_through">Мидбас HPF: Без срез (Through / пълна лента)</string>
@@ -554,7 +553,6 @@
     <string name="room_layout_one_pair">Необходима е поне една двойка високоговорители във вратите.</string>
     <string name="room_err_unexpected">Неочаквана грешка: %1$s</string>
     <string name="room_err_unknown">Неизвестна грешка</string>
-    <string name="room_polarity_warning">Обърната полярност (+/-) на: %1$s. Високоговорителят е свързан в противофаза и заглушава баса в купето. Проверете кабелите на клемите.</string>
     <string name="room_wizard_delays_sub">Субуфер: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Стил на интерфейса</string>

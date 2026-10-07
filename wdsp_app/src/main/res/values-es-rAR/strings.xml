@@ -495,7 +495,6 @@
     <string name="room_wizard_progress_title">Acoustic Calibration in Progress</string>
     <string name="room_wizard_progress_warning">Keep doors closed, engine off, and remain quiet!</string>
     <string name="room_wizard_report_title">Calibration Results &amp; Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ SPEAKER POLARITY WARNING!</string>
     <string name="room_wizard_crossover_title">Acoustic Crossover</string>
     <string name="room_wizard_crossover_hpf">Midbass HPF: %1$d Hz (mechanical protection)</string>
     <string name="room_wizard_crossover_hpf_through">Midbass HPF: Through (0 Hz / full range)</string>
@@ -550,7 +549,6 @@
     <string name="room_layout_one_pair">Se necesita al menos un par de parlantes en las puertas.</string>
     <string name="room_err_unexpected">Error inesperado: %1$s</string>
     <string name="room_err_unknown">Error desconocido</string>
-    <string name="room_polarity_warning">Polaridad invertida (+/-) en: %1$s. El parlante está conectado en antifase y cancela los graves en el habitáculo. Revise los terminales.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Estilo de interfaz</string>

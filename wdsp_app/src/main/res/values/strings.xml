@@ -421,7 +421,6 @@
     <string name="room_wizard_progress_title">Acoustic Calibration in Progress</string>
     <string name="room_wizard_progress_warning">Keep doors closed, engine off, and remain quiet!</string>
     <string name="room_wizard_report_title">Calibration Results &amp; Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ SPEAKER POLARITY WARNING!</string>
     <string name="room_wizard_crossover_title">Acoustic Crossover</string>
     <string name="room_wizard_crossover_hpf">Midbass HPF: %1$d Hz (mechanical protection)</string>
     <string name="room_wizard_crossover_hpf_through">Midbass HPF: Through (0 Hz / full range)</string>
@@ -586,7 +585,6 @@
     <string name="room_layout_one_pair">At least one pair of door speakers is needed.</string>
     <string name="room_err_unexpected">Unexpected error: %1$s</string>
     <string name="room_err_unknown">Unknown error</string>
-    <string name="room_polarity_warning">Reversed polarity (+/-) on: %1$s. The speaker is wired in antiphase and cancels bass in the cabin. Check the wires at its terminals.</string>
     <string name="room_wizard_delays_sub">Subwoofer: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">UI Style</string>

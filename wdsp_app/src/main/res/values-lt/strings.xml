@@ -499,7 +499,6 @@ Bendras numatytasis: %1$s</string>
     <string name="room_wizard_progress_title">Acoustic Calibration in Progress</string>
     <string name="room_wizard_progress_warning">Keep doors closed, engine off, and remain quiet!</string>
     <string name="room_wizard_report_title">Calibration Results &amp; Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ SPEAKER POLARITY WARNING!</string>
     <string name="room_wizard_crossover_title">Acoustic Crossover</string>
     <string name="room_wizard_crossover_hpf">Midbass HPF: %1$d Hz (mechanical protection)</string>
     <string name="room_wizard_crossover_hpf_through">Midbass HPF: Through (0 Hz / full range)</string>
@@ -554,7 +553,6 @@ Bendras numatytasis: %1$s</string>
     <string name="room_layout_one_pair">Reikalinga bent viena durų garsiakalbių pora.</string>
     <string name="room_err_unexpected">Netikėta klaida: %1$s</string>
     <string name="room_err_unknown">Nežinoma klaida</string>
-    <string name="room_polarity_warning">Sukeistas poliškumas (+/-): %1$s. Garsiakalbis prijungtas priešfaze ir slopina žemus dažnius salone. Patikrinkite laidų gnybtus.</string>
     <string name="room_wizard_delays_sub">Žemų dažnių garsiakalbis: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Sąsajos stilius</string>

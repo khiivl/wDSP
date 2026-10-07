@@ -486,7 +486,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_wizard_progress_title">Acoustic Calibration in Progress</string>
     <string name="room_wizard_progress_warning">Keep doors closed, engine off, and remain quiet!</string>
     <string name="room_wizard_report_title">Calibration Results &amp; Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ SPEAKER POLARITY WARNING!</string>
     <string name="room_wizard_crossover_title">Acoustic Crossover</string>
     <string name="room_wizard_crossover_hpf">Midbass HPF: %1$d Hz (mechanical protection)</string>
     <string name="room_wizard_crossover_hpf_through">Midbass HPF: Through (0 Hz / full range)</string>
@@ -554,7 +553,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_layout_one_pair">Legalább egy pár ajtóhangszóró szükséges.</string>
     <string name="room_err_unexpected">Váratlan hiba: %1$s</string>
     <string name="room_err_unknown">Ismeretlen hiba</string>
-    <string name="room_polarity_warning">Fordított polaritás (+/-) itt: %1$s. A hangszóró ellenfázisban van bekötve és kioltja a mélyhangokat. Ellenőrizze a csatlakozókat.</string>
     <string name="room_wizard_delays_sub">Mélynyomó: %1$.1f ms (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Kezelőfelület stílusa</string>

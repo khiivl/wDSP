@@ -388,7 +388,6 @@
     <string name="room_wizard_progress_title">Виконується калібрування акустики</string>
     <string name="room_wizard_progress_warning">Зачиніть двері, вимкніть двигун та зберігайте тишу!</string>
     <string name="room_wizard_report_title">Результати калібрування та Auto-EQ</string>
-    <string name="room_wizard_polarity_warning_title">⚠️ УВАГА: ПОЛЯРНІСТЬ ДИНАМІКІВ!</string>
     <string name="room_wizard_crossover_title">Акустичний кросовер</string>
     <string name="room_wizard_crossover_hpf">Зріз мідбасів HPF: %1$d Гц (захист від перевантаження)</string>
     <string name="room_wizard_crossover_hpf_through">Зріз мідбасів HPF: Без зрізу (Through / повний діапазон)</string>
@@ -569,7 +568,6 @@
     <string name="room_layout_one_pair">Потрібна хоча б одна пара дверних динаміків.</string>
     <string name="room_err_unexpected">Несподівана помилка: %1$s</string>
     <string name="room_err_unknown">Невідома помилка</string>
-    <string name="room_polarity_warning">Переплутано полярність (+/-): %1$s. Динамік підключений у протифазі й гасить баси в салоні. Перевірте дроти на його клемах.</string>
     <string name="room_wizard_delays_sub">Сабвуфер: %1$.1f мс (%2$d)</string>
     <!-- UI Style switcher (Classic / Modern) -->
     <string name="settings_ui_style_title">Стиль інтерфейсу</string>
