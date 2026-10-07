@@ -2477,7 +2477,8 @@ public class SettingsActivity extends AppCompatActivity {
                     for (int b = 0; b < 16; b++) {
                         if (b > 0 && b % 4 == 0) sbEq.append("\n");
                         else if (b > 0) sbEq.append("  |  ");
-                        sbEq.append(String.format(Locale.US, "%-4s: %+2d dB", freqLabels[b], result.autoEqGains16[b]));
+                        sbEq.append(String.format(Locale.US, "%-4s: %+2d dB", freqLabels[b],
+                                Math.round(AudioConfig.eqGainDb(result.autoEqGains16[b]))));
                     }
                     tvAutoEq.setText(sbEq.toString());
 
