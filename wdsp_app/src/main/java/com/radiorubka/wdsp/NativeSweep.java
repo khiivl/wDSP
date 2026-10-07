@@ -49,9 +49,22 @@ public final class NativeSweep implements AutoCloseable {
     }
 
     private long handle;
+    private final float spanHz;
 
     public NativeSweep(int sampleRate, float startHz, float endHz, float seconds) {
         handle = available ? nativeCreate(sampleRate, startHz, endHz, seconds) : 0;
+        spanHz = endHz - startHz;
+    }
+
+    /**
+     * How much louder this sweep's bands read than those of a sweep covering {@code other}'s span, in dB.
+     * The inverse filter is normalised to an impulse of unit HEIGHT, and a band-limited impulse of unit
+     * height carries a spectral level inversely proportional to its bandwidth in hertz: the subwoofer's
+     * 15-200 Hz sweep read +40.7 dB against the doors' 20 Hz-20 kHz one (19980 / 185 = 108x), measured on
+     * the bench 07.10.2026 as +40. Subtract this to put the two on one scale.
+     */
+    public float levelOffsetDbAgainst(NativeSweep other) {
+        return (float) (20.0 * Math.log10(other.spanHz / spanHz));
     }
 
     public boolean isValid() {

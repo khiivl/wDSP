@@ -108,6 +108,25 @@ public final class RoomMeasurement {
      * are differences between channels - stay exact.
      */
     private static final float SUB_SWEEP_START_HZ = 15f;
+    /**
+     * Where the subwoofer's sweep stops. Its pass leaves the doors on behind a 250 Hz high-pass
+     * (setRoutingFor), so a sweep that went on to 20 kHz was played by the doors above it at full level -
+     * and the sharpest impulse in that recording, the one the arrival and the polarity are read from,
+     * was theirs. On the owner's bench, 07.10.2026: the "subwoofer" arrived 0.05 ms from the front right
+     * with a clarity of 21.8 dB and read -6.6 dB from 1.25 to 20 kHz, to the tenth the same as the front
+     * right, in two positions of the head unit. A sub in a boot would have been reported arriving with the
+     * doors. Above 200 Hz there is nothing a subwoofer is measured for.
+     */
+    private static final float SUB_SWEEP_TOP_HZ = 200f;
+    /**
+     * The subwoofer's recording is low-passed here (both directions, so the arrival does not move) before
+     * it is analysed: the doors' 250 Hz high-pass still lets them through below it, only quieter, and the
+     * arrival must be the sub's own.
+     */
+    private static final float SUB_ANALYSIS_LOWPASS_HZ = 150f;
+    /** Presence test bands for the subwoofer: 31.5 to 125 Hz, where its sweep and its job are. */
+    private static final int SUB_SNR_TEST_FIRST_BAND = 1;
+    private static final int SUB_SNR_TEST_LAST_BAND = 4;
     private static final float SWEEP_END_HZ = 20000f;
     /**
      * Where the sweep stops when the microphone is stuck at 16 kHz.
@@ -316,6 +335,30 @@ public final class RoomMeasurement {
     private static final int NOISE_TEST_LAST_BAND = 9;
 
     /**
+     * A second-order Butterworth low-pass run forward and then backward over {@code x[0..len)}: zero
+     * phase, so an impulse filtered this way stays where it was - the arrival is a time, and a filter
+     * that moved it would move every delay computed from it.
+     */
+    private static void lowPassBothWays(float[] x, int len, float cutoffHz) {
+        final double w = 2 * Math.PI * cutoffHz / SAMPLE_RATE;
+        final double alpha = Math.sin(w) / (2 * Math.sqrt(0.5));
+        final double cos = Math.cos(w);
+        final double a0 = 1 + alpha;
+        final double b0 = (1 - cos) / 2 / a0, b1 = (1 - cos) / a0, b2 = b0;
+        final double a1 = -2 * cos / a0, a2 = (1 - alpha) / a0;
+        for (int pass = 0; pass < 2; pass++) {
+            double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            for (int n = 0; n < len; n++) {
+                final int i = pass == 0 ? n : len - 1 - n;
+                final double in = x[i];
+                final double out = b0 * in + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                x2 = x1; x1 = in; y2 = y1; y1 = out;
+                x[i] = (float) out;
+            }
+        }
+    }
+
+    /**
      * The median signal-to-noise ratio over a band range, in dB.
      *
      * <p>Median rather than mean: one band sitting on a cabin resonance, or one that the speaker
@@ -348,6 +391,114 @@ public final class RoomMeasurement {
      */
     private static final float PROBE_SECONDS = 1.5f;
     private static final float MAX_PLAUSIBLE_SUB_SPREAD_MS = 18.0f;
+
+    /** Centre of the band the subwoofer is aligned in - where a car's crossover sits (50..100 Hz). */
+    private static final float SUB_ALIGN_CENTRE_HZ = 80f;
+    /** How far either way the subwoofer may sit from the doors in that band. */
+    private static final float SUB_ALIGN_MAX_LAG_MS = 25f;
+    /**
+     * A correlation peak at least this share of the strongest one counts as an equal candidate. In a band
+     * this narrow the correlation repeats every period (12.5 ms at 80 Hz) and every repeat is in phase at
+     * the crossover; the strongest is usually one cycle late, pulled by the sub's group delay - on the
+     * bench, 07.10.2026, +13.4 ms against +0.9. Delaying the doors a whole extra cycle buys nothing, so the
+     * candidate nearest zero wins.
+     */
+    private static final float SUB_ALIGN_EQUAL_SHARE = 0.8f;
+    /** Below this normalised correlation the sub's alignment is reported, not trusted. */
+    private static final float SUB_ALIGN_MIN_CORRELATION = 0.5f;
+
+    /**
+     * Times the subwoofer against the doors where the two actually meet: around the crossover, not by the
+     * peak of its impulse. A sub's impulse is a low-passed, blunt thing whose peak sits at its group delay -
+     * on the owner's bench, 07.10.2026, 16 ms after the front right although it stands right under it - and
+     * aligning that peak would have delayed both doors by 15 ms. What matters to the listener is that the
+     * two add up in the band they share. So both impulses go through the same octave-wide band-pass at
+     * {@link #SUB_ALIGN_CENTRE_HZ} and the lag of their best correlation, within
+     * {@link #SUB_ALIGN_MAX_LAG_MS}, becomes the sub's arrival relative to the anchor; its sign is the
+     * sub's polarity against the doors there. The same filter on both keeps their relative phase, which
+     * is all this reads. Confidence is the correlation itself - clarity means nothing for a band-limited
+     * impulse. The method REW calls "aligning the sub with the mains".
+     */
+    private static void alignSubwooferAtCrossover(Result result, int refIdx, float[][] impulses) {
+        final int subIdx = Channel.SUBWOOFER.ordinal();
+        if (refIdx < 0 || result.channels.length <= subIdx) return;
+        final ChannelResult sub = result.channels[subIdx];
+        final ChannelResult anchor = result.channels[refIdx];
+        final float[] a = impulses[refIdx];
+        final float[] b = impulses[subIdx];
+        if (sub == null || !sub.heardAtAll || anchor == null || a == null || b == null) return;
+        int peak = 0;
+        for (int i = 1; i < a.length; i++) if (Math.abs(a[i]) > Math.abs(a[peak])) peak = i;
+        final int maxLag = Math.round(SUB_ALIGN_MAX_LAG_MS * SAMPLE_RATE / 1000f);
+        final int from = Math.max(0, peak - 2 * maxLag);
+        final int to = Math.min(Math.min(a.length, b.length), peak + 10 * maxLag);
+        if (to - from <= 2 * maxLag) return;
+        final float[] fa = java.util.Arrays.copyOfRange(a, from, to);
+        final float[] fb = java.util.Arrays.copyOfRange(b, from, to);
+        bandPassBothWays(fa, SUB_ALIGN_CENTRE_HZ);
+        bandPassBothWays(fb, SUB_ALIGN_CENTRE_HZ);
+        double ea = 0, eb = 0;
+        for (int i = 0; i < fa.length; i++) {
+            ea += (double) fa[i] * fa[i];
+            eb += (double) fb[i] * fb[i];
+        }
+        if (ea <= 0 || eb <= 0) return;
+        final double[] corrAt = new double[2 * maxLag + 1];
+        double best = 0;
+        int strongestLag = 0;
+        for (int lag = -maxLag; lag <= maxLag; lag++) {
+            double c = 0;
+            for (int i = Math.max(0, -lag); i < fa.length && i + lag < fb.length; i++) {
+                c += (double) fa[i] * fb[i + lag];
+            }
+            corrAt[lag + maxLag] = c;
+            if (Math.abs(c) > Math.abs(best)) {
+                best = c;
+                strongestLag = lag;
+            }
+        }
+        // Of the peaks of the same sign nearly as strong, the one nearest zero (SUB_ALIGN_EQUAL_SHARE).
+        int bestLag = strongestLag;
+        for (int j = 1; j < corrAt.length - 1; j++) {
+            final double c = corrAt[j];
+            final boolean localPeak = Math.abs(c) >= Math.abs(corrAt[j - 1]) && Math.abs(c) >= Math.abs(corrAt[j + 1]);
+            if (!localPeak || Math.signum(c) != Math.signum(best)
+                    || Math.abs(c) < SUB_ALIGN_EQUAL_SHARE * Math.abs(best)) continue;
+            if (Math.abs(j - maxLag) < Math.abs(bestLag)) bestLag = j - maxLag;
+        }
+        final float corr = (float) (corrAt[bestLag + maxLag] / Math.sqrt(ea * eb));
+        final float peakMs = sub.arrivalMs;
+        sub.arrivalMs = anchor.arrivalMs + bestLag * 1000f / SAMPLE_RATE;
+        sub.polarity = corr < 0 ? -1 : 1;
+        sub.confident = Math.abs(corr) >= SUB_ALIGN_MIN_CORRELATION;
+        Log.i(TAG, String.format(Locale.US,
+                "subwoofer aligned at %.0f Hz against %s: %+.2f ms (strongest peak %+.2f ms, impulse "
+                        + "peak said %+.2f ms), correlation %+.2f -> polarity %+d, %s",
+                SUB_ALIGN_CENTRE_HZ, anchor.label, sub.arrivalMs - anchor.arrivalMs,
+                strongestLag * 1000f / SAMPLE_RATE, peakMs - anchor.arrivalMs, corr, sub.polarity,
+                sub.confident ? "trusted" : "weak - reported, not trusted"));
+    }
+
+    /** An octave-wide second-order band-pass, forward and backward (zero phase), in place. */
+    private static void bandPassBothWays(float[] x, float centreHz) {
+        final double w = 2 * Math.PI * centreHz / SAMPLE_RATE;
+        final double q = Math.sqrt(2); // one octave wide: Q = sqrt(2^N) / (2^N - 1) with N = 1
+        final double alpha = Math.sin(w) / (2 * q);
+        final double cos = Math.cos(w);
+        final double a0 = 1 + alpha;
+        final double b0 = alpha / a0, b2 = -alpha / a0;
+        final double a1 = -2 * cos / a0, a2 = (1 - alpha) / a0;
+        for (int pass = 0; pass < 2; pass++) {
+            double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            for (int n = 0; n < x.length; n++) {
+                final int i = pass == 0 ? n : x.length - 1 - n;
+                final double in = x[i];
+                final double out = b0 * in + b2 * x2 - a1 * y1 - a2 * y2;
+                x2 = x1; x1 = in; y2 = y1; y1 = out;
+                x[i] = (float) out;
+            }
+        }
+    }
 
     /**
      * The channel every arrival is judged against: the clearest door channel that was heard, or -1.
@@ -1768,7 +1919,8 @@ public final class RoomMeasurement {
                 + " and is restored in the finally block and by restoreIfInterrupted()");
 
         try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds);
-             NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ, topHz, seconds);
+             NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ,
+                     Math.min(topHz, SUB_SWEEP_TOP_HZ), seconds);
              NativeSweep probeSweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, PROBE_SECONDS)) {
             if (!sweep.isValid() || !subSweep.isValid() || subSweep.length() != sweep.length()) {
                 result.fail(MeasurementFailure.SWEEP_NOT_BUILT);
@@ -2202,6 +2354,8 @@ public final class RoomMeasurement {
             }
             cr.recordedPeak = windowPeak / 32768f;
             cr.recordedRms = (float) Math.sqrt(windowSum / len);
+            final boolean subPass = !probe && slots[k] == Channel.SUBWOOFER;
+            if (subPass) lowPassBothWays(window, len, SUB_ANALYSIS_LOWPASS_HZ);
 
             // Each sweep is taken apart with its own inverse filter.
             final NativeSweep played = probe ? probeSweep
@@ -2220,6 +2374,15 @@ public final class RoomMeasurement {
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
             // Deconvolved impulse response silence noise floor (sample 48), perfectly matching bandsDb domain
             System.arraycopy(analysis, NativeSweep.NOISE_BANDS, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
+            if (subPass) {
+                // Its narrower sweep reads louder by the ratio of the spans (levelOffsetDbAgainst);
+                // signal and noise move together, so the SNR is untouched.
+                final float off = subSweep.levelOffsetDbAgainst(sweep);
+                for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                    cr.bandsDb[b] -= off;
+                    cr.noiseBandsDb[b] -= off;
+                }
+            }
 
             // Spectral subtraction: clean = max(sweep - noise, 1e-12), snr = sweep - noise
             NativeSweep.subtractNoise(cr.bandsDb, cr.noiseBandsDb, cr.cleanBandsDb, cr.snrDb);
@@ -2258,7 +2421,9 @@ public final class RoomMeasurement {
             // the car. A channel with nothing connected still records cabin noise and the other
             // speakers leaking, and it can clear the level bar by thirteen decibels while standing
             // nowhere at all above its own noise floor - see MIN_SNR_PRESENT_DB for the measurement.
-            final float midSnrDb = medianSnrDb(cr.snrDb, SNR_TEST_FIRST_BAND, SNR_TEST_LAST_BAND);
+            final int snrFirst = subPass ? SUB_SNR_TEST_FIRST_BAND : SNR_TEST_FIRST_BAND;
+            final int snrLast = subPass ? SUB_SNR_TEST_LAST_BAND : SNR_TEST_LAST_BAND;
+            final float midSnrDb = medianSnrDb(cr.snrDb, snrFirst, snrLast);
             final boolean loudEnough = cr.recordedPeak >= MIN_PEAK;
             final boolean aboveOwnNoise = midSnrDb >= MIN_SNR_PRESENT_DB;
             cr.heardAtAll = loudEnough && aboveOwnNoise;
@@ -2268,7 +2433,7 @@ public final class RoomMeasurement {
                     "%s: peak %.1f dBFS (%s), median SNR %.1f dB over bands %d-%d (%s) -> %s",
                     cr.label, 20 * Math.log10(cr.recordedPeak + 1e-9f),
                     loudEnough ? "above the level bar" : "below the level bar",
-                    midSnrDb, SNR_TEST_FIRST_BAND, SNR_TEST_LAST_BAND,
+                    midSnrDb, snrFirst, snrLast,
                     aboveOwnNoise ? "a speaker was driven" : "noise, not a speaker",
                     cr.ok ? "counted" : "not present"));
             if (delayTest != 0 && k > 0 && result.channels[0] != null) {
@@ -2294,6 +2459,7 @@ public final class RoomMeasurement {
         // 2. GCC-PHAT high-precision delay estimation
         // 2. The anchor: the clearest door channel (arrivalAnchor - one rule with computeDelays).
         final int refIdx = arrivalAnchor(result);
+        alignSubwooferAtCrossover(result, refIdx, channelImpulses);
 
         // The deconvolved floor reported is that of the anchor channel. This no longer destroys the
         // measured cabin silence: that lives in result.ambientNoiseDb16 and the two are different
@@ -3303,7 +3469,10 @@ public final class RoomMeasurement {
                     "", 0, result.midbassHpfFreqHz));
         }
         if (result.channels != null) {
-            for (ChannelResult c : result.channels) {
+            for (int i = 0; i < Math.min(Channel.SUBWOOFER.ordinal(), result.channels.length); i++) {
+                final ChannelResult c = result.channels[i];
+                // Doors only: a subwoofer's impulse is band-limited and blunt by nature, and its
+                // confidence is the crossover correlation (alignSubwooferAtCrossover), not clarity.
                 if (c == null || !c.ok || c.confident) continue;
                 result.defects.add(new CabinDefect(CabinDefect.Kind.REFLECTIONS_ONLY,
                         CabinDefect.Certainty.POSSIBLE, c.label, c.nameRes, Float.NaN));
