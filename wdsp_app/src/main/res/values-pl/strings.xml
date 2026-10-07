@@ -155,7 +155,7 @@
     <string name="DLtab">Opóźnienia</string>
     <string name="OTtab">Inne</string>
     <string name="GLtab">GALA</string>
-    <string name="lbl_pwr">Moc Ampa:</string>
+    <string name="lbl_pwr">Wzmocnienie:</string>
     <string name="hint_sub_freq">Częstot.</string>
 
     <!-- Status Bar Visualizer -->
