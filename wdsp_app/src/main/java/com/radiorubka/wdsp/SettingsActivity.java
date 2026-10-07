@@ -1989,12 +1989,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Step 3: Report
         View layoutReport = view.findViewById(R.id.layout_wizard_report);
-        View layoutPolarity = view.findViewById(R.id.layout_polarity_alert);
-        if (layoutPolarity != null) {
-            layoutPolarity.setBackground(ThemeManager.roundedDrawable(this, 12, 0x22E5352B, 0xFFE5352B, 1.5f));
-        }
-        TextView tvPolarityMsg = view.findViewById(R.id.tv_polarity_alert_msg);
-        if (tvPolarityMsg != null) tvPolarityMsg.setTextColor(textPrimary);
+        // The findings block is framed when the run ends: red for faults, a plain card for notes only.
+        View layoutFindings = view.findViewById(R.id.layout_findings);
+        TextView tvFindings = view.findViewById(R.id.tv_findings_msg);
+        if (tvFindings != null) tvFindings.setTextColor(textPrimary);
 
         View cardCrossover = view.findViewById(R.id.card_report_crossover);
         if (cardCrossover instanceof ViewGroup) {
@@ -2120,7 +2118,7 @@ public class SettingsActivity extends AppCompatActivity {
             // that in advance, in desc_room_no_root.
             runMeasurementInWizard(dialog, layoutSetup, layoutProgress, layoutReport,
                     tvProgressStage, tvProgressDetail, progressBar, tvPercent,
-                    layoutPolarity, tvPolarityMsg, tvHpf, tvSub, tvDelays, tvAutoEq,
+                    layoutFindings, tvFindings, tvHpf, tvSub, tvDelays, tvAutoEq,
                     btnApply, hasSub, selectedMode, selectedTarget, selectedBody, selectedDistance);
         });
 
@@ -2348,10 +2346,42 @@ public class SettingsActivity extends AppCompatActivity {
         return v < -1f ? -1f : v > 1f ? 1f : v;
     }
 
+    /**
+     * The defect list on the wizard's report, one line per finding in the person's language. A red
+     * frame when anything is a fault, a plain card when there are only notes or nothing at all -
+     * "nothing found" is said in words, together with the normality the owner wants said as loudly
+     * as a fault: front and rear sounding different.
+     */
+    private void showFindings(RoomMeasurement.Result result, View layout, TextView text) {
+        if (layout == null || text == null) return;
+        final StringBuilder lines = new StringBuilder();
+        boolean fault = false;
+        for (CabinDefect d : result.defects) {
+            if (lines.length() > 0) lines.append("\n\n");
+            lines.append("• ").append(d.screenLine(this));
+            fault |= !d.isNote();
+        }
+        if (!fault) {
+            if (lines.length() > 0) lines.append("\n\n");
+            lines.append(getString(R.string.room_findings_none));
+        }
+        text.setText(lines);
+        final int cardBg = ThemeManager.cardBackground(this, editNight);
+        final int accentRed = 0xFFE5352B;
+        layout.setBackground(fault
+                ? ThemeManager.roundedDrawable(this, 12, 0x22E5352B, accentRed, 1.5f)
+                : ThemeManager.roundedDrawable(this, 12, cardBg, ThemeManager.panelBorder(this, editNight), 1f));
+        if (layout instanceof ViewGroup && ((ViewGroup) layout).getChildAt(0) instanceof TextView) {
+            ((TextView) ((ViewGroup) layout).getChildAt(0)).setTextColor(fault ? accentRed
+                    : ThemeManager.contrastText(ThemeManager.textPrimary(this, editNight), cardBg));
+        }
+        layout.setVisibility(View.VISIBLE);
+    }
+
     private void runMeasurementInWizard(Dialog dialog, View layoutSetup, View layoutProgress, View layoutReport,
                                         TextView tvProgressStage, TextView tvProgressDetail,
                                         ProgressBar progressBar, TextView tvPercent,
-                                        View layoutPolarity, TextView tvPolarityMsg,
+                                        View layoutFindings, TextView tvFindings,
                                         TextView tvHpf, TextView tvSub, TextView tvDelays, TextView tvAutoEq,
                                         TextView btnApply, boolean hasSub,
                                         RoomMeasurement.SoundstageMode mode,
@@ -2404,13 +2434,9 @@ public class SettingsActivity extends AppCompatActivity {
                     showRoomStatus();
                     layoutReport.setVisibility(View.VISIBLE);
 
-                    // 1. Polarity check
-                    if (result.hasPolarityInversion && result.wiringWarning != null) {
-                        layoutPolarity.setVisibility(View.VISIBLE);
-                        tvPolarityMsg.setText(result.wiringWarning);
-                    } else {
-                        layoutPolarity.setVisibility(View.GONE);
-                    }
+                    // 1. What the measurement found - its main answer (owner, 02.10.2026), so it
+                    //    comes first. A pass without findings says so instead of showing nothing.
+                    showFindings(result, layoutFindings, tvFindings);
 
                     // 2. Crossover
                     if (result.hasSubwoofer) {

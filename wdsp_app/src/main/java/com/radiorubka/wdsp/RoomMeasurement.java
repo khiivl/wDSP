@@ -1284,8 +1284,6 @@ public final class RoomMeasurement {
         public final List<ChannelResult> invertedChannels = new ArrayList<>();
         /** Some main channels read inverted and others do not: a crossed wire. */
         public boolean hasPolarityInversion = false;
-        /** What the screen says about it, in the person's language. */
-        public String wiringWarning = null;
         /** Arrival order against the cabin's geometry; null when fewer than two door speakers were heard directly. */
         public ChannelSwapCheck.Verdict channelOrder;
         /** The measurement's main answer: the faults found, in the list's order (collectDefects). */
@@ -1782,7 +1780,7 @@ public final class RoomMeasurement {
             runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, probeSweep.isValid() ? probeSweep : null,
                     amplitude, result, listener,
                     isMicCalibrationOnly);
-            judgePolarity(app, result);
+            judgePolarity(result);
 
             if (!isMicCalibrationOnly) {
                 if (listener != null) {
@@ -3237,9 +3235,10 @@ public final class RoomMeasurement {
 
     /**
      * The one place polarity is read off the channels; see {@link #wiringVerdict} for why only the
-     * main channels heard directly take part. The screen and the report only read what it stores.
+     * main channels heard directly take part. The screen and the report only read what it stores -
+     * the screen through the defect list (CabinDefect.POLARITY), not through a sentence of its own.
      */
-    private static void judgePolarity(Context context, Result result) {
+    private static void judgePolarity(Result result) {
         result.polarityInPhase = 0;
         result.polarityInverted = 0;
         result.invertedChannels.clear();
@@ -3255,12 +3254,6 @@ public final class RoomMeasurement {
         }
         result.hasPolarityInversion = result.polarityInPhase > 0 && result.polarityInverted > 0;
         if (!result.hasPolarityInversion) return;
-        StringBuilder shown = new StringBuilder();
-        for (ChannelResult c : result.invertedChannels) {
-            if (shown.length() > 0) shown.append(", ");
-            shown.append(context.getString(c.nameRes));
-        }
-        result.wiringWarning = context.getString(R.string.room_polarity_warning, shown);
         Log.w(TAG, "POLARITY WARNING: inverted on " + invertedLabels(result));
     }
 

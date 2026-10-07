@@ -444,28 +444,26 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <!-- Polarity Warning Alert Box (shown only on phase inversion) -->
+            <!-- What the measurement found (CabinDefect list); framed in code -->
             <LinearLayout
-                android:id="@+id/layout_polarity_alert"
+                android:id="@+id/layout_findings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp"
-                android:layout_marginBottom="10dp"
-                android:visibility="gone">
+                android:layout_marginBottom="10dp">
 
                 <TextView
-                    android:id="@+id/tv_polarity_alert_title"
+                    android:id="@+id/tv_findings_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/room_wizard_polarity_warning_title"
+                    android:text="@string/room_findings_title"
                     android:textSize="@dimen/text_size_small"
                     android:textStyle="bold"
-                    android:textColor="#E5352B"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
-                    android:id="@+id/tv_polarity_alert_msg"
+                    android:id="@+id/tv_findings_msg"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="@dimen/text_size_dense_label"

@@ -110,4 +110,50 @@ public final class CabinDefect {
                 return sure + at + kind.name();
         }
     }
+
+    /** A note rather than a fault: the screen shows the list calmly when nothing else was found. */
+    public boolean isNote() {
+        return kind == Kind.MIDBASS_ROLLOFF;
+    }
+
+    /** The same finding for the screen, in the person's language: how sure, then what and what to do. */
+    public String screenLine(android.content.Context context) {
+        final String name = whereRes != 0 ? context.getString(whereRes) : where;
+        final String text;
+        switch (kind) {
+            case CLIPPING:
+                text = context.getString(R.string.room_finding_clipping, Math.round(value));
+                break;
+            case DECLARED_NOT_HEARD:
+                text = context.getString(R.string.room_finding_declared_not_heard, name);
+                break;
+            case HEARD_NOT_DECLARED:
+                text = context.getString(R.string.room_finding_heard_not_declared, name);
+                break;
+            case CHANNELS_SWAPPED:
+                text = context.getString(R.string.room_finding_channels_swapped, name,
+                        pairRes != 0 ? context.getString(pairRes) : "");
+                break;
+            case POLARITY:
+                text = context.getString(R.string.room_finding_polarity, name);
+                break;
+            case DELAY_BEYOND_HARDWARE:
+                text = context.getString(R.string.room_finding_delay_beyond_hardware);
+                break;
+            case MIDBASS_ROLLOFF:
+                text = context.getString(R.string.room_finding_midbass_rolloff, Math.round(value));
+                break;
+            case REFLECTIONS_ONLY:
+                text = context.getString(R.string.room_finding_reflections_only, name);
+                break;
+            case NOISY_CABIN:
+                text = context.getString(R.string.room_finding_noisy_cabin, value);
+                break;
+            default:
+                text = kind.name();
+        }
+        final int sureRes = certainty == Certainty.SURE ? R.string.room_certainty_sure
+                : certainty == Certainty.LIKELY ? R.string.room_certainty_likely : R.string.room_certainty_possible;
+        return context.getString(sureRes) + ": " + text;
+    }
 }
