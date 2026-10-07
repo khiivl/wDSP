@@ -551,26 +551,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tintSlider(Slider s, ColorStateList csl, ColorStateList cslTrack) {
-        if (s == null) return;
-        boolean isNight = ThemeManager.isNight(this);
-        boolean isClassic = ThemeManager.isClassic(this);
-        float density = getResources().getDisplayMetrics().density;
-        s.setThumbTintList(csl);
-        s.setTrackActiveTintList(csl);
-        s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(isNight)));
-        s.setHaloRadius(0);
-        if (isClassic) {
-            s.setTrackHeight((int) (4 * density));
-            s.setThumbWidth((int) (4 * density));
-            s.setThumbHeight((int) (20 * density));
-        } else {
-            s.setTrackHeight((int) (5 * density));
-            s.setThumbRadius((int) (10 * density));
-            s.setThumbWidth((int) (20 * density));
-            s.setThumbHeight((int) (20 * density));
-        }
-        s.setTrackStopIndicatorSize(0);
-        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
+        ThemeManager.tintSlider(s, csl.getDefaultColor(), ThemeManager.isNight(this));
     }
 
     public void updateToggleStyle(View v) {

@@ -1702,6 +1702,7 @@ public class SettingsActivity extends AppCompatActivity {
             wireMicBody();
             wireHasSubwoofer();
             wireSubPlace();
+            wireSpeakerLayout();
             wireCabin();
             wireMicNudge(micSpot, R.id.btn_room_mic_front, 0f, +MIC_NUDGE);
             wireMicNudge(micSpot, R.id.btn_room_mic_rear, 0f, -MIC_NUDGE);
@@ -2123,15 +2124,51 @@ public class SettingsActivity extends AppCompatActivity {
         CheckBox box = findViewById(R.id.cb_room_has_subwoofer);
         View placeRow = findViewById(R.id.layout_room_sub_place);
         if (box == null) return;
-        int cardBg = ThemeManager.cardBackground(this);
-        box.setTextColor(ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg));
-        box.setButtonTintList(android.content.res.ColorStateList.valueOf(ThemeManager.accent(this)));
+        // Its colours come from applyTheme, with the theme being edited, like every other control.
         box.setChecked(CabinProfile.hasSubwoofer(this));
         showSubPlace(placeRow, box.isChecked());
         box.setOnCheckedChangeListener((button, checked) -> {
             CabinProfile.setHasSubwoofer(this, checked);
             showSubPlace(placeRow, checked);
+            showSpeakerLayout();
         });
+    }
+
+    /**
+     * The speaker layout on the measurement's car picture (owner's plan, 02.10.2026: «комплектація —
+     * тап по динаміках»): a tap on a door speaker toggles its pair in CabinProfile, on the subwoofer
+     * the box above - the same preference, so the box and the picture never disagree. The last pair is
+     * not taken away: a subwoofer alone is not a layout, and CabinProfile refuses it.
+     */
+    private void wireSpeakerLayout() {
+        SpeakerLayoutView layout = findViewById(R.id.room_speaker_layout);
+        if (layout == null) return;
+        // Colours come from applyTheme, with the theme being edited.
+        layout.setOnSpeakerTapListener(which -> {
+            if (which == SpeakerLayoutView.SUBWOOFER) {
+                CheckBox box = findViewById(R.id.cb_room_has_subwoofer);
+                if (box != null) box.setChecked(!box.isChecked());   // its listener stores it
+                return;
+            }
+            boolean front = CabinProfile.hasFrontPair(this);
+            boolean rear = CabinProfile.hasRearPair(this);
+            if (which == SpeakerLayoutView.FRONT_PAIR) front = !front;
+            else rear = !rear;
+            if (!CabinProfile.setPairs(this, front, rear)) {
+                Toaster.show(this, getString(R.string.room_layout_one_pair));
+                return;
+            }
+            showSpeakerLayout();
+        });
+        showSpeakerLayout();
+    }
+
+    private void showSpeakerLayout() {
+        SpeakerLayoutView layout = findViewById(R.id.room_speaker_layout);
+        if (layout != null) {
+            layout.setLayout(CabinProfile.hasFrontPair(this), CabinProfile.hasRearPair(this),
+                    CabinProfile.hasSubwoofer(this));
+        }
     }
 
     /**
@@ -2154,19 +2191,23 @@ public class SettingsActivity extends AppCompatActivity {
                 CabinProfile.MIN_WIDTH_CM, CabinProfile.MAX_WIDTH_CM, CabinProfile.widthCm(this));
         bindCabinSlider(R.id.seek_room_cabin_height, R.id.tv_room_cabin_height_val,
                 CabinProfile.MIN_HEIGHT_CM, CabinProfile.MAX_HEIGHT_CM, CabinProfile.heightCm(this));
-        // Upright like the EQ's band sliders: the rotated slider is as long as its box is tall.
-        View box = findViewById(R.id.box_room_cabin_length);
-        Slider length = findViewById(R.id.seek_room_cabin_length);
-        if (box != null && length != null) {
-            box.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-                int h = b - t;
-                if (h > 0 && length.getWidth() != h) {
-                    ViewGroup.LayoutParams lp = length.getLayoutParams();
-                    lp.width = h;
-                    length.setLayoutParams(lp);
-                }
-            });
-        }
+        uprightSlider(R.id.box_room_cabin_length, R.id.seek_room_cabin_length);
+        uprightSlider(R.id.box_room_cabin_height, R.id.seek_room_cabin_height);
+    }
+
+    /** Upright like the EQ's band sliders: the rotated slider is as long as its box is tall. */
+    private void uprightSlider(int boxId, int sliderId) {
+        View box = findViewById(boxId);
+        Slider slider = findViewById(sliderId);
+        if (box == null || slider == null) return;
+        box.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            int h = b - t;
+            if (h > 0 && slider.getWidth() != h) {
+                ViewGroup.LayoutParams lp = slider.getLayoutParams();
+                lp.width = h;
+                slider.setLayoutParams(lp);
+            }
+        });
     }
 
     private static final float CABIN_STEP_CM = 5f;
@@ -3303,7 +3344,7 @@ public class SettingsActivity extends AppCompatActivity {
             R.id.desc_vis_oscillo_persistence,
             R.id.desc_agc_bar, R.id.desc_latency_trim,
             R.id.desc_sync_measure, R.id.desc_room_measure, R.id.desc_room_no_root, R.id.desc_room_mic_spot,
-            R.id.desc_system_report, R.id.desc_room_cabin,
+            R.id.desc_system_report, R.id.desc_room_cabin, R.id.tv_room_layout_hint, R.id.tv_room_mic_cal_status,
             R.id.tv_system_report_status,
             R.id.desc_screensaver_enable, R.id.desc_screensaver_cover_sb, R.id.desc_screensaver_note,
             R.id.desc_resume_after_reboot, R.id.desc_resume_after_sleep, R.id.desc_button_backlight,
@@ -3489,9 +3530,18 @@ public class SettingsActivity extends AppCompatActivity {
                 spinnerScreensaverStyle.post(spinnerScreensaverStyle::showDropDown);
             }
         }
-        AutoCompleteTextView roomSpinner = findViewById(R.id.spinner_room_mic_place);
-        if (roomSpinner != null) {
-            ThemeManager.tintTextInputLayout(findViewById(R.id.layout_room_mic_place), roomSpinner, accent, secondaryText, primaryText);
+        // All three of the cabin card's spinners. Only the first was listed here, and the two added after
+        // it (the capsule's surroundings, the subwoofer's place) kept their layout colours - a pale box
+        // in the night themes (07.10.2026, Classic night on the bench).
+        int[][] roomSpinners = {
+                {R.id.layout_room_mic_place, R.id.spinner_room_mic_place},
+                {R.id.layout_room_mic_body, R.id.spinner_room_mic_body},
+                {R.id.layout_room_sub_place, R.id.spinner_room_sub_place},
+        };
+        for (int[] pair : roomSpinners) {
+            AutoCompleteTextView roomSpinner = findViewById(pair[1]);
+            if (roomSpinner == null) continue;
+            ThemeManager.tintTextInputLayout(findViewById(pair[0]), roomSpinner, accent, secondaryText, primaryText);
             if (roomSpinner.isPopupShowing()) {
                 roomSpinner.dismissDropDown();
                 if (roomSpinner.getAdapter() instanceof android.widget.ArrayAdapter) {
@@ -3499,6 +3549,11 @@ public class SettingsActivity extends AppCompatActivity {
                 }
                 roomSpinner.post(roomSpinner::showDropDown);
             }
+        }
+        CheckBox hasSub = findViewById(R.id.cb_room_has_subwoofer);
+        if (hasSub != null) {
+            hasSub.setTextColor(primaryText);
+            hasSub.setButtonTintList(android.content.res.ColorStateList.valueOf(accent));
         }
 
         // Live update active dialogs (notice, confirmation, input, options, etc.)
@@ -3515,6 +3570,13 @@ public class SettingsActivity extends AppCompatActivity {
         updateEqVisModeHighlights(eqVisMode);
         updateEqVisShapeHighlights(SpectrumAnalyzerView.shapeOf(ThemeManager.prefs(this)));
         updateCabinSpaceHighlights();
+        // The speaker marks follow the theme being edited, like every other control here: four
+        // looks (Classic day/night - the author's, Modern day/night - ours) without a recreate.
+        SpeakerLayoutView speakers = findViewById(R.id.room_speaker_layout);
+        if (speakers != null) {
+            int card = ThemeManager.cardBackground(this, editNight);
+            speakers.setColors(accent, ThemeManager.contrastText(ThemeManager.textSecondary(this, editNight), card), card);
+        }
         updatePermissionButtons();
         SharedPreferences prefs = ThemeManager.prefs(this);
         StatusBarVisualizerManager sbm = StatusBarVisualizerManager.getInstance(this);
@@ -3581,19 +3643,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void tintSlider(Slider s, int accent) {
-        if (s == null) return;
-        ColorStateList csl = ColorStateList.valueOf(accent);
-        s.setThumbTintList(csl);
-        s.setTrackActiveTintList(csl);
-        s.setTrackInactiveTintList(ColorStateList.valueOf(ThemeManager.sliderInactiveColor(editNight)));
-        s.setHaloRadius(0);
-        s.setTrackStopIndicatorSize(0);
-        float density = getResources().getDisplayMetrics().density;
-        s.setTrackHeight((int) (5 * density));
-        s.setThumbRadius((int) (10 * density));
-        s.setThumbWidth((int) (20 * density));
-        s.setThumbHeight((int) (20 * density));
-        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
+        ThemeManager.tintSlider(s, accent, editNight);
     }
 
     @Override

@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
+import com.google.android.material.slider.LabelFormatter;
+import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputLayout;
 import com.radiorubka.wdsp.R;
 
@@ -329,6 +331,33 @@ public final class ThemeManager {
 
     public static int sliderInactiveColor(boolean night) {
         return night ? Color.parseColor("#2A343D") : Color.parseColor("#B0BEC5");
+    }
+
+    /**
+     * One look for a slider, by style: Classic is the author's thin bar on a 4 dp track, Modern our round
+     * thumb on a 5 dp one. Both screens call this. Until 07.10.2026 Settings had a copy of its own that
+     * drew the Modern thumb whatever the style (owner: «В класік, вони… не відповідають класік»).
+     */
+    public static void tintSlider(Slider s, int accent, boolean night) {
+        if (s == null) return;
+        final float density = s.getResources().getDisplayMetrics().density;
+        final ColorStateList csl = ColorStateList.valueOf(accent);
+        s.setThumbTintList(csl);
+        s.setTrackActiveTintList(csl);
+        s.setTrackInactiveTintList(ColorStateList.valueOf(sliderInactiveColor(night)));
+        s.setHaloRadius(0);
+        if (isClassic(s.getContext())) {
+            s.setTrackHeight((int) (4 * density));
+            s.setThumbWidth((int) (4 * density));
+            s.setThumbHeight((int) (20 * density));
+        } else {
+            s.setTrackHeight((int) (5 * density));
+            s.setThumbRadius((int) (10 * density));
+            s.setThumbWidth((int) (20 * density));
+            s.setThumbHeight((int) (20 * density));
+        }
+        s.setTrackStopIndicatorSize(0);
+        s.setLabelBehavior(LabelFormatter.LABEL_GONE);
     }
 
     public static String wallpaperKey(Context ctx, boolean night) {
