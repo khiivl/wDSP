@@ -223,7 +223,7 @@ us stays as it is.
 | layout mismatch | stated not heard; heard not stated (door probe, §7) | ✅ `DECLARED_NOT_HEARD`, `HEARD_NOT_DECLARED`; the sub is not probed |
 | midbass roll-off | where the doors stop delivering (→ door high-pass) | ✅ `detectMidbassRollOff` |
 | sub | polarity / phase at the crossover, delay | 🟡 |
-| clipping, channel heard only by reflection, delay beyond the hardware, noise (air-con +12..15 dB in 80 Hz–1.25 kHz) | ✅ in the report; 📋 into the list, noise warning before the sweep (`TODO.md`) |
+| clipping, channel heard only by reflection, delay beyond the hardware, noise (air-con +12..15 dB in 80 Hz–1.25 kHz) | ✅ in the list (`CabinDefect`); noise = `NOISY_CABIN`: median SNR over 80 Hz–1.25 kHz below the synthesis's full trust (`snrConfidence` < 1) — judged by ratio after the sweep, not by the pre-sweep silence level, which is in microphone units |
 
 ## 9. The coarse correction
 
