@@ -549,6 +549,7 @@ Genel Varsayılan: %1$s</string>
     <string name="room_err_output_open">Ses çıkışı açılamadı.</string>
     <string name="room_err_nothing_heard">Hiçbir hoparlör duyulmadı. Ses seviyesini ve mikrofonun kapalı olmadığını kontrol edin.</string>
     <string name="room_err_too_few_heard">Yalnızca %1$d hoparlör duyuldu — hizalama yapılacak yeterli hoparlör yok. Ses seviyesini ve mikrofon konumunu kontrol edin.</string>
+    <string name="room_err_layout_mismatch">Düzeninizdeki hoparlörlerin hiçbiri duyulmadı, ancak belirtmediğiniz hoparlörler çaldı. Hoparlör düzenini kontrol edin ve tekrar ölçün.</string>
     <string name="room_err_unexpected">Beklenmeyen hata: %1$s</string>
     <string name="room_err_unknown">Bilinmeyen hata</string>
     <string name="room_polarity_warning">%1$s üzerinde ters kutup (+/-). Hoparlör ters fazda bağlı ve kabindeki basları yok ediyor. Terminallerdeki kabloları kontrol edin.</string>

@@ -549,6 +549,7 @@ Globální výchozí: %1$s</string>
     <string name="room_err_output_open">Zvukový výstup se nepodařilo otevřít.</string>
     <string name="room_err_nothing_heard">Nebyl detekován žádný reproduktor. Zkontrolujte hlasitost a ujistěte se, že mikrofon není zakrytý.</string>
     <string name="room_err_too_few_heard">Detekováno pouze %1$d reproduktorů — nelze provést zarovnání. Zkontrolujte hlasitost a umístění mikrofonu.</string>
+    <string name="room_err_layout_mismatch">Žádný z reproduktorů ve vaší konfiguraci nebyl slyšet, ale hrály reproduktory, které jste neuvedli. Zkontrolujte konfiguraci reproduktorů a změřte znovu.</string>
     <string name="room_err_unexpected">Neočekávaná chyba: %1$s</string>
     <string name="room_err_unknown">Neznámá chyba</string>
     <string name="room_polarity_warning">Obrácená polarita (+/-) na: %1$s. Reproduktor je zapojen v protifázi a ruší basy v kabině. Zkontrolujte zapojení na svorkách.</string>

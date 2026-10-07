@@ -549,6 +549,7 @@ Globale standaard: %1$s</string>
     <string name="room_err_output_open">De audio-uitgang kon niet worden geopend.</string>
     <string name="room_err_nothing_heard">Er is geen enkele luidspreker waargenomen. Controleer het volume en of de microfoon niet is bedekt.</string>
     <string name="room_err_too_few_heard">Slechts %1$d luidspreker(s) waargenomen - niets om op uit te lijnen. Controleer volume en microfoonpositie.</string>
+    <string name="room_err_layout_mismatch">Geen van de luidsprekers in uw configuratie werd waargenomen, maar niet-opgegeven luidsprekers speelden wel. Controleer de luidsprekerconfiguratie en meet opnieuw.</string>
     <string name="room_err_unexpected">Onverwachte fout: %1$s</string>
     <string name="room_err_unknown">Onbekende fout</string>
     <string name="room_polarity_warning">Omgekeerde polariteit (+/-) op: %1$s. De luidspreker is in tegenfase aangesloten en dooft de bas in de cabine uit. Controleer de bedrading op de aansluitingen.</string>

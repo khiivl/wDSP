@@ -549,6 +549,7 @@ Implicit global: %1$s</string>
     <string name="room_err_output_open">Ieșirea audio nu a putut fi deschisă.</string>
     <string name="room_err_nothing_heard">Nu s-a auzit niciun difuzor. Verificați volumul și asigurați-vă că microfonul nu este acoperit.</string>
     <string name="room_err_too_few_heard">S-au auzit doar %1$d difuzor/difuzoare - nu există referință pentru aliniere. Verificați volumul și poziția microfonului.</string>
+    <string name="room_err_layout_mismatch">Niciun difuzor din configurația dvs. nu a fost auzit, dar au cântat difuzoare pe care nu le-ați declarat. Verificați configurația difuzoarelor și măsurați din nou.</string>
     <string name="room_err_unexpected">Eroare neașteptată: %1$s</string>
     <string name="room_err_unknown">Eroare necunoscută</string>
     <string name="room_polarity_warning">Polaritate inversată (+/-) la: %1$s. Difuzorul este conectat în antifază și anulează basul în cabină. Verificați firele la terminale.</string>

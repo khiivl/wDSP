@@ -549,6 +549,7 @@
     <string name="room_err_output_open">Heliväljundit ei õnnestunud avada.</string>
     <string name="room_err_nothing_heard">Ühtegi kõlarit ei tuvastatud. Kontrolli helitugevust ja veendu, et mikrofon poleks kaetud.</string>
     <string name="room_err_too_few_heard">Tuvastati ainult %1$d kõlar(it) — joondamiseks ebapiisav. Kontrolli helitugevust ja mikrofoni asukohta.</string>
+    <string name="room_err_layout_mismatch">Ühtegi kõlarit teie paigutusest ei tuvastatud, kuid mängisid kõlarid, mida te ei märkinud. Kontrollige kõlarite paigutust ja mõõtke uuesti.</string>
     <string name="room_err_unexpected">Ootamatu viga: %1$s</string>
     <string name="room_err_unknown">Tundmatu viga</string>
     <string name="room_polarity_warning">Polaarsus (+/-) vahetuses kõlaril: %1$s. Kõlar on ühendatud vastasfaasis ja summutab salongi bassi. Kontrolli klemme.</string>

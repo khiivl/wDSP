@@ -549,6 +549,7 @@ Globalno zadano: %1$s</string>
     <string name="room_err_output_open">Audio izlaz se nije mogao otvoriti.</string>
     <string name="room_err_nothing_heard">Nijedan zvučnik nije detektiran. Provjerite glasnoću i pazite da mikrofon nije pokriven.</string>
     <string name="room_err_too_few_heard">Detektirano je samo %1$d zvučnik(a) — premalo za poravnanje. Provjerite glasnoću i položaj mikrofona.</string>
+    <string name="room_err_layout_mismatch">Niti jedan zvučnik iz vaše konfiguracije nije se čuo, ali su svirali zvučnici koje niste označili. Provjerite konfiguraciju zvučnika i ponovite mjerenje.</string>
     <string name="room_err_unexpected">Neočekivana pogreška: %1$s</string>
     <string name="room_err_unknown">Nepoznata pogreška</string>
     <string name="room_polarity_warning">Obrnuti polaritet (+/-) na: %1$s. Zvučnik je spojen u protufazi i poništava bas u kabini. Provjerite žice na priključcima.</string>

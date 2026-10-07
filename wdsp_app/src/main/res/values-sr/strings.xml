@@ -549,6 +549,7 @@
     <string name="room_err_output_open">Аудио излаз није могао бити отворен.</string>
     <string name="room_err_nothing_heard">Ниједан звучник се није чуо. Проверите јачину звука и да микрофон није покривен.</string>
     <string name="room_err_too_few_heard">Чуло се само %1$d звучник(а) — недовољно за поравнање. Проверите јачину звука и положај микрофона.</string>
+    <string name="room_err_layout_mismatch">Ниједан звучник из ваше конфигурације није се чуо, али су свирали звучници које нисте означили. Проверите конфигурацију звучника и поновите мерење.</string>
     <string name="room_err_unexpected">Неочекивана грешка: %1$s</string>
     <string name="room_err_unknown">Непозната грешка</string>
     <string name="room_polarity_warning">Обрнут поларитет (+/-) на: %1$s. Звучник је повезан у противфази и поништава бас у кабини. Проверите жице на клемама.</string>

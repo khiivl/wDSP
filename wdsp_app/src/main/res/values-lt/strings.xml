@@ -549,6 +549,7 @@ Bendras numatytasis: %1$s</string>
     <string name="room_err_output_open">Nepavyko atidaryti garso išvesties.</string>
     <string name="room_err_nothing_heard">Neaptiktas nė vienas garsiakalbis. Patikrinkite garsumą ir ar mikrofonas neuždengtas.</string>
     <string name="room_err_too_few_heard">Aptikta tik %1$d garsiakalbių — nėra pagal ką lyginti. Patikrinkite garsumą ir mikrofono padėtį.</string>
+    <string name="room_err_layout_mismatch">Neišgirstas nė vienas garsiakalbis iš jūsų konfigūracijos, tačiau grojo garsiakalbiai, kurių nenurodėte. Patikrinkite garsiakalbių konfigūraciją ir išmatuokite dar kartą.</string>
     <string name="room_err_unexpected">Netikėta klaida: %1$s</string>
     <string name="room_err_unknown">Nežinoma klaida</string>
     <string name="room_polarity_warning">Sukeistas poliškumas (+/-): %1$s. Garsiakalbis prijungtas priešfaze ir slopina žemus dažnius salone. Patikrinkite laidų gnybtus.</string>

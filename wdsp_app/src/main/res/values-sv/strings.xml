@@ -546,6 +546,7 @@
     <string name="room_err_output_open">Ljudutgången kunde inte öppnas.</string>
     <string name="room_err_nothing_heard">Ingen högtalare hördes alls. Kontrollera volymen och att mikrofonen inte är övertäckt.</string>
     <string name="room_err_too_few_heard">Endast %1$d högtalare hördes — inget att justera mot. Kontrollera volym och mikrofonplacering.</string>
+    <string name="room_err_layout_mismatch">Ingen av högtalarna i din konfiguration hördes, men högtalare du inte angav spelade. Kontrollera högtalarkonfigurationen och mät igen.</string>
     <string name="room_err_unexpected">Oväntat fel: %1$s</string>
     <string name="room_err_unknown">Okänt fel</string>
     <string name="room_polarity_warning">Omvänd polaritet (+/-) på: %1$s. Högtalaren är ansluten i motfas och släcker ut basen i kupén. Kontrollera kablarna vid terminalerna.</string>

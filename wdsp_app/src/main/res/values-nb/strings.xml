@@ -549,6 +549,7 @@ Global standard: %1$s</string>
     <string name="room_err_output_open">Lydutgangen kunne ikke åpnes.</string>
     <string name="room_err_nothing_heard">Ingen høyttaler ble hørt. Sjekk volumet og at mikrofonen ikke er tildekket.</string>
     <string name="room_err_too_few_heard">Kun %1$d høyttaler(e) ble hørt — ingenting å justere mot. Sjekk volum og mikrofonplassering.</string>
+    <string name="room_err_layout_mismatch">Ingen av høyttalerne i oppsettet ditt ble hørt, men høyttalere du ikke oppga, spilte. Sjekk høyttaleroppsettet og mål på nytt.</string>
     <string name="room_err_unexpected">Uventet feil: %1$s</string>
     <string name="room_err_unknown">Ukjent feil</string>
     <string name="room_polarity_warning">Omvendt polaritet (+/-) på: %1$s. Høyttaleren er koblet i motfase og utligner bassen i kupeen. Sjekk ledningene på terminalene.</string>

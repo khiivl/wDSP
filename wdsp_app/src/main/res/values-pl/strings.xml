@@ -546,6 +546,7 @@
     <string name="room_err_output_open">Nie udało się otworzyć wyjścia audio.</string>
     <string name="room_err_nothing_heard">Nie wykryto żadnego głośnika. Sprawdź głośność i upewnij się, że mikrofon nie jest zasłonięty.</string>
     <string name="room_err_too_few_heard">Wykryto tylko %1$d głośnik(ów) — brak punktu odniesienia do wyrównania. Sprawdź głośność i położenie mikrofonu.</string>
+    <string name="room_err_layout_mismatch">Nie usłyszano żadnego głośnika z Twojej konfiguracji, ale zagrały głośniki, których nie wskazano. Sprawdź konfigurację głośników i zmierz ponownie.</string>
     <string name="room_err_unexpected">Nieoczekiwany błąd: %1$s</string>
     <string name="room_err_unknown">Nieznany błąd</string>
     <string name="room_polarity_warning">Odwrócona polaryzacja (+/-) na: %1$s. Głośnik jest podłączony w przeciwfazie i wygasza basy w kabinie. Sprawdź przewody na jego złączach.</string>

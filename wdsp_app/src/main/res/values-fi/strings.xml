@@ -549,6 +549,7 @@ Yleinen oletus: %1$s</string>
     <string name="room_err_output_open">Äänilähtöä ei voitu avata.</string>
     <string name="room_err_nothing_heard">Yhtäkään kaiutinta ei kuultu. Tarkista äänenvoimakkuus ja että mikrofoni ei ole peitetty.</string>
     <string name="room_err_too_few_heard">Vain %1$d kaiutin(ta) kuultiin — ei vertailukohtaa kohdistukselle. Tarkista äänenvoimakkuus ja mikrofonin sijainti.</string>
+    <string name="room_err_layout_mismatch">Yhtäkään määrittämääsi kaiutinta ei kuultu, mutta määrittämättömät kaiuttimet soivat. Tarkista kaiutinasettelu ja mittaa uudelleen.</string>
     <string name="room_err_unexpected">Odottamaton virhe: %1$s</string>
     <string name="room_err_unknown">Tuntematon virhe</string>
     <string name="room_polarity_warning">Käänteinen napaisuus (+/-) kaiuttimessa: %1$s. Kaiutin on kytketty vastavaiheeseen ja se vaimentaa bassoa matkustamossa. Tarkista liitännät.</string>

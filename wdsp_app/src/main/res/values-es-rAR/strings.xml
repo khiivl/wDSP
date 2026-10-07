@@ -545,6 +545,7 @@
     <string name="room_err_output_open">No se pudo abrir la salida de audio.</string>
     <string name="room_err_nothing_heard">No se detectó ningún parlante. Compruebe el volumen y que el micrófono no esté cubierto.</string>
     <string name="room_err_too_few_heard">Solo se detectaron %1$d parlante(s) - nada con qué alinear. Compruebe el volumen y la ubicación del micrófono.</string>
+    <string name="room_err_layout_mismatch">No se escuchó ninguno de los parlantes de su configuración, pero sonaron parlantes que no había declarado. Compruebe la configuración de parlantes y mida de nuevo.</string>
     <string name="room_err_unexpected">Error inesperado: %1$s</string>
     <string name="room_err_unknown">Error desconocido</string>
     <string name="room_polarity_warning">Polaridad invertida (+/-) en: %1$s. El parlante está conectado en antifase y cancela los graves en el habitáculo. Revise los terminales.</string>

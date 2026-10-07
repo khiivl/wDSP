@@ -546,6 +546,7 @@
     <string name="room_err_output_open">Die Audioausgabe konnte nicht geöffnet werden.</string>
     <string name="room_err_nothing_heard">Es wurde kein Lautsprecher gehört. Prüfen Sie die Lautstärke und stellen Sie sicher, dass das Mikrofon nicht verdeckt ist.</string>
     <string name="room_err_too_few_heard">Nur %1$d Lautsprecher gehört — keine Basis für den Abgleich. Prüfen Sie Lautstärke und Mikrofonposition.</string>
+    <string name="room_err_layout_mismatch">Keiner der Lautsprecher in Ihrer Konfiguration wurde gehört, aber es spielten Lautsprecher, die Sie nicht angegeben haben. Prüfen Sie die Lautsprecherkonfiguration und messen Sie erneut.</string>
     <string name="room_err_unexpected">Unerwarteter Fehler: %1$s</string>
     <string name="room_err_unknown">Unbekannter Fehler</string>
     <string name="room_polarity_warning">Verpolung (+/-) bei: %1$s. Der Lautsprecher ist gegenphasig angeschlossen und löscht den Bass im Innenraum aus. Prüfen Sie die Anschlüsse.</string>

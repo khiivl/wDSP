@@ -547,6 +547,7 @@
     <string name="room_err_output_open">Não foi possível abrir a saída de áudio.</string>
     <string name="room_err_nothing_heard">Nenhuma coluna foi detetada. Verifique o volume e certifique-se de que o microfone não está tapado.</string>
     <string name="room_err_too_few_heard">Apenas %1$d coluna(s) detetada(s) - nada para alinhar. Verifique o volume e a posição do microfone.</string>
+    <string name="room_err_layout_mismatch">Nenhuma das colunas da sua configuração foi ouvida, mas tocaram colunas que não declarou. Verifique a configuração das colunas e meça novamente.</string>
     <string name="room_err_unexpected">Erro inesperado: %1$s</string>
     <string name="room_err_unknown">Erro desconhecido</string>
     <string name="room_polarity_warning">Polaridade invertida (+/-) em: %1$s. A coluna está ligada em antifase e cancela os graves no habitáculo. Verifique os fios nos terminais.</string>
