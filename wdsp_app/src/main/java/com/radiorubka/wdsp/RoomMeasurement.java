@@ -405,13 +405,16 @@ public final class RoomMeasurement {
     /** How far either way the subwoofer may sit from the doors in that band. */
     private static final float SUB_ALIGN_MAX_LAG_MS = 25f;
     /**
-     * A correlation peak at least this share of the strongest one counts as an equal candidate. In a band
-     * this narrow the correlation repeats every period (12.5 ms at 80 Hz) and every repeat is in phase at
-     * the crossover; the strongest is usually one cycle late, pulled by the sub's group delay - on the
-     * bench, 07.10.2026, +13.4 ms against +0.9. Delaying the doors a whole extra cycle buys nothing, so the
-     * candidate nearest zero wins.
+     * A correlation peak at least this share of the strongest one is a candidate. In a band this narrow
+     * the correlation repeats every period (12.5 ms at 80 Hz) and every repeat is in phase at the
+     * crossover; the strongest is usually one cycle late, pulled by the sub's group delay. Of the
+     * candidates the one nearest the geometry wins - the path difference the cabin card gives: the
+     * candidates are a whole period apart, so even a rough card picks the right one. Until 08.10.2026 the
+     * share was 0.8 and the winner the candidate nearest zero; on the bench the in-phase peak at +0.9 ms
+     * (geometry +0.97) fell under 0.8, +13.5 ms won, and the doors were delayed 11.8 and 13.4 ms - four
+     * metres - to wait for the sub (owner: "дикі затримки каналів по чотири метри, а саб 0").
      */
-    private static final float SUB_ALIGN_EQUAL_SHARE = 0.8f;
+    private static final float SUB_ALIGN_CANDIDATE_SHARE = 0.5f;
     /** Below this normalised correlation the sub's alignment is reported, not trusted. */
     private static final float SUB_ALIGN_MIN_CORRELATION = 0.5f;
 
@@ -467,15 +470,25 @@ public final class RoomMeasurement {
                 strongestLag = lag;
             }
         }
-        // Of the peaks of the same sign nearly as strong, the one nearest zero (SUB_ALIGN_EQUAL_SHARE).
+        // Of the peaks of the same sign strong enough, the one nearest the geometry (SUB_ALIGN_CANDIDATE_SHARE).
+        final float[] mic = micPosition(result);
+        final float expectedMs = (float) ((CabinGeometry.distanceCm(speakerPosition(result, Channel.SUBWOOFER), mic)
+                - CabinGeometry.distanceCm(speakerPosition(result, Channel.values()[refIdx]), mic))
+                / CabinGeometry.SOUND_CM_PER_MS);
+        final float expectedLag = expectedMs * SAMPLE_RATE / 1000f;
         int bestLag = strongestLag;
+        final StringBuilder candidates = new StringBuilder();
         for (int j = 1; j < corrAt.length - 1; j++) {
             final double c = corrAt[j];
             final boolean localPeak = Math.abs(c) >= Math.abs(corrAt[j - 1]) && Math.abs(c) >= Math.abs(corrAt[j + 1]);
             if (!localPeak || Math.signum(c) != Math.signum(best)
-                    || Math.abs(c) < SUB_ALIGN_EQUAL_SHARE * Math.abs(best)) continue;
-            if (Math.abs(j - maxLag) < Math.abs(bestLag)) bestLag = j - maxLag;
+                    || Math.abs(c) < SUB_ALIGN_CANDIDATE_SHARE * Math.abs(best)) continue;
+            candidates.append(String.format(Locale.US, " %+.2f ms (%.2f)",
+                    (j - maxLag) * 1000f / SAMPLE_RATE, c / best));
+            if (Math.abs(j - maxLag - expectedLag) < Math.abs(bestLag - expectedLag)) bestLag = j - maxLag;
         }
+        Log.i(TAG, String.format(Locale.US, "subwoofer candidates in phase (share of the strongest):%s;"
+                + " geometry expects %+.2f ms", candidates, expectedMs));
         final float corr = (float) (corrAt[bestLag + maxLag] / Math.sqrt(ea * eb));
         final float peakMs = sub.arrivalMs;
         sub.arrivalMs = anchor.arrivalMs + bestLag * 1000f / SAMPLE_RATE;
