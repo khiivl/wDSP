@@ -550,6 +550,8 @@ Predefinito globale: %1$s</string>
     <string name="room_err_nothing_heard">Nessun altoparlante rilevato. Controlla il volume e verifica che il microfono non sia coperto.</string>
     <string name="room_err_too_few_heard">Rilevati solo %1$d altoparlante/i - nessun riferimento per l\'allineamento. Controlla volume e posizione del microfono.</string>
     <string name="room_err_layout_mismatch">Nessuno degli altoparlanti della configurazione è stato rilevato, ma hanno suonato altoparlanti non dichiarati. Controlla la configurazione degli altoparlanti ed esegui nuovamente la misurazione.</string>
+    <string name="room_layout_hint">Configurazione: tocca un altoparlante sull\'auto per indicarne la presenza. Gli altoparlanti delle portiere vanno a coppie.</string>
+    <string name="room_layout_one_pair">È necessaria almeno una coppia di altoparlanti nelle portiere.</string>
     <string name="room_err_unexpected">Errore imprevisto: %1$s</string>
     <string name="room_err_unknown">Errore sconosciuto</string>
     <string name="room_polarity_warning">Polarità invertita (+/-) su: %1$s. L\'altoparlante è collegato in controfase e cancella i bassi nell\'abitacolo. Controlla i cavi ai terminali.</string>

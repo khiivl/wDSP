@@ -550,6 +550,8 @@ Globálne predvolené: %1$s</string>
     <string name="room_err_nothing_heard">Nebol detegovaný žiadny reproduktor. Skontrolujte hlasitosť a uistite sa, že mikrofón nie je zakrytý.</string>
     <string name="room_err_too_few_heard">Detegovaných iba %1$d reproduktorov — nie je voči čomu vyrovnať. Skontrolujte hlasitosť a umiestnenie mikrofónu.</string>
     <string name="room_err_layout_mismatch">Žiaden z reproduktorov vo vašej konfigurácii nebolo počuť, ale hrali reproduktory, ktoré ste neuviedli. Skontrolujte konfiguráciu reproduktorov a zmerajte znova.</string>
+    <string name="room_layout_hint">Konfigurácia: ťuknutím na reproduktor na aute označte jeho prítomnosť. Dverové reproduktory sú v pároch.</string>
+    <string name="room_layout_one_pair">Vyžaduje sa aspoň jeden pár dverových reproduktorov.</string>
     <string name="room_err_unexpected">Neočakávaná chyba: %1$s</string>
     <string name="room_err_unknown">Neznáma chyba</string>
     <string name="room_polarity_warning">Obrátená polarita (+/-) na: %1$s. Reproduktor je zapojený v protifáze a tlmí basy v kabíne. Skontrolujte vodiče na svorkách.</string>

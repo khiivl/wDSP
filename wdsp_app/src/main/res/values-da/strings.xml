@@ -550,6 +550,8 @@ Global standard: %1$s</string>
     <string name="room_err_nothing_heard">Ingen højttaler blev hørt. Kontroller lydstyrken, og at mikrofonen ikke er tildækket.</string>
     <string name="room_err_too_few_heard">Kun %1$d højttaler(e) blev hørt — intet grundlag for justering. Kontroller lydstyrke og mikrofonplacering.</string>
     <string name="room_err_layout_mismatch">Ingen af højttalerne i din opsætning blev hørt, men højttalere, du ikke har angivet, spillede. Tjek højttaleropsætningen og mål igen.</string>
+    <string name="room_layout_hint">Opsætning: tryk på en højttaler på bilen for at markere, om den er der. Dørhøjttalere er parvise.</string>
+    <string name="room_layout_one_pair">Der kræves mindst ét par dørhøjttalere.</string>
     <string name="room_err_unexpected">Uventet fejl: %1$s</string>
     <string name="room_err_unknown">Ukendt fejl</string>
     <string name="room_polarity_warning">Omvendt polaritet (+/-) på: %1$s. Højttaleren er tilsluttet i modfase og udligner bassen i kabinen. Kontroller ledningerne ved terminalerne.</string>

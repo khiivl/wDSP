@@ -548,6 +548,8 @@
     <string name="room_err_nothing_heard">Nenhum alto-falante foi detectado. Verifique o volume e certifique-se de que o microfone não está coberto.</string>
     <string name="room_err_too_few_heard">Apenas %1$d alto-falante(s) detectado(s) - nada para alinhar. Verifique o volume e a posição do microfone.</string>
     <string name="room_err_layout_mismatch">Nenhum dos alto-falantes da sua configuração foi ouvido, mas tocaram alto-falantes que você não declarou. Verifique a configuração dos alto-falantes e meça novamente.</string>
+    <string name="room_layout_hint">Configuração: toque em um alto-falante no carro para marcar se ele existe. Os das portas vão em pares.</string>
+    <string name="room_layout_one_pair">É necessário pelo menos um par de alto-falantes nas portas.</string>
     <string name="room_err_unexpected">Erro inesperado: %1$s</string>
     <string name="room_err_unknown">Erro desconhecido</string>
     <string name="room_polarity_warning">Polaridade invertida (+/-) em: %1$s. O alto-falante está ligado em antifase e cancela os graves na cabine. Verifique os fios nos terminais.</string>

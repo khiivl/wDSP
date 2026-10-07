@@ -550,6 +550,8 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_err_nothing_heard">Egyetlen hangszóró sem észlelhető. Ellenőrizze a hangerőt és a mikrofon rálátását.</string>
     <string name="room_err_too_few_heard">Csak %1$d hangszóró észlelve — nincs mihez igazítani. Ellenőrizze a hangerőt és a mikrofon helyét.</string>
     <string name="room_err_layout_mismatch">Az elrendezésben szereplő egyik hangszóró sem volt hallható, de nem jelölt hangszórók szóltak. Ellenőrizze a hangszóró-elrendezést, és mérjen újra.</string>
+    <string name="room_layout_hint">Elrendezés: érintsen meg egy hangszórót az autón a kijelöléshez. Az ajtóhangszórók párban vannak.</string>
+    <string name="room_layout_one_pair">Legalább egy pár ajtóhangszóró szükséges.</string>
     <string name="room_err_unexpected">Váratlan hiba: %1$s</string>
     <string name="room_err_unknown">Ismeretlen hiba</string>
     <string name="room_polarity_warning">Fordított polaritás (+/-) itt: %1$s. A hangszóró ellenfázisban van bekötve és kioltja a mélyhangokat. Ellenőrizze a csatlakozókat.</string>

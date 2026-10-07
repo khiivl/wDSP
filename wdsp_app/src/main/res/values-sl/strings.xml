@@ -550,6 +550,8 @@ Globalno privzeto: %1$s</string>
     <string name="room_err_nothing_heard">Nobenega zvočnika ni bilo slišati. Preverite glasnost in poskrbite, da mikrofon ni pokrit.</string>
     <string name="room_err_too_few_heard">Zaznanih je bilo le %1$d zvočnikov — premalo za poravnavo. Preverite glasnost in položaj mikrofona.</string>
     <string name="room_err_layout_mismatch">Nobenega od zvočnikov v vaši postavitvi ni bilo slišati, so pa igrali zvočniki, ki jih niste označili. Preverite postavitev zvočnikov in ponovite meritev.</string>
+    <string name="room_layout_hint">Postavitev: dotaknite se zvočnika na avtu, da ga označite. Vratni zvočniki so v parih.</string>
+    <string name="room_layout_one_pair">Potreben je vsaj en par vratnih zvočnikov.</string>
     <string name="room_err_unexpected">Nepričakovana napaka: %1$s</string>
     <string name="room_err_unknown">Neznana napaka</string>
     <string name="room_polarity_warning">Obrnjena polarnost (+/-) na: %1$s. Zvočnik je priključen v protifazi in zaduši nizke tone v kabini. Preverite kable na sponkah.</string>

@@ -550,6 +550,8 @@ Globāli noklusējums: %1$s</string>
     <string name="room_err_nothing_heard">Netika konstatēts neviens skaļrunis. Pārbaudiet skaļumu un pārliecinieties, ka mikrofons nav aizsegts.</string>
     <string name="room_err_too_few_heard">Konstatēti tikai %1$d skaļruņi — nav atsauces salāgošanai. Pārbaudiet skaļumu un mikrofona novietojumu.</string>
     <string name="room_err_layout_mismatch">Neviens no konfigurācijā norādītajiem skaļruņiem netika dzirdēts, bet skanēja nenorādīti skaļruņi. Pārbaudiet skaļruņu konfigurāciju un veiciet mērījumu vēlreiz.</string>
+    <string name="room_layout_hint">Konfigurācija: pieskarieties skaļrunim uz auto, lai to atzīmētu. Durvju skaļruņi ir pa pāriem.</string>
+    <string name="room_layout_one_pair">Nepieciešams vismaz viens durvju skaļruņu pāris.</string>
     <string name="room_err_unexpected">Negaidīta kļūda: %1$s</string>
     <string name="room_err_unknown">Nezināma kļūda</string>
     <string name="room_polarity_warning">Apgriezta polaritāte (+/-) uz: %1$s. Skaļrunis ir pievienots pretfāzē un slāpē basus salonā. Pārbaudiet spaiļu vadus.</string>
