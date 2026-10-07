@@ -93,6 +93,14 @@ Found in the debounce and fixed here (`1865731`): the pending write captures the
 and reads the VALUES from the widgets when it fires, so a preset loaded within those 300 ms (the spinner,
 or the service switching by player or for a call) hands its values to the original preset; rename and
 delete brought the old name's keys back; export read the store before the write. `flushPendingAutoSave()`
-now runs first in `loadPreset`, rename, delete, import and export. Trade-off left to him: the service
-applies presets from SharedPreferences, so the chip now hears a slider after the finger stops, not
-during the drag.
+now runs first in `loadPreset`, rename, delete, import and export.
+
+The debounce also stopped the chip following the finger - the service applies presets from
+SharedPreferences, so it heard a slider only after the finger stopped. Owner: «Чип слідує за пальцем -
+це ж правильне рішення». Fixed without giving up his fewer writes (`596a56b`): `LivePreset` holds the
+values the screen published and the disk does not have yet; `autoSaveCurrent` snapshots the preset at
+the tick (the same `putPreset` code as the save), publishes it and the service hears the changed keys
+through the same dispatch and reads them through `presetPrefs()`; the disk gets the same snapshot once
+per pause. Measured on the unit, 4 EQ steps in 0.4 s: before - one packet, after the drag; after - an
+intermediate step mid-drag and the final value 100-120 ms after it (the service's own EQ throttle sets
+the ~0.5 s spacing, as before the merge).
