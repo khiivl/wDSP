@@ -1,0 +1,40 @@
+// One release signing for both modules (applied by wdsp_app and wdsp_proxy, which each had their own
+// copy of this until 03.10.2026). The credentials never live in git; two places are read, so the
+// branch builds on either machine:
+//   keystore.properties (project root) - the author's (storeFile, storePassword, keyAlias, keyPassword),
+//                                        his 26b8d14; storeFile resolved against the project root;
+//   local.properties                   - ours (keystore.file, keystore.password, key.alias, key.password);
+//                                        keystore.file resolved against the module.
+// The first that exists wins. With neither, wdspSigning is null and the modules leave signing alone, so
+// a fresh checkout still builds debug.
+
+def readProps = { File f ->
+    def p = new Properties()
+    f.withReader('UTF-8') { r -> p.load(r) }
+    return p
+}
+
+def keystoreFile = rootProject.file('keystore.properties')
+def localFile = rootProject.file('local.properties')
+
+ext.wdspSigning = null
+if (keystoreFile.exists()) {
+    def p = readProps(keystoreFile)
+    if (p.getProperty('storeFile')) {
+        ext.wdspSigning = [
+                storeFile    : rootProject.file(p.getProperty('storeFile')),
+                storePassword: p.getProperty('storePassword', ''),
+                keyAlias     : p.getProperty('keyAlias', ''),
+                keyPassword  : p.getProperty('keyPassword', '')]
+    }
+}
+if (ext.wdspSigning == null && localFile.exists()) {
+    def p = readProps(localFile)
+    if (p.getProperty('keystore.file')) {
+        ext.wdspSigning = [
+                storeFile    : file(p.getProperty('keystore.file')),
+                storePassword: p.getProperty('keystore.password', ''),
+                keyAlias     : p.getProperty('key.alias', ''),
+                keyPassword  : p.getProperty('key.password', '')]
+    }
+}

@@ -13,11 +13,24 @@
 .externalNativeBuild
 .cxx
 local.properties
-rules.md
-agents.md
+/rules.md
+/agents.md
 
-# Release signing - never commit the keystore or its credentials
+# Native build intermediates
+wdsp_app/.cxx/
+
+# Release builds - the signed APK is an artefact, not source
+wdsp_app/release/
+*.apk
+
+# Byte code left behind by the scripts in tools/. Importing check_locales.py to test it
+# creates tools/__pycache__, which then sits in `git status` looking like work.
+__pycache__/
+*.pyc
+
+# Release signing - never commit the keystore or its credentials (the author, 26b8d14)
 /keystore.properties
 /keystore/
 *.keystore
 *.jks
+/scratch/

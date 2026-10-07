@@ -1,0 +1,3 @@
+# Everything here runs under sh on the head unit. core.autocrlf would check these files out with CRLF
+# on Windows, and every command would then end in "\r".
+* text eol=lf

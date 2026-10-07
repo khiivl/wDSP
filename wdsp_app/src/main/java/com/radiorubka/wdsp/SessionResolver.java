@@ -12,15 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Decides which audio session {@link SpectrumAnalyzerView} should attach its Visualizer to.
+ * Decides which audio session {@link AudioSpectrumEngine} should attach its Visualizer to.
  *
  * Why this exists: a Visualizer created on session 0 is an "output mix" effect, and
  * AudioPolicyManager::getOutputForEffect() hard-prefers the PRIMARY output. Stock QF policies
  * expose exactly two outputs - "primary output" and "fast" - and route all media to the fast one,
  * leaving primary in standby. The session-0 effect therefore processes an idle thread and yields
- * silence. Custom audio policies (users running a Magisk module, e.g. BitPerfect) move media back
- * onto primary, and there session 0 works - so session 0 stays a legitimate answer, it just
- * cannot be assumed.
+ * silence. Custom audio policies (users running a Magisk module) move media back onto primary, and
+ * there session 0 works - so session 0 stays a legitimate answer, it just cannot be assumed.
  *
  * A session-targeted effect is created on whichever thread the track actually lives on, which is
  * the way out. Measured on a K706: attaching to another app's session is permitted for a plain
@@ -85,7 +84,7 @@ public final class SessionResolver {
     /**
      * Starts listening for players that announce their session. Well-behaved players (Poweramp,
      * VLC, anything built on MediaPlayer) send this; YouTube Music does not, which is exactly why
-     * the sweep below still has to exist. Safe to call repeatedly - no-ops after the first.
+     * the sweep below still has to exist.
      */
     public synchronized void start() {
         if (effectSessionReceiver != null) return;
@@ -178,6 +177,14 @@ public final class SessionResolver {
             forget(cached);
         }
 
+        // Nothing is playing, so no session can carry a signal: walking 512 of them only creates and
+        // fails 512 Visualizers in audioserver. At boot that is exactly what happened - the engine
+        // resolves on start, before any player - and it fed a five-minute boot with a cascade of
+        // ANRs (bench, 02.10.2026: 644 failed effect creations; Antigravity, board #1243).
+        if (!isAudioPlaying()) {
+            Log.i(TAG, "Nothing is playing - no sweep");
+            return -1;
+        }
         int swept = sweep();
         if (swept >= 0) {
             Log.i(TAG, "Resolved by sweep: session " + swept + " in "
@@ -212,6 +219,15 @@ public final class SessionResolver {
             if (SessionProbe.probe(sid, PROBE_MS).hasSignal()) return sid;
         }
         return -1;
+    }
+
+    private boolean isAudioPlaying() {
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            return am == null || am.isMusicActive();
+        } catch (Throwable t) {
+            return true; // cannot tell - keep the old behaviour rather than go blind
+        }
     }
 
     private synchronized void remember(String playerPackage, int sessionId) {

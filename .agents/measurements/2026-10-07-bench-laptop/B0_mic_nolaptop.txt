@@ -1,0 +1,109 @@
+wDSP room measurement
+app 0.4.9.8 (vc25)
+MCU code=002121 (ST), sound processor=BU32107, tuner=TDA7708, path=I2S, capture effects the platform OFFERS (not what any given capture got): AEC=true NS=true AGC=false
+capture source: UNPROCESSED requested - QF firmware records it as MIC, which the policy gives AEC and NS; whether they stayed on is in the effects lines of this report
+board=uis7862s_1h10 platform=ums512 model=K706 android=13 (sdk 29)
+SCREEN & WINDOW TOPOLOGY
+  physical display (real) = 1280 x 720 px (rotation=0, hwrotation=90)
+  app viewport (display)  = 1280 x 720 px
+  display metrics (dm)    = 1280 x 720 px, density=1.00 (160 dpi), 1280 x 720 dp
+  configuration           = LANDSCAPE (w=1280dp, h=648dp, sw=720dp)
+  system dimensions (res) : status_bar=72 px, nav_bar_h=154 px, nav_bar_w=640 px
+  decor window on screen  : location=(0, 0), size=1280 x 720 px
+  visible display frame   : [0, 72 - 1280, 720] (size=1280 x 648 px)
+  window insets (system)  : top=72, bottom=0, left=0, right=0 px
+  window insets (stable)  : top=72, bottom=0, left=0, right=0 px
+  screensaver overlay cfg : bounds=1280 x 720 px, status_bar_used=72 px, offset_y=0 px
+  launcher                : none set, installed: com.android.launcher.black.blue|com.android.launcher.blueman|com.android.launcher.bustling.city|com.android.launcher.dark.tunnel|com.android.launcher.fantasy.purple|com.android.launcher.grassland|com.android.launcher.meet.again|com.android.launcher.morning.light|com.android.launcher.movablecell|com.android.launcher.plane|com.android.launcher.simple.blue|com.android.launcher.star.blue|com.android.launcher.swood.grain|com.android.launcher.undercurrent|com.android.settings
+  shell wm size           : Physical size: 1280x720
+  dumpsys window displays :
+    DisplayFrames w=1280 h=720 r=0
+    mStable=[0,72][1280,720]
+    mDock=[0,72][1280,720]
+    mContent=[0,72][1280,720]
+    mContentFrame=Rect(0, 0 - 1280, 72)
+  dumpsys window frames   :
+    Window #0 Window{48c904d u0 StatusBar}:
+    mFrame=[0,0][1280,72] last=[0,0][1280,72]
+    WindowStateAnimator{63df4ae StatusBar}:
+    mSurface=Surface(name=StatusBar)/@0xf8e3b49
+    mFrame=[1207,72][1280,145] last=[1207,72][1280,145]
+    mFrame=[153,0][665,72] last=[153,0][665,72]
+    mFrame=[0,72][1,73] last=[0,72][1,73]
+    mFrame=[0,72][0,72] last=[0,0][0,0]
+    mFrame=[0,720][1280,720] last=[0,0][0,0]
+    mFrame=[0,0][0,0] last=[0,0][0,0]
+    mFrame=[0,0][0,0] last=[0,0][0,0]
+    mFrame=[350,249][930,542] last=[350,249][930,542]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,768] last=[0,0][1280,768]
+
+microphone was already ours (input device at 48000 Hz)
+microphone placed: front centre  (lr -0.08, fr +0.86), on the head unit front panel, built in: behind a hole in a panel
+audio focus: granted
+preset=AutoEQ Harman (Центр) amplitude=0.25 sweep=6.0 s from 20 Hz (subwoofer from 15 Hz) up to 20000 Hz
+soundstage: Driver focus
+cabin body: far seating (minivan / bus, 90 cm), listening distance: 90 cm
+cabin: front pair + rear pair + subwoofer; 290 x 150 x 120 cm, closed, cabin gain below 59 Hz
+FINDINGS:
+  - [likely] rear left: declared but not heard. Check that the speaker is connected and plays; if the car has none there, untick it in the speaker layout.
+  - [likely] rear right: declared but not heard. Check that the speaker is connected and plays; if the car has none there, untick it in the speaker layout.
+
+rear left    arrival  1026.60 ms  clarity  10.5 dB  prominence      104  polarity -1  peak  -25.5 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -45.8 -49.3 -46.0 -55.6 -55.3 -56.4 -53.4 -55.8 -61.2 -64.2 -66.6 -66.7 -66.8 -66.6 -64.5 -64.9
+             noise dB:    -55.0 -48.7 -45.1 -56.5 -56.2 -55.4 -53.6 -56.1 -63.4 -65.4 -67.2 -68.0 -66.8 -67.0 -65.1 -64.8
+             clean dB:    -46.4 -61.3 -58.0 -62.9 -62.4 -68.4 -65.4 -67.5 -65.3 -70.4 -75.9 -72.5 -78.8 -76.7 -73.2 -76.9
+             SNR dB:      9.1 -0.7 -0.9 0.9 0.9 -1.0 0.2 0.3 2.2 1.2 0.5 1.3 0.0 0.4 0.6 -0.1
+
+rear right   arrival  1026.56 ms  clarity   8.7 dB  prominence      144  polarity +1  peak  -25.5 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -43.8 -48.6 -43.7 -51.5 -54.9 -49.6 -56.3 -54.1 -63.2 -65.7 -66.8 -67.9 -67.2 -66.5 -64.4 -65.5
+             noise dB:    -44.6 -42.9 -44.0 -55.8 -52.8 -54.8 -56.1 -52.1 -58.8 -65.0 -68.1 -68.5 -67.9 -67.4 -65.4 -66.2
+             clean dB:    -51.6 -60.6 -54.8 -53.5 -66.9 -51.2 -68.3 -66.1 -75.2 -77.7 -72.9 -76.8 -75.4 -74.0 -71.5 -73.4
+             SNR dB:      0.8 -5.7 0.3 4.4 -2.2 5.2 -0.2 -1.9 -4.3 -0.7 1.2 0.6 0.7 0.8 1.0 0.8
+
+front left   arrival  1029.19 ms  clarity  10.6 dB  prominence     9110  polarity +1  peak   -9.7 dBFS   heard directly
+             suggested delay 0.0 ms (0 steps)
+             response dB: -28.2 -16.9 -13.3 -14.8 -11.6 -8.2 -8.9 -9.6 -12.0 -14.8 -19.2 -18.8 -23.8 -31.8 -36.1 -47.6
+             noise dB:    -47.3 -52.2 -44.2 -37.8 -40.3 -56.8 -56.1 -27.8 -32.4 -40.8 -64.4 -61.4 -63.0 -66.0 -64.7 -66.3
+             clean dB:    -28.2 -16.9 -13.4 -14.9 -11.6 -8.2 -8.9 -9.6 -12.0 -14.8 -19.2 -18.8 -23.8 -31.8 -36.1 -47.7
+             SNR dB:      19.1 35.4 30.8 23.0 28.7 48.6 47.3 18.3 20.4 26.0 45.2 42.5 39.2 34.2 28.6 18.7
+             GCC-PHAT:   +1.444 ms (1444.2 us, prominence 9109.7)
+
+front right  arrival  1027.75 ms  clarity  25.8 dB  prominence    38937  polarity +1  peak   -4.1 dBFS   heard directly
+             suggested delay 0.0 ms (0 steps)
+             response dB: -15.3 -11.3 -8.5 -6.3 -8.0 -5.8 -3.5 -7.0 -4.9 -6.3 -6.5 -6.3 -6.5 -6.6 -6.5 -6.6
+             noise dB:    -50.4 -50.7 -37.0 -51.6 -52.0 -26.3 -19.6 -17.9 -17.4 -17.4 -17.4 -17.3 -17.3 -17.4 -17.4 -17.4
+             clean dB:    -15.3 -11.3 -8.5 -6.3 -8.0 -5.8 -3.6 -7.4 -5.1 -6.6 -6.9 -6.7 -6.8 -6.9 -6.9 -7.0
+             SNR dB:      35.1 39.5 28.5 45.3 44.1 20.6 16.1 10.9 12.6 11.1 10.8 11.0 10.9 10.8 10.9 10.8
+             GCC-PHAT:   +0.000 ms (0.0 us, prominence 1000.0)
+
+subwoofer    arrival  1027.71 ms  clarity  22.7 dB  prominence    37365  polarity -1  peak   -4.0 dBFS   heard directly
+             suggested delay 0.0 ms (0 steps)
+             response dB: -24.4 -14.5 -10.1 -8.4 -4.7 -6.3 -1.9 -5.9 -4.5 -6.0 -6.2 -6.0 -6.4 -6.5 -6.5 -6.6
+             noise dB:    -50.3 -31.5 -17.3 -12.8 -11.1 -18.7 -17.0 -19.8 -18.1 -17.0 -17.4 -17.3 -17.3 -17.3 -17.4 -17.4
+             clean dB:    -24.4 -14.6 -11.1 -10.4 -5.8 -6.5 -2.1 -6.1 -4.7 -6.4 -6.6 -6.3 -6.7 -6.9 -6.9 -7.0
+             SNR dB:      25.9 17.1 7.1 4.4 6.4 12.5 15.1 13.9 13.5 11.0 11.2 11.4 11.0 10.8 10.9 10.8
+             GCC-PHAT:   -0.045 ms (-45.2 us, prominence 37364.6)
+
+Cabin silence dB:      -69.7 -73.8 -66.3 -83.5 -81.8 -86.9 -85.4 -88.5 -98.2 -100.2 -104.3 -106.5 -107.3 -109.5 -109.2 -112.1
+Deconv. noise (front right): -50.4 -50.7 -37.0 -51.6 -52.0 -26.3 -19.6 -17.9 -17.4 -17.4 -17.4 -17.3 -17.3 -17.4 -17.4 -17.4
+Mic compensation dB:   +29.7 +17.9 +7.1 +4.0 +0.1 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0
+Mounting treble TRIMMED at 2000, 3150, 5000, 8000, 12500, 20000 Hz: the table asked for more boost than the sweep saw in every channel, and was cut back to the part all channels confirm.
+Mic curve before:     2026-10-07 21:58 31.66,10.86,2.51,2.96,0.97,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.67,10.00
+Avg SNR dB:            0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+EQ trust (0..1):       0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Mic calibrated:       yes
+
+WIRING: the main channels heard directly are in phase with each other. The subwoofer is not compared: it plays through a 12 dB/oct low-pass that turns its own phase, and plenty of them are wired inverted on purpose, so its sign here says nothing about anybody's wiring.
+Soundstage mode: Driver focus
+Target sound curve: Harman Reference
+Midbass HPF: Through (idx 0)
+Subwoofer: Installed, LPF 80 Hz (idx 5), Gain +2 dB, Delay 0.0 ms (0 steps)
+Synthesized Auto-EQ (Harman Reference target), dB: -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12 -12
+  same as hardware indices (6 = 0 dB, 2 dB a step): 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 8000 12500 20000 Hz
+The response includes the microphone's own curve and is NOT a calibration.

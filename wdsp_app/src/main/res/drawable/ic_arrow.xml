@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Simple stroked chevron ("^") pointing up. The four arrow buttons around
-     the car image reuse this single drawable and just rotate the ImageView
-     (0/90/180/270) instead of shipping four near-identical vectors -
-     rotated 90 degrees it reads as ">". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Bold, hollow outlined chevron arrow -->
     <path
-        android:pathData="M5,14 L12,9 L19,14"
-        android:strokeColor="@color/text_theme_aware_2"
-        android:strokeAlpha="0.5"
-        android:strokeWidth="1.0"
+        android:pathData="M5,15.5 L12,8.5 L19,15.5"
+        android:strokeColor="@color/cyan_custom"
+        android:strokeWidth="2.8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000" />

@@ -7,6 +7,19 @@ package com.radiorubka.wdsp;
  */
 public class AudioConfig {
     public static final int NUM_BANDS = 16;
+    /** The equaliser's gain index that is flat; indices run 0..12 (McuService.applyEqualizer). */
+    public static final int EQ_FLAT_INDEX = 6;
+    /** Decibels per equaliser gain step - the chip's own resolution. */
+    public static final float EQ_STEP_DB = 2f;
+
+    /**
+     * A gain index as decibels: 6 is flat, each step 2 dB. The one place this is written - it used to
+     * be spelled out in six, and the measurement wizard's report printed the raw index as "dB".
+     * Takes a float so the animated (gliding) gains go through it too.
+     */
+    public static float eqGainDb(float index) {
+        return (index - EQ_FLAT_INDEX) * EQ_STEP_DB;
+    }
     
     // Index-to-MCU Gain value mapping
     public static final int[] GAIN_MAP = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
@@ -206,7 +219,7 @@ public class AudioConfig {
         // boxing into a temporary float[] every call.
         float totalDb = 0f;
         for (int i = 0; i < NUM_BANDS; i++) {
-            totalDb += singleBandDb((gains[i] - 6) * 2f, freqHz, BAND_CENTER_HZ[i], DEFAULT_Q);
+            totalDb += singleBandDb(eqGainDb(gains[i]), freqHz, BAND_CENTER_HZ[i], DEFAULT_Q);
         }
         return totalDb;
     }
@@ -218,7 +231,7 @@ public class AudioConfig {
     public static float compositeResponseDb(float[] gains, float freqHz) {
         float totalDb = 0f;
         for (int i = 0; i < NUM_BANDS; i++) {
-            totalDb += singleBandDb((gains[i] - 6) * 2f, freqHz, BAND_CENTER_HZ[i], DEFAULT_Q);
+            totalDb += singleBandDb(eqGainDb(gains[i]), freqHz, BAND_CENTER_HZ[i], DEFAULT_Q);
         }
         return totalDb;
     }
@@ -329,5 +342,35 @@ public class AudioConfig {
         float hiHz = BAND_CENTER_HZ[hi];
         float frac = t - lo;
         return (float) (loHz * Math.pow(hiHz / loHz, frac));
+    }
+
+    /**
+     * The inverse of {@link #frequencyAt}: the continuous band position of {@code freqHz}, extended
+     * past the first and last band with the same edge spacing. Where the live RTA curve puts a
+     * frequency on the equaliser's axis, so a point and the slider of the same frequency line up.
+     */
+    public static float bandPositionOf(float freqHz) {
+        if (freqHz <= 0f) return 0f;
+        int lo;
+        if (freqHz < BAND_CENTER_HZ[0]) lo = 0;
+        else if (freqHz > BAND_CENTER_HZ[NUM_BANDS - 1]) lo = NUM_BANDS - 2;
+        else {
+            lo = 0;
+            while (lo < NUM_BANDS - 2 && freqHz > BAND_CENTER_HZ[lo + 1]) lo++;
+        }
+        double frac = Math.log(freqHz / BAND_CENTER_HZ[lo])
+                / Math.log(BAND_CENTER_HZ[lo + 1] / BAND_CENTER_HZ[lo]);
+        return (float) (lo + frac);
+    }
+
+    /**
+     * A per-band value read at any frequency: linear in band position between the two nearest
+     * bands, the edge band's value past either end. At a band centre it is that band's value.
+     */
+    public static float bandValueAt(float[] perBand, float freqHz) {
+        float t = Math.max(0f, Math.min(NUM_BANDS - 1, bandPositionOf(freqHz)));
+        int lo = Math.min(NUM_BANDS - 2, (int) t);
+        float frac = t - lo;
+        return perBand[lo] + (perBand[lo + 1] - perBand[lo]) * frac;
     }
 }

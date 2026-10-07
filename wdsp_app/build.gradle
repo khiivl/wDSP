@@ -2,42 +2,55 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-// Release signing credentials live in keystore.properties (gitignored, project root - not
-// hardcoded here) - see that file's own doc for why. Missing entirely on a fresh checkout that
-// hasn't set one up yet, so release signingConfig is only wired up when it's actually present -
-// debug builds (and assembleRelease itself, which will just fail at the packaging step with a
-// clear error) aren't affected either way.
-def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
+// Release signing credentials: one place for both modules (signing.gradle).
+apply from: rootProject.file('signing.gradle')
 
 android {
     namespace 'com.radiorubka.wdsp'
     compileSdk 36
+    // Pinned so Android Studio builds the native module with the same toolchain as the command
+    // line instead of picking whatever it finds or offering to download another one.
+    ndkVersion '28.2.13676358'
 
     defaultConfig {
         applicationId "com.radiorubka.wdsp"
         minSdk 29
         //noinspection ExpiredTargetSdkVersion
         targetSdk 29
-        versionCode 2
-        versionName "1.0.2"
+        versionCode 25
+        versionName "0.4.9.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
+        
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17'
+            }
+        }
+        ndk {
+            // The head units this targets are UIS7862/ums512, all 64-bit; the 32-bit slice is
+            // there only so an older board does not end up without a library at all.
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
     }
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile rootProject.file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+            if (wdspSigning != null) {
+                storeFile wdspSigning.storeFile
+                storePassword wdspSigning.storePassword
+                keyAlias wdspSigning.keyAlias
+                keyPassword wdspSigning.keyPassword
             }
         }
     }
@@ -45,10 +58,11 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            if (wdspSigning != null) signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
-            }
+        }
+        debug {
+            if (wdspSigning != null) signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -72,5 +86,4 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation libs.core.ktx.v1131
-    implementation libs.flexbox
 }
