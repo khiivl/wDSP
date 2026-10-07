@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -1779,18 +1780,46 @@ public class SettingsActivity extends AppCompatActivity {
         showRoomMeasurementWizard();
     }
 
+    private void styleRadioGroup(RadioGroup rg, int textPrimary, int textSecondary, ColorStateList csl) {
+        if (rg == null) return;
+        for (int i = 0; i < rg.getChildCount(); i++) {
+            View child = rg.getChildAt(i);
+            if (child instanceof RadioButton) {
+                RadioButton rb = (RadioButton) child;
+                rb.setTextColor(textPrimary);
+                rb.setButtonTintList(csl);
+            } else if (child instanceof TextView) {
+                ((TextView) child).setTextColor(textSecondary);
+            }
+        }
+    }
+
     private void showRoomMeasurementWizard() {
         View view = getLayoutInflater().inflate(R.layout.dialog_room_wizard, null);
 
-        int cardBg = ThemeManager.cardBackground(this);
-        int border = ThemeManager.panelBorder(this);
-        int textPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(this), cardBg);
-        int textSecondary = ThemeManager.contrastText(ThemeManager.textSecondary(this), cardBg);
-        int accent = ThemeManager.accent(this);
-        int onAccent = ThemeManager.onAccent(this);
+        int cardBg = ThemeManager.cardBackground(this, editNight);
+        int border = ThemeManager.panelBorder(this, editNight);
+        int textPrimary = ThemeManager.contrastText(ThemeManager.textPrimary(this, editNight), cardBg);
+        int textSecondary = ThemeManager.contrastText(ThemeManager.textSecondary(this, editNight), cardBg);
+        int accent = ThemeManager.accent(this, editNight);
+        int onAccent = ThemeManager.onAccent(this, editNight);
+
+        ColorStateList rbCsl = new ColorStateList(
+                new int[][]{
+                        new int[]{android.R.attr.state_checked},
+                        new int[]{-android.R.attr.state_checked}
+                },
+                new int[]{
+                        accent,
+                        textSecondary
+                }
+        );
 
         TextView tvTitle = view.findViewById(R.id.tv_wizard_title);
-        tvTitle.setTextColor(textPrimary);
+        if (tvTitle != null) tvTitle.setTextColor(textPrimary);
+
+        TextView tvSetupDesc = view.findViewById(R.id.tv_wizard_setup_desc);
+        if (tvSetupDesc != null) tvSetupDesc.setTextColor(textSecondary);
 
         // Step 1: Setup
         View layoutSetup = view.findViewById(R.id.layout_wizard_setup);
@@ -1800,9 +1829,14 @@ public class SettingsActivity extends AppCompatActivity {
         // answers could differ and the later screen would win for reasons nobody could see.
 
         View cardStage = view.findViewById(R.id.card_soundstage);
-        cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        if (cardStage instanceof ViewGroup) {
+            cardStage.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+            View title = ((ViewGroup) cardStage).getChildAt(0);
+            if (title instanceof TextView) ((TextView) title).setTextColor(textPrimary);
+        }
         RadioGroup rgStage = view.findViewById(R.id.rg_soundstage_mode);
         if (rgStage != null) {
+            styleRadioGroup(rgStage, textPrimary, textSecondary, rbCsl);
             RoomMeasurement.SoundstageMode savedStage = RoomMeasurement.getSoundstageMode(this);
             if (savedStage == RoomMeasurement.SoundstageMode.FRONT_CENTER) {
                 RadioButton rb = view.findViewById(R.id.rb_stage_front_center);
@@ -1820,11 +1854,14 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         View cardTarget = view.findViewById(R.id.card_target_curve);
-        if (cardTarget != null) {
+        if (cardTarget instanceof ViewGroup) {
             cardTarget.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+            View title = ((ViewGroup) cardTarget).getChildAt(0);
+            if (title instanceof TextView) ((TextView) title).setTextColor(textPrimary);
         }
         RadioGroup rgTarget = view.findViewById(R.id.rg_target_curve);
         if (rgTarget != null) {
+            styleRadioGroup(rgTarget, textPrimary, textSecondary, rbCsl);
             RoomMeasurement.TargetCurve savedCurve = RoomMeasurement.getTargetCurve(this);
             if (savedCurve == RoomMeasurement.TargetCurve.DOLBY_ATMOS) {
                 RadioButton rb = view.findViewById(R.id.rb_target_dolby);
@@ -1845,10 +1882,15 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         View cardGeometry = view.findViewById(R.id.card_cabin_geometry);
-        if (cardGeometry != null) {
+        if (cardGeometry instanceof ViewGroup) {
             cardGeometry.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+            View title = ((ViewGroup) cardGeometry).getChildAt(0);
+            if (title instanceof TextView) ((TextView) title).setTextColor(textPrimary);
         }
         RadioGroup rgBodyType = view.findViewById(R.id.rg_cabin_body_type);
+        if (rgBodyType != null) {
+            styleRadioGroup(rgBodyType, textPrimary, textSecondary, rbCsl);
+        }
         TextView tvDistLabel = view.findViewById(R.id.tv_distance_label);
         TextView tvDistValue = view.findViewById(R.id.tv_distance_value);
         TextView btnDistMinus = view.findViewById(R.id.btn_distance_minus);
@@ -1920,49 +1962,68 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         TextView btnCancel = view.findViewById(R.id.btn_wizard_cancel);
-        btnCancel.setTextColor(textSecondary);
-        TouchGlow.attach(btnCancel);
+        if (btnCancel != null) {
+            btnCancel.setTextColor(textSecondary);
+            TouchGlow.attach(btnCancel);
+        }
 
         TextView btnStart = view.findViewById(R.id.btn_wizard_start);
-        btnStart.setTextColor(onAccent);
-        btnStart.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
-        TouchGlow.attach(btnStart);
+        if (btnStart != null) {
+            btnStart.setTextColor(onAccent);
+            btnStart.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+            TouchGlow.attach(btnStart);
+        }
 
         // Step 2: Progress
         View layoutProgress = view.findViewById(R.id.layout_wizard_progress);
         TextView tvProgressStage = view.findViewById(R.id.tv_progress_stage);
-        tvProgressStage.setTextColor(textPrimary);
+        if (tvProgressStage != null) tvProgressStage.setTextColor(textPrimary);
         TextView tvProgressDetail = view.findViewById(R.id.tv_progress_detail);
-        tvProgressDetail.setTextColor(textSecondary);
+        if (tvProgressDetail != null) tvProgressDetail.setTextColor(textSecondary);
         ProgressBar progressBar = view.findViewById(R.id.progress_wizard_bar);
+        if (progressBar != null) progressBar.setProgressTintList(ColorStateList.valueOf(accent));
         TextView tvPercent = view.findViewById(R.id.tv_progress_percent);
-        tvPercent.setTextColor(textPrimary);
+        if (tvPercent != null) tvPercent.setTextColor(textPrimary);
         TextView tvProgressWarning = view.findViewById(R.id.tv_progress_warning);
-        tvProgressWarning.setTextColor(textSecondary);
+        if (tvProgressWarning != null) tvProgressWarning.setTextColor(textSecondary);
 
         // Step 3: Report
         View layoutReport = view.findViewById(R.id.layout_wizard_report);
         View layoutPolarity = view.findViewById(R.id.layout_polarity_alert);
-        layoutPolarity.setBackground(ThemeManager.roundedDrawable(this, 12, 0x22E5352B, 0xFFE5352B, 1.5f));
+        if (layoutPolarity != null) {
+            layoutPolarity.setBackground(ThemeManager.roundedDrawable(this, 12, 0x22E5352B, 0xFFE5352B, 1.5f));
+        }
         TextView tvPolarityMsg = view.findViewById(R.id.tv_polarity_alert_msg);
-        tvPolarityMsg.setTextColor(textPrimary);
+        if (tvPolarityMsg != null) tvPolarityMsg.setTextColor(textPrimary);
 
         View cardCrossover = view.findViewById(R.id.card_report_crossover);
-        cardCrossover.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        if (cardCrossover instanceof ViewGroup) {
+            cardCrossover.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+            View title = ((ViewGroup) cardCrossover).getChildAt(0);
+            if (title instanceof TextView) ((TextView) title).setTextColor(textPrimary);
+        }
         TextView tvHpf = view.findViewById(R.id.tv_report_crossover_hpf);
-        tvHpf.setTextColor(textSecondary);
+        if (tvHpf != null) tvHpf.setTextColor(textSecondary);
         TextView tvSub = view.findViewById(R.id.tv_report_crossover_sub);
-        tvSub.setTextColor(textSecondary);
+        if (tvSub != null) tvSub.setTextColor(textSecondary);
 
         View cardDelays = view.findViewById(R.id.card_report_delays);
-        cardDelays.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        if (cardDelays instanceof ViewGroup) {
+            cardDelays.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+            View title = ((ViewGroup) cardDelays).getChildAt(0);
+            if (title instanceof TextView) ((TextView) title).setTextColor(textPrimary);
+        }
         TextView tvDelays = view.findViewById(R.id.tv_report_delays);
-        tvDelays.setTextColor(textSecondary);
+        if (tvDelays != null) tvDelays.setTextColor(textSecondary);
 
         View cardAutoEq = view.findViewById(R.id.card_report_autoeq);
-        cardAutoEq.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        if (cardAutoEq instanceof ViewGroup) {
+            cardAutoEq.setBackground(ThemeManager.roundedDrawable(this, 12, cardBg, border, 1f));
+        }
+        TextView tvAutoEqTitle = view.findViewById(R.id.tv_report_autoeq_title);
+        if (tvAutoEqTitle != null) tvAutoEqTitle.setTextColor(textPrimary);
         TextView tvAutoEq = view.findViewById(R.id.tv_report_autoeq_gains);
-        tvAutoEq.setTextColor(textPrimary);
+        if (tvAutoEq != null) tvAutoEq.setTextColor(textPrimary);
 
         TextView btnSave = view.findViewById(R.id.btn_save_report);
         if (btnSave != null) {
@@ -1973,13 +2034,17 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         TextView btnClose = view.findViewById(R.id.btn_close_report);
-        btnClose.setTextColor(textSecondary);
-        TouchGlow.attach(btnClose);
+        if (btnClose != null) {
+            btnClose.setTextColor(textSecondary);
+            TouchGlow.attach(btnClose);
+        }
 
         TextView btnApply = view.findViewById(R.id.btn_apply_autoeq);
-        btnApply.setTextColor(onAccent);
-        btnApply.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
-        TouchGlow.attach(btnApply);
+        if (btnApply != null) {
+            btnApply.setTextColor(onAccent);
+            btnApply.setBackground(ThemeManager.roundedDrawable(this, 10, accent, 0, 0));
+            TouchGlow.attach(btnApply);
+        }
 
         // Create Dialog
         Dialog dialog = ThemedDialog.builder(this)
@@ -3640,6 +3705,16 @@ public class SettingsActivity extends AppCompatActivity {
         styleActionButton(findViewById(R.id.btn_screensaver_apps));
         styleActionButton(btnVisPreviewScreensaver);
         styleActionButton(findViewById(R.id.btn_open_sleep_whitelist));
+
+        int accent = ThemeManager.accent(this, editNight);
+        ImageView arrowFront = findViewById(R.id.btn_room_mic_front);
+        if (arrowFront != null) arrowFront.setColorFilter(accent);
+        ImageView arrowRear = findViewById(R.id.btn_room_mic_rear);
+        if (arrowRear != null) arrowRear.setColorFilter(accent);
+        ImageView arrowLeft = findViewById(R.id.btn_room_mic_left);
+        if (arrowLeft != null) arrowLeft.setColorFilter(accent);
+        ImageView arrowRight = findViewById(R.id.btn_room_mic_right);
+        if (arrowRight != null) arrowRight.setColorFilter(accent);
     }
 
     private void tintSlider(Slider s, int accent) {
