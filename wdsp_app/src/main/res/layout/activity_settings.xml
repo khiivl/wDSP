@@ -2835,380 +2835,442 @@
                     android:text="@string/room_mic_spot_desc"
                     android:textSize="@dimen/settings_note_text" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layout_room_mic_place"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                <!-- Two columns (owner, 07.10.2026: «на два розділи, зліва зібрав би спінери, а справа
+                     машинка, бо це якось дуже довге, і багато скролу»): the answers on the left, the car
+                     they describe on the right - the dot, the speakers and the length beside it. -->
+                <LinearLayout
+                    android:id="@+id/row_room_columns"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/room_mic_place_hint"
-                    android:textColorHint="@color/text_theme_aware_2"
-                    app:boxBackgroundColor="@color/card_bg_theme_aware"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxStrokeColor="@color/cyan_custom"
-                    app:boxStrokeWidth="1.2dp"
-                    app:endIconTint="@color/cyan_custom"
-                    app:hintTextColor="@color/cyan_custom">
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
-                    <AutoCompleteTextView
-                        android:id="@+id/spinner_room_mic_place"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:focusable="false"
-                        android:inputType="none"
-                        android:paddingVertical="8dp"
-                        android:textColor="@color/cyan_custom" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- A second question, and deliberately not part of the first: where the microphone
-                     is decides path length, what it is built into decides the response of whatever
-                     surrounds the capsule. Open in the middle of a fascia and open inside a dome
-                     fitting are different things, and either can be at any of the places above. -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layout_room_mic_body"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/room_mic_body_hint"
-                    android:textColorHint="@color/text_theme_aware_2"
-                    app:boxBackgroundColor="@color/card_bg_theme_aware"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxStrokeColor="@color/cyan_custom"
-                    app:boxStrokeWidth="1.2dp"
-                    app:endIconTint="@color/cyan_custom"
-                    app:hintTextColor="@color/cyan_custom">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/spinner_room_mic_body"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:focusable="false"
-                        android:inputType="none"
-                        android:paddingVertical="8dp"
-                        android:textColor="@color/cyan_custom" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Whether there is a subwoofer at all. It belongs here, next to where the
-                     microphone is and what the cabin is, because it is a fact about the car and not
-                     about a preset - it used to be asked only inside the measurement wizard, which
-                     meant the row below asked where the box stands without anyone having said there
-                     was one. Same preference the wizard writes; one fact, two doors to it. -->
-                <CheckBox
-                    android:id="@+id/cb_room_has_subwoofer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/room_wizard_subwoofer_check"
-                    android:textSize="@dimen/text_size_dense_label" />
-
-                <!-- The subwoofer's own place. At these frequencies the cabin is smaller than the
-                     wavelength, so this barely changes the tone - but it changes the path length,
-                     and the delay line is one of the few things reachable without patching the MCU.
-                     A boot and an under-seat box are more than a metre apart: six slider steps.
-                     Hidden entirely when the box above says there is no subwoofer. -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layout_room_sub_place"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/room_sub_place_hint"
-                    android:textColorHint="@color/text_theme_aware_2"
-                    app:boxBackgroundColor="@color/card_bg_theme_aware"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxStrokeColor="@color/cyan_custom"
-                    app:boxStrokeWidth="1.2dp"
-                    app:endIconTint="@color/cyan_custom"
-                    app:hintTextColor="@color/cyan_custom">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/spinner_room_sub_place"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:focusable="false"
-                        android:inputType="none"
-                        android:paddingVertical="8dp"
-                        android:textColor="@color/cyan_custom" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/room_mic_car_height"
-                    android:layout_marginTop="6dp">
-
-                    <androidx.appcompat.widget.AppCompatImageView
-                        android:id="@+id/img_room_mic_car"
+                    <LinearLayout
+                        android:id="@+id/col_room_answers"
                         android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_marginStart="@dimen/fader_arrow_gap_h"
-                        android:layout_marginTop="@dimen/fader_arrow_gap_v"
-                        android:layout_marginEnd="@dimen/fader_arrow_gap_h"
-                        android:layout_marginBottom="@dimen/fader_arrow_gap_v"
-                        android:contentDescription="@string/room_mic_spot_label"
-                        android:layerType="hardware"
-                        android:scaleType="fitCenter"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintDimensionRatio="W,300:520"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_car_cabriolet" />
-
-                    <com.radiorubka.wdsp.BalancePointerView
-                        android:id="@+id/room_mic_pointer"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
-                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
-                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
-                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
-
-                    <ImageView
-                        android:id="@+id/btn_room_mic_front"
-                        android:layout_width="@dimen/toggle_height"
-                        android:layout_height="@dimen/toggle_height"
-                        android:background="@drawable/bg_icon_button"
-                        android:clickable="true"
-                        android:contentDescription="@string/room_mic_spot_label"
-                        android:focusable="true"
-                        android:padding="8dp"
-                        android:rotation="0"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_arrow"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toTopOf="@id/img_room_mic_car"
-                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
-                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
-
-                    <ImageView
-                        android:id="@+id/btn_room_mic_rear"
-                        android:layout_width="@dimen/toggle_height"
-                        android:layout_height="@dimen/toggle_height"
-                        android:background="@drawable/bg_icon_button"
-                        android:clickable="true"
-                        android:contentDescription="@string/room_mic_spot_label"
-                        android:focusable="true"
-                        android:padding="8dp"
-                        android:rotation="180"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_arrow"
-                        app:layout_constraintTop_toBottomOf="@id/img_room_mic_car"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
-                        app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
-
-                    <ImageView
-                        android:id="@+id/btn_room_mic_left"
-                        android:layout_width="@dimen/toggle_height"
-                        android:layout_height="@dimen/toggle_height"
-                        android:background="@drawable/bg_icon_button"
-                        android:clickable="true"
-                        android:contentDescription="@string/room_mic_spot_label"
-                        android:focusable="true"
-                        android:padding="8dp"
-                        android:rotation="270"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_arrow"
-                        app:layout_constraintEnd_toStartOf="@id/img_room_mic_car"
-                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
-                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
-
-                    <ImageView
-                        android:id="@+id/btn_room_mic_right"
-                        android:layout_width="@dimen/toggle_height"
-                        android:layout_height="@dimen/toggle_height"
-                        android:background="@drawable/bg_icon_button"
-                        android:clickable="true"
-                        android:contentDescription="@string/room_mic_spot_label"
-                        android:focusable="true"
-                        android:padding="8dp"
-                        android:rotation="90"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_arrow"
-                        app:layout_constraintStart_toEndOf="@id/img_room_mic_car"
-                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
-                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
-
-                    <!-- The cabin's length stands upright beside the car, front to back like the car itself: a
-                         rotated slider as long as its box is tall, the same as the EQ's band sliders. -->
-                    <TextView
-                        android:id="@+id/label_room_cabin_length"
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/room_cabin_length"
-                        android:textSize="@dimen/text_size_dense_label"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
-                        app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+                        android:layout_marginEnd="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <FrameLayout
-                        android:id="@+id/box_room_cabin_length"
-                        android:layout_width="44dp"
-                        android:layout_height="0dp"
-                        android:layout_marginStart="16dp"
-                        app:layout_constraintStart_toEndOf="@id/btn_room_mic_right"
-                        app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
-                        app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car">
-
-                        <com.google.android.material.slider.Slider
-                            android:id="@+id/seek_room_cabin_length"
-                            style="@style/CustomSliderStyle"
-                            android:layout_width="200dp"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_room_mic_place"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:rotation="270"
-                            android:valueFrom="0"
-                            android:valueTo="1000"
-                            android:stepSize="5"
-                            android:value="0"
-                            app:labelBehavior="gone" />
-                    </FrameLayout>
+                            android:layout_marginTop="8dp"
+                            android:hint="@string/room_mic_place_hint"
+                            android:textColorHint="@color/text_theme_aware_2"
+                            app:boxBackgroundColor="@color/card_bg_theme_aware"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:boxStrokeWidth="1.2dp"
+                            app:endIconTint="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom">
 
-                    <TextView
-                        android:id="@+id/tv_room_cabin_length_val"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="@dimen/text_size_dense_label"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
-                        app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+                            <AutoCompleteTextView
+                                android:id="@+id/spinner_room_mic_place"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:inputType="none"
+                                android:paddingVertical="8dp"
+                                android:textColor="@color/cyan_custom" />
 
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- The cabin (CabinProfile, owner 02.10.2026): closed or open space, then its width and
-                     height; the length is the upright slider beside the car above. -->
-                <TextView
-                    android:id="@+id/label_room_cabin_space"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/room_cabin_space_label"
-                    android:textSize="@dimen/settings_subtitle_text"
-                    android:textStyle="bold" />
+                        <!-- A second question, and deliberately not part of the first: where the microphone
+                             is decides path length, what it is built into decides the response of whatever
+                             surrounds the capsule. Open in the middle of a fascia and open inside a dome
+                             fitting are different things, and either can be at any of the places above. -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_room_mic_body"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:hint="@string/room_mic_body_hint"
+                            android:textColorHint="@color/text_theme_aware_2"
+                            app:boxBackgroundColor="@color/card_bg_theme_aware"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:boxStrokeWidth="1.2dp"
+                            app:endIconTint="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom">
 
-                <TextView
-                    android:id="@+id/desc_room_cabin"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingExtra="3dp"
-                    android:text="@string/room_cabin_desc"
-                    android:textSize="@dimen/settings_note_text" />
+                            <AutoCompleteTextView
+                                android:id="@+id/spinner_room_mic_body"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:inputType="none"
+                                android:paddingVertical="8dp"
+                                android:textColor="@color/cyan_custom" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:orientation="horizontal">
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
-                        android:id="@+id/btn_room_space_closed"
+                        <!-- Whether there is a subwoofer at all. It belongs here, next to where the
+                             microphone is and what the cabin is, because it is a fact about the car and not
+                             about a preset - it used to be asked only inside the measurement wizard, which
+                             meant the row below asked where the box stands without anyone having said there
+                             was one. Same preference the wizard writes; one fact, two doors to it. -->
+                        <CheckBox
+                            android:id="@+id/cb_room_has_subwoofer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/room_wizard_subwoofer_check"
+                            android:textSize="@dimen/text_size_dense_label" />
+
+                        <!-- The subwoofer's own place. At these frequencies the cabin is smaller than the
+                             wavelength, so this barely changes the tone - but it changes the path length,
+                             and the delay line is one of the few things reachable without patching the MCU.
+                             A boot and an under-seat box are more than a metre apart: six slider steps.
+                             Hidden entirely when the box above says there is no subwoofer. -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_room_sub_place"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:hint="@string/room_sub_place_hint"
+                            android:textColorHint="@color/text_theme_aware_2"
+                            app:boxBackgroundColor="@color/card_bg_theme_aware"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/cyan_custom"
+                            app:boxStrokeWidth="1.2dp"
+                            app:endIconTint="@color/cyan_custom"
+                            app:hintTextColor="@color/cyan_custom">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinner_room_sub_place"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:inputType="none"
+                                android:paddingVertical="8dp"
+                                android:textColor="@color/cyan_custom" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- The cabin (CabinProfile, owner 02.10.2026): closed or open space, then its width and
+                             height; the length is the upright slider beside the car above. -->
+                        <TextView
+                            android:id="@+id/label_room_cabin_space"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/room_cabin_space_label"
+                            android:textSize="@dimen/settings_subtitle_text"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/desc_room_cabin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/room_cabin_desc"
+                            android:textSize="@dimen/settings_note_text" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/btn_room_space_closed"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:padding="8dp"
+                                android:background="@null"
+                                android:text="@string/room_cabin_space_closed"
+                                android:textSize="@dimen/text_size_dense_label" />
+
+                            <TextView
+                                android:id="@+id/btn_room_space_open"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:gravity="center"
+                                android:padding="8dp"
+                                android:background="@null"
+                                android:text="@string/room_cabin_space_open"
+                                android:textSize="@dimen/text_size_dense_label" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/col_room_car"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:layout_weight="1"
-                        android:gravity="center"
-                        android:padding="8dp"
-                        android:background="@null"
-                        android:text="@string/room_cabin_space_closed"
-                        android:textSize="@dimen/text_size_dense_label" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/btn_room_space_open"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:gravity="center"
-                        android:padding="8dp"
-                        android:background="@null"
-                        android:text="@string/room_cabin_space_open"
-                        android:textSize="@dimen/text_size_dense_label" />
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/tv_room_layout_hint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:text="@string/room_layout_hint"
+                            android:textSize="@dimen/text_size_dense_desc" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/room_mic_car_height"
+                            android:layout_marginTop="4dp">
 
-                    <TextView
-                        android:id="@+id/label_room_cabin_width"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="80dp"
-                        android:text="@string/room_cabin_width"
-                        android:textSize="@dimen/text_size_dense_label" />
+                            <androidx.appcompat.widget.AppCompatImageView
+                                android:id="@+id/img_room_mic_car"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:layout_marginStart="@dimen/fader_arrow_gap_h"
+                                android:layout_marginTop="@dimen/fader_arrow_gap_v"
+                                android:layout_marginEnd="@dimen/fader_arrow_gap_h"
+                                android:layout_marginBottom="@dimen/fader_arrow_gap_v"
+                                android:contentDescription="@string/room_mic_spot_label"
+                                android:layerType="hardware"
+                                android:scaleType="fitCenter"
+                                app:layout_constraintBottom_toTopOf="@id/row_room_cabin_width"
+                                app:layout_constraintDimensionRatio="W,300:520"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/ic_car_cabriolet" />
 
-                    <!-- Range and step come from CabinProfile in code, not from here. -->
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/seek_room_cabin_width"
-                        style="@style/CustomSliderStyle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:valueFrom="0"
-                        android:valueTo="1000"
-                        android:stepSize="5"
-                        android:value="0"
-                        app:labelBehavior="gone" />
+                            <!-- Which speakers the car has: a tap on a door speaker toggles its pair, on the
+                                 subwoofer the subwoofer. Under the microphone dot, which passes through every
+                                 touch that is not near the dot. -->
+                            <com.radiorubka.wdsp.SpeakerLayoutView
+                                android:id="@+id/room_speaker_layout"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:contentDescription="@string/room_layout_hint"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
+                                app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
+                                app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
 
-                    <TextView
-                        android:id="@+id/tv_room_cabin_width_val"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="64dp"
-                        android:gravity="end"
-                        android:textSize="@dimen/text_size_dense_label" />
-                </LinearLayout>
+                            <com.radiorubka.wdsp.BalancePointerView
+                                android:id="@+id/room_mic_pointer"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car"
+                                app:layout_constraintEnd_toEndOf="@id/img_room_mic_car"
+                                app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                            <ImageView
+                                android:id="@+id/btn_room_mic_front"
+                                android:layout_width="@dimen/toggle_height"
+                                android:layout_height="@dimen/toggle_height"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:contentDescription="@string/room_mic_spot_label"
+                                android:focusable="true"
+                                android:padding="8dp"
+                                android:rotation="0"
+                                android:scaleType="centerInside"
+                                android:src="@drawable/ic_arrow"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toTopOf="@id/img_room_mic_car"
+                                app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                                app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
 
-                    <TextView
-                        android:id="@+id/label_room_cabin_height"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="80dp"
-                        android:text="@string/room_cabin_height"
-                        android:textSize="@dimen/text_size_dense_label" />
+                            <ImageView
+                                android:id="@+id/btn_room_mic_rear"
+                                android:layout_width="@dimen/toggle_height"
+                                android:layout_height="@dimen/toggle_height"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:contentDescription="@string/room_mic_spot_label"
+                                android:focusable="true"
+                                android:padding="8dp"
+                                android:rotation="180"
+                                android:scaleType="centerInside"
+                                android:src="@drawable/ic_arrow"
+                                app:layout_constraintTop_toBottomOf="@id/img_room_mic_car"
+                                app:layout_constraintBottom_toTopOf="@id/row_room_cabin_width"
+                                app:layout_constraintStart_toStartOf="@id/img_room_mic_car"
+                                app:layout_constraintEnd_toEndOf="@id/img_room_mic_car" />
 
-                    <!-- Range and step come from CabinProfile in code, not from here. -->
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/seek_room_cabin_height"
-                        style="@style/CustomSliderStyle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:valueFrom="0"
-                        android:valueTo="1000"
-                        android:stepSize="5"
-                        android:value="0"
-                        app:labelBehavior="gone" />
+                            <ImageView
+                                android:id="@+id/btn_room_mic_left"
+                                android:layout_width="@dimen/toggle_height"
+                                android:layout_height="@dimen/toggle_height"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:contentDescription="@string/room_mic_spot_label"
+                                android:focusable="true"
+                                android:padding="8dp"
+                                android:rotation="270"
+                                android:scaleType="centerInside"
+                                android:src="@drawable/ic_arrow"
+                                app:layout_constraintEnd_toStartOf="@id/img_room_mic_car"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
 
-                    <TextView
-                        android:id="@+id/tv_room_cabin_height_val"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="64dp"
-                        android:gravity="end"
-                        android:textSize="@dimen/text_size_dense_label" />
+                            <ImageView
+                                android:id="@+id/btn_room_mic_right"
+                                android:layout_width="@dimen/toggle_height"
+                                android:layout_height="@dimen/toggle_height"
+                                android:background="@drawable/bg_icon_button"
+                                android:clickable="true"
+                                android:contentDescription="@string/room_mic_spot_label"
+                                android:focusable="true"
+                                android:padding="8dp"
+                                android:rotation="90"
+                                android:scaleType="centerInside"
+                                android:src="@drawable/ic_arrow"
+                                app:layout_constraintStart_toEndOf="@id/img_room_mic_car"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car" />
+
+                            <!-- The cabin's three sizes stand around the car (owner, 07.10.2026: «ширина я б зробив під
+                                 машинкою, а висота, зліва від неї, в її ж блоці»): the length upright on the right, front
+                                 to back like the car itself; the height upright on the left; the width under it. The
+                                 upright ones are rotated sliders as long as their box is tall, like the EQ's bands. -->
+                            <TextView
+                                android:id="@+id/label_room_cabin_length"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_cabin_length"
+                                android:textSize="@dimen/text_size_dense_label"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
+                                app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+
+                            <FrameLayout
+                                android:id="@+id/box_room_cabin_length"
+                                android:layout_width="44dp"
+                                android:layout_height="0dp"
+                                android:layout_marginStart="16dp"
+                                app:layout_constraintStart_toEndOf="@id/btn_room_mic_right"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car">
+
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_room_cabin_length"
+                                    style="@style/CustomSliderStyle"
+                                    android:layout_width="200dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:rotation="270"
+                                    android:valueFrom="0"
+                                    android:valueTo="1000"
+                                    android:stepSize="5"
+                                    android:value="0"
+                                    app:labelBehavior="gone" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/tv_room_cabin_length_val"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="@dimen/text_size_dense_label"
+                                app:layout_constraintTop_toBottomOf="@id/box_room_cabin_length"
+                                app:layout_constraintStart_toStartOf="@id/box_room_cabin_length"
+                                app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length" />
+
+                            <TextView
+                                android:id="@+id/label_room_cabin_height"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/room_cabin_height"
+                                android:textSize="@dimen/text_size_dense_label"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintStart_toStartOf="@id/box_room_cabin_height"
+                                app:layout_constraintEnd_toEndOf="@id/box_room_cabin_height" />
+
+                            <FrameLayout
+                                android:id="@+id/box_room_cabin_height"
+                                android:layout_width="44dp"
+                                android:layout_height="0dp"
+                                android:layout_marginEnd="16dp"
+                                app:layout_constraintEnd_toStartOf="@id/btn_room_mic_left"
+                                app:layout_constraintTop_toTopOf="@id/img_room_mic_car"
+                                app:layout_constraintBottom_toBottomOf="@id/img_room_mic_car">
+
+                                <!-- Range and step come from CabinProfile in code, not from here. -->
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_room_cabin_height"
+                                    style="@style/CustomSliderStyle"
+                                    android:layout_width="200dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:rotation="270"
+                                    android:valueFrom="0"
+                                    android:valueTo="1000"
+                                    android:stepSize="5"
+                                    android:value="0"
+                                    app:labelBehavior="gone" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/tv_room_cabin_height_val"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="@dimen/text_size_dense_label"
+                                app:layout_constraintTop_toBottomOf="@id/box_room_cabin_height"
+                                app:layout_constraintStart_toStartOf="@id/box_room_cabin_height"
+                                app:layout_constraintEnd_toEndOf="@id/box_room_cabin_height" />
+
+                            <LinearLayout
+                                android:id="@+id/row_room_cabin_width"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="@id/box_room_cabin_length"
+                                app:layout_constraintStart_toStartOf="@id/box_room_cabin_height">
+
+                                <TextView
+                                    android:id="@+id/label_room_cabin_width"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/room_cabin_width"
+                                    android:textSize="@dimen/text_size_dense_label" />
+
+                                <!-- Range and step come from CabinProfile in code, not from here. -->
+                                <com.google.android.material.slider.Slider
+                                    android:id="@+id/seek_room_cabin_width"
+                                    style="@style/CustomSliderStyle"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:valueFrom="0"
+                                    android:valueTo="1000"
+                                    android:stepSize="5"
+                                    android:value="0"
+                                    app:labelBehavior="gone" />
+
+                                <TextView
+                                    android:id="@+id/tv_room_cabin_width_val"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="56dp"
+                                    android:gravity="end"
+                                    android:textSize="@dimen/text_size_dense_label" />
+                            </LinearLayout>
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
