@@ -453,72 +453,84 @@ public class McuService extends Service implements LocationListener {
 
     private final SharedPreferences.OnSharedPreferenceChangeListener prefListener = (p, key) -> {
         if (key == null) return;
-        backgroundHandler.post(() -> {
-            if (key.startsWith("sb_vis_") || key.equals(com.radiorubka.wdsp.ui.theme.ThemeManager.PREF_THEME_MODE)) {
-                if (statusBarManager != null) statusBarManager.onPreferenceChanged(key);
-            }
-            else if (key.equals(PREF_PLAYER_MAP)) {
-                loadPlayerMap();
-            }
-            else if (key.equals(PREF_LAST_SELECTED)) {
-                syncPreset(false);
-            }
-            else if (key.startsWith(GALA_GLOBAL_PREFIX)) {
-                // One branch for the whole shared set, the mode and the on/off state included.
-                // Two of these keys used to be handled here and the other five did not exist, so a
-                // flip of the mode left the cached GALA values as the previous preset had them -
-                // and nothing reloaded them until some other preference happened to change.
-                galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
-                galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
-                if (currentPresetName != null) loadPresetData(currentPresetName);
-            }
-            else if (currentPresetName != null && key.startsWith(currentPresetName + "_")) {
+        backgroundHandler.post(() -> onPrefChanged(key));
+    };
 
-                // Reload the data first
-                loadPresetData(currentPresetName);
+    /**
+     * The screen's ticks, before the disk has them (LivePreset): the same dispatch as a stored change,
+     * so the chip follows the finger while the file is written once per pause (owner, 07.10.2026).
+     */
+    private final LivePreset.Listener liveListener =
+            keys -> backgroundHandler.post(() -> {
+                for (String key : keys) onPrefChanged(key);
+            });
 
-                Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
+    /** wDSP_Worker. What a changed preference means for the chip. */
+    private void onPrefChanged(String key) {
+        if (key.startsWith("sb_vis_") || key.equals(com.radiorubka.wdsp.ui.theme.ThemeManager.PREF_THEME_MODE)) {
+            if (statusBarManager != null) statusBarManager.onPreferenceChanged(key);
+        }
+        else if (key.equals(PREF_PLAYER_MAP)) {
+            loadPlayerMap();
+        }
+        else if (key.equals(PREF_LAST_SELECTED)) {
+            syncPreset(false);
+        }
+        else if (key.startsWith(GALA_GLOBAL_PREFIX)) {
+            // One branch for the whole shared set, the mode and the on/off state included.
+            // Two of these keys used to be handled here and the other five did not exist, so a
+            // flip of the mode left the cached GALA values as the previous preset had them -
+            // and nothing reloaded them until some other preference happened to change.
+            galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
+            galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
+            if (currentPresetName != null) loadPresetData(currentPresetName);
+        }
+        else if (currentPresetName != null && key.startsWith(currentPresetName + "_")) {
 
-                // 1. Check for Subwoofer first (specific)
-                if (key.contains("_sub") || key.contains("_ultra_bass")) {
+            // Reload the data first
+            loadPresetData(currentPresetName);
+
+            Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
+
+            // 1. Check for Subwoofer first (specific)
+            if (key.contains("_sub") || key.contains("_ultra_bass")) {
+                updateSubwoofer(VolumeHelper.getVolume());
+            }
+            // 2. Then check for EQ bands or FM settings (less specific). Trim Highs ("_fat_")
+            //    used to fall through every branch here, so its switch and start volume took
+            //    effect only at the next volume change.
+            else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm") || key.contains("_fat_")) {
+                updateEqWithFm(VolumeHelper.getVolume());
+                // Calibration, strength and the loudness switch also move the subwoofer's
+                // compensation and the bass shelf's share (the author's 0.5).
+                if (key.contains("_fm")) {
                     updateSubwoofer(VolumeHelper.getVolume());
-                }
-                // 2. Then check for EQ bands or FM settings (less specific). Trim Highs ("_fat_")
-                //    used to fall through every branch here, so its switch and start volume took
-                //    effect only at the next volume change.
-                else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm") || key.contains("_fat_")) {
-                    updateEqWithFm(VolumeHelper.getVolume());
-                    // Calibration, strength and the loudness switch also move the subwoofer's
-                    // compensation and the bass shelf's share (the author's 0.5).
-                    if (key.contains("_fm")) {
-                        updateSubwoofer(VolumeHelper.getVolume());
-                        applyBassBoost(VolumeHelper.getVolume());
-                    }
-                }
-                else if (key.contains("_power_vol")) {
-                    setPowerAmpVol();
-                }
-                else if (key.contains("_d_")) {
-                    applySpatialDelays();
-                }
-                else if (key.contains("_d1_") || key.contains("_rsse_")) {
-                    applySurroundDelays();
-                }
-                else if (key.contains("_bb_") || key.contains("_bf_")) {
                     applyBassBoost(VolumeHelper.getVolume());
-                    // The front shelf frequency picks the equaliser's residual row (the author's 0.5).
-                    updateEqWithFm(VolumeHelper.getVolume());
                 }
-                else if (key.contains("_f_") || key.contains("_loud")) {
-                    applyFaderLoud();
-                }
+            }
+            else if (key.contains("_power_vol")) {
+                setPowerAmpVol();
+            }
+            else if (key.contains("_d_")) {
+                applySpatialDelays();
+            }
+            else if (key.contains("_d1_") || key.contains("_rsse_")) {
+                applySurroundDelays();
+            }
+            else if (key.contains("_bb_") || key.contains("_bf_")) {
+                applyBassBoost(VolumeHelper.getVolume());
+                // The front shelf frequency picks the equaliser's residual row (the author's 0.5).
+                updateEqWithFm(VolumeHelper.getVolume());
+            }
+            else if (key.contains("_f_") || key.contains("_loud")) {
+                applyFaderLoud();
+            }
 //                else {
 //                    Log.d(TAG, "[TurboSender2000] ApplyStaticSettings called: " + key);
 //                    applyStaticSettings();
 //                }
-            }
-        });
-    };
+        }
+    }
 
     private final BroadcastReceiver controlReceiver = new BroadcastReceiver() {
         @Override
@@ -916,6 +928,7 @@ public class McuService extends Service implements LocationListener {
         galaGlobalMode = prefs.getBoolean(PREF_GALA_GLOBAL_MODE, false);
         galaGlobalEnabled = prefs.getBoolean(PREF_GALA_GLOBAL_ENABLED, false);
         prefs.registerOnSharedPreferenceChangeListener(prefListener);
+        LivePreset.setListener(liveListener);
         loadPlayerMap();
         // syncPreset reads last_selected_preset, loads it and applies it - all three. What
         // stood here did the first two by hand and got the first one wrong: it asked for a
@@ -1061,7 +1074,7 @@ public class McuService extends Service implements LocationListener {
      * {@code prefs} is assigned in two places, and a mirror of it would be a third that can drift.
      */
     private SharedPreferences presetPrefs() {
-        return CallPreset.readView(prefs);
+        return CallPreset.readView(LivePreset.readView(prefs));
     }
 
     private void loadPresetData(String preset) {
@@ -2652,6 +2665,7 @@ public class McuService extends Service implements LocationListener {
         }
         backgroundHandler.post(() -> {
             if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(prefListener);
+            LivePreset.setListener(null);
             stopPolling();
             stopGps();
             workerThread.quitSafely();

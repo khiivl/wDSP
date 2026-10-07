@@ -2691,20 +2691,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePreset(String name) {
-        if (name == null || name.trim().isEmpty()) return;
+        SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        if (putPreset(name, e)) e.apply();
+    }
+
+    /**
+     * The preset's values as the screen holds them, put into {@code e}: the store's editor, or a
+     * {@link LivePreset.Snapshot} when the screen only says what the preset is now. False when there
+     * is nothing to put.
+     */
+    private boolean putPreset(String name, SharedPreferences.Editor e) {
+        if (name == null || name.trim().isEmpty()) return false;
         // The service preset for calls is an array in CallPreset and is not edited (owner,
         // 14.09.2026). Nothing of its own is stored - and McuService reads Call_* from the array
         // anyway, so a write here would be both forbidden and ignored. The one thing still saved is
         // GALA in global mode, because then it belongs to the car and not to any preset.
         if (CallPreset.is(name)) {
             if (isFullyInitialized && galaGlobalMode) {
-                SharedPreferences.Editor g = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
-                putGalaGlobal(g);
-                g.apply();
+                putGalaGlobal(e);
+                return true;
             }
-            return;
+            return false;
         }
-        SharedPreferences.Editor e = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             e.putInt(name + "_g" + i, getIntSlider(gainSliders.get(i)));
             e.putBoolean(name + "_q" + i, qSwitches.get(i).isChecked());
@@ -2782,7 +2790,7 @@ public class MainActivity extends AppCompatActivity {
             }
             e.putBoolean(name + "_gala_disabled_for_preset", isChecked(switchGalaDisableForPreset));
         }
-        e.apply();
+        return true;
     }
 
     /** The car-wide GALA keys. One place, used by the ordinary save and by the service preset. */
@@ -3485,11 +3493,22 @@ public class MainActivity extends AppCompatActivity {
      */
     private void autoSaveCurrent() {
         if (!isFullyInitialized) return;
+        final String targetPreset = spinnerPresets.getText().toString();
+        // 🔴 The values are taken NOW, at the tick, and published to the service at once: it applies a
+        // preset from what it reads, so with only the delayed write the chip heard a slider after the
+        // finger stopped (owner, 07.10.2026: «Чип слідує за пальцем - це ж правильне рішення»). The
+        // disk gets this same snapshot once the ticks pause - never values read when the write fires.
+        final LivePreset.Snapshot snapshot = new LivePreset.Snapshot();
+        if (!putPreset(targetPreset, snapshot)) return;
+        final SharedPreferences store = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        LivePreset.publish(store, snapshot.values);
         if (pendingAutoSave != null) handler.removeCallbacks(pendingAutoSave);
-        String targetPreset = spinnerPresets.getText().toString();
         pendingAutoSave = () -> {
             pendingAutoSave = null;
-            savePreset(targetPreset);
+            SharedPreferences.Editor e = store.edit();
+            snapshot.writeTo(e);
+            e.apply();
+            LivePreset.stored(snapshot.values);
         };
         handler.postDelayed(pendingAutoSave, AUTOSAVE_DEBOUNCE_MS);
     }
@@ -3498,13 +3517,12 @@ public class MainActivity extends AppCompatActivity {
      * its delay - call before anything that could end the process (onPause()) so a change made
      * right before backgrounding/closing the app isn't silently dropped.
      *
-     * <p>🔴 And before anything that changes what the screen shows or which keys a preset has. The
-     * pending write captures the preset's NAME when the slider moves but reads the VALUES from the
-     * widgets when it fires, 300 ms later. Load another preset in between - the spinner, or the
-     * service switching by player or for a call (PRESET_CHANGED) - and the original preset gets
-     * the other one's values; rename or delete and the old name's keys come back; export reads
-     * the stored preset before the write has landed. So loadPreset, rename, delete, import and export run it first
-     * (merge of 1.0.2, 07.10.2026). */
+     * <p>🔴 And before anything that reads the store or rewrites a preset's keys. The pending write
+     * lands up to 300 ms later: after a rename or a delete it would bring the old name's keys back,
+     * and an export or a load would read the store before it. (The values are a snapshot taken at
+     * the tick; the 1.0.2 debounce read the widgets when it fired, so a preset loaded in between
+     * handed its values to the one being edited.) So loadPreset, rename, delete, import and export
+     * run it first (merge of 1.0.2, 07.10.2026). */
     private void flushPendingAutoSave() {
         if (pendingAutoSave != null) {
             handler.removeCallbacks(pendingAutoSave);
