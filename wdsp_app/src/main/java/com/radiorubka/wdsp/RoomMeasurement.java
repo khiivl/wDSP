@@ -310,6 +310,12 @@ public final class RoomMeasurement {
     /** Bands the test is taken over: 80 Hz to 5 kHz, where any loudspeaker must produce something. */
     private static final int SNR_TEST_FIRST_BAND = 3;
     private static final int SNR_TEST_LAST_BAND = 12;
+    /**
+     * Bands the noisy-cabin finding reads: 80 Hz to 1.25 kHz, where an air-con blower adds 12 to 15 dB
+     * and where both the Auto-EQ and the presence test live (CABIN_MODEL.md §8).
+     */
+    private static final int NOISE_TEST_FIRST_BAND = 3;
+    private static final int NOISE_TEST_LAST_BAND = 9;
 
     /**
      * The median signal-to-noise ratio over a band range, in dB.
@@ -3310,6 +3316,16 @@ public final class RoomMeasurement {
                 if (c == null || !c.ok || c.confident) continue;
                 result.defects.add(new CabinDefect(CabinDefect.Kind.REFLECTIONS_ONLY,
                         CabinDefect.Certainty.POSSIBLE, c.label, c.nameRes, Float.NaN));
+            }
+        }
+        // The noise is judged by the synthesis's own trust ramp rather than by the silence before the
+        // sweep: that silence is a level in the microphone's units, and only the ratio tells whether
+        // the measurement was spoiled. Below full trust the correction was cut back - say so.
+        if (result.cabinResponseMeasured) {
+            final float snr = medianSnrDb(result.avgSnrDb16, NOISE_TEST_FIRST_BAND, NOISE_TEST_LAST_BAND);
+            if (NativeSweep.snrConfidence(snr) < 1f) {
+                result.defects.add(new CabinDefect(CabinDefect.Kind.NOISY_CABIN, CabinDefect.Certainty.SURE,
+                        "", 0, snr));
             }
         }
     }

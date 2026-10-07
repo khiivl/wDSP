@@ -38,6 +38,8 @@ public final class CabinDefect {
         MIDBASS_ROLLOFF,
         /** A channel heard mainly through the cabin, not directly. */
         REFLECTIONS_ONLY,
+        /** The cabin was loud where the correction lives (a blower, the engine): part of it was not trusted. */
+        NOISY_CABIN,
     }
 
     /** How sure the measurement is - said to the person as plainly as the fault itself. */
@@ -100,6 +102,10 @@ public final class CabinDefect {
             case REFLECTIONS_ONLY:
                 return sure + at + "heard mainly through the cabin, not directly - its delay and polarity "
                         + "are less certain. Check that nothing blocks it, or move the microphone.";
+            case NOISY_CABIN:
+                return sure + String.format(Locale.US, "the speakers stood only %.1f dB above the cabin's noise "
+                        + "at 80 Hz - 1.25 kHz, so the correction there was applied only in part. An air-con "
+                        + "blower or a running engine does this: switch them off and measure again.", value);
             default:
                 return sure + at + kind.name();
         }
