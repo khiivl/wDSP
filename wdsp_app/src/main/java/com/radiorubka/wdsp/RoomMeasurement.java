@@ -396,7 +396,11 @@ public final class RoomMeasurement {
     private static final float PROBE_SECONDS = 1.5f;
     private static final float MAX_PLAUSIBLE_SUB_SPREAD_MS = 18.0f;
 
-    /** Centre of the band the subwoofer is aligned in - where a car's crossover sits (50..100 Hz). */
+    /**
+     * Centre of the band the subwoofer is aligned in when the doors keep no high-pass (Through) - where a
+     * car's crossover usually sits. Otherwise the band is the crossover the measurement chose
+     * (chooseDoorCrossover; owner, 08.10.2026: aligned at the crossover "підібраний вимірюванням").
+     */
     private static final float SUB_ALIGN_CENTRE_HZ = 80f;
     /** How far either way the subwoofer may sit from the doors in that band. */
     private static final float SUB_ALIGN_MAX_LAG_MS = 25f;
@@ -417,7 +421,8 @@ public final class RoomMeasurement {
      * on the owner's bench, 07.10.2026, 16 ms after the front right although it stands right under it - and
      * aligning that peak would have delayed both doors by 15 ms. What matters to the listener is that the
      * two add up in the band they share. So both impulses go through the same octave-wide band-pass at
-     * {@link #SUB_ALIGN_CENTRE_HZ} and the lag of their best correlation, within
+     * the crossover the measurement chose for the doors ({@link #SUB_ALIGN_CENTRE_HZ} without one) and
+     * the lag of their best correlation, within
      * {@link #SUB_ALIGN_MAX_LAG_MS}, becomes the sub's arrival relative to the anchor; its sign is the
      * sub's polarity against the doors there. The same filter on both keeps their relative phase, which
      * is all this reads. Confidence is the correlation itself - clarity means nothing for a band-limited
@@ -426,6 +431,7 @@ public final class RoomMeasurement {
     private static void alignSubwooferAtCrossover(Result result, int refIdx, float[][] impulses) {
         final int subIdx = Channel.SUBWOOFER.ordinal();
         if (refIdx < 0 || result.channels.length <= subIdx) return;
+        final float centreHz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : SUB_ALIGN_CENTRE_HZ;
         final ChannelResult sub = result.channels[subIdx];
         final ChannelResult anchor = result.channels[refIdx];
         final float[] a = impulses[refIdx];
@@ -439,8 +445,8 @@ public final class RoomMeasurement {
         if (to - from <= 2 * maxLag) return;
         final float[] fa = java.util.Arrays.copyOfRange(a, from, to);
         final float[] fb = java.util.Arrays.copyOfRange(b, from, to);
-        bandPassBothWays(fa, SUB_ALIGN_CENTRE_HZ);
-        bandPassBothWays(fb, SUB_ALIGN_CENTRE_HZ);
+        bandPassBothWays(fa, centreHz);
+        bandPassBothWays(fb, centreHz);
         double ea = 0, eb = 0;
         for (int i = 0; i < fa.length; i++) {
             ea += (double) fa[i] * fa[i];
@@ -478,9 +484,55 @@ public final class RoomMeasurement {
         Log.i(TAG, String.format(Locale.US,
                 "subwoofer aligned at %.0f Hz against %s: %+.2f ms (strongest peak %+.2f ms, impulse "
                         + "peak said %+.2f ms), correlation %+.2f -> polarity %+d, %s",
-                SUB_ALIGN_CENTRE_HZ, anchor.label, sub.arrivalMs - anchor.arrivalMs,
+                centreHz, anchor.label, sub.arrivalMs - anchor.arrivalMs,
                 strongestLag * 1000f / SAMPLE_RATE, peakMs - anchor.arrivalMs, corr, sub.polarity,
                 sub.confident ? "trusted" : "weak - reported, not trusted"));
+    }
+
+    /**
+     * The doors' spectrum as the listener gets it - their power mean - and the mean signal-to-noise
+     * ratio beside it, over the door channels that are heard, confident and, when an anchor is given,
+     * not phantoms of it. Returns how many doors went in; with none both arrays stay zero.
+     */
+    private static int averageDoors(Result result, ChannelResult anchor, float[] outClean, float[] outSnr) {
+        final double[] power = new double[NativeSweep.BAND_COUNT];
+        java.util.Arrays.fill(outSnr, 0f);
+        int used = 0;
+        for (int chIdx : new int[]{Channel.FRONT_LEFT.ordinal(), Channel.FRONT_RIGHT.ordinal(),
+                                   Channel.REAR_LEFT.ordinal(), Channel.REAR_RIGHT.ordinal()}) {
+            ChannelResult c = result.channels[chIdx];
+            if (c == null || !c.ok || !c.confident || isPhantom(chIdx, c, anchor)) continue;
+            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+                power[b] += Math.pow(10.0, c.cleanBandsDb[b] / 10.0);
+                outSnr[b] += c.snrDb[b];
+            }
+            used++;
+        }
+        for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
+            outClean[b] = used > 0 ? (float) (10.0 * Math.log10(Math.max(power[b] / used, 1e-30))) : 0f;
+            if (used > 0) outSnr[b] /= used;
+        }
+        return used;
+    }
+
+    /**
+     * Where the doors' midbass rolls off becomes their high-pass, and so the crossover with the sub:
+     * the native side answers in Hz, the chip's code is ours. Without a subwoofer the doors stay
+     * full-range (Through, code 0). Chosen before the subwoofer is aligned, because that alignment
+     * happens at this frequency; the phantom rule is applied here by hand since the pass applies it
+     * to the channels only afterwards.
+     */
+    private static void chooseDoorCrossover(Result result, int refIdx) {
+        if (!result.hasSubwoofer || refIdx < 0) {
+            result.midbassHpfIdx = 0;
+            result.midbassHpfFreqHz = 0;   // displayed as Through
+            return;
+        }
+        final float[] clean = new float[NativeSweep.BAND_COUNT];
+        final float[] snr = new float[NativeSweep.BAND_COUNT];
+        averageDoors(result, result.channels[refIdx], clean, snr);
+        result.midbassHpfIdx = DspResponse.doorHpfIndexOf(NativeSweep.detectMidbassRollOffHz(clean));
+        result.midbassHpfFreqHz = Math.round(DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx]);
     }
 
     /** An octave-wide second-order band-pass, forward and backward (zero phase), in place. */
@@ -537,16 +589,22 @@ public final class RoomMeasurement {
         for (int i = 0; i < list.length; i++) {
             ChannelResult c = list[i];
             if (c == null || !c.ok || c == anchor) continue;
-            final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
-            final float limit = i == Channel.SUBWOOFER.ordinal()
-                    ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
-            if (apart > limit) {
+            if (isPhantom(i, c, anchor)) {
                 c.ok = false;
                 Log.w(TAG, String.format(Locale.US,
                         "%s: arrived %.1f ms from anchor %s (> %.0f ms) - disqualified phantom/reflection",
-                        c.label, apart, anchor.label, limit));
+                        c.label, Math.abs(c.arrivalMs - anchor.arrivalMs), anchor.label, phantomLimitMs(i)));
             }
         }
+    }
+
+    /** The phantom rule itself: arrived too far from the anchor to be the speaker at channel index {@code i}. */
+    private static boolean isPhantom(int i, ChannelResult c, ChannelResult anchor) {
+        return anchor != null && c != anchor && Math.abs(c.arrivalMs - anchor.arrivalMs) > phantomLimitMs(i);
+    }
+
+    private static float phantomLimitMs(int i) {
+        return i == Channel.SUBWOOFER.ordinal() ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
     }
 
     /**
@@ -2474,6 +2532,7 @@ public final class RoomMeasurement {
         // 2. GCC-PHAT high-precision delay estimation
         // 2. The anchor: the clearest door channel (arrivalAnchor - one rule with computeDelays).
         final int refIdx = arrivalAnchor(result);
+        chooseDoorCrossover(result, refIdx);
         alignSubwooferAtCrossover(result, refIdx, channelImpulses);
 
         // The deconvolved floor reported is that of the anchor channel. This no longer destroys the
@@ -2900,26 +2959,8 @@ public final class RoomMeasurement {
         // to do anything else with.
         // The ratio stays a dB mean: it is a measure of trust, not a level.
         float[] avgClean = new float[NativeSweep.BAND_COUNT];
-        double[] avgPower = new double[NativeSweep.BAND_COUNT];
         float[] avgSnr = new float[NativeSweep.BAND_COUNT];
-        int usedCount = 0;
-        for (int chIdx : new int[]{Channel.FRONT_LEFT.ordinal(), Channel.FRONT_RIGHT.ordinal(),
-                                   Channel.REAR_LEFT.ordinal(), Channel.REAR_RIGHT.ordinal()}) {
-            ChannelResult c = result.channels[chIdx];
-            if (c != null && c.ok && c.confident) {
-                for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-                    avgPower[b] += Math.pow(10.0, c.cleanBandsDb[b] / 10.0);
-                    avgSnr[b] += c.snrDb[b];
-                }
-                usedCount++;
-            }
-        }
-        if (usedCount > 0) {
-            for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
-                avgClean[b] = (float) (10.0 * Math.log10(Math.max(avgPower[b] / usedCount, 1e-30)));
-                avgSnr[b] /= usedCount;
-            }
-        }
+        averageDoors(result, null, avgClean, avgSnr);
         // 🔴 A band the sweep never reached is not a band that measured badly - it is a band that
         // was not measured, and the two must not be handed to the synthesis as the same thing.
         //
@@ -2951,16 +2992,8 @@ public final class RoomMeasurement {
         System.arraycopy(avgSnr, 0, result.avgSnrDb16, 0, NativeSweep.BAND_COUNT);
 
 
-        // 3. Detect midbass roll-off: the native side answers in Hz, the chip's code is ours.
-        if (result.hasSubwoofer) {
-            result.midbassHpfIdx = DspResponse.doorHpfIndexOf(NativeSweep.detectMidbassRollOffHz(avgClean));
-            // 0 for code 0: Through, which is how the no-subwoofer branch below says it too.
-            result.midbassHpfFreqHz = Math.round(DspResponse.DOOR_HPF_HZ[result.midbassHpfIdx]);
-        } else {
-            // No subwoofer installed: keep door speakers full-range (Through / 20 Hz, idx 0)
-            result.midbassHpfIdx = 0;
-            result.midbassHpfFreqHz = 0; // Displayed as Through (0 Hz / 20 Hz)
-        }
+        // 3. The doors' high-pass - the crossover - was chosen before the subwoofer was aligned at it
+        //    (chooseDoorCrossover), from the same average of the same doors.
 
         // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
         float[] subOut = new float[2];
