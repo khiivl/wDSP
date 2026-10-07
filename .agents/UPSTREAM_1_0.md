@@ -52,6 +52,11 @@ What is taken — the author's audio reasoning and his numbers:
    microphone already hears the chip's output.
 5. Normalisation −20…60 dB, unclamped; the curve fades out in silence (peak below 2 dB, 4 dB fade) and
    back in; `Choreographer` interpolates between captures.
+6. This branch's scale: the curve is drawn relative to the **dB mean** of the points with sound — the
+   reference the bars use. Until 07.10.2026 it was a power mean, which sits near the loudest points; on the
+   author's four Audio Check stems played together it stood **7–17 dB** above the dB mean (bench, 32-band dump, points within 36 dB of the peak,
+   11 frames), so the whole curve read that much low (owner: *«RTA… показує занижені рівні»*). Fixed in
+   `443aa20`.
 
 Where it lives: the native analyser gains a 200-point curve output from the transforms it already
 runs (8192 below 800 Hz, 1024 above); a Java helper `RtaCurve` does 3–5; `SpectrumAnalyzerView` draws
