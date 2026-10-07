@@ -19,6 +19,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 
 | file | what |
 |---|---|
+| [FOR_THE_AUTHOR.md](FOR_THE_AUTHOR.md) | 🧭 **for the author's agent**: a tour of `kostyfmat_mod` against `master` - how it relates, where each subsystem lives, conventions, what is open |
 | [AGENTS.md](AGENTS.md) | **read first** — the rules in force: what this project is, how it builds, how it is verified on the unit, the prohibitions, how to work with the owner, and the dependencies |
 | [HANDOFF.md](HANDOFF.md) | one current snapshot, overwritten each session: where things stand, what is in flight with its exact next step, questions for the owner. No history — that is in git |
 | [TODO.md](TODO.md) · [DEBT.md](DEBT.md) | the queue, and the defects that are still open (symptom, where in the code, why deferred). In Ukrainian: the owner reads them |
