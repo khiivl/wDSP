@@ -1720,7 +1720,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDbLabel(int i, int p) {
-        int val = (p - 6) * 2;
+        int val = Math.round(AudioConfig.eqGainDb(p));
         String text = (val > 0 ? "+" : "") + val;
         dbLabels.get(i).setText(text);
     }

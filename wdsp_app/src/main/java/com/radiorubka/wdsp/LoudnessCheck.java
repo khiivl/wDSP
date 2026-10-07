@@ -282,6 +282,6 @@ public final class LoudnessCheck {
     /** A stored gain index 0..12 as decibels: index 6 is flat, each step is 2 dB. */
     private static float bandDb(int[] gains, int i) {
         if (gains == null || i >= gains.length) return 0f;
-        return (gains[i] - 6) * 2f;
+        return AudioConfig.eqGainDb(gains[i]);
     }
 }

@@ -142,7 +142,7 @@ public final class LoudnessCurve {
         boolean hasOffset = false;
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float off = offsets != null && i < offsets.length ? offsets[i] : 0f;
-            target[i] = (gains[i] - 6) * 2f + off;
+            target[i] = AudioConfig.eqGainDb(gains[i]) + off;
             if (off != 0f) hasOffset = true;
         }
         return hasOffset ? AudioConfig.prewarpEq(target) : target;

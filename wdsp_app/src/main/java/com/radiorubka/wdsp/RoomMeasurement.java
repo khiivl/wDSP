@@ -231,8 +231,6 @@ public final class RoomMeasurement {
     private static final int FADER_MIN = 0;
     private static final int FADER_CENTRE = 12;
     private static final int FADER_MAX = 24;
-    /** Equaliser gain indices run 0..12, and 6 is flat - see McuService.applyEqualizer(). */
-    private static final int EQ_FLAT_INDEX = 6;
     /** Time for the MCU to act on a routing change before the sweep starts. */
     private static final long ROUTING_SETTLE_MS = 800;
 
@@ -3073,7 +3071,7 @@ public final class RoomMeasurement {
          // the preset. The gains are numbers; the Q flags are booleans, one bit per band, because
          // the hardware only offers a wide setting and a narrow one.
          for (int b = 0; b < 16; b++) {
-             e.putInt(SCRATCH_PRESET + "_g" + b, EQ_FLAT_INDEX);
+             e.putInt(SCRATCH_PRESET + "_g" + b, AudioConfig.EQ_FLAT_INDEX);
              e.putBoolean(SCRATCH_PRESET + "_q" + b, false);
          }
          e.putInt(SCRATCH_PRESET + "_f_lr", FADER_CENTRE);
@@ -3795,7 +3793,7 @@ public final class RoomMeasurement {
             // quantities, and the label was the one lying.
             sb.append("Synthesized Auto-EQ (").append(result.targetCurve != null ? result.targetCurve.title : "Harman").append(" target), dB:");
             for (int g : result.autoEqGains16) {
-                sb.append(String.format(Locale.US, " %+d", (g - EQ_FLAT_INDEX) * 2));
+                sb.append(String.format(Locale.US, " %+d", Math.round(AudioConfig.eqGainDb(g))));
             }
             sb.append("\n");
             sb.append("  same as hardware indices (6 = 0 dB, 2 dB a step):");
