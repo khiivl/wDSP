@@ -252,6 +252,8 @@ public final class RoomMeasurement {
     private static final int FADER_MAX = 24;
     /** Time for the MCU to act on a routing change before the sweep starts. */
     private static final long ROUTING_SETTLE_MS = 800;
+    /** How often the measurement's progress is reported while it records. */
+    private static final long PROGRESS_EVERY_MS = 400;
 
     /**
      * Reported, no longer used to decide anything.
@@ -2176,6 +2178,7 @@ public final class RoomMeasurement {
             // Routing is switched in the silence before each sweep. The timing comes from the
             // wall clock rather than from frames written, because what matters is when the MCU
             // acts, and it acts on its own schedule - the gap is long enough to absorb both.
+            final int[] playingSlot = {0};
             Thread router = new Thread(() -> {
                 for (int k = 1; k < slots.length; k++) {
                     // Tied to ROUTING_SETTLE_MS rather than to a fraction of the gap. It used to be
@@ -2190,12 +2193,8 @@ public final class RoomMeasurement {
                             * 1000L / SAMPLE_RATE);
                     long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
                     if (waitMs > 0) sleep(waitMs);
-                    int pct = 15 + (k * 65) / slots.length;
-                    if (listener != null) {
-                        listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
-                                context.getString(R.string.room_stage_speakers_detail,
-                                        context.getString(slots[k].nameRes)), pct);
-                    }
+                    // Which speaker plays is said here; how far the pass is, by the recording loop.
+                    playingSlot[0] = k;
                     applyRouting(prefs, preset, slots[k]);
                 }
             }, "wDSP_RoomRouting");
@@ -2207,7 +2206,19 @@ public final class RoomMeasurement {
 
             router.start();
 
+            // Progress follows the recording, not the sweep count: counted by sweeps, the last one
+            // (a short probe or the sub) showed 67 % for its whole length and the analysis after it
+            // takes a second, so the owner saw every run "end at 67 %" (07.10.2026).
+            long lastProgressMs = 0;
             while (got < recordLen) {
+                final long nowMs = System.currentTimeMillis();
+                if (listener != null && nowMs - lastProgressMs >= PROGRESS_EVERY_MS) {
+                    lastProgressMs = nowMs;
+                    listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
+                            context.getString(R.string.room_stage_speakers_detail,
+                                    context.getString(slots[playingSlot[0]].nameRes)),
+                            15 + (int) (65L * got / recordLen));
+                }
                 if (aborted || CallState.isActive()) {
                     Log.w(TAG, "measurement aborted due to active phone call");
                     result.error = "phone call interrupted measurement";
