@@ -336,6 +336,13 @@ public final class RoomMeasurement {
      * For subwoofers placed in the trunk (with sub amplifier/DSP latency), up to 18 ms (~6.2 m) is allowed.
      */
     private static final float MAX_PLAUSIBLE_SPREAD_MS = 10.0f;
+
+    /**
+     * A probe of a door nobody declared: long enough for the presence test (level, median SNR over
+     * the mid bands, an arrival near the anchor), short enough to be "a few seconds" for the whole
+     * layout - a full sweep is there to shape an equaliser, which a probe never does.
+     */
+    private static final float PROBE_SECONDS = 1.5f;
     private static final float MAX_PLAUSIBLE_SUB_SPREAD_MS = 18.0f;
 
     /**
@@ -363,10 +370,14 @@ public final class RoomMeasurement {
      */
     private static void disqualifyPhantoms(Result result, int anchorIdx) {
         if (anchorIdx < 0) return;
-        final ChannelResult anchor = result.channels[anchorIdx];
-        for (int i = 0; i < result.channels.length; i++) {
-            ChannelResult c = result.channels[i];
-            if (c == null || !c.ok || i == anchorIdx) continue;
+        disqualifyPhantoms(result.channels, result.channels[anchorIdx]);
+    }
+
+    /** The same rule over any list kept by channel index - the declared speakers or the probes. */
+    private static void disqualifyPhantoms(ChannelResult[] list, ChannelResult anchor) {
+        for (int i = 0; i < list.length; i++) {
+            ChannelResult c = list[i];
+            if (c == null || !c.ok || c == anchor) continue;
             final float apart = Math.abs(c.arrivalMs - anchor.arrivalMs);
             final float limit = i == Channel.SUBWOOFER.ordinal()
                     ? MAX_PLAUSIBLE_SUB_SPREAD_MS : MAX_PLAUSIBLE_SPREAD_MS;
@@ -901,6 +912,22 @@ public final class RoomMeasurement {
     }
 
     /**
+     * Diagnostic: the door layout for the NEXT measurement only, without touching the person's
+     * answers in CabinProfile - so a bench with one pair can be measured as "front only" or "rear
+     * only" and the probe of the undeclared doors checked both ways. -1 leaves that pair as declared.
+     *
+     * <pre>
+     *   adb shell am broadcast -a com.radiorubka.wdsp.MEASURE_ROOM -p com.radiorubka.wdsp --ei front 1 --ei rear 0
+     * </pre>
+     */
+    private static volatile int layoutFront = -1, layoutRear = -1;
+
+    public static void setLayoutOnce(int front, int rear) {
+        layoutFront = front;
+        layoutRear = rear;
+    }
+
+    /**
      * Diagnostic: hold the routing still and change the delay line between sweeps instead.
      *
      * The sliders are labelled in milliseconds, and those labels came from reading somebody else's
@@ -1257,6 +1284,12 @@ public final class RoomMeasurement {
         public ChannelSwapCheck.Verdict channelOrder;
         /** The measurement's main answer: the faults found, in the list's order (collectDefects). */
         public final List<CabinDefect> defects = new ArrayList<>();
+        /**
+         * Doors nobody declared, played briefly at the end of the pass to catch a speaker that is
+         * there anyway (owner, 07.10.2026). By channel index; null when not probed. They answer that
+         * one question and take part in nothing else - not the anchor, the delays or the equaliser.
+         */
+        public final ChannelResult[] probes = new ChannelResult[Channel.SUBWOOFER.ordinal()];
 
         // Microphone placement & cavity awareness
         public float micSpotLr = -0.5f;
@@ -1268,9 +1301,9 @@ public final class RoomMeasurement {
         public int subPlace = -1;
 
         /**
-         * Every speaker the person said the car has was heard. A channel nobody declared is not
-         * swept and stays null - "не чує = немає" (owner, 13.09.2026) holds for it by construction;
-         * a declared one that stayed silent is what {@link #declaredButUnheard} names.
+         * Every speaker the person said the car has was heard. A channel nobody declared is only
+         * probed ({@link #probes}) and stays null here - "не чує = немає" (owner, 13.09.2026) holds for
+         * it by construction; a declared one that stayed silent is what {@link #declaredButUnheard} names.
          */
         public boolean isUsable() {
             if (channels == null || channels.length == 0) return false;
@@ -1600,8 +1633,14 @@ public final class RoomMeasurement {
         }
         aborted = false;
         result.hasSubwoofer = hasSubwoofer;
-        result.hasFrontPair = CabinProfile.hasFrontPair(context);
-        result.hasRearPair = CabinProfile.hasRearPair(context);
+        result.hasFrontPair = layoutFront >= 0 ? layoutFront != 0 : CabinProfile.hasFrontPair(context);
+        result.hasRearPair = layoutRear >= 0 ? layoutRear != 0 : CabinProfile.hasRearPair(context);
+        if (layoutFront >= 0 || layoutRear >= 0) {
+            Log.w(TAG, "layout for this measurement only (diagnostic): front pair " + result.hasFrontPair
+                    + ", rear pair " + result.hasRearPair);
+        }
+        layoutFront = -1;   // one measurement, then the person's answers again
+        layoutRear = -1;
         result.cabinWidthCm = CabinProfile.widthCm(context);
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
@@ -1727,12 +1766,15 @@ public final class RoomMeasurement {
                 + " and is restored in the finally block and by restoreIfInterrupted()");
 
         try (NativeSweep sweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, seconds);
-             NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ, topHz, seconds)) {
+             NativeSweep subSweep = new NativeSweep(SAMPLE_RATE, SUB_SWEEP_START_HZ, topHz, seconds);
+             NativeSweep probeSweep = new NativeSweep(SAMPLE_RATE, SWEEP_START_HZ, topHz, PROBE_SECONDS)) {
             if (!sweep.isValid() || !subSweep.isValid() || subSweep.length() != sweep.length()) {
                 result.fail(MeasurementFailure.SWEEP_NOT_BUILT);
                 return result;
             }
-            runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, amplitude, result, listener,
+            if (!probeSweep.isValid()) Log.w(TAG, "the probe sweep was not built - undeclared doors stay unprobed");
+            runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, probeSweep.isValid() ? probeSweep : null,
+                    amplitude, result, listener,
                     isMicCalibrationOnly);
             judgePolarity(app, result);
 
@@ -1820,7 +1862,8 @@ public final class RoomMeasurement {
      * @param subSweep the subwoofer's ({@link #SUB_SWEEP_START_HZ}), the same length
      */
     private static void runOnePass(Context context, SharedPreferences prefs, String preset,
-                                   NativeSweep sweep, NativeSweep subSweep, float amplitude,
+                                   NativeSweep sweep, NativeSweep subSweep, NativeSweep probeSweep,
+                                   float amplitude,
                                    Result result, Listener listener, boolean isMicCalibrationOnly) {
         // Only what the person said the car has (CabinProfile). Results are kept by the channel's
         // own index, never by its place in this list: everything downstream reads FRONT_LEFT and
@@ -1830,33 +1873,57 @@ public final class RoomMeasurement {
             if (result.isDeclared(ch.ordinal())) declared.add(ch);
         }
         final Channel[] channels = declared.toArray(new Channel[0]);
+        // Doors nobody declared get a short probe at the end of the same pass (owner, 07.10.2026:
+        // «так»): a speaker playing where the layout says there is none is a finding of its own, and
+        // only sound can find it. Never the subwoofer: on its pass the doors play above the 250 Hz
+        // high-pass, so a probe there would hear them and call it a sub.
+        final java.util.List<Channel> undeclared = new java.util.ArrayList<>();
+        if (probeSweep != null && !isMicCalibrationOnly && delayTest == 0) {
+            for (Channel ch : Channel.values()) {
+                if (ch != Channel.SUBWOOFER && !result.isDeclared(ch.ordinal())) undeclared.add(ch);
+            }
+        }
         final int sweepLen = sweep.length();
+        final int probeLen = probeSweep != null ? probeSweep.length() : 0;
         final int gap = (int) (GAP_SECONDS * SAMPLE_RATE);
         final int lead = (int) (LEAD_SECONDS * SAMPLE_RATE);
-        final int period = sweepLen + gap;
-        final int totalFrames = lead + channels.length * period;
+        // Where each sweep starts in the one long track, and whose it is: the declared speakers' full
+        // sweeps first, the probes after them. Without probes this is lead + k * (sweep + gap), as it
+        // always was.
+        final Channel[] slots = new Channel[channels.length + undeclared.size()];
+        final int[] slotAt = new int[slots.length];
+        int next = lead;
+        for (int k = 0; k < slots.length; k++) {
+            slots[k] = k < channels.length ? channels[k] : undeclared.get(k - channels.length);
+            slotAt[k] = next;
+            next += (k < channels.length ? sweepLen : probeLen) + gap;
+        }
+        final int totalFrames = next;
         final int recordLen = totalFrames + (int) (TAIL_SECONDS * SAMPLE_RATE);
 
         float[] mono = new float[sweepLen];
         sweep.generate(mono, amplitude);
         float[] monoSub = new float[sweepLen];
         subSweep.generate(monoSub, amplitude);
+        float[] monoProbe = new float[probeLen];
+        if (probeLen > 0) probeSweep.generate(monoProbe, amplitude);
 
         // One long track: quiet, sweep, quiet, sweep, and so on.
         short[] stereo = new short[totalFrames * 2];
-        for (int k = 0; k < channels.length; k++) {
-            final int at = lead + k * period;
-            final float[] source = channels[k] == Channel.SUBWOOFER ? monoSub : mono;
-            for (int i = 0; i < sweepLen; i++) {
+        for (int k = 0; k < slots.length; k++) {
+            final int at = slotAt[k];
+            final float[] source = k >= channels.length ? monoProbe
+                    : slots[k] == Channel.SUBWOOFER ? monoSub : mono;
+            for (int i = 0; i < source.length; i++) {
                 short v = (short) Math.max(Short.MIN_VALUE,
                         Math.min(Short.MAX_VALUE, Math.round(source[i] * Short.MAX_VALUE)));
                 stereo[(at + i) * 2] = v;
                 stereo[(at + i) * 2 + 1] = v;
             }
         }
-        Log.i(TAG, "one pass: sweep " + sweepLen + " samples, gap " + gap + ", period " + period
-                + ", total " + totalFrames + " frames (" + (totalFrames / (float) SAMPLE_RATE)
-                + " s)");
+        Log.i(TAG, "one pass: sweep " + sweepLen + " samples, gap " + gap + ", " + channels.length
+                + " declared + " + undeclared.size() + " probe(s) of " + probeLen + " samples, total "
+                + totalFrames + " frames (" + (totalFrames / (float) SAMPLE_RATE) + " s)");
 
         AudioTrack track = null;
         AudioRecord record = null;
@@ -1891,7 +1958,7 @@ public final class RoomMeasurement {
 
             // The first speaker is selected before anything starts, so its sweep is not the one
             // that has to wait for the routing to take effect.
-            applyRouting(prefs, preset, channels[0]);
+            applyRouting(prefs, preset, slots[0]);
             sleep(ROUTING_SETTLE_MS);
 
             // Pause media player before sweep
@@ -1956,7 +2023,7 @@ public final class RoomMeasurement {
             // wall clock rather than from frames written, because what matters is when the MCU
             // acts, and it acts on its own schedule - the gap is long enough to absorb both.
             Thread router = new Thread(() -> {
-                for (int k = 1; k < channels.length; k++) {
+                for (int k = 1; k < slots.length; k++) {
                     // Tied to ROUTING_SETTLE_MS rather than to a fraction of the gap. It used to be
                     // gap/2 - 750 ms ahead of the sweep - while the code's own figure for how long
                     // the MCU needs to act on a routing change is 800 ms. Two numbers about the same
@@ -1965,23 +2032,23 @@ public final class RoomMeasurement {
                     // sent exactly one settle-time before the sweep, which with a 1.5 s gap still
                     // leaves 700 ms for the cabin to stop ringing after the previous one.
                     final long settleFrames = ROUTING_SETTLE_MS * SAMPLE_RATE / 1000L;
-                    final long switchAtMs = (long) ((lead + k * period - settleFrames)
+                    final long switchAtMs = (long) ((slotAt[k] - settleFrames)
                             * 1000L / SAMPLE_RATE);
                     long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
                     if (waitMs > 0) sleep(waitMs);
-                    int pct = 15 + (k * 65) / channels.length;
+                    int pct = 15 + (k * 65) / slots.length;
                     if (listener != null) {
                         listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
                                 context.getString(R.string.room_stage_speakers_detail,
-                                        context.getString(channels[k].nameRes)), pct);
+                                        context.getString(slots[k].nameRes)), pct);
                     }
-                    applyRouting(prefs, preset, channels[k]);
+                    applyRouting(prefs, preset, slots[k]);
                 }
             }, "wDSP_RoomRouting");
             if (listener != null) {
                 listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
                         context.getString(R.string.room_stage_speakers_detail,
-                                context.getString(channels[0].nameRes)), 15);
+                                context.getString(slots[0].nameRes)), 15);
             }
 
             router.start();
@@ -2098,24 +2165,27 @@ public final class RoomMeasurement {
         // Each sweep is cut out with a generous margin. The window is short enough that the next
         // sweep cannot fall inside it, so the strongest peak in each window belongs to the sweep
         // that window was cut for.
-        final int windowLen = lead + sweepLen + (int) (1.0f * SAMPLE_RATE);
         float[] analysis = new float[NativeSweep.RESULT_SIZE];
         float[][] channelImpulses = new float[result.channels.length][];
 
-        for (int k = 0; k < channels.length; k++) {
-            // k is the sweep's place in the recording; ord is where its result lives.
-            final int ord = channels[k].ordinal();
+        for (int k = 0; k < slots.length; k++) {
+            // k is the sweep's place in the recording; ord is where its result lives. A probe's
+            // result goes to result.probes and nowhere else.
+            final boolean probe = k >= channels.length;
+            final int ord = slots[k].ordinal();
+            final int thisLen = probe ? probeLen : sweepLen;
             ChannelResult cr = new ChannelResult();
-            cr.label = channels[k].label;
-            cr.nameRes = channels[k].nameRes;
+            cr.label = probe ? slots[k].label + " (probe)" : slots[k].label;
+            cr.nameRes = slots[k].nameRes;
             cr.recordedPeak = passPeak;
             cr.recordedRms = passRms;
             cr.bandwidthDb = passBandwidth;
-            result.channels[ord] = cr;
+            if (probe) result.probes[ord] = cr;
+            else result.channels[ord] = cr;
 
-            final int from = k * period;
-            final int len = Math.min(windowLen, got - from);
-            if (len < sweepLen) {
+            final int from = slotAt[k] - lead;
+            final int len = Math.min(lead + thisLen + (int) (1.0f * SAMPLE_RATE), got - from);
+            if (len < thisLen) {
                 Log.w(TAG, cr.label + ": the recording ended before this sweep");
                 continue;
             }
@@ -2132,7 +2202,8 @@ public final class RoomMeasurement {
             cr.recordedRms = (float) Math.sqrt(windowSum / len);
 
             // Each sweep is taken apart with its own inverse filter.
-            final NativeSweep played = channels[k] == Channel.SUBWOOFER ? subSweep : sweep;
+            final NativeSweep played = probe ? probeSweep
+                    : slots[k] == Channel.SUBWOOFER ? subSweep : sweep;
             if (!played.analyse(window, len, analysis)) {
                 Log.w(TAG, cr.label + ": nothing in this part of the recording looked like the "
                         + "sweep");
@@ -2154,7 +2225,7 @@ public final class RoomMeasurement {
             // Deconvolve impulse response for GCC-PHAT
             float[] impBuf = new float[len];
             int impLen = played.deconvolve(window, len, impBuf);
-            if (impLen > 0) {
+            if (impLen > 0 && !probe) {
                 channelImpulses[ord] = new float[impLen];
                 System.arraycopy(impBuf, 0, channelImpulses[ord], 0, impLen);
             }
@@ -2235,8 +2306,9 @@ public final class RoomMeasurement {
         }
         Log.i(TAG, nfLog.toString());
 
-        // Arrivals too far from the anchor to be the speaker itself.
+        // Arrivals too far from the anchor to be the speaker itself - the probes' too.
         disqualifyPhantoms(result, refIdx);
+        if (refIdx >= 0) disqualifyPhantoms(result.probes, result.channels[refIdx]);
 
         // GCC-PHAT high-precision delay estimation relative to the anchor
         if (refIdx >= 0 && channelImpulses[refIdx] != null) {
@@ -2380,7 +2452,11 @@ public final class RoomMeasurement {
         }
         final int anchorIdx = arrivalAnchor(result);
         if (anchorIdx < 0) {
-            result.fail(MeasurementFailure.NOTHING_HEARD);
+            // "Check the volume and the microphone" is the wrong advice when a probe heard a door
+            // nobody declared: the sound is fine, the layout is not.
+            boolean probeHeard = false;
+            for (ChannelResult p : result.probes) probeHeard |= p != null && p.ok;
+            result.fail(probeHeard ? MeasurementFailure.LAYOUT_MISMATCH : MeasurementFailure.NOTHING_HEARD);
             Log.w(TAG, result.error);
             return;
         }
@@ -3202,6 +3278,12 @@ public final class RoomMeasurement {
                         CabinDefect.Certainty.LIKELY, ch.label, ch.nameRes, Float.NaN));
             }
         }
+        for (int i = 0; i < result.probes.length; i++) {
+            if (result.probes[i] == null || !result.probes[i].ok) continue;
+            Channel ch = Channel.values()[i];
+            result.defects.add(new CabinDefect(CabinDefect.Kind.HEARD_NOT_DECLARED,
+                    CabinDefect.Certainty.LIKELY, ch.label, ch.nameRes, Float.NaN));
+        }
         if (result.channelOrder != null) {
             for (Channel[] pair : result.channelOrder.swapped) {
                 result.defects.add(new CabinDefect(CabinDefect.Kind.CHANNELS_SWAPPED, CabinDefect.Certainty.LIKELY,
@@ -3584,6 +3666,20 @@ public final class RoomMeasurement {
                 }
                 sb.append("\n");
             }
+            boolean probed = false;
+            for (int i = 0; i < result.probes.length; i++) {
+                ChannelResult p = result.probes[i];
+                if (p == null) continue;
+                probed = true;
+                sb.append(String.format(Locale.US,
+                        "%-12s PROBE, not declared: arrival %8.2f ms  clarity %5.1f dB  peak %6.1f dBFS  "
+                                + "median SNR %5.1f dB  -> %s\n",
+                        Channel.values()[i].label, p.arrivalMs, p.clarityDb,
+                        20 * Math.log10(p.recordedPeak + 1e-9f),
+                        medianSnrDb(p.snrDb, SNR_TEST_FIRST_BAND, SNR_TEST_LAST_BAND),
+                        p.ok ? "HEARD - a speaker plays here" : "not heard"));
+            }
+            if (probed) sb.append('\n');
             sb.append("Cabin silence dB:     ");
             for (float band : result.ambientNoiseDb16) {
                 sb.append(String.format(Locale.US, " %.1f", band));

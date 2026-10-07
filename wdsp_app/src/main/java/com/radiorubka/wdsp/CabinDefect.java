@@ -26,6 +26,8 @@ public final class CabinDefect {
         CLIPPING,
         /** A speaker the person said the car has stayed silent. */
         DECLARED_NOT_HEARD,
+        /** A door nobody declared answered its probe: a speaker plays there. */
+        HEARD_NOT_DECLARED,
         /** Two speakers arrive as if each stood in the other's place: swapped wires, or a wrong dot. */
         CHANNELS_SWAPPED,
         /** A main speaker reads inverted while the others do not. */
@@ -77,6 +79,10 @@ public final class CabinDefect {
             case DECLARED_NOT_HEARD:
                 return sure + at + "declared but not heard. Check that the speaker is connected and plays; "
                         + "if the car has none there, untick it in the speaker layout.";
+            case HEARD_NOT_DECLARED:
+                return sure + at + "heard although not declared - a speaker plays on this output. If the car "
+                        + "has one there, tick it in the speaker layout and measure again; if not, find what "
+                        + "is wired to it.";
             case CHANNELS_SWAPPED:
                 return sure + at + String.format(Locale.US, "the arrival times fit the cabin only with these two "
                         + "swapped (%.2f ms off as wired). If the microphone stood where the dot says, their "

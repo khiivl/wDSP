@@ -34,7 +34,10 @@ enum MeasurementFailure {
     NOTHING_HEARD(R.string.room_err_nothing_heard,
             "no speaker was heard at all - check the volume and that the microphone is not covered"),
     TOO_FEW_HEARD(R.string.room_err_too_few_heard,
-            "only %1$d speaker(s) were heard - nothing to align against");
+            "only %1$d speaker(s) were heard - nothing to align against"),
+    /** NOTHING_HEARD, except that a probe of an undeclared door did hear a speaker: the layout is wrong. */
+    LAYOUT_MISMATCH(R.string.room_err_layout_mismatch,
+            "none of the declared speakers was heard, but undeclared ones played - check the speaker layout");
 
     private final int textRes;
     private final String english;

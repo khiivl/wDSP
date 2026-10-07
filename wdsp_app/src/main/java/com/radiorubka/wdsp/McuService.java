@@ -702,6 +702,7 @@ public class McuService extends Service implements LocationListener {
                     // the recordings are kept so a tester can send them back.
                     RoomMeasurement.setSameRouting(intent.getIntExtra("same", 0) != 0);
                     RoomMeasurement.setDelayTest(intent.getIntExtra("delaytest", 0));
+                    RoomMeasurement.setLayoutOnce(intent.getIntExtra("front", -1), intent.getIntExtra("rear", -1));
                     RoomMeasurement.measureAsync(getApplicationContext(),
                             intent.getFloatExtra("amp", 0.25f),
                             intent.getFloatExtra("sec", 3f), null);
