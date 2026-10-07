@@ -25,6 +25,14 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
   hardware, and it is why a band-edge figure alone never proved a rolled-off tweeter.
 - 📻 Reference material: EMMA "12 Pink Noise.wav" is 44.1 kHz, −29 dBFS RMS, with −4 dB at 20 Hz and
   −4.5 dB at 20 kHz. Subtract that before blaming the room.
+- 📻 **The author's calibration files** (audiocheck.net, given 07.10.2026; he calls them "0 dB"). All
+  mono 44.1 kHz MP3, none at 0 dBFS — "0 dB" is only roughly true of the peaks, and the RMS spread is 9 dB:
+  - `pinknoise` 10 s: peak −2.0, **RMS −15.2 dBFS**; 1/3-octave bands flat ±0.3 dB 50 Hz–12.5 kHz,
+    +0.7…0.8 at 31.5 and 16–20 kHz. Usable as is (unlike the EMMA file above).
+  - `whitenoise` 10 s: peak −0.5, **RMS −10.5 dBFS**; rises +1.0 dB per third-octave, as white must.
+  - `sweep20-20klog` 20 s: 20 Hz → 20 kHz exponential, 0.498 oct/s (fit residual 0.001 oct); constant
+    envelope **−2.9 dBFS** peak (RMS −5.9), flat ±0.03 dB across all ten octaves.
+  A level calibrated "by these files" is calibrated by ONE of them — name which.
 
 ## The platform around us
 
