@@ -80,3 +80,19 @@ are not listed. Collected here as they are found:
 ## The merge (`11926b3`, 05.10.2026)
 
 Twenty conflicts. Where 1.0 had already been taken by this branch's own implementation (RTA, "No Sub", Audio Check, the loudness groups and GALA "Advanced"), this branch's file stands; `SessionResolver` / `SessionProbe` are ours (see above); `layout-port` stays deleted (`34a9e9a`); `build.gradle` keeps versionCode 25 (his 2 would not install over our builds). Taken from his side: `typicalCarSpeakerFloorDb`, `wdsp_app/proguard-rules.pro`, README (`8c508fd`). Not taken: GALA rescaling, `ic_bass_radiation.png`, his new dimens and `.idea` (only his layouts and his IDE use them). The report for him, in Ukrainian: `UPSTREAM_MERGE_REPORT.md` in the repository root.
+
+## The 1.0.1–1.0.2 merge (`964111d`, 07.10.2026)
+
+Four commits (`18cf110`, `d8e9918`, `73ae14d`, `5cc3860`). Taken: the debounced autosave (300 ms after
+the last slider tick, flushed on `onPause` and the Apply button), folded into this branch's
+`autoSaveCurrent` behind its `isFullyInitialized` guard; his Polish `lbl_pwr` (`baa3e39`). Kept ours:
+`McuService` - his v1.0.1 removes the `applyCurrentSettings()` at the end of `onCreate`, which this branch
+removed on 13.09 with the measurement (`5cf9a8a`); `build.gradle` numbering (25 / 0.4.9.8).
+
+Found in the debounce and fixed here (`1865731`): the pending write captures the preset NAME at the tick
+and reads the VALUES from the widgets when it fires, so a preset loaded within those 300 ms (the spinner,
+or the service switching by player or for a call) hands its values to the original preset; rename and
+delete brought the old name's keys back; export read the store before the write. `flushPendingAutoSave()`
+now runs first in `loadPreset`, rename, delete, import and export. Trade-off left to him: the service
+applies presets from SharedPreferences, so the chip now hears a slider after the finger stops, not
+during the drag.
