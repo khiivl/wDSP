@@ -254,6 +254,8 @@ public final class RoomMeasurement {
     private static final long ROUTING_SETTLE_MS = 800;
     /** How often the measurement's progress is reported while it records. */
     private static final long PROGRESS_EVERY_MS = 400;
+    /** How much the recording loop reads at a time: 0.2 s, so it comes back to report progress. */
+    private static final int READ_CHUNK_FRAMES = SAMPLE_RATE / 5;
 
     /**
      * Reported, no longer used to decide anything.
@@ -2224,7 +2226,9 @@ public final class RoomMeasurement {
                     result.error = "phone call interrupted measurement";
                     break;
                 }
-                int read = record.read(captured, got, recordLen - got);
+                // In pieces: one read of the whole remainder blocks until the end, and the progress
+                // above then never moves past its first value (it stood at 15 %, 07.10.2026).
+                int read = record.read(captured, got, Math.min(recordLen - got, READ_CHUNK_FRAMES));
                 if (read <= 0) {
                     Log.w(TAG, "read returned " + read);
                     break;
