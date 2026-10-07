@@ -20,8 +20,14 @@ package com.radiorubka.wdsp;
  * </ol>
  *
  * <p>Then this branch's scale (owner, 15.09.2026, the bars' "option В"): the curve is drawn on the
- * equaliser's grid relative to the power average of what has sound, so "+4" means 4 dB above the
+ * equaliser's grid relative to the average of what has sound, so "+4" means 4 dB above the
  * average and the slider under it would go to -4 - the same reading the bars give.
+ *
+ * <p>🔴 The average is taken in dB, as the bars take theirs (SpectrumAnalyzerView.onDraw). Until
+ * 07.10.2026 it was a power average, and a power average sits near the loudest points: on music
+ * that is the bass, so the whole curve read several dB low against the bars over the same sound
+ * (owner, 07.10: "RTA shows levels too low"). Power is right for adding speakers that play
+ * together; a reference line across frequency is a dB question, like the equaliser's own grid.
  */
 final class RtaCurve {
 
@@ -67,22 +73,22 @@ final class RtaCurve {
         }
         primed = true;
 
-        // 3-4. Presence-gated correction, then the power average of what has sound. Built in its
+        // 3-4. Presence-gated correction, then the dB average of what has sound. Built in its
         //    own array, so a frame without enough sound leaves the last drawn curve as it was.
         final float floorDb = peak - rangeDb;
-        double sumPower = 0.0;
+        double sumDb = 0.0;
         int active = 0;
         for (int j = 0; j < POINTS; j++) {
             float presence = (smoothedDb[j] - floorDb) / PRESENCE_FADE_DB;
             presence = Math.max(0f, Math.min(1f, presence));
             corrected[j] = smoothedDb[j] + presence * correctionDb[j];
             if (presence >= 1f) {
-                sumPower += Math.pow(10.0, corrected[j] / 10.0);
+                sumDb += corrected[j];
                 active++;
             }
         }
         if (active < MIN_POINTS_FOR_AVERAGE) return false;
-        final float averageDb = (float) (10.0 * Math.log10(sumPower / active));
+        final float averageDb = (float) (sumDb / active);
         for (int j = 0; j < POINTS; j++) relativeDb[j] = corrected[j] - averageDb;
         return true;
     }
