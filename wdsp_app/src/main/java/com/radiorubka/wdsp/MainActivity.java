@@ -2492,6 +2492,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void renameCurrentPreset() {
+        flushPendingAutoSave();   // see flushPendingAutoSave: before the screen or the keys change
         final String oldName = spinnerPresets.getText().toString();
 
         // Prevent renaming the protected "Call" preset immediately
@@ -2608,6 +2609,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performDeletePreset(String curr) {
+        flushPendingAutoSave();   // see flushPendingAutoSave: before the screen or the keys change
         int currindex = presetNames.indexOf(curr);
         SharedPreferences p = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = p.edit();
@@ -2794,6 +2796,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPreset(String name) {
+        flushPendingAutoSave();   // before another preset's values reach the widgets the write reads
         isUpdatingUi = true;
         // Through the CallPreset view, so the service preset shows what the chip actually gets -
         // fader to the front, subwoofer down, flat - rather than every reader's own default. Until
@@ -3493,7 +3496,15 @@ public class MainActivity extends AppCompatActivity {
 
     /** Runs any debounced autoSaveCurrent() write immediately instead of waiting out the rest of
      * its delay - call before anything that could end the process (onPause()) so a change made
-     * right before backgrounding/closing the app isn't silently dropped. */
+     * right before backgrounding/closing the app isn't silently dropped.
+     *
+     * <p>🔴 And before anything that changes what the screen shows or which keys a preset has. The
+     * pending write captures the preset's NAME when the slider moves but reads the VALUES from the
+     * widgets when it fires, 300 ms later. Load another preset in between - the spinner, or the
+     * service switching by player or for a call (PRESET_CHANGED) - and the original preset gets
+     * the other one's values; rename or delete and the old name's keys come back; export reads
+     * the stored preset before the write has landed. So loadPreset, rename, delete, import and export run it first
+     * (merge of 1.0.2, 07.10.2026). */
     private void flushPendingAutoSave() {
         if (pendingAutoSave != null) {
             handler.removeCallbacks(pendingAutoSave);
@@ -3518,6 +3529,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void exportPresets() {
         autoSaveCurrent();
+        flushPendingAutoSave();   // the export reads what is stored, not what is on screen
         String s = spinnerPresets.getText().toString();
         // Saved straight to Download/wDSP so that the same file manager handles both saving and
         // loading. Only the document picker offers a save dialog on these head units, and only a
@@ -3603,6 +3615,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPresetFromFile(Uri u) {
+        flushPendingAutoSave();   // see flushPendingAutoSave: before the screen or the keys change
         try (InputStream is = getContentResolver().openInputStream(u);
              BufferedReader r = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
 
