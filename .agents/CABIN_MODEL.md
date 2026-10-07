@@ -196,9 +196,14 @@ order (absent = `null` / `ok=false` — results are read back by position). What
 - **stated but not heard** is a defect; **heard but not stated** is a defect (wiring or the answer).
 
 Today (✅ 06.10): `runOnePass` sweeps only what is stated (`CabinProfile`), results stay by ordinal, and
-"stated, not heard" is a FINDINGS entry. 📋 "Heard, not stated" needs sound on the outputs nobody
-declared: a short probe of each undeclared channel in the same pass (owner, 07.10.2026: «так»),
-judged by the same presence rule (`heardAtAll` + phantom check).
+"stated, not heard" is a FINDINGS entry. ✅ 07.10 (`06b96f3`, owner: «так»): each undeclared DOOR
+gets a 1.5 s probe at the end of the same pass, judged by the same presence rule (level, median SNR
+over bands 3-12, phantom check against the declared anchor); results live in `result.probes` and
+feed nothing else. Never the sub: on its pass the doors play above the 250 Hz high-pass, so a probe
+would hear them. Bench, 07.10: absent rears probed at −16 / −23 dBFS peak but 3.6 / 1.4 dB SNR → not
+heard; undeclared fronts 33 / 40 dB → heard. None declared heard but a probe heard → `LAYOUT_MISMATCH`.
+📋 People cannot reach it yet: there is no pair selection in the UI (§ plan step 11); the diagnostic
+`MEASURE_ROOM --ei front 0|1 --ei rear 0|1` sets the layout for one measurement.
 
 ## 8. The list of defects (the product)
 
@@ -215,7 +220,7 @@ us stays as it is.
 | resonance | narrow peak/dip below ~200 Hz. **The same frequency for every speaker** → cabin mode (Q 4–8), not treatable, not a defect; **one speaker only**, with a long ringing tail in that channel's impulse → door panel or mounting (adapter ring ~40 Hz, panel ~80 Hz, Q 10–40, 6–10 dB) — add damping, check the fixings | 📋 |
 | channels swapped | arrival order contradicting the geometry from the microphone spot (not a fixed "left-hand drive" rule — right-hand-drive cars and a centre-console microphone exist): every stated wiring and every pairwise swap of door speakers is fitted with its own shared constant; a swap is named when it fits within 0.45 ms RMS and beats the stated wiring by 0.35 ms. Direct arrivals only, never the sub; broadband level is not used (sensitivity and aiming differ by as much as the 3 dB a nearer door adds). A microphone on the centre line cannot tell left from right and says nothing | ✅ `ChannelSwapCheck` (`c0c4559`), geometry in `CabinGeometry` |
 | mic blocked | one channel far later than the geometry with no swap explaining it | 🟡 covered by "heard only through the cabin" (clarity); the misfit numbers are in the report |
-| layout mismatch | stated not heard ✅; heard not stated 📋 (probe, §7) | 🟡 |
+| layout mismatch | stated not heard; heard not stated (door probe, §7) | ✅ `DECLARED_NOT_HEARD`, `HEARD_NOT_DECLARED`; the sub is not probed |
 | midbass roll-off | where the doors stop delivering (→ door high-pass) | ✅ `detectMidbassRollOff` |
 | sub | polarity / phase at the crossover, delay | 🟡 |
 | clipping, channel heard only by reflection, delay beyond the hardware, noise (air-con +12..15 dB in 80 Hz–1.25 kHz) | ✅ in the report; 📋 into the list, noise warning before the sweep (`TODO.md`) |
