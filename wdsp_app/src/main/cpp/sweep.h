@@ -204,6 +204,20 @@ public:
     static int crossoverNotch(const float* a32, const float* aNoise32, const float* b32,
                               const float* bNoise32, float& outHz, float& outDepthDb);
 
+    /**
+     * Narrow peaks below 200 Hz on the third-octave grid, across the heard channels (TODO 3 step 7):
+     * a peak every channel shows is the cabin's mode, a peak one channel alone shows is that
+     * speaker's door or mounting. {@code ch32} / {@code noise32} hold {@code count} channels of 32
+     * thirds each, one after another.
+     *
+     * @param outBand  third-octave index of each finding
+     * @param outWho   -1 for a cabin mode (every channel), else the one channel's index
+     * @param outRise  how far the peak stands over its neighbours, dB (the channels' least for a mode)
+     * @return how many findings were written, at most {@code maxOut}
+     */
+    static int lowResonances(const float* ch32, const float* noise32, int count, int maxOut,
+                             int* outBand, int* outWho, float* outRise);
+
     /** Mean of bands 5..8 (200..800 Hz) that read above -70 dB; NaN when none does. */
     static float midbandReference(const float* bands16);
 

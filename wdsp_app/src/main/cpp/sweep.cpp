@@ -1021,6 +1021,59 @@ int SweepMeasurement::crossoverNotch(const float* a32, const float* aNoise32, co
     return a ? 1 : 2;
 }
 
+namespace {
+
+/** Resonance criteria (TODO 3 step 7): a narrow peak, every channel or one alone, heard well. */
+constexpr float kPeakMinDb = 6.0f;
+constexpr float kPeakSharedDb = 4.0f;   // every other channel shows at least this for a cabin mode
+constexpr float kPeakAbsentDb = 3.0f;   // and below this for one speaker's own resonance
+constexpr float kPeakMinSnrDb = 12.0f;
+
+}  // namespace
+
+int SweepMeasurement::lowResonances(const float* ch32, const float* noise32, int count, int maxOut,
+                                    int* outBand, int* outWho, float* outRise) {
+    if (ch32 == nullptr || noise32 == nullptr || count < 1 || maxOut < 1) return 0;
+    const int from = thirdIndexNear(31.5f), to = thirdIndexNear(200.0f);
+    int found = 0;
+    for (int i = from; i <= to && found < maxOut; i++) {
+        int strong = 0, shared = 0, alone = -1;
+        float least = 1e9f, most = 0.0f;
+        for (int c = 0; c < count; c++) {
+            const float* x = ch32 + c * kThirdOctaveBands;
+            const float* n = noise32 + c * kThirdOctaveBands;
+            const float rise = -notchDepth(x, i);
+            const bool heard = x[i] - n[i] >= kPeakMinSnrDb;
+            if (heard && rise >= kPeakMinDb) {
+                strong++;
+                alone = c;
+                most = std::max(most, rise);
+            }
+            if (heard && rise >= kPeakSharedDb) shared++;
+            least = std::min(least, rise);
+        }
+        if (strong == 0) continue;
+        if (count >= 2 && shared == count) {
+            outBand[found] = i;
+            outWho[found] = -1;
+            outRise[found] = least;
+            found++;
+        } else if (strong == 1) {
+            bool othersQuiet = true;
+            for (int c = 0; c < count; c++) {
+                if (c == alone) continue;
+                if (-notchDepth(ch32 + c * kThirdOctaveBands, i) >= kPeakAbsentDb) othersQuiet = false;
+            }
+            if (!othersQuiet) continue;
+            outBand[found] = i;
+            outWho[found] = alone;
+            outRise[found] = most;
+            found++;
+        }
+    }
+    return found;
+}
+
 void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
                                          const float* snr16,
                                          float doorHpfHz, bool hasSub, int targetCurveType,
