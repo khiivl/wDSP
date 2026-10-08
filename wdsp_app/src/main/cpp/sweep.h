@@ -222,6 +222,16 @@ public:
      */
     static void limitZigzag16(int* gains16);
 
+    /**
+     * How much louder channel A plays than its mirror B in the midrange (200 Hz .. 2 kHz, where a
+     * loudspeaker is little directional) beyond what the distances to the microphone explain: the
+     * median of A - B over the bands both are heard in (SNR >= 12 dB), minus {@code expectedDb}
+     * (20 * log10(dB / dA)). The treble is not judged at all - there the angle to a microphone behind
+     * the fascia rules (owner, 21.09.2026). NaN with fewer than four such bands.
+     */
+    static float pairImbalanceDb(const float* a16, const float* snrA16, const float* b16,
+                                 const float* snrB16, float expectedDb);
+
     static int lowResonances(const float* ch32, const float* noise32, int count, int maxOut,
                              int* outBand, int* outWho, float* outRise);
 

@@ -1287,6 +1287,22 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
     limitZigzag16(outGains16);
 }
 
+float SweepMeasurement::pairImbalanceDb(const float* a16, const float* snrA16, const float* b16,
+                                        const float* snrB16, float expectedDb) {
+    if (a16 == nullptr || b16 == nullptr || snrA16 == nullptr || snrB16 == nullptr) return NAN;
+    float diff[kHwBands];
+    int n = 0;
+    for (int b = 0; b < kHwBands; b++) {
+        if (kHwCenters[b] < 200.0f || kHwCenters[b] > 2000.0f) continue;
+        if (snrA16[b] < kPeakMinSnrDb || snrB16[b] < kPeakMinSnrDb) continue;
+        diff[n++] = a16[b] - b16[b];
+    }
+    if (n < 4) return NAN;
+    std::sort(diff, diff + n);
+    const float median = (n % 2) ? diff[n / 2] : 0.5f * (diff[n / 2 - 1] + diff[n / 2]);
+    return median - expectedDb;
+}
+
 void SweepMeasurement::limitZigzag16(int* gains16) {
     // A band on one side of 0 dB between two neighbours on the other, two steps (4 dB) or more from
     // each: back and forth that a fixed Q 2.2 cannot draw - adjacent bands overlap, so the chip sums

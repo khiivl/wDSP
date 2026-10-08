@@ -3526,6 +3526,41 @@ public final class RoomMeasurement {
      * plays there shows is the cabin's mode - a note, and a likely one when it falls on an axial mode
      * of the closed cabin the person described; one a single speaker shows is its door or mounting.
      */
+    /** A pair imbalance this far beyond the distances is a fault (TODO 3 step 6); from 9 dB a likely one. */
+    private static final float PAIR_LEVEL_FAULT_DB = 6f;
+    private static final float PAIR_LEVEL_LIKELY_DB = 9f;
+
+    /**
+     * Left against right, door pair by door pair, in the midrange only (sweep.cpp pairImbalanceDb): the
+     * part of the level difference the distances to the microphone - from the cabin card - do not
+     * explain. Front against rear is never compared: that difference is the car's, not a fault.
+     */
+    private static void collectPairLevels(Result result) {
+        if (result.channels == null) return;
+        final float[] mic = micPosition(result);
+        for (Channel[] pair : new Channel[][]{{Channel.FRONT_LEFT, Channel.FRONT_RIGHT},
+                {Channel.REAR_LEFT, Channel.REAR_RIGHT}}) {
+            final int ia = pair[0].ordinal(), ib = pair[1].ordinal();
+            if (ib >= result.channels.length) continue;
+            final ChannelResult a = result.channels[ia], b = result.channels[ib];
+            if (a == null || b == null || !a.ok || !b.ok) continue;
+            final double dA = CabinGeometry.distanceCm(speakerPosition(result, pair[0]), mic);
+            final double dB = CabinGeometry.distanceCm(speakerPosition(result, pair[1]), mic);
+            final float expected = dA > 0 && dB > 0 ? (float) (20.0 * Math.log10(dB / dA)) : 0f;
+            final float excess = NativeSweep.pairImbalanceDb(a.cleanBandsDb, a.snrDb, b.cleanBandsDb,
+                    b.snrDb, expected);
+            if (Float.isNaN(excess)) continue;
+            Log.i(TAG, String.format(Locale.US, "%s vs %s at 200 Hz - 2 kHz: %+.1f dB beyond the distances "
+                    + "(they explain %+.1f)", a.label, b.label, excess, expected));
+            if (Math.abs(excess) < PAIR_LEVEL_FAULT_DB) continue;
+            final ChannelResult quiet = excess < 0 ? a : b;
+            final Channel quietCh = excess < 0 ? pair[0] : pair[1], loudCh = excess < 0 ? pair[1] : pair[0];
+            result.defects.add(new CabinDefect(CabinDefect.Kind.PAIR_LEVEL,
+                    Math.abs(excess) >= PAIR_LEVEL_LIKELY_DB ? CabinDefect.Certainty.LIKELY : CabinDefect.Certainty.POSSIBLE,
+                    quiet.label, quietCh.nameRes, loudCh.nameRes, Math.abs(excess)));
+        }
+    }
+
     private static void collectLowResonances(Result result) {
         if (result.channels == null) return;
         final java.util.List<ChannelResult> heard = new java.util.ArrayList<>();
@@ -3631,6 +3666,7 @@ public final class RoomMeasurement {
             }
         }
         collectLowResonances(result);
+        collectPairLevels(result);
         if (result.beyondHardware) {
             result.defects.add(new CabinDefect(CabinDefect.Kind.DELAY_BEYOND_HARDWARE,
                     CabinDefect.Certainty.SURE, "", 0, Float.NaN));

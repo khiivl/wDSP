@@ -245,6 +245,17 @@ public final class NativeSweep implements AutoCloseable {
         return isAvailable() ? nativeLowResonances(ch32, noise32, count, band, who, rise) : 0;
     }
 
+    /**
+     * How much louder channel A plays than its mirror B at 200 Hz .. 2 kHz beyond what the distances
+     * explain ({@code expectedDb} = 20 log10(dB / dA)); NaN with too few bands heard (sweep.cpp).
+     */
+    public static float pairImbalanceDb(float[] a16, float[] snrA16, float[] b16, float[] snrB16, float expectedDb) {
+        return isAvailable() ? nativePairImbalanceDb(a16, snrA16, b16, snrB16, expectedDb) : Float.NaN;
+    }
+
+    private static native float nativePairImbalanceDb(float[] a16, float[] snrA16, float[] b16,
+                                                      float[] snrB16, float expectedDb);
+
     private static native int nativeLowResonances(float[] ch32, float[] noise32, int count, int[] band,
                                                   int[] who, float[] rise);
 

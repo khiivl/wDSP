@@ -36,6 +36,8 @@ public final class CabinDefect {
         CROSSOVER_PHASE,
         /** One speaker alone peaks narrowly below 200 Hz: its door panel or its mounting rings. */
         SPEAKER_RESONANCE,
+        /** One speaker of a mirrored pair plays quieter in the midrange than the distances explain. */
+        PAIR_LEVEL,
         /** A channel needs more delay than the chip can apply. */
         DELAY_BEYOND_HARDWARE,
         /** Where the doors' midbass rolls off - the preset puts the door high-pass there (a note, not a fault). */
@@ -104,6 +106,11 @@ public final class CabinDefect {
                         + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
                         + "Swap the two wires of that tweeter (or check its crossover) and measure again.",
                         value / 1000f);
+            case PAIR_LEVEL:
+                return sure + at + String.format(Locale.US, "%.0f dB quieter than its mirror at 200 Hz - 2 kHz, "
+                        + "beyond what the distances to the microphone explain. Check that speaker, its wires and "
+                        + "its amplifier channel; the fader too. (The treble is not compared: there the angle "
+                        + "to the microphone rules.)", value);
             case SPEAKER_RESONANCE:
                 return sure + at + String.format(Locale.US, "a narrow peak at %.0f Hz that the other speakers "
                         + "do not have - its door panel or its mounting rings. Check the speaker's screws, "
@@ -157,6 +164,10 @@ public final class CabinDefect {
                 break;
             case CROSSOVER_PHASE:
                 text = context.getString(R.string.room_finding_crossover_phase, name, value / 1000f);
+                break;
+            case PAIR_LEVEL:
+                text = context.getString(R.string.room_finding_pair_level, name, Math.round(value),
+                        pairRes != 0 ? context.getString(pairRes) : "");
                 break;
             case SPEAKER_RESONANCE:
                 text = context.getString(R.string.room_finding_speaker_resonance, name, Math.round(value));

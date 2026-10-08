@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(wdsp_native)
 
-# test_analyzer.cpp, test_sweep.cpp, test_miccal.cpp, test_micwidth.cpp, test_crossover.cpp, test_resonance.cpp and test_zigzag.cpp are
+# test_analyzer.cpp, test_sweep.cpp, test_miccal.cpp, test_micwidth.cpp, test_crossover.cpp, test_resonance.cpp, test_zigzag.cpp and test_pair.cpp are
 # deliberately absent: they are host
 # harnesses with their own main(), built with plain g++ on a desktop, not part of the library.
 #   g++ -O2 -std=c++17 -o /tmp/miccal test_miccal.cpp sweep.cpp analyzer.cpp fft.cpp stitcher.cpp

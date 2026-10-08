@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <jni.h>
 
@@ -560,6 +561,19 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeMidbandReference(JNIEnv* env, jclass,
 JNIEXPORT jfloat JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeSnrConfidence(JNIEnv*, jclass, jfloat snrDb) {
     return wdsp::SweepMeasurement::snrConfidence(snrDb);
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativePairImbalanceDb(JNIEnv* env, jclass, jfloatArray a16,
+                                                           jfloatArray snrA16, jfloatArray b16,
+                                                           jfloatArray snrB16, jfloat expectedDb) {
+    jfloatArray in[4] = {a16, snrA16, b16, snrB16};
+    float buf[4][wdsp::kHwBands];
+    for (int k = 0; k < 4; k++) {
+        if (in[k] == nullptr || env->GetArrayLength(in[k]) < wdsp::kHwBands) return NAN;
+        env->GetFloatArrayRegion(in[k], 0, wdsp::kHwBands, buf[k]);
+    }
+    return wdsp::SweepMeasurement::pairImbalanceDb(buf[0], buf[1], buf[2], buf[3], expectedDb);
 }
 
 JNIEXPORT jint JNICALL
