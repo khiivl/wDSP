@@ -142,7 +142,8 @@ a measurement (`+52.8`) and the top lift `+3.5 / +7 / +10`, independently dispro
    Host check: `cpp/test_micwidth.cpp`.
    Item 1 is done too - the cabin rise comes back only for a cabin the person called closed
    (`CabinProfile`, 06.10).
-3. **"Unknown" must be visible.** Today the band silently keeps the matrix value and writes a status
+3. **"Unknown" must be visible.** ✅ Done 08.10.2026: the microphone-calibration dialog names the
+   unknown bands in the person's language (`RoomMeasurement.micUnknownForPerson`). Today the band silently keeps the matrix value and writes a status
    into the report; the person sees a flat profile and cannot tell a refusal from a result.
 
 **Do not bring back:** the top `+3.5 / +7 / +10` unconfirmed; the ceiling written as a measurement.
