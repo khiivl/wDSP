@@ -959,6 +959,68 @@ float SweepMeasurement::detectMidbassRollOffHz(const float* avgClean16) {
 }
 
 
+namespace {
+
+/** Notch criteria (TODO 3 step 5): deep enough, the mirror clearly without it, heard well. */
+constexpr float kNotchMinDb = 6.0f;
+constexpr float kNotchMirrorMarginDb = 4.0f;
+constexpr float kNotchMinSnrDb = 12.0f;
+/** A second notch at least this share as deep, elsewhere in the same channel, makes it a comb. */
+constexpr float kCombShare = 0.7f;
+
+int thirdIndexNear(float hz) {
+    int best = 0;
+    for (int i = 1; i < kThirdOctaveBands; i++) {
+        if (std::fabs(std::log(thirdOctaveCentreHz(i) / hz)) < std::fabs(std::log(thirdOctaveCentreHz(best) / hz))) best = i;
+    }
+    return best;
+}
+
+/** How far a third sits below the mean of its two neighbours, dB; positive is a notch. */
+float notchDepth(const float* x, int i) {
+    return 0.5f * (x[i - 1] + x[i + 1]) - x[i];
+}
+
+}  // namespace
+
+int SweepMeasurement::crossoverNotch(const float* a32, const float* aNoise32, const float* b32,
+                                     const float* bNoise32, float& outHz, float& outDepthDb) {
+    outHz = 0.0f;
+    outDepthDb = 0.0f;
+    if (a32 == nullptr || b32 == nullptr || aNoise32 == nullptr || bNoise32 == nullptr) return 0;
+    const int from = thirdIndexNear(2000.0f), to = thirdIndexNear(5000.0f);
+    const int combFrom = thirdIndexNear(500.0f), combTo = std::min(thirdIndexNear(16000.0f), kThirdOctaveBands - 2);
+
+    auto oneSided = [&](const float* s, const float* sNoise, const float* m, int& at, float& depth) {
+        at = -1;
+        depth = 0.0f;
+        for (int i = from; i <= to; i++) {
+            const float d = notchDepth(s, i);
+            if (d < kNotchMinDb || d <= depth) continue;
+            if (s[i] - sNoise[i] < kNotchMinSnrDb) continue;
+            if (notchDepth(m, i) > d - kNotchMirrorMarginDb) continue;
+            at = i;
+            depth = d;
+        }
+        if (at < 0) return false;
+        for (int j = combFrom; j <= combTo; j++) {
+            if (std::abs(j - at) <= 1) continue;
+            const float d = notchDepth(s, j);
+            if (d >= kCombShare * depth && notchDepth(m, j) <= d - kNotchMirrorMarginDb) return false;
+        }
+        return true;
+    };
+
+    int atA, atB;
+    float depthA, depthB;
+    const bool a = oneSided(a32, aNoise32, b32, atA, depthA);
+    const bool b = oneSided(b32, bNoise32, a32, atB, depthB);
+    if (a == b) return 0;   // neither, or both - which then is no longer "one side only"
+    outHz = thirdOctaveCentreHz(a ? atA : atB);
+    outDepthDb = a ? depthA : depthB;
+    return a ? 1 : 2;
+}
+
 void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* micComp16,
                                          const float* snr16,
                                          float doorHpfHz, bool hasSub, int targetCurveType,

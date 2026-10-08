@@ -32,6 +32,8 @@ public final class CabinDefect {
         CHANNELS_SWAPPED,
         /** A main speaker reads inverted while the others do not. */
         POLARITY,
+        /** A tweeter fights its own mid-bass on one side only: a crossover notch the mirror lacks. */
+        CROSSOVER_PHASE,
         /** A channel needs more delay than the chip can apply. */
         DELAY_BEYOND_HARDWARE,
         /** Where the doors' midbass rolls off - the preset puts the door high-pass there (a note, not a fault). */
@@ -93,6 +95,11 @@ public final class CabinDefect {
             case POLARITY:
                 return sure + at + "reads inverted while the other main speakers do not - most likely "
                         + "connected the wrong way round. Check the two wires at that speaker.";
+            case CROSSOVER_PHASE:
+                return sure + at + String.format(Locale.US, "a notch at %.1f kHz that the mirrored speaker does "
+                        + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
+                        + "Swap the two wires of that tweeter (or check its crossover) and measure again.",
+                        value / 1000f);
             case DELAY_BEYOND_HARDWARE:
                 return sure + "a speaker needs more delay than the chip can apply - a long vehicle. The "
                         + "furthest one cannot be fully aligned; the rest is.";
@@ -136,6 +143,9 @@ public final class CabinDefect {
                 break;
             case POLARITY:
                 text = context.getString(R.string.room_finding_polarity, name);
+                break;
+            case CROSSOVER_PHASE:
+                text = context.getString(R.string.room_finding_crossover_phase, name, value / 1000f);
                 break;
             case DELAY_BEYOND_HARDWARE:
                 text = context.getString(R.string.room_finding_delay_beyond_hardware);

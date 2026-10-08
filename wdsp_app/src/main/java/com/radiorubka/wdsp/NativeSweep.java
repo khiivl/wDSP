@@ -225,6 +225,20 @@ public final class NativeSweep implements AutoCloseable {
     }
 
     /**
+     * A tweeter fighting its mid-bass on one side of a mirrored pair: a notch at 2..5 kHz in one
+     * channel's third-octave response and not in the other's (sweep.cpp, crossoverNotch).
+     *
+     * @param out2 receives the notch's centre in Hz and its depth in dB
+     * @return 0 none, 1 channel A, 2 channel B; 0 without the library
+     */
+    public static int crossoverNotch(float[] a32, float[] aNoise32, float[] b32, float[] bNoise32, float[] out2) {
+        return isAvailable() ? nativeCrossoverNotch(a32, aNoise32, b32, bNoise32, out2) : 0;
+    }
+
+    private static native int nativeCrossoverNotch(float[] a32, float[] aNoise32, float[] b32,
+                                                   float[] bNoise32, float[] out2);
+
+    /**
      * Where the door speakers stop delivering bass, in Hz (50, 63, 80 or 100) - the chip's code for
      * it is {@link DspResponse#doorHpfIndexOf}.
      */

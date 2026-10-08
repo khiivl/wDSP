@@ -191,6 +191,19 @@ public:
      */
     static float detectMidbassRollOffHz(const float* avgClean16);
 
+    /**
+     * A tweeter fighting its own mid-bass on one side only: a notch at the crossover, 2..5 kHz, in
+     * one channel of a mirrored pair and not in the other. Read on the third-octave grid (bands.h),
+     * response and noise of both channels. A notch both sides share is the crossover's design and
+     * says nothing; a notch that comes with another as deep elsewhere (500 Hz..16 kHz) in the same
+     * channel is a reflection's comb, not a crossover.
+     *
+     * @return 0 none, 1 channel A, 2 channel B; with the notch's centre and depth below its
+     *         neighbours' mean
+     */
+    static int crossoverNotch(const float* a32, const float* aNoise32, const float* b32,
+                              const float* bNoise32, float& outHz, float& outDepthDb);
+
     /** Mean of bands 5..8 (200..800 Hz) that read above -70 dB; NaN when none does. */
     static float midbandReference(const float* bands16);
 

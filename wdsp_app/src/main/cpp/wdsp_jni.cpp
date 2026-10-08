@@ -561,6 +561,24 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeSnrConfidence(JNIEnv*, jclass, jfloat
     return wdsp::SweepMeasurement::snrConfidence(snrDb);
 }
 
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeCrossoverNotch(JNIEnv* env, jclass, jfloatArray a32,
+                                                          jfloatArray aNoise32, jfloatArray b32,
+                                                          jfloatArray bNoise32, jfloatArray out2) {
+    jfloatArray in[4] = {a32, aNoise32, b32, bNoise32};
+    for (jfloatArray x : in) {
+        if (x == nullptr || env->GetArrayLength(x) < wdsp::kThirdOctaveBands) return 0;
+    }
+    if (out2 == nullptr || env->GetArrayLength(out2) < 2) return 0;
+    float buf[4][wdsp::kThirdOctaveBands];
+    for (int k = 0; k < 4; k++) env->GetFloatArrayRegion(in[k], 0, wdsp::kThirdOctaveBands, buf[k]);
+    float hzDepth[2] = {0.0f, 0.0f};
+    const int side = wdsp::SweepMeasurement::crossoverNotch(buf[0], buf[1], buf[2], buf[3],
+                                                            hzDepth[0], hzDepth[1]);
+    env->SetFloatArrayRegion(out2, 0, 2, hzDepth);
+    return side;
+}
+
 JNIEXPORT jfloat JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeDetectMidbassRollOffHz(JNIEnv* env, jclass,
                                                                  jfloatArray avgClean16) {

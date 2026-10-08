@@ -3548,6 +3548,26 @@ public final class RoomMeasurement {
                         c.label, c.nameRes, Float.NaN));
             }
         }
+        // A tweeter against its own mid-bass on one side (TODO 3 step 5): judged on the third-octave
+        // grid, pair by mirrored pair, both heard directly - a reflection-led spectrum is all notches.
+        if (result.channels != null) {
+            final float[] notch = new float[2];
+            for (Channel[] pair : new Channel[][]{{Channel.FRONT_LEFT, Channel.FRONT_RIGHT},
+                    {Channel.REAR_LEFT, Channel.REAR_RIGHT}}) {
+                final int ia = pair[0].ordinal(), ib = pair[1].ordinal();
+                if (ib >= result.channels.length) continue;
+                final ChannelResult a = result.channels[ia], b = result.channels[ib];
+                if (a == null || b == null || !a.ok || !b.ok || !a.confident || !b.confident) continue;
+                final int side = NativeSweep.crossoverNotch(a.thirdsDb, a.noiseThirdsDb,
+                        b.thirdsDb, b.noiseThirdsDb, notch);
+                if (side == 0) continue;
+                final ChannelResult c = side == 1 ? a : b;
+                Log.i(TAG, String.format(Locale.US, "%s: crossover notch at %.0f Hz, %.1f dB below its "
+                        + "neighbours, not in %s", c.label, notch[0], notch[1], (side == 1 ? b : a).label));
+                result.defects.add(new CabinDefect(CabinDefect.Kind.CROSSOVER_PHASE, CabinDefect.Certainty.LIKELY,
+                        c.label, c.nameRes, notch[0]));
+            }
+        }
         if (result.beyondHardware) {
             result.defects.add(new CabinDefect(CabinDefect.Kind.DELAY_BEYOND_HARDWARE,
                     CabinDefect.Certainty.SURE, "", 0, Float.NaN));
