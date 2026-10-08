@@ -550,7 +550,7 @@
     <!-- Room measurement: stages, failures, polarity (02.10.2026) -->
     <string name="room_stage_progress">Step %1$d/%2$d: %3$s</string>
     <string name="room_stage_noise">Background noise</string>
-    <string name="room_stage_noise_detail">Measuring the cabin in silence and fixing the volume (16)…</string>
+    <string name="room_stage_noise_detail">Measuring the cabin in silence and fixing the volume…</string>
     <string name="room_stage_speakers">Speakers</string>
     <string name="room_stage_speakers_detail">Playing the sweep: %1$s</string>
     <string name="room_stage_delays">Delays</string>

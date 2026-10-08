@@ -533,7 +533,7 @@
     <!-- Вимір салону: етапи, збої, полярність (02.10.2026) -->
     <string name="room_stage_progress">Етап %1$d/%2$d: %3$s</string>
     <string name="room_stage_noise">Замір фону тиші</string>
-    <string name="room_stage_noise_detail">Вимір фонового шуму в тиші та фіксація гучності (16 од.)…</string>
+    <string name="room_stage_noise_detail">Вимір фонового шуму в тиші та фіксація гучності…</string>
     <string name="room_stage_speakers">Замір динаміків</string>
     <string name="room_stage_speakers_detail">Відтворення свіпу: %1$s</string>
     <string name="room_stage_delays">Аналіз затримок</string>
