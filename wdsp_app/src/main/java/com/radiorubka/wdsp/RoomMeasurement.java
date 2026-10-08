@@ -435,8 +435,14 @@ public final class RoomMeasurement {
      * share was 0.8 and the winner the candidate nearest zero; on the bench the in-phase peak at +0.9 ms
      * (geometry +0.97) fell under 0.8, +13.5 ms won, and the doors were delayed 11.8 and 13.4 ms - four
      * metres - to wait for the sub (owner: "дикі затримки каналів по чотири метри, а саб 0").
+     * At 0.5 the same happened on 09.10.2026: candidates +13.33 (1.00) and +24.19 (0.70), the early one
+     * under the floor, the doors delayed 12.0 and 13.4 ms. The strongest peak is not a later arrival:
+     * the sub's filter chain (the chip's low-pass, an amplifier's own on op-amps, a bass boost, the box)
+     * turns its phase by a whole cycle at the crossover, which this band cannot tell from 12.5 ms of time,
+     * and the filters' group delay only leans the envelope that way (+13.33 - 12.5 = +0.83 against the
+     * geometry's +0.97). So the floor only keeps noise out; the geometry chooses (owner: "роби").
      */
-    private static final float SUB_ALIGN_CANDIDATE_SHARE = 0.5f;
+    private static final float SUB_ALIGN_CANDIDATE_SHARE = 0.2f;
     /** Below this normalised correlation the sub's alignment is reported, not trusted. */
     private static final float SUB_ALIGN_MIN_CORRELATION = 0.5f;
 
