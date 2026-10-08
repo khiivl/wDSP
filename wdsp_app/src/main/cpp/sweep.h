@@ -215,6 +215,13 @@ public:
      * @param outRise  how far the peak stands over its neighbours, dB (the channels' least for a mode)
      * @return how many findings were written, at most {@code maxOut}
      */
+    /**
+     * Takes the back-and-forth out of a synthesised preset: a band on one side of 0 dB between two
+     * neighbours on the other, 4 dB or more from each, moves one step (2 dB) towards 0. Gain indices,
+     * 6 = 0 dB. A single cut or boost is left alone.
+     */
+    static void limitZigzag16(int* gains16);
+
     static int lowResonances(const float* ch32, const float* noise32, int count, int maxOut,
                              int* outBand, int* outWho, float* outRise);
 

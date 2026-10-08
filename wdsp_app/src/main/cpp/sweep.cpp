@@ -1284,6 +1284,25 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         gainIdx = std::max(minGainIdx, std::min(8, gainIdx));
         outGains16[b] = gainIdx;
     }
+    limitZigzag16(outGains16);
+}
+
+void SweepMeasurement::limitZigzag16(int* gains16) {
+    // A band on one side of 0 dB between two neighbours on the other, two steps (4 dB) or more from
+    // each: back and forth that a fixed Q 2.2 cannot draw - adjacent bands overlap, so the chip sums
+    // it into a ripple nobody asked for (TODO "межа на зигзаг"; on the owner's 20.09 preset, +2 -2 +2
+    // at 200-500 Hz). That band moves one step towards 0. One pass over the original, so a fix never
+    // feeds the next band's test; a single honest cut (0 -6 0) has no neighbours across zero and stays.
+    constexpr int kFlat = 6;
+    int in[kHwBands];
+    std::copy(gains16, gains16 + kHwBands, in);
+    for (int b = 1; b + 1 < kHwBands; b++) {
+        const int g = in[b] - kFlat, l = in[b - 1] - kFlat, r = in[b + 1] - kFlat;
+        const bool across = g != 0 && l != 0 && r != 0 && (l > 0) == (r > 0) && (g > 0) != (l > 0);
+        if (across && std::abs(g - l) >= 2 && std::abs(g - r) >= 2) {
+            gains16[b] = in[b] + (g > 0 ? -1 : 1);
+        }
+    }
 }
 
 } // namespace wdsp
