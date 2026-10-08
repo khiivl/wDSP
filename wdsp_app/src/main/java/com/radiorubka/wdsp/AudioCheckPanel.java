@@ -97,12 +97,10 @@ final class AudioCheckPanel implements AudioCheck.Listener {
                 }
                 rtaZero.setEnabled(false);
                 Toaster.show(activity, activity.getString(R.string.toast_rta_zero_listening));
-                AudioSpectrumEngine.getInstance().captureRtaZero((zeroDb, acoustic) -> {
+                AudioSpectrumEngine.getInstance().captureRtaZero(zeroDb -> {
                     rtaZero.setEnabled(true);
-                    Toaster.show(activity, Float.isNaN(zeroDb)
-                            ? activity.getString(R.string.toast_rta_zero_failed)
-                            : activity.getString(acoustic ? R.string.toast_rta_zero_taken_mic
-                                    : R.string.toast_rta_zero_taken));
+                    Toaster.show(activity, activity.getString(Float.isNaN(zeroDb)
+                            ? R.string.toast_rta_zero_failed : R.string.toast_rta_zero_taken));
                 });
             });
             rtaZero.setOnLongClickListener(v -> {
