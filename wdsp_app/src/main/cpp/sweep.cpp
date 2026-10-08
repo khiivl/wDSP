@@ -490,6 +490,16 @@ void SweepMeasurement::subtractNoise(const float* sweepDb16, const float* noiseD
 constexpr float kSnrNoneDb = 6.0f;
 constexpr float kSnrFullDb = 18.0f;
 
+/**
+ * Where a car's cabin stops having separate modes and its field turns diffuse - the Schroeder
+ * frequency, 2000 * sqrt(T60 / V): about 3 m3 and 0.1 s give ~365 Hz (settled physics, not ours
+ * to measure). Below it a narrow deviation common to every channel can be a mode at the
+ * microphone; above it, it is the capsule's.
+ */
+constexpr float kCabinModalLimitHz = 400.0f;
+/** The smallest narrow common deviation charged to the capsule below 10 kHz: one equaliser step. */
+constexpr float kCapsuleNarrowMinDb = 2.0f;
+
 /** Below this a midband reading is not a reading (a band with nothing in it reads -120). */
 constexpr float kMidGuardDb = -70.0f;
 
@@ -765,32 +775,48 @@ void SweepMeasurement::estimateMicCompensation(const float* avgClean16, const fl
         smooth[b] = count > 0 ? (sum / static_cast<float>(count)) : mean16[b];
     }
 
+    // What every channel shows, as a correction: a common dip asks for a plus, a common peak for a
+    // minus, and anything the channels disagree about asks for nothing.
+    float common[kHwBands] = {0};
     for (int b = 5; b < kHwBands; b++) {
-        const float table = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
         const float rBest = avgClean16[b] - smooth[b];
         const bool haveWorst = worstClean16 != nullptr && std::isfinite(worstClean16[b]);
         const float rWorst = haveWorst ? (worstClean16[b] - smooth[b]) : 0.0f;
-
-        // What every channel shows, as a correction: a common dip asks for a plus, a common peak
-        // for a minus, and anything the channels disagree about asks for nothing.
-        float measured = 0.0f;
         if (rBest < 0.0f) {
-            measured = -rBest;                 // the shallowest dip any channel had
+            common[b] = -rBest;                // the shallowest dip any channel had
         } else if (haveWorst && rWorst > 0.0f) {
-            measured = -rWorst;                // the smallest peak any channel had
+            common[b] = -rWorst;               // the smallest peak any channel had
         }
+    }
+
+    for (int b = 5; b < kHwBands; b++) {
+        const float table = mountingDb16 != nullptr ? mountingDb16[b] : 0.0f;
+        float measured = common[b];
         if (snr16 != nullptr) {
             measured *= snrConfidence(snr16[b]);
         }
 
         // Where the mounting says nothing, the measurement speaks alone ONLY where a capsule
-        // plausibly can: sharp resonances of the port and the cavity, which the document places
-        // above 10 kHz. Lower down, "common to every channel" stops meaning "the microphone" -
-        // every loudspeaker shares the same room, so a room mode at the microphone's own position
-        // is common too, and charging it to the capsule would be the old mistake in a new coat.
-        // On the owner's 20.09 pass this rule is the difference between a clean curve and one
-        // carrying +2.1 dB at 200 Hz and -1.0 at 315, which are the bench, not the microphone.
-        const bool capsuleCanSpeakHere = kHwCenters[b] >= 10000.0f;
+        // plausibly can. Below the cabin's modal region "common to every channel" stops meaning
+        // "the microphone" - every loudspeaker shares the same room, so a room mode at the
+        // microphone's own position is common too, and narrow as well; on the owner's 20.09 pass
+        // that is the difference between a clean curve and one carrying +2.1 dB at 200 Hz and
+        // -1.0 at 315, which are the bench. Above it the field is diffuse and what a car does there
+        // is broad, so a NARROW common deviation is the capsule's (CALIBRATION_HISTORY.md, advice
+        // of 28.09: split by width, not by frequency - until 08.10.2026 the line was 10 kHz, which
+        // silenced 500 Hz..8 kHz for good). Narrow: neither neighbour shares at least half of it.
+        // At 10 kHz and up the capsule's port and cavity speak whatever the width, as before.
+        const float c = common[b];
+        auto shares = [&](int k) {
+            return k >= 5 && k < kHwBands && c != 0.0f && (common[k] > 0.0f) == (c > 0.0f)
+                    && std::fabs(common[k]) >= 0.5f * std::fabs(c);
+        };
+        // And at least one equaliser step deep: below that a "narrow peak" is the moving average
+        // lagging at a knee of the broad slope - on the 20.09 pass, 0.9 dB at 1250 Hz where the mean
+        // turns down towards the treble - and the chip could not apply it anyway.
+        const bool narrow = std::fabs(c) >= kCapsuleNarrowMinDb && !shares(b - 1) && !shares(b + 1);
+        const bool capsuleCanSpeakHere = kHwCenters[b] >= 10000.0f
+                || (kHwCenters[b] >= kCabinModalLimitHz && narrow);
         float value;
         if (table == 0.0f) {
             value = capsuleCanSpeakHere ? measured : 0.0f;
