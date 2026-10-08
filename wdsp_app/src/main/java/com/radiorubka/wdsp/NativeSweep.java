@@ -235,6 +235,19 @@ public final class NativeSweep implements AutoCloseable {
         return isAvailable() ? nativeCrossoverNotch(a32, aNoise32, b32, bNoise32, out2) : 0;
     }
 
+    /**
+     * Narrow peaks below 200 Hz across {@code count} channels' thirds, laid one after another
+     * (sweep.cpp, lowResonances).
+     *
+     * @return how many findings were written; {@code who} is -1 for the cabin's mode, else the channel
+     */
+    public static int lowResonances(float[] ch32, float[] noise32, int count, int[] band, int[] who, float[] rise) {
+        return isAvailable() ? nativeLowResonances(ch32, noise32, count, band, who, rise) : 0;
+    }
+
+    private static native int nativeLowResonances(float[] ch32, float[] noise32, int count, int[] band,
+                                                  int[] who, float[] rise);
+
     private static native int nativeCrossoverNotch(float[] a32, float[] aNoise32, float[] b32,
                                                    float[] bNoise32, float[] out2);
 

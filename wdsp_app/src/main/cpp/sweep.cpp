@@ -1037,32 +1037,39 @@ int SweepMeasurement::lowResonances(const float* ch32, const float* noise32, int
     const int from = thirdIndexNear(31.5f), to = thirdIndexNear(200.0f);
     int found = 0;
     for (int i = from; i <= to && found < maxOut; i++) {
-        int strong = 0, shared = 0, alone = -1;
+        // "Every channel" means every channel that plays here: a door behind a 63-100 Hz high-pass
+        // does not reach 40 Hz at all, and a mode there is still the cabin's.
+        int heardHere = 0, strong = 0, shared = 0, alone = -1;
         float least = 1e9f, most = 0.0f;
         for (int c = 0; c < count; c++) {
             const float* x = ch32 + c * kThirdOctaveBands;
             const float* n = noise32 + c * kThirdOctaveBands;
+            if (x[i] - n[i] < kPeakMinSnrDb) continue;
+            heardHere++;
             const float rise = -notchDepth(x, i);
-            const bool heard = x[i] - n[i] >= kPeakMinSnrDb;
-            if (heard && rise >= kPeakMinDb) {
+            if (rise >= kPeakMinDb) {
                 strong++;
                 alone = c;
                 most = std::max(most, rise);
             }
-            if (heard && rise >= kPeakSharedDb) shared++;
+            if (rise >= kPeakSharedDb) shared++;
             least = std::min(least, rise);
         }
         if (strong == 0) continue;
-        if (count >= 2 && shared == count) {
+        if (heardHere >= 2 && shared == heardHere) {
             outBand[found] = i;
             outWho[found] = -1;
             outRise[found] = least;
             found++;
-        } else if (strong == 1) {
+        } else if (strong == 1 && heardHere >= 2) {
+            // One speaker's own only when others play here and do not show it; heard alone, a peak
+            // could be either and is left unsaid.
             bool othersQuiet = true;
             for (int c = 0; c < count; c++) {
                 if (c == alone) continue;
-                if (-notchDepth(ch32 + c * kThirdOctaveBands, i) >= kPeakAbsentDb) othersQuiet = false;
+                const float* x = ch32 + c * kThirdOctaveBands;
+                if (x[i] - (noise32 + c * kThirdOctaveBands)[i] < kPeakMinSnrDb) continue;
+                if (-notchDepth(x, i) >= kPeakAbsentDb) othersQuiet = false;
             }
             if (!othersQuiet) continue;
             outBand[found] = i;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <limits>
 #include <jni.h>
 
@@ -559,6 +560,31 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeMidbandReference(JNIEnv* env, jclass,
 JNIEXPORT jfloat JNICALL
 Java_com_radiorubka_wdsp_NativeSweep_nativeSnrConfidence(JNIEnv*, jclass, jfloat snrDb) {
     return wdsp::SweepMeasurement::snrConfidence(snrDb);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_radiorubka_wdsp_NativeSweep_nativeLowResonances(JNIEnv* env, jclass, jfloatArray ch32,
+                                                         jfloatArray noise32, jint count, jintArray band,
+                                                         jintArray who, jfloatArray rise) {
+    if (ch32 == nullptr || noise32 == nullptr || band == nullptr || who == nullptr || rise == nullptr
+            || count < 1) return 0;
+    const int need = count * wdsp::kThirdOctaveBands;
+    if (env->GetArrayLength(ch32) < need || env->GetArrayLength(noise32) < need) return 0;
+    const int maxOut = std::min({(int) env->GetArrayLength(band), (int) env->GetArrayLength(who),
+                                 (int) env->GetArrayLength(rise)});
+    if (maxOut < 1) return 0;
+    std::vector<float> x(need), n(need), r(maxOut);
+    std::vector<int> b(maxOut), w(maxOut);
+    env->GetFloatArrayRegion(ch32, 0, need, x.data());
+    env->GetFloatArrayRegion(noise32, 0, need, n.data());
+    const int found = wdsp::SweepMeasurement::lowResonances(x.data(), n.data(), count, maxOut,
+                                                            b.data(), w.data(), r.data());
+    if (found > 0) {
+        env->SetIntArrayRegion(band, 0, found, b.data());
+        env->SetIntArrayRegion(who, 0, found, w.data());
+        env->SetFloatArrayRegion(rise, 0, found, r.data());
+    }
+    return found;
 }
 
 JNIEXPORT jint JNICALL

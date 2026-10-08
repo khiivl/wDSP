@@ -34,12 +34,16 @@ public final class CabinDefect {
         POLARITY,
         /** A tweeter fights its own mid-bass on one side only: a crossover notch the mirror lacks. */
         CROSSOVER_PHASE,
+        /** One speaker alone peaks narrowly below 200 Hz: its door panel or its mounting rings. */
+        SPEAKER_RESONANCE,
         /** A channel needs more delay than the chip can apply. */
         DELAY_BEYOND_HARDWARE,
         /** Where the doors' midbass rolls off - the preset puts the door high-pass there (a note, not a fault). */
         MIDBASS_ROLLOFF,
         /** A channel heard mainly through the cabin, not directly. */
         REFLECTIONS_ONLY,
+        /** Every speaker peaks at one frequency below 200 Hz: the cabin's own mode (a note, not a fault). */
+        CABIN_MODE,
         /** The cabin was loud where the correction lives (a blower, the engine): part of it was not trusted. */
         NOISY_CABIN,
     }
@@ -100,6 +104,13 @@ public final class CabinDefect {
                         + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
                         + "Swap the two wires of that tweeter (or check its crossover) and measure again.",
                         value / 1000f);
+            case SPEAKER_RESONANCE:
+                return sure + at + String.format(Locale.US, "a narrow peak at %.0f Hz that the other speakers "
+                        + "do not have - its door panel or its mounting rings. Check the speaker's screws, "
+                        + "the panel's clips, and what rattles in that door.", value);
+            case CABIN_MODE:
+                return sure + String.format(Locale.US, "every speaker peaks at %.0f Hz - the cabin's own "
+                        + "mode, not a speaker's fault. The correction cuts what it can there.", value);
             case DELAY_BEYOND_HARDWARE:
                 return sure + "a speaker needs more delay than the chip can apply - a long vehicle. The "
                         + "furthest one cannot be fully aligned; the rest is.";
@@ -120,7 +131,7 @@ public final class CabinDefect {
 
     /** A note rather than a fault: the screen shows the list calmly when nothing else was found. */
     public boolean isNote() {
-        return kind == Kind.MIDBASS_ROLLOFF;
+        return kind == Kind.MIDBASS_ROLLOFF || kind == Kind.CABIN_MODE;
     }
 
     /** The same finding for the screen, in the person's language: how sure, then what and what to do. */
@@ -146,6 +157,12 @@ public final class CabinDefect {
                 break;
             case CROSSOVER_PHASE:
                 text = context.getString(R.string.room_finding_crossover_phase, name, value / 1000f);
+                break;
+            case SPEAKER_RESONANCE:
+                text = context.getString(R.string.room_finding_speaker_resonance, name, Math.round(value));
+                break;
+            case CABIN_MODE:
+                text = context.getString(R.string.room_finding_cabin_mode, Math.round(value));
                 break;
             case DELAY_BEYOND_HARDWARE:
                 text = context.getString(R.string.room_finding_delay_beyond_hardware);

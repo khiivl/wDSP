@@ -1489,6 +1489,9 @@ public final class RoomMeasurement {
         public boolean hasFrontPair = true, hasRearPair = true;
         /** The cabin's width the person gave (CabinProfile) - the doors and the microphone dot sit in it. */
         public int cabinWidthCm = CabinProfile.DEFAULT_WIDTH_CM;
+        /** Its length and height, and whether it is closed - the cabin's own modes come from these. */
+        public int cabinLengthCm, cabinHeightCm;
+        public boolean cabinClosed;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
         public TargetCurve targetCurve = TargetCurve.HARMAN;
         public CarBodyType bodyType = CarBodyType.SEDAN;
@@ -1891,6 +1894,9 @@ public final class RoomMeasurement {
         layoutFront = -1;   // one measurement, then the person's answers again
         layoutRear = -1;
         result.cabinWidthCm = CabinProfile.widthCm(context);
+        result.cabinLengthCm = CabinProfile.lengthCm(context);
+        result.cabinHeightCm = CabinProfile.heightCm(context);
+        result.cabinClosed = CabinProfile.isClosed(context);
         result.soundstageMode = soundstageMode != null ? soundstageMode : SoundstageMode.DRIVER;
         result.targetCurve = targetCurve != null ? targetCurve : TargetCurve.HARMAN;
         result.bodyType = bodyType != null ? bodyType : CarBodyType.SEDAN;
@@ -3515,6 +3521,62 @@ public final class RoomMeasurement {
      * arrival order (judgeChannelOrder), polarity (judgePolarity), delays (computeDelays), the midbass
      * roll-off, direct versus reflected sound - and decides nothing of its own.
      */
+    /**
+     * Narrow peaks below 200 Hz (TODO 3 step 7, sweep.cpp lowResonances): one every channel that
+     * plays there shows is the cabin's mode - a note, and a likely one when it falls on an axial mode
+     * of the closed cabin the person described; one a single speaker shows is its door or mounting.
+     */
+    private static void collectLowResonances(Result result) {
+        if (result.channels == null) return;
+        final java.util.List<ChannelResult> heard = new java.util.ArrayList<>();
+        for (ChannelResult c : result.channels) if (c != null && c.ok) heard.add(c);
+        if (heard.size() < 2) return;
+        final int third = NativeSweep.THIRD_COUNT;
+        final float[] all = new float[heard.size() * third];
+        final float[] noise = new float[heard.size() * third];
+        for (int k = 0; k < heard.size(); k++) {
+            System.arraycopy(heard.get(k).thirdsDb, 0, all, k * third, third);
+            System.arraycopy(heard.get(k).noiseThirdsDb, 0, noise, k * third, third);
+        }
+        final int[] band = new int[8], who = new int[8];
+        final float[] rise = new float[8];
+        final int n = NativeSweep.lowResonances(all, noise, heard.size(), band, who, rise);
+        for (int k = 0; k < n; k++) {
+            final float hz = NativeSweep.thirdCentreHz(band[k]);
+            if (who[k] < 0) {
+                final boolean axial = result.cabinClosed && onAxialMode(result, hz);
+                Log.i(TAG, String.format(Locale.US, "cabin mode at %.0f Hz, +%.1f dB in every channel playing "
+                        + "there%s", hz, rise[k], axial ? ", on an axial mode of the cabin" : ""));
+                result.defects.add(new CabinDefect(CabinDefect.Kind.CABIN_MODE,
+                        axial ? CabinDefect.Certainty.LIKELY : CabinDefect.Certainty.POSSIBLE, "", 0, hz));
+            } else {
+                final ChannelResult c = heard.get(who[k]);
+                Log.i(TAG, String.format(Locale.US, "%s: own resonance at %.0f Hz, +%.1f dB, not in the "
+                        + "other channels", c.label, hz, rise[k]));
+                result.defects.add(new CabinDefect(CabinDefect.Kind.SPEAKER_RESONANCE,
+                        CabinDefect.Certainty.POSSIBLE, c.label, c.nameRes, hz));
+            }
+        }
+    }
+
+    /**
+     * Within a sixth of an octave - half a third, the grid's own reach - of an axial mode k * c / 2d
+     * (k = 1..3) of the cabin's length, width or height. Settled physics (CABIN_MODEL.md): the modes are
+     * known from the dimensions, not measured.
+     */
+    private static boolean onAxialMode(Result result, float hz) {
+        final int[] dims = {result.cabinLengthCm, result.cabinWidthCm, result.cabinHeightCm};
+        final double reach = Math.pow(2.0, 1.0 / 6.0);
+        for (int d : dims) {
+            if (d <= 0) continue;
+            for (int k = 1; k <= 3; k++) {
+                final double mode = k * CabinGeometry.SOUND_CM_PER_MS * 1000.0 / (2.0 * d);
+                if (hz >= mode / reach && hz <= mode * reach) return true;
+            }
+        }
+        return false;
+    }
+
     private static void collectDefects(Result result) {
         result.defects.clear();
         if (result.clippedSamples > 0) {
@@ -3568,6 +3630,7 @@ public final class RoomMeasurement {
                         c.label, c.nameRes, notch[0]));
             }
         }
+        collectLowResonances(result);
         if (result.beyondHardware) {
             result.defects.add(new CabinDefect(CabinDefect.Kind.DELAY_BEYOND_HARDWARE,
                     CabinDefect.Certainty.SURE, "", 0, Float.NaN));
