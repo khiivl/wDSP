@@ -593,6 +593,12 @@
     <string name="audiocheck_sweep_duration_hint">Трај. (s)</string>
     <string name="audiocheck_sweep_normalize">Нормализуј за праг чујности</string>
     <string name="toast_sweep_hearing_threshold">Пуштајте што тише – на прагу чујности, једва чујно.</string>
+    <string name="audiocheck_rta_zero">Нула RTA</string>
+    <string name="toast_rta_zero_needs_pink">Прво укључите ружичасти шум: нула RTA се узима из њега.</string>
+    <string name="toast_rta_zero_listening">Слушање ружичастог шума 3 секунде…</string>
+    <string name="toast_rta_zero_taken">Нула RTA је постављена: ружичасти шум сада показује 0 dB.</string>
+    <string name="toast_rta_zero_failed">Чује се премало звука — нула RTA није постављена.</string>
+    <string name="toast_rta_zero_cleared">Нула RTA је поништена: крива се поново исцртава у односу на свој просек.</string>
     <string name="audiocheck_pink_noise">Ружичасти шум</string>
     <string name="gala_advanced_settings">Напредно</string>
     <string name="eq_vis_shape_label">Облик спектра:</string>

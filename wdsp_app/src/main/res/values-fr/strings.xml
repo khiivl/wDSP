@@ -593,6 +593,12 @@ Par défaut global : %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Durée (s)</string>
     <string name="audiocheck_sweep_normalize">Normaliser pour le seuil d\'audition</string>
     <string name="toast_sweep_hearing_threshold">Jouez aussi doucement que possible – à votre seuil d\'audition, à peine audible.</string>
+    <string name="audiocheck_rta_zero">Zéro RTA</string>
+    <string name="toast_rta_zero_needs_pink">Activez d\'abord le bruit rose : le zéro RTA est étalonné dessus.</string>
+    <string name="toast_rta_zero_listening">Écoute du bruit rose pendant 3 secondes…</string>
+    <string name="toast_rta_zero_taken">Zéro RTA défini : le bruit rose indique maintenant 0 dB.</string>
+    <string name="toast_rta_zero_failed">Trop peu de son capté – le zéro RTA n\'a pas été défini.</string>
+    <string name="toast_rta_zero_cleared">Zéro RTA effacé : la courbe est de nouveau tracée par rapport à sa moyenne.</string>
     <string name="audiocheck_pink_noise">Bruit rose</string>
     <string name="gala_advanced_settings">Avancé</string>
     <string name="eq_vis_shape_label">Forme du spectre :</string>

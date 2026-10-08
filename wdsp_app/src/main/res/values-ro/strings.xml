@@ -593,6 +593,12 @@ Implicit global: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Dur. (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizare pentru pragul auditiv</string>
     <string name="toast_sweep_hearing_threshold">Redați cât mai încet posibil – la pragul auzului, abia perceptibil.</string>
+    <string name="audiocheck_rta_zero">Zero RTA</string>
+    <string name="toast_rta_zero_needs_pink">Porniți mai întâi zgomotul roz: nivelul zero RTA este preluat din el.</string>
+    <string name="toast_rta_zero_listening">Ascultare zgomot roz timp de 3 secunde…</string>
+    <string name="toast_rta_zero_taken">Nivel zero RTA setat: zgomotul roz indică acum 0 dB.</string>
+    <string name="toast_rta_zero_failed">Prea puțin sunet auzit – nivelul zero RTA nu a fost setat.</string>
+    <string name="toast_rta_zero_cleared">Nivel zero RTA șters: curba este trasată din nou față de media sa.</string>
     <string name="audiocheck_pink_noise">Zgomot roz</string>
     <string name="gala_advanced_settings">Avansat</string>
     <string name="eq_vis_shape_label">Forma spectrului:</string>

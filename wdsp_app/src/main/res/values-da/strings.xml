@@ -593,6 +593,12 @@ Global standard: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Var. (s)</string>
     <string name="audiocheck_sweep_normalize">Normaliser til høretærskel</string>
     <string name="toast_sweep_hearing_threshold">Afspil så stille som muligt – ved din høretærskel, knap hørbar.</string>
+    <string name="audiocheck_rta_zero">RTA-nul</string>
+    <string name="toast_rta_zero_needs_pink">Tænd for lyserød støj først: RTA-nullet tages herfra.</string>
+    <string name="toast_rta_zero_listening">Lytter til lyserød støj i 3 sekunder…</string>
+    <string name="toast_rta_zero_taken">RTA-nul indstillet: lyserød støj måler nu 0 dB.</string>
+    <string name="toast_rta_zero_failed">For lidt lyd registreret - RTA-nul blev ikke indstillet.</string>
+    <string name="toast_rta_zero_cleared">RTA-nul nulstillet: kurven tegnes igen mod sit gennemsnit.</string>
     <string name="audiocheck_pink_noise">Lyserød støj</string>
     <string name="gala_advanced_settings">Avanceret</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>

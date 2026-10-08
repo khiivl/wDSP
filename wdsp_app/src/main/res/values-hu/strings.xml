@@ -593,6 +593,12 @@ Globális alapértelmezett: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Időt. (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizálás hallásküszöbhöz</string>
     <string name="toast_sweep_hearing_threshold">Játssza le a lehető leghalkabban – a hallásküszöbön, alig hallhatóan.</string>
+    <string name="audiocheck_rta_zero">RTA nulla</string>
+    <string name="toast_rta_zero_needs_pink">Először kapcsolja be a rózsaszín zajt: az RTA nulla ebből származik.</string>
+    <string name="toast_rta_zero_listening">Rózsaszín zaj figyelése 3 másodpercig…</string>
+    <string name="toast_rta_zero_taken">RTA nulla beállítva: a rózsaszín zaj most 0 dB értéket mutat.</string>
+    <string name="toast_rta_zero_failed">Túl kevés hang hallható – az RTA nulla nem lett beállítva.</string>
+    <string name="toast_rta_zero_cleared">RTA nulla törölve: a görbe ismét az átlagához képest jelenik meg.</string>
     <string name="audiocheck_pink_noise">Rózsaszín zaj</string>
     <string name="gala_advanced_settings">Haladó</string>
     <string name="eq_vis_shape_label">Spektrum alakja:</string>

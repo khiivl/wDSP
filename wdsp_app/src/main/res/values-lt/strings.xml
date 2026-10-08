@@ -593,6 +593,12 @@ Bendras numatytasis: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Trukmė (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizuoti pagal girdimumo slenkstį</string>
     <string name="toast_sweep_hearing_threshold">Groti kuo tyliau – ties girdimumo slenksčiu, vos girdimai.</string>
+    <string name="audiocheck_rta_zero">RTA nulis</string>
+    <string name="toast_rta_zero_needs_pink">Pirmiausia įjunkite rausvąjį triukšmą: RTA nulis imamas iš jo.</string>
+    <string name="toast_rta_zero_listening">Klausomasi rausvojo triukšmo 3 sekundes…</string>
+    <string name="toast_rta_zero_taken">RTA nulis nustatytas: rausvasis triukšmas dabar rodo 0 dB.</string>
+    <string name="toast_rta_zero_failed">Girdima per mažai garso – RTA nulis nenustatytas.</string>
+    <string name="toast_rta_zero_cleared">RTA nulis išvalytas: kreivė vėl braižoma pagal jos vidurkį.</string>
     <string name="audiocheck_pink_noise">Rausvasis triukšmas</string>
     <string name="gala_advanced_settings">Išplėstiniai</string>
     <string name="eq_vis_shape_label">Spektro forma:</string>

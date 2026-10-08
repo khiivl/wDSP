@@ -591,6 +591,12 @@
     <string name="audiocheck_sweep_duration_hint">Dur. (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizar para o limiar de audição</string>
     <string name="toast_sweep_hearing_threshold">Reproduza o mais baixo possível – no seu limiar de audição, quase inaudível.</string>
+    <string name="audiocheck_rta_zero">Zero RTA</string>
+    <string name="toast_rta_zero_needs_pink">Ative primeiro o ruído rosa: o zero RTA é obtido a partir dele.</string>
+    <string name="toast_rta_zero_listening">A escutar o ruído rosa durante 3 segundos…</string>
+    <string name="toast_rta_zero_taken">Zero RTA definido: o ruído rosa agora marca 0 dB.</string>
+    <string name="toast_rta_zero_failed">Muito pouco som detetado – o zero RTA não foi definido.</string>
+    <string name="toast_rta_zero_cleared">Zero RTA limpo: a curva volta a ser desenhada relativamente à sua média.</string>
     <string name="audiocheck_pink_noise">Ruído rosa</string>
     <string name="gala_advanced_settings">Avançado</string>
     <string name="eq_vis_shape_label">Forma do espetro:</string>

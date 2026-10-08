@@ -591,6 +591,12 @@
     <string name="stem_melody">Melodía</string>
     <string name="stem_vocal">Voz</string>
     <string name="toast_sweep_hearing_threshold">Reproduce lo más bajo posible: en tu umbral auditivo, apenas audible.</string>
+    <string name="audiocheck_rta_zero">Cero RTA</string>
+    <string name="toast_rta_zero_needs_pink">Primero activa el ruido rosa: el cero RTA se toma de él.</string>
+    <string name="toast_rta_zero_listening">Escuchando el ruido rosa durante 3 segundos…</string>
+    <string name="toast_rta_zero_taken">Cero RTA establecido: el ruido rosa ahora marca 0 dB.</string>
+    <string name="toast_rta_zero_failed">Se escuchó muy poco sonido: no se estableció el cero RTA.</string>
+    <string name="toast_rta_zero_cleared">Cero RTA borrado: la curva se vuelve a dibujar respecto a su promedio.</string>
     <string name="eq_vis_shape_label">Forma del espectro:</string>
     <string name="eq_vis_shape_curve">Curva en vivo</string>
     <string name="eq_vis_shape_bars">Barras</string>

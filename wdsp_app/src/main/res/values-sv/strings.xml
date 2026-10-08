@@ -591,6 +591,12 @@
     <string name="audiocheck_sweep_duration_hint">Tid (s)</string>
     <string name="audiocheck_sweep_normalize">Normalisera för Hörtröskel</string>
     <string name="toast_sweep_hearing_threshold">Spela så tyst som möjligt - vid din hörtröskel, precis hörbart.</string>
+    <string name="audiocheck_rta_zero">RTA-nolla</string>
+    <string name="toast_rta_zero_needs_pink">Slå på rosa brus först: RTA-nollan tas från det.</string>
+    <string name="toast_rta_zero_listening">Lyssnar på rosa brus i 3 sekunder…</string>
+    <string name="toast_rta_zero_taken">RTA-nolla inställd: rosa brus visar nu 0 dB.</string>
+    <string name="toast_rta_zero_failed">För lite ljud hördes – RTA-nollan ställdes inte in.</string>
+    <string name="toast_rta_zero_cleared">RTA-nolla rensad: kurvan ritas åter mot sitt genomsnitt.</string>
     <string name="gala_advanced_settings">Avancerat</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>
     <string name="eq_vis_shape_curve">Livekurva</string>

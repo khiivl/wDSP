@@ -593,6 +593,12 @@ Yleinen oletus: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Kesto (s)</string>
     <string name="audiocheck_sweep_normalize">Normalisoi kuulokynnykselle</string>
     <string name="toast_sweep_hearing_threshold">Toista mahdollisimman hiljaa – kuulokynnyksellä, tuskin kuultavissa.</string>
+    <string name="audiocheck_rta_zero">RTA-nolla</string>
+    <string name="toast_rta_zero_needs_pink">Kytke vaaleanpunainen kohina päälle ensin: RTA-nolla mitataan siitä.</string>
+    <string name="toast_rta_zero_listening">Kuunnellaan vaaleanpunaista kohinaa 3 sekuntia…</string>
+    <string name="toast_rta_zero_taken">RTA-nolla asetettu: vaaleanpunainen kohina näyttää nyt 0 dB.</string>
+    <string name="toast_rta_zero_failed">Liian vähän ääntä havaittu – RTA-nollaa ei asetettu.</string>
+    <string name="toast_rta_zero_cleared">RTA-nolla nollattu: käyrä piirretään jälleen suhteessa keskiarvoonsa.</string>
     <string name="audiocheck_pink_noise">Vaaleanpunainen kohina</string>
     <string name="gala_advanced_settings">Lisäasetukset</string>
     <string name="eq_vis_shape_label">Spektrin muoto:</string>

@@ -591,6 +591,12 @@
     <string name="audiocheck_sweep_duration_hint">Длит. с</string>
     <string name="audiocheck_sweep_normalize">Нормализация по порогу слуха</string>
     <string name="toast_sweep_hearing_threshold">Включите как можно тише - на пороге слышимости, едва слышно.</string>
+    <string name="audiocheck_rta_zero">Ноль RTA</string>
+    <string name="toast_rta_zero_needs_pink">Сначала включите розовый шум: ноль RTA снимается с него.</string>
+    <string name="toast_rta_zero_listening">Слушаю розовый шум 3 секунды…</string>
+    <string name="toast_rta_zero_taken">Ноль RTA установлен: розовый шум теперь на 0 дБ.</string>
+    <string name="toast_rta_zero_failed">Слышно слишком мало звука — ноль RTA не установлен.</string>
+    <string name="toast_rta_zero_cleared">Ноль RTA сброшен: кривая снова строится относительно своего среднего.</string>
     <string name="audiocheck_pink_noise">Розовый шум</string>
     <string name="gala_advanced_settings">Дополнительно</string>
     <string name="eq_vis_shape_label">Форма спектра:</string>

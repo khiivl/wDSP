@@ -593,6 +593,12 @@ Global standard: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Var. (s)</string>
     <string name="audiocheck_sweep_normalize">Normaliser for høreterskel</string>
     <string name="toast_sweep_hearing_threshold">Spill så lavt som mulig – ved høreterskelen, knapt hørbart.</string>
+    <string name="audiocheck_rta_zero">RTA-null</string>
+    <string name="toast_rta_zero_needs_pink">Slå på rosa støy først: RTA-null hentes derfra.</string>
+    <string name="toast_rta_zero_listening">Lytter til rosa støy i 3 sekunder…</string>
+    <string name="toast_rta_zero_taken">RTA-null satt: rosa støy måler nå 0 dB.</string>
+    <string name="toast_rta_zero_failed">For lite lyd registrert – RTA-null ble ikke satt.</string>
+    <string name="toast_rta_zero_cleared">RTA-null tilbakestilt: kurven tegnes igjen mot gjennomsnittet sitt.</string>
     <string name="audiocheck_pink_noise">Rosa støy</string>
     <string name="gala_advanced_settings">Avansert</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>

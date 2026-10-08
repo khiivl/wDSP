@@ -593,6 +593,12 @@ Predefinito globale: %1$s</string>
     <string name="audiocheck_sweep_duration_hint">Durata (s)</string>
     <string name="audiocheck_sweep_normalize">Normalizza per soglia uditiva</string>
     <string name="toast_sweep_hearing_threshold">Riproduci il più piano possibile – alla soglia uditiva, appena udibile.</string>
+    <string name="audiocheck_rta_zero">Zero RTA</string>
+    <string name="toast_rta_zero_needs_pink">Attiva prima il rumore rosa: lo zero RTA viene rilevato da esso.</string>
+    <string name="toast_rta_zero_listening">Ascolto del rumore rosa per 3 secondi…</string>
+    <string name="toast_rta_zero_taken">Zero RTA impostato: il rumore rosa ora misura 0 dB.</string>
+    <string name="toast_rta_zero_failed">Troppo poco suono rilevato – lo zero RTA non è stato impostato.</string>
+    <string name="toast_rta_zero_cleared">Zero RTA azzerato: la curva viene nuovamente tracciata rispetto alla media.</string>
     <string name="audiocheck_pink_noise">Rumore rosa</string>
     <string name="gala_advanced_settings">Avanzate</string>
     <string name="eq_vis_shape_label">Forma spettro:</string>
