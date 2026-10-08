@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bands.h"
+
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
@@ -15,7 +17,7 @@ namespace wdsp {
 /** Number of hardware equaliser bands - the grid the BU32107 actually works on. */
 constexpr int kHwBands = 16;
 /** Analysis bands: every hardware band split in two, so folding pairs back is exact. */
-constexpr int kBands = 32;
+constexpr int kBands = kThirdOctaveBands;
 /**
  * Points of the live RTA curve, log-spaced from 20 Hz to 20 kHz - the author's 1.0 display model
  * (200 points, `SpectrumAnalyzerView` in his master). Each point is measured exactly as a band is:

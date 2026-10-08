@@ -30,7 +30,17 @@ public final class NativeSweep implements AutoCloseable {
     public static final int BAND_COUNT = 16;
     /** Sixteen band levels of deconvolved noise floor in dB start here. */
     public static final int NOISE_BANDS = BANDS + BAND_COUNT;
-    public static final int RESULT_SIZE = NOISE_BANDS + BAND_COUNT;
+    /** The standard third-octave grid, 16 Hz .. 20 kHz (cpp/bands.h): the response here... */
+    public static final int THIRD_COUNT = 32;
+    public static final int THIRDS = NOISE_BANDS + BAND_COUNT;
+    /** ...and the noise floor here, on the same grid. */
+    public static final int NOISE_THIRDS = THIRDS + THIRD_COUNT;
+    public static final int RESULT_SIZE = NOISE_THIRDS + THIRD_COUNT;
+
+    /** Centre of third-octave band {@code i}, the native grid's own formula: 1000 * 2^((i - 18) / 3). */
+    public static float thirdCentreHz(int i) {
+        return (float) (1000.0 * Math.pow(2.0, (i - 18) / 3.0));
+    }
 
     private static boolean available;
 

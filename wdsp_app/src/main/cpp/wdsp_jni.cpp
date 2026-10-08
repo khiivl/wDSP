@@ -323,7 +323,8 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
                                                    jfloatArray result) {
     auto* sweep = asSweep(handle);
     if (sweep == nullptr || recorded == nullptr || result == nullptr) return JNI_FALSE;
-    if (env->GetArrayLength(result) < 4 + wdsp::kHwBands * 2) return JNI_FALSE;
+    const int resultSize = 4 + wdsp::kHwBands * 2 + wdsp::kThirdOctaveBands * 2;
+    if (env->GetArrayLength(result) < resultSize) return JNI_FALSE;
     if (length > env->GetArrayLength(recorded)) length = env->GetArrayLength(recorded);
 
     jfloat* input = env->GetFloatArrayElements(recorded, nullptr);
@@ -354,7 +355,7 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
         }
     }
 
-    std::vector<float> out(4 + wdsp::kHwBands * 2, 0.0f);
+    std::vector<float> out(resultSize, 0.0f);
     out[0] = static_cast<float>(arrival) + delta;
     out[1] = prominence;
     out[2] = static_cast<float>(polarity);
@@ -364,6 +365,10 @@ Java_com_radiorubka_wdsp_NativeSweep_nativeAnalyse(JNIEnv* env, jclass, jlong ha
     sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), arrival, out.data() + 4);
     // 2. Ambient noise floor 16 bands from pre-sweep lead silence (sample 48 -> samples 0..16384 of deconvolved silence)
     sweep->bandLevelsDb(impulse.data(), (int) impulse.size(), 48, out.data() + 4 + wdsp::kHwBands);
+    // 3-4. The same two on the third-octave grid, for the defects the hardware grid blurs.
+    float* thirds = out.data() + 4 + wdsp::kHwBands * 2;
+    sweep->bandLevels32Db(impulse.data(), (int) impulse.size(), arrival, thirds);
+    sweep->bandLevels32Db(impulse.data(), (int) impulse.size(), 48, thirds + wdsp::kThirdOctaveBands);
 
     env->SetFloatArrayRegion(result, 0, (jsize) out.size(), out.data());
     return JNI_TRUE;

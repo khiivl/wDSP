@@ -115,7 +115,7 @@ void Analyzer::buildBandPlan() {
     // that bar read -16 dB on pink noise, pulling the 20 kHz hardware bar down with it. Owner:
     // "сітку стандартну".
     for (int i = 0; i < kBands; i++) {
-        plan_[i] = makePlan(1000.0f * std::pow(2.0f, static_cast<float>(i - 18) / 3.0f));
+        plan_[i] = makePlan(thirdOctaveCentreHz(i));
     }
 }
 

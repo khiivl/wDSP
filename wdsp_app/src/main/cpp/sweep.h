@@ -112,7 +112,18 @@ public:
      * range to have something to show: at 48 kHz, sixteen thousand samples is a third of a
      * second, which is seven cycles of the lowest band and several times the decay of a car.
      */
+    /** Both grids' body: mean power per bin within centre / halfWidth .. centre * halfWidth. */
+    void levelsAround(const float* impulse, int length, int arrival, const float* centresHz,
+                      int count, float halfWidth, float* out) const;
+
     void bandLevelsDb(const float* impulse, int length, int arrival, float* out16) const;
+
+    /**
+     * The same response on the standard third-octave grid (bands.h): 32 bands, 16 Hz .. 20 kHz, each a
+     * third of an octave wide - half the width of a hardware band. For what the 16 bands blur: a
+     * crossover notch between a tweeter and its mid-bass, a narrow resonance below 200 Hz.
+     */
+    void bandLevels32Db(const float* impulse, int length, int arrival, float* out32) const;
 
     /**
      * 16-band energy spectrum (in dB) of an arbitrary signal slice (such as ambient noise floor).

@@ -224,6 +224,62 @@ void testNoiseTolerance(const SweepMeasurement& m) {
 
 } // namespace
 
+/** A notch (RBJ biquad) at centreHz with quality q - a tweeter fighting its mid-bass at the crossover. */
+void notch(std::vector<float>& x, float centreHz, float q) {
+    const double w = 2 * 3.14159265358979 * centreHz / kRate, alpha = std::sin(w) / (2 * q), c = std::cos(w);
+    const double a0 = 1 + alpha, b0 = 1 / a0, b1 = -2 * c / a0, b2 = 1 / a0, a1 = -2 * c / a0, a2 = (1 - alpha) / a0;
+    double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    for (float& v : x) {
+        const double in = v, out = b0 * in + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = in; y2 = y1; y1 = out;
+        v = static_cast<float>(out);
+    }
+}
+
+/**
+ * The third-octave grid (08.10.2026), criteria written before it was built: a flat path reads flat
+ * across every band the sweep covers (25 Hz .. 20 kHz, within 1 dB on the app's 6 s sweep), and a
+ * notch at 3150 Hz is deepest in the 3150 Hz third and at least 3 dB deeper there than the 16-band
+ * grid shows it - or the finer grid buys nothing.
+ */
+void testThirdOctaveGrid(const SweepMeasurement& m) {
+    std::printf("\nThe third-octave grid: flat stays flat, a crossover notch is seen where it is\n");
+    std::vector<float> rec = playThrough(m, 2400, 0.5f, false, 0.0f, kRate / 2);
+    std::vector<float> ir;
+    m.deconvolve(rec.data(), (int) rec.size(), ir);
+    float prominence = 0.0f;
+    int arrival = SweepMeasurement::findArrival(ir.data(), (int) ir.size(), prominence);
+    float flat32[kThirdOctaveBands];
+    m.bandLevels32Db(ir.data(), (int) ir.size(), arrival, flat32);
+    float lo = 1e9f, hi = -1e9f;
+    for (int i = 2; i < kThirdOctaveBands; i++) {
+        lo = std::min(lo, flat32[i]);
+        hi = std::max(hi, flat32[i]);
+    }
+    char detail[160];
+    std::snprintf(detail, sizeof(detail), "spread over 25 Hz .. 20 kHz is %.2f dB", hi - lo);
+    check(hi - lo < 1.0f, "flat across 30 thirds", detail);
+
+    std::vector<float> rec2 = playThrough(m, 2400, 0.5f, false, 0.0f, kRate / 2);
+    notch(rec2, 3150.0f, 4.0f);
+    std::vector<float> ir2;
+    m.deconvolve(rec2.data(), (int) rec2.size(), ir2);
+    arrival = SweepMeasurement::findArrival(ir2.data(), (int) ir2.size(), prominence);
+    float n32[kThirdOctaveBands], n16[kHwBands], f16[kHwBands];
+    m.bandLevels32Db(ir2.data(), (int) ir2.size(), arrival, n32);
+    m.bandLevelsDb(ir2.data(), (int) ir2.size(), arrival, n16);
+    m.bandLevelsDb(ir.data(), (int) ir.size(), arrival, f16);
+    int deepest = 2;
+    for (int i = 2; i < kThirdOctaveBands; i++) {
+        if (n32[i] - flat32[i] < n32[deepest] - flat32[deepest]) deepest = i;
+    }
+    const float dip32 = n32[deepest] - flat32[deepest];
+    const float dip16 = n16[11] - f16[11];   // band 11 is 3150 Hz
+    std::snprintf(detail, sizeof(detail), "deepest third %.0f Hz, %.1f dB; the 16-band grid shows %.1f dB",
+                  thirdOctaveCentreHz(deepest), dip32, dip16);
+    check(deepest == 23 && dip32 <= dip16 - 3.0f, "notch located and deeper", detail);
+}
+
 int main() {
     std::printf("Sweep measurement, %.0f s exponential sweep 20 Hz - 20 kHz at %d Hz\n",
                 kSweepSeconds, kRate);
@@ -243,6 +299,7 @@ int main() {
     testKnownFilter(m);
     testKnownHighPass(m);
     testNoiseTolerance(m);
+    testThirdOctaveGrid(app);
 
     std::printf("\n%s (%d failures)\n", failures == 0 ? "ALL PASS" : "FAILURES", failures);
     return failures == 0 ? 0 : 1;

@@ -1289,6 +1289,10 @@ public final class RoomMeasurement {
         public final float[] cleanBandsDb = new float[NativeSweep.BAND_COUNT];
         /** Deconvolved noise floor in dB across the 16 bands. */
         public final float[] noiseBandsDb = new float[NativeSweep.BAND_COUNT];
+        /** The response on the third-octave grid ({@link NativeSweep#thirdCentreHz}), for the defects. */
+        public final float[] thirdsDb = new float[NativeSweep.THIRD_COUNT];
+        /** The noise floor on the same grid. */
+        public final float[] noiseThirdsDb = new float[NativeSweep.THIRD_COUNT];
         /** Signal-to-noise ratio in dB across the 16 bands. */
         public final float[] snrDb = new float[NativeSweep.BAND_COUNT];
         /** Fractional delay from reference channel using GCC-PHAT in milliseconds. */
@@ -2477,6 +2481,8 @@ public final class RoomMeasurement {
             System.arraycopy(analysis, NativeSweep.BANDS, cr.bandsDb, 0, NativeSweep.BAND_COUNT);
             // Deconvolved impulse response silence noise floor (sample 48), perfectly matching bandsDb domain
             System.arraycopy(analysis, NativeSweep.NOISE_BANDS, cr.noiseBandsDb, 0, NativeSweep.BAND_COUNT);
+            System.arraycopy(analysis, NativeSweep.THIRDS, cr.thirdsDb, 0, NativeSweep.THIRD_COUNT);
+            System.arraycopy(analysis, NativeSweep.NOISE_THIRDS, cr.noiseThirdsDb, 0, NativeSweep.THIRD_COUNT);
             if (subPass) {
                 // Its narrower sweep reads louder by the ratio of the spans (levelOffsetDbAgainst);
                 // signal and noise move together, so the SNR is untouched.
@@ -2484,6 +2490,10 @@ public final class RoomMeasurement {
                 for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
                     cr.bandsDb[b] -= off;
                     cr.noiseBandsDb[b] -= off;
+                }
+                for (int i = 0; i < NativeSweep.THIRD_COUNT; i++) {
+                    cr.thirdsDb[i] -= off;
+                    cr.noiseThirdsDb[i] -= off;
                 }
             }
 
@@ -3910,6 +3920,17 @@ public final class RoomMeasurement {
                 sb.append("\n");
                 sb.append("             SNR dB:     ");
                 for (float band : c.snrDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n");
+                // The third-octave grid, 16 Hz .. 20 kHz: what the defect detectors read.
+                sb.append("             thirds dB:  ");
+                for (float band : c.thirdsDb) {
+                    sb.append(String.format(Locale.US, " %.1f", band));
+                }
+                sb.append("\n");
+                sb.append("             thirds noise:");
+                for (float band : c.noiseThirdsDb) {
                     sb.append(String.format(Locale.US, " %.1f", band));
                 }
                 sb.append("\n");

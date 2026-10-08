@@ -338,7 +338,22 @@ float SweepMeasurement::bandwidthRatioDb(const float* signal, int length, int sa
 
 void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arrival,
                                     float* out16) const {
-    for (int b = 0; b < kHwBands; b++) out16[b] = -120.0f;
+    // A hardware band reaches a third of an octave either side of its centre.
+    levelsAround(impulse, length, arrival, kHwCenters, kHwBands, std::pow(2.0f, 1.0f / 3.0f), out16);
+}
+
+void SweepMeasurement::bandLevels32Db(const float* impulse, int length, int arrival,
+                                      float* out32) const {
+    float centres[kThirdOctaveBands];
+    for (int i = 0; i < kThirdOctaveBands; i++) centres[i] = thirdOctaveCentreHz(i);
+    // A third-octave band reaches a sixth either side.
+    levelsAround(impulse, length, arrival, centres, kThirdOctaveBands, std::pow(2.0f, 1.0f / 6.0f), out32);
+}
+
+void SweepMeasurement::levelsAround(const float* impulse, int length, int arrival,
+                                    const float* centresHz, int count, float halfWidth,
+                                    float* out) const {
+    for (int b = 0; b < count; b++) out[b] = -120.0f;
     if (impulse == nullptr || arrival < 0 || arrival >= length) return;
 
     const int from = std::max(0, arrival - kPreArrivalOpen);
@@ -373,7 +388,6 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     fft(re, im, false);
 
     const float binHz = static_cast<float>(sampleRate_) / static_cast<float>(n);
-    const float third = std::pow(2.0f, 1.0f / 3.0f);
 
     // Where the sweep is at full height: past its fade-in, short of its fade-out.
     const float sweepSeconds = static_cast<float>(sweepLength()) / static_cast<float>(sampleRate_);
@@ -381,15 +395,15 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
     const float fullLow = startHz_ * std::exp(kFadeInSec * octaves / sweepSeconds);
     const float fullHigh = endHz_ * std::exp(-kFadeOutSec * octaves / sweepSeconds);
 
-    for (int b = 0; b < kHwBands; b++) {
+    for (int b = 0; b < count; b++) {
         // Only the part of the band the sweep excited at full height. The mean below is a transfer
         // function, and a bin the sweep never reached has nothing to transfer: counted, it halved
         // the edge bands - 20 kHz read -6.6 dB on a flat path for as long as the sweep ended at
         // 20 kHz, and 20 Hz the same once the window stopped filling it with splatter (15.09.2026).
         // Two bins of margin at the bottom: the window smooths the sweep's lower edge over about
         // that much, and at 20 Hz those are a large part of a band only five hertz wide.
-        const float low = std::max(kHwCenters[b] / third, fullLow + 2.0f * binHz);
-        const float high = std::min(std::min(kHwCenters[b] * third, fullHigh),
+        const float low = std::max(centresHz[b] / halfWidth, fullLow + 2.0f * binHz);
+        const float high = std::min(std::min(centresHz[b] * halfWidth, fullHigh),
                                     static_cast<float>(sampleRate_) * 0.5f);
         int first = static_cast<int>(std::ceil(low / binHz));
         int last = static_cast<int>(std::floor(high / binHz));
@@ -398,7 +412,7 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
         if (last < first) {
             // Narrower than one bin: take the nearest bin rather than reporting silence.
             first = last = std::max(1, std::min(n / 2,
-                                                static_cast<int>(kHwCenters[b] / binHz + 0.5f)));
+                                                static_cast<int>(centresHz[b] / binHz + 0.5f)));
         }
 
         double power = 0.0;
@@ -412,7 +426,7 @@ void SweepMeasurement::bandLevelsDb(const float* impulse, int length, int arriva
         // path into a 45 dB ramp and halved the slope of a known filter.
         const int bins = last - first + 1;
         const double mean = power / bins;
-        out16[b] = 10.0f * std::log10(static_cast<float>(mean) + 1e-20f);
+        out[b] = 10.0f * std::log10(static_cast<float>(mean) + 1e-20f);
     }
 }
 
