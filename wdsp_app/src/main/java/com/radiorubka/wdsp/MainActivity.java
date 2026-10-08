@@ -87,6 +87,12 @@ import java.util.Objects;
 import java.util.Set;
 import androidx.activity.EdgeToEdge;
 
+/**
+ * The main screen: the 16-band equaliser with its live spectrum behind it, presets, the subwoofer and the
+ * door filters, delays and fader, the loudness tab (FM curve, fatigue, bass shelf, Ultra Bass), GALA and
+ * Audio Check. It writes settings to SharedPreferences and nothing to the hardware - McuService reads
+ * them and is the only thing that talks to the chip (ARCHITECTURE.md).
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Main";

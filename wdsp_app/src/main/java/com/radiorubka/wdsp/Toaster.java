@@ -15,6 +15,7 @@ import androidx.core.graphics.ColorUtils;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
+/** Short messages to the person, drawn in the current style and theme instead of the system's toast. */
 public class Toaster {
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static Toast toast;

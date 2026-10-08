@@ -85,6 +85,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * The settings screen: style and theme, the spectrum's look, the cabin card (speaker layout, cabin size,
+ * open or closed, microphone and subwoofer placement), the microphone calibration and the cabin
+ * measurement wizard with its list of findings, permissions, the status-bar visualiser and the
+ * screensaver. Measurements run in RoomMeasurement; this screen asks the questions and shows the answers.
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "wDSP_Settings";

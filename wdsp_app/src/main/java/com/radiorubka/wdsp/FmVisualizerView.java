@@ -22,6 +22,11 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.util.Locale;
 
+/**
+ * The loudness tab's preview (the author's "Correction" view): the equaliser's gains with the loudness
+ * offsets on top, as MainActivity computes them for the volume the sliders show, and the warnings
+ * LoudnessCheck raises about that curve. It draws what it is given and computes nothing itself.
+ */
 public class FmVisualizerView extends View {
     private Paint linePaint;
     private Paint fillPaint;

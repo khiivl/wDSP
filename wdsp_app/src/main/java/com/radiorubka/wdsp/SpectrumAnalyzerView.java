@@ -18,6 +18,11 @@ import androidx.annotation.NonNull;
 
 import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
+/**
+ * The live spectrum behind the equaliser's sliders: the RTA curve (RtaCurve, the author's display model)
+ * or the 16 bars, chosen in the settings; on the equaliser's grid, relative to the frame's average or to
+ * the fixed zero taken from pink noise (RtaReference).
+ */
 public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.OnSpectrumDataListener {
 
     private static final String TAG = "wDSP_Spectrum";
