@@ -130,6 +130,16 @@ final class RtaCurve {
         return active < MIN_POINTS_FOR_AVERAGE ? Float.NaN : (float) (sum / active);
     }
 
+    /**
+     * The curve after the ballistics and before any correction - what the screen draws, in the
+     * measurement's dB. The fixed zero is taken from this (RtaReference): taken from the raw frames,
+     * pink noise sat 2-4 dB over its own zero, because an instant attack with a slow release rides
+     * above the mean of a noisy signal (bench, 09.10.2026).
+     */
+    float[] smoothedDb() {
+        return smoothedDb;
+    }
+
     /** The last frame, dB relative to the zero: the average of what had sound, or the fixed one. */
     float[] relativeDb() {
         return relativeDb;

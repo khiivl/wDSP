@@ -893,7 +893,12 @@ public class AudioSpectrumEngine {
         new Thread(() -> {
             final float[] curve = new float[NativeAnalyzer.CURVE_POINTS];
             final RtaReference.Capture capture = new RtaReference.Capture();
-            final long end = System.currentTimeMillis() + RtaReference.CAPTURE_MS;
+            // The same ballistics the screen applies (RtaCurve), so the zero is the level the drawn
+            // curve has; its envelope needs half a second to settle before it is counted.
+            final RtaCurve ballistics = new RtaCurve();
+            final float[] noCorrection = new float[NativeAnalyzer.CURVE_POINTS];
+            final long settled = System.currentTimeMillis() + 500;
+            final long end = settled + RtaReference.CAPTURE_MS;
             while (System.currentTimeMillis() < end) {
                 synchronized (analyzerLock) {
                     NativeAnalyzer tap = nativeAnalyzer;
@@ -904,7 +909,10 @@ public class AudioSpectrumEngine {
                         analyzer.setCurveFraction(3);
                         analyzer.getCurveDb(curve);
                         addCurveOffset(analyzer, curve);
-                        capture.offer(RtaCurve.contentLevelDb(curve, getDisplayRangeDb()));
+                        ballistics.update(curve, noCorrection, getDisplayRangeDb(), System.nanoTime(), Float.NaN);
+                        if (System.currentTimeMillis() >= settled) {
+                            capture.offer(RtaCurve.contentLevelDb(ballistics.smoothedDb(), getDisplayRangeDb()));
+                        }
                     }
                 }
                 try {
