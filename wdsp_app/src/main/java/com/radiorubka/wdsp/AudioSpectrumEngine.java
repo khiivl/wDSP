@@ -837,6 +837,84 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /** The RTA's fixed zero ({@link RtaReference}); built on first use, when the context is known. */
+    private RtaReference rtaReference;
+
+    private RtaReference rtaReference() {
+        if (rtaReference == null && appContext != null) {
+            rtaReference = new RtaReference(com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(appContext));
+        }
+        return rtaReference;
+    }
+
+    /** The zero the live curve is drawn against, for the analyser shown now; NaN for the floating average. */
+    public float rtaZeroDb() {
+        RtaReference ref = rtaReference();
+        if (ref == null) return Float.NaN;
+        final boolean acoustic;
+        synchronized (analyzerLock) {
+            NativeAnalyzer analyzer = shownAnalyzer();
+            if (analyzer == null) return Float.NaN;
+            acoustic = analyzer.isAcoustic();
+        }
+        return ref.zeroDb(acoustic, acoustic ? VolumeHelper.getVolume() : 0);
+    }
+
+    /** What a zero capture reports, on the main thread. */
+    public interface RtaZeroListener {
+        /** @param zeroDb the zero taken, NaN when too little was heard; @param acoustic which analyser */
+        void onRtaZero(float zeroDb, boolean acoustic);
+    }
+
+    /**
+     * Takes the RTA's zero from what plays now - meant for Audio Check's pink noise - over
+     * {@link RtaReference#CAPTURE_MS}, read straight from the shown analyser at a third of an octave,
+     * so it does not depend on the curve being on screen. Stored only if enough was heard and the
+     * analyser did not change underneath.
+     */
+    public void captureRtaZero(RtaZeroListener listener) {
+        final RtaReference ref = rtaReference();
+        final Handler main = new Handler(Looper.getMainLooper());
+        new Thread(() -> {
+            final float[] curve = new float[NativeAnalyzer.CURVE_POINTS];
+            final RtaReference.Capture capture = new RtaReference.Capture();
+            Boolean acoustic = null;
+            final long end = System.currentTimeMillis() + RtaReference.CAPTURE_MS;
+            while (System.currentTimeMillis() < end) {
+                synchronized (analyzerLock) {
+                    NativeAnalyzer analyzer = analysisPaused() ? null : shownAnalyzer();
+                    if (analyzer != null && analyzer.isValid()) {
+                        if (acoustic == null) acoustic = analyzer.isAcoustic();
+                        if (acoustic != analyzer.isAcoustic()) {
+                            acoustic = null;
+                            break;
+                        }
+                        analyzer.setCurveFraction(3);
+                        analyzer.getCurveDb(curve);
+                        capture.offer(RtaCurve.contentLevelDb(curve, getDisplayRangeDb()));
+                    }
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+            final boolean isAcoustic = acoustic != null && acoustic;
+            final float zero = acoustic == null || ref == null ? Float.NaN : capture.resultDb();
+            if (!Float.isNaN(zero)) ref.store(isAcoustic, zero, isAcoustic ? VolumeHelper.getVolume() : 0);
+            Log.i(TAG, String.format(java.util.Locale.US, "RTA zero (%s): %s", isAcoustic ? "microphone" : "calculated",
+                    Float.isNaN(zero) ? "not taken - too little heard" : String.format(java.util.Locale.US, "%.1f dB", zero)));
+            if (listener != null) main.post(() -> listener.onRtaZero(zero, isAcoustic));
+        }, "rta-zero").start();
+    }
+
+    /** Forgets the RTA's zeros: the curve goes back to the frame's average. */
+    public void clearRtaZero() {
+        RtaReference ref = rtaReference();
+        if (ref != null) ref.clear();
+    }
+
     /**
      * A test tone is playing (Audio Check's sine or sweep): the curve reads a twenty-fourth of an
      * octave instead of a third, so the tone stands as a peak, not a plateau. Kept here and handed to

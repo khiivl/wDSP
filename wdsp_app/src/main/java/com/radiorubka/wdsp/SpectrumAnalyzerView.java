@@ -134,7 +134,7 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
         boolean sound = engine.readCurve(curveContent, curveCorrection)
                 && rta.update(curveContent, curveCorrection, engine.getDisplayRangeDb(),
-                frameTimeNanos);
+                frameTimeNanos, engine.rtaZeroDb());
         float dtMs = lastCurveNanos == 0 ? 0f : (frameTimeNanos - lastCurveNanos) / 1_000_000f;
         lastCurveNanos = frameTimeNanos;
         float target = sound ? 1f : 0f;

@@ -29,7 +29,7 @@ final class AudioCheckPanel implements AudioCheck.Listener {
     private final AudioCheck engine;
     private final SharedPreferences prefs;
 
-    private final MaterialButton bass, vocal, drums, melody, pink, sine, sweep, normalize;
+    private final MaterialButton bass, vocal, drums, melody, pink, sine, sweep, normalize, rtaZero;
     private final MaterialButton fl, fr, rl, rr, onlySub;
     private final MaterialButton[] steps;
     private final Slider sineFreq;
@@ -48,6 +48,7 @@ final class AudioCheckPanel implements AudioCheck.Listener {
         melody = activity.findViewById(R.id.switch_audiocheck_melody);
         pink = activity.findViewById(R.id.switch_audiocheck_pink_noise);
         sine = activity.findViewById(R.id.switch_audiocheck_sine);
+        rtaZero = activity.findViewById(R.id.btn_audiocheck_rta_zero);
         sweep = activity.findViewById(R.id.btn_audiocheck_sweep_toggle);
         normalize = activity.findViewById(R.id.switch_audiocheck_sweep_normalize);
         fl = activity.findViewById(R.id.btn_audiocheck_fl);
@@ -86,6 +87,31 @@ final class AudioCheckPanel implements AudioCheck.Listener {
         bind(rr, () -> engine.toggleSpeaker(AudioCheck.Speaker.RR));
         bind(onlySub, () -> engine.setOnlySub(onlySub.isChecked()));
 
+        // The RTA's zero from the author's pink noise (owner, 08.10.2026): a tap takes it, a long press
+        // forgets it. Only while pink noise plays - any other sound would put its own tilt on the zero.
+        if (rtaZero != null) {
+            rtaZero.setOnClickListener(v -> {
+                if (!engine.isPinkNoiseOn()) {
+                    Toaster.show(activity, activity.getString(R.string.toast_rta_zero_needs_pink));
+                    return;
+                }
+                rtaZero.setEnabled(false);
+                Toaster.show(activity, activity.getString(R.string.toast_rta_zero_listening));
+                AudioSpectrumEngine.getInstance().captureRtaZero((zeroDb, acoustic) -> {
+                    rtaZero.setEnabled(true);
+                    Toaster.show(activity, Float.isNaN(zeroDb)
+                            ? activity.getString(R.string.toast_rta_zero_failed)
+                            : activity.getString(acoustic ? R.string.toast_rta_zero_taken_mic
+                                    : R.string.toast_rta_zero_taken));
+                });
+            });
+            rtaZero.setOnLongClickListener(v -> {
+                AudioSpectrumEngine.getInstance().clearRtaZero();
+                Toaster.show(activity, activity.getString(R.string.toast_rta_zero_cleared));
+                return true;
+            });
+        }
+
         normalize.setChecked(prefs.getBoolean(PREF_SWEEP_NORMALIZE, false));
         normalize.addOnCheckedChangeListener((bv, checked) -> {
             activity.updateToggleStyle(bv);
@@ -120,7 +146,7 @@ final class AudioCheckPanel implements AudioCheck.Listener {
 
     /** Every button of the panel, for the activity's theme pass. */
     View[] buttons() {
-        return new View[]{bass, vocal, drums, melody, pink, sine, sweep, normalize,
+        return new View[]{bass, vocal, drums, melody, pink, sine, sweep, normalize, rtaZero,
                 fl, fr, rl, rr, onlySub, steps[0], steps[1], steps[2], steps[3]};
     }
 

@@ -28,6 +28,12 @@ package com.radiorubka.wdsp;
  * that is the bass, so the whole curve read several dB low against the bars over the same sound
  * (owner, 07.10: "RTA shows levels too low"). Power is right for adding speakers that play
  * together; a reference line across frequency is a dB question, like the equaliser's own grid.
+ *
+ * <p>🔴 A floating average puts any sound's own tilt on the grid: music is not pink, its bass sits
+ * 10-20 dB over the average of all its points and ran into the top of the view (owner, 08.10.2026:
+ * "живий спектр зашкалює, типу кліпінг"). So the zero can be fixed instead, by pink noise
+ * ({@link RtaReference}): the level pink noise reads becomes the grid's 0, and from then on the
+ * curve is drawn against it - the equaliser's correction on top, as before.
  */
 final class RtaCurve {
 
@@ -57,6 +63,16 @@ final class RtaCurve {
      *         its last values, for a fade-out
      */
     boolean update(float[] contentDb, float[] correctionDb, float rangeDb, long nowNanos) {
+        return update(contentDb, correctionDb, rangeDb, nowNanos, Float.NaN);
+    }
+
+    /**
+     * One display frame against a fixed zero.
+     *
+     * @param referenceDb the grid's 0 in the measured curve's dB (pink noise's level, see
+     *                    {@link RtaReference}); NaN draws against the frame's own average
+     */
+    boolean update(float[] contentDb, float[] correctionDb, float rangeDb, long nowNanos, float referenceDb) {
         // 2. Ballistics.
         float release = 1f;
         if (primed) {
@@ -88,12 +104,33 @@ final class RtaCurve {
             }
         }
         if (active < MIN_POINTS_FOR_AVERAGE) return false;
-        final float averageDb = (float) (sumDb / active);
+        final float averageDb = Float.isNaN(referenceDb) ? (float) (sumDb / active) : referenceDb;
         for (int j = 0; j < POINTS; j++) relativeDb[j] = corrected[j] - averageDb;
         return true;
     }
 
-    /** The last frame, dB relative to the average of what had sound. */
+    /**
+     * The level of a measured curve, as the fixed zero is taken: the dB average of its points that
+     * have sound - within {@code rangeDb} of the loudest - without any correction, so the equaliser
+     * still moves the curve after the zero is fixed. NaN with too few such points. One rule with the
+     * presence gate above, so pink noise reads 0 on the grid it was calibrated on.
+     */
+    static float contentLevelDb(float[] contentDb, float rangeDb) {
+        float peak = -Float.MAX_VALUE;
+        for (int j = 0; j < POINTS; j++) peak = Math.max(peak, contentDb[j]);
+        final float floorDb = peak - rangeDb;
+        double sum = 0.0;
+        int active = 0;
+        for (int j = 0; j < POINTS; j++) {
+            if (contentDb[j] - floorDb >= PRESENCE_FADE_DB) {
+                sum += contentDb[j];
+                active++;
+            }
+        }
+        return active < MIN_POINTS_FOR_AVERAGE ? Float.NaN : (float) (sum / active);
+    }
+
+    /** The last frame, dB relative to the zero: the average of what had sound, or the fixed one. */
     float[] relativeDb() {
         return relativeDb;
     }
