@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(wdsp_native)
 
-# test_analyzer.cpp, test_sweep.cpp, test_miccal.cpp and test_micwidth.cpp are deliberately absent: they are host
+# test_analyzer.cpp, test_sweep.cpp, test_miccal.cpp, test_micwidth.cpp and test_crossover.cpp are deliberately absent: they are host
 # harnesses with their own main(), built with plain g++ on a desktop, not part of the library.
 #   g++ -O2 -std=c++17 -o /tmp/miccal test_miccal.cpp sweep.cpp analyzer.cpp fft.cpp stitcher.cpp
 # test_miccal replays the owner's own 20.09 measurement through the microphone estimate and the
