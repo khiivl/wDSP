@@ -43,13 +43,50 @@ what is still open. The rules in force are in [AGENTS.md](AGENTS.md); the curren
 | Living with other apps | `PlayerResume`, `NowPlaying`, `ScreensaverManager`, `StatusBarVisualizerManager`, `RadioMicCapture`, `CallState` | [CONTRACTS_MAP.md](CONTRACTS_MAP.md) |
 | UI helpers | `ui/` — `Disclosure` (collapsible groups), `RowFit` (narrow screens), `ThemedDialog`, `theme/` | ARCHITECTURE.md §"UI" |
 
+## 3a. Roadmap: the main flows, from a tap to the chip
+
+Every class with what it offers: [CLASS_MAP.md](CLASS_MAP.md) (generated from the code's comments by
+`tools/classmap.py` - regenerate it after a change). The paths that tie the classes together:
+
+1. **Boot.** `BootReceiver` starts `McuService` as a foreground service; no activity is created. The
+   service reads the current preset from SharedPreferences and sends it through `McuLink` (the MCU
+   manager by reflection) to the BU32107. A fault seen only after a reboot lives on this path.
+2. **A slider moves.** `MainActivity` writes SharedPreferences (unsaved edits through `LivePreset`).
+   `McuService`'s preference listener picks the change up, folds in the loudness curve for the current
+   volume (`LoudnessCurve`: FM curve, fatigue, bass shelf, Ultra Bass), quantises to 2 dB steps and
+   sends the frame. It then hands the values it really sent to `AudioSpectrumEngine.setDspState`, so
+   the calculated spectrum draws what the chip does, not what the screen asked for.
+3. **The spectrum.** `AudioSpectrumEngine` finds the player's audio session (`SessionResolver`), taps it
+   with a Visualizer (session 0 is dead on QF), and feeds `NativeAnalyzer` (`cpp/analyzer.cpp`, 32
+   third-octave bands + a 200-point curve). The microphone mode runs a second analyser on the
+   microphone, held on the calculated one by our AGC (`alignMicrophoneToCalculated`).
+   `SpectrumAnalyzerView` draws bars or the RTA curve (`RtaCurve`), against the frame's average or the
+   fixed zero taken from pink noise (`RtaReference`).
+4. **The cabin measurement.** `SettingsActivity` asks the questions (the cabin card: `CabinProfile`,
+   `MicProfile`) and calls `RoomMeasurement.measureAsync`. One pass: route one speaker at a time through
+   the fader and EQ (`McuService` lends them), play the sweep (`NativeSweep` / `cpp/sweep.cpp`), record,
+   deconvolve per channel, find arrivals, align the sub at the crossover, judge polarity and wiring
+   (`ChannelSwapCheck`), collect the defects (`CabinDefect`: clipping, missing or extra speakers,
+   swapped channels, polarity, tweeter against its mid-bass, resonances and cabin modes, a quiet side,
+   reflections only, noise), and synthesise a coarse preset (16 bands, 2 dB, no zigzag). The
+   microphone calibration is the same pass with `estimateMicCompensation` instead of the synthesis.
+5. **Audio Check.** `AudioCheck` plays the test signals (stems, pink noise, sine, sweep, one speaker);
+   `AudioCheckPanel` binds the buttons. The fader and "only sub" overrides go to `McuService` as
+   runtime actions and are cleared when a call starts.
+
+Native code has host tests with known answers, run with plain g++ in WSL or Linux:
+`cpp/test_sweep.cpp`, `test_analyzer.cpp`, `test_miccal.cpp` (replays the owner's 20.09 run),
+`test_micwidth.cpp`, `test_crossover.cpp`, `test_resonance.cpp`, `test_pair.cpp`, `test_zigzag.cpp`
+(command lines in `cpp/CMakeLists.txt`). There are no Java tests.
+
 ## 4. What the cabin measurement is for
 
 The chip gives one global EQ of 16 bands, 2 dB steps, a fixed Q of 2.2, no per-channel EQ. Chasing a
 flat ±1 dB response is neither possible nor useful. So the measurement's main output is **a list
-of acoustic defects** (`CabinDefect`: a speaker declared but not heard or heard but not declared,
-swapped channels, an inverted speaker, a channel heard only by reflection, delay beyond the chip,
-mid-bass roll-off, a noisy cabin) with what to do about each, plus a coarse correction: wide deviations only,
+of acoustic defects** (`CabinDefect`: clipping, a speaker declared but not heard or heard but not
+declared, swapped channels, an inverted speaker, a tweeter against its own mid-bass, a quiet side,
+a speaker's own resonance or the cabin's mode below 200 Hz, a channel heard only by reflection,
+delay beyond the chip, mid-bass roll-off, a noisy cabin) with what to do about each, plus a coarse correction: wide deviations only,
 cuts preferred, boost ≤ +3 dB. The owner's bench is an open desk, not a car — no acoustic
 conclusion is drawn from it.
 
@@ -65,14 +102,18 @@ conclusion is drawn from it.
 - Contracts with other apps are canonical in the owner's `C:\APPS_Contacts\`; copies here are
   mirrors — [CONTRACTS_MAP.md](CONTRACTS_MAP.md).
 
-## 6. Open, as of 08.10.2026
+## 6. Open, as of 09.10.2026
 
 The queue is [TODO.md](TODO.md), known defects [DEBT.md](DEBT.md), the current step [HANDOFF.md](HANDOFF.md).
 Things the author may care about:
-- the subwoofer pass now really plays the sub only (sweep to 200 Hz, LPF 150 Hz) and aligns its
-  delay by phase at the crossover; the sub sits at +13.4 ms or +0.9 ms after alignment — the owner
-  is choosing by ear;
-- MCU fact (🔬 firmware 002121): sub payload `8B 00` is LPF 25 Hz at −24 dB, **not** mute; full
+- **not yet heard on the unit** (written at night, host-tested only): the sub aligned at the crossover
+  the measurement chose and on the in-phase peak nearest the geometry; the RTA zero from pink noise;
+  the defect detectors on the third-octave grid; the zigzag limit;
+- the front/rear fader trim waits for the MCU's fader table (index 0..24 -> dB);
+- MCU fact (🔬 firmware 002121): sub payload `8B 00` is LPF 25 Hz at -24 dB, **not** mute; full
   silence needs an MCU patch;
-- the audiocheck.net calibration files in the repo are not at 0 dBFS (RMS: sweep −5.9, white −10.5,
-  pink −15.2 dBFS) — [MEASURED_FACTS.md](MEASURED_FACTS.md).
+- the audiocheck.net calibration files in the repo are not at 0 dBFS (RMS: sweep -5.9, white -10.5,
+  pink -15.2 dBFS) - [MEASURED_FACTS.md](MEASURED_FACTS.md);
+- an idea left for the author, not started: a software 32-band EQ inserted after the mixer when
+  BitPerfect is on (question to that line on the board, #1628-#1631) - the hardware keeps the
+  crossover, sub, filters, delays and fader; calls and radio bypass it.
