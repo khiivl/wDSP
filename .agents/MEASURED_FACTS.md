@@ -48,8 +48,10 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
   judging it alone dropped the sub from the cabin average (31.5/50 Hz −15.4/−9.4 instead of −1.7/+2.2).
 - 📻 **Before `1e89976` (07.10) the sub pass recorded the doors** (they played full above their HPF;
   "sub" 0.05 ms from the right door) — old "sub distance to the centimetre" was a door's distance.
-- 📻 Bench: front left reads 15 dB quieter at 200 Hz–2 kHz and arrives 1.4 ms late (lamp in front,
-  heard via reflection) — a bench artefact, not a speaker fault.
+- 📻 Bench front left: 13–25 dB below the right from 500 Hz up and ~45 dB at 12.5–20 kHz, identical in
+  three runs (01:1x–01:3x). ~~A bench artefact (lamp in front)~~ — wrong: a shadow does not take 45 dB
+  off the treble. A fault in the speaker or its contact (owner: "електроніка — наука про контакти");
+  the `PAIR_LEVEL` detector was right, the reflection verdict (clarity ~9 dB) follows from it.
 - ❓ Pending proof: the amp's LPF turned fully right should move the strongest peak towards the geometry.
 
 ## The platform around us
