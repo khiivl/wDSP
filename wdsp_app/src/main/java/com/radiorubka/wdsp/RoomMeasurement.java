@@ -1491,6 +1491,10 @@ public final class RoomMeasurement {
         public int cabinWidthCm = CabinProfile.DEFAULT_WIDTH_CM;
         /** Its length and height, and whether it is closed - the cabin's own modes come from these. */
         public int cabinLengthCm, cabinHeightCm;
+        /** How much louder the rear pair plays than the front at 200 Hz - 2 kHz, dB; NaN unless all four heard. */
+        public float rearOverFrontDb = Float.NaN;
+        /** The preset's front/rear fader: the centre, or forward to quiet a rear that plays louder. */
+        public int faderFr = FADER_CENTRE;
         public boolean cabinClosed;
         public SoundstageMode soundstageMode = SoundstageMode.DRIVER;
         public TargetCurve targetCurve = TargetCurve.HARMAN;
@@ -3041,6 +3045,9 @@ public final class RoomMeasurement {
         // 3. The doors' high-pass - the crossover - was chosen before the subwoofer was aligned at it
         //    (chooseDoorCrossover), from the same average of the same doors.
 
+        // 3a. A rear that plays louder than the front is quieted by the fader (chooseRearTrim).
+        chooseRearTrim(result);
+
         // 4. Synthesize 16-band Auto-EQ & Sub settings matching chosen TargetCurve
         float[] subOut = new float[2];
         NativeSweep.synthesizeAutoEq16(avgClean, result.micCompensation16, avgSnr,
@@ -3200,7 +3207,7 @@ public final class RoomMeasurement {
 
         // 5. Centered balance
         e.putInt(presetName + "_f_lr", FADER_CENTRE);
-        e.putInt(presetName + "_f_fr", FADER_CENTRE);
+        e.putInt(presetName + "_f_fr", result.faderFr);
         e.putBoolean(presetName + "_loud", false);
 
         // 6. Everything else this preset owns, written explicitly rather than left as it was.
@@ -3559,6 +3566,43 @@ public final class RoomMeasurement {
                     Math.abs(excess) >= PAIR_LEVEL_LIKELY_DB ? CabinDefect.Certainty.LIKELY : CabinDefect.Certainty.POSSIBLE,
                     quiet.label, quietCh.nameRes, loudCh.nameRes, Math.abs(excess)));
         }
+    }
+
+    /**
+     * The rear pair quieted by the fader when it plays louder than the front at the microphone (owner,
+     * 09.10.2026: only the rear is ever cut - moving the fader back would cut the subwoofer with the
+     * front, DspResponse.FADER_STEP_CUT_DB). The firmware's steps are 3, 5, 8, 10 dB...; the largest one
+     * not beyond the difference is taken, so a rear 4 dB louder loses 3. A front louder than the rear is
+     * the car's normal and left alone. Judged in the midrange, the pair's channels averaged in power.
+     */
+    private static void chooseRearTrim(Result result) {
+        result.faderFr = FADER_CENTRE;
+        result.rearOverFrontDb = Float.NaN;
+        if (result.channels == null || result.channels.length <= Channel.REAR_RIGHT.ordinal()) return;
+        final float front = pairMidLevelDb(result, Channel.FRONT_LEFT, Channel.FRONT_RIGHT);
+        final float rear = pairMidLevelDb(result, Channel.REAR_LEFT, Channel.REAR_RIGHT);
+        if (Float.isNaN(front) || Float.isNaN(rear)) return;
+        result.rearOverFrontDb = rear - front;
+        final int steps = DspResponse.faderStepsForCut(result.rearOverFrontDb);
+        result.faderFr = FADER_CENTRE + steps;
+        Log.i(TAG, String.format(Locale.US, "rear vs front at 200 Hz - 2 kHz: %+.1f dB -> fader %d (rear cut %.0f dB)",
+                result.rearOverFrontDb, result.faderFr, DspResponse.FADER_STEP_CUT_DB[steps]));
+    }
+
+    /** A pair's level at 200 Hz - 2 kHz: power mean of its two channels, dB mean over the bands both hear. */
+    private static float pairMidLevelDb(Result result, Channel a, Channel b) {
+        final ChannelResult ca = result.channels[a.ordinal()], cb = result.channels[b.ordinal()];
+        if (ca == null || cb == null || !ca.ok || !cb.ok) return Float.NaN;
+        double sum = 0;
+        int n = 0;
+        for (int k = 0; k < NativeSweep.BAND_COUNT && k < AudioConfig.BAND_CENTER_HZ.length; k++) {
+            final float hz = AudioConfig.BAND_CENTER_HZ[k];
+            if (hz < 200f || hz > 2000f || ca.snrDb[k] < 12f || cb.snrDb[k] < 12f) continue;
+            final double p = 0.5 * (Math.pow(10, ca.cleanBandsDb[k] / 10.0) + Math.pow(10, cb.cleanBandsDb[k] / 10.0));
+            sum += 10.0 * Math.log10(Math.max(p, 1e-30));
+            n++;
+        }
+        return n < 4 ? Float.NaN : (float) (sum / n);
     }
 
     private static void collectLowResonances(Result result) {
@@ -4167,6 +4211,10 @@ public final class RoomMeasurement {
             sb.append(result.midbassHpfFreqHz > 0
                     ? String.format(Locale.US, "Midbass HPF: %d Hz (idx %d)\n", result.midbassHpfFreqHz, result.midbassHpfIdx)
                     : String.format(Locale.US, "Midbass HPF: Through (idx %d)\n", result.midbassHpfIdx));
+            sb.append(Float.isNaN(result.rearOverFrontDb)
+                    ? String.format(Locale.US, "Fader F-R: %d (rear not compared - not all four doors heard)\n", result.faderFr)
+                    : String.format(Locale.US, "Fader F-R: %d (rear %+.1f dB against the front at 200 Hz - 2 kHz)\n",
+                            result.faderFr, result.rearOverFrontDb));
             if (result.hasSubwoofer) {
                 sb.append(String.format(Locale.US, "Subwoofer: Installed, LPF %d Hz (idx %d), Gain %+d dB, Delay %.1f ms (%d steps)\n",
                         result.subLpfFreqHz, result.subLpfIdx, result.subGain, result.suggestedSubDelayMs, result.suggestedSubDelaySteps));

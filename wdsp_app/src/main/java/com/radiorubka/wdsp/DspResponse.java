@@ -87,6 +87,25 @@ public final class DspResponse {
      * the measurement ({@code RoomMeasurement.BASS_FILTER_FREQS_HZ}) each had a copy that called code 0
      * "20 Hz" and code 2 "31". A model of the chip has to follow the chip, and so does its label.
      */
+    /**
+     * What one step of the fader away from its centre (12) cuts, in dB, steps 0..11; step 12 is the
+     * chip's hard mute. 🔬 A table in the MCU firmware, not a formula: 002121 at 0x0800D20D, written to
+     * the BU32107 fader registers 0A00-0A05 (Gemini's disassembly, board #1653, 09.10.2026). It agrees
+     * with how the cabin measurement isolates a speaker - balance 0 and fader 24 leave front left alone.
+     * The fader moved back (below 12) cuts the front AND the subwoofer, whose registers mirror the front
+     * pair's; moved forward it cuts the rear only.
+     */
+    static final float[] FADER_STEP_CUT_DB = {0f, 3f, 5f, 8f, 10f, 13f, 15f, 18f, 20f, 23f, 25f, 28f};
+
+    /** The most fader steps whose cut does not exceed {@code cutDb}: never more than asked. */
+    static int faderStepsForCut(float cutDb) {
+        int steps = 0;
+        for (int i = 1; i < FADER_STEP_CUT_DB.length; i++) {
+            if (FADER_STEP_CUT_DB[i] <= cutDb) steps = i;
+        }
+        return steps;
+    }
+
     static final float[] DOOR_HPF_HZ = {0f, 25f, 31.5f, 40f, 50f, 63f, 80f, 100f, 125f, 160f, 200f, 250f};
 
     private DspResponse() {
