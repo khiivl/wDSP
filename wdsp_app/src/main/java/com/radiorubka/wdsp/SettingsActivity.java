@@ -2832,6 +2832,20 @@ public class SettingsActivity extends AppCompatActivity {
                 packed++;
 
                 byte[] buffer = new byte[8192];
+                // The microphone calibration every sweep here was read through - kept apart from
+                // the runs, so it travels with whichever measurement is sent (owner, 09.10.2026).
+                java.io.File micCal = RoomMeasurement.micCalibrationReport(this);
+                if (micCal != null && micCal.isFile()) {
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(micCal.getName());
+                    entry.setTime(micCal.lastModified());
+                    zos.putNextEntry(entry);
+                    try (java.io.FileInputStream in = new java.io.FileInputStream(micCal)) {
+                        int n;
+                        while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
+                    }
+                    zos.closeEntry();
+                    packed++;
+                }
                 java.io.File[] files = dir.listFiles();
                 if (files != null) {
                     for (java.io.File f : files) {

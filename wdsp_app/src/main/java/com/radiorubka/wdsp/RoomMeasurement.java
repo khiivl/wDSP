@@ -1522,6 +1522,8 @@ public final class RoomMeasurement {
         public TargetCurve targetCurve = TargetCurve.HARMAN;
         public CarBodyType bodyType = CarBodyType.SEDAN;
         public int listeningDistanceCm = DEFAULT_LISTENING_DIST_CM;
+        /** A microphone calibration: no preset is synthesised, so the report prints none. */
+        public boolean micCalibrationPass;
         /** The volume this pass played at (measureVolumeFor). */
         public int measureVolume = MEASURE_VOLUME;
         public int midbassHpfIdx = 0; // default Through
@@ -1906,6 +1908,7 @@ public final class RoomMeasurement {
                                   CarBodyType bodyType, int listeningDistanceCm,
                                   Listener listener, boolean isMicCalibrationOnly) {
         Result result = new Result();
+        result.micCalibrationPass = isMicCalibrationOnly;
         if (CallState.isActive()) {
             result.error = "phone call in progress";
             Log.w(TAG, "cannot measure room: " + result.error);
@@ -2090,6 +2093,7 @@ public final class RoomMeasurement {
                 result.sweepTopHz = topHz;
                 collectDefects(result);
                 result.reportPath = writeReport(app, result, preset, amplitude, seconds);
+                keepMicCalibrationReport(app, result.reportPath);
 
                 if (listener != null) {
                     listener.onProgress(5, 5, app.getString(R.string.room_stage_done),
@@ -3577,7 +3581,9 @@ public final class RoomMeasurement {
             final int ia = pair[0].ordinal(), ib = pair[1].ordinal();
             if (ib >= result.channels.length) continue;
             final ChannelResult a = result.channels[ia], b = result.channels[ib];
-            if (a == null || b == null || !a.ok || !b.ok) continue;
+            // Both heard directly: a channel heard mainly by reflection reads the level of its path,
+            // not of its speaker (bench 09.10.2026: front left, by the cabinet, "14 dB quieter").
+            if (a == null || b == null || !a.ok || !b.ok || !a.confident || !b.confident) continue;
             final double dA = CabinGeometry.distanceCm(speakerPosition(result, pair[0]), mic);
             final double dB = CabinGeometry.distanceCm(speakerPosition(result, pair[1]), mic);
             final float expected = dA > 0 && dB > 0 ? (float) (20.0 * Math.log10(dB / dA)) : 0f;
@@ -3993,6 +3999,17 @@ public final class RoomMeasurement {
         return dir;
     }
 
+    /**
+     * The last microphone calibration's report, kept apart from the runs. Every later cabin measurement
+     * is read through that calibration's curve, yet the next run put the calibration's own folder away
+     * and the archive a person sends carried no trace of it (owner, 09.10.2026: keep it and add it to
+     * the sweeps' data). Outside the cache, which the system may clear; null without external storage.
+     */
+    public static File micCalibrationReport(Context context) {
+        File dir = context.getExternalFilesDir(null);
+        return dir != null ? new File(dir, "mic_calibration.txt") : null;
+    }
+
     /** The folder holding the measurement being taken, or the last one taken. */
     public static File outputDir(Context context) {
         File dir = new File(runsDir(context), CURRENT_RUN);
@@ -4005,6 +4022,19 @@ public final class RoomMeasurement {
     public static boolean hasResult(Context context) {
         File report = new File(outputDir(context), "room_measurement.txt");
         return report.isFile() && report.length() > 0;
+    }
+
+    /** Copies a microphone calibration's report to micCalibrationReport, replacing the previous one. */
+    private static void keepMicCalibrationReport(Context context, String reportPath) {
+        final File kept = micCalibrationReport(context);
+        if (reportPath == null || kept == null) return;
+        try {
+            java.nio.file.Files.copy(new File(reportPath).toPath(), kept.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Log.i(TAG, "microphone calibration report kept as " + kept.getAbsolutePath());
+        } catch (IOException | RuntimeException e) {
+            Log.w(TAG, "could not keep the microphone calibration report", e);
+        }
     }
 
     private static String writeReport(Context context, Result result, String preset,
@@ -4230,6 +4260,11 @@ public final class RoomMeasurement {
               .append("\n\n");
             sb.append(wiringVerdict(result));
             if (result.channelOrder != null) sb.append(result.channelOrder.describe()).append('\n');
+            if (result.micCalibrationPass) {
+                // Until 09.10.2026 the synthesis lines were printed here too, from an array nothing
+                // had filled - "Synthesized Auto-EQ: -12 -12 ... -12" in every calibration report.
+                sb.append("Microphone calibration pass: no preset is synthesised.\n\n");
+            } else {
             sb.append("Soundstage mode: ").append(result.soundstageMode != null ? result.soundstageMode.title : "Default").append("\n");
             sb.append("Target sound curve: ").append(result.targetCurve != null ? result.targetCurve.title : "Harman Reference").append("\n");
             if (result.targetCurve == TargetCurve.DOLBY_ATMOS) {
@@ -4263,6 +4298,7 @@ public final class RoomMeasurement {
                 sb.append(String.format(Locale.US, " %d", g));
             }
             sb.append("\n\n");
+            }
             // From the array rather than from a literal: the two used to be maintained separately,
             // and a report that names the wrong frequency for a band is worse than one that names
             // none - every column in every line above is read against this row.
