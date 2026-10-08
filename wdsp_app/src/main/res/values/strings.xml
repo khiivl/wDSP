@@ -613,7 +613,6 @@
     <string name="toast_rta_zero_needs_pink">Turn on pink noise first: the RTA zero is taken from it.</string>
     <string name="toast_rta_zero_listening">Listening to pink noise for 3 seconds…</string>
     <string name="toast_rta_zero_taken">RTA zero set: pink noise now reads 0 dB.</string>
-    <string name="toast_rta_zero_taken_mic">RTA zero set for the microphone at this volume. At another volume the RTA goes back to the average.</string>
     <string name="toast_rta_zero_failed">Too little sound heard - the RTA zero was not set.</string>
     <string name="toast_rta_zero_cleared">RTA zero cleared: the curve is drawn against its average again.</string>
     <string name="audiocheck_sweep_play" translatable="false">⏯</string>

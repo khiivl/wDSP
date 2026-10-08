@@ -604,7 +604,6 @@
     <string name="toast_rta_zero_needs_pink">Спершу ввімкніть рожевий шум: нуль RTA береться з нього.</string>
     <string name="toast_rta_zero_listening">Слухаю рожевий шум 3 секунди…</string>
     <string name="toast_rta_zero_taken">Нуль RTA встановлено: рожевий шум тепер на 0 дБ.</string>
-    <string name="toast_rta_zero_taken_mic">Нуль RTA для мікрофона встановлено на цій гучності. На іншій гучності RTA повертається до середнього.</string>
     <string name="toast_rta_zero_failed">Чути замало звуку - нуль RTA не встановлено.</string>
     <string name="toast_rta_zero_cleared">Нуль RTA скинуто: крива знову малюється відносно свого середнього.</string>
 </resources>
