@@ -2595,9 +2595,12 @@ public class SettingsActivity extends AppCompatActivity {
                         return;
                     }
                     showMicCalStatus();
+                    final String unknown = RoomMeasurement.micUnknownForPerson(SettingsActivity.this,
+                            result.micBandStatus16);
                     ThemedDialog.notice(SettingsActivity.this,
                             getString(R.string.room_mic_cal_confirm_title),
-                            getString(R.string.room_mic_cal_done));
+                            unknown.isEmpty() ? getString(R.string.room_mic_cal_done)
+                                    : getString(R.string.room_mic_cal_done) + "\n\n" + unknown);
                 });
             }
         });

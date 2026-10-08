@@ -1719,6 +1719,23 @@ public final class RoomMeasurement {
      * <p>Empty when the calibration answered for every band, and empty on a cabin pass, which
      * loads a saved curve and estimates nothing.
      */
+    /**
+     * The person's half of {@link #micBandCaveats}: which bands of the microphone curve this
+     * calibration could not answer for, in their language, or "" when it answered for all. Until
+     * 08.10.2026 only the English report said so, and a refusal looked to the person exactly like a
+     * flat, measured result (CALIBRATION_HISTORY.md, advice of 28.09, point 3).
+     */
+    static String micUnknownForPerson(Context context, int[] status16) {
+        if (status16 == null) return "";
+        final StringBuilder bands = new StringBuilder();
+        for (int b = 0; b < status16.length && b < AudioConfig.BAND_CENTER_HZ.length; b++) {
+            if (status16[b] != NativeSweep.MIC_BAND_UNKNOWN) continue;
+            if (bands.length() > 0) bands.append(", ");
+            bands.append(bandCentreLabel(b));
+        }
+        return bands.length() == 0 ? "" : context.getString(R.string.room_mic_cal_unknown, bands);
+    }
+
     private static String micBandCaveats(int[] status16) {
         if (status16 == null) return "";
         final StringBuilder unknown = new StringBuilder();
