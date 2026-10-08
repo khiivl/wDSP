@@ -445,6 +445,7 @@ Yleinen oletus: %1$s</string>
     <string name="room_mic_calibrate_button">Calibrate Microphone</string>
     <string name="room_mic_cal_running">Calibrating microphone: %1$s</string>
     <string name="room_mic_cal_done">Microphone calibrated</string>
+    <string name="room_mic_cal_unknown">Mikrofonin omaa osuutta taajuudella %1$s Hz ei pystytty tällä mittauskerralla erottamaan kaiuttimista ja matkustamosta. Bassoalueen korjaus perustuu siellä mikrofonin kiinnityksen tunnettuihin ominaisuuksiin, ei mittaukseen.</string>
     <string name="room_mic_cal_none">Microphone not calibrated</string>
     <string name="room_mic_cal_confirm_title">Microphone Calibration</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>

@@ -445,6 +445,7 @@ Par défaut global : %1$s</string>
     <string name="room_mic_calibrate_button">Calibrate Microphone</string>
     <string name="room_mic_cal_running">Calibrating microphone: %1$s</string>
     <string name="room_mic_cal_done">Microphone calibrated</string>
+    <string name="room_mic_cal_unknown">La part propre au microphone à %1$s Hz n\'a pas pu être distinguée de celle des haut-parleurs et de l\'habitacle lors de ce passage. La correction des basses y repose sur les caractéristiques connues de la fixation du microphone, et non sur une mesure.</string>
     <string name="room_mic_cal_none">Microphone not calibrated</string>
     <string name="room_mic_cal_confirm_title">Microphone Calibration</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>

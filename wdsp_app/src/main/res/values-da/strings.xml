@@ -445,6 +445,7 @@ Global standard: %1$s</string>
     <string name="room_mic_calibrate_button">Calibrate Microphone</string>
     <string name="room_mic_cal_running">Calibrating microphone: %1$s</string>
     <string name="room_mic_cal_done">Microphone calibrated</string>
+    <string name="room_mic_cal_unknown">Mikrofonens egen andel ved %1$s Hz kunne ikke skelnes fra højttalerne og kabinen i denne gennemgang. Derfor er baskorrektionen baseret på, hvad mikrofonens montering forventes at gøre, ikke på en måling.</string>
     <string name="room_mic_cal_none">Microphone not calibrated</string>
     <string name="room_mic_cal_confirm_title">Microphone Calibration</string>
     <string name="room_mic_cal_confirm_msg">A calibration sweep will play through the speakers to calculate the hardware microphone frequency response and ambient noise floor.\n\nKeep the cabin quiet and windows closed.\n\nStart microphone calibration now?</string>
