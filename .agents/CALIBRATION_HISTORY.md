@@ -135,6 +135,13 @@ a measurement (`+52.8`) and the top lift `+3.5 / +7 / +10`, independently dispro
 2. **"Below 10 kHz the measurement is silent" is too broad.** It killed bands 5–9 for good, though the
    reasoning under it is right (a cabin mode at the microphone is also common to all channels).
    ⇒ Split by **width**, not frequency: a narrow common dip is the capsule, a broad one the cabin.
+   ✅ **Done 08.10.2026** (`mic: капсуль між 400 Гц і 10 кГц…`): above the cabin's modal limit (400 Hz,
+   its Schroeder frequency) a common deviation is the capsule's when it is narrow (no neighbour shares
+   half of it) and at least 2 dB; below 400 Hz silent as before. The 20.09 replay is unchanged
+   (a first try without the 2 dB floor charged -0.8 dB at 1250 Hz - the slope's knee, not a resonance).
+   Host check: `cpp/test_micwidth.cpp`.
+   Item 1 is done too - the cabin rise comes back only for a cabin the person called closed
+   (`CabinProfile`, 06.10).
 3. **"Unknown" must be visible.** Today the band silently keeps the matrix value and writes a status
    into the report; the person sees a flat profile and cannot tell a refusal from a result.
 
