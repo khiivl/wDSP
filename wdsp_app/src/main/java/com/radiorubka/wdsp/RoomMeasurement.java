@@ -521,7 +521,11 @@ public final class RoomMeasurement {
         final float peakMs = sub.arrivalMs;
         sub.arrivalMs = anchor.arrivalMs + bestLag * 1000f / SAMPLE_RATE;
         sub.polarity = corr < 0 ? -1 : 1;
-        sub.confident = Math.abs(corr) >= SUB_ALIGN_MIN_CORRELATION;
+        // Trust is whether the sub and the doors match in this band at all - the strongest peak. The
+        // candidate a cycle away is weaker by construction (the envelope leans the other way), and
+        // judging it alone dropped the sub from the cabin average and the preset on 09.10.2026:
+        // 31.5 and 50 Hz read -15.4 and -9.4 dB instead of -1.7 and +2.2 with the same sub levels.
+        sub.confident = Math.abs(best / Math.sqrt(ea * eb)) >= SUB_ALIGN_MIN_CORRELATION;
         Log.i(TAG, String.format(Locale.US,
                 "subwoofer aligned at %.0f Hz against %s: %+.2f ms (strongest peak %+.2f ms, impulse "
                         + "peak said %+.2f ms), correlation %+.2f -> polarity %+d, %s",
