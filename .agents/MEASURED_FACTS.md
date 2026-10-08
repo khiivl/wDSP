@@ -34,6 +34,24 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
     envelope **−2.9 dBFS** peak (RMS −5.9), flat ±0.03 dB across all ten octaves.
   A level calibrated "by these files" is calibrated by ONE of them — name which.
 
+## Subwoofer timing (owner's bench, 09.10.2026)
+
+- 📻 **The sub's "+13 ms" is a phase cycle, not a delay.** Band-limited correlation at 80 Hz:
+  strongest peak +13.33 ms, then +24.19 (0.70); minus one period (12.5 ms) gives **+0.83 ms against the
+  tape-measured geometry's +0.97**. The sub chain (chip LPF 80 Hz, the owner's analog class-D amp with
+  its own op-amp LPF and bass boost, the box) turns ~360° at the crossover; group delay only leans the
+  envelope later. Choosing the strongest peak delayed both doors 12–13.4 ms ("4 m"); since `d5e0a0f` the
+  in-phase peak nearest the geometry wins: sub +0.42 ms, doors 0 / 1.4 ms.
+- 📻 **Not the MCU, not the BU32107:** `8C 00 00 00 00 00` went out (01:12:23) before the sweeps (01:12:47);
+  the sub DAC shares the doors' frame.
+- 📻 **Trust follows the strongest peak** (`9a325b7`): the cycle-early candidate is weaker by construction;
+  judging it alone dropped the sub from the cabin average (31.5/50 Hz −15.4/−9.4 instead of −1.7/+2.2).
+- 📻 **Before `1e89976` (07.10) the sub pass recorded the doors** (they played full above their HPF;
+  "sub" 0.05 ms from the right door) — old "sub distance to the centimetre" was a door's distance.
+- 📻 Bench: front left reads 15 dB quieter at 200 Hz–2 kHz and arrives 1.4 ms late (lamp in front,
+  heard via reflection) — a bench artefact, not a speaker fault.
+- ❓ Pending proof: the amp's LPF turned fully right should move the strongest peak towards the geometry.
+
 ## The platform around us
 
 - 📻 `sys.boot.reason` reads `reboot,adb` or `reboot` (the latter when power was cut). **The assistant
