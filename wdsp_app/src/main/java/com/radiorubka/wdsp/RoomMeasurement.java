@@ -290,6 +290,28 @@ public final class RoomMeasurement {
      * with it, which is the correct behaviour and the reason it is read rather than copied.
      */
     public static final int MEASURE_VOLUME = 16;
+    /**
+     * The quietest volume a measurement runs at. Since 09.10.2026 a pass plays at the volume the person
+     * has set, held between this and {@link #MEASURE_VOLUME} (owner, at 1 a.m.: the forced 16 was too
+     * loud for the hour). A weak pass says so through the "measured in noise" defect.
+     */
+    public static final int MEASURE_VOLUME_MIN = 6;
+    /** The volume the last cabin measurement ran at - where its preset, and the loudness anchor, are true. */
+    public static final String PREF_LAST_MEASURE_VOLUME = "room_last_measure_volume";
+
+    /** The volume a pass plays at, given the one set now. */
+    public static int measureVolumeFor(int current) {
+        return Math.max(MEASURE_VOLUME_MIN, Math.min(MEASURE_VOLUME, current));
+    }
+
+    /**
+     * Where the loudness curve should be anchored: the volume the car was last measured at, 0 when it was
+     * never measured. A measurement before 09.10.2026 ran at {@link #MEASURE_VOLUME} and stored nothing.
+     */
+    public static int lastMeasureVolume(SharedPreferences prefs) {
+        if (prefs.getString(PREF_LAST_AUTOEQ_PRESET, null) == null) return 0;
+        return prefs.getInt(PREF_LAST_MEASURE_VOLUME, MEASURE_VOLUME);
+    }
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
     /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
     private static final int CLIP_MAGNITUDE = 32690;
@@ -1500,6 +1522,8 @@ public final class RoomMeasurement {
         public TargetCurve targetCurve = TargetCurve.HARMAN;
         public CarBodyType bodyType = CarBodyType.SEDAN;
         public int listeningDistanceCm = DEFAULT_LISTENING_DIST_CM;
+        /** The volume this pass played at (measureVolumeFor). */
+        public int measureVolume = MEASURE_VOLUME;
         public int midbassHpfIdx = 0; // default Through
         public int midbassHpfFreqHz = 0;
         // The app's default crossover until the synthesis says otherwise (DspResponse - it used to
@@ -1993,13 +2017,15 @@ public final class RoomMeasurement {
         McuService.ensureStarted(app);
         VolumeHelper.init(app);
         int origVolume = VolumeHelper.getVolume();
-        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> " + MEASURE_VOLUME);
+        final int measureVolume = measureVolumeFor(origVolume);
+        result.measureVolume = measureVolume;
+        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> " + measureVolume);
         String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
-        VolumeHelper.setVolume(MEASURE_VOLUME);
-        VolumeHelper.setVolumeForType("media_type", MEASURE_VOLUME);
+        VolumeHelper.setVolume(measureVolume);
+        VolumeHelper.setVolumeForType("media_type", measureVolume);
         int readbackVol = VolumeHelper.getVolume();
-        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> " + MEASURE_VOLUME
+        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> " + measureVolume
                 + " (readback=" + readbackVol
                 + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
         buildScratchPreset(prefs, preset);
@@ -3233,7 +3259,7 @@ public final class RoomMeasurement {
         // nothing on screen to tell them why. That is the guessing this pass was told to end.
         //
         // So they are written as the answer the measurement can actually give:
-        //   - the calibration point is MEASURE_VOLUME, because these band gains are the correction
+        //   - the calibration point is the volume this pass ran at, because these band gains are the correction
         //     measured at that volume and are true only there. Below it the ear loses the bottom
         //     and the correction no longer matches what is heard, which is the gap the curve fills;
         //   - the strength is the strongest curve these particular gains leave room for. A preset
@@ -3250,9 +3276,9 @@ public final class RoomMeasurement {
         e.putBoolean(presetName + "_fm_en", false);
         e.putBoolean(presetName + "_fat_en", false);
         e.putBoolean(presetName + "_ultra_bass_en", false);
-        e.putInt(presetName + "_fm_cal", MEASURE_VOLUME);
+        e.putInt(presetName + "_fm_cal", result.measureVolume);
         e.putInt(presetName + "_fm_str", autoFmStrength);
-        Log.i(TAG, "loudness curve left ready but off: cal=" + MEASURE_VOLUME
+        Log.i(TAG, "loudness curve left ready but off: cal=" + result.measureVolume
                 + " strength=" + autoFmStrength + "% (headroom under the +12 dB ceiling)");
         // Bass boost is a second bass control on top of the one just synthesized; two of them
         // fighting is how a preset ends up with a bottom nobody asked for.
@@ -3268,6 +3294,7 @@ public final class RoomMeasurement {
         // 7. Activate preset
         e.putString(PREF_LAST_SELECTED, presetName);
         e.putString(PREF_LAST_AUTOEQ_PRESET, presetName);
+        e.putInt(PREF_LAST_MEASURE_VOLUME, result.measureVolume);
         e.apply();
 
         // Broadcast to McuService

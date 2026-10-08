@@ -20,7 +20,8 @@ import java.util.List;
  *
  * <h3>Where the recommended calibration point comes from, and what it is not</h3>
  *
- * <p>It is {@link RoomMeasurement#MEASURE_VOLUME} - the volume the sweep runs at - and it is
+ * <p>It is the volume the car was last measured at ({@link RoomMeasurement#lastMeasureVolume}; 16 until
+ * 09.10.2026, the person's own volume within 6..16 since) - and it is
  * recommended only once the car has actually been measured. The reasoning is not that 16 is a
  * magic level. It is that the preset's band gains are the correction measured <em>at that volume</em>
  * and are honest only there; below it the ear loses the bottom and the correction stops matching
@@ -103,14 +104,14 @@ public final class LoudnessCheck {
      * @param fatigueStartVol  where Trim Highs starts, the preset's {@code _fat_start_vol}
      * @param bassFreqIdxFront the front bass shelf frequency, {@code _bb_frq_f}, 0 = off
      * @param bassGainFront    the front bass shelf's own gain, {@code _bb_f}
-     * @param carMeasured  whether this car has an auto-EQ measurement at all
+     * @param measuredVolume the volume the car was last measured at, 0 when it never was
      */
     public static Result inspect(int[] gains, int subGainIdx, int subFreqIdx, int bassBoost,
                                  boolean fmEnabled, boolean fatigueEnabled, boolean subComp,
                                  int cal, int strengthPct, int fatigueStartVol,
-                                 int bassFreqIdxFront, int bassGainFront, boolean carMeasured) {
+                                 int bassFreqIdxFront, int bassGainFront, int measuredVolume) {
         Result r = new Result();
-        r.recommendedCal = carMeasured ? RoomMeasurement.MEASURE_VOLUME : 0;
+        r.recommendedCal = Math.max(0, measuredVolume);
         r.recommendedStrength = maxDeliverableStrength(gains, subGainIdx, subFreqIdx, subComp,
                 bassFreqIdxFront, bassGainFront);
 
@@ -177,7 +178,7 @@ public final class LoudnessCheck {
 
         // 4. The anchor. Only said once the car has been measured, because only then does the app
         //    know a volume at which the band gains are true.
-        if (fmEnabled && carMeasured && !calDead && cal != r.recommendedCal) {
+        if (fmEnabled && measuredVolume > 0 && !calDead && cal != r.recommendedCal) {
             r.findings.add(new Finding(Code.CAL_NOT_AT_MEASURED, Level.NOTE,
                     cal, r.recommendedCal));
         }

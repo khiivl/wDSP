@@ -2311,8 +2311,7 @@ public class MainActivity extends AppCompatActivity {
             gains[i] = getIntSlider(gainSliders.get(i));
         }
         int bassBoost = Math.max(getIntSlider(seekBassBoostFront), getIntSlider(seekBassBoostRear));
-        boolean carMeasured = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getString(RoomMeasurement.PREF_LAST_AUTOEQ_PRESET, null) != null;
+        int measuredVolume = RoomMeasurement.lastMeasureVolume(getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
 
         LoudnessCheck.Result r = LoudnessCheck.inspect(
                 gains,
@@ -2327,7 +2326,7 @@ public class MainActivity extends AppCompatActivity {
                 fatStartVol(),
                 frontBassFreqIdx(),
                 seekBassBoostFront != null ? getIntSlider(seekBassBoostFront) : 0,
-                carMeasured);
+                measuredVolume);
         lastLoudnessResult = r;
 
         StringBuilder sb = new StringBuilder();
