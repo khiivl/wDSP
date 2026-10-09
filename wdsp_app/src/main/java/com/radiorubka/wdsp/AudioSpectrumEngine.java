@@ -355,10 +355,24 @@ public class AudioSpectrumEngine {
     }
 
     public synchronized void setSpectrumMode(String mode) {
+        final boolean wasOff = SPECTRUM_MODE_OFF.equals(spectrumMode);
         this.spectrumMode = mode;
         if (appContext != null) {
             com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(appContext).edit()
                     .putString(PREF_SPECTRUM_MODE, mode).apply();
+        }
+        // OFF switches the analyser off, resolver included; switching it back on starts from
+        // nothing - the session it last sat on may belong to a player long gone (owner,
+        // 09.10.2026: "кнопка OFF ... мала б вимикати резольвер, а при вмиканні рестартувати").
+        if (SPECTRUM_MODE_OFF.equals(mode)) {
+            Log.i(TAG, "spectrum OFF: capture stopped, no resolving");
+            stop();
+            return;
+        }
+        if (wasOff) {
+            if (sessionResolver != null) sessionResolver.forget(currentSessionId);
+            sessionHeardFor = null;
+            requestResolve("spectrum switched on");
         }
         checkSourceState();
         // A person has switched the microphone on: the moment root is asked for (owner, 14.09.2026),
@@ -1327,6 +1341,7 @@ public class AudioSpectrumEngine {
      */
     private void requestResolve(String reason) {
         if (sessionResolver == null || sessionResolver.isResolving()) return;
+        if (SPECTRUM_MODE_OFF.equals(spectrumMode)) return;
         // Radio only: on a PCM source the tap runs in the microphone mode too, as its reference, and
         // is resolved like any other; the microphone's analysis is not touched by it.
         if (appContext != null && NowPlaying.getInstance(appContext).isRadioSource()) {
