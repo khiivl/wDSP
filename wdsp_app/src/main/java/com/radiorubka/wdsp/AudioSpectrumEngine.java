@@ -355,24 +355,10 @@ public class AudioSpectrumEngine {
     }
 
     public synchronized void setSpectrumMode(String mode) {
-        final boolean wasOff = SPECTRUM_MODE_OFF.equals(spectrumMode);
         this.spectrumMode = mode;
         if (appContext != null) {
             com.radiorubka.wdsp.ui.theme.ThemeManager.prefs(appContext).edit()
                     .putString(PREF_SPECTRUM_MODE, mode).apply();
-        }
-        // OFF hides only the main analyser: the status-bar widget and the screensaver keep the engine
-        // (owner, 09.10.2026). Switching it back on starts from nothing - the session it last sat on
-        // may belong to a player long gone ("при вмиканні рестартувати резольв").
-        if (wasOff && !SPECTRUM_MODE_OFF.equals(mode)) {
-            // A full restart: everything learned about sessions is dropped, and the capture is
-            // built again from nothing (owner: "при вмиканні повну перезарядку всього").
-            if (sessionResolver != null) sessionResolver.reset();
-            sessionHeardFor = null;
-            stop();
-            currentSessionId = 0;
-            if (!listeners.isEmpty()) start();
-            requestResolve("spectrum switched on");
         }
         checkSourceState();
         // A person has switched the microphone on: the moment root is asked for (owner, 14.09.2026),

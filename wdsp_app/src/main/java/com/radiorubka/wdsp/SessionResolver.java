@@ -124,12 +124,6 @@ public final class SessionResolver {
         cacheByPackage.values().removeAll(java.util.Collections.singleton(sessionId));
     }
 
-    /** Forgets every session it knows - the announced one and each player's - for a fresh start. */
-    public synchronized void reset() {
-        hintedSession = -1;
-        cacheByPackage.clear();
-    }
-
     public boolean isResolving() {
         return resolving;
     }
