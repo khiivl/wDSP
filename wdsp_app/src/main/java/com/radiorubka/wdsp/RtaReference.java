@@ -7,10 +7,11 @@ import android.content.SharedPreferences;
  * calibrate the RTA by pink noise, a fixed zero rather than the frame's floating average - see
  * {@link RtaCurve}).
  *
- * <p>One zero for both analysers: the calculated one taps the digital stream before the volume, and
- * the microphone is held on it by our AGC ({@code AudioSpectrumEngine.alignMicrophoneToCalculated}),
- * so both curves are in the track's units and neither moves with the volume (owner, 08.10.2026: "тут
- * має працювати власний AGC").
+ * <p>Two zeros, one per analyser (owner, 09.10.2026: "роживий нуль різні речі для обох каналів"):
+ * the channel's is the level of our digital chain, the microphone's the level the cabin and the
+ * capsule give that noise at the volume it was taken at. Until the microphone has its own, it falls
+ * back on the channel's zero, held there by our AGC ({@code AudioSpectrumEngine
+ * .alignMicrophoneToCalculated}) - the single zero of 08.10.2026 ("тут має працювати власний AGC").
  *
  * <p>Kept in the UI preferences, not in a preset: it describes this unit and its microphone, not a
  * sound, and the presets export must not carry it to another car.
@@ -23,6 +24,7 @@ final class RtaReference {
     private static final int MIN_FRAMES = 20;
 
     private static final String KEY_ZERO_DB = "rta_zero_db";
+    private static final String KEY_MIC_ZERO_DB = "rta_zero_mic_db";
 
     private final SharedPreferences prefs;
 
@@ -30,18 +32,18 @@ final class RtaReference {
         this.prefs = prefs;
     }
 
-    /** The zero to draw against, or NaN when none was taken. */
-    float zeroDb() {
-        return prefs.getFloat(KEY_ZERO_DB, Float.NaN);
+    /** The zero of the channel's or the microphone's curve, or NaN when none was taken. */
+    float zeroDb(boolean microphone) {
+        return prefs.getFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, Float.NaN);
     }
 
-    void store(float db) {
-        prefs.edit().putFloat(KEY_ZERO_DB, db).apply();
+    void store(boolean microphone, float db) {
+        prefs.edit().putFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, db).apply();
     }
 
-    /** Forgets the zero: the curve goes back to the floating average. */
-    void clear() {
-        prefs.edit().remove(KEY_ZERO_DB).apply();
+    /** Forgets one zero: that curve goes back to its fallback. */
+    void clear(boolean microphone) {
+        prefs.edit().remove(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB).apply();
     }
 
     /** Averages the levels of the frames a capture saw; NaN when it heard too little. */

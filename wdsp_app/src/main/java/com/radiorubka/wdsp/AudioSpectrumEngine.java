@@ -856,23 +856,34 @@ public class AudioSpectrumEngine {
      * fell with the volume. The calculated curve is in the track's units already.
      */
     private void addCurveOffset(NativeAnalyzer analyzer, float[] curveDb) {
-        if (!analyzer.isAcoustic() || !micOffsetValid) return;
+        if (!analyzer.isAcoustic() || !micOffsetValid || hasMicZero()) return;
         for (int j = 0; j < curveDb.length; j++) curveDb[j] += micOffsetDb;
+    }
+
+    /** The microphone has a zero of its own - its curve is then drawn raw, without our AGC. */
+    private boolean hasMicZero() {
+        RtaReference ref = rtaReference();
+        return ref != null && !Float.isNaN(ref.zeroDb(true));
     }
 
     /**
      * The zero the live curve is drawn against, for the analyser shown now; NaN for the floating
-     * average. One zero for both analysers, since both curves are in the track's units - except the
-     * microphone with nothing to align to (radio: no calculated spectrum), whose level is the cabin's.
+     * average. Each analyser has its own ({@link RtaReference}); the microphone without one falls back
+     * on the channel's through our AGC, and with neither (radio: nothing to align to) floats.
      */
     public float rtaZeroDb() {
         RtaReference ref = rtaReference();
         if (ref == null) return Float.NaN;
         synchronized (analyzerLock) {
             NativeAnalyzer analyzer = shownAnalyzer();
-            if (analyzer == null || (analyzer.isAcoustic() && !micOffsetValid)) return Float.NaN;
+            if (analyzer == null) return Float.NaN;
+            if (analyzer.isAcoustic()) {
+                float own = ref.zeroDb(true);
+                if (!Float.isNaN(own)) return own;
+                if (!micOffsetValid) return Float.NaN;
+            }
         }
-        return ref.zeroDb();
+        return ref.zeroDb(false);
     }
 
     /** What a zero capture reports, on the main thread. */
@@ -883,9 +894,9 @@ public class AudioSpectrumEngine {
 
     /**
      * Takes the RTA's zero from what plays now - meant for Audio Check's pink noise - over
-     * {@link RtaReference#CAPTURE_MS}, read straight from an analyser at a third of an octave, so it
-     * does not depend on the curve being on screen: the calculated one when it runs (the track itself),
-     * else the microphone aligned to it. Stored only if enough was heard.
+     * {@link RtaReference#CAPTURE_MS}, read straight from the analyser shown at a third of an octave,
+     * so it does not depend on the curve being on screen: the channel's zero in the channel's mode, the
+     * microphone's own, raw, in the microphone's. Stored only if enough was heard.
      */
     public void captureRtaZero(RtaZeroListener listener) {
         final RtaReference ref = rtaReference();
@@ -899,16 +910,14 @@ public class AudioSpectrumEngine {
             final float[] noCorrection = new float[NativeAnalyzer.CURVE_POINTS];
             final long settled = System.currentTimeMillis() + 500;
             final long end = settled + RtaReference.CAPTURE_MS;
+            boolean microphone = false;
             while (System.currentTimeMillis() < end) {
                 synchronized (analyzerLock) {
-                    NativeAnalyzer tap = nativeAnalyzer;
-                    NativeAnalyzer analyzer = analysisPaused() ? null
-                            : tap != null && tap.isValid() ? tap : shownAnalyzer();
-                    if (analyzer != null && analyzer.isValid()
-                            && (!analyzer.isAcoustic() || micOffsetValid)) {
+                    NativeAnalyzer analyzer = analysisPaused() ? null : shownAnalyzer();
+                    if (analyzer != null && analyzer.isValid()) {
+                        microphone = analyzer.isAcoustic();
                         analyzer.setCurveFraction(3);
                         analyzer.getCurveDb(curve);
-                        addCurveOffset(analyzer, curve);
                         ballistics.update(curve, noCorrection, getDisplayRangeDb(), System.nanoTime(), Float.NaN);
                         if (System.currentTimeMillis() >= settled) {
                             capture.offer(RtaCurve.contentLevelDb(ballistics.smoothedDb(), getDisplayRangeDb()));
@@ -922,17 +931,22 @@ public class AudioSpectrumEngine {
                 }
             }
             final float zero = ref == null ? Float.NaN : capture.resultDb();
-            if (!Float.isNaN(zero)) ref.store(zero);
-            Log.i(TAG, "RTA zero: " + (Float.isNaN(zero) ? "not taken - too little heard"
+            if (!Float.isNaN(zero)) ref.store(microphone, zero);
+            Log.i(TAG, "RTA zero (" + (microphone ? "microphone" : "channel") + "): "
+                    + (Float.isNaN(zero) ? "not taken - too little heard"
                     : String.format(java.util.Locale.US, "%.1f dB", zero)));
             if (listener != null) main.post(() -> listener.onRtaZero(zero));
         }, "rta-zero").start();
     }
 
-    /** Forgets the RTA's zero: the curve goes back to the frame's average. */
+    /** Forgets the zero of the analyser shown: its curve goes back to its fallback. */
     public void clearRtaZero() {
         RtaReference ref = rtaReference();
-        if (ref != null) ref.clear();
+        if (ref == null) return;
+        synchronized (analyzerLock) {
+            NativeAnalyzer analyzer = shownAnalyzer();
+            ref.clear(analyzer != null && analyzer.isAcoustic());
+        }
     }
 
     /**
