@@ -370,8 +370,13 @@ public class AudioSpectrumEngine {
             return;
         }
         if (wasOff) {
-            if (sessionResolver != null) sessionResolver.forget(currentSessionId);
+            // A full restart: everything learned about sessions is dropped, and the capture is
+            // built again from nothing (owner: "при вмиканні повну перезарядку всього").
+            if (sessionResolver != null) sessionResolver.reset();
             sessionHeardFor = null;
+            stop();
+            currentSessionId = 0;
+            if (!listeners.isEmpty()) start();
             requestResolve("spectrum switched on");
         }
         checkSourceState();
