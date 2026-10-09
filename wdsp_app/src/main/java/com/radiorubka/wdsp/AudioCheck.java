@@ -425,6 +425,14 @@ final class AudioCheck {
 
     private void giveBackIfIdle() {
         if (anythingPlays()) return;
+        // wDSP is not a player: once nothing sounds, the tracks are stopped and freed, not paused.
+        // A paused track kept its session alive in audioserver with our Visualizer on it, and the
+        // spectrum stayed there instead of following the player that plays (owner, 09.10.2026:
+        // "стоп, а не пауза. вДСП не плеєр").
+        for (LoopTrack lt : stems.values()) releaseLoop(lt);
+        stems.clear();
+        releaseLoop(pinkNoise);
+        pinkNoise = null;
         announceSession(false);
         focus.abandon(app);
     }
