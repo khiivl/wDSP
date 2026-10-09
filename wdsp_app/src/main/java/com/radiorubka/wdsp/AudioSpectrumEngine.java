@@ -939,16 +939,6 @@ public class AudioSpectrumEngine {
         }, "rta-zero").start();
     }
 
-    /** Forgets the zero of the analyser shown: its curve goes back to its fallback. */
-    public void clearRtaZero() {
-        RtaReference ref = rtaReference();
-        if (ref == null) return;
-        synchronized (analyzerLock) {
-            NativeAnalyzer analyzer = shownAnalyzer();
-            ref.clear(analyzer != null && analyzer.isAcoustic());
-        }
-    }
-
     /**
      * A test tone is playing (Audio Check's sine or sweep): the curve reads a twenty-fourth of an
      * octave instead of a third, so the tone stands as a peak, not a plateau. Kept here and handed to

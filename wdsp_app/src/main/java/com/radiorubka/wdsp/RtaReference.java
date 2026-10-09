@@ -41,11 +41,6 @@ final class RtaReference {
         prefs.edit().putFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, db).apply();
     }
 
-    /** Forgets one zero: that curve goes back to its fallback. */
-    void clear(boolean microphone) {
-        prefs.edit().remove(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB).apply();
-    }
-
     /** Averages the levels of the frames a capture saw; NaN when it heard too little. */
     static final class Capture {
         private double sum;

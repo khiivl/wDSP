@@ -24,6 +24,8 @@ final class AudioCheckPanel implements AudioCheck.Listener {
     private static final String PREF_SWEEP_END = "audiocheck_sweep_end";
     private static final String PREF_SWEEP_DURATION = "audiocheck_sweep_duration";
     private static final String PREF_SWEEP_NORMALIZE = "audiocheck_sweep_normalize";
+    /** How long the pink noise the RTA button switched on plays before it is listened to. */
+    private static final long RTA_ZERO_NOISE_SETTLE_MS = 1000;
 
     private final MainActivity activity;
     private final AudioCheck engine;
@@ -87,26 +89,33 @@ final class AudioCheckPanel implements AudioCheck.Listener {
         bind(rr, () -> engine.toggleSpeaker(AudioCheck.Speaker.RR));
         bind(onlySub, () -> engine.setOnlySub(onlySub.isChecked()));
 
-        // The RTA's zero from the author's pink noise (owner, 08.10.2026): a tap takes it, a long press
-        // forgets it. Only while pink noise plays - any other sound would put its own tilt on the zero.
+        // The RTA's zero from the author's pink noise, in one tap (owner, 09.10.2026: one button and
+        // nothing else to know): the noise is switched on if it is not playing, listened to for the
+        // mode on screen, and switched off again. A new zero replaces the old one; there is no reset.
         if (rtaZero != null) {
             rtaZero.setOnClickListener(v -> {
-                if (!engine.isPinkNoiseOn()) {
-                    Toaster.show(activity, activity.getString(R.string.toast_rta_zero_needs_pink));
-                    return;
+                final boolean ownNoise = !engine.isPinkNoiseOn();
+                if (ownNoise) {
+                    engine.setPinkNoise(true);
+                    refresh();
+                    if (!engine.isPinkNoiseOn()) {
+                        Toaster.show(activity, activity.getString(R.string.toast_rta_zero_failed));
+                        return;
+                    }
                 }
                 rtaZero.setEnabled(false);
                 Toaster.show(activity, activity.getString(R.string.toast_rta_zero_listening));
-                AudioSpectrumEngine.getInstance().captureRtaZero(zeroDb -> {
+                // The output answers after its latency (591 ms measured on the bench), so the capture
+                // starts once the noise is surely in the analyser.
+                rtaZero.postDelayed(() -> AudioSpectrumEngine.getInstance().captureRtaZero(zeroDb -> {
+                    if (ownNoise) {
+                        engine.setPinkNoise(false);
+                        refresh();
+                    }
                     rtaZero.setEnabled(true);
                     Toaster.show(activity, activity.getString(Float.isNaN(zeroDb)
                             ? R.string.toast_rta_zero_failed : R.string.toast_rta_zero_taken));
-                });
-            });
-            rtaZero.setOnLongClickListener(v -> {
-                AudioSpectrumEngine.getInstance().clearRtaZero();
-                Toaster.show(activity, activity.getString(R.string.toast_rta_zero_cleared));
-                return true;
+                }), ownNoise ? RTA_ZERO_NOISE_SETTLE_MS : 0);
             });
         }
 
