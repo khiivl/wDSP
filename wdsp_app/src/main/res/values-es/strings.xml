@@ -598,11 +598,9 @@
     <string name="audiocheck_sweep_normalize">Normalizar para Umbral Auditivo</string>
     <string name="toast_sweep_hearing_threshold">Reproduce lo más bajo posible: en tu umbral auditivo, apenas audible.</string>
     <string name="audiocheck_rta_zero">Cero RTA</string>
-    <string name="toast_rta_zero_needs_pink">Activa primero el ruido rosa: el cero RTA se toma de él.</string>
     <string name="toast_rta_zero_listening">Escuchando el ruido rosa durante 3 segundos…</string>
     <string name="toast_rta_zero_taken">Cero RTA establecido: el ruido rosa ahora marca 0 dB.</string>
     <string name="toast_rta_zero_failed">Se ha escuchado muy poco sonido: el cero RTA no se ha establecido.</string>
-    <string name="toast_rta_zero_cleared">Cero RTA borrado: la curva vuelve a dibujarse respecto a su promedio.</string>
     <string name="gala_advanced_settings">Avanzado</string>
     <string name="eq_vis_shape_label">Forma del espectro:</string>
     <string name="eq_vis_shape_curve">Curva en vivo</string>

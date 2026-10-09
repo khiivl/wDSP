@@ -599,11 +599,9 @@
     <string name="audiocheck_sweep_normalize">Normaliseeri kuulmislävele</string>
     <string name="toast_sweep_hearing_threshold">Mängi nii vaikselt kui võimalik – kuulmislävel, vaevukuuldav.</string>
     <string name="audiocheck_rta_zero">RTA null</string>
-    <string name="toast_rta_zero_needs_pink">Lülita esmalt sisse roosa müra: RTA null võetakse sellest.</string>
     <string name="toast_rta_zero_listening">Roosa müra kuulamine 3 sekundit…</string>
     <string name="toast_rta_zero_taken">RTA null määratud: roosa müra tase on nüüd 0 dB.</string>
     <string name="toast_rta_zero_failed">Liiga vähe heli kuulda – RTA nulli ei määratud.</string>
-    <string name="toast_rta_zero_cleared">RTA null tühjendatud: kõver joonistatakse taas oma keskmise suhtes.</string>
     <string name="audiocheck_pink_noise">Roosa müra</string>
     <string name="gala_advanced_settings">Täpsemalt</string>
     <string name="eq_vis_shape_label">Spektri kuju:</string>

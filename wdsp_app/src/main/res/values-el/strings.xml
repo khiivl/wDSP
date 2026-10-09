@@ -599,11 +599,9 @@
     <string name="audiocheck_sweep_normalize">Κανονικοποίηση για ουδό ακοής</string>
     <string name="toast_sweep_hearing_threshold">Αναπαραγωγή όσο πιο σιγά γίνεται - στο όριο ακοής, μόλις ακουστό.</string>
     <string name="audiocheck_rta_zero">Μηδέν RTA</string>
-    <string name="toast_rta_zero_needs_pink">Ενεργοποιήστε πρώτα τον ροζ θόρυβο: το μηδέν RTA λαμβάνεται από αυτόν.</string>
     <string name="toast_rta_zero_listening">Ακρόαση ροζ θορύβου για 3 δευτερόλεπτα…</string>
     <string name="toast_rta_zero_taken">Το μηδέν RTA ορίστηκε: ο ροζ θόρυβος είναι τώρα στα 0 dB.</string>
     <string name="toast_rta_zero_failed">Ακούγεται πολύ χαμηλός ήχος - το μηδέν RTA δεν ορίστηκε.</string>
-    <string name="toast_rta_zero_cleared">Το μηδέν RTA διαγράφηκε: η καμπύλη σχεδιάζεται ξανά ως προς τον μέσο όρο της.</string>
     <string name="audiocheck_pink_noise">Ροζ θόρυβος</string>
     <string name="gala_advanced_settings">Για προχωρημένους</string>
     <string name="eq_vis_shape_label">Μορφή φάσματος:</string>

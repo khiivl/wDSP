@@ -599,11 +599,9 @@ Globalno zadano: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normaliziraj za prag čujnosti</string>
     <string name="toast_sweep_hearing_threshold">Reproducirajte što tiše – na granici čujnosti, jedva čujno.</string>
     <string name="audiocheck_rta_zero">RTA nula</string>
-    <string name="toast_rta_zero_needs_pink">Prvo uključite ružičasti šum: RTA nula se uzima iz njega.</string>
     <string name="toast_rta_zero_listening">Slušanje ružičastog šuma 3 sekunde…</string>
     <string name="toast_rta_zero_taken">RTA nula postavljena: ružičasti šum sada očitava 0 dB.</string>
     <string name="toast_rta_zero_failed">Čuje se premalo zvuka - RTA nula nije postavljena.</string>
-    <string name="toast_rta_zero_cleared">RTA nula poništena: krivulja se ponovno iscrtava u odnosu na svoj prosjek.</string>
     <string name="audiocheck_pink_noise">Ružičasti šum</string>
     <string name="gala_advanced_settings">Napredno</string>
     <string name="eq_vis_shape_label">Oblik spektra:</string>

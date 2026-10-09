@@ -599,11 +599,9 @@ Genel Varsayılan: %1$s</string>
     <string name="audiocheck_sweep_normalize">İşitme eşiğine göre normalleştir</string>
     <string name="toast_sweep_hearing_threshold">Mümkün olduğunca sessiz çalın – işitme eşiğinizde, zar zor duyulabilir.</string>
     <string name="audiocheck_rta_zero">RTA Sıfırı</string>
-    <string name="toast_rta_zero_needs_pink">Önce pembe gürültüyü açın: RTA sıfırı ondan alınır.</string>
     <string name="toast_rta_zero_listening">3 saniye boyunca pembe gürültü dinleniyor…</string>
     <string name="toast_rta_zero_taken">RTA sıfırı ayarlandı: pembe gürültü artık 0 dB okuyor.</string>
     <string name="toast_rta_zero_failed">Çok az ses duyuldu – RTA sıfırı ayarlanamadı.</string>
-    <string name="toast_rta_zero_cleared">RTA sıfırı temizlendi: eğri yeniden ortalamasına göre çiziliyor.</string>
     <string name="audiocheck_pink_noise">Pembe Gürültü</string>
     <string name="gala_advanced_settings">Gelişmiş</string>
     <string name="eq_vis_shape_label">Spektrum biçimi:</string>

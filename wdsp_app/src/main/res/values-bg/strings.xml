@@ -599,11 +599,9 @@
     <string name="audiocheck_sweep_normalize">Нормализиране за праг на чуване</string>
     <string name="toast_sweep_hearing_threshold">Пускайте възможно най-тихо - на прага на чуваемост, едва доловимо.</string>
     <string name="audiocheck_rta_zero">Нула RTA</string>
-    <string name="toast_rta_zero_needs_pink">Първо включете розов шум: нулата на RTA се взема от него.</string>
     <string name="toast_rta_zero_listening">Слушане на розов шум за 3 секунди…</string>
     <string name="toast_rta_zero_taken">Нулата на RTA е зададена: розовият шум вече показва 0 dB.</string>
     <string name="toast_rta_zero_failed">Чува се твърде малко звук - нулата на RTA не беше зададена.</string>
-    <string name="toast_rta_zero_cleared">Нулата на RTA е изчистена: кривата отново се чертае спрямо средната си стойност.</string>
     <string name="audiocheck_pink_noise">Розов шум</string>
     <string name="gala_advanced_settings">Разширени</string>
     <string name="eq_vis_shape_label">Форма на спектъра:</string>

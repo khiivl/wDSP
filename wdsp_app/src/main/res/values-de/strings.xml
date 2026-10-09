@@ -597,11 +597,9 @@
     <string name="audiocheck_sweep_normalize">Für Hörschwelle normalisieren</string>
     <string name="toast_sweep_hearing_threshold">So leise wie möglich abspielen - an deiner Hörschwelle, gerade noch hörbar.</string>
     <string name="audiocheck_rta_zero">RTA-Null</string>
-    <string name="toast_rta_zero_needs_pink">Zuerst Rosa Rauschen einschalten: Der RTA-Nullpunkt wird davon erfasst.</string>
     <string name="toast_rta_zero_listening">Rosa Rauschen wird 3 Sekunden lang analysiert…</string>
     <string name="toast_rta_zero_taken">RTA-Nullpunkt gesetzt: Rosa Rauschen liegt jetzt bei 0 dB.</string>
     <string name="toast_rta_zero_failed">Zu wenig Signal gehört - RTA-Nullpunkt wurde nicht gesetzt.</string>
-    <string name="toast_rta_zero_cleared">RTA-Nullpunkt gelöscht: Kurve wird wieder relativ zum Mittelwert gezeichnet.</string>
     <string name="gala_advanced_settings">Erweitert</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>
     <string name="eq_vis_shape_curve">Live-Kurve</string>

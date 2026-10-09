@@ -599,11 +599,9 @@ Globálne predvolené: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizovať pre prah počuteľnosti</string>
     <string name="toast_sweep_hearing_threshold">Prehrávajte čo najtichšie – na prahu počuteľnosti, sotva počuteľné.</string>
     <string name="audiocheck_rta_zero">Nula RTA</string>
-    <string name="toast_rta_zero_needs_pink">Najprv zapnite ružový šum: nula RTA sa preberá z neho.</string>
     <string name="toast_rta_zero_listening">Počúvam ružový šum počas 3 sekúnd…</string>
     <string name="toast_rta_zero_taken">Nula RTA nastavená: ružový šum má teraz 0 dB.</string>
     <string name="toast_rta_zero_failed">Počuť príliš málo zvuku – nula RTA nebola nastavená.</string>
-    <string name="toast_rta_zero_cleared">Nula RTA vymazaná: krivka sa opäť vykresľuje voči svojmu priemeru.</string>
     <string name="audiocheck_pink_noise">Ružový šum</string>
     <string name="gala_advanced_settings">Rozšírené</string>
     <string name="eq_vis_shape_label">Tvar spektra:</string>
