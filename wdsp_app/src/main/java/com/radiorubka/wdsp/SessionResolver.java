@@ -54,6 +54,18 @@ public final class SessionResolver {
      * is rejected by the effect engine in about a millisecond.
      */
     private static final int MAX_CANDIDATES = 512;
+    /**
+     * Session 0 is listened to for longer: the output mix answers only after the output's latency
+     * (bench 09.10.2026: 591 ms on YouTube's track), so 120 ms of it read "silent" while music played,
+     * and the resolver walked 512 refusing sessions for 9 s before settling on 0 anyway.
+     */
+    private static final int OUTPUT_MIX_PROBE_MS = 800;
+    /**
+     * A sweep that met this many refusals in a row stops: here every other application's session is
+     * refused (error -3, YouTube's 473 included) and walking the rest only costs seconds. Ids are
+     * spaced eight apart, so this still covers the latest sixteen sessions.
+     */
+    private static final int MAX_REFUSED_IN_A_ROW = 128;
     /** A player announcing its session is only trusted for this long. */
     private static final long HINT_TTL_MS = 5 * 60 * 1000L;
 
@@ -205,7 +217,7 @@ public final class SessionResolver {
      * the session that just started playing is the highest-numbered one.
      */
     private int sweep() {
-        if (SessionProbe.probe(0, PROBE_MS).hasSignal()) return 0;
+        if (SessionProbe.probe(0, OUTPUT_MIX_PROBE_MS).hasSignal()) return 0;
 
         int counter = 0;
         try {
@@ -217,8 +229,16 @@ public final class SessionResolver {
         if (counter <= 0) return -1;
 
         int probed = 0;
+        int refusedInARow = 0;
         for (int sid = counter - 1; sid > 0 && probed < MAX_CANDIDATES; sid--, probed++) {
-            if (SessionProbe.probe(sid, PROBE_MS).hasSignal()) return sid;
+            SessionProbe.Result r = SessionProbe.probe(sid, PROBE_MS);
+            if (r.hasSignal()) return sid;
+            refusedInARow = r.attached ? 0 : refusedInARow + 1;
+            if (refusedInARow >= MAX_REFUSED_IN_A_ROW) {
+                Log.i(TAG, "Sweep stopped after " + refusedInARow + " refusals in a row at session " + sid
+                        + " - this platform does not hand out other applications' sessions");
+                break;
+            }
         }
         return -1;
     }
