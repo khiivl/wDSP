@@ -1877,37 +1877,7 @@ public class AudioSpectrumEngine {
             return true;
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || audioManager == null) return false;
-        try {
-            List<AudioPlaybackConfiguration> configs = audioManager.getActivePlaybackConfigurations();
-            if (configs == null) return false;
-            for (AudioPlaybackConfiguration config : configs) {
-                if (!isConfigActive(config)) continue;
-                AudioAttributes attr = config.getAudioAttributes();
-                if (attr != null && (attr.getUsage() == AudioAttributes.USAGE_MEDIA
-                        || attr.getUsage() == AudioAttributes.USAGE_GAME
-                        || attr.getUsage() == AudioAttributes.USAGE_UNKNOWN)) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return false;
-    }
-
-    private boolean isConfigActive(AudioPlaybackConfiguration config) {
-        if (config == null) return false;
-        try {
-            java.lang.reflect.Method m = config.getClass().getMethod("isActive");
-            Object res = m.invoke(config);
-            if (res instanceof Boolean) return (Boolean) res;
-        } catch (Throwable ignored) {}
-        try {
-            java.lang.reflect.Method m = config.getClass().getMethod("getPlayerState");
-            Object res = m.invoke(config);
-            if (res instanceof Integer) return ((Integer) res) == 2; // 2 = PLAYER_STATE_STARTED
-        } catch (Throwable ignored) {}
-        return true;
+        return SessionResolver.mediaTrackStarted(audioManager);
     }
 
     private synchronized void restartWithSession(int sessionId) {
@@ -1982,7 +1952,7 @@ public class AudioSpectrumEngine {
                 List<AudioPlaybackConfiguration> configs = audioManager.getActivePlaybackConfigurations();
                 if (configs != null) {
                     for (AudioPlaybackConfiguration config : configs) {
-                        if (isConfigActive(config)) return true;
+                        if (SessionResolver.isConfigActive(config)) return true;
                     }
                 }
             }

@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.AudioPlaybackConfiguration;
 import android.media.audiofx.AudioEffect;
 import android.util.Log;
 
@@ -224,10 +226,51 @@ public final class SessionResolver {
     private boolean isAudioPlaying() {
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            return am == null || am.isMusicActive();
+            return am == null || mediaTrackStarted(am);
         } catch (Throwable t) {
             return true; // cannot tell - keep the old behaviour rather than go blind
         }
+    }
+
+    /**
+     * Whether a media track is started in AudioFlinger - the only thing a Visualizer can be put on.
+     * One answer for the engine and for this resolver: until 09.10.2026 the resolver asked
+     * {@code isMusicActive()}, which on the bench said "nothing" while YouTube played (an active
+     * AudioTrack, usage MEDIA, state started), so the engine kept asking for a session and the
+     * resolver kept declining to look for one.
+     */
+    static boolean mediaTrackStarted(AudioManager am) {
+        if (am == null) return false;
+        try {
+            java.util.List<AudioPlaybackConfiguration> configs = am.getActivePlaybackConfigurations();
+            if (configs == null) return false;
+            for (AudioPlaybackConfiguration config : configs) {
+                if (!isConfigActive(config)) continue;
+                AudioAttributes attr = config.getAudioAttributes();
+                if (attr != null && (attr.getUsage() == AudioAttributes.USAGE_MEDIA
+                        || attr.getUsage() == AudioAttributes.USAGE_GAME
+                        || attr.getUsage() == AudioAttributes.USAGE_UNKNOWN)) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    static boolean isConfigActive(AudioPlaybackConfiguration config) {
+        if (config == null) return false;
+        try {
+            java.lang.reflect.Method m = config.getClass().getMethod("isActive");
+            Object res = m.invoke(config);
+            if (res instanceof Boolean) return (Boolean) res;
+        } catch (Throwable ignored) {}
+        try {
+            java.lang.reflect.Method m = config.getClass().getMethod("getPlayerState");
+            Object res = m.invoke(config);
+            if (res instanceof Integer) return ((Integer) res) == 2; // 2 = PLAYER_STATE_STARTED
+        } catch (Throwable ignored) {}
+        return true;
     }
 
     private synchronized void remember(String playerPackage, int sessionId) {
