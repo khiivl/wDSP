@@ -443,7 +443,8 @@ public class McuService extends Service implements LocationListener {
     /**
      * Every property the poll's decisions read (qf-platform 08 §1): the live source, the four
      * stored levels, the global mute, the call, the sound channel, the tuner, the focus player.
-     * A property added to checkVolumeAndGala or checkPlayer must be added here too.
+     * A property added to checkVolumeAndGala, checkPlayer, the analyser's watchdog or the
+     * screensaver's look must be added here too.
      */
     private static final String[] WATCHED_PROPERTIES = {
             "sys.current.vol.type",
@@ -453,6 +454,7 @@ public class McuService extends Service implements LocationListener {
             "sys.qf.sound.channel",
             "sys.qf.radio.status",
             "sys.qf.last_audio_src",
+            "sys.qf.current.activity",   // the screensaver: what is in front
     };
     private static final String VOL_TYPE_CALL = "btcall_type";
 
@@ -872,10 +874,10 @@ public class McuService extends Service implements LocationListener {
         ScreensaverManager.getInstance(this).start();
         // Cheap: one broadcast filter, and media sessions only if the owner has allowed them.
         NowPlaying.getInstance(this).start();
-        // The check runs on events, not on a clock (owner, 12.10.2026) - these two are the ones
-        // that are not properties or vendor broadcasts. See pollingRunnable.
-        NowPlaying.getInstance(this).setOnChange(this::wakePoll);
-        AudioSpectrumEngine.getInstance().setOnSignalAppeared(this::wakePoll);
+        // The check runs on events, not on a clock (owner, 12.10.2026): the app's one bell, rung
+        // by the property watch, the media sessions and the analyser. See pollingRunnable.
+        NowPlaying.getInstance(this).setOnChange(StateEvents::fire);
+        StateEvents.subscribe(this::wakePoll);
 
         // Armed here rather than when the diagnostic screen is opened, because the events worth
         // recording - a Bluetooth call taking the audio path and giving it back - happen while
@@ -1234,8 +1236,9 @@ public class McuService extends Service implements LocationListener {
                         + " (remembered base was " + was + ")");
             }
         }
-        // The source, the player, the call, the mute and the live level are all properties.
-        wakePoll();
+        // The source, the player, the call, the mute, the live level and what is in front are all
+        // properties - this service's check, the analyser and the screensaver read them.
+        StateEvents.fire();
     };
 
     /** While GALA is actually working - see {@link #needsFastPoll()}. */
@@ -1254,13 +1257,12 @@ public class McuService extends Service implements LocationListener {
      * once ({@link #wakePoll()}). The fast pace is kept only while GALA has something in flight.
      *
      * <p>🔀 No idle tick any more (owner, 12.10.2026: «переводь на події, GALA лиши на таймері»).
-     * Outside GALA's work the poll runs only when something it reads changes: a property
-     * ({@link PropertyWatch} - the source, its level, the mute, the call state, the sound channel,
-     * the focus player), VOLUME_CHANGED / MUTE_EQ, a call announced or ended, a media session
-     * playing or stopping ({@link NowPlaying#setOnChange}), sound appearing on the captured
-     * session, and speed reaching GALA. What is time and not state is a single delayed look:
-     * the call announcement's watchdog, and the signal running out while the tuner is the
-     * evidence (see checkPlayer).
+     * Outside GALA's work the poll runs only when something it reads changes. Through
+     * {@link StateEvents}: a watched property ({@link PropertyWatch} - the source, its level, the
+     * mute, the call state, the sound channel, the focus player), a media session playing or
+     * stopping, playback in AudioFlinger, the captured signal appearing or running out. Directly:
+     * VOLUME_CHANGED / MUTE_EQ, a call announced or ended, speed reaching GALA. The call
+     * announcement's watchdog is time, not state: one delayed look.
      */
     private final Runnable pollingRunnable = new Runnable() {
         @Override
@@ -1272,8 +1274,6 @@ public class McuService extends Service implements LocationListener {
             if (needsFastPoll()) backgroundHandler.postDelayed(this, POLL_FAST_MS);
         }
     };
-
-    private final Runnable signalExpiryLook = this::wakePoll;
 
     /** Runs the poll now. Safe from any thread. */
     private void wakePoll() {
@@ -2138,16 +2138,9 @@ public class McuService extends Service implements LocationListener {
         // would have caught it - so that guard is gone. See NowPlaying.isRadioSource().
         String soundChannel = HardwareProfile.systemProperty("sys.qf.sound.channel");
 
-        boolean tunerEvidence = "radio_type".equals(activeType) || "2".equals(soundChannel)
-                || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status"));
-        boolean isRadio = !hasSignal && !isPlayingMedia && tunerEvidence;
-        // The signal running out is time, not an event: the only case where it changes the answer
-        // gets one look when it is due. Rescheduled, not stacked.
-        backgroundHandler.removeCallbacks(signalExpiryLook);
-        if (hasSignal && !isPlayingMedia && tunerEvidence) {
-            backgroundHandler.postDelayed(signalExpiryLook,
-                    AudioSpectrumEngine.getInstance().millisUntilSilence() + 100);
-        }
+        boolean isRadio = !hasSignal && !isPlayingMedia
+                && ("radio_type".equals(activeType) || "2".equals(soundChannel)
+                    || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status")));
 
         // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
         // muted when this was measured. The problem is what hiding costs: the widget unregisters

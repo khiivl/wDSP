@@ -126,9 +126,11 @@ public final class ScreensaverManager {
     public static final float MIN_INFO_H = 0.08f;
     public static final float MAX_INFO_H = 0.25f;
 
-    private static final long POLL_MS = 2000L;
-    /** While the screensaver is on screen - it has to notice a change underneath quickly. */
-    private static final long ATTACHED_POLL_MS = 500L;
+    /**
+     * A look that came due and could not act - show() failed, say - is retried after this, not at
+     * once, so a failure cannot spin.
+     */
+    private static final long RETRY_LOOK_MS = 1000L;
 
     /**
      * How long the music has to stay stopped before the clock takes over.
@@ -1371,6 +1373,9 @@ public final class ScreensaverManager {
 
     private void resetIdleClock() {
         foregroundSince = System.currentTimeMillis();
+        // The idle timer counts from here now. Called from touches and dismissals too, which no
+        // event announces, so the timer is re-armed here and not only after a look.
+        handler.post(this::scheduleNextLook);
     }
 
     /**
@@ -1431,14 +1436,22 @@ public final class ScreensaverManager {
         if (!isEnabled() || !screenOn) return;
         if (touchWatcher == null) touchWatcher = new TouchWatcher(context, this::onTouchedSomewhere);
         touchWatcher.start();
-        handler.postDelayed(poll, POLL_MS);
+        StateEvents.subscribe(lookNow);
+        handler.post(poll);
     }
 
     private void stopPolling() {
+        StateEvents.unsubscribe(lookNow);
         handler.removeCallbacks(poll);
         if (touchWatcher != null) touchWatcher.stop();
     }
 
+    /**
+     * One look at the state. No clock of its own any more (owner, 12.10.2026): it runs when
+     * {@link StateEvents} rings - what is in front, the call, playback, the signal - and at the two
+     * moments that are time rather than state: the idle delay running out, and the music having
+     * stayed stopped for {@link #PAUSE_HOLD_MS}. See {@link #scheduleNextLook()}.
+     */
     private final Runnable poll = new Runnable() {
         @Override
         public void run() {
@@ -1447,12 +1460,35 @@ public final class ScreensaverManager {
             } catch (Throwable t) {
                 Log.w(TAG, "screensaver tick failed", t);
             }
-            // Half a second while it is on screen: that tick is now what dismisses it when the
-            // person switches applications underneath, and two seconds of curtain after a key press
-            // reads as the key not working. One property read is all it costs.
-            if (isEnabled() && screenOn) handler.postDelayed(this, attached ? ATTACHED_POLL_MS : POLL_MS);
+            scheduleNextLook();
         }
     };
+
+    /** Rung by StateEvents on any thread: look now, on the main one. */
+    private final Runnable lookNow = () -> handler.post(() -> {
+        handler.removeCallbacks(poll);
+        poll.run();
+    });
+
+    /** Arms the one timer there is: the nearer of the idle delay and the pause hold, if either. */
+    private void scheduleNextLook() {
+        handler.removeCallbacks(poll);
+        if (!isEnabled() || !screenOn) return;
+        long now = System.currentTimeMillis();
+        long due = Long.MAX_VALUE;
+        if (stoppedSince != 0L && now - stoppedSince < PAUSE_HOLD_MS) {
+            due = stoppedSince + PAUSE_HOLD_MS - now;           // the clock takes over then
+        }
+        if (!attached) {
+            String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
+            if (whyHeldBack(foreground) == null) {
+                long idleLeft = foregroundSince + delaySeconds() * 1000L - now;
+                due = Math.min(due, idleLeft > 0 ? idleLeft : RETRY_LOOK_MS);
+            }
+            // Held back: whatever lifts it - the app in front, the call, the screen - rings the bell.
+        }
+        if (due != Long.MAX_VALUE) handler.postDelayed(poll, due + 50);
+    }
 
     private void tick() {
         updatePlaybackBelief();

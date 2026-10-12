@@ -429,6 +429,7 @@ public class AudioSpectrumEngine {
     }
 
     private AudioSpectrumEngine() {
+        StateEvents.subscribe(this::lookAgain);
         Arrays.fill(gains, 6);
         Arrays.fill(qNarrow, false);
         Arrays.fill(fmOffsets, 0f);
@@ -1161,9 +1162,10 @@ public class AudioSpectrumEngine {
         for (int i = 0; i < len; i++) {
             if (Math.abs(buffer[i]) > 300) {
                 lastMicSignalTime = System.currentTimeMillis();
-                return;
+                break;
             }
         }
+        noteSignalEdges();
     }
 
     /** Floor between two resolutions, so a genuinely quiet track cannot start a sweep loop. */
@@ -1221,6 +1223,9 @@ public class AudioSpectrumEngine {
                 @Override
                 public void onPlaybackConfigChanged(List<AudioPlaybackConfiguration> configs) {
                     checkAndSwitchSession();
+                    // Playback starting or stopping is what the idle pause, the silence the
+                    // microphone is told about and the service's player check all read.
+                    StateEvents.fire();
                 }
             };
             try {
@@ -1263,26 +1268,29 @@ public class AudioSpectrumEngine {
         if (waveform == null) return;
         for (byte b : waveform) {
             if (Math.abs((b & 0xFF) - 128) > SIGNAL_THRESHOLD) {
-                boolean was = hasMediaSignalNow();
                 lastSignalTime = System.currentTimeMillis();
-                Runnable l = onSignalAppeared;
-                if (!was && l != null) l.run();
-                return;
+                break;
             }
         }
+        noteSignalEdges();
     }
 
-    /** Told when the attached session starts carrying sound after silence; on the capture thread. */
-    private volatile Runnable onSignalAppeared;
+    private volatile boolean reportedMediaSignal;
+    private volatile boolean reportedAnySignal;
 
-    public void setOnSignalAppeared(Runnable listener) {
-        onSignalAppeared = listener;
-    }
-
-    /** How long the signal counts as present without another loud buffer; 0 when it is gone. */
-    public long millisUntilSilence() {
-        if (lastSignalTime == 0) return 0;
-        return Math.max(0, lastSignalTime + SILENCE_TOLERANCE_MS - System.currentTimeMillis());
+    /**
+     * Rings {@link StateEvents} when the signal appears or runs out. Called for every captured
+     * buffer, loud or quiet, so "ran out" is seen by the first quiet buffer past
+     * {@link #SILENCE_TOLERANCE_MS} - the data stream is the clock, no timer is needed. While the
+     * analysis is paused no buffers come, and nothing here needs to: what resumes it is playback.
+     */
+    private void noteSignalEdges() {
+        boolean media = hasMediaSignalNow();
+        boolean any = hasSignalNow();
+        if (media == reportedMediaSignal && any == reportedAnySignal) return;
+        reportedMediaSignal = media;
+        reportedAnySignal = any;
+        StateEvents.fire();
     }
 
     /**
@@ -1314,16 +1322,28 @@ public class AudioSpectrumEngine {
                 // The tap runs in the microphone mode too, as its reference, so a silent session is
                 // re-resolved whatever the mode. On radio isMediaPlaybackActive() is false.
                 if (visualizer != null && now - lastSignalTime > SILENCE_TOLERANCE_MS
-                        && now - lastResolveTime > wait
                         && isMediaPlaybackActive()) {
-                    requestResolve("attached session silent while media plays");
-                }
-                if (watchdogHandler != null) {
-                    watchdogHandler.postDelayed(this, WATCHDOG_PERIOD_MS);
+                    if (now - lastResolveTime > wait) {
+                        requestResolve("attached session silent while media plays");
+                    } else if (watchdogHandler != null) {
+                        // The back-off is time, not state: look once more when it has run out.
+                        watchdogHandler.postDelayed(this, lastResolveTime + wait - now + 100);
+                    }
                 }
             }
+            // No clock of its own any more: StateEvents, the playback callback and the signal's
+            // edges bring it back (owner, 12.10.2026).
         }
     };
+
+    /** Runs the watchdog now, once, on its own thread. Safe from any thread. */
+    private void lookAgain() {
+        Handler h = watchdogHandler;
+        // Only while somebody draws: that is when the self-arming clock used to run too.
+        if (h == null || listeners.isEmpty()) return;
+        h.removeCallbacks(watchdog);
+        h.post(watchdog);
+    }
 
     /**
      * Resolution is exclusive: our own capture is released first, so the resolver can probe any
