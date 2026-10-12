@@ -436,6 +436,10 @@ public class McuService extends Service implements LocationListener {
      */
     private final Map<String, Integer> rememberedBase = new HashMap<>();
     private final SourceLevelWatch levelWatch = new SourceLevelWatch();
+    /** Wakes {@link #levelWatch} when a property changes; null where the native wait is missing. */
+    private volatile PropertyWatch propertyWatch;
+    private volatile boolean levelCheckPending;
+    private static final long LEVEL_CHECK_DELAY_MS = 300;
     private static final String VOL_TYPE_CALL = "btcall_type";
 
     private void initReflection() {
@@ -1167,12 +1171,49 @@ public class McuService extends Service implements LocationListener {
             isPolling = true;
             backgroundHandler.post(pollingRunnable);
         }
+        if (propertyWatch == null || !propertyWatch.isRunning()) {
+            propertyWatch = PropertyWatch.start(this::onPropertyChanged);
+            if (propertyWatch == null) Log.e(TAG, "no property subscription: levels set elsewhere will be overwritten");
+        }
     }
 
     private void stopPolling() {
         isPolling = false;
         backgroundHandler.removeCallbacks(pollingRunnable);
+        if (propertyWatch != null) {
+            propertyWatch.stop();
+            propertyWatch = null;
+        }
     }
+
+    /**
+     * Some property changed, anywhere in the system - most are not ours. Batched: one check per
+     * {@link #LEVEL_CHECK_DELAY_MS} however many arrive, and late enough that a source switch in
+     * progress has reached the poll first, which owns whatever a switch moves.
+     */
+    private void onPropertyChanged() {
+        if (levelCheckPending) return;
+        levelCheckPending = true;
+        backgroundHandler.postDelayed(levelCheckRunnable, LEVEL_CHECK_DELAY_MS);
+    }
+
+    private final Runnable levelCheckRunnable = () -> {
+        levelCheckPending = false;
+        String live = VolumeHelper.getActivePlayerType();
+        // A switch the poll has not taken yet: what moved is the platform's wipe, and the poll's
+        // resync learns it without reporting.
+        if (galavoltype_last == null || !live.equals(galavoltype_last)) {
+            wakePoll();
+            return;
+        }
+        // A source that is not playing changed level: somebody else did it - the car settings,
+        // the radio - so that is the level it returns to. See SourceLevelWatch.
+        for (Map.Entry<String, Integer> change : levelWatch.poll(live).entrySet()) {
+            Integer was = rememberedBase.put(change.getKey(), change.getValue());
+            Log.i(TAG, change.getKey() + " set elsewhere to " + change.getValue()
+                    + " (remembered base was " + was + ")");
+        }
+    };
 
     /** While GALA is actually working - see {@link #needsFastPoll()}. */
     private static final long POLL_FAST_MS = 100;
@@ -1681,14 +1722,6 @@ public class McuService extends Service implements LocationListener {
                     galavoltype_last = galavoltype;
                     return;
                 }
-            }
-        } else {
-            // A source that is not playing changed level: somebody else did it - the car
-            // settings, the radio - so that is the level it returns to. See SourceLevelWatch.
-            for (Map.Entry<String, Integer> change : levelWatch.poll(galavoltype).entrySet()) {
-                Integer was = rememberedBase.put(change.getKey(), change.getValue());
-                Log.i(TAG, change.getKey() + " set elsewhere to " + change.getValue()
-                        + " (remembered base was " + was + ")");
             }
         }
 

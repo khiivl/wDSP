@@ -15,8 +15,8 @@ import java.util.Map;
  * {@code RPC_SetVolume} only when that source is the live one. So a level changed for a source
  * that is not playing raises no {@code com.qf.action.VOLUME_CHANGED}, and the config service
  * ({@code ConfigInfoManagerService.updateConfigItemInfo}) broadcasts nothing either. Android has no
- * listener for a system property. The stored levels are four property reads; the service's
- * one-second idle tick reads them.
+ * listener for a system property, and inotify does not see them either; {@link PropertyWatch}
+ * wakes the check on a property change instead.
  *
  * <p>📻 The bug this answers (owner, 12.10.2026): call volume set to 10 in the car settings between
  * calls came back as 13 on the next call - the figure wDSP remembered from the call before.

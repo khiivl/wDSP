@@ -13,6 +13,7 @@ project(wdsp_native)
 # the cabin's modal limit).
 add_library(wdsp_native SHARED
         wdsp_jni.cpp
+        property_wait.cpp
         fft.cpp
         stitcher.cpp
         analyzer.cpp
