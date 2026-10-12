@@ -74,6 +74,23 @@ Every class with what it offers: [CLASS_MAP.md](CLASS_MAP.md) (generated from th
    `AudioCheckPanel` binds the buttons. The fader and "only sub" overrides go to `McuService` as
    runtime actions and are cleared when a call starts.
 
+6. **Events instead of clocks (12–13.10.2026).** Nothing polls while the car is parked: the service's
+   check, the analyser's watchdog and the screensaver look when `StateEvents` rings (a watched property
+   changes value via `PropertyWatch` / `__system_property_wait`, a media session plays or stops,
+   playback or the captured signal starts or ends). Only GALA keeps a 100 ms timer, and only while it
+   works, from its own speed threshold - a parked unit's GPS drifts 1-6 km/h and the old "> 0" ran the
+   check ten times a second. Time-only moments are single delayed looks (the screensaver's idle delay,
+   the clock after a pause, the call announcement's watchdog, the session re-resolve back-off).
+   Details: [ARCHITECTURE.md](ARCHITECTURE.md), "The volume and player check".
+7. **Rules that came out of it** (owner's decisions, 12–13.10): wDSP never rewrites `persist.*`
+   volumes; the per-source memory follows changes made in QF car settings (`SourceLevelWatch`); no GALA
+   on a call; on radio the microphone analysis is decided by the settings toggle only, not by the
+   display mode or calibration, and the analyser does not trust the factory FM app's session (it says
+   "not playing" while the tuner sounds); the screensaver clock comes ~1 s after a player reports
+   PAUSED, the 4 s + 8 s wait stays for ambiguous stops. The re-resolve while paused is kept on purpose
+   (Bluetooth music plays past AudioFlinger's list).
+   Accepted on the unit with the owner, row by row: [TESTS.md](TESTS.md).
+
 Native code has host tests with known answers, run with plain g++ in WSL or Linux:
 `cpp/test_sweep.cpp`, `test_analyzer.cpp`, `test_miccal.cpp` (replays the owner's 20.09 run),
 `test_micwidth.cpp`, `test_crossover.cpp`, `test_resonance.cpp`, `test_pair.cpp`, `test_zigzag.cpp`
@@ -114,6 +131,10 @@ Things the author may care about:
   silence needs an MCU patch;
 - the audiocheck.net calibration files in the repo are not at 0 dBFS (RMS: sweep -5.9, white -10.5,
   pink -15.2 dBFS) - [MEASURED_FACTS.md](MEASURED_FACTS.md);
+- open after 13.10: the volume synchronisation with the owner's own radio app was not re-tested (it
+  was not installed); after a full reboot wDSP's main window sometimes opens and nobody is found doing
+  it (the platform's restore list `/system/config/RestoreAppsWhenWakeup.ini` does not contain wDSP);
+  `PlayerResume` once remembered the factory player as "playing" while Bluetooth played;
 - an idea left for the author, not started: a software 32-band EQ inserted after the mixer when
   BitPerfect is on (question to that line on the board, #1628-#1631) - the hardware keeps the
   crossover, sub, filters, delays and fader; calls and radio bypass it.

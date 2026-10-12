@@ -9,7 +9,7 @@ the first sentence of theirs (at most 40 a file).
 
 ## Java (`java/com/radiorubka/wdsp`)
 
-### `AudioCheck.java` — 658 lines
+### `AudioCheck.java` — 666 lines
 Audio Check - the author's 1.0 test-signal tab: the four stems of one song (bass, vocal, drums, melody) looped in sync and freely combined, pink noise, a sine generator, a logarithmic sweep that can be normalised to the 
 - `isTonePlaying()` — A narrow-band tone is playing - the spectrum can stop smoothing it (the author's reason).
 - `setStem(Stem stem, boolean on)` — Starts or stops one stem, joined in phase with the stems already playing: a stem switched on late starts where the others are in the shared loop, not at its beginning (the author's sync).
@@ -23,7 +23,7 @@ Audio Check - the author's 1.0 test-signal tab: the four stems of one song (bass
 - `maxDb(float loHz, float hiHz)` — The least sensitive point within a range, sampled at 200 log points - the dip is inside.
 - `gain(double freqHz, double tqMaxDb)` — Linear gain (at most 1) that cancels the ear's threshold shape against the range's maximum.
 
-### `AudioCheckPanel.java` — 232 lines
+### `AudioCheckPanel.java` — 241 lines
 The Audio Check tab's controls (the author's 1.0), bound to AudioCheck, which owns the sound.
 - `buttons()` — Every button of the panel, for the activity's theme pass.
 - `tintFields(int textColor, int hintColor)` — The sweep fields in the theme's colours - text and hint - for the activity's theme pass.
@@ -45,7 +45,7 @@ Shared audio configuration and constants for wDSP.
 What the audio policy on this particular unit actually decided.
 - `appendRawPolicies(StringBuilder sb)` — The policy files themselves, verbatim, at the end of the report.
 
-### `AudioSpectrumEngine.java` — 2511 lines
+### `AudioSpectrumEngine.java` — 2553 lines
 Centralized audio spectrum capture and 16-band Post-DSP analysis engine.
 - `getLatestWaveform(byte[] outBuffer)` — Copies the latest raw PCM waveform snapshot (unsigned 8-bit, 128 = zero baseline).
 - `storeMeasuredLatency(Context context, LatencyProbe.Result result)` — Turns a measurement into the base the analyser will use from now on, and returns it.
@@ -62,8 +62,7 @@ Centralized audio spectrum capture and 16-band Post-DSP analysis engine.
 - `readCurve(float[] contentDb, float[] correctionDb)` — The live RTA's input for one display frame: the shown analyser's curve as measured (contentDb, see NativeAnalyzer#getCurveDb) and the correction its mode adds (correctionDb): the chip's response in the calculated mode, t
 - `rtaZeroDb()` — The zero the live curve is drawn against, for the analyser shown now; NaN for the floating average.
 - `onRtaZero(float zeroDb)` — @param zeroDb the zero taken, NaN when too little was heard
-- `captureRtaZero(RtaZeroListener listener)` — Takes the RTA's zero from what plays now - meant for Audio Check's pink noise - over RtaReference#CAPTURE_MS, read straight from an analyser at a third of an octave, so it does not depend on the curve being on screen: th
-- `clearRtaZero()` — Forgets the RTA's zero: the curve goes back to the frame's average.
+- `captureRtaZero(RtaZeroListener listener)` — Takes the RTA's zero from what plays now - meant for Audio Check's pink noise - over RtaReference#CAPTURE_MS, read straight from the analyser shown at a third of an octave, so it does not depend on the curve being on scr
 - `resolveForOwnPlayback()` — Our own test signal started (Audio Check): find its session now rather than waiting for the previous one to go quiet.
 - `onMeasuredCurvesChanged()` — Re-pushes whatever the measurements have taught us into the running analyser.
 - `describeForReport()` — What the analyser is doing, in the words a report needs.
@@ -156,11 +155,12 @@ Writes a file straight into the public Downloads folder.
 - `finish(Context context, Pending pending)` — Closes the file and makes it visible.
 - `discard(Context context, Pending pending)` — Removes a file that was never finished, so a failed save leaves nothing behind.
 
-### `DspResponse.java` — 226 lines
+### `DspResponse.java` — 245 lines
 Models what the BU32107 actually does to the signal, as a per-band dB curve.
 - `isSubOff(int subFreqIdx)` — Whether a stored "_sub_f" is the author's "No Sub".
 - `nearestSubLpfIndex(float hz)` — The chip's code for the subwoofer low-pass nearest to hz.
 - `doorHpfIndexOf(float hz)` — The chip's code for the door high-pass nearest to hz; 0 Hz is code 0, Through.
+- `faderStepsForCut(float cutDb)` — The most fader steps whose cut does not exceed cutDb: never more than asked.
 - `compute(int[] gains, boolean[] qNarrow, float[] fmOffsets, int subFr)` — Full DSP response in dB per band - what the preset makes the hardware do, the "target" the calculated spectrum shows (owner, 14.09.2026), with nothing of the car in it.
 - `computeAt(float[] freqsHz, int[] gains, float[] fmOffsets, int subFreq)` — The same response as #compute, at any frequencies instead of the band centres - what the live RTA curve adds in the calculated mode, one point per frequency.
 - `doorHpfHz(int code)` — Hz for a door high-pass code; 0 for Through or an unknown code.
@@ -213,7 +213,7 @@ Preset values the screen has changed and the disk has not stored yet.
 - `readView(SharedPreferences base)` — Reads through the values not stored yet, then the store.
 - `writeTo(SharedPreferences.Editor e)` — Puts everything remembered into a real editor.
 
-### `LoudnessCheck.java` — 287 lines
+### `LoudnessCheck.java` — 288 lines
 Checks a preset's loudness curve and says what is wrong with it.
 - `inspect(int[] gains, int subGainIdx, int subFreqIdx, int bassBoost, )` — @param gains 16 gain indices 0..12 as stored in the preset @param subGainIdx subwoofer gain index 0..12 @param subFreqIdx index into DspResponse#SUB_FREQS_HZ @param bassBoost the larger of the front and rear bass boost l
 - `maxDeliverableStrength(int[] gains, int subGainIdx, int subFreqIdx, boolean subComp)` — The strongest curve these band gains leave room for.
@@ -232,7 +232,7 @@ The Fletcher-Munson loudness curve and the fatigue trim, in one place.
 - `maxSubBoost(int subFreqIdx)` — The subwoofer's share of the loudness curve at volume 1, by crossover: the ISO 226 boost (AudioConfig#ISO_FULL_TARGET_DB) of the highest equaliser band the subwoofer plays on its own - one band below the band its crossov
 - `hzOf(int subFreqIdx)` — The crossover in hertz.
 
-### `MainActivity.java` — 3763 lines
+### `MainActivity.java` — 3762 lines
 The main screen: the 16-band equaliser with its live spectrum behind it, presets, the subwoofer and the door filters, delays and fader, the loudness tab (FM curve, fatigue, bass shelf, Ultra Bass), GALA and Audio Check.
 
 ### `McuLink.java` — 54 lines
@@ -240,7 +240,7 @@ The one way into the QF MCU manager (mcu_service), by reflection: the DSP frame 
 - `setEqData(byte[] frame)` — Sends one DSP frame.
 - `sendMsg(byte message, byte[] payload)` — Sends one MCU message.
 
-### `McuService.java` — 2678 lines
+### `McuService.java` — 2748 lines
 Background service to handle MCU communication, dynamic Fletcher-Munson EQ adjustment, player-based preset switching, and GALA (Speed Sensitive Volume).
 
 ### `MeasurementFailure.java` — 59 lines
@@ -331,7 +331,7 @@ Java side of the sweep measurement in cpp/sweep.cpp.
 ### `NotificationAccess.java` — 21 lines
 Declared so that media sessions can be read, and for nothing else.
 
-### `NowPlaying.java` — 835 lines
+### `NowPlaying.java` — 861 lines
 What is playing right now: who, what, how far through, and a picture.
 - `titleLine()` — The part of #line() without the artist: album and title, in reading order.
 - `line()` — One line for the marquee, in the order a person reads it.
@@ -371,6 +371,10 @@ Validates, repairs, and migrates the wDSP EQ & audio presets database (EqPresets
 - `validateAndMigrate(Context context)` — Inspects the entire presets database, migrating any legacy presets, repairing corrupted or out-of-range values, recovering orphaned presets, and updating the DB version.
 - `sanitizePreset(SharedPreferences.Editor editor, SharedPreferences prefs, St)` — Sanitizes a single preset by name, ensuring all required parameters exist, are within valid hardware ranges, and mutual exclusion rules are respected.
 
+### `PropertyWatch.java` — 109 lines
+Wakes a listener when any system property changes - a subscription where Android has none.
+- `start(String[] keys, Runnable onChange)` — @return the running watch, or null when the native wait cannot be had on this unit.
+
 ### `RadioMicCapture.java` — 809 lines
 🎙️ Captures cabin acoustic audio via microphone for analogue FM Radio visualization.
 - `onPcmChunk(short[] boosted, short[] raw, int count, float gain)` — One chunk, delivered twice over.
@@ -383,8 +387,10 @@ Validates, repairs, and migrates the wDSP EQ & audio presets database (EqPresets
 - `isCapturing()` — Started, and the read loop is still alive.
 - `firstOnInput()` — Capturing, and nobody was on the input when our recorder opened it - so the input is set up the way we opened it, whoever joined later.
 
-### `RoomMeasurement.java` — 4347 lines
+### `RoomMeasurement.java` — 4468 lines
 Measures the car, one loudspeaker at a time.
+- `measureVolumeFor(int current)` — The volume a pass plays at, given the one set now.
+- `lastMeasureVolume(SharedPreferences prefs)` — Where the loudness curve should be anchored: the volume the car was last measured at, 0 when it was never measured.
 - `subPlace(Context context)` — -1 when nobody has said; the boot is then assumed, as it always was.
 - `pauseMedia(Context context)` — Pauses any active media player using KEYCODE_MEDIA_PAUSE before the sweep.
 - `getMicCompensationCurve(Context context)` — Reads the calibrated 16-band microphone inverse compensation curve from SharedPreferences.
@@ -403,6 +409,7 @@ Measures the car, one loudspeaker at a time.
 - `autoEqPresetName(Result result)` — The name a measurement's preset is saved under - the target curve and the stage, both fixed English (see SoundstageMode), so measuring the same stage again replaces it.
 - `applyAutoEqPreset(Context context, Result result, String presetName)` — Applies the synthesized Auto-EQ preset directly to SharedPreferences and broadcasts to McuService.
 - `runsDir(Context context)` — The folder every run lives under, one subfolder each.
+- `micCalibrationReport(Context context)` — The last microphone calibration's report, kept apart from the runs.
 - `outputDir(Context context)` — The folder holding the measurement being taken, or the last one taken.
 - `hasResult(Context context)` — True when there is a measurement on disk worth sending.
 - `measureAsync(Context context, Listener listener)` — Convenience for the defaults, used by the debug broadcast.
@@ -414,20 +421,20 @@ Asks Magisk for root out loud, instead of finding out in silence that it was nev
 - `checkForMicrophone(Context context)` — The first time in this process that a person switches the microphone on: asks Magisk, and may raise its prompt - that is the point of asking here, on an action, rather than at start.
 - `request(Context context)` — The root card: a person asked for root, so Magisk is asked whatever the last answer was, and its prompt may appear.
 
-### `RtaCurve.java` — 142 lines
+### `RtaCurve.java` — 152 lines
 The live RTA's display model - the author's, from his 1.0 SpectrumAnalyzerView - applied to this branch's measurement (AudioSpectrumEngine#readCurve).
 - `update(float[] contentDb, float[] correctionDb, float rangeDb, long)` — One display frame.
 - `update(float[] contentDb, float[] correctionDb, float rangeDb, long)` — One display frame against a fixed zero.
 - `contentLevelDb(float[] contentDb, float rangeDb)` — The level of a measured curve, as the fixed zero is taken: the dB average of its points that have sound - within rangeDb of the loudest - without any correction, so the equaliser still moves the curve after the zero is f
+- `smoothedDb()` — The curve after the ballistics and before any correction - what the screen draws, in the measurement's dB.
 - `relativeDb()` — The last frame, dB relative to the zero: the average of what had sound, or the fixed one.
 - `reset()` — Forgets the ballistics, as after a stop: the next frame is taken as it is.
 
-### `RtaReference.java` — 62 lines
+### `RtaReference.java` — 59 lines
 The live RTA's fixed zero: the level pink noise reads, taken once and kept (owner, 08.10.2026: calibrate the RTA by pink noise, a fixed zero rather than the frame's floating average - see RtaCurve).
-- `zeroDb()` — The zero to draw against, or NaN when none was taken.
-- `clear()` — Forgets the zero: the curve goes back to the floating average.
+- `zeroDb(boolean microphone)` — The zero of the channel's or the microphone's curve, or NaN when none was taken.
 
-### `ScreensaverManager.java` — 1863 lines
+### `ScreensaverManager.java` — 1920 lines
 A full-screen visualiser that appears when the head unit has been left alone.
 - `isEnabled()` — On unless it has been switched off.
 - `onPreferencesRestored()` — Called when preferences have been restored from backup or migrated.
@@ -449,15 +456,22 @@ Diagnostic-only helper: answers the single question the spectrum engine cannot a
 - `scanAsync(final Context ctx, final int maxCandidates, final int perPro)` — Walks candidate session ids downwards from the platform's current counter and logs every one that carries audio.
 - `probe(int sessionId, int durationMs)` — Attaches a Visualizer to one session, measures it, releases it.
 
-### `SessionResolver.java` — 238 lines
+### `SessionResolver.java` — 301 lines
 Decides which audio session AudioSpectrumEngine should attach its Visualizer to.
 - `onSessionResolved(int sessionId)` — Called off the main thread with a session known to carry audio, or -1 if none found.
 - `start()` — Starts listening for players that announce their session.
 - `forget(int sessionId)` — Drops a session from every cache - call when it stopped delivering audio.
 - `resolveAsync(final String playerPackage, final Callback callback)` — Resolves asynchronously and calls back on a worker thread.
+- `mediaTrackStarted(AudioManager am)` — Whether a media track is started in AudioFlinger - the only thing a Visualizer can be put on.
 
-### `SettingsActivity.java` — 3768 lines
+### `SettingsActivity.java` — 3782 lines
 The settings screen: style and theme, the spectrum's look, the cabin card (speaker layout, cabin size, open or closed, microphone and subwoofer placement), the microphone calibration and the cabin measurement wizard with
+
+### `SourceLevelWatch.java` — 73 lines
+Watches the level the platform stores for every source that is not playing, so a change made somewhere else reaches wDSP's per-source memory instead of being overwritten by it.
+- `poll(String liveType)` — Reads every source but the live one and returns those whose stored level changed since the last read, with the new level.
+- `resync(String liveType)` — Learns every non-live level as it stands, reporting nothing.
+- `note(String type, int level)` — Records a level this service itself wrote for a non-live source, so it is not reported back.
 
 ### `SpeakerLayoutView.java` — 164 lines
 Which speakers the car has, drawn over the measurement's car picture and changed by a tap (owner's plan, 02.10.2026: «комплектація — тап по динаміках»).
@@ -467,6 +481,9 @@ Which speakers the car has, drawn over the measurement's car picture and changed
 The live spectrum behind the equaliser's sliders: the RTA curve (RtaCurve, the author's display model) or the 16 bars, chosen in the settings; on the equaliser's grid, relative to the frame's average or to the fixed zero
 - `shapeOf(android.content.SharedPreferences prefs)` — Reads the stored shape; anything but bars is the curve, the default.
 - `onDraw(@NonNull Canvas canvas)` — 🔴 Owner, 15.09.2026 (option В): the bars are drawn on the equaliser's grid in the equaliser's own decibels, relative to the frame's average.
+
+### `StateEvents.java` — 35 lines
+"Something the sound state is made of may have changed" - one bell for the whole app, so the service's check, the analyser's watchdog and the screensaver look when it rings instead of each on its own clock (owner, 12.10.
 
 ### `StatusBarVisualizerManager.java` — 969 lines
 Manages the Status Bar Visualizer overlay lifecycle, positioning, styling, and audio gating.

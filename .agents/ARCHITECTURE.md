@@ -70,9 +70,29 @@ Hidden-API access is entirely reflective, no root:
 additionally go through a 500 ms throttle (`THROTTLE_MS`) with a trailing write, because dragging a
 slider would otherwise flood the MCU.
 
-### The 100 ms polling loop
+### The volume and player check — run by events, not by a clock
 
-`pollingRunnable` re-posts itself every 100 ms and does three things:
+Since 12–13.10.2026 (owner: «переводь на події, GALA лиши на таймері») `pollingRunnable` has **no idle
+tick**. It runs when something it reads changes, and re-posts itself every 100 ms **only while GALA has
+work in flight** (`fastPollReason()` names why, in the log: GALA above its threshold, a boost applied or
+on its way, our own command not yet echoed, a hand on the knob). What wakes it:
+
+- `StateEvents` — the app's one bell, rung by `PropertyWatch` when a watched property **changes value**
+  (`WATCHED_PROPERTIES`: the source, the four stored levels, mute, call state, sound channel, tuner
+  status, the focus player, what is in front), by `NowPlaying` (a session plays/stops), and by
+  `AudioSpectrumEngine` (AudioFlinger playback starts/stops; the captured signal appears or runs out).
+  The same bell wakes the analyser's watchdog and the screensaver;
+- directly: `VOLUME_CHANGED` / `MUTE_EQ`, `PHONE_CALL_START/END`, GPS speed crossing GALA's threshold
+  (and every fix while the UI is open, for the speedometer).
+
+`PropertyWatch` is a real subscription: a thread sleeps in bionic's `__system_property_wait`
+(`cpp/property_wait.cpp`, API 26+, no root). inotify cannot see properties - they change in shared
+memory - and Java has no listener. The futex wakes on every property set system-wide (~0.8/s on the
+bench, mostly same-value rewrites), so it re-reads only the watched keys and reports a real change.
+**A property the check, the analyser or the screensaver starts reading must be added to
+`WATCHED_PROPERTIES`**, or nothing will wake them for it.
+
+Each pass does three things:
 
 1. `checkVolumeAndGala()` — reads hardware volume; recomputes the Fletcher-Munson / fatigue EQ offsets
    and the sub compensation whenever volume changed; runs GALA (speed-dependent volume) with a
@@ -82,6 +102,15 @@ slider would otherwise flood the MCU.
    and gates the status-bar visualizer (channel 2 = hardware radio, so no PCM to visualize).
 3. `checkForBug()` — firmware workaround: volume 0 while *not* muted is forced to 1, because that
    state can destroy the subwoofer on jitu/haiwai firmware. Do not remove this.
+
+**Per-source volume memory** (`rememberedBase`, by volume type) holds the base each source had when
+it stopped being live, without GALA's boost, and restores it on the way back in, because the platform
+wipes levels at a switch. `SourceLevelWatch` keeps it in step with changes made elsewhere (QF car
+settings write a non-live source's level with no broadcast): a change seen outside a switch is
+somebody else's and is adopted; one seen on the switch is the platform's wipe and is undone. **wDSP
+never writes `persist.*` volumes** (owner: «персисти переписувати НЕ можна») - the platform does,
+on every knob step, for radio, call and AUX (qf-platform 08). **No GALA on a call**: the boost is
+dropped at `btcall_type`, the call starts at its own level.
 
 ### Broadcasts
 
