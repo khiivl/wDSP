@@ -1328,6 +1328,12 @@ public class AudioSpectrumEngine {
                         && isMediaPlaybackActive()) {
                     if (now - lastResolveTime > wait) {
                         requestResolve("attached session silent while media plays");
+                        // A sweep that finds nothing leaves a silent session, and silence never
+                        // rings: look again when the back-off allows, as the old clock did
+                        // (📻 13.10.2026, Bluetooth: one sweep at 00:04:30 and none after).
+                        if (watchdogHandler != null) {
+                            watchdogHandler.postDelayed(this, RESOLVE_RETRY_MS + 100);
+                        }
                     } else if (watchdogHandler != null) {
                         // The back-off is time, not state: look once more when it has run out.
                         watchdogHandler.postDelayed(this, lastResolveTime + wait - now + 100);
