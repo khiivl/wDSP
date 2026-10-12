@@ -123,6 +123,15 @@ public final class NowPlaying {
         if (l != null) {
             main.post(l::onMetadataChanged);
         }
+        Runnable c = this.onChange;
+        if (c != null) main.post(c);
+    }
+
+    /** Told on every change of what plays, or of who plays it - the service's wake-up. */
+    private volatile Runnable onChange;
+
+    public void setOnChange(Runnable listener) {
+        this.onChange = listener;
     }
 
     public void setOnStarted(Runnable listener) {
@@ -569,7 +578,10 @@ public final class NowPlaying {
         title = info.getName();
         artist = info.getArtist();
         album = info.getAlbum();
+        boolean was = playing;
         playing = info.getCurPlayStatus() == QF_STATUS_PLAYING;
+        // Only on the edge: this player repeats its state every second.
+        if (playing != was) notifyMetadataChanged();
         positionMs = info.getCurrTime();
         durationMs = info.getTotalTime();
         positionTakenAt = System.currentTimeMillis();
@@ -731,6 +743,7 @@ public final class NowPlaying {
                 artKey = null;
             }
             PlayerResume.getInstance(context).onPlaybackState("", false);
+            notifyMetadataChanged();
             return;
         }
         controllerCallback = new MediaController.Callback() {

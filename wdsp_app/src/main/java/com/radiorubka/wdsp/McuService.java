@@ -440,6 +440,20 @@ public class McuService extends Service implements LocationListener {
     private volatile PropertyWatch propertyWatch;
     private volatile boolean levelCheckPending;
     private static final long LEVEL_CHECK_DELAY_MS = 300;
+    /**
+     * Every property the poll's decisions read (qf-platform 08 §1): the live source, the four
+     * stored levels, the global mute, the call, the sound channel, the tuner, the focus player.
+     * A property added to checkVolumeAndGala or checkPlayer must be added here too.
+     */
+    private static final String[] WATCHED_PROPERTIES = {
+            "sys.current.vol.type",
+            "sys.media.vol", "sys.radio.vol", "sys.call.vol", "sys.aux.vol",
+            "sys.mute.state",
+            "sys.qf.call_state",
+            "sys.qf.sound.channel",
+            "sys.qf.radio.status",
+            "sys.qf.last_audio_src",
+    };
     private static final String VOL_TYPE_CALL = "btcall_type";
 
     private void initReflection() {
@@ -589,6 +603,9 @@ public class McuService extends Service implements LocationListener {
                     MicrophoneGuard.releaseHold();
                     // Announce here, act on background thread via checkPlayer()
                     backgroundHandler.post(McuService.this::checkPlayer);
+                    // The announcement's watchdog is time, not state: look once when it is due.
+                    backgroundHandler.postDelayed(McuService.this::wakePoll,
+                            CallState.ANNOUNCED_WATCHDOG_MS + 100);
                     return;
                 }
                 if ("com.qf.action.PHONE_CALL_END".equals(action)) {
@@ -855,6 +872,10 @@ public class McuService extends Service implements LocationListener {
         ScreensaverManager.getInstance(this).start();
         // Cheap: one broadcast filter, and media sessions only if the owner has allowed them.
         NowPlaying.getInstance(this).start();
+        // The check runs on events, not on a clock (owner, 12.10.2026) - these two are the ones
+        // that are not properties or vendor broadcasts. See pollingRunnable.
+        NowPlaying.getInstance(this).setOnChange(this::wakePoll);
+        AudioSpectrumEngine.getInstance().setOnSignalAppeared(this::wakePoll);
 
         // Armed here rather than when the diagnostic screen is opened, because the events worth
         // recording - a Bluetooth call taking the audio path and giving it back - happen while
@@ -1172,7 +1193,9 @@ public class McuService extends Service implements LocationListener {
             backgroundHandler.post(pollingRunnable);
         }
         if (propertyWatch == null || !propertyWatch.isRunning()) {
-            propertyWatch = PropertyWatch.start(this::onPropertyChanged);
+            // Learn the stored levels now, or the first change after the start goes unreported.
+            backgroundHandler.post(() -> levelWatch.resync(VolumeHelper.getActivePlayerType()));
+            propertyWatch = PropertyWatch.start(WATCHED_PROPERTIES, this::onPropertyChanged);
             if (propertyWatch == null) Log.e(TAG, "no property subscription: levels set elsewhere will be overwritten");
         }
     }
@@ -1200,25 +1223,23 @@ public class McuService extends Service implements LocationListener {
     private final Runnable levelCheckRunnable = () -> {
         levelCheckPending = false;
         String live = VolumeHelper.getActivePlayerType();
-        // A switch the poll has not taken yet: what moved is the platform's wipe, and the poll's
-        // resync learns it without reporting.
-        if (galavoltype_last == null || !live.equals(galavoltype_last)) {
-            wakePoll();
-            return;
+        // A switch the poll has not taken yet is left to it: what moved is the platform's wipe,
+        // and the poll's resync learns it without reporting.
+        if (galavoltype_last != null && live.equals(galavoltype_last)) {
+            // A source that is not playing changed level: somebody else did it - the car
+            // settings, the radio - so that is the level it returns to. See SourceLevelWatch.
+            for (Map.Entry<String, Integer> change : levelWatch.poll(live).entrySet()) {
+                Integer was = rememberedBase.put(change.getKey(), change.getValue());
+                Log.i(TAG, change.getKey() + " set elsewhere to " + change.getValue()
+                        + " (remembered base was " + was + ")");
+            }
         }
-        // A source that is not playing changed level: somebody else did it - the car settings,
-        // the radio - so that is the level it returns to. See SourceLevelWatch.
-        for (Map.Entry<String, Integer> change : levelWatch.poll(live).entrySet()) {
-            Integer was = rememberedBase.put(change.getKey(), change.getValue());
-            Log.i(TAG, change.getKey() + " set elsewhere to " + change.getValue()
-                    + " (remembered base was " + was + ")");
-        }
+        // The source, the player, the call, the mute and the live level are all properties.
+        wakePoll();
     };
 
     /** While GALA is actually working - see {@link #needsFastPoll()}. */
     private static final long POLL_FAST_MS = 100;
-    /** Otherwise: enough for a player switch, and a safety net under the volume broadcast. */
-    private static final long POLL_IDLE_MS = 1000;
 
     /**
      * 🔴 The poll used to run ten times a second, always. Every pass reads the volume state through
@@ -1231,6 +1252,15 @@ public class McuService extends Service implements LocationListener {
      * com.qf.action.VOLUME_CHANGED after every volume command to the MCU, whoever sent it (one
      * broadcast per RPC_SetVolume, measured 02.10), and MUTE_EQ on mute - those wake the poll at
      * once ({@link #wakePoll()}). The fast pace is kept only while GALA has something in flight.
+     *
+     * <p>🔀 No idle tick any more (owner, 12.10.2026: «переводь на події, GALA лиши на таймері»).
+     * Outside GALA's work the poll runs only when something it reads changes: a property
+     * ({@link PropertyWatch} - the source, its level, the mute, the call state, the sound channel,
+     * the focus player), VOLUME_CHANGED / MUTE_EQ, a call announced or ended, a media session
+     * playing or stopping ({@link NowPlaying#setOnChange}), sound appearing on the captured
+     * session, and speed reaching GALA. What is time and not state is a single delayed look:
+     * the call announcement's watchdog, and the signal running out while the tuner is the
+     * evidence (see checkPlayer).
      */
     private final Runnable pollingRunnable = new Runnable() {
         @Override
@@ -1239,11 +1269,13 @@ public class McuService extends Service implements LocationListener {
             checkVolumeAndGala();
             checkPlayer();
             checkForBug();
-            backgroundHandler.postDelayed(this, needsFastPoll() ? POLL_FAST_MS : POLL_IDLE_MS);
+            if (needsFastPoll()) backgroundHandler.postDelayed(this, POLL_FAST_MS);
         }
     };
 
-    /** Runs the poll now instead of at its next tick. Called on the background thread. */
+    private final Runnable signalExpiryLook = this::wakePoll;
+
+    /** Runs the poll now. Safe from any thread. */
     private void wakePoll() {
         if (!isPolling) return;
         backgroundHandler.removeCallbacks(pollingRunnable);
@@ -1256,13 +1288,31 @@ public class McuService extends Service implements LocationListener {
      * settled needs none of it.
      */
     private boolean needsFastPoll() {
+        String reason = fastPollReason();
+        if (!Objects.equals(reason, lastFastPollReason)) {
+            lastFastPollReason = reason;
+            Log.i(TAG, reason != null ? "fast pace: " + reason : "fast pace off");
+        }
+        return reason != null;
+    }
+
+    private String lastFastPollReason;
+
+    /** Why the poll needs the fast pace, or null when it does not; named for the log. */
+    private String fastPollReason() {
         long now = System.currentTimeMillis();
-        boolean moving = (simulatedSpeedKmh > 0f ? simulatedSpeedKmh : currentSpeedKmh) > 0f;
-        return (isGalaEnabled() && moving)
-                || currentAppliedOffset > 0
-                || pendingTargetOffset != currentAppliedOffset
-                || lastGalaCommandVol != -1
-                || now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS;
+        float speed = simulatedSpeedKmh > 0f ? simulatedSpeedKmh : currentSpeedKmh;
+        // From GALA's own threshold, not from any speed: below it GALA has nothing to do, and
+        // 📻 a parked unit's GPS drifts at 1-6 km/h (bench, 12.10.2026) - "> 0" kept the poll at
+        // ten a second on a standing car. A boost still fading is held by the lines below.
+        if (isGalaEnabled() && speed >= cachedGalaMinV * 5) return "GALA on, above its threshold";
+        if (currentAppliedOffset > 0) return "boost applied";
+        if (pendingTargetOffset != currentAppliedOffset) {
+            return "boost on its way";
+        }
+        if (lastGalaCommandVol != -1) return "own command not yet echoed";
+        if (now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS) return "hand on the knob";
+        return null;
     }
 
 
@@ -2088,9 +2138,16 @@ public class McuService extends Service implements LocationListener {
         // would have caught it - so that guard is gone. See NowPlaying.isRadioSource().
         String soundChannel = HardwareProfile.systemProperty("sys.qf.sound.channel");
 
-        boolean isRadio = !hasSignal && !isPlayingMedia
-                && ("radio_type".equals(activeType) || "2".equals(soundChannel)
-                    || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status")));
+        boolean tunerEvidence = "radio_type".equals(activeType) || "2".equals(soundChannel)
+                || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status"));
+        boolean isRadio = !hasSignal && !isPlayingMedia && tunerEvidence;
+        // The signal running out is time, not an event: the only case where it changes the answer
+        // gets one look when it is due. Rescheduled, not stacked.
+        backgroundHandler.removeCallbacks(signalExpiryLook);
+        if (hasSignal && !isPlayingMedia && tunerEvidence) {
+            backgroundHandler.postDelayed(signalExpiryLook,
+                    AudioSpectrumEngine.getInstance().millisUntilSilence() + 100);
+        }
 
         // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
         // muted when this was measured. The problem is what hiding costs: the widget unregisters
@@ -2639,10 +2696,14 @@ public class McuService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(@NonNull Location location) {
         backgroundHandler.post(() -> {
-            boolean wasMoving = currentSpeedKmh > 0f;
+            int threshold = cachedGalaMinV * 5;
+            boolean wasAbove = currentSpeedKmh >= threshold;
             currentSpeedKmh = location.getSpeed() * 3.6f;
-            // Pulling away is when GALA needs the fast pace again - do not wait for the idle tick.
-            if (!wasMoving && currentSpeedKmh > 0f && isGalaEnabled()) wakePoll();
+            // Crossing GALA's threshold is when it needs the fast pace again; and with the screen
+            // open the speedometer follows every fix - there is no idle tick to carry it any more.
+            if ((!wasAbove && currentSpeedKmh >= threshold && isGalaEnabled()) || isUiVisible) {
+                wakePoll();
+            }
         });
     }
 

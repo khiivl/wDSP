@@ -26,7 +26,7 @@ public final class CallState {
      * How long an announcement stands without the hardware confirming a call. Past it the broadcast
      * is taken as orphaned (a missed PHONE_CALL_END, a dialer crash, a test command).
      */
-    private static final long ANNOUNCED_WATCHDOG_MS = 6000;
+    static final long ANNOUNCED_WATCHDOG_MS = 6000;
 
     /**
      * Set by {@code com.qf.action.PHONE_CALL_START}, cleared by {@code _END} or the watchdog. Written

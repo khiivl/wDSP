@@ -1263,10 +1263,26 @@ public class AudioSpectrumEngine {
         if (waveform == null) return;
         for (byte b : waveform) {
             if (Math.abs((b & 0xFF) - 128) > SIGNAL_THRESHOLD) {
+                boolean was = hasMediaSignalNow();
                 lastSignalTime = System.currentTimeMillis();
+                Runnable l = onSignalAppeared;
+                if (!was && l != null) l.run();
                 return;
             }
         }
+    }
+
+    /** Told when the attached session starts carrying sound after silence; on the capture thread. */
+    private volatile Runnable onSignalAppeared;
+
+    public void setOnSignalAppeared(Runnable listener) {
+        onSignalAppeared = listener;
+    }
+
+    /** How long the signal counts as present without another loud buffer; 0 when it is gone. */
+    public long millisUntilSilence() {
+        if (lastSignalTime == 0) return 0;
+        return Math.max(0, lastSignalTime + SILENCE_TOLERANCE_MS - System.currentTimeMillis());
     }
 
     /**
