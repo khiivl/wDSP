@@ -146,6 +146,14 @@ public final class ScreensaverManager {
      */
     private static final long PAUSE_HOLD_MS = 8000L;
 
+    /**
+     * How long a pause the player itself reports as PAUSED has to last before the clock comes
+     * (owner, 13.10.2026: «чи не можна пришвидшити появу годинника» - it took 4 s of silence plus
+     * {@link #PAUSE_HOLD_MS} after a pause by key). A gap between tracks does not say PAUSED, so this
+     * one is not waited out; the second only lets a pause-and-resume tap pass without a flash.
+     */
+    private static final long EXPLICIT_PAUSE_HOLD_MS = 1000L;
+
     /** The platform names the foreground activity here, as {@code package/class}. */
     /**
      * Said out loud when the screensaver appears and disappears.
@@ -1482,6 +1490,10 @@ public final class ScreensaverManager {
         if (stoppedSince != 0L && now - stoppedSince < PAUSE_HOLD_MS) {
             due = stoppedSince + PAUSE_HOLD_MS - now;           // the clock takes over then
         }
+        long pausedAt = NowPlaying.getInstance(context).pausedSince();
+        if (pausedAt != 0L && now - pausedAt < EXPLICIT_PAUSE_HOLD_MS) {
+            due = Math.min(due, pausedAt + EXPLICIT_PAUSE_HOLD_MS - now);   // or sooner, when PAUSED
+        }
         if (!attached) {
             String foreground = orEmpty(HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY));
             if (whyHeldBack(foreground) == null) {
@@ -1606,6 +1618,9 @@ public final class ScreensaverManager {
         // one a key that reached nobody - no session, or a player that ignores it - would put a
         // clock over music that never stopped.
         if (ownPause && !NowPlaying.getInstance(context).isPlaying()) return true;
+        // The player said PAUSED: a person paused it, by a key, the wheel or the player.
+        long pausedAt = NowPlaying.getInstance(context).pausedSince();
+        if (pausedAt != 0L && System.currentTimeMillis() - pausedAt >= EXPLICIT_PAUSE_HOLD_MS) return true;
         return stoppedSince != 0L && System.currentTimeMillis() - stoppedSince >= PAUSE_HOLD_MS;
     }
 

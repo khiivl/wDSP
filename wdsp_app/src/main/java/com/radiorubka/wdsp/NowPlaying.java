@@ -819,6 +819,17 @@ public final class NowPlaying {
         notifyMetadataChanged();
     }
 
+    /**
+     * When the session's player said, in so many words, that it is PAUSED - a person's pause, by a
+     * key, the wheel or the player itself; 0 while it says anything else. A gap between tracks or
+     * buffering does not say PAUSED, so this is the one stop that need not be waited out.
+     */
+    private long pausedAt = 0L;
+
+    public synchronized long pausedSince() {
+        return controller != null ? pausedAt : 0L;
+    }
+
     private void acceptState(PlaybackState state) {
         if (state == null) return;
         boolean started;
@@ -830,6 +841,8 @@ public final class NowPlaying {
             playing = state.getState() == PlaybackState.STATE_PLAYING;
             positionMs = state.getPosition();
             positionTakenAt = System.currentTimeMillis();
+            if (state.getState() != PlaybackState.STATE_PAUSED) pausedAt = 0L;
+            else if (pausedAt == 0L) pausedAt = positionTakenAt;
             started = playing && !was;
             stopped = !playing && was;
             pkg = playerPackage;
