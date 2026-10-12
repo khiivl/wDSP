@@ -24,6 +24,7 @@ documentation and the behaviour disagree often enough that an unmarked claim is 
 | [AGENTS.md](AGENTS.md) | **read first** — the rules in force: what this project is, how it builds, how it is verified on the unit, the prohibitions, how to work with the owner, and the dependencies |
 | [HANDOFF.md](HANDOFF.md) | one current snapshot, overwritten each session: where things stand, what is in flight with its exact next step, questions for the owner. No history — that is in git |
 | [TODO.md](TODO.md) · [DEBT.md](DEBT.md) | the queue, and the defects that are still open (symptom, where in the code, why deferred). In Ukrainian: the owner reads them |
+| [TESTS.md](TESTS.md) | the acceptance checklist for the 12–13.10 changes (volume memory, property subscription, events instead of ticks), closed in order with the owner; each row has the expected number. In Ukrainian. Delete when every row is closed |
 | [DECISIONS.md](DECISIONS.md) | why each rule in AGENTS.md exists — the episode that produced it and what it cost |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | how the app is put together: the SharedPreferences bus, `McuService`, the 100 ms loop, broadcasts, the measurement probes, who holds the microphone, the UI, the native analyser |
 | [UPSTREAM_0_5.md](UPSTREAM_0_5.md) | 🔴 absorbing the author's 0.5 (`origin/master`, 02.10.2026): every feature he added, where it lands in our code, the decision and the status. Port by feature, never merge; our GALA and `AudioSpectrumEngine` stay |
