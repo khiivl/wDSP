@@ -951,6 +951,10 @@ public final class ScreensaverManager {
      */
     private final Runnable styleButtonLongPress = this::openEqualiserFromStyleButton;
 
+    /** A full second, not the system's long-press timeout (owner, 12.10.2026: «збільши затримку
+     *  … до 1с»). */
+    private static final long STYLE_BUTTON_LONG_PRESS_MS = 1000;
+
     private void openEqualiserFromStyleButton() {
         longPressFired = true;
         noteTouch("long press on the style button -> open the equaliser");
@@ -1025,8 +1029,7 @@ public final class ScreensaverManager {
                     longPressFired = false;
                     handler.removeCallbacks(styleButtonLongPress);
                     if (!previewMode && onStyleButton(event.getX(), event.getY())) {
-                        handler.postDelayed(styleButtonLongPress,
-                                ViewConfiguration.getLongPressTimeout());
+                        handler.postDelayed(styleButtonLongPress, STYLE_BUTTON_LONG_PRESS_MS);
                     }
                 }
                 detector.onTouchEvent(event);
