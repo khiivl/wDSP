@@ -428,10 +428,15 @@ public class McuService extends Service implements LocationListener {
     private static final long MCU_WAIT_MS = 20000;
     private static final long BOOT_POLL_MS = 100;
 
-    private int media_standstill = -1;
-    private int btcall_standstill = -1;
-    private int aux_standstill = -1;
-    private int radio_standstill = -1;
+    /**
+     * The base each source had when it last stopped being live, by volume type - the level the
+     * person chose, without GALA's boost. Restored on the way back in, because the platform wipes
+     * levels at a switch (see checkVolumeAndGala). Kept in step with changes made elsewhere by
+     * {@link #levelWatch}; absent = never left, the platform's level is taken as it is.
+     */
+    private final Map<String, Integer> rememberedBase = new HashMap<>();
+    private final SourceLevelWatch levelWatch = new SourceLevelWatch();
+    private static final String VOL_TYPE_CALL = "btcall_type";
 
     private void initReflection() {
         try {
@@ -1355,9 +1360,9 @@ public class McuService extends Service implements LocationListener {
         if (!VolumeHelper.setVolumeForType(other, base)) return;
 
         // Keep our own remembered base for that source in step, or the next switch would restore
-        // the figure we have just superseded.
-        if (VOL_TYPE_MEDIA.equals(other)) media_standstill = base;
-        else radio_standstill = base;
+        // the figure we have just superseded - and tell the watch it was us.
+        rememberedBase.put(other, base);
+        levelWatch.note(other, base);
 
         Log.i(TAG, "volume sync: " + currentType + " base " + base + " carried to " + other);
     }
@@ -1610,57 +1615,24 @@ public class McuService extends Service implements LocationListener {
             // and the base volume is already established
             if (baseStandstillVolume != -1) {
                 // save the last standstill volume recorded by the algorithm
-                if (galavoltype_last.equals("media_type")) {
-                    media_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("btcall_type")) {
-                    btcall_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("aux_type")) {
-                    aux_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("radio_type")) {
-                    radio_standstill = baseStandstillVolume;
-                }
-                // set the base volume to the last known volume for this type
-                // if not known, set to current for this type
-                if (galavoltype.equals("media_type")) {
-                    if (media_standstill != -1) {
-                        baseStandstillVolume = media_standstill;
-                    }
-                    else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
-                    }
-                }
-                if (galavoltype.equals("btcall_type")) {
-                    if (btcall_standstill != -1) {
-                        baseStandstillVolume = btcall_standstill;
-                    }
-                    else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
-                    }
-                }
-                if (galavoltype.equals("aux_type")) {
-                    if (aux_standstill != -1) {
-                        baseStandstillVolume = aux_standstill;
-                    }
-                    else {
-                        // The other three sources all fall back to the live volume here, and the
-                        // omission was doing real harm: switching to AUX for the first time in a
-                        // session left the base belonging to whatever played before it. GALA then
-                        // added its offset to somebody else's base - too loud if the previous
-                        // source was louder, silent if it was quieter.
-                        baseStandstillVolume = VolumeHelper.getVolume();
-                    }
-                }
-                if (galavoltype.equals("radio_type")) {
-                    if (radio_standstill != -1) {
-                        baseStandstillVolume = radio_standstill;
-                    }
-                    else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
-                    }
-                }
+                rememberedBase.put(galavoltype_last, baseStandstillVolume);
+                // The base this source had when it last left, or, never left, its live level.
+                // Never the previous source's base: AUX once kept it, and GALA then added its
+                // offset to somebody else's base - too loud or silent.
+                Integer kept = rememberedBase.get(galavoltype);
+                baseStandstillVolume = (kept != null) ? kept : VolumeHelper.getVolume();
+            }
+            // Whatever the other sources hold now was set by this switch - the platform's wipe,
+            // which the restore below undoes - not by a person.
+            levelWatch.resync(galavoltype);
+
+            // 🔴 No GALA on a call (owner, 12.10.2026: on calls the volume is not touched). The
+            // call starts at its own level; the boost is dropped here, not faded out, and is not
+            // carried back - the source after the call fades it in again from the speed.
+            if (VOL_TYPE_CALL.equals(galavoltype)) {
+                currentAppliedOffset = 0;
+                pendingTargetOffset  = 0;
+                lastGalaTier         = 0;
             }
 
             // 🔴 Put the level back, because the platform has just thrown it away.
@@ -1710,6 +1682,14 @@ public class McuService extends Service implements LocationListener {
                     return;
                 }
             }
+        } else {
+            // A source that is not playing changed level: somebody else did it - the car
+            // settings, the radio - so that is the level it returns to. See SourceLevelWatch.
+            for (Map.Entry<String, Integer> change : levelWatch.poll(galavoltype).entrySet()) {
+                Integer was = rememberedBase.put(change.getKey(), change.getValue());
+                Log.i(TAG, change.getKey() + " set elsewhere to " + change.getValue()
+                        + " (remembered base was " + was + ")");
+            }
         }
 
         // 🔴 Remember the source here rather than at the foot of this method, because two branches
@@ -1758,7 +1738,10 @@ public class McuService extends Service implements LocationListener {
         // 2. PRE-CALCULATE RAW OFFSET: What should the GALA boost be at the current speed?
         int rawOffset = 0;
         int minSpeed = cachedGalaMinV * 5;
-        if (isGalaEnabled()) {
+        // Not on a call, whatever the preset says: the Call preset disables GALA too, but it loads
+        // a poll or more after the call begins.
+        final boolean galaOn = isGalaEnabled() && !VOL_TYPE_CALL.equals(galavoltype);
+        if (galaOn) {
             int speedIncrement = Math.max(1, cachedGalaInc + 5);
             if (speed >= minSpeed) {
                 rawOffset = (int) ((speed - minSpeed) / speedIncrement);
@@ -1860,7 +1843,7 @@ public class McuService extends Service implements LocationListener {
             lastGalaCommandVol = -1; // user overrides any pending command
             lastAppliedVolume = hardwareVol;
 
-            boolean isGalaActiveAtSpeed = isGalaEnabled() && (speed >= minSpeed) && (rawOffset > 0);
+            boolean isGalaActiveAtSpeed = galaOn && (speed >= minSpeed) && (rawOffset > 0);
 
             if (isGalaActiveAtSpeed && baseStandstillVolume >= 0) {
                 int desiredBoost = hardwareVol - baseStandstillVolume;
@@ -1922,7 +1905,7 @@ public class McuService extends Service implements LocationListener {
         boolean userAdjusting = (now - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS);
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
-        if (isGalaEnabled()) {
+        if (galaOn) {
             int targetWithTrim = Math.max(0, rawOffset + galaUserTrim);
 
             // 6a. HOLD-TIMER: Has the tier changed?
