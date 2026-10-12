@@ -1757,7 +1757,8 @@ public class AudioSpectrumEngine {
             }
             lastCaptureTime = now;
 
-            if (mic != null) alignMicrophoneToCalculated(mic, tap);
+            // On radio the tap is only the witness and hears nothing: the microphone is drawn alone.
+            if (mic != null) alignMicrophoneToCalculated(mic, onRadioPath ? null : tap);
 
             for (int consumer = 0; consumer <= 1; consumer++) {
                 // Nobody is looking at this one - every call below is a lock taken away from the
@@ -2133,6 +2134,13 @@ public class AudioSpectrumEngine {
         return micAnalysing && micAnalyzer != null && radioMicCapture.isCapturing();
     }
 
+    /**
+     * The source switch last chose the radio: the microphone is drawn alone and the tap, kept
+     * running, is only the witness that hears the player come back. Set by startInternal and
+     * checkSourceState, read by the frame loop - one switch, one flag.
+     */
+    private volatile boolean onRadioPath;
+
     private boolean isRadioSourceNow() {
         return appContext != null && NowPlaying.getInstance(appContext).isRadioSource();
     }
@@ -2375,29 +2383,33 @@ public class AudioSpectrumEngine {
 
         if (isRadio) {
             if (wantsMicPipeline(true)) {
-                if (visualizer != null || !isMicPipelineRunning()) {
+                if (!onRadioPath || !isMicPipelineRunning()) {
                     Log.i(TAG, "Source is Radio - switching to calibrated mic capture pipeline");
                     startInternal(currentSessionId);
                 }
             } else {
-                if (isMicPipelineRunning() || visualizer != null) {
-                    Log.i(TAG, "Source is Radio (the radio microphone toggle is off) - stopping active capture");
+                if (isMicPipelineRunning() || !onRadioPath) {
+                    // The tap is kept as the witness - see startInternal.
+                    Log.i(TAG, "Source is Radio (the radio microphone toggle is off) - microphone stopped, tap kept as the witness");
+                    onRadioPath = true;
+                    stopMicAnalysis();
                     stopRadioMicCapture();
-                    stopNativeCapture();
-                    if (visualizer != null) {
-                        try {
-                            visualizer.setEnabled(false);
-                            visualizer.release();
-                        } catch (Throwable ignored) {}
-                        visualizer = null;
-                    }
                 }
             }
         } else {
+            boolean leavingRadio = onRadioPath;
+            onRadioPath = false;
+            // Back from the radio, the tap may be missing (an older path released it) - the
+            // calculated spectrum and the microphone's reference both need it.
+            if (visualizer == null || nativeAnalyzer == null) {
+                attachKnownSessionOrResolve("source switched to audioflinger");
+            }
             if (wantsMicPipeline(false)) {
                 if (!isMicPipelineRunning()) {
                     Log.i(TAG, "Spectrum mode is MIC - switching to mic capture pipeline");
                     startInternal(currentSessionId);
+                } else if (leavingRadio) {
+                    Log.i(TAG, "Source switched to AudioFlinger - microphone now aligned to the tap again");
                 }
             } else {
                 if (isMicPipelineRunning()) {
@@ -2406,9 +2418,6 @@ public class AudioSpectrumEngine {
                     Log.i(TAG, "Source switched to AudioFlinger - restoring PCM capture");
                     stopMicAnalysis();
                     stopRadioMicCapture();
-                    if (visualizer == null || nativeAnalyzer == null) {
-                        attachKnownSessionOrResolve("source switched to audioflinger");
-                    }
                 }
             }
         }
@@ -2437,9 +2446,16 @@ public class AudioSpectrumEngine {
         boolean wantMic = wantsMicPipeline(isRadio);
 
         if (isRadio) {
-            // No PCM: no tap to keep, and the microphone - if it is wanted - is drawn alone.
-            releaseVisualizer();
-            stopVisualizerPipeline();
+            // No PCM, and the microphone - if it is wanted - is drawn alone. But the tap stays, as
+            // the witness: "it is not the radio" is decided by hearing the player's signal, and with
+            // the tap released nothing could ever hear it again. 📻 13.10.2026: the factory FM app
+            // left sys.qf.radio.status true after it closed, and the analyser stayed on "radio"
+            // for good - the main screen froze while music played (owner chose this fix).
+            onRadioPath = true;
+            if (visualizer == null || nativeAnalyzer == null) {
+                releaseVisualizer();
+                attachVisualizer(sessionId);
+            }
             if (wantMic) {
                 if (!isMicPipelineRunning()) startRadioMicPipeline();
             } else {
@@ -2449,6 +2465,7 @@ public class AudioSpectrumEngine {
             return;
         }
 
+        onRadioPath = false;
         // A PCM source: the tap runs whatever the mode. It is the calculated spectrum, and in the
         // microphone mode the reference the microphone is aligned to (owner's option (b)) - so it is
         // attached first, and a return to the calculated mode only has to stop the microphone.
