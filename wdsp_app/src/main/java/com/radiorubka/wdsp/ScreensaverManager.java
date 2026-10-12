@@ -634,8 +634,16 @@ public final class ScreensaverManager {
         setOscPersistence(style(), persistence);
     }
 
+    /**
+     * Normalised or absolute is the widget's choice, whatever style the screensaver draws (owner,
+     * 13.10.2026: «заставка забавка, як і віджет, і повинна наслідувати віджет»). It used to be read
+     * for the screensaver's own style, which had no setting and fell to the default - absolute - so on
+     * radio, where the microphone is drawn alone and unaligned, the screensaver showed the capsule's
+     * raw levels while the widget showed proper peaks. {@code s} is kept for the callers; unused.
+     */
     public boolean normalizationEnabled(int s) {
-        return StatusBarVisualizerManager.getInstance(context).getNormalizationForStyle(s);
+        StatusBarVisualizerManager widget = StatusBarVisualizerManager.getInstance(context);
+        return widget.getNormalizationForStyle(widget.getStyle());
     }
 
     public boolean normalizationEnabled() {
