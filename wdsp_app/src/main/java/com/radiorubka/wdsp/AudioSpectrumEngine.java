@@ -1275,6 +1275,8 @@ public class AudioSpectrumEngine {
         noteSignalEdges();
     }
 
+    private final Runnable signalRunsOut = this::noteSignalEdges;
+
     private volatile boolean reportedMediaSignal;
     private volatile boolean reportedAnySignal;
 
@@ -1978,7 +1980,10 @@ public class AudioSpectrumEngine {
     private boolean isAnythingAudible() {
         if (appContext == null) return true;
         NowPlaying now = NowPlaying.getInstance(appContext);
-        if (now.isRadioSource()) return now.isPlaying();
+        // The tuner: the microphone hears it, so with the toggle on there is always something to
+        // listen to. Not the radio app's session - the factory one says "not playing" while the
+        // tuner sounds (📻 13.10.2026: paused at 01:09:02 and 01:10:06 with the radio on).
+        if (now.isRadioSource()) return (radioMicVisualizerEnabled && canRunMic()) || now.isPlaying();
         if ("aux_type".equals(VolumeHelper.getActivePlayerType())) return true;   // analogue, no PCM
         if (audioManager == null) return true;
         try {
@@ -2005,6 +2010,15 @@ public class AudioSpectrumEngine {
         if (idle) {
             Log.i(TAG, "nothing audible: analysis paused, microphone kept, bars dropped");
             dispatchSilenceFrame();
+            // Paused, no buffers come, so the signal can no longer run out by itself: the last
+            // sound would count as present for good and the source stay "media" (📻 13.10.2026: the
+            // radio was taken for the player before it for 58 s). One look when it runs out.
+            long left = Math.max(lastSignalTime, lastMicSignalTime) + SILENCE_TOLERANCE_MS
+                    - System.currentTimeMillis();
+            if (left > 0 && watchdogHandler != null) {
+                watchdogHandler.removeCallbacks(signalRunsOut);
+                watchdogHandler.postDelayed(signalRunsOut, left + 50);
+            }
         } else {
             Log.i(TAG, "playback: analysis resumed");
         }
@@ -2128,13 +2142,14 @@ public class AudioSpectrumEngine {
      *
      * <p>One function for a decision that was written out twice - in startInternal and
      * checkSourceState - and is now needed a third time in start, so that "already running what it
-     * should" and "what to start" cannot drift apart. On radio there is no PCM at all, so the widget alone is reason enough to use the
-     * microphone; on a PCM source only the chosen mode is.
+     * should" and "what to start" cannot drift apart. On radio there is no PCM at all, so the
+     * microphone is the only thing that can hear it - and on radio the settings toggle alone decides,
+     * not the display mode or the calibration (owner, 13.10.2026: «не повинно залежати від режиму -
+     * мік чи розрахунковий, а хіба від тогла в налаштуваннях»). On a PCM source the chosen mode does.
      */
     private boolean wantsMicPipeline(boolean isRadio) {
         if (!canRunMic()) return false;
-        boolean micMode = micModeInEffect();
-        return isRadio ? (micMode || radioMicVisualizerEnabled) : micMode;
+        return isRadio ? radioMicVisualizerEnabled : micModeInEffect();
     }
 
     /** Schedules the silence watchdog. Safe to call repeatedly; it never stacks. */
@@ -2366,7 +2381,7 @@ public class AudioSpectrumEngine {
                 }
             } else {
                 if (isMicPipelineRunning() || visualizer != null) {
-                    Log.i(TAG, "Source is Radio (mic uncalibrated / mode calc) - stopping active capture");
+                    Log.i(TAG, "Source is Radio (the radio microphone toggle is off) - stopping active capture");
                     stopRadioMicCapture();
                     stopNativeCapture();
                     if (visualizer != null) {
