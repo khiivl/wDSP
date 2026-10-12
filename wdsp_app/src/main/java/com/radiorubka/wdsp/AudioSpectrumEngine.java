@@ -1321,6 +1321,9 @@ public class AudioSpectrumEngine {
                         : RESOLVE_COOLDOWN_MS;
                 // The tap runs in the microphone mode too, as its reference, so a silent session is
                 // re-resolved whatever the mode. On radio isMediaPlaybackActive() is false.
+                // 🔴 Kept even while paused for silence (owner, 13.10.2026: «ні … причина, БТ
+                // трансляція, наприклад»): Bluetooth music plays past AudioFlinger's playback list,
+                // so "nothing audible" can be wrong exactly when a session must still be found.
                 if (visualizer != null && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && isMediaPlaybackActive()) {
                     if (now - lastResolveTime > wait) {

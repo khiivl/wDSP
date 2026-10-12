@@ -1464,11 +1464,14 @@ public final class ScreensaverManager {
         }
     };
 
-    /** Rung by StateEvents on any thread: look now, on the main one. */
-    private final Runnable lookNow = () -> handler.post(() -> {
+    /**
+     * Rung by StateEvents on any thread: look now, on the main one. One look per burst - a pause
+     * rang it ten times in 50 ms (bench, 13.10.2026), and each used to queue a look of its own.
+     */
+    private final Runnable lookNow = () -> {
         handler.removeCallbacks(poll);
-        poll.run();
-    });
+        handler.post(poll);
+    };
 
     /** Arms the one timer there is: the nearer of the idle delay and the pause hold, if either. */
     private void scheduleNextLook() {
