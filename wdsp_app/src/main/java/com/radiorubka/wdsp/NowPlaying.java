@@ -459,6 +459,8 @@ public final class NowPlaying {
      *       decides, anything else says nothing. It reads reliably only where the BitPerfect
      *       policies are installed and wanders on a factory unit, but the asymmetry costs nothing:
      *       a stray 2 while music plays never gets here, because there is signal.</li>
+     *   <li><b>The focus owner</b> ({@code sys.qf.last_audio_src}, written by the platform's focus
+     *       control): a non-radio player there means the radio flag is stale.</li>
      *   <li><b>The radio flag</b>, which the radio app now sets properly.</li>
      * </ol>
      *
@@ -475,7 +477,21 @@ public final class NowPlaying {
         if (AudioSpectrumEngine.getInstance().hasMediaSignalNow()) return false;
 
         if (CHANNEL_RADIO.equals(HardwareProfile.systemProperty(PROP_SOUND_CHANNEL))) return true;
+        if (focusHeldByOtherPlayer()) return false;
         return isTrue(HardwareProfile.systemProperty(PROP_RADIO_STATUS));
+    }
+
+    /**
+     * The audio focus belongs to a player that is not a radio app. Evidence against the radio flag
+     * only, never for it: a radio package proves nothing (it plays streams too), "nothing" proves
+     * nothing. 📻 13.10.2026: the factory FM woke after sleep, YouTube Music took the focus and was
+     * paused - {@code sys.qf.radio.status} stayed true, and with no signal on the pause the
+     * screensaver drew the cabin microphone instead of the clock.
+     */
+    private static boolean focusHeldByOtherPlayer() {
+        String owner = HardwareProfile.systemProperty(PROP_AUDIO_SRC);
+        return owner != null && !owner.isEmpty() && !"nothing".equalsIgnoreCase(owner)
+                && !isRadioPackage(owner);
     }
 
     private static boolean isTrue(String s) {
