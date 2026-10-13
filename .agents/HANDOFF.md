@@ -21,6 +21,10 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
+**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): the volume table inside the wizard,
+the mic-mode visualizer from the table instead of AGC, absolute calc mode, bench checks, the 20 Hz rule.
+
+
 1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
    resolver gate `SessionResolver.sweep`): + to + → −1, advice, control sweep SUMMED_CANCELLATION
    (+8.4 dB if flipped); + to − → +1, SUMMED_OK. Fact in MEASURED_FACTS "Subwoofer timing". Left: the
