@@ -1535,6 +1535,8 @@ public final class RoomMeasurement {
          * is summed from. Null for a channel not swept.
          */
         public float[][] impulses;
+        /** How much louder the sub's narrower sweep reads than the doors' - its impulse is that much too loud. */
+        public float subImpulseOffsetDb;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
         /** What the platform answered when the sweep asked to be the player. */
@@ -2523,6 +2525,7 @@ public final class RoomMeasurement {
                 // Its narrower sweep reads louder by the ratio of the spans (levelOffsetDbAgainst);
                 // signal and noise move together, so the SNR is untouched.
                 final float off = subSweep.levelOffsetDbAgainst(sweep);
+                result.subImpulseOffsetDb = off;
                 for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
                     cr.bandsDb[b] -= off;
                     cr.noiseBandsDb[b] -= off;

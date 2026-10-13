@@ -86,6 +86,10 @@ final class ControlSweep {
         public float residualDb = Float.NaN;
         public float flipGainDb = Float.NaN;
         public float peakDbfs = Float.NEGATIVE_INFINITY;
+        /** The combined sweep's impulse on the same time base as the speakers', for the dump. */
+        float[] combinedImpulse;
+        /** How much louder the combined (15 Hz) sweep reads than the doors' (20 Hz). */
+        float combinedOffsetDb;
         public int clipped;
         public String error;
 
@@ -201,6 +205,10 @@ final class ControlSweep {
         // Its wider sweep (from 15 Hz) reads quieter than the doors' by the ratio of the spans, as the
         // sub's narrower one reads louder; on the doors' scale, the speakers' own sweeps are comparable.
         final float off = sweep.levelOffsetDbAgainst(doorSweep);
+        final float[] imp = new float[got];
+        final int impLen = sweep.deconvolve(signal, got, imp);
+        out.combinedImpulse = impLen > 0 ? Arrays.copyOf(imp, impLen) : null;
+        out.combinedOffsetDb = off;
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
             out.combined16[b] = a[NativeSweep.BANDS + b] - off;
             out.noise16[b] = a[NativeSweep.NOISE_BANDS + b] - off;
@@ -264,7 +272,9 @@ final class ControlSweep {
         final float hpfFront = DspResponse.doorHpfHz(x[0]);
         final float hpfRear = DspResponse.doorHpfHz(x[1]);
         final float subLpf = DspResponse.SUB_FREQS_HZ[x[2]];
-        final double subGain = Math.pow(10.0, (Math.max(0, Math.min(12, x[3])) - RoomMeasurement.SUB_PASS_GAIN_DB) / 20.0);
+        // The preset's gain over the pass's, and the sub's narrower sweep's extra level out of its impulse.
+        final double subGain = Math.pow(10.0, (Math.max(0, Math.min(12, x[3])) - RoomMeasurement.SUB_PASS_GAIN_DB
+                - m.subImpulseOffsetDb) / 20.0);
         final boolean delays = out.preset != null && prefs.getBoolean(out.preset + "_d_en", false);
         final int sr = RoomMeasurement.SAMPLE_RATE;
 
@@ -291,6 +301,7 @@ final class ControlSweep {
         final double[][] reD = new double[n][POINTS_PER_THIRD], imD = new double[n][POINTS_PER_THIRD];
         final double[][] reS = new double[n][POINTS_PER_THIRD], imS = new double[n][POINTS_PER_THIRD];
         final double[][] energy = new double[n][POINTS_PER_THIRD];
+        final java.util.List<Object[]> dump = new java.util.ArrayList<>();
         for (RoomMeasurement.Channel ch : all) {
             final int o = ch.ordinal();
             if (!usable(m, o)) continue;
@@ -301,6 +312,7 @@ final class ControlSweep {
             final double gain = isSub ? subGain : 1.0;
             final double delaySec = delays ? prefs.getInt(out.preset + "_d_" + delayKey(ch), 0)
                     * RoomMeasurement.DELAY_STEP_MS / 1000.0 : 0.0;
+            dump.add(new Object[]{ch.name(), seg, gain, delaySec});
             for (int i = 0; i < n; i++) {
                 final double fc = NativeSweep.thirdCentreHz(i);
                 if (fc > COMPLEX_TOP_HZ) break;
@@ -331,6 +343,11 @@ final class ControlSweep {
                 }
             }
         }
+        if (out.combinedImpulse != null && out.combinedImpulse.length >= to) {
+            dump.add(new Object[]{"COMBINED", Arrays.copyOfRange(out.combinedImpulse, from, to),
+                    Math.pow(10.0, -out.combinedOffsetDb / 20.0), 0.0});
+        }
+        writeDump(m, dump, from);
         for (int i = 0; i < n; i++) {
             if (NativeSweep.thirdCentreHz(i) > COMPLEX_TOP_HZ || Float.isNaN(out.forecastThirds[i])) continue;
             double plus = 0, minus = 0, e = 0;
@@ -344,6 +361,34 @@ final class ControlSweep {
             if (e <= 0 || plus <= 0 || minus <= 0) continue;
             out.complexAsIs[i] = out.forecastThirds[i] + (float) (10.0 * Math.log10(plus / e));
             out.complexFlipped[i] = out.forecastThirds[i] + (float) (10.0 * Math.log10(minus / e));
+        }
+    }
+
+    /**
+     * Each speaker's impulse in the preset's state, and the combined one, for checking the complex
+     * forecast off the unit: control_impulses.txt names them, control_impulses.f32 holds them
+     * (float32 little-endian, one after another, already in the preset's state but before gain and delay).
+     */
+    private static void writeDump(RoomMeasurement.Result m, java.util.List<Object[]> dump, int from) {
+        if (m.reportPath == null) return;
+        final java.io.File dir = new java.io.File(m.reportPath).getParentFile();
+        final StringBuilder txt = new StringBuilder("# name samples gain delay_s (from sample " + from
+                + " of the common base, 48000 Hz)\n");
+        try (java.io.DataOutputStream bin = new java.io.DataOutputStream(new java.io.BufferedOutputStream(
+                new java.io.FileOutputStream(new java.io.File(dir, "control_impulses.f32"))))) {
+            for (Object[] d : dump) {
+                final float[] seg = (float[]) d[1];
+                txt.append(String.format(Locale.US, "%s %d %.6f %.6f\n", d[0], seg.length, (double) d[2], (double) d[3]));
+                for (float v : seg) bin.writeInt(Integer.reverseBytes(Float.floatToIntBits(v)));
+            }
+        } catch (IOException e) {
+            Log.w(TAG, "could not write the impulse dump", e);
+            return;
+        }
+        try (FileWriter w = new FileWriter(new java.io.File(dir, "control_impulses.txt"))) {
+            w.write(txt.toString());
+        } catch (IOException e) {
+            Log.w(TAG, "could not write the impulse dump", e);
         }
     }
 
