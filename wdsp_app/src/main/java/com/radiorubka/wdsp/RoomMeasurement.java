@@ -427,43 +427,61 @@ public final class RoomMeasurement {
     /** How far either way the subwoofer may sit from the doors in that band. */
     private static final float SUB_ALIGN_MAX_LAG_MS = 25f;
     /**
-     * A correlation peak at least this share of the strongest one is a candidate. In a band this narrow
-     * the correlation repeats every period (12.5 ms at 80 Hz) and every repeat is in phase at the
-     * crossover - and inverted every half period, which reads the same as the opposite polarity, so
-     * peaks of both signs are candidates (13.10.2026); the strongest is usually one cycle late, pulled by the sub's group delay. Of the
-     * candidates the one nearest the geometry wins - the path difference the cabin card gives: the
-     * candidates are a whole period apart, so even a rough card picks the right one. Until 08.10.2026 the
-     * share was 0.8 and the winner the candidate nearest zero; on the bench the in-phase peak at +0.9 ms
-     * (geometry +0.97) fell under 0.8, +13.5 ms won, and the doors were delayed 11.8 and 13.4 ms - four
-     * metres - to wait for the sub (owner: "дикі затримки каналів по чотири метри, а саб 0").
-     * At 0.5 the same happened on 09.10.2026: candidates +13.33 (1.00) and +24.19 (0.70), the early one
-     * under the floor, the doors delayed 12.0 and 13.4 ms. The strongest peak is not a later arrival:
-     * the sub's filter chain (the chip's low-pass, an amplifier's own on op-amps, a bass boost, the box)
-     * turns its phase by a whole cycle at the crossover, which this band cannot tell from 12.5 ms of time,
-     * and the filters' group delay only leans the envelope that way (+13.33 - 12.5 = +0.83 against the
-     * geometry's +0.97). So the floor only keeps noise out; the geometry chooses (owner: "роби").
+     * How far either way of the geometry the sub's lag is looked for: under a quarter period at 80 Hz
+     * (half a period is 6.25 ms), so the window holds one lobe and an inverted sub cannot pass for one
+     * moved half a period. The geometry centres it (owner, 09.10.2026: «роби») - the strongest lobe sits
+     * a cycle late, pulled by the sub chain's group delay, and aligning that delayed both doors 12-13 ms
+     * («дикі затримки … по чотири метри»). History of the candidate rule: MEASURED_FACTS.md "Subwoofer
+     * timing"; the window: research/RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md (±3.0 ms).
      */
-    private static final float SUB_ALIGN_CANDIDATE_SHARE = 0.2f;
+    private static final float SUB_ALIGN_WINDOW_MS = 3.0f;
     /** Below this normalised correlation the sub's alignment is reported, not trusted. */
     private static final float SUB_ALIGN_MIN_CORRELATION = 0.5f;
+
+    /** The sub's low-pass a preset gets with this door high-pass: the same frequency (synthesizeAutoEq16). */
+    static int presetSubLpfIdx(float doorHpfHz) {
+        return DspResponse.nearestSubLpfIndex(doorHpfHz > 0 ? doorHpfHz : SUB_ALIGN_CENTRE_HZ);
+    }
+
+    /**
+     * Moves an impulse into the state the preset plays it in: a door through the preset's high-pass
+     * (it was swept with none), the subwoofer from the 160 Hz low-pass of its pass to the preset's.
+     * Causal, so the phase is the chip's ({@link Biquad}).
+     */
+    static void toPresetState(float[] impulse, boolean subwoofer, float doorHpfHz, float subLpfHz) {
+        if (subwoofer) {
+            Biquad.filter(impulse, Biquad.retuneLowPass(
+                    DspResponse.SUB_FREQS_HZ[SUB_PASS_LPF_IDX], subLpfHz, Biquad.Q, SAMPLE_RATE));
+        } else if (doorHpfHz > 0) {
+            Biquad.filter(impulse, Biquad.highPass(doorHpfHz, Biquad.Q, SAMPLE_RATE));
+        }
+    }
 
     /**
      * Times the subwoofer against the doors where the two actually meet: around the crossover, not by the
      * peak of its impulse. A sub's impulse is a low-passed, blunt thing whose peak sits at its group delay -
      * on the owner's bench, 07.10.2026, 16 ms after the front right although it stands right under it - and
      * aligning that peak would have delayed both doors by 15 ms. What matters to the listener is that the
-     * two add up in the band they share. So both impulses go through the same octave-wide band-pass at
-     * the crossover the measurement chose for the doors ({@link #SUB_ALIGN_CENTRE_HZ} without one) and
-     * the lag of their best correlation, within
-     * {@link #SUB_ALIGN_MAX_LAG_MS}, becomes the sub's arrival relative to the anchor; its sign is the
-     * sub's polarity against the doors there. The same filter on both keeps their relative phase, which
-     * is all this reads. Confidence is the correlation itself - clarity means nothing for a band-limited
-     * impulse. The method REW calls "aligning the sub with the mains".
+     * two add up in the band they share. The method REW calls "aligning the sub with the mains".
+     *
+     * <p>🔴 In the state the person listens in (owner, 13.10.2026: «роби»). Both impulses were recorded
+     * through the measurement's own settings - the doors with no high-pass, the sub through 160 Hz - and
+     * the preset's 80 Hz pair turns them about 130° against each other at the crossover (a 2nd-order
+     * high-pass and low-pass are 180° apart at every frequency). Read there, the sign came out the wrong
+     * way round: 📻 the bench, 13.10, sub wired + to + read +1, and with the preset the pair cancelled -
+     * the combined 80 Hz band 6 dB under the sub inverted. So each impulse first goes into the preset's
+     * state ({@link #toPresetState}), then both through the same octave band-pass at the crossover
+     * ({@link #SUB_ALIGN_CENTRE_HZ} without one). The strongest correlation within
+     * {@link #SUB_ALIGN_WINDOW_MS} of the geometry gives the lag - the sub's arrival against the anchor -
+     * and its sign the sub's polarity against the doors there: -1 means the two cancel and its phase
+     * switch wants turning. Confidence is the correlation at its strongest anywhere - clarity means
+     * nothing for a band-limited impulse.
      */
     private static void alignSubwooferAtCrossover(Result result, int refIdx, float[][] impulses) {
         final int subIdx = Channel.SUBWOOFER.ordinal();
         if (refIdx < 0 || result.channels.length <= subIdx) return;
         final float centreHz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : SUB_ALIGN_CENTRE_HZ;
+        final float subLpfHz = DspResponse.SUB_FREQS_HZ[presetSubLpfIdx(result.midbassHpfFreqHz)];
         final ChannelResult sub = result.channels[subIdx];
         final ChannelResult anchor = result.channels[refIdx];
         final float[] a = impulses[refIdx];
@@ -477,6 +495,8 @@ public final class RoomMeasurement {
         if (to - from <= 2 * maxLag) return;
         final float[] fa = java.util.Arrays.copyOfRange(a, from, to);
         final float[] fb = java.util.Arrays.copyOfRange(b, from, to);
+        toPresetState(fa, false, result.midbassHpfFreqHz, subLpfHz);
+        toPresetState(fb, true, result.midbassHpfFreqHz, subLpfHz);
         bandPassBothWays(fa, centreHz);
         bandPassBothWays(fb, centreHz);
         double ea = 0, eb = 0;
@@ -499,43 +519,34 @@ public final class RoomMeasurement {
                 strongestLag = lag;
             }
         }
-        // Of the peaks strong enough (SUB_ALIGN_CANDIDATE_SHARE), of EITHER sign, the one nearest the
-        // geometry; its sign is the polarity. In a band this narrow an inverted sub reads the same as
-        // one half a period away, so the strongest peak cannot decide the sign either. 📻 13.10.2026,
-        // the same bench, only the volume two steps apart: strongest -0.44 at +11.58 ms gave polarity
-        // -1 at -0.79 ms, strongest +0.31 at +16.81 ms gave +1 at -7.23 ms - the peak half a period
-        // from it, near the geometry's -1.70, was never a candidate for having the other sign.
         final float[] mic = micPosition(result);
         final float expectedMs = (float) ((CabinGeometry.distanceCm(speakerPosition(result, Channel.SUBWOOFER), mic)
                 - CabinGeometry.distanceCm(speakerPosition(result, Channel.values()[refIdx]), mic))
                 / CabinGeometry.SOUND_CM_PER_MS);
-        final float expectedLag = expectedMs * SAMPLE_RATE / 1000f;
-        int bestLag = strongestLag;
-        final StringBuilder candidates = new StringBuilder();
-        for (int j = 1; j < corrAt.length - 1; j++) {
-            final double c = corrAt[j];
-            final boolean localPeak = Math.abs(c) >= Math.abs(corrAt[j - 1]) && Math.abs(c) >= Math.abs(corrAt[j + 1]);
-            if (!localPeak || Math.abs(c) < SUB_ALIGN_CANDIDATE_SHARE * Math.abs(best)) continue;
-            candidates.append(String.format(Locale.US, " %+.2f ms (%.2f)",
-                    (j - maxLag) * 1000f / SAMPLE_RATE, c / best));
-            if (Math.abs(j - maxLag - expectedLag) < Math.abs(bestLag - expectedLag)) bestLag = j - maxLag;
+        final int expectedLag = Math.round(expectedMs * SAMPLE_RATE / 1000f);
+        final int halfWindow = Math.round(SUB_ALIGN_WINDOW_MS * SAMPLE_RATE / 1000f);
+        int bestLag = Math.max(-maxLag, Math.min(maxLag, expectedLag));
+        for (int lag = Math.max(-maxLag, expectedLag - halfWindow);
+             lag <= Math.min(maxLag, expectedLag + halfWindow); lag++) {
+            if (Math.abs(corrAt[lag + maxLag]) > Math.abs(corrAt[bestLag + maxLag])) bestLag = lag;
         }
-        Log.i(TAG, String.format(Locale.US, "subwoofer candidates (signed share of the strongest):%s;"
-                + " geometry expects %+.2f ms", candidates, expectedMs));
         final float corr = (float) (corrAt[bestLag + maxLag] / Math.sqrt(ea * eb));
         final float peakMs = sub.arrivalMs;
         sub.arrivalMs = anchor.arrivalMs + bestLag * 1000f / SAMPLE_RATE;
         sub.polarity = corr < 0 ? -1 : 1;
         sub.alignedAtCrossover = true;
         // Trust is whether the sub and the doors match in this band at all - the strongest peak. The
-        // candidate a cycle away is weaker by construction (the envelope leans the other way), and
-        // judging it alone dropped the sub from the cabin average and the preset on 09.10.2026:
-        // 31.5 and 50 Hz read -15.4 and -9.4 dB instead of -1.7 and +2.2 with the same sub levels.
+        // lobe a cycle away is weaker by construction (the envelope leans the other way), and judging
+        // it alone dropped the sub from the cabin average and the preset on 09.10.2026: 31.5 and 50 Hz
+        // read -15.4 and -9.4 dB instead of -1.7 and +2.2 with the same sub levels.
         sub.confident = Math.abs(best / Math.sqrt(ea * eb)) >= SUB_ALIGN_MIN_CORRELATION;
         Log.i(TAG, String.format(Locale.US,
-                "subwoofer aligned at %.0f Hz against %s: %+.2f ms (strongest peak %+.2f ms, impulse "
-                        + "peak said %+.2f ms), correlation %+.2f -> polarity %+d, %s",
-                centreHz, anchor.label, sub.arrivalMs - anchor.arrivalMs,
+                "subwoofer aligned at %.0f Hz against %s in the preset's state (doors high-pass %d Hz, sub "
+                        + "low-pass %.0f -> %.0f Hz): %+.2f ms within %.1f ms of the geometry's %+.2f "
+                        + "(strongest %+.2f ms, impulse peak said %+.2f ms), correlation %+.2f -> polarity %+d, %s",
+                centreHz, anchor.label, result.midbassHpfFreqHz,
+                (float) DspResponse.SUB_FREQS_HZ[SUB_PASS_LPF_IDX], subLpfHz,
+                sub.arrivalMs - anchor.arrivalMs, SUB_ALIGN_WINDOW_MS, expectedMs,
                 strongestLag * 1000f / SAMPLE_RATE, peakMs - anchor.arrivalMs, corr, sub.polarity,
                 sub.confident ? "trusted" : "weak - reported, not trusted"));
     }
@@ -687,7 +698,7 @@ public final class RoomMeasurement {
      */
     private static final int MAX_DELAY_STEPS = 40;
     /** Measured, not assumed: 0.4990 ms per step across the linear range. */
-    private static final float DELAY_STEP_MS = 0.5f;
+    static final float DELAY_STEP_MS = 0.5f;
     /** Where the delay line itself stops. Beyond this it saturates; the slider now matches it. */
     private static final int HARDWARE_DELAY_STEPS = 40;
 
@@ -1518,6 +1529,12 @@ public final class RoomMeasurement {
         public float sweepSeconds = DEFAULT_SECONDS;
         /** The control sweep through the applied preset, null until it has run. */
         public ControlSweep.Outcome control;
+        /**
+         * Each channel's deconvolved impulse response by ordinal, on the pass's common time base (each
+         * window starts the same lead before its own sweep) - what the control sweep's complex forecast
+         * is summed from. Null for a channel not swept.
+         */
+        public float[][] impulses;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
         /** What the platform answered when the sweep asked to be the player. */
@@ -2593,6 +2610,7 @@ public final class RoomMeasurement {
         final int refIdx = arrivalAnchor(result);
         chooseDoorCrossover(result, refIdx);
         alignSubwooferAtCrossover(result, refIdx, channelImpulses);
+        result.impulses = channelImpulses;
 
         // The deconvolved floor reported is that of the anchor channel. This no longer destroys the
         // measured cabin silence: that lives in result.ambientNoiseDb16 and the two are different
@@ -3829,9 +3847,10 @@ public final class RoomMeasurement {
                         c.label, c.nameRes, Float.NaN));
             }
         }
-        // The sub against the doors where they meet: inverted there, the two cancel at the crossover.
-        // Not a wiring fault (see the WIRING line) - a phase setting the chip cannot flip. 📻 13.10.2026:
-        // the owner's flip read -1 at -0.92 ms, flipped back +1 at -1.52 ms against the geometry's -1.70.
+        // The sub against the doors where they meet, in the preset's state (alignSubwooferAtCrossover):
+        // inverted there, the two cancel at the crossover. Not a wiring fault (see the WIRING line) - a
+        // 2nd-order crossover wants one side inverted even when every wire is right - and a phase
+        // setting the chip cannot flip, so the person turns the switch on the sub's amplifier.
         if (result.channels != null && result.channels.length > Channel.SUBWOOFER.ordinal()) {
             final ChannelResult sub = result.channels[Channel.SUBWOOFER.ordinal()];
             if (sub != null && sub.alignedAtCrossover && sub.confident && sub.polarity < 0) {

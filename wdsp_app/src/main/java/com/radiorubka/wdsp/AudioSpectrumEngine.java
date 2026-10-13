@@ -640,6 +640,17 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /**
+     * The crossover as last published: {front door high-pass code, rear door high-pass code, sub
+     * low-pass index, sub gain dB}, or null while McuService has published nothing.
+     */
+    public int[] dspCrossover() {
+        synchronized (dspGainIdx) {
+            if (!hasServiceDspState) return null;
+            return new int[]{dspHpfFrontCode, dspHpfRearCode, dspSubFreqIdx, dspSubGainIdx};
+        }
+    }
+
     // --- Diagnostics, driven by the PROBE_SESSION debug broadcast ---
 
     private volatile boolean debugDump = false;

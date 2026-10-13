@@ -50,10 +50,12 @@ public final class CabinDefect {
         CABIN_MODE,
         /** The cabin was loud where the correction lives (a blower, the engine): part of it was not trusted. */
         NOISY_CABIN,
-        /** The control sweep: every speaker at once fell under the forecast where the sub and the doors meet. */
+        /** The control sweep: the sub and the doors cancel at the crossover; inverting the sub gains (value2) dB. */
         SUMMED_CANCELLATION,
-        /** The control sweep: the sub and the doors add up where they meet (a note, not a fault). */
+        /** The control sweep: the sub and the doors add up at the crossover (a note, not a fault). */
         SUMMED_OK,
+        /** The control sweep: its forecast misses the combined sound by (value2) dB - no verdict (a note). */
+        SUMMED_NO_VERDICT,
     }
 
     /** How sure the measurement is - said to the person as plainly as the fault itself. */
@@ -116,9 +118,9 @@ public final class CabinDefect {
                 return sure + at + "reads inverted while the other main speakers do not - most likely "
                         + "connected the wrong way round. Check the two wires at that speaker.";
             case SUB_ANTIPHASE:
-                return sure + at + String.format(Locale.US, "in antiphase to the doors at the crossover (%.0f Hz) "
-                        + "- the two cancel there. Flip the subwoofer's phase: the 0/180 switch on its "
-                        + "amplifier, or swap the two wires at the sub. Then measure again.", value);
+                return sure + at + String.format(Locale.US, "with this preset it plays against the doors at the "
+                        + "crossover (%.0f Hz), so the two cancel there. Turn the phase switch on its amplifier "
+                        + "(0/180) and keep the wiring + to +. Then measure again.", value);
             case CROSSOVER_PHASE:
                 return sure + at + String.format(Locale.US, "a notch at %.1f kHz that the mirrored speaker does "
                         + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
@@ -150,12 +152,17 @@ public final class CabinDefect {
                         + "at 80 Hz - 1.25 kHz, so the correction there was applied only in part. An air-con "
                         + "blower or a running engine does this: switch them off and measure again.", value);
             case SUMMED_CANCELLATION:
-                return sure + String.format(Locale.US, "control sweep: at %.0f Hz every speaker together plays "
-                        + "%.0f dB under the forecast from their own sweeps - the subwoofer and the doors cancel "
-                        + "at the crossover. Flip the subwoofer's phase and measure again.", value, -value2);
+                return sure + String.format(Locale.US, "control sweep: at %.0f Hz the subwoofer and the doors "
+                        + "cancel - with the phase switch on the subwoofer's amplifier turned (0/180) they would "
+                        + "play %.0f dB louder there. Keep the wiring + to +, turn the switch, measure again.",
+                        value, value2);
             case SUMMED_OK:
-                return sure + String.format(Locale.US, "control sweep: the subwoofer and the doors add up at the "
-                        + "crossover (the worst shared third, %.0f Hz, %+.1f dB against the forecast).", value, value2);
+                return sure + String.format(Locale.US, "control sweep: the subwoofer and the doors add up at "
+                        + "%.0f Hz; turning the subwoofer's phase would change it by %+.1f dB.", value, value2);
+            case SUMMED_NO_VERDICT:
+                return sure + String.format(Locale.US, "control sweep: at %.0f Hz the speakers together play "
+                        + "%+.1f dB off the forecast from their own sweeps - too far to judge the subwoofer's "
+                        + "phase.", value, value2);
             default:
                 return sure + at + kind.name();
         }
@@ -163,7 +170,8 @@ public final class CabinDefect {
 
     /** A note rather than a fault: the screen shows the list calmly when nothing else was found. */
     public boolean isNote() {
-        return kind == Kind.MIDBASS_ROLLOFF || kind == Kind.CABIN_MODE || kind == Kind.SUMMED_OK;
+        return kind == Kind.MIDBASS_ROLLOFF || kind == Kind.CABIN_MODE || kind == Kind.SUMMED_OK
+                || kind == Kind.SUMMED_NO_VERDICT;
     }
 
     /** The same finding for the screen, in the person's language: how sure, then what and what to do. */
@@ -217,10 +225,14 @@ public final class CabinDefect {
                 break;
             case SUMMED_CANCELLATION:
                 text = context.getString(R.string.room_finding_summed_cancellation, Math.round(value),
-                        Math.round(-value2));
+                        Math.round(value2));
                 break;
             case SUMMED_OK:
                 text = context.getString(R.string.room_finding_summed_ok, Math.round(value), Math.round(value2));
+                break;
+            case SUMMED_NO_VERDICT:
+                text = context.getString(R.string.room_finding_summed_no_verdict, Math.round(value),
+                        Math.round(value2));
                 break;
             default:
                 text = kind.name();
