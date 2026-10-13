@@ -2127,20 +2127,11 @@ public class McuService extends Service implements LocationListener {
 
         // Audio gating for status bar visualizer: Hide only when hardware Radio (tuner DSP) is active
         // The hardware tuner bypasses Android PCM AudioFlinger, so there is nothing to measure.
-        // If the spectrum engine hears real signal, or a software media session is active, it is NOT tuner.
-        boolean hasSignal = AudioSpectrumEngine.getInstance().hasMediaSignalNow();
-        boolean isPlayingMedia = NowPlaying.getInstance(this).isPlaying()
-                && !NowPlaying.getInstance(this).isRadioSource();
-        // The channel counts as evidence FOR the tuner and never against it: it only reads
-        // reliably on a unit carrying the BitPerfect policies, and wanders on a factory one. A
-        // stray 2 while music plays costs nothing, because hasSignal above has already answered.
-        // A stray 4 while the tuner plays used to suppress the radio flag here, and nothing else
-        // would have caught it - so that guard is gone. See NowPlaying.isRadioSource().
-        String soundChannel = HardwareProfile.systemProperty("sys.qf.sound.channel");
-
-        boolean isRadio = !hasSignal && !isPlayingMedia
-                && ("radio_type".equals(activeType) || "2".equals(soundChannel)
-                    || "true".equalsIgnoreCase(HardwareProfile.systemProperty("sys.qf.radio.status")));
+        // One answer for the whole app - NowPlaying.isRadioSource(). This poll used to compute its
+        // own, with the radio flag and no focus witness: 📻 13.10.2026 the factory FM left
+        // sys.qf.radio.status true, YouTube Music took the focus, and until its signal came the
+        // preset switched to the radio's (the global one), and back and forth five times.
+        boolean isRadio = NowPlaying.getInstance(this).isRadioSource();
 
         // Deliberately NOT gating on mute, though the flag itself is honest - the unit really was
         // muted when this was measured. The problem is what hiding costs: the widget unregisters

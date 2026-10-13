@@ -21,6 +21,7 @@ import android.view.KeyEvent;
 
 import com.qf.musicplayer.bean.MusicInfoData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -93,6 +94,9 @@ public final class NowPlaying {
     private MediaSessionManager.OnActiveSessionsChangedListener sessionsListener;
     private MediaController controller;
     private MediaController.Callback controllerCallback;
+    /** The sessions not adopted, each with its callback - see {@link #watchOthers}. Main thread. */
+    private final List<MediaController> watched = new ArrayList<>();
+    private final List<MediaController.Callback> watchers = new ArrayList<>();
 
     /**
      * Told the moment playback starts, so the bars do not wait for the next poll.
@@ -747,6 +751,7 @@ public final class NowPlaying {
             } catch (Throwable ignored) {
             }
         }
+        watchOthers(controllers, best);
         controller = best;
         if (controller == null) {
             synchronized (this) {
@@ -780,6 +785,44 @@ public final class NowPlaying {
         Log.i(TAG, "adoptSession adopted: " + playerPackage);
         acceptMetadata(controller.getMetadata());
         acceptState(controller.getPlaybackState());
+    }
+
+    /**
+     * Watches every session that was not adopted, and re-adopts when one of them starts playing.
+     * The list of sessions does not change when a player that already has a session presses play,
+     * so the adopted one's callback alone never hears it. 📻 13.10.2026: radio, then YouTube Music
+     * played - its session stayed unadopted for ~25 s, its preset never came, until the main screen
+     * opened and called {@link #refresh()}.
+     */
+    private void watchOthers(List<MediaController> controllers, MediaController adopted) {
+        for (int i = 0; i < watched.size(); i++) {
+            try {
+                watched.get(i).unregisterCallback(watchers.get(i));
+            } catch (Throwable ignored) {
+            }
+        }
+        watched.clear();
+        watchers.clear();
+        if (controllers == null) return;
+        for (MediaController c : controllers) {
+            if (c == null || c == adopted) continue;
+            MediaController.Callback cb = new MediaController.Callback() {
+                @Override
+                public void onPlaybackStateChanged(PlaybackState state) {
+                    if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
+                        main.post(() -> {
+                            if (watched.contains(c)) adoptSession(controllers);
+                        });
+                    }
+                }
+            };
+            try {
+                c.registerCallback(cb);
+                watched.add(c);
+                watchers.add(cb);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     private synchronized void acceptMetadata(MediaMetadata metadata) {
