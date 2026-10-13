@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**13.10.2026 ~20:30, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**13.10.2026 ~21:10, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -13,19 +13,19 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP **`d6aaae3`** (adb install -r + service started by hand). Sub wired
+- Bench `192.168.1.138:9876`: wDSP **`d6aaae3`** (code is at `8a5f758`) (adb install -r + service started by hand). Sub wired
   as its manual says (+ to +). **Bench handed** to another session (module + reboot, board #1712).
 
 ## ⏳ Open
 
-1. **Sub phase at the crossover** — the main item. Control sweeps (`d6aaae3`) with the preset applied:
-   + to + → measured +1, sum at 80 Hz −11 dB; + to − → −1, −4.8 dB (the 20:11 repeat matched within
-   0.4 dB). The measurement reads the wiring right, yet wired as the manual says the sub and the doors
-   cancel at 80–100 Hz. Owner: *«ось це і треба радити»* — TODO «Порада про фазу саба». **Waiting
-   for the research** (ordered 13.10): `research/RESEARCH_REQUEST_SUB_CROSSOVER_PHASE.md`. Hypothesis:
-   polarity is read with no door high-pass and the sub through 160 Hz, while the preset's 80 Hz pair
-   turns them ~180°. The control-sweep criterion (≥ 6 dB under the energy forecast) told nothing apart
-   — write the new one down before testing. Data: DEBT «саб із ФНЧ підсилювача на максимумі».
+1. **Sub phase at the crossover** — the main item. Research answered and digested
+   (`research/RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md`): a 2nd-order HP/LP pair is 180° apart, so step 2
+   read the sub in the wrong state. **`8a5f758` (built, NOT on the bench):** the sub is aligned in the
+   preset's filter state (`Biquad`, `toPresetState`, ±3 ms of geometry); the control sweep forecasts the
+   sum as waves for the sub as is and inverted. Pre-registered: as-is forecast within ±1.5 dB of the
+   combined sound, inverted ≥ 4 dB above → SUMMED_CANCELLATION. **Bench test:** + to + → polarity −1
+   and SUMMED_CANCELLATION; + to − → +1 and SUMMED_OK — otherwise it is wrong. Old data: DEBT «саб із
+   ФНЧ підсилювача на максимумі».
 2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
    quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
    microphone. My rule "below 50 Hz charge nothing to the mic in open space" **awaits the owner**.
