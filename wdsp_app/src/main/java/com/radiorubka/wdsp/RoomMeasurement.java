@@ -1541,6 +1541,8 @@ public final class RoomMeasurement {
         }
 
         public String reportPath;
+        /** What the level probe heard and chose, one line for the report; null without one. */
+        public String levelProbe;
         /** The sweep's level and length, so the control sweep plays what the measurement played. */
         public float amplitude = DEFAULT_AMPLITUDE;
         public float sweepSeconds = DEFAULT_SECONDS;
@@ -2181,8 +2183,11 @@ public final class RoomMeasurement {
                 return result;
             }
             if (!probeSweep.isValid()) Log.w(TAG, "the probe sweep was not built - undeclared doors stay unprobed");
+            final float level = probeSweep.isValid()
+                    ? probeLevel(app, prefs, SCRATCH_PRESET, probeSweep, amplitude, result) : amplitude;
+            result.amplitude = level;
             runOnePass(app, prefs, SCRATCH_PRESET, sweep, subSweep, probeSweep.isValid() ? probeSweep : null,
-                    amplitude, result, listener,
+                    level, result, listener,
                     isMicCalibrationOnly);
             judgePolarity(result);
 
@@ -2770,6 +2775,17 @@ public final class RoomMeasurement {
      */
     static int playAndRecord(Context context, short[] stereo, short[] captured, Result result,
                              java.util.function.LongConsumer onPlaying, PassProgress progress) {
+        return playAndRecord(context, stereo, captured, result, onPlaying, progress, true);
+    }
+
+    /**
+     * @param releaseHold false keeps {@link MicrophoneGuard}'s placeholder on the input after this
+     *                    pass's own capture opens - for a pass that runs before the one that should
+     *                    let it go (the level probe), so the input is never idle in between
+     */
+    static int playAndRecord(Context context, short[] stereo, short[] captured, Result result,
+                             java.util.function.LongConsumer onPlaying, PassProgress progress,
+                             boolean releaseHold) {
         final int recordLen = captured.length;
         AudioTrack track = null;
         AudioRecord record = null;
@@ -2800,7 +2816,7 @@ public final class RoomMeasurement {
             // Only now, with a second client already on the same input, does the placeholder go.
             // Released before the null check on purpose: if the real open failed we are abandoning
             // the pass anyway, and leaving a recorder running would be worse than the failure.
-            MicrophoneGuard.releaseHold();
+            if (releaseHold) MicrophoneGuard.releaseHold();
             result.captureSource = describeCaptureSource(record);
             if (record == null) {
                 result.fail(MeasurementFailure.MIC_NOT_OPENED);
@@ -2880,6 +2896,76 @@ public final class RoomMeasurement {
     static final int SUB_PASS_GAIN_DB = 12;
     static final int SUB_PASS_LPF_IDX = 8;
     private static final int SUB_PASS_DOOR_HPF_CODE = 11;
+
+    /**
+     * The loudest the recording may get: the pass's own peak, every speaker together, lands here.
+     * 📻 13.10.2026, the owner's bench: a calibration whose peak reached -2.4 dBFS had the treble's
+     * deconvolved noise at -34 dB - the input distorting short of clipping; two volume steps down
+     * (peak -5.3) it fell 12-31 dB while the signal fell 3.5. The control sweep, all speakers at
+     * once, peaked at -0.7. So the probe aims the loudest case well below that knee.
+     */
+    static final float LEVEL_TARGET_DBFS = -9f;
+    /** Quieter than this the probe heard nothing it can scale from - the level stays as asked. */
+    private static final float LEVEL_PROBE_DEAF_DBFS = -45f;
+    /** The sweep's amplitude is kept between these, whatever the probe says. */
+    private static final float LEVEL_MIN = 0.02f;
+    private static final float LEVEL_MAX = 0.5f;
+
+    /**
+     * Sets the sweep's level by the microphone actually in use, before the pass (owner, 13.10.2026:
+     * «пробувати мікрофон на чутливість перед свіпом» - BitPerfect's routing, a stock unit and another
+     * capsule in another cabin each hand back a different sensitivity). A short sweep through every
+     * speaker at once - the doors with no high-pass, the sub as on its own pass - is the loudest
+     * thing the measurement will play, the control sweep included; its peak is scaled to
+     * {@link #LEVEL_TARGET_DBFS}. The volume is not touched: the loudness curve keeps the
+     * measurement's volume as its calibration point.
+     *
+     * @return the amplitude for the pass and the control sweep
+     */
+    private static float probeLevel(Context app, SharedPreferences prefs, String preset, NativeSweep probe,
+                                    float amplitude, Result result) {
+        prefs.edit()
+                .putInt(preset + "_f_lr", FADER_CENTRE)
+                .putInt(preset + "_f_fr", FADER_CENTRE)
+                .putInt(preset + "_sub_g", SUB_PASS_GAIN_DB)
+                .putInt(preset + "_sub_f", SUB_PASS_LPF_IDX)
+                .putInt(preset + "_bf_f", 0)
+                .putInt(preset + "_bf_r", 0)
+                .apply();
+        sleep(ROUTING_SETTLE_MS);
+        pauseMedia(app);
+        final int lead = (int) (0.3f * SAMPLE_RATE);
+        final int len = probe.length();
+        final float[] mono = new float[len];
+        probe.generate(mono, amplitude);
+        final short[] stereo = new short[(lead + len) * 2];
+        for (int i = 0; i < len; i++) {
+            final short v = (short) Math.max(Short.MIN_VALUE,
+                    Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+            stereo[(lead + i) * 2] = v;
+            stereo[(lead + i) * 2 + 1] = v;
+        }
+        final short[] captured = new short[lead + len + (int) (0.5f * SAMPLE_RATE)];
+        final Result pass = new Result();
+        final int got = playAndRecord(app, stereo, captured, pass, null, null, false);
+        float level = amplitude;
+        if (got > 0 && pass.error == null) {
+            int peak = 0;
+            for (int i = 0; i < got; i++) peak = Math.max(peak, Math.abs(captured[i]));
+            final float peakDbfs = (float) (20 * Math.log10(peak / 32768.0 + 1e-9));
+            if (peakDbfs > LEVEL_PROBE_DEAF_DBFS) {
+                level = (float) Math.max(LEVEL_MIN, Math.min(LEVEL_MAX,
+                        amplitude * Math.pow(10.0, (LEVEL_TARGET_DBFS - peakDbfs) / 20.0)));
+            }
+            result.levelProbe = String.format(Locale.US, "level probe (every speaker at once): peak %.1f dBFS at "
+                    + "amplitude %.3f -> amplitude %.3f, aiming at %.0f dBFS%s", peakDbfs, amplitude, level,
+                    LEVEL_TARGET_DBFS, peakDbfs > LEVEL_PROBE_DEAF_DBFS ? "" : " (heard nothing - kept)");
+        } else {
+            result.levelProbe = "level probe failed (" + pass.error + ") - amplitude " + amplitude + " kept";
+        }
+        Log.i(TAG, result.levelProbe);
+        return level;
+    }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
     private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
@@ -4253,8 +4339,9 @@ public final class RoomMeasurement {
                 if (lost != null) sb.append(" - then ").append(lost).append(" DURING the pass");
                 sb.append('\n');
             }
+            if (result.levelProbe != null) sb.append(result.levelProbe).append('\n');
             sb.append("preset=").append(preset)
-                    .append(" amplitude=").append(amplitude)
+                    .append(" amplitude=").append(result.amplitude)
                     .append(" sweep=").append(seconds).append(" s")
                     .append(" from ").append((int) SWEEP_START_HZ).append(" Hz (subwoofer from ")
                     .append((int) SUB_SWEEP_START_HZ).append(" Hz)")
