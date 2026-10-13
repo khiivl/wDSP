@@ -13,14 +13,14 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP **`d6aaae3`** (code is at `8a5f758`) (adb install -r + service started by hand). Sub wired
-  as its manual says (+ to +). **Bench handed** to another session (module + reboot, board #1712).
+- Bench `192.168.1.138:9876`: wDSP **`8a5f758`** (13.10 20:45, adb install -r + service by hand, after the
+  other session's reboot). Sub wired + to +. Bench taken for sweeps (board).
 
 ## ⏳ Open
 
 1. **Sub phase at the crossover** — the main item. Research answered and digested
    (`research/RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md`): a 2nd-order HP/LP pair is 180° apart, so step 2
-   read the sub in the wrong state. **`8a5f758` (built, NOT on the bench):** the sub is aligned in the
+   read the sub in the wrong state. **`8a5f758` (on the bench, untested):** the sub is aligned in the
    preset's filter state (`Biquad`, `toPresetState`, ±3 ms of geometry); the control sweep forecasts the
    sum as waves for the sub as is and inverted. Pre-registered: as-is forecast within ±1.5 dB of the
    combined sound, inverted ≥ 4 dB above → SUMMED_CANCELLATION. **Bench test:** + to + → polarity −1
