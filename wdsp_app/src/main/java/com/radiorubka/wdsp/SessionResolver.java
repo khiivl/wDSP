@@ -217,6 +217,14 @@ public final class SessionResolver {
      * the session that just started playing is the highest-numbered one.
      */
     private int sweep() {
+        // A cabin measurement is the only thing playing then - our own sweep track, nothing to find.
+        // 📻 13.10.2026 21:18, the first measurement after a reboot: its track woke this sweep, a probe
+        // Visualizer on it hit a destroyed native mutex in setCaptureSize (FORTIFY SIGABRT) and the
+        // process died with the measurement half-started.
+        if (RoomMeasurement.isRunning()) {
+            Log.i(TAG, "A cabin measurement is playing - no sweep");
+            return -1;
+        }
         if (SessionProbe.probe(0, OUTPUT_MIX_PROBE_MS).hasSignal()) return 0;
 
         int counter = 0;
