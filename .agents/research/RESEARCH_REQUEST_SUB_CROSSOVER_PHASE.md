@@ -34,12 +34,13 @@ phase switch). Wired + to +, − to −, as its manual says.
 
 | sub wiring | polarity read in step 2 | combined, 80 Hz band | combined, 100 Hz third | combined − energy forecast, worst of 63/80/100 Hz |
 |---|---|---|---|---|
-| inverted (+ to −) | +1 | −11.2 dB | −6.9 dB | −2.4 dB |
-| as the manual says (+ to +) | −1 | **−4.8 dB** | **−1.1 dB** | −1.1 dB |
+| as the manual says (+ to +) | +1 | −11.2 dB | −6.9 dB | −2.4 dB |
+| inverted (+ to −) | −1 | **−4.8 dB** | **−1.1 dB** | −1.1 dB |
 
 Above 800 Hz the energy forecast matched the combined sweep within ±0.7 dB, so the levels and the
-EQ model hold. With the wiring the manual prescribes, step 2 reads polarity −1 (and the report tells the person to
-flip the phase), yet that wiring plays ~6 dB louder at the crossover than the inverted one. Our hypothesis: step 2 reads the phase in the temporary state (doors without
+EQ model hold. Step 2 reads the wiring correctly (+1 as the manual says, −1 inverted), and the report tells the person
+with inverted wiring to flip it back. Yet the inverted wiring plays ~6 dB louder at the crossover
+with the preset applied: the advice brings them to the worse of the two. Our hypothesis: step 2 reads the phase in the temporary state (doors without
 a high-pass, sub through 160 Hz), and the preset's 80 Hz high-pass and low-pass add a relative
 rotation of about 180°. It is untested.
 
