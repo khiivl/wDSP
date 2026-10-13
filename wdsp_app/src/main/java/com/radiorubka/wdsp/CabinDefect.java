@@ -50,6 +50,10 @@ public final class CabinDefect {
         CABIN_MODE,
         /** The cabin was loud where the correction lives (a blower, the engine): part of it was not trusted. */
         NOISY_CABIN,
+        /** The control sweep: every speaker at once fell under the forecast where the sub and the doors meet. */
+        SUMMED_CANCELLATION,
+        /** The control sweep: the sub and the doors add up where they meet (a note, not a fault). */
+        SUMMED_OK,
     }
 
     /** How sure the measurement is - said to the person as plainly as the fault itself. */
@@ -65,18 +69,26 @@ public final class CabinDefect {
     public final int pairRes;
     /** The number that goes with it - samples, Hz, ms - or NaN when none. */
     public final float value;
+    /** A second number where one is not enough (the control sweep: Hz, then dB), else NaN. */
+    public final float value2;
 
     public CabinDefect(Kind kind, Certainty certainty, String where, int whereRes, float value) {
         this(kind, certainty, where, whereRes, 0, value);
     }
 
     public CabinDefect(Kind kind, Certainty certainty, String where, int whereRes, int pairRes, float value) {
+        this(kind, certainty, where, whereRes, pairRes, value, Float.NaN);
+    }
+
+    public CabinDefect(Kind kind, Certainty certainty, String where, int whereRes, int pairRes, float value,
+                       float value2) {
         this.kind = kind;
         this.certainty = certainty;
         this.where = where != null ? where : "";
         this.whereRes = whereRes;
         this.pairRes = pairRes;
         this.value = value;
+        this.value2 = value2;
     }
 
     /** One line for the English report: what, where, how sure, and what to do. */
@@ -137,6 +149,13 @@ public final class CabinDefect {
                 return sure + String.format(Locale.US, "the speakers stood only %.1f dB above the cabin's noise "
                         + "at 80 Hz - 1.25 kHz, so the correction there was applied only in part. An air-con "
                         + "blower or a running engine does this: switch them off and measure again.", value);
+            case SUMMED_CANCELLATION:
+                return sure + String.format(Locale.US, "control sweep: at %.0f Hz every speaker together plays "
+                        + "%.0f dB under the forecast from their own sweeps - the subwoofer and the doors cancel "
+                        + "at the crossover. Flip the subwoofer's phase and measure again.", value, -value2);
+            case SUMMED_OK:
+                return sure + String.format(Locale.US, "control sweep: the subwoofer and the doors add up at the "
+                        + "crossover (the worst shared third, %.0f Hz, %+.1f dB against the forecast).", value, value2);
             default:
                 return sure + at + kind.name();
         }
@@ -144,7 +163,7 @@ public final class CabinDefect {
 
     /** A note rather than a fault: the screen shows the list calmly when nothing else was found. */
     public boolean isNote() {
-        return kind == Kind.MIDBASS_ROLLOFF || kind == Kind.CABIN_MODE;
+        return kind == Kind.MIDBASS_ROLLOFF || kind == Kind.CABIN_MODE || kind == Kind.SUMMED_OK;
     }
 
     /** The same finding for the screen, in the person's language: how sure, then what and what to do. */
@@ -195,6 +214,13 @@ public final class CabinDefect {
                 break;
             case NOISY_CABIN:
                 text = context.getString(R.string.room_finding_noisy_cabin, value);
+                break;
+            case SUMMED_CANCELLATION:
+                text = context.getString(R.string.room_finding_summed_cancellation, Math.round(value),
+                        Math.round(-value2));
+                break;
+            case SUMMED_OK:
+                text = context.getString(R.string.room_finding_summed_ok, Math.round(value), Math.round(value2));
                 break;
             default:
                 text = kind.name();

@@ -94,20 +94,20 @@ import java.util.Set;
 public final class RoomMeasurement {
     private static final String TAG = "wDSP_RoomMeasure";
 
-    private static final int SAMPLE_RATE = 48000;
+    static final int SAMPLE_RATE = 48000;
     /**
      * Where the door channels' sweep starts. Owner, 15.09.2026: 20 Hz for the doors, 15 Hz for the
      * subwoofer. The doors play without their high-pass during a measurement (the scratch preset sets
      * it Through), and below 20 Hz their cones travel further for nothing a door can reproduce.
      */
-    private static final float SWEEP_START_HZ = 20f;
+    static final float SWEEP_START_HZ = 20f;
     /**
      * Where the subwoofer's sweep starts, so that its 20 Hz band (about 16-25 Hz) is excited whole
      * rather than from its centre up. Same length as the doors' sweep: one pass, one period, and the
      * arrival of a sweep's impulse does not depend on where the sweep starts, so the delays - which
      * are differences between channels - stay exact.
      */
-    private static final float SUB_SWEEP_START_HZ = 15f;
+    static final float SUB_SWEEP_START_HZ = 15f;
     /**
      * Where the subwoofer's sweep stops. Its pass leaves the doors on behind a 250 Hz high-pass
      * (setRoutingFor), so a sweep that went on to 20 kHz was played by the doors above it at full level -
@@ -186,9 +186,9 @@ public final class RoomMeasurement {
      */
     private static final float DEFAULT_AMPLITUDE = 0.25f;
     /** Recording continues past the last sweep so that the room's decay is captured too. */
-    private static final float TAIL_SECONDS = 1.0f;
+    static final float TAIL_SECONDS = 1.0f;
     /** Silence before the first sweep (ambient noise floor capture), and inside every window. */
-    private static final float LEAD_SECONDS = 1.0f;
+    static final float LEAD_SECONDS = 1.0f;
     public static final String PREF_MIC_COMPENSATION = "pref_mic_compensation";
     /** Curves this unit had before the current one, newest first, one per line: "stamp v,v,...". */
     public static final String PREF_MIC_COMPENSATION_HISTORY = "pref_mic_compensation_history";
@@ -314,7 +314,7 @@ public final class RoomMeasurement {
     }
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
     /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
-    private static final int CLIP_MAGNITUDE = 32690;
+    static final int CLIP_MAGNITUDE = 32690;
     /** Above this the pass is undamaged but has no margin left. */
     private static final float HEADROOM_WARN_DBFS = -3.0f;
     /**
@@ -1136,7 +1136,7 @@ public final class RoomMeasurement {
         Log.i(TAG, "saved cabin response shape to preferences: " + sb);
     }
     /** Holds everything a running measurement has changed, so it can be undone after a crash. */
-    private static final String PREF_RECOVERY = "room_measure_recovery";
+    static final String PREF_RECOVERY = "room_measure_recovery";
 
     /**
      * How long the chip is given to receive the flat scratch preset before the first tone.
@@ -1145,7 +1145,7 @@ public final class RoomMeasurement {
      * so the registers do not change on the same instruction. A sweep that started earlier would
      * measure the first fraction of a second through the user's curve.
      */
-    private static final long PRESET_SETTLE_MS = 450;
+    static final long PRESET_SETTLE_MS = 450;
 
     private static volatile boolean running;
     private static volatile boolean aborted;
@@ -1513,6 +1513,11 @@ public final class RoomMeasurement {
         }
 
         public String reportPath;
+        /** The sweep's level and length, so the control sweep plays what the measurement played. */
+        public float amplitude = DEFAULT_AMPLITUDE;
+        public float sweepSeconds = DEFAULT_SECONDS;
+        /** The control sweep through the applied preset, null until it has run. */
+        public ControlSweep.Outcome control;
         /** What the microphone guard found and did, in one line for the report. */
         public String microphone;
         /** What the platform answered when the sweep asked to be the player. */
@@ -1629,6 +1634,35 @@ public final class RoomMeasurement {
 
     public static boolean isRunning() {
         return running;
+    }
+
+    /**
+     * Plays one sweep through every speaker at once with the preset just applied, and reports how
+     * they added up - see {@link ControlSweep}. The listener gets the same result back, with
+     * {@code result.control} filled in and its finding added to {@code result.defects}.
+     *
+     * @return false when it could not start - another measurement runs - and the listener is not called
+     */
+    public static boolean controlAsync(final Context context, final Result measured, final Listener listener) {
+        if (running || measured == null) {
+            Log.w(TAG, "control sweep not started: " + (running ? "a measurement is running" : "no measurement"));
+            return false;
+        }
+        new Thread(() -> {
+            running = true;
+            aborted = false;
+            try {
+                ControlSweep.run(context.getApplicationContext(), measured, listener);
+            } catch (Throwable t) {
+                if (measured.control == null) measured.control = new ControlSweep.Outcome();
+                measured.control.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+                Log.e(TAG, "control sweep failed", t);
+            } finally {
+                running = false;
+            }
+            if (listener != null) listener.onFinished(measured);
+        }, "wDSP_ControlSweep").start();
+        return true;
     }
 
     /** Runs a full measurement on its own thread with subwoofer, soundstage mode, target curve, body type and listening distance. */
@@ -2040,6 +2074,8 @@ public final class RoomMeasurement {
         int origVolume = VolumeHelper.getVolume();
         final int measureVolume = measureVolumeFor(origVolume);
         result.measureVolume = measureVolume;
+        result.amplitude = amplitude;
+        result.sweepSeconds = seconds;
         Log.i(TAG, "locking volume for measurement: " + origVolume + " -> " + measureVolume);
         String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
         prefs.edit().putString(PREF_RECOVERY, saved).apply();
@@ -2769,6 +2805,15 @@ public final class RoomMeasurement {
         return got;
     }
 
+    /**
+     * The subwoofer's own pass: its gain (0..12 is dB, so +12 - the comment here used to say +6), its
+     * low-pass at 160 Hz and the doors' high-pass at 250 Hz. What the sub's measured response was
+     * recorded through, which the control sweep's forecast takes back out.
+     */
+    static final int SUB_PASS_GAIN_DB = 12;
+    static final int SUB_PASS_LPF_IDX = 8;
+    private static final int SUB_PASS_DOOR_HPF_CODE = 11;
+
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
     private static void applyRouting(SharedPreferences prefs, String preset, Channel channel) {
         if (delayTest != 0) {
@@ -2803,10 +2848,10 @@ public final class RoomMeasurement {
         if (channel == Channel.SUBWOOFER) {
             ed.putInt(preset + "_f_lr", FADER_CENTRE)
               .putInt(preset + "_f_fr", FADER_CENTRE)
-              .putInt(preset + "_sub_g", 12)  // Subwoofer active (+6 dB)
-              .putInt(preset + "_sub_f", 8)   // 160 Hz LPF
-              .putInt(preset + "_bf_f", 11)  // 250 Hz HPF on front (attenuates main door speakers)
-              .putInt(preset + "_bf_r", 11); // 250 Hz HPF on rear
+              .putInt(preset + "_sub_g", SUB_PASS_GAIN_DB)
+              .putInt(preset + "_sub_f", SUB_PASS_LPF_IDX)
+              .putInt(preset + "_bf_f", SUB_PASS_DOOR_HPF_CODE)  // attenuates the doors
+              .putInt(preset + "_bf_r", SUB_PASS_DOOR_HPF_CODE);
         } else {
             ed.putInt(preset + "_f_lr", channel.leftRight)
               .putInt(preset + "_f_fr", channel.frontRear)
@@ -3375,7 +3420,7 @@ public final class RoomMeasurement {
     // borrowing and returning the head unit's settings
     // ---------------------------------------------------------------------------------------
 
-    private static void applySaved(SharedPreferences.Editor editor, String saved) {
+    static void applySaved(SharedPreferences.Editor editor, String saved) {
         for (String pair : saved.split(";")) {
             int eq = pair.indexOf('=');
             if (eq <= 0) continue;
@@ -4409,7 +4454,7 @@ public final class RoomMeasurement {
         }
     }
 
-    private static void writeWav(Context context, String name, short[] samples, int count) {
+    static void writeWav(Context context, String name, short[] samples, int count) {
         File file = new File(outputDir(context), name);
         try (FileOutputStream out = new FileOutputStream(file)) {
             out.write(new byte[44]);
@@ -4516,7 +4561,7 @@ public final class RoomMeasurement {
         }
     }
 
-    private static void sleep(long ms) {
+    static void sleep(long ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException ie) {

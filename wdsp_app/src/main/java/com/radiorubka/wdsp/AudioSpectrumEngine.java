@@ -620,6 +620,26 @@ public class AudioSpectrumEngine {
         }
     }
 
+    /**
+     * The chip's three outputs at these frequencies, as {@link #setDspState} last published them -
+     * the preset as it went to the hardware, with McuService's folds in it ({@link DspResponse#pathsAt}).
+     *
+     * @param out three arrays of {@code hz.length}: front doors, rear doors, subwoofer
+     * @return false while McuService has published nothing, and the paths are unknown
+     */
+    public boolean dspPathsAt(float[] hz, float[][] out) {
+        synchronized (dspGainIdx) {
+            if (!hasServiceDspState) return false;
+            final float[] p = new float[3];
+            for (int j = 0; j < hz.length; j++) {
+                DspResponse.pathsAt(hz[j], AudioConfig.compositeResponseDb(dspGainIdx, hz[j]), dspSubFreqIdx,
+                        dspSubGainIdx, dspHpfFrontCode, dspHpfRearCode, dspShelf, 0f, p);
+                for (int k = 0; k < 3; k++) out[k][j] = p[k];
+            }
+            return true;
+        }
+    }
+
     // --- Diagnostics, driven by the PROBE_SESSION debug broadcast ---
 
     private volatile boolean debugDump = false;
