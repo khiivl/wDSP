@@ -2233,12 +2233,10 @@ public final class RoomMeasurement {
                 + " declared + " + undeclared.size() + " probe(s) of " + probeLen + " samples, total "
                 + totalFrames + " frames (" + (totalFrames / (float) SAMPLE_RATE) + " s)");
 
-        AudioTrack track = null;
-        AudioRecord record = null;
-        MicProbe.Suspension effects = null;
         short[] captured = new short[recordLen];
-        int got = 0;
-
+        final int got;
+        final int[] playingSlot = {0};
+        final Thread[] router = {null};
         try {
             if (delayTest != 0) {
                 // One loudspeaker, chosen once, and the delay line is what changes. The front
@@ -2272,134 +2270,61 @@ public final class RoomMeasurement {
             // Pause media player before sweep
             pauseMedia(context);
 
-            // Ask to be the player before making a sound.
-            //
-            // 🔴 This was missing, and it is the best explanation anybody has for the oldest
-            // complaint about this feature: the first measurement on a unit fails, and then it
-            // works after a Bluetooth call, or simply the next day. Both of those force the
-            // platform to re-establish who owns the audio.
-            //
-            // On this platform the volume only reaches the amplifier for the source named in
-            // sys.current.vol.type, and one failing tester's report had that property **unset**.
-            // A track that never asked for focus never makes the platform decide it is the
-            // player, so the sweep can be written, mixed, and never actually amplified - and from
-            // the microphone that looks exactly like three speakers that are not connected.
-            //
-            // Held for the whole pass rather than per sweep: dropping and retaking it four times
-            // would invite the platform to re-route between channels, which is the one thing this
-            // measurement must not have happen in the middle of it.
-            result.focus = requestFocus(context);
-            Log.i(TAG, "audio focus for the sweep: " + result.focus);
-
-            record = openMicrophone();
-            activeRecord = record;
-            // Only now, with a second client already on the same input, does the placeholder go.
-            // Released before the null check on purpose: if the real open failed we are abandoning
-            // the pass anyway, and leaving a recorder running would be worse than the failure.
-            MicrophoneGuard.releaseHold();
-            result.captureSource = describeCaptureSource(record);
-            if (record == null) {
-                result.fail(MeasurementFailure.MIC_NOT_OPENED);
-                Log.e(TAG, result.error);
-                return;
-            }
-            effects = MicProbe.suspendCapturePreprocessing(record.getAudioSessionId(), TAG);
-
-            track = openTrack(stereo.length);
-            if (track == null) {
-                result.fail(MeasurementFailure.OUTPUT_NOT_OPENED);
-                Log.e(TAG, result.error);
-                return;
-            }
-
-            record.startRecording();
-            track.play();
-            final long playStartedMs = System.currentTimeMillis();
-
-            final AudioTrack playing = track;
-            Thread writer = new Thread(() -> {
-                int offset = 0;
-                while (offset < stereo.length) {
-                    int written = playing.write(stereo, offset, stereo.length - offset);
-                    if (written <= 0) break;
-                    offset += written;
-                }
-            }, "wDSP_RoomSweepOut");
-            writer.start();
-
-            // Routing is switched in the silence before each sweep. The timing comes from the
-            // wall clock rather than from frames written, because what matters is when the MCU
-            // acts, and it acts on its own schedule - the gap is long enough to absorb both.
-            final int[] playingSlot = {0};
-            Thread router = new Thread(() -> {
-                for (int k = 1; k < slots.length; k++) {
-                    // Tied to ROUTING_SETTLE_MS rather than to a fraction of the gap. It used to be
-                    // gap/2 - 750 ms ahead of the sweep - while the code's own figure for how long
-                    // the MCU needs to act on a routing change is 800 ms. Two numbers about the same
-                    // thing, fifty milliseconds apart, and nothing connecting them: the first tones
-                    // of each sweep could still be leaving the previous speaker. Now the switch is
-                    // sent exactly one settle-time before the sweep, which with a 1.5 s gap still
-                    // leaves 700 ms for the cabin to stop ringing after the previous one.
-                    final long settleFrames = ROUTING_SETTLE_MS * SAMPLE_RATE / 1000L;
-                    final long switchAtMs = (long) ((slotAt[k] - settleFrames)
-                            * 1000L / SAMPLE_RATE);
-                    long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
-                    if (waitMs > 0) sleep(waitMs);
-                    // Which speaker plays is said here; how far the pass is, by the recording loop.
-                    playingSlot[0] = k;
-                    applyRouting(prefs, preset, slots[k]);
-                }
-            }, "wDSP_RoomRouting");
             if (listener != null) {
                 listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
                         context.getString(R.string.room_stage_speakers_detail,
                                 context.getString(slots[0].nameRes)), 15);
             }
-
-            router.start();
-
+            // Routing is switched in the silence before each sweep. The timing comes from the
+            // wall clock rather than from frames written, because what matters is when the MCU
+            // acts, and it acts on its own schedule - the gap is long enough to absorb both.
             // Progress follows the recording, not the sweep count: counted by sweeps, the last one
             // (a short probe or the sub) showed 67 % for its whole length and the analysis after it
             // takes a second, so the owner saw every run "end at 67 %" (07.10.2026).
-            long lastProgressMs = 0;
-            while (got < recordLen) {
-                final long nowMs = System.currentTimeMillis();
-                if (listener != null && nowMs - lastProgressMs >= PROGRESS_EVERY_MS) {
-                    lastProgressMs = nowMs;
+            got = playAndRecord(context, stereo, captured, result, playStartedMs -> {
+                router[0] = new Thread(() -> {
+                    for (int k = 1; k < slots.length; k++) {
+                        // Tied to ROUTING_SETTLE_MS rather than to a fraction of the gap. It used to be
+                        // gap/2 - 750 ms ahead of the sweep - while the code's own figure for how long
+                        // the MCU needs to act on a routing change is 800 ms. Two numbers about the same
+                        // thing, fifty milliseconds apart, and nothing connecting them: the first tones
+                        // of each sweep could still be leaving the previous speaker. Now the switch is
+                        // sent exactly one settle-time before the sweep, which with a 1.5 s gap still
+                        // leaves 700 ms for the cabin to stop ringing after the previous one.
+                        final long settleFrames = ROUTING_SETTLE_MS * SAMPLE_RATE / 1000L;
+                        final long switchAtMs = (long) ((slotAt[k] - settleFrames)
+                                * 1000L / SAMPLE_RATE);
+                        long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
+                        if (waitMs > 0) sleep(waitMs);
+                        // Which speaker plays is said here; how far the pass is, by the recording loop.
+                        playingSlot[0] = k;
+                        applyRouting(prefs, preset, slots[k]);
+                    }
+                }, "wDSP_RoomRouting");
+                router[0].start();
+                // Progress follows the recording, not the sweep count: counted by sweeps, the last one
+                // (a short probe or the sub) showed 67 % for its whole length and the analysis after it
+                // takes a second, so the owner saw every run "end at 67 %" (07.10.2026).
+            }, done -> {
+                if (listener != null) {
                     listener.onProgress(2, 5, context.getString(R.string.room_stage_speakers),
                             context.getString(R.string.room_stage_speakers_detail,
                                     context.getString(slots[playingSlot[0]].nameRes)),
-                            15 + (int) (65L * got / recordLen));
+                            15 + (int) (65L * done / recordLen));
                 }
-                if (aborted || CallState.isActive()) {
-                    Log.w(TAG, "measurement aborted due to active phone call");
-                    result.error = "phone call interrupted measurement";
-                    break;
+            });
+            if (router[0] != null) {
+                try {
+                    router[0].join(2000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
                 }
-                // In pieces: one read of the whole remainder blocks until the end, and the progress
-                // above then never moves past its first value (it stood at 15 %, 07.10.2026).
-                int read = record.read(captured, got, Math.min(recordLen - got, READ_CHUNK_FRAMES));
-                if (read <= 0) {
-                    Log.w(TAG, "read returned " + read);
-                    break;
-                }
-                got += read;
-            }
-            try {
-                writer.join(2000);
-                router.join(2000);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
             }
         } catch (Throwable t) {
             result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
             Log.e(TAG, "the pass failed", t);
             return;
         } finally {
-            if (effects != null) effects.restore();
-            closeQuietly(track);
-            activeRecord = null;
-            closeQuietly(record);
             // Reset scratch routing and filters back to neutral
             prefs.edit()
                     .putInt(preset + "_f_lr", FADER_CENTRE)
@@ -2408,8 +2333,8 @@ public final class RoomMeasurement {
                     .putInt(preset + "_bf_f", 0)
                     .putInt(preset + "_bf_r", 0)
                     .apply();
-            abandonFocus(context);
         }
+        if (got < 0) return;
 
         // The whole recording is kept as one file. Four separate ones would have to be lined up
         // again by whoever looks at them, and lining them up is the entire difficulty.
@@ -2723,6 +2648,125 @@ public final class RoomMeasurement {
             }
             Log.i(TAG, mcLog.toString());
         }
+    }
+
+    /** How far a pass has got, in frames recorded - called from the recording thread. */
+    interface PassProgress {
+        void onRecorded(int framesRecorded);
+    }
+
+    /**
+     * Plays one track and records the microphone over it: one stream each way, so the skew between
+     * them is a single constant (see runOnePass). Focus, the input, the capture effects and the
+     * output are taken here and given back here - for the measurement's pass and the control sweep's
+     * alike, one path rather than two copies of it.
+     *
+     * @param onPlaying called once the track plays, with the wall-clock start in ms
+     * @param progress  called at most every {@link #PROGRESS_EVERY_MS}, may be null
+     * @return frames recorded, or -1 with {@code result.error} set when the pass never started
+     */
+    static int playAndRecord(Context context, short[] stereo, short[] captured, Result result,
+                             java.util.function.LongConsumer onPlaying, PassProgress progress) {
+        final int recordLen = captured.length;
+        AudioTrack track = null;
+        AudioRecord record = null;
+        MicProbe.Suspension effects = null;
+        int got = 0;
+        try {
+            // Ask to be the player before making a sound.
+            //
+            // 🔴 This was missing, and it is the best explanation anybody has for the oldest
+            // complaint about this feature: the first measurement on a unit fails, and then it
+            // works after a Bluetooth call, or simply the next day. Both of those force the
+            // platform to re-establish who owns the audio.
+            //
+            // On this platform the volume only reaches the amplifier for the source named in
+            // sys.current.vol.type, and one failing tester's report had that property **unset**.
+            // A track that never asked for focus never makes the platform decide it is the
+            // player, so the sweep can be written, mixed, and never actually amplified - and from
+            // the microphone that looks exactly like three speakers that are not connected.
+            //
+            // Held for the whole pass rather than per sweep: dropping and retaking it four times
+            // would invite the platform to re-route between channels, which is the one thing this
+            // measurement must not have happen in the middle of it.
+            result.focus = requestFocus(context);
+            Log.i(TAG, "audio focus for the sweep: " + result.focus);
+
+            record = openMicrophone();
+            activeRecord = record;
+            // Only now, with a second client already on the same input, does the placeholder go.
+            // Released before the null check on purpose: if the real open failed we are abandoning
+            // the pass anyway, and leaving a recorder running would be worse than the failure.
+            MicrophoneGuard.releaseHold();
+            result.captureSource = describeCaptureSource(record);
+            if (record == null) {
+                result.fail(MeasurementFailure.MIC_NOT_OPENED);
+                Log.e(TAG, result.error);
+                return -1;
+            }
+            effects = MicProbe.suspendCapturePreprocessing(record.getAudioSessionId(), TAG);
+
+            track = openTrack(stereo.length);
+            if (track == null) {
+                result.fail(MeasurementFailure.OUTPUT_NOT_OPENED);
+                Log.e(TAG, result.error);
+                return -1;
+            }
+
+            record.startRecording();
+            track.play();
+            final long playStartedMs = System.currentTimeMillis();
+
+            final AudioTrack playing = track;
+            Thread writer = new Thread(() -> {
+                int offset = 0;
+                while (offset < stereo.length) {
+                    int written = playing.write(stereo, offset, stereo.length - offset);
+                    if (written <= 0) break;
+                    offset += written;
+                }
+            }, "wDSP_RoomSweepOut");
+            writer.start();
+            if (onPlaying != null) onPlaying.accept(playStartedMs);
+
+            long lastProgressMs = 0;
+            while (got < recordLen) {
+                final long nowMs = System.currentTimeMillis();
+                if (progress != null && nowMs - lastProgressMs >= PROGRESS_EVERY_MS) {
+                    lastProgressMs = nowMs;
+                    progress.onRecorded(got);
+                }
+                if (aborted || CallState.isActive()) {
+                    Log.w(TAG, "measurement aborted due to active phone call");
+                    result.error = "phone call interrupted measurement";
+                    break;
+                }
+                // In pieces: one read of the whole remainder blocks until the end, and the progress
+                // above then never moves past its first value (it stood at 15 %, 07.10.2026).
+                int read = record.read(captured, got, Math.min(recordLen - got, READ_CHUNK_FRAMES));
+                if (read <= 0) {
+                    Log.w(TAG, "read returned " + read);
+                    break;
+                }
+                got += read;
+            }
+            try {
+                writer.join(2000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (Throwable t) {
+            result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            Log.e(TAG, "the pass failed", t);
+            return -1;
+        } finally {
+            if (effects != null) effects.restore();
+            closeQuietly(track);
+            activeRecord = null;
+            closeQuietly(record);
+            abandonFocus(context);
+        }
+        return got;
     }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
