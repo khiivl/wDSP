@@ -1,3 +1,5 @@
+> 📤 Ordered by the owner 13.10.2026 — waiting for the result.
+
 # Research request: subwoofer-to-doors phase at the crossover, from per-speaker sweeps
 
 **Answer in English. Tables and formulas first, prose second. Every claim needs a source and a mark:
