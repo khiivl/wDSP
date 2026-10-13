@@ -1,50 +1,50 @@
-# HANDOFF — зріз wDSP
+# HANDOFF — wDSP slice
 
-**13.10.2026 ~20:20, сесія Claude «wDSP mod».** Файл перезаписується; історія — у git.
+**13.10.2026 ~20:30, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
-## Для агента автора: з чого почати
+## For the author's agent: where to start
 
-Гілка `kostyfmat_mod` — мод Костянтина поверх `master` автора (khiivl); **увесь `origin/master` уже в
-ній**. Мета власника (08.10): довести почате до ±готового продукту, віддати автору все (опис функцій,
-родмап класів) і закрити проєкт; нових фронтів не відкривати. PR у `master` — рішення автора.
-Мапа гілки — [FOR_THE_AUTHOR.md](FOR_THE_AUTHOR.md). Кожна зміна UI — у **Classic** (автора) і
-**Modern** (наш), день і ніч.
+Branch `kostyfmat_mod` is Kostiantyn's mod on top of the author's (khiivl) `master`; **all of
+`origin/master` is already in it**. Owner's goal (08.10): bring the work to a near-finished product, hand
+the author everything (every function described, a class roadmap) and close the project; open no new
+fronts. A PR into `master` is the author's call. Branch map: [FOR_THE_AUTHOR.md](FOR_THE_AUTHOR.md).
+Every UI change goes into **Classic** (the author's) and **Modern** (ours), day and night.
 
-## Стан
+## State
 
-- Гілку запушено: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15). Після нього — лише цей зріз.
-- Стенд `192.168.1.138:9876`: wDSP **`d6aaae3`** (adb install -r + сервіс вручну). Саб підключено
-  за схемою «+ до +». **Стенд віддано** іншій сесії (модуль + ребут, дошка #1712).
+- Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
+- Bench `192.168.1.138:9876`: wDSP **`d6aaae3`** (adb install -r + service started by hand). Sub wired
+  as its manual says (+ to +). **Bench handed** to another session (module + reboot, board #1712).
 
-## ⏳ Відкрите
+## ⏳ Open
 
-1. **Фаза саба на розділі** — головне. Контрольні свіпи (`d6aaae3`) з пресетом: «+ до +» → вимір +1,
-   сума 80 Гц −11 дБ; «+ до −» → −1, −4,8 дБ (повтор 20:11 відтворився в межах 0,4 дБ). Вимір читає
-   дроти правильно, але за схемою саб і двері гасять одне одного на 80–100 Гц. Власник: *«ось це і
-   треба радити»* — TODO «Порада про фазу саба». **Чекаємо дослідження** (замовлено 13.10):
-   `research/RESEARCH_REQUEST_SUB_CROSSOVER_PHASE.md`. Гіпотеза: полярність читається без ФВЧ дверей
-   і з ФНЧ саба 160, а фільтри пресета на 80 Гц розвертають ~180°. Критерій контрольного свіпу
-   (≥ 6 дБ під енергетичним прогнозом) не розрізнив — новий записати наперед. Дані — DEBT «саб із ФНЧ
-   підсилювача на максимумі».
-2. **Калібрування мікрофона:** на звичній гучності було перевантаження (шум верхів −34 дБ); на 2 кроки
-   тихіше чисто. Поправка 20 Гц +16,6 — підозра (спад динаміків записано на мікрофон); моє правило
-   «нижче 50 Гц не списувати на мікрофон у відкритому просторі» — **чекає рішення власника**.
-3. **Дзвінок бере рівень платформи** (`698830f`, #1704 BitPerfect): на стенді, живим дзвінком не
-   перевірено — `setprop sys.call.vol 10` поза дзвінком → дзвінок → лишається 10.
-4. **Гучність джерел** (`4d1006d`): лишився живий дзвінок власника; пробудження з ACC OFF не
-   перевірено (якщо там 0 → main_volume, wDSP перейме як зміну людини — власник вирішує, чи вада).
-5. **Сервіс на подіях:** `TESTS.md` закрито 13.10; не перевірено лише синхронізацію з радіо власника,
-   режим «мікрофон» після `83bf476` і нормалізацію заставки.
-6. RTA: два нулі + калібрування одною кнопкою (`f8e0fb3`, `3abcd22`) — на стенді не перевірено.
-   Затримки «на слухача» — DEBT «Вимір», перший пункт.
-7. Програмний EQ — відкладено власником 13.10 (TODO «Разом із сесією Дж» п. 15).
-8. Дж: перекласти нові рядки на 26 мов — `room_finding_sub_antiphase`, `room_finding_summed_*`,
-   `room_stage_control*`, `room_control_failed`, `toast_rta_zero_listening`.
+1. **Sub phase at the crossover** — the main item. Control sweeps (`d6aaae3`) with the preset applied:
+   + to + → measured +1, sum at 80 Hz −11 dB; + to − → −1, −4.8 dB (the 20:11 repeat matched within
+   0.4 dB). The measurement reads the wiring right, yet wired as the manual says the sub and the doors
+   cancel at 80–100 Hz. Owner: *«ось це і треба радити»* — TODO «Порада про фазу саба». **Waiting
+   for the research** (ordered 13.10): `research/RESEARCH_REQUEST_SUB_CROSSOVER_PHASE.md`. Hypothesis:
+   polarity is read with no door high-pass and the sub through 160 Hz, while the preset's 80 Hz pair
+   turns them ~180°. The control-sweep criterion (≥ 6 dB under the energy forecast) told nothing apart
+   — write the new one down before testing. Data: DEBT «саб із ФНЧ підсилювача на максимумі».
+2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
+   quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
+   microphone. My rule "below 50 Hz charge nothing to the mic in open space" **awaits the owner**.
+3. **Call takes the platform's level** (`698830f`, #1704 BitPerfect): on the bench, not checked with a
+   live call — `setprop sys.call.vol 10` outside a call → call → stays 10.
+4. **Source volumes** (`4d1006d`): the owner's live call remains; wake from ACC OFF unchecked (if the
+   platform sets 0 → main_volume there, wDSP takes it as the person's change — owner decides).
+5. **Event-driven service:** `TESTS.md` closed 13.10; unchecked: sync with the owner's radio, the
+   "microphone" mode after `83bf476`, the screensaver normalisation.
+6. RTA: two zeros + one-button calibration (`f8e0fb3`, `3abcd22`) not checked on the bench. Delays
+   "for the listener" — DEBT «Вимір», first item.
+7. Software EQ — postponed by the owner 13.10 (TODO «Разом із сесією Дж» item 15).
+8. Gemini: translate the new strings into 26 languages — `room_finding_sub_antiphase`,
+   `room_finding_summed_*`, `room_stage_control*`, `room_control_failed`, `toast_rta_zero_listening`.
 
-## ❓ Питання власнику
+## ❓ For the owner
 
-- Правило для 20 Гц у калібруванні мікрофона (п. 2) — так чи ні?
-- Проба незаявлених дверей (два короткі свіпи) — лишити чи зробити вимикною?
-- Спінери картки в Modern ніч — як мають виглядати?
-- Не доведено: під час свіпів дверей саб у scratch стоїть на 0 дБ із ФНЧ 25 Гц, а не вимкнений —
-  чи просочується він у низ дверей, не перевіряв.
+- The 20 Hz rule for mic calibration (item 2) — yes or no?
+- The probe of undeclared doors (two short sweeps) — keep, or make it switchable?
+- Card spinners in Modern night — how should they look?
+- Unproven: during the door sweeps the scratch preset leaves the sub at 0 dB with a 25 Hz low-pass
+  rather than off — whether it leaks into the doors' bottom end is unchecked.

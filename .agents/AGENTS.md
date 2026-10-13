@@ -5,9 +5,10 @@
 
 ## Language (owner, 28.09.2026)
 
-**English** — everything an agent reads: these rules, the knowledge files, code comments, memory.
+**English** — everything an agent reads: these rules, [HANDOFF.md](HANDOFF.md) (owner, 13.10.2026), the
+knowledge files, code comments, memory.
 **Ukrainian** — only what the owner reads: the conversation, commit messages, [TODO.md](TODO.md),
-[DEBT.md](DEBT.md), [HANDOFF.md](HANDOFF.md). His quoted decisions stay as he said them.
+[DEBT.md](DEBT.md). His quoted decisions stay as he said them.
 
 An equaliser and cabin-measurement app for QF head units, driving the ROHM **BU32107** sound processor through the
 MCU. The owner's second application; the repository is shared with a friend who keeps `origin/master`.
