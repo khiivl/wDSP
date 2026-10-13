@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**13.10.2026 ~21:10, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**13.10.2026 ~21:30, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -13,19 +13,16 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP **`8a5f758`** (13.10 20:45, adb install -r + service by hand, after the
-  other session's reboot). Sub wired + to +. Bench taken for sweeps (board).
+- Bench `192.168.1.138:9876`: wDSP at the resolver-gate commit (13.10 21:21; adb install -r + service by hand).
+  Sub wired + to − (better with this preset). Bench taken for sweeps (board #1715). The owner rebooted the
+  unit at 21:15 after I hung adb with two parallel installs.
 
 ## ⏳ Open
 
-1. **Sub phase at the crossover** — the main item. Research answered and digested
-   (`research/RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md`): a 2nd-order HP/LP pair is 180° apart, so step 2
-   read the sub in the wrong state. **`8a5f758` (on the bench, untested):** the sub is aligned in the
-   preset's filter state (`Biquad`, `toPresetState`, ±3 ms of geometry); the control sweep forecasts the
-   sum as waves for the sub as is and inverted. Pre-registered: as-is forecast within ±1.5 dB of the
-   combined sound, inverted ≥ 4 dB above → SUMMED_CANCELLATION. **Bench test:** + to + → polarity −1
-   and SUMMED_CANCELLATION; + to − → +1 and SUMMED_OK — otherwise it is wrong. Old data: DEBT «саб із
-   ФНЧ підсилювача на максимумі».
+1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
+   resolver gate `SessionResolver.sweep`): + to + → −1, advice, control sweep SUMMED_CANCELLATION
+   (+8.4 dB if flipped); + to − → +1, SUMMED_OK. Fact in MEASURED_FACTS "Subwoofer timing". Left: the
+   `control_impulses.*` dump stays as a tester diagnostic (owner may drop it); the sub sits + to − now.
 2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
    quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
    microphone. My rule "below 50 Hz charge nothing to the mic in open space" **awaits the owner**.

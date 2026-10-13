@@ -36,6 +36,12 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
 
 ## Subwoofer timing (owner's bench, 09.10.2026)
 
+- 📻 **Sub phase is judged in the preset's state** (13.10.2026, `8a5f758` + `7fdc770` sub level fix):
+  wired + to + the sub reads polarity −1 at the crossover and the control sweep says it cancels —
+  complex forecast within 0.3 dB of the combined sound, inverting gains +8.4 dB at 79 Hz; wired + to −
+  it reads +1 and adds up (forecast within 0.2 dB, inverting loses 8.0 dB). The 2nd-order HP/LP pair is
+  why (research/RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md). Do not re-measure.
+
 - 📻 **The sub's "+13 ms" is a phase cycle, not a delay.** Band-limited correlation at 80 Hz:
   strongest peak +13.33 ms, then +24.19 (0.70); minus one period (12.5 ms) gives **+0.83 ms against the
   tape-measured geometry's +0.97**. The sub chain (chip LPF 80 Hz, the owner's analog class-D amp with
