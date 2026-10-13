@@ -1706,12 +1706,24 @@ public class McuService extends Service implements LocationListener {
             // and the base volume is already established
             if (baseStandstillVolume != -1) {
                 // save the last standstill volume recorded by the algorithm
-                rememberedBase.put(galavoltype_last, baseStandstillVolume);
-                // The base this source had when it last left, or, never left, its live level.
-                // Never the previous source's base: AUX once kept it, and GALA then added its
-                // offset to somebody else's base - too loud or silent.
-                Integer kept = rememberedBase.get(galavoltype);
-                baseStandstillVolume = (kept != null) ? kept : VolumeHelper.getVolume();
+                if (!VOL_TYPE_CALL.equals(galavoltype_last)) {
+                    rememberedBase.put(galavoltype_last, baseStandstillVolume);
+                }
+                if (VOL_TYPE_CALL.equals(galavoltype)) {
+                    // 🔴 The call level is the platform's alone (QF_Framework_Mod, owner 13.10.2026:
+                    // a change during a call lives for the trip, after sleep or reboot the car
+                    // settings default). wDSP keeps no memory of it: on 13.10 the framework set
+                    // sys.call.vol 6 -> 10 at wake, resync took that for a wipe, and the call
+                    // came back on our stale 6. The platform's figure is the base.
+                    int platform = VolumeHelper.getVolumeForType(VOL_TYPE_CALL);
+                    baseStandstillVolume = (platform >= 0) ? platform : VolumeHelper.getVolume();
+                } else {
+                    // The base this source had when it last left, or, never left, its live level.
+                    // Never the previous source's base: AUX once kept it, and GALA then added its
+                    // offset to somebody else's base - too loud or silent.
+                    Integer kept = rememberedBase.get(galavoltype);
+                    baseStandstillVolume = (kept != null) ? kept : VolumeHelper.getVolume();
+                }
             }
             // Whatever the other sources hold now was set by this switch - the platform's wipe,
             // which the restore below undoes - not by a person.
