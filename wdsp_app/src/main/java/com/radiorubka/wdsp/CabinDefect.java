@@ -120,7 +120,8 @@ public final class CabinDefect {
             case SUB_ANTIPHASE:
                 return sure + at + String.format(Locale.US, "with this preset it plays against the doors at the "
                         + "crossover (%.0f Hz), so the two cancel there. Turn the phase switch on its amplifier "
-                        + "(0/180) and keep the wiring + to +. Then measure again.", value);
+                        + "to the other position (0/180); with no switch, swap the two wires at the subwoofer. "
+                        + "Then measure again.", value);
             case CROSSOVER_PHASE:
                 return sure + at + String.format(Locale.US, "a notch at %.1f kHz that the mirrored speaker does "
                         + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
@@ -153,9 +154,9 @@ public final class CabinDefect {
                         + "blower or a running engine does this: switch them off and measure again.", value);
             case SUMMED_CANCELLATION:
                 return sure + String.format(Locale.US, "control sweep: at %.0f Hz the subwoofer and the doors "
-                        + "cancel - with the phase switch on the subwoofer's amplifier turned (0/180) they would "
-                        + "play %.0f dB louder there. Keep the wiring + to +, turn the switch, measure again.",
-                        value, value2);
+                        + "cancel - with the subwoofer's phase turned they would play %.0f dB louder there, where "
+                        + "the microphone stands. Turn the phase switch on its amplifier (0/180); with no switch, "
+                        + "swap the two wires at the subwoofer. Then measure again.", value, value2);
             case SUMMED_OK:
                 return sure + String.format(Locale.US, "control sweep: the subwoofer and the doors add up at "
                         + "%.0f Hz; turning the subwoofer's phase would change it by %+.1f dB.", value, value2);

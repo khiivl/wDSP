@@ -438,6 +438,23 @@ public final class RoomMeasurement {
     /** Below this normalised correlation the sub's alignment is reported, not trusted. */
     private static final float SUB_ALIGN_MIN_CORRELATION = 0.5f;
 
+    /**
+     * The alignment's own reckoning of the sub's phase, as advice, or null: in the preset's state
+     * (alignSubwooferAtCrossover) the sub inverted against the doors - they cancel at the crossover. Not
+     * a wiring fault (see the WIRING line): a 2nd-order crossover wants one side inverted even when
+     * every wire is right, and the chip cannot flip it, so the person turns the switch on the sub's
+     * amplifier. Only the control sweep gives it, and only when its own verdict is missing - it
+     * is a reckoning, the speakers heard together outrank it.
+     */
+    static CabinDefect subAntiphase(Result result) {
+        if (result.channels == null || result.channels.length <= Channel.SUBWOOFER.ordinal()) return null;
+        final ChannelResult sub = result.channels[Channel.SUBWOOFER.ordinal()];
+        if (sub == null || !sub.alignedAtCrossover || !sub.confident || sub.polarity >= 0) return null;
+        final float hz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : SUB_ALIGN_CENTRE_HZ;
+        return new CabinDefect(CabinDefect.Kind.SUB_ANTIPHASE, CabinDefect.Certainty.POSSIBLE,
+                sub.label, sub.nameRes, hz);
+    }
+
     /** The sub's low-pass a preset gets with this door high-pass: the same frequency (synthesizeAutoEq16). */
     static int presetSubLpfIdx(float doorHpfHz) {
         return DspResponse.nearestSubLpfIndex(doorHpfHz > 0 ? doorHpfHz : SUB_ALIGN_CENTRE_HZ);
@@ -1679,6 +1696,15 @@ public final class RoomMeasurement {
             } finally {
                 running = false;
             }
+            // The phase advice comes after the control sweep (owner, 13.10.2026: «поради краще давати
+            // після контрольного»): its verdict when it has one, else the alignment's reckoning - one
+            // answer either way, whatever stopped the sweep.
+            boolean verdict = false;
+            for (CabinDefect d : measured.defects) {
+                verdict |= d.kind == CabinDefect.Kind.SUMMED_CANCELLATION || d.kind == CabinDefect.Kind.SUMMED_OK;
+            }
+            final CabinDefect reckoning = verdict ? null : subAntiphase(measured);
+            if (reckoning != null) measured.defects.add(reckoning);
             if (listener != null) listener.onFinished(measured);
         }, "wDSP_ControlSweep").start();
         return true;
@@ -3850,18 +3876,8 @@ public final class RoomMeasurement {
                         c.label, c.nameRes, Float.NaN));
             }
         }
-        // The sub against the doors where they meet, in the preset's state (alignSubwooferAtCrossover):
-        // inverted there, the two cancel at the crossover. Not a wiring fault (see the WIRING line) - a
-        // 2nd-order crossover wants one side inverted even when every wire is right - and a phase
-        // setting the chip cannot flip, so the person turns the switch on the sub's amplifier.
-        if (result.channels != null && result.channels.length > Channel.SUBWOOFER.ordinal()) {
-            final ChannelResult sub = result.channels[Channel.SUBWOOFER.ordinal()];
-            if (sub != null && sub.alignedAtCrossover && sub.confident && sub.polarity < 0) {
-                final float hz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : SUB_ALIGN_CENTRE_HZ;
-                result.defects.add(new CabinDefect(CabinDefect.Kind.SUB_ANTIPHASE, CabinDefect.Certainty.LIKELY,
-                        sub.label, sub.nameRes, hz));
-            }
-        }
+        // No subwoofer phase advice here: it is given after the control sweep (owner, 13.10.2026: «поради
+        // краще давати після контрольного») - by its verdict, or by subAntiphase() when it has none.
         // A tweeter against its own mid-bass on one side (TODO 3 step 5): judged on the third-octave
         // grid, pair by mirrored pair, both heard directly - a reflection-led spectrum is all notches.
         if (result.channels != null) {
