@@ -579,6 +579,11 @@
     <string name="room_finding_channels_swapped">%1$s and %2$s - the arrival times fit only with these two swapped. If the microphone stood where the dot is, their wires are swapped. Fix this first: every other finding names a speaker by its output.</string>
     <string name="room_finding_polarity">%1$s - in antiphase to the other main speakers, most likely plus and minus swapped. It cancels bass in the cabin. Check the two wires at this speaker.</string>
     <string name="room_finding_sub_antiphase">%1$s - in antiphase to the doors at the crossover (%2$d Hz), so the two cancel there. Flip the subwoofer\'s phase: the 0/180 switch on its amplifier, or swap the two wires at the sub. Then measure again.</string>
+    <string name="room_finding_summed_cancellation">control sweep: at %1$d Hz every speaker together plays %2$d dB under the forecast from their own sweeps - the subwoofer and the doors cancel at the crossover. Flip the subwoofer\'s phase and measure again.</string>
+    <string name="room_finding_summed_ok">control sweep: the subwoofer and the doors add up at the crossover (the worst shared third, %1$d Hz, %2$+d dB against the forecast). A note, not a fault.</string>
+    <string name="room_stage_control">Control sweep</string>
+    <string name="room_stage_control_detail">Every speaker at once, through the preset just applied</string>
+    <string name="room_control_failed">The control sweep did not run: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: a notch at %2$.1f kHz that the speaker on the other side does not have - the tweeter most likely plays against its own mid-bass. Swap the two wires of that tweeter (or check its crossover) and measure again.</string>
     <string name="room_finding_speaker_resonance">%1$s: a narrow peak at %2$d Hz that the other speakers do not have - its door panel or its mounting rings. Check the speaker\'s screws, the panel\'s clips and what rattles in that door.</string>
     <string name="room_finding_cabin_mode">Every speaker peaks at %1$d Hz - the cabin\'s own mode, not a speaker\'s fault. The correction cuts what it can there.</string>
