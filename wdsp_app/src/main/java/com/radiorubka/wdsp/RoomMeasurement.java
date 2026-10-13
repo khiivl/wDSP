@@ -429,7 +429,8 @@ public final class RoomMeasurement {
     /**
      * A correlation peak at least this share of the strongest one is a candidate. In a band this narrow
      * the correlation repeats every period (12.5 ms at 80 Hz) and every repeat is in phase at the
-     * crossover; the strongest is usually one cycle late, pulled by the sub's group delay. Of the
+     * crossover - and inverted every half period, which reads the same as the opposite polarity, so
+     * peaks of both signs are candidates (13.10.2026); the strongest is usually one cycle late, pulled by the sub's group delay. Of the
      * candidates the one nearest the geometry wins - the path difference the cabin card gives: the
      * candidates are a whole period apart, so even a rough card picks the right one. Until 08.10.2026 the
      * share was 0.8 and the winner the candidate nearest zero; on the bench the in-phase peak at +0.9 ms
@@ -498,7 +499,12 @@ public final class RoomMeasurement {
                 strongestLag = lag;
             }
         }
-        // Of the peaks of the same sign strong enough, the one nearest the geometry (SUB_ALIGN_CANDIDATE_SHARE).
+        // Of the peaks strong enough (SUB_ALIGN_CANDIDATE_SHARE), of EITHER sign, the one nearest the
+        // geometry; its sign is the polarity. In a band this narrow an inverted sub reads the same as
+        // one half a period away, so the strongest peak cannot decide the sign either. 📻 13.10.2026,
+        // the same bench, only the volume two steps apart: strongest -0.44 at +11.58 ms gave polarity
+        // -1 at -0.79 ms, strongest +0.31 at +16.81 ms gave +1 at -7.23 ms - the peak half a period
+        // from it, near the geometry's -1.70, was never a candidate for having the other sign.
         final float[] mic = micPosition(result);
         final float expectedMs = (float) ((CabinGeometry.distanceCm(speakerPosition(result, Channel.SUBWOOFER), mic)
                 - CabinGeometry.distanceCm(speakerPosition(result, Channel.values()[refIdx]), mic))
@@ -509,13 +515,12 @@ public final class RoomMeasurement {
         for (int j = 1; j < corrAt.length - 1; j++) {
             final double c = corrAt[j];
             final boolean localPeak = Math.abs(c) >= Math.abs(corrAt[j - 1]) && Math.abs(c) >= Math.abs(corrAt[j + 1]);
-            if (!localPeak || Math.signum(c) != Math.signum(best)
-                    || Math.abs(c) < SUB_ALIGN_CANDIDATE_SHARE * Math.abs(best)) continue;
+            if (!localPeak || Math.abs(c) < SUB_ALIGN_CANDIDATE_SHARE * Math.abs(best)) continue;
             candidates.append(String.format(Locale.US, " %+.2f ms (%.2f)",
                     (j - maxLag) * 1000f / SAMPLE_RATE, c / best));
             if (Math.abs(j - maxLag - expectedLag) < Math.abs(bestLag - expectedLag)) bestLag = j - maxLag;
         }
-        Log.i(TAG, String.format(Locale.US, "subwoofer candidates in phase (share of the strongest):%s;"
+        Log.i(TAG, String.format(Locale.US, "subwoofer candidates (signed share of the strongest):%s;"
                 + " geometry expects %+.2f ms", candidates, expectedMs));
         final float corr = (float) (corrAt[bestLag + maxLag] / Math.sqrt(ea * eb));
         final float peakMs = sub.arrivalMs;
