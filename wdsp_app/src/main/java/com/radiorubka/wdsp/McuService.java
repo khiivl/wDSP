@@ -735,6 +735,10 @@ public class McuService extends Service implements LocationListener {
                             intent.getFloatExtra("amp", 0.25f),
                             intent.getFloatExtra("sec", 3f), null);
                 }
+                else if ("com.radiorubka.wdsp.MEASURE_VOLUME_STEPS".equals(action)) {
+                    // Diagnostic: dB per volume step through the microphone - see VolumeSteps.
+                    VolumeSteps.measureAsync(getApplicationContext());
+                }
                 else if ("com.radiorubka.wdsp.SET_VOLUME".equals(action)) {
                     // Diagnostic only: moves the volume the way a person does, without
                     // telling GALA, so its manual-adjustment detector can be tested.
@@ -1059,6 +1063,7 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.radiorubka.wdsp.SETTINGS_RESTORED");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_SESSION");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_ROOM");
+        controlFilter.addAction("com.radiorubka.wdsp.MEASURE_VOLUME_STEPS");
         controlFilter.addAction("com.radiorubka.wdsp.SET_VOLUME");
         controlFilter.addAction("com.radiorubka.wdsp.MEASURE_LATENCY");
         controlFilter.addAction("com.radiorubka.wdsp.PROBE_MIC");

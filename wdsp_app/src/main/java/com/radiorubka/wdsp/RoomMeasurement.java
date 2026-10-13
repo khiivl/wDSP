@@ -1674,6 +1674,18 @@ public final class RoomMeasurement {
         return running;
     }
 
+    /** Claims the measurement slot for another sweep-like job (VolumeSteps); false while one runs. */
+    static synchronized boolean begin() {
+        if (running) return false;
+        running = true;
+        aborted = false;
+        return true;
+    }
+
+    static void end() {
+        running = false;
+    }
+
     /** The measured preset as the control sweep plays it - never in the person's list, overwritten each run. */
     static final String CONTROL_PRESET = "wDSP Control";
 
