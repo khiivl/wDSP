@@ -13,7 +13,8 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP at the resolver-gate commit (13.10 21:21; adb install -r + service by hand).
+- Bench `192.168.1.138:9876`: wDSP `b8afc89` (13.10 21:33; adb install -r + service by hand). Phase advice now only
+  after the control sweep; untested on the unit.
   Sub wired + to − (better with this preset). Bench taken for sweeps (board #1715). The owner rebooted the
   unit at 21:15 after I hung adb with two parallel installs.
 
