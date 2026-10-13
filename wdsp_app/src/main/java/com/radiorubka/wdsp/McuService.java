@@ -823,6 +823,9 @@ public class McuService extends Service implements LocationListener {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        // The loudness curve rides the measured dB per volume step when there is a table (VolumeSteps).
+        LoudnessCurve.setStepTable(getSharedPreferences(RoomMeasurement.PREFS_NAME, MODE_PRIVATE)
+                .getString(VolumeSteps.PREF_TABLE, null));
         createNotificationChannel();
 
         // The start's root check (boot, or the first start after an update) - and with a grant, the

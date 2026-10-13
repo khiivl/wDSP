@@ -38,14 +38,62 @@ public final class LoudnessCurve {
     }
 
     /**
-     * How far the loudness curve has travelled at this volume: 0 where it does nothing, 1 at the
-     * bottom of the scale. A calibration point of 0 or 1 leaves no room below it, which is why it
-     * answers 0 rather than dividing by zero - and why {@link LoudnessCheck} reports that setting
-     * as a curve that cannot act rather than letting it fail silently.
+     * The calibration point the full curve was drawn for: the author's default (FM_CAL_VOL_DEFAULT).
+     * His curve is the boost at volume 1 for a person calibrated there, so it stands for the drop in
+     * level from this step to step 1.
+     */
+    public static final int FULL_CURVE_CAL = 25;
+
+    /**
+     * dB of each volume step against step 32, index = step (VolumeSteps, measured through the
+     * microphone); null while nothing was measured. Set by the service from the stored table.
+     */
+    private static volatile float[] stepDb;
+
+    /** Takes the stored table (32 values, step 1 first, comma separated); anything else clears it. */
+    public static void setStepTable(String csv) {
+        float[] t = null;
+        if (csv != null) {
+            final String[] parts = csv.split(",");
+            if (parts.length == VOL_MAX) {
+                t = new float[VOL_MAX + 1];
+                for (int i = 0; i < VOL_MAX && t != null; i++) {
+                    try {
+                        t[i + 1] = Float.parseFloat(parts[i].trim());
+                        if (Float.isNaN(t[i + 1])) t = null;
+                    } catch (NumberFormatException e) {
+                        t = null;
+                    }
+                }
+            }
+        }
+        stepDb = t;
+    }
+
+    /**
+     * How far the loudness curve has travelled at this volume: 0 where it does nothing, 1 for the
+     * drop the full curve was drawn for. A calibration point of 0 or 1 leaves no room below it, which
+     * is why it answers 0 rather than dividing by zero - and why {@link LoudnessCheck} reports that
+     * setting as a curve that cannot act rather than letting it fail silently.
+     *
+     * <p>🔴 By the drop in decibels, not in steps (owner, 13.10.2026: «може там також математику
+     * виправити»). The ear loses the bass by how much quieter it got, and the steps are not equal:
+     * 📻 measured on the owner's unit 13.10, about 1 dB a step from 32 to 13, 2 from 12 to 8, 3 from 7
+     * to 5 and 5-6 below - 62 dB from 32 to 1. Counted in steps, the curve was full at volume 1 for
+     * any calibration point: a measured preset calibrated at 8 got the boost drawn for a 52 dB drop
+     * after a 30 dB one. With the table the share is the drop from the calibration point over the
+     * drop from {@link #FULL_CURVE_CAL} to 1, capped at 1; without one, the steps as before.
      */
     public static float loudnessRatio(int vol, int cal) {
         if (cal <= VOL_MIN || vol >= cal) return 0f;
-        float r = (float) (cal - vol) / (float) (cal - VOL_MIN);
+        final float[] t = stepDb;
+        float r;
+        if (t != null && cal <= VOL_MAX && vol >= VOL_MIN) {
+            final float full = t[FULL_CURVE_CAL] - t[VOL_MIN];
+            r = full > 0f ? (t[cal] - t[vol]) / full : 0f;
+        } else {
+            r = (float) (cal - vol) / (float) (cal - VOL_MIN);
+        }
         return r < 0f ? 0f : (r > 1f ? 1f : r);
     }
 

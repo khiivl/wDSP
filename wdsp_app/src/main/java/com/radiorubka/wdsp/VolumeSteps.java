@@ -207,7 +207,10 @@ final class VolumeSteps {
             whole &= !Double.isNaN(rel[v]);
         }
         // Only a whole table is kept: the loudness maths reads it step by step.
-        if (whole) prefs.edit().putString(PREF_TABLE, csv.toString()).apply();
+        if (whole) {
+            prefs.edit().putString(PREF_TABLE, csv.toString()).apply();
+            LoudnessCurve.setStepTable(csv.toString());
+        }
         txt.append(whole ? "kept as " + PREF_TABLE + "\n" : "not kept - a step was not read\n");
         Log.i(TAG, txt.toString());
         final File dir = app.getExternalFilesDir(null);
