@@ -1,4 +1,4 @@
-> 📤 Ordered by the owner 13.10.2026 — waiting for the result.
+> 📦 Answered 13.10.2026 — digest `RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md`.
 
 # Research request: subwoofer-to-doors phase at the crossover, from per-speaker sweeps
 
