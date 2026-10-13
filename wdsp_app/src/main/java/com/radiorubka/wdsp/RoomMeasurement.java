@@ -526,6 +526,7 @@ public final class RoomMeasurement {
         final float peakMs = sub.arrivalMs;
         sub.arrivalMs = anchor.arrivalMs + bestLag * 1000f / SAMPLE_RATE;
         sub.polarity = corr < 0 ? -1 : 1;
+        sub.alignedAtCrossover = true;
         // Trust is whether the sub and the doors match in this band at all - the strongest peak. The
         // candidate a cycle away is weaker by construction (the envelope leans the other way), and
         // judging it alone dropped the sub from the cabin average and the preset on 09.10.2026:
@@ -1320,6 +1321,8 @@ public final class RoomMeasurement {
         public float prominence;
         /** +1 normal, -1 wired backwards, 0 not determined. */
         public int polarity;
+        /** The subwoofer only: its polarity is its sign against the doors at the crossover. */
+        public boolean alignedAtCrossover;
         /** Sixteen band levels in dB, on the hardware equaliser's grid. */
         public final float[] bandsDb = new float[NativeSweep.BAND_COUNT];
         /** Clean response in dB (after ambient noise floor spectral subtraction). */
@@ -3735,6 +3738,17 @@ public final class RoomMeasurement {
             for (ChannelResult c : result.invertedChannels) {
                 result.defects.add(new CabinDefect(CabinDefect.Kind.POLARITY, CabinDefect.Certainty.LIKELY,
                         c.label, c.nameRes, Float.NaN));
+            }
+        }
+        // The sub against the doors where they meet: inverted there, the two cancel at the crossover.
+        // Not a wiring fault (see the WIRING line) - a phase setting the chip cannot flip. 📻 13.10.2026:
+        // the owner's flip read -1 at -0.92 ms, flipped back +1 at -1.52 ms against the geometry's -1.70.
+        if (result.channels != null && result.channels.length > Channel.SUBWOOFER.ordinal()) {
+            final ChannelResult sub = result.channels[Channel.SUBWOOFER.ordinal()];
+            if (sub != null && sub.alignedAtCrossover && sub.confident && sub.polarity < 0) {
+                final float hz = result.midbassHpfFreqHz > 0 ? result.midbassHpfFreqHz : SUB_ALIGN_CENTRE_HZ;
+                result.defects.add(new CabinDefect(CabinDefect.Kind.SUB_ANTIPHASE, CabinDefect.Certainty.LIKELY,
+                        sub.label, sub.nameRes, hz));
             }
         }
         // A tweeter against its own mid-bass on one side (TODO 3 step 5): judged on the third-octave

@@ -32,6 +32,8 @@ public final class CabinDefect {
         CHANNELS_SWAPPED,
         /** A main speaker reads inverted while the others do not. */
         POLARITY,
+        /** The subwoofer plays against the doors at the crossover: its phase wants flipping. */
+        SUB_ANTIPHASE,
         /** A tweeter fights its own mid-bass on one side only: a crossover notch the mirror lacks. */
         CROSSOVER_PHASE,
         /** One speaker alone peaks narrowly below 200 Hz: its door panel or its mounting rings. */
@@ -101,6 +103,10 @@ public final class CabinDefect {
             case POLARITY:
                 return sure + at + "reads inverted while the other main speakers do not - most likely "
                         + "connected the wrong way round. Check the two wires at that speaker.";
+            case SUB_ANTIPHASE:
+                return sure + at + String.format(Locale.US, "in antiphase to the doors at the crossover (%.0f Hz) "
+                        + "- the two cancel there. Flip the subwoofer's phase: the 0/180 switch on its "
+                        + "amplifier, or swap the two wires at the sub. Then measure again.", value);
             case CROSSOVER_PHASE:
                 return sure + at + String.format(Locale.US, "a notch at %.1f kHz that the mirrored speaker does "
                         + "not have - the tweeter most likely plays against its own mid-bass at the crossover. "
@@ -161,6 +167,9 @@ public final class CabinDefect {
                 break;
             case POLARITY:
                 text = context.getString(R.string.room_finding_polarity, name);
+                break;
+            case SUB_ANTIPHASE:
+                text = context.getString(R.string.room_finding_sub_antiphase, name, Math.round(value));
                 break;
             case CROSSOVER_PHASE:
                 text = context.getString(R.string.room_finding_crossover_phase, name, value / 1000f);
