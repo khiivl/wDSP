@@ -13,8 +13,9 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP `b8afc89` (13.10 21:33; adb install -r + service by hand). Phase advice now only
-  after the control sweep; untested on the unit.
+- Bench `192.168.1.138:9876`: wDSP `57f9ad7` (13.10 21:42; adb install -r + service by hand): the control sweep runs
+  right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
+  13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
   Sub wired + to − (better with this preset). Bench taken for sweeps (board #1715). The owner rebooted the
   unit at 21:15 after I hung adb with two parallel installs.
 
