@@ -2508,7 +2508,7 @@ public class SettingsActivity extends AppCompatActivity {
     /**
      * Every speaker at once through the preset just applied (RoomMeasurement.controlAsync, ControlSweep):
      * the wizard's own progress page while it plays, then its report again with the finding added, and
-     * the apply button turned into close.
+     * the apply button hidden - the report's own close stays the way out.
      */
     private void runControlSweepInWizard(Dialog dialog, View layoutProgress, View layoutReport,
                                          TextView tvProgressStage, TextView tvProgressDetail,
@@ -2538,8 +2538,8 @@ public class SettingsActivity extends AppCompatActivity {
                         Toast.makeText(SettingsActivity.this,
                                 getString(R.string.room_control_failed, r.control.error), Toast.LENGTH_LONG).show();
                     }
-                    btnApply.setText(R.string.room_wizard_btn_close);
-                    btnApply.setOnClickListener(x -> dialog.dismiss());
+                    // Applied already: the report's own close button is the way out, not a second one.
+                    btnApply.setVisibility(View.GONE);
                 });
             }
         });
