@@ -103,7 +103,9 @@ final class ControlSweep {
     private ControlSweep() {
     }
 
-    static void run(Context app, RoomMeasurement.Result measured, RoomMeasurement.Listener listener) {
+    /** @param restorePreset the person's own preset - what the recovery record puts back if this dies */
+    static void run(Context app, RoomMeasurement.Result measured, RoomMeasurement.Listener listener,
+                    String restorePreset) {
         final Outcome out = new Outcome();
         measured.control = out;
         if (CallState.isActive()) {
@@ -126,7 +128,7 @@ final class ControlSweep {
         // The same recovery record as a measurement's: if this dies half-way, the service start
         // puts the volume back (RoomMeasurement.restoreIfInterrupted).
         prefs.edit().putString(RoomMeasurement.PREF_RECOVERY, RoomMeasurement.PREF_LAST_SELECTED + "="
-                + out.preset + ";saved_volume=" + origVolume).apply();
+                + restorePreset + ";saved_volume=" + origVolume).apply();
 
         final int sr = RoomMeasurement.SAMPLE_RATE;
         try (NativeSweep sweep = new NativeSweep(sr, RoomMeasurement.SUB_SWEEP_START_HZ,
@@ -139,7 +141,7 @@ final class ControlSweep {
             }
             VolumeHelper.setVolume(measured.measureVolume);
             VolumeHelper.setVolumeForType("media_type", measured.measureVolume);
-            // The preset just applied, through the one path every push takes.
+            // The measured preset, through the one path every push takes.
             app.sendBroadcast(new Intent("com.radiorubka.wdsp.RESET_AUDIO_MCU").setPackage(app.getPackageName()));
             RoomMeasurement.sleep(PRESET_PUSH_MS);
             RoomMeasurement.pauseMedia(app);

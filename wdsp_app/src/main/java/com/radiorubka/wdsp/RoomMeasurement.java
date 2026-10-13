@@ -1672,42 +1672,59 @@ public final class RoomMeasurement {
         return running;
     }
 
+    /** The measured preset as the control sweep plays it - never in the person's list, overwritten each run. */
+    static final String CONTROL_PRESET = "wDSP Control";
+
     /**
-     * Plays one sweep through every speaker at once with the preset just applied, and reports how
-     * they added up - see {@link ControlSweep}. The listener gets the same result back, with
-     * {@code result.control} filled in and its finding added to {@code result.defects}.
-     *
-     * @return false when it could not start - another measurement runs - and the listener is not called
+     * Plays one sweep through every speaker at once with the measured preset, before the person saves
+     * it - see {@link ControlSweep}. The preset goes on the chip as {@link #CONTROL_PRESET}: a copy of
+     * what «Застосувати» will leave under the preset's own name (its other keys carried over, then
+     * the measured values), so what is heard is what will be saved. The person's selection comes back
+     * afterwards, and through the recovery record if the process dies half-way. Then the phase advice,
+     * once: the sweep's verdict when it has one, else the alignment's reckoning.
      */
-    public static boolean controlAsync(final Context context, final Result measured, final Listener listener) {
-        if (running || measured == null) {
-            Log.w(TAG, "control sweep not started: " + (running ? "a measurement is running" : "no measurement"));
-            return false;
+    private static void controlPass(Context app, Result result, Listener listener) {
+        final SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        final String own = prefs.getString(PREF_LAST_SELECTED, null);
+        final SharedPreferences.Editor e = prefs.edit();
+        copyPresetKeys(prefs, e, autoEqPresetName(result), CONTROL_PRESET);
+        writePresetValues(e, CONTROL_PRESET, result);
+        e.putString(PREF_LAST_SELECTED, CONTROL_PRESET);
+        e.apply();
+        try {
+            ControlSweep.run(app, result, listener, own);
+        } catch (Throwable t) {
+            if (result.control == null) result.control = new ControlSweep.Outcome();
+            result.control.error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            Log.e(TAG, "control sweep failed", t);
+        } finally {
+            prefs.edit().putString(PREF_LAST_SELECTED, own).apply();
+            app.sendBroadcast(new Intent("com.radiorubka.wdsp.RESET_AUDIO_MCU").setPackage(app.getPackageName()));
         }
-        new Thread(() -> {
-            running = true;
-            aborted = false;
-            try {
-                ControlSweep.run(context.getApplicationContext(), measured, listener);
-            } catch (Throwable t) {
-                if (measured.control == null) measured.control = new ControlSweep.Outcome();
-                measured.control.error = t.getClass().getSimpleName() + ": " + t.getMessage();
-                Log.e(TAG, "control sweep failed", t);
-            } finally {
-                running = false;
-            }
-            // The phase advice comes after the control sweep (owner, 13.10.2026: «поради краще давати
-            // після контрольного»): its verdict when it has one, else the alignment's reckoning - one
-            // answer either way, whatever stopped the sweep.
-            boolean verdict = false;
-            for (CabinDefect d : measured.defects) {
-                verdict |= d.kind == CabinDefect.Kind.SUMMED_CANCELLATION || d.kind == CabinDefect.Kind.SUMMED_OK;
-            }
-            final CabinDefect reckoning = verdict ? null : subAntiphase(measured);
-            if (reckoning != null) measured.defects.add(reckoning);
-            if (listener != null) listener.onFinished(measured);
-        }, "wDSP_ControlSweep").start();
-        return true;
+        // The phase advice comes after the control sweep (owner, 13.10.2026: «поради краще давати
+        // після контрольного»): its verdict when it has one, else the alignment's reckoning - one
+        // answer either way, whatever stopped the sweep.
+        boolean verdict = false;
+        for (CabinDefect d : result.defects) {
+            verdict |= d.kind == CabinDefect.Kind.SUMMED_CANCELLATION || d.kind == CabinDefect.Kind.SUMMED_OK;
+        }
+        final CabinDefect reckoning = verdict ? null : subAntiphase(result);
+        if (reckoning != null) result.defects.add(reckoning);
+    }
+
+    /** Copies every key of one preset under another name, types kept. */
+    private static void copyPresetKeys(SharedPreferences prefs, SharedPreferences.Editor e, String from, String to) {
+        final String prefix = from + "_";
+        for (java.util.Map.Entry<String, ?> kv : prefs.getAll().entrySet()) {
+            if (!kv.getKey().startsWith(prefix)) continue;
+            final String key = to + "_" + kv.getKey().substring(prefix.length());
+            final Object v = kv.getValue();
+            if (v instanceof Integer) e.putInt(key, (Integer) v);
+            else if (v instanceof Boolean) e.putBoolean(key, (Boolean) v);
+            else if (v instanceof Float) e.putFloat(key, (Float) v);
+            else if (v instanceof Long) e.putLong(key, (Long) v);
+            else if (v instanceof String) e.putString(key, (String) v);
+        }
     }
 
     /** Runs a full measurement on its own thread with subwoofer, soundstage mode, target curve, body type and listening distance. */
@@ -1727,6 +1744,9 @@ public final class RoomMeasurement {
             Result result;
             try {
                 result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType, listeningDistanceCm, listener, false);
+                // The control sweep before the person decides (owner, 13.10.2026: «не чекати на
+                // "застосувати", а зразу контрольний, потім вердикт і тоді вже застосувати»).
+                if (result.error == null) controlPass(context.getApplicationContext(), result, listener);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -3336,14 +3356,10 @@ public final class RoomMeasurement {
     }
 
     /**
-     * Applies the synthesized Auto-EQ preset directly to SharedPreferences and broadcasts to McuService.
+     * Every value a measured preset carries, written under {@code presetName}: what «Застосувати» saves,
+     * and what the control sweep plays before anybody chose to save it - one writer for both.
      */
-    public static void applyAutoEqPreset(Context context, Result result, String presetName) {
-        if (context == null || result == null) return;
-        if (presetName == null || presetName.trim().isEmpty()) presetName = autoEqPresetName(result);
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor e = prefs.edit();
-
+    private static void writePresetValues(SharedPreferences.Editor e, String presetName, Result result) {
         // 1. Equalizer 16 bands
         for (int b = 0; b < NativeSweep.BAND_COUNT; b++) {
             e.putInt(presetName + "_g" + b, result.autoEqGains16[b]);
@@ -3443,6 +3459,17 @@ public final class RoomMeasurement {
         for (String k : new String[]{"_bb_f", "_bb_r", "_bb_frq_f", "_bb_frq_r"}) {
             e.putInt(presetName + k, 0);
         }
+    }
+
+    /**
+     * Applies the synthesized Auto-EQ preset directly to SharedPreferences and broadcasts to McuService.
+     */
+    public static void applyAutoEqPreset(Context context, Result result, String presetName) {
+        if (context == null || result == null) return;
+        if (presetName == null || presetName.trim().isEmpty()) presetName = autoEqPresetName(result);
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e = prefs.edit();
+        writePresetValues(e, presetName, result);
 
         // 6. Add to preset list
         Set<String> presetNames = new HashSet<>(prefs.getStringSet(PREF_PRESET_NAMES, new HashSet<>()));

@@ -2494,65 +2494,11 @@ public class SettingsActivity extends AppCompatActivity {
                         RoomMeasurement.applyAutoEqPreset(SettingsActivity.this, result, presetName);
                         Toast.makeText(SettingsActivity.this, getString(R.string.room_wizard_applied_toast, presetName), Toast.LENGTH_LONG).show();
                         showRoomStatus();
-                        // The control sweep, at once: the person still sits where the microphone
-                        // measured, and sees whether the preset adds up (owner, 13.10.2026).
-                        runControlSweepInWizard(dialog, layoutProgress, layoutReport, tvProgressStage,
-                                tvProgressDetail, progressBar, tvPercent, layoutFindings, tvFindings,
-                                btnApply, result);
+                        dialog.dismiss();
                     });
                 });
             }
         });
-    }
-
-    /**
-     * Every speaker at once through the preset just applied (RoomMeasurement.controlAsync, ControlSweep):
-     * the wizard's own progress page while it plays, then its report again with the finding added, and
-     * the apply button hidden - the report's own close stays the way out.
-     */
-    private void runControlSweepInWizard(Dialog dialog, View layoutProgress, View layoutReport,
-                                         TextView tvProgressStage, TextView tvProgressDetail,
-                                         ProgressBar progressBar, TextView tvPercent,
-                                         View layoutFindings, TextView tvFindings, TextView btnApply,
-                                         RoomMeasurement.Result result) {
-        final boolean started = RoomMeasurement.controlAsync(this, result, new RoomMeasurement.Listener() {
-            @Override
-            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
-                runOnUiThread(() -> {
-                    tvProgressStage.setText(getString(R.string.room_stage_progress, step, totalSteps, stageTitle));
-                    tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
-                    progressBar.setProgress(percent);
-                    tvPercent.setText(percent + "%");
-                });
-            }
-
-            @Override
-            public void onFinished(RoomMeasurement.Result r) {
-                runOnUiThread(() -> {
-                    dialog.setCancelable(true);
-                    dialog.setCanceledOnTouchOutside(true);
-                    layoutProgress.setVisibility(View.GONE);
-                    layoutReport.setVisibility(View.VISIBLE);
-                    showFindings(r, layoutFindings, tvFindings);
-                    if (r.control != null && r.control.error != null) {
-                        Toast.makeText(SettingsActivity.this,
-                                getString(R.string.room_control_failed, r.control.error), Toast.LENGTH_LONG).show();
-                    }
-                    // Applied already: the report's own close button is the way out, not a second one.
-                    btnApply.setVisibility(View.GONE);
-                });
-            }
-        });
-        if (!started) {
-            dialog.dismiss();
-            return;
-        }
-        layoutReport.setVisibility(View.GONE);
-        layoutProgress.setVisibility(View.VISIBLE);
-        progressBar.setProgress(0);
-        tvPercent.setText("0%");
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
     }
 
     private void startMicCalibration() {
