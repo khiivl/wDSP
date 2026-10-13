@@ -13,7 +13,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15); only slice/rules commits after it.
-- Bench `192.168.1.138:9876`: wDSP `5f0395f` (13.10 21:47, + the mic level probe before the sweep; adb install -r + service by hand): the control sweep runs
+- Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
   Sub wired + to − (better with this preset). Bench taken for sweeps (board #1715). The owner rebooted the
@@ -36,11 +36,9 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
    "microphone" mode after `83bf476`, the screensaver normalisation.
 6. RTA: two zeros + one-button calibration (`f8e0fb3`, `3abcd22`) not checked on the bench. Delays
    "for the listener" — DEBT «Вимір», first item.
-6b. **Loudness maths is wrong** (owner 13.10 asked): the ISO 226 boost grows linearly in volume STEPS
-   from the calibration point to the full curve at volume 1, whatever the calibration point - so a
-   measured preset (cal = the measurement volume, ~8) over-boosts the bass low down. Fix: measure dB per
-   volume step with the mic (sound, owner present, daytime), then drive the curve by the dB drop
-   (ISO 226 difference between the two levels). Owner: the forecast/options are there to show it.
+6b. **Loudness by dB, not steps** (13.10, on the bench, not yet heard by the owner): `LoudnessCurve.loudnessRatio`
+   reads the measured step table (`VolumeSteps`, MEASURED_FACTS "Volume steps"); the mic level probe
+   before sweeps is on the bench too, unverified.
 7. Software EQ — postponed by the owner 13.10 (TODO «Разом із сесією Дж» item 15).
 8. Gemini: translate the new strings into 26 languages — `room_finding_sub_antiphase`,
    `room_finding_summed_*`, `room_stage_control*`, `room_control_failed`, `toast_rta_zero_listening`.

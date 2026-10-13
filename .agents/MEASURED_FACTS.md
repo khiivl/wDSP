@@ -34,6 +34,14 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
     envelope **−2.9 dBFS** peak (RMS −5.9), flat ±0.03 dB across all ten octaves.
   A level calibrated "by these files" is calibrated by ONE of them — name which.
 
+## Volume steps (owner's unit, 13.10.2026, `VolumeSteps`, 1 kHz through the microphone)
+
+- 📻 **dB per step is not constant:** ~1.0 dB a step from 32 down to 13 (1.5 at 28-30, 2.5 at 31→32),
+  ~2 from 12 to 8, ~3 from 7 to 5, 5-6 from 4 to 1; **62 dB from 32 to 1**. Two separate walks joined
+  at 13 agreed within 0.2 dB down to step 5. The MCU ramps the volume: a 0.3 s walk read the big low
+  steps as plateaus — read each low step for a second. Stored as `volume_step_db`; the loudness curve
+  rides it. Do not re-measure.
+
 ## Subwoofer timing (owner's bench, 09.10.2026)
 
 - 📻 **Sub phase is judged in the preset's state** (13.10.2026, `8a5f758` + `7fdc770` sub level fix):

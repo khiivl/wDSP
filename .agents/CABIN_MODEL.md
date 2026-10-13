@@ -254,7 +254,7 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 | "the chip takes 2 commands a second" | ❌ our own `McuService.THROTTLE_MS = 500` | — |
 | "MEMS input cut at 70–150 Hz, useless for bass" | ❌ disproved by measurement | §5 |
 | `CAL_STEP = 24` ≈ 80 dBA | ❌ unfounded (SPL never measured) | our calibration step defaults to 25; the curve ends where the cabin was measured |
-| linear scaling between steps | ✅ a compromise until the dB per volume step is measured (1 kHz tone, steps 1..32 — owed, needs sound) | — |
+| linear scaling between steps | ❌ replaced 13.10: the dB per step was measured (MEASURED_FACTS "Volume steps"); the share of the curve is the dB drop from the calibration point over the drop from 25 to 1 | `LoudnessCurve.loudnessRatio` |
 | cabin gain +12 dB/oct below 60–80 Hz, level-independent | ✅ physics (§4.1) — not a dynamic effect | — |
 
 ## 12. Verdicts — the blind-calibration reference
