@@ -12,8 +12,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `76b5089` (13.10 ~20:15). **~24 local commits NOT pushed** (sub phase,
-  control sweep, level probe, volume table, loudness by dB) — push on the owner's order.
+- Pushed: `origin/kostyfmat_mod` = `7ffa03c` (13.10 ~22:20) — everything, only this slice line after it.
 - Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
