@@ -12,12 +12,12 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `bb54fdc`; **three commits after it are local only**
-  (`0ddab58` the measurement volume, `7a197f3` its strings, this slice).
+- Pushed: `origin/kostyfmat_mod` = `bb54fdc`; **7 commits after it are local only** — the
+  measurement volume `0ddab58` and its strings `7a197f3`/`51337ac`, the rest slices.
 - Bench `192.168.1.138:9876`: `492e348` (14.10 23:51, adb install -r + service by hand; v0.4.9.8,
   no crash, nothing measured) — the locales after it are strings only. Sub + to −.
 - Argon: chat 228743237ea71d21 is dead — never address it; current one 32890fb409d8df41.
-- The 28 other locales are in (`20cd7bb`, Gemini's text, checked per file).
+- The 28 locales are in (Gemini's text, checked per file).
 
 ## ⏳ Open
 
