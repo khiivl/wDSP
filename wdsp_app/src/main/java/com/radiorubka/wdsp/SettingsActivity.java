@@ -2409,10 +2409,12 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
+                    // By stage, not by percent (owner, 14.10.2026: «Нафіга ті проценти?»).
                     tvProgressStage.setText(getString(R.string.room_stage_progress, step, totalSteps, stageTitle));
                     tvProgressDetail.setText(stageDetail != null ? stageDetail : "");
-                    progressBar.setProgress(percent);
-                    tvPercent.setText(percent + "%");
+                    progressBar.setMax(totalSteps);
+                    progressBar.setProgress(step);
+                    tvPercent.setVisibility(View.GONE);
                     if (tvRoomStatus != null) {
                         tvRoomStatus.setText(getString(R.string.room_measure_running, stageTitle));
                     }
@@ -2578,9 +2580,10 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
                 runOnUiThread(() -> {
-                    progressBar.setProgress(percent);
+                    progressBar.setMax(totalSteps);
+                    progressBar.setProgress(step);
                     tvMsg.setText(getString(R.string.room_stage_progress, step, totalSteps, stageTitle)
-                            + "\n" + (stageDetail != null ? stageDetail : "") + " (" + percent + "%)");
+                            + "\n" + (stageDetail != null ? stageDetail : ""));
                     if (tvRoomMicCalStatus != null) {
                         tvRoomMicCalStatus.setText(getString(R.string.room_mic_cal_running, stageTitle));
                     }

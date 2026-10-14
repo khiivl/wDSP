@@ -1690,6 +1690,43 @@ public final class RoomMeasurement {
         running = false;
     }
 
+    /**
+     * One part of a longer job as the person sees it: the part's own stage numbers moved past the
+     * {@code before} stages ahead of it and counted out of the whole job's {@code total}, and the
+     * part's own "done" dropped - the job says done once, at its end ({@link #done}). Owner,
+     * 14.10.2026: «Етапів стільки то - етап 1...2...3\10», instead of a percentage that started
+     * again with every part (the control sweep went 0..100 % as "stage 1/1" after the measurement's
+     * "5/5 done", the volume steps sat at 0 %).
+     */
+    static Listener part(Listener listener, int before, int total) {
+        if (listener == null) return null;
+        return new Listener() {
+            @Override
+            public void onProgress(String stage) {
+                listener.onProgress(stage);
+            }
+
+            @Override
+            public void onProgress(int step, int totalSteps, String stageTitle, String stageDetail, int percent) {
+                if (totalSteps > 1 && step == totalSteps) return;   // the part's own "done"
+                listener.onProgress(before + step, total, stageTitle, stageDetail, percent);
+            }
+
+            @Override
+            public void onFinished(Result result) {
+                listener.onFinished(result);
+            }
+        };
+    }
+
+    /** The job's last stage: done, once, after every part of it. */
+    private static void done(Context context, Listener listener, int total, int detailRes) {
+        if (listener == null) return;
+        listener.onProgress(total, total, context.getString(R.string.room_stage_done),
+                context.getString(detailRes), 100);
+    }
+
+
     /** The measured preset as the control sweep plays it - never in the person's list, overwritten each run. */
     static final String CONTROL_PRESET = "wDSP Control";
 
@@ -1765,14 +1802,20 @@ public final class RoomMeasurement {
         new Thread(() -> {
             Result result;
             try {
-                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType, listeningDistanceCm, listener, false);
+                // Stages as the person sees them: silence, the speakers, the delays, the preset, the
+                // control sweep, the volume steps when the unit has no table yet, done.
+                final boolean table = !VolumeSteps.hasTable(context);
+                final int total = table ? 7 : 6;
+                result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType,
+                        listeningDistanceCm, part(listener, 0, total), false);
                 // The control sweep before the person decides (owner, 13.10.2026: «не чекати на
                 // "застосувати", а зразу контрольний, потім вердикт і тоді вже застосувати»).
-                if (result.error == null) controlPass(context.getApplicationContext(), result, listener);
+                if (result.error == null) controlPass(context.getApplicationContext(), result, part(listener, 4, total));
                 // The volume table once, on a unit that has none (a calibration takes it every time).
-                if (result.error == null && !VolumeSteps.hasTable(context)) {
-                    VolumeSteps.inMeasurement(context.getApplicationContext(), listener);
+                if (result.error == null && table) {
+                    VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 5, total));
                 }
+                if (result.error == null) done(context, listener, total, R.string.room_stage_done_detail);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -1975,13 +2018,18 @@ public final class RoomMeasurement {
                 // Whether there is a subwoofer is a fact about the car, not about a preset, and
                 // CabinProfile.hasSubwoofer() is the one function that owns it. A literal here was a third
                 // road to the same fact, hidden inside an overload.
+                // Four stages as the person sees them: silence, the speakers, the volume steps, done.
+                final int total = 4;
                 result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS,
                         CabinProfile.hasSubwoofer(context),
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
-                        getBodyType(context), getListeningDistanceCm(context), listener, true);
+                        getBodyType(context), getListeningDistanceCm(context), part(listener, 0, total), true);
                 // Every calibration takes the volume table afresh: whoever recalibrates may have
                 // changed the amplifier (owner, 13.10.2026: «програма має сама знімати обладнання»).
-                if (result.error == null) VolumeSteps.inMeasurement(context.getApplicationContext(), listener);
+                if (result.error == null) {
+                    VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 2, total));
+                    done(context, listener, total, R.string.room_stage_mic_done_detail);
+                }
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
