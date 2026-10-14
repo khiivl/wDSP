@@ -33,12 +33,12 @@ So the product of a measurement is, in this order:
 1. **a list of defects** — what, where (which speaker, which band), how sure, what the person can do;
 2. **a coarse global correction** — only what this hardware can actually change.
 
-What the hardware gives us to correct with (all of it global — one EQ for every channel):
+What the hardware gives us to correct with (all of it global — one EQ for all four doors, none for the sub):
 
 | control | resolution | consequence |
 |---|---|---|
 | EQ | 16 fixed third-octave bands, **Q 2.2 fixed**, **2 dB steps**, ±12 dB | anything finer than ~±2 dB is arithmetic, not sound; no narrow notch/peak can be treated |
-| EQ placement | **before** the sub crossover, the same EQ for front, rear and sub | a band raised for one speaker is raised for all; a weak channel cannot be fixed by EQ |
+| EQ placement | **after** the sub branch: front and rear EQ (rear may mirror front), none for the sub (datasheet register map, corrected 15.10.2026 — `platform/03-SOUND-PROCESSOR.md`) | a band raised for one door is raised for all doors and never for the sub; the sub is shaped only by its gain and low-pass; a weak channel cannot be fixed by EQ |
 | door high-pass / sub low-pass | fixed frequency lists, 12 dB/oct | coarse handover only |
 | fader / balance | 0..24 | the only per-zone level control (front ↔ rear, left ↔ right) |
 | delays | 0.5 ms steps, ≤ 40 steps | time alignment is the one thing measured and applied precisely |
@@ -240,7 +240,7 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 | meaning | what it is | owner / where |
 |---|---|---|
 | **loudness** (тонкомпенсація) | EQ raised by volume step below the calibration step (ISO 226 shape), applied after the knob stops | ✅ `LoudnessCurve`, `McuService.applyVolumeDependentSettings`; prefs `_fm_en/_fm_cal/_fm_str` |
-| **"Компенсація саба"** | the sub gain raised by the loudness offset of the highest band the sub plays alone (one below the crossover band; the author's 0.5 table, carried on to 250 Hz — 02.10), only with loudness on | ✅ `LoudnessCurve.subOffset/maxSubBoost`; pref `_sub_comp`. Kept by the owner (15.09: switched on deliberately when bass is short) although the research says "EQ only" (§11) |
+| **"Компенсація саба"** | the sub gain raised by the loudness offset of the highest band the sub plays alone (one below the crossover band; the author's 0.5 table, carried on to 250 Hz — 02.10), only with loudness on | ✅ `LoudnessCurve.subOffset/maxSubBoost`; pref `_sub_comp`. Kept by the owner (15.09: switched on deliberately when bass is short). The research's "EQ only" (§11) rested on the EQ feeding the sub, which it does not: without this switch the loudness curve never reaches the sub |
 | **low end of the microphone curve** | bands 0–4 of `estimateMicCompensation` (§6) | ✅ / 📋 cabin gain |
 | **sub in the auto-EQ** | handover below the door high-pass, sub gain constants (§9) | ✅ `synthesizeAutoEq16` |
 
@@ -250,7 +250,7 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 |---|---|---|
 | low-level bass loss is hearing (ISO 226); small-signal speaker is linear | ✅ physics; the owner's "lazy midbass" not supported | Klippel papers (sources 1–2); sources 3–4 (YouTube, XDA) irrelevant |
 | drive loudness by volume step, not program RMS; keep HPF static; apply after the knob stops | ✅ matches the code | `LoudnessCurve`; 500 ms throttle with a trailing write |
-| EQ sits before the sub split, so "Sub compensation" doubles the boost | ✅ very likely — register `0206` = 00 after reset (`RESEARCH_BU32107_SUB_SOURCE.md`); acoustic proof owed | kept anyway by the owner's decision (§10) |
+| EQ sits before the sub split, so "Sub compensation" doubles the boost | ❌ wrong (15.10.2026): the EQ has no SL/SR channel and the sub crossover is fed from Time Alignment, which is upstream of the EQ (`platform/03-SOUND-PROCESSOR.md`); "Sub compensation" is the only path loudness has to the sub. 📻 acoustic check owed | the owner's switch stays (§10) |
 | "the chip takes 2 commands a second" | ❌ our own `McuService.THROTTLE_MS = 500` | — |
 | "MEMS input cut at 70–150 Hz, useless for bass" | ❌ disproved by measurement | §5 |
 | `CAL_STEP = 24` ≈ 80 dBA | ❌ unfounded (SPL never measured) | our calibration step defaults to 25; the curve ends where the cabin was measured |

@@ -199,36 +199,21 @@
 
 ## 5. 🎛️ Повна топологія цифрового тракту BU32107
 
+> ✍️ Rewritten 15.10.2026 (Claude) from the datasheet register map; the diagram that stood here put the
+> EQ before the split and was wrong. Detail and evidence: `03-SOUND-PROCESSOR.md`, "Hardware signal path".
+
 ```
-I2S In (Stereo 48kHz)
-   │
-   ▼
-[16-Band Parametric EQ]  (0610..061F)  ◄── Спільний для Front/Rear (Mono-Linked)
-   │
-   ▼
-[P2Bass Bass Synthesizer] (0705..0706)  ◄── Динамічний підйом гармонік НЧ
-   │
-   ├────────────────────────────────────────┬─────────────────────────────┐
-   ▼                                        ▼                             ▼
-[Front HPF 12dB/oct] (0703)          [Rear HPF 12dB/oct] (0704)    [Sub LPF 12dB/oct] (0707)
-   │                                        │                             │
-   ▼                                        ▼                             ▼
-[Time Alignment Delays]              [Time Alignment Delays]        [Sub Phase / Delay]
-  FL / FR (0400..0403)                 RL / RR (0404..0407)           Sub (0408..0409)
-   │                                        │                             │
-   ▼                                        ▼                             ▼
-[DVol Digital Volume] (0900..090B)   [DVol Digital Volume]          [DVol Sub Gain]
-   │                                        │                             │
-   ▼                                        ▼                             ▼
-[Analog Fader Volume] (0A00..0A01)   [Analog Fader Volume] (0A02..0A03) [Analog Fader Sub] (0A04..0A05)
-   │                                        │                             │
-   ▼                                        ▼                             ▼
-[DAC Front Left / Right]             [DAC Rear Left / Right]        [DAC Subwoofer / Center]
+DSP Input ─► Loudness (0701/0702) ─► Time Alignment (0400..040D, input 0203[4])
+   ├─► P2Bass (0705/0706) ─► Front HPF (0703) + 13-band EQ + tone Front (0610..061F) ─► DVol ─► Fader FL/FR (0A00/0A01)
+   ├─► P2Bass (0705/0706) ─► Rear HPF (0704)  + 13-band EQ + tone Rear  (0620..062F) ─► DVol ─► Fader RL/RR (0A02/0A03)
+   └─► SL X'over input (0206[7:6] = 00 = Time Alignment) ─► Sub HPF/LPF (0707/0708) ─► Sub selector (0102[5:4]) ─► Fader Sub (0A04)
 ```
 
 ### 🧩 Головні архітектурні закони проєкту:
-1. **EQ стоїть ДО кросовера**:
-   - Будь-яке заниження частот 20, 31.5, 50, 80 Гц у 16-смуговому еквалайзері позбавляє сабвуфер корисного сигналу. При увімкненому сабвуфері смуги 20..80 Гц тримаються на **0 дБ (Flat)**.
+1. **🔬 EQ stands AFTER the subwoofer branch** (corrected 15.10.2026; until then this line said the opposite):
+   - The EQ has Front and Rear channels only, no SL/SR, so a cut or boost at 20..80 Hz never reaches the
+     subwoofer. With a subwoofer those bands only touch the high-passed doors; the sub is shaped by its
+     gain, low-pass and fader alone. ❓ `0102[5:4]` as the MCU writes it is unverified (see `03`).
 2. **Захист від перевантаження ЦАП**:
    - Одночасне увімкнення Loudness (апаратний контур підйому НЧ) та FM-кривої (підйом НЧ/ВЧ тюнера) призводить до цифрового кліпінгу. Вони взаємовиключні.
 3. **Серіалізація команд гучності та фейдера**:

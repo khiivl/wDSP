@@ -1,3 +1,7 @@
+> ❌ Correction, 15.10.2026 (Claude): wherever this file says the EQ sits before the subwoofer split, it
+> is wrong - the EQ comes after the sub branch and has no sub channel (`platform/03-SOUND-PROCESSOR.md`,
+> "Hardware signal path"). Kept as written for history.
+
 > 📦 Answered 13.10.2026 — digest `RESEARCH_RESULT_SUB_CROSSOVER_PHASE.md`.
 
 # Research request: subwoofer-to-doors phase at the crossover, from per-speaker sweeps

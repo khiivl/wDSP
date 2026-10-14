@@ -192,20 +192,36 @@ its mandatory bit 7 already set. So P2Bass gain really is dB, one per step, stra
 The sub high-pass — the subsonic filter that keeps a ported box from unloading — exists in the
 chip and the app does not expose it.
 
-### 🔬 Hardware Signal Path & Topology (Datasheet BU32107EFV-M pp. 88–90 & MCU Firmware)
-> ✍️ *Documented by Antigravity (Gemini) & Kostyamat — 10.09.2026 20:45*.
+### 🔬 Hardware signal path (datasheet BU32107EFV-M Rev.001, register map) — corrected 15.10.2026
 
-The internal digital signal path of the ROHM BU32107 proceeds strictly in this order:
 ```
-I2S In ──► 16-Band Parametric EQ (0610..061F) ──► P2Bass (0705..0706)
-       ──► Crossover Split:
-             ├──► Front HPF (0703) ──► DVol / Faders (FL, FR) ──► DAC
-             ├──► Rear HPF (0704)  ──► DVol / Faders (RL, RR) ──► DAC
-             └──► Sub LPF (0707)   ──► DVol / Faders (Sub)    ──► DAC
+DSP Input (0203[7]) ─► SpeAna ─► Loudness (0701/0702) ─► Time Alignment (input 0203[4] = Loudness)
+   ├─► doors: P2Bass (0705/0706) ─► door HPF (0703/0704) + 13-band EQ + 3-band tone (0610..062F)
+   │          ─► DVol ─► faders 0A00..0A03 ─► FL FR RL RR
+   └─► sub:   SL X'over input (0206[7:6] = 00 = Time Alignment) ─► Sub HPF/LPF/IIR (0707/0708, coefs 1300)
+              ─► Sub selector (0102[5:4]) ─► fader 0A04 ─► SUB
 ```
 
-**🔴 Fundamental Architectural Law: The 16-band EQ is BEFORE the Crossover**:
-Because the 16-band EQ processes the composite stereo stream before the crossover split, **any cut on the lowest EQ bands (20 Hz, 31.5 Hz, 50 Hz, 80 Hz) starves the subwoofer input**. If an Auto-EQ algorithm pulls down EQ sub-bass and attempts to compensate by raising subwoofer gain to +8..+12 dB, the subwoofer path is overdriven with an attenuated, phase-distorted signal.
+**🔴 The 16-band EQ sits AFTER the subwoofer branch and does not reach the subwoofer.**
+- 🔬 EQ and tone registers exist for **Front** (`0610..061F`) and **Rear** (`0620..062F`) only. Bit 6 of
+  `0610..061F` is "Front only / Front+Rear"; the coefficient selector `1000[6:4]` offers Front, Rear,
+  Front/Rear, FL, FR, RL, RR — **no SL/SR**. The sub has filters of its own (`1300`: Sub HPF A/B, Sub LPF
+  A/B, Sub IIR). The 16 bands of wDSP are the 13-band EQ + the 3-band tone (`061D..061F`).
+- 🔬 The sub crossover's input `0206[7:6]` = `00` (reset value) = the Time Alignment output. Time
+  Alignment takes Loudness or the DC-cut HPF (`0203[4]`); Loudness takes the SpeAna input, which takes the
+  DSP input. The EQ is nowhere upstream. The datasheet says the same in words: Loudness output above
+  0 dBFS clips "at the next Time Alignment circuit".
+- 🔬 P2Bass is Front/Rear only as well (`0705/0706`, input selectors `0205[6]`, `0205[5:4]`).
+- 🧩 So an EQ cut or boost at 20..80 Hz changes only the doors, which are high-passed there; the sub's
+  level moves only with its gain (`0x8B`) and fader. Loudness through the EQ never reaches the sub —
+  "Sub compensation" is the only path it has there, not a double boost.
+- ❓ What the MCU writes to `0102[5:4]` (the sub fader's source): reset `00` = SL/SR, the sub crossover;
+  `01` = RL/RR would hand the sub the rear doors' post-EQ, post-HPF signal. The claim "no handler writes
+  `0102`" (Gemini, 15.09) rested on a wrong command table. 📻 Owed: scratch preset, doors muted, −10 dB
+  at 31.5 Hz on the EQ — the sub's level must not move.
+- History: the "law" that stood here until 15.10.2026 — "the 16-band EQ is BEFORE the crossover, any cut
+  at 20..80 Hz starves the subwoofer" (Gemini 10.09 and 15.09) — was wrong. Claude's check of 15.09
+  confirmed only `0206` = Time Alignment and never asked where Time Alignment sits relative to the EQ.
 
 ### 🔬 Filter Slopes and Frequency Code Translation
 1. **Filter Order and Slope**:

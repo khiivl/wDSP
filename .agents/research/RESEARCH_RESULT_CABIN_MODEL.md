@@ -1,3 +1,7 @@
+> ❌ Correction, 15.10.2026 (Claude): wherever this file says the EQ sits before the subwoofer split, it
+> is wrong - the EQ comes after the sub branch and has no sub channel (`platform/03-SOUND-PROCESSOR.md`,
+> "Hardware signal path"). Kept as written for history.
+
 > 📦 Source, kept as delivered (02.10.2026, from the owner's Downloads). **Digested into
 > [`../CABIN_MODEL.md`](../CABIN_MODEL.md) §8 and §14 — every number is transcribed there. Its numbers
 > are embedded PNG formulas (several cropped at export): do not decode or re-read this; read §14.**
