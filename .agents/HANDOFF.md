@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**15.10.2026 ~01:30, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**15.10.2026 ~01:55, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,12 +12,11 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `ce35998` (15.10, on the owner's order) — the measurement volume
-  `0ddab58`, its strings `7a197f3`, the 28 locales `51337ac`. Local, not pushed: `8c122ed` (docs: the
-  EQ sits AFTER the sub branch, datasheet) and `8f4431a` (`DspResponse`: no EQ on the sub path; built,
-  not installed). 📻 Owed: −10 dB at 31.5 Hz, doors muted, sub level unchanged; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `492e348` (14.10 23:51, adb install -r + service by hand; v0.4.9.8,
-  no crash, nothing measured) — the locales after it are strings only. Sub + to −.
+- Pushed: `origin/kostyfmat_mod` = `91d758c` (15.10 ~01:55, on the owner's order) — `8c122ed` docs: the
+  EQ sits AFTER the sub branch (datasheet); `8f4431a` `DspResponse`: no EQ on the sub path. 📻 Owed:
+  −10 dB at 31.5 Hz, doors muted, sub level unchanged; ❓ `0102[5:4]`.
+- Bench `192.168.1.138:9876`: `8f4431a` (15.10 01:53, adb install -r + service by hand; v0.4.9.8, no
+  crash; the calculated spectrum below the crossover not yet looked at). Sub + to −.
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
