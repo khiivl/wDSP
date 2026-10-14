@@ -36,7 +36,8 @@ calculated RTA and bars must not depend on the volume; the mic follows the table
    `control_impulses.*` dump stays as a tester diagnostic (owner may drop it); the sub sits + to − now.
 2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
    quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
-   microphone. My rule "below 50 Hz charge nothing to the mic in open space" **awaits the owner**.
+   microphone. The rule (open space: charge nothing at 20/31.5 Hz) **waits for the author** — the owner
+   asked him 14.10 and wants him in on it (TODO «Ближнє» item 5). Do not ask the owner again.
 3. **Call takes the platform's level** (`698830f`, #1704 BitPerfect): on the bench, not checked with a
    live call — `setprop sys.call.vol 10` outside a call → call → stays 10.
 4. **Source volumes** (`4d1006d`): the owner's live call remains; wake from ACC OFF unchecked (if the
@@ -54,7 +55,6 @@ calculated RTA and bars must not depend on the volume; the mic follows the table
 
 ## ❓ For the owner
 
-- The 20 Hz rule for mic calibration (item 2) — yes or no?
 - The probe of undeclared doors (two short sweeps) — keep, or make it switchable?
 - Card spinners in Modern night — how should they look?
 - Unproven: during the door sweeps the scratch preset leaves the sub at 0 dB with a 25 Hz low-pass
