@@ -1,6 +1,6 @@
 # Argon model review, 14.10.2026 — digest, checked against the code
 
-Chat (full answer): https://gemini.google.com/app/228743237ea71d21. Input: the owner's blind-calibration
+Chat (full answer): https://gemini.google.com/app/228743237ea71d21 — **hung and closed by the owner 14.10; never address it again** (owner). Input: the owner's blind-calibration
 PDF (text), `RESEARCH_RESULT_DYNAMIC_BASS.md`, `CABIN_MODEL.md`, `sweep.cpp`, `LoudnessCurve.java`, and
 the open-space 20 Hz question. The owner pasted the answer from Gemini Desktop (the bridge hung on it).
 Marks: ✅ confirmed in our code by Claude, 💭 Argon's inference not re-derived, ❌ rejected.
