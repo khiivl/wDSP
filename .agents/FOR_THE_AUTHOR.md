@@ -42,6 +42,8 @@ what is still open. The rules in force are in [AGENTS.md](AGENTS.md); the curren
 | Audio Check (author's 1.0) | `AudioCheck`, `AudioCheckPanel`, `ToneSource`, `PlaybackFocus` | UPSTREAM_1_0.md |
 | Living with other apps | `PlayerResume`, `NowPlaying`, `ScreensaverManager`, `StatusBarVisualizerManager`, `RadioMicCapture`, `CallState` | [CONTRACTS_MAP.md](CONTRACTS_MAP.md) |
 | UI helpers | `ui/` — `Disclosure` (collapsible groups), `RowFit` (narrow screens), `ThemedDialog`, `theme/` | ARCHITECTURE.md §"UI" |
+| User manual | — | `docs/manual_uk.html` (source), `manual_en.html`, `manual_es.html`, `manual_ru.html`: the setup order, the five "calibrations" and what each changes, the tabs, the spectrum modes. Move it with the UI: a label changed on screen is a label changed there |
+| Volume steps, level probe, control sweep (13–14.10) | `VolumeSteps` (dB per volume step, taken in the mic calibration), `RoomMeasurement.probeLevel`, `ControlSweep`, `LoudnessCurve.stepDb` | [MEASURED_FACTS.md](MEASURED_FACTS.md) "Volume steps", [CABIN_MODEL.md](CABIN_MODEL.md) §11, `research/ARGON_*_14_10.md` |
 
 ## 3a. Roadmap: the main flows, from a tap to the chip
 
@@ -119,10 +121,15 @@ conclusion is drawn from it.
 - Contracts with other apps are canonical in the owner's `C:\APPS_Contacts\`; copies here are
   mirrors — [CONTRACTS_MAP.md](CONTRACTS_MAP.md).
 
-## 6. Open, as of 09.10.2026
+## 6. Open, as of 14.10.2026
 
 The queue is [TODO.md](TODO.md), known defects [DEBT.md](DEBT.md), the current step [HANDOFF.md](HANDOFF.md).
 Things the author may care about:
+- **14.10, decided and changed**: the EQ pre-warp (his 0.5) now runs on every send, not only under a
+  loudness offset — why, who found it and the numbers: [UPSTREAM_1_0.md](UPSTREAM_1_0.md), the table;
+- **14.10, waiting for him** (the owner asked him directly): the mic calibration's 20 Hz correction
+  in open space — TODO «Ближнє» item 5; and the measurement volume chosen by the app + the loudness
+  anchor separated from it — TODO item 7, `research/ARGON_MEASURE_VOLUME_14_10.md`;
 - **not yet heard on the unit** (written at night, host-tested only): the sub aligned at the crossover
   the measurement chose and on the in-phase peak nearest the geometry; the RTA zero from pink noise;
   the defect detectors on the third-octave grid; the zigzag limit;
