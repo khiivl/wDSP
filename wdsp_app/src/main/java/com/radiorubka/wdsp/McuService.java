@@ -2335,8 +2335,8 @@ public class McuService extends Service implements LocationListener {
         updateFmOffsets(currentVol);
         eqData[0] = (byte) 0x80;
 
-        // The sliders plus the curve, pre-warped together while the curve acts (the author's 0.5,
-        // see LoudnessCurve.eqDriveDb); with no curve the sliders go out byte for byte as before.
+        // The sliders plus the curve, always pre-warped together (the author's 0.5, see
+        // LoudnessCurve.eqDriveDb): a slider is the level at its band's centre, curve or no curve.
         float[] driveDb = LoudnessCurve.eqDriveDb(cachedGains, fmOffsets);
         if (audioCheckOnlySub) {
             // Audio Check "only sub": every band at the EQ's floor, past loudness and pre-warp.

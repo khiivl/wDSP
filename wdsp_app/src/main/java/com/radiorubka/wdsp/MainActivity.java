@@ -1659,7 +1659,10 @@ public class MainActivity extends AppCompatActivity {
                 qn[i] = qSwitches.get(i).isChecked();
             }
         }
-        eqVisualizer.setGains(gs);
+        // The curve the chip plays: the sliders pre-warped and rounded as the service sends them
+        // (LoudnessCurve.driveIndices), so it passes through the sliders at the band centres
+        // instead of piling neighbouring bells on top of each other.
+        eqVisualizer.setGains(LoudnessCurve.driveIndices(gs, null));
         float[] offs = calculateFmOffsets();
         updateMainOverlays(gs, offs);
         AudioSpectrumEngine engine = AudioSpectrumEngine.getInstance();
@@ -1685,9 +1688,9 @@ public class MainActivity extends AppCompatActivity {
 
         boolean hasCorrection = false;
         for (float o : offs) if (o != 0f) { hasCorrection = true; break; }
-        float[] drive = LoudnessCurve.eqDriveDb(gs, offs);
+        int[] drive = LoudnessCurve.driveIndices(gs, offs);
         float[] driveIdx = new float[AudioConfig.NUM_BANDS];
-        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) driveIdx[i] = LoudnessCurve.gainIndex(drive[i]);
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) driveIdx[i] = drive[i];
         eqVisualizer.setLoudnessCorrection(driveIdx, showOnMain && hasCorrection);
 
         eqVisualizer.setSubFilter(subFilterHz(), sentSubGainDb(showOnMain));
@@ -2203,11 +2206,14 @@ public class MainActivity extends AppCompatActivity {
         int[] sliders = new int[AudioConfig.NUM_BANDS];
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) sliders[i] = getIntSlider(gainSliders.get(i));
         float[] drive = LoudnessCurve.eqDriveDb(sliders, offs);
+        // The correction against the sliders as they are sent without it - the pre-warp reshapes
+        // the sliders themselves, and that is not loudness's doing.
+        int[] base = LoudnessCurve.driveIndices(sliders, null);
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float pot = drive[i] / 2f + 6f;
             float wOffset = (pot - 12f) * 2; warns[i] = (pot > 12.025f && wOffset > 0.999f) ? wOffset : 0f;
             gs[i] = LoudnessCurve.gainIndex(drive[i]);
-            actual[i] = (gs[i] - sliders[i]) * 2f;
+            actual[i] = (gs[i] - base[i]) * 2f;
         }
         fmVisualizer.setGains(gs); fmVisualizer.setOffsets(actual); fmVisualizer.setWarnings(warns);
         fmVisualizer.setSubFilter(subFilterHz(), sentSubGainDb(true));

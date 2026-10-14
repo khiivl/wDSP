@@ -182,24 +182,43 @@ public final class LoudnessCurve {
 
     /**
      * What the equaliser is driven with, per band in dB, before the chip's 2 dB rounding and
-     * +/-12 dB clamp ({@link #gainIndex}): the sliders plus the offsets, pre-warped together while
-     * an offset is active ({@link AudioConfig#prewarpEq}, the author's 0.5), so the 16 overlapping
-     * bells sum to that target at every band centre. With no offset it is the sliders, exactly.
-     * The one place this is computed: the service sends it, {@link LoudnessCheck} measures its
-     * headroom.
+     * +/-12 dB clamp ({@link #gainIndex}): the sliders plus the offsets, always pre-warped together
+     * ({@link AudioConfig#prewarpEq}, the author's 0.5), so the 16 overlapping bells sum to that
+     * target at every band centre. A slider therefore means "this many dB at this band's
+     * frequency", which is what the measured preset is computed as (sweep.cpp synthesizeAutoEq16
+     * sets each band alone) and what the person reads off the slider.
+     *
+     * <p>🔴 Always, not only while an offset is active (owner, 14.10.2026: «роби як правильно»).
+     * Until then the sliders went out raw whenever loudness added nothing, so the same preset had
+     * two shapes: raw at and above the calibration point - three neighbouring +4 dB bands play
+     * 4.9 / 5.5 / 5.0 dB at their centres on the chip (Q 2.2 bells overlap; 0.7..1 dB off after the
+     * pre-warp, which is as close as 2 dB steps get) - and untangled below it,
+     * the cluster's middle band dropping the moment the volume crossed the point. The measured
+     * preset was hit by the first: it is synthesised band by band and was played summed. Found by
+     * Argon's model review (.agents/research/ARGON_REVIEW_MODEL_14_10.md, item 6). A lone band, or
+     * every band at 0, comes out the same after the 2 dB rounding; only clusters change.
+     *
+     * <p>The one place this is computed: the service sends it, {@link LoudnessCheck} measures its
+     * headroom, the EQ graph and the correction tab draw it ({@link #driveIndices}).
      *
      * @param gains   16 stored gain indices, 6 = flat
      * @param offsets {@link #offsets} in dB, or null
      */
     public static float[] eqDriveDb(int[] gains, float[] offsets) {
         float[] target = new float[AudioConfig.NUM_BANDS];
-        boolean hasOffset = false;
         for (int i = 0; i < AudioConfig.NUM_BANDS; i++) {
             float off = offsets != null && i < offsets.length ? offsets[i] : 0f;
             target[i] = AudioConfig.eqGainDb(gains[i]) + off;
-            if (off != 0f) hasOffset = true;
         }
-        return hasOffset ? AudioConfig.prewarpEq(target) : target;
+        return AudioConfig.prewarpEq(target);
+    }
+
+    /** {@link #eqDriveDb} rounded the way the chip gets it: 16 gain indices 0..12. */
+    public static int[] driveIndices(int[] gains, float[] offsets) {
+        final float[] drive = eqDriveDb(gains, offsets);
+        final int[] idx = new int[AudioConfig.NUM_BANDS];
+        for (int i = 0; i < AudioConfig.NUM_BANDS; i++) idx[i] = gainIndex(drive[i]);
+        return idx;
     }
 
     /** The chip's gain index for a drive in dB: 2 dB steps around index 6, clamped to 0..12. */

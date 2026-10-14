@@ -159,10 +159,10 @@ public class AudioConfig {
      * offset, combined), not just an isolated offset. This is what lets the manual EQ's own
      * shape get cross-talk-cancelled too, instead of only ever being true for the loudness
      * offset in isolation while the user's raw slider ripple sits uncorrected on top of it.
-     * With a flat/all-equal targetDb (nothing for 16 overlapping bells to fight over), the
-     * result is targetDb unchanged - callers should still skip calling this when there's no
-     * loudness offset active, though, both as an optimization and to avoid introducing
-     * floating-point drift into an otherwise-exact passthrough.
+     * An all-zero target comes back all zero. Any other target is changed wherever bands overlap -
+     * an all-equal one too: the bands at the ends have one neighbour, the inner ones two, so the
+     * inner ones are driven lower. It runs on every send (LoudnessCurve.eqDriveDb), not only while
+     * loudness acts, and the chip's 2 dB rounding absorbs the floating-point residue.
      */
     public static float[] prewarpEq(float[] targetDb) {
         float[] result = new float[NUM_BANDS];
