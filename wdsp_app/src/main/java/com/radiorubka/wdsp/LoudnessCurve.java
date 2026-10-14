@@ -56,24 +56,14 @@ public final class LoudnessCurve {
         return t == null || vol < VOL_MIN || vol > VOL_MAX ? Float.NaN : t[vol];
     }
 
-    /** Takes the stored table (32 values, step 1 first, comma separated); anything else clears it. */
+    /**
+     * Takes the stored table (32 values, step 1 first, comma separated); anything else clears it.
+     *
+     * <p>{@link VolumeSteps} writes that table and so owns reading it back: this used to parse the
+     * string here as well, and a second reader was about to be written for the measurement volume.
+     */
     public static void setStepTable(String csv) {
-        float[] t = null;
-        if (csv != null) {
-            final String[] parts = csv.split(",");
-            if (parts.length == VOL_MAX) {
-                t = new float[VOL_MAX + 1];
-                for (int i = 0; i < VOL_MAX && t != null; i++) {
-                    try {
-                        t[i + 1] = Float.parseFloat(parts[i].trim());
-                        if (Float.isNaN(t[i + 1])) t = null;
-                    } catch (NumberFormatException e) {
-                        t = null;
-                    }
-                }
-            }
-        }
-        stepDb = t;
+        stepDb = VolumeSteps.parse(csv);
     }
 
     /**

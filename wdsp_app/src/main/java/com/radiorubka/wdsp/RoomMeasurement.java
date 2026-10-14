@@ -284,33 +284,76 @@ public final class RoomMeasurement {
      * bands this work is trying to measure. Lowering it costs SNR. That trade wants numbers
      * from both ends before a constant is chosen, which is what this name is now for.
      *
-     * <p>Public since 13.09.2026 because {@link LoudnessCheck} anchors the loudness curve here: the
-     * band gains are the correction measured at this volume, so this is the volume at which the
-     * preset is true and the curve should do nothing. If this number ever moves, that anchor moves
-     * with it, which is the correct behaviour and the reason it is read rather than copied.
+     * <p>What is left of it: the step a measurement is assumed to have run at when it was taken
+     * before the app recorded one, and the fallback for a preset that needs a number before any
+     * measurement exists. The step a pass actually runs at is {@link MeasureVolume}'s answer, read
+     * back from {@link Result#measureVolume}; the volume the loudness curve is anchored at is a
+     * different fact again ({@link #loudnessAnchor}), separated 14.10.2026.
      */
     public static final int MEASURE_VOLUME = 16;
-    /**
-     * The quietest volume a measurement runs at. Since 09.10.2026 a pass plays at the volume the person
-     * has set, held between this and {@link #MEASURE_VOLUME} (owner, at 1 a.m.: the forced 16 was too
-     * loud for the hour). A weak pass says so through the "measured in noise" defect.
-     */
-    public static final int MEASURE_VOLUME_MIN = 6;
-    /** The volume the last cabin measurement ran at - where its preset, and the loudness anchor, are true. */
+    /** The volume the last cabin measurement ran at - where its preset is true. */
     public static final String PREF_LAST_MEASURE_VOLUME = "room_last_measure_volume";
 
-    /** The volume a pass plays at, given the one set now. */
-    public static int measureVolumeFor(int current) {
-        return Math.max(MEASURE_VOLUME_MIN, Math.min(MEASURE_VOLUME, current));
-    }
-
     /**
-     * Where the loudness curve should be anchored: the volume the car was last measured at, 0 when it was
-     * never measured. A measurement before 09.10.2026 ran at {@link #MEASURE_VOLUME} and stored nothing.
+     * The volume the car was last measured at, 0 when it was never measured. A measurement before
+     * 09.10.2026 ran at {@link #MEASURE_VOLUME} and stored nothing.
      */
     public static int lastMeasureVolume(SharedPreferences prefs) {
         if (prefs.getString(PREF_LAST_AUTOEQ_PRESET, null) == null) return 0;
         return prefs.getInt(PREF_LAST_MEASURE_VOLUME, MEASURE_VOLUME);
+    }
+
+    /** The volume the person was listening at when they started a measurement. */
+    public static final String PREF_USUAL_VOLUME = "room_usual_volume";
+    /** The band the derived anchor is held to, when there is no listening volume to read. */
+    static final int ANCHOR_MIN = 16, ANCHOR_MAX = 24;
+    /** How much louder than the measurement step an anchor derived from it sits. */
+    private static final float ANCHOR_OVER_MEASURE_DB = 18f;
+    /** The anchor on a unit with neither a listening volume nor a step table. */
+    private static final int ANCHOR_DEFAULT = 20;
+
+    /**
+     * Where the loudness curve belongs: the volume this person listens at, 0 until the car has been
+     * measured.
+     *
+     * <p>🔴 Not the volume of the measurement, which is what it was until 14.10.2026, and that was
+     * wrong in one direction only: the step a measurement runs at is chosen for the microphone and
+     * the converter ({@link MeasureVolume}, 6..18, 8 on the owner's unit), and
+     * {@link LoudnessCurve#loudnessRatio} does nothing at or above its calibration point. Anchored
+     * at 8, the curve never acted at all for anyone listening at 10..25 - which is everyone. The
+     * two numbers answer different questions and the transfer function says so: it is
+     * level-independent, so the band gains are the car's correction at any volume, while the
+     * equal-loudness contours the curve is drawn from are not, so they belong at the level the
+     * person actually hears (research/ARGON_MEASURE_VOLUME_14_10.md, finding 4).
+     *
+     * <p>Read, in order: the volume the person had on when they last started a measurement, when it
+     * leaves the curve room to act; otherwise {@link #ANCHOR_OVER_MEASURE_DB} above the step that
+     * measurement ran at, off the measured step table, held to {@link #ANCHOR_MIN}..{@link #ANCHOR_MAX};
+     * and without a table, {@link #ANCHOR_DEFAULT}. There is no running median of the volumes over a
+     * trip yet - that is a front of its own and nobody has asked for it.
+     */
+    public static int loudnessAnchor(Context context, SharedPreferences prefs) {
+        final int measured = lastMeasureVolume(prefs);
+        return measured == 0 ? 0
+                : anchorFor(context, prefs.getInt(PREF_USUAL_VOLUME, 0), measured);
+    }
+
+    /**
+     * The anchor from the two numbers it is made of, so the measurement that has just chosen its
+     * step can ask before it has stored anything, and the loudness tab can ask afterwards.
+     */
+    static int anchorFor(Context context, int usual, int measureStep) {
+        // Equal to the measurement step or below it leaves the curve nothing to act over, so it is
+        // not an anchor however honestly it was recorded.
+        if (usual > measureStep && usual <= LoudnessCurve.VOL_MAX) return usual;
+        final float[] table = VolumeSteps.table(context);
+        if (table == null) return Math.max(ANCHOR_DEFAULT, Math.min(ANCHOR_MAX, measureStep + 1));
+        for (int v = measureStep + 1; v <= ANCHOR_MAX; v++) {
+            if (table[v] - table[measureStep] >= ANCHOR_OVER_MEASURE_DB) {
+                return Math.max(ANCHOR_MIN, v);
+            }
+        }
+        return ANCHOR_MAX;
     }
     private static final float MIN_PEAK = 0.01f;      // -40 dBFS
     /** Within 0.02 dB of full scale. See {@code Result#clippedSamples}. */
@@ -1585,8 +1628,12 @@ public final class RoomMeasurement {
         public int listeningDistanceCm = DEFAULT_LISTENING_DIST_CM;
         /** A microphone calibration: no preset is synthesised, so the report prints none. */
         public boolean micCalibrationPass;
-        /** The volume this pass played at (measureVolumeFor). */
+        /** The volume this pass played at - {@link MeasureVolume}'s choice. */
         public int measureVolume = MEASURE_VOLUME;
+        /** What the volume probe heard and why it chose that step, one line for the report. */
+        public String volumeChoice;
+        /** Where the loudness curve belongs - the person's own volume, not this pass's step. */
+        public int loudnessAnchor = ANCHOR_MIN;
         public int midbassHpfIdx = 0; // default Through
         public int midbassHpfFreqHz = 0;
         // The app's default crossover until the synthesis says otherwise (DspResponse - it used to
@@ -1802,18 +1849,22 @@ public final class RoomMeasurement {
         new Thread(() -> {
             Result result;
             try {
-                // Stages as the person sees them: silence, the speakers, the delays, the preset, the
-                // control sweep, the volume steps when the unit has no table yet, done.
+                // Stages as the person sees them: the volume steps when the unit has no table yet,
+                // silence, the speakers, the delays, the preset, the control sweep, done.
+                //
+                // 🔴 The table comes FIRST since 14.10.2026, and not because it reads better: the
+                // step this measurement runs at is read off it (MeasureVolume), so a unit measured
+                // before its own table was taken would have chosen that step blind. Every other
+                // stage is the same work in the same order.
                 final boolean table = !VolumeSteps.hasTable(context);
                 final int total = table ? 7 : 6;
+                if (table) VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 0, total));
                 result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType,
-                        listeningDistanceCm, part(listener, 0, total), false);
+                        listeningDistanceCm, part(listener, table ? 1 : 0, total), false);
                 // The control sweep before the person decides (owner, 13.10.2026: «не чекати на
                 // "застосувати", а зразу контрольний, потім вердикт і тоді вже застосувати»).
-                if (result.error == null) controlPass(context.getApplicationContext(), result, part(listener, 4, total));
-                // The volume table once, on a unit that has none (a calibration takes it every time).
-                if (result.error == null && table) {
-                    VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 5, total));
+                if (result.error == null) {
+                    controlPass(context.getApplicationContext(), result, part(listener, table ? 5 : 4, total));
                 }
                 if (result.error == null) done(context, listener, total, R.string.room_stage_done_detail);
             } catch (Throwable t) {
@@ -2018,16 +2069,20 @@ public final class RoomMeasurement {
                 // Whether there is a subwoofer is a fact about the car, not about a preset, and
                 // CabinProfile.hasSubwoofer() is the one function that owns it. A literal here was a third
                 // road to the same fact, hidden inside an overload.
-                // Four stages as the person sees them: silence, the speakers, the volume steps, done.
+                // Four stages as the person sees them: the volume steps, silence, the speakers, done.
+                //
+                // Every calibration takes the volume table afresh: whoever recalibrates may have
+                // changed the amplifier (owner, 13.10.2026: «програма має сама знімати обладнання»).
+                // Since 14.10.2026 it is taken first, because the step this pass runs at is chosen
+                // off that table (MeasureVolume) - a fresh table that arrived after the sweeps would
+                // have described an amplifier the sweeps never ran through.
                 final int total = 4;
+                VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 0, total));
                 result = measure(context, DEFAULT_AMPLITUDE, DEFAULT_SECONDS,
                         CabinProfile.hasSubwoofer(context),
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
-                        getBodyType(context), getListeningDistanceCm(context), part(listener, 0, total), true);
-                // Every calibration takes the volume table afresh: whoever recalibrates may have
-                // changed the amplifier (owner, 13.10.2026: «програма має сама знімати обладнання»).
+                        getBodyType(context), getListeningDistanceCm(context), part(listener, 1, total), true);
                 if (result.error == null) {
-                    VolumeSteps.inMeasurement(context.getApplicationContext(), part(listener, 2, total));
                     done(context, listener, total, R.string.room_stage_mic_done_detail);
                 }
             } catch (Throwable t) {
@@ -2213,19 +2268,15 @@ public final class RoomMeasurement {
         McuService.ensureStarted(app);
         VolumeHelper.init(app);
         int origVolume = VolumeHelper.getVolume();
-        final int measureVolume = measureVolumeFor(origVolume);
-        result.measureVolume = measureVolume;
         result.amplitude = amplitude;
         result.sweepSeconds = seconds;
-        Log.i(TAG, "locking volume for measurement: " + origVolume + " -> " + measureVolume);
+        // Written before anything is touched, and acted on in the finally block: the volume is not
+        // locked here any more. Which step this pass runs at is MeasureVolume's answer, and it can
+        // only be asked once the flat preset is on the chip, a dozen lines below.
         String saved = "last_selected_preset=" + preset + ";saved_volume=" + origVolume;
-        prefs.edit().putString(PREF_RECOVERY, saved).apply();
-        VolumeHelper.setVolume(measureVolume);
-        VolumeHelper.setVolumeForType("media_type", measureVolume);
-        int readbackVol = VolumeHelper.getVolume();
-        Log.i(TAG, "locked volume for measurement: " + origVolume + " -> " + measureVolume
-                + " (readback=" + readbackVol
-                + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
+        // What the person was listening at when they started this: the loudness curve is anchored
+        // there, not at the step the sweeps run on (loudnessAnchor).
+        prefs.edit().putString(PREF_RECOVERY, saved).putInt(PREF_USUAL_VOLUME, origVolume).apply();
         buildScratchPreset(prefs, preset);
 
         // And now actually switch to it. Until 13.09.2026 this line did not exist, and the whole
@@ -2257,6 +2308,31 @@ public final class RoomMeasurement {
                 return result;
             }
             if (!probeSweep.isValid()) Log.w(TAG, "the probe sweep was not built - undeclared doors stay unprobed");
+
+            // Which step to measure at, chosen by the app rather than taken from whatever the person
+            // happened to have set (MeasureVolume; owner, 14.10.2026). It runs here and not earlier
+            // because its tones have to meet the chain the sweeps will meet: the flat scratch preset
+            // is on the chip by now, and the routing below is the loudest pass's own.
+            //
+            // Inside the try on purpose - the finally block is what puts the person's volume and
+            // preset back, so a refusal from here is restored like any other failure.
+            routeEverySpeaker(prefs, SCRATCH_PRESET);
+            sleep(ROUTING_SETTLE_MS);
+            final MeasureVolume.Outcome chosen = MeasureVolume.choose(app, origVolume);
+            result.volumeChoice = chosen.said;
+            if (chosen.tooNoisy) {
+                result.fail(MeasurementFailure.CABIN_TOO_NOISY, chosen.noiseForPerson());
+                Log.w(TAG, result.error);
+                return result;
+            }
+            result.measureVolume = chosen.step;
+            result.loudnessAnchor = anchorFor(app, origVolume, chosen.step);
+            VolumeHelper.setVolume(chosen.step);
+            VolumeHelper.setVolumeForType("media_type", chosen.step);
+            Log.i(TAG, "locked volume for measurement: " + origVolume + " -> " + chosen.step
+                    + " (readback=" + VolumeHelper.getVolume()
+                    + ", activeType=" + VolumeHelper.getActivePlayerType() + ")");
+
             final float level = probeSweep.isValid()
                     ? probeLevel(app, prefs, SCRATCH_PRESET, probeSweep, amplitude, result) : amplitude;
             result.amplitude = level;
@@ -3011,14 +3087,7 @@ public final class RoomMeasurement {
      */
     private static float probeLevel(Context app, SharedPreferences prefs, String preset, NativeSweep probe,
                                     float amplitude, Result result) {
-        prefs.edit()
-                .putInt(preset + "_f_lr", FADER_CENTRE)
-                .putInt(preset + "_f_fr", FADER_CENTRE)
-                .putInt(preset + "_sub_g", SUB_PASS_GAIN_DB)
-                .putInt(preset + "_sub_f", SUB_PASS_LPF_IDX)
-                .putInt(preset + "_bf_f", 0)
-                .putInt(preset + "_bf_r", 0)
-                .apply();
+        routeEverySpeaker(prefs, preset);
         sleep(ROUTING_SETTLE_MS);
         pauseMedia(app);
         final int lead = (int) (0.3f * SAMPLE_RATE);
@@ -3063,6 +3132,23 @@ public final class RoomMeasurement {
         result.levelProbe = said.toString();
         Log.i(TAG, result.levelProbe);
         return level;
+    }
+
+    /**
+     * Every speaker at once, the doors with no high-pass and the subwoofer as on its own pass: the
+     * loudest thing the measurement plays, and so the routing both probes judge the chain through -
+     * {@link MeasureVolume} when it picks the step, {@link #probeLevel} when it sets the amplitude.
+     * The caller waits {@link #ROUTING_SETTLE_MS} afterwards.
+     */
+    static void routeEverySpeaker(SharedPreferences prefs, String preset) {
+        prefs.edit()
+                .putInt(preset + "_f_lr", FADER_CENTRE)
+                .putInt(preset + "_f_fr", FADER_CENTRE)
+                .putInt(preset + "_sub_g", SUB_PASS_GAIN_DB)
+                .putInt(preset + "_sub_f", SUB_PASS_LPF_IDX)
+                .putInt(preset + "_bf_f", 0)
+                .putInt(preset + "_bf_r", 0)
+                .apply();
     }
 
     /** Steers the sound to one speaker by pushing balance and fader to their extremes. */
@@ -3617,9 +3703,15 @@ public final class RoomMeasurement {
         // nothing on screen to tell them why. That is the guessing this pass was told to end.
         //
         // So they are written as the answer the measurement can actually give:
-        //   - the calibration point is the volume this pass ran at, because these band gains are the correction
-        //     measured at that volume and are true only there. Below it the ear loses the bottom
-        //     and the correction no longer matches what is heard, which is the gap the curve fills;
+        //   - the calibration point is the volume the PERSON listens at (result.loudnessAnchor).
+        //     Until 14.10.2026 it was the volume this pass ran at, on the reasoning that the band
+        //     gains are the correction measured there - true, but about the wrong curve. The
+        //     transfer function is level-independent, so those gains hold at any volume; the
+        //     equal-loudness contours are not, and they are what this calibration point scales. With
+        //     the step now chosen for the microphone (MeasureVolume: 6..18, 8 on the owner's unit)
+        //     the old rule anchored the curve below every volume anyone listens at, and
+        //     loudnessRatio does nothing at or above its calibration point - so loudness was a
+        //     switch that could not act. See loudnessAnchor;
         //   - the strength is the strongest curve these particular gains leave room for. A preset
         //     that already raises the bass has less headroom under the equaliser's +12 dB ceiling,
         //     and a curve asking for more than that does not get louder, it goes flat at the top
@@ -3634,9 +3726,10 @@ public final class RoomMeasurement {
         e.putBoolean(presetName + "_fm_en", false);
         e.putBoolean(presetName + "_fat_en", false);
         e.putBoolean(presetName + "_ultra_bass_en", false);
-        e.putInt(presetName + "_fm_cal", result.measureVolume);
+        e.putInt(presetName + "_fm_cal", result.loudnessAnchor);
         e.putInt(presetName + "_fm_str", autoFmStrength);
-        Log.i(TAG, "loudness curve left ready but off: cal=" + result.measureVolume
+        Log.i(TAG, "loudness curve left ready but off: cal=" + result.loudnessAnchor
+                + " (the person's own volume; this pass measured at " + result.measureVolume + ")"
                 + " strength=" + autoFmStrength + "% (headroom under the +12 dB ceiling)");
         // Bass boost is a second bass control on top of the one just synthesized; two of them
         // fighting is how a preset ends up with a bottom nobody asked for.
@@ -4437,6 +4530,9 @@ public final class RoomMeasurement {
                 if (lost != null) sb.append(" - then ").append(lost).append(" DURING the pass");
                 sb.append('\n');
             }
+            // The step first, then the amplitude: that is the order they were chosen in, and the
+            // second only makes sense against the first.
+            if (result.volumeChoice != null) sb.append(result.volumeChoice).append('\n');
             if (result.levelProbe != null) sb.append(result.levelProbe).append('\n');
             sb.append("preset=").append(preset)
                     .append(" amplitude=").append(result.amplitude)

@@ -104,14 +104,15 @@ public final class LoudnessCheck {
      * @param fatigueStartVol  where Trim Highs starts, the preset's {@code _fat_start_vol}
      * @param bassFreqIdxFront the front bass shelf frequency, {@code _bb_frq_f}, 0 = off
      * @param bassGainFront    the front bass shelf's own gain, {@code _bb_f}
-     * @param measuredVolume the volume the car was last measured at, 0 when it never was
+     * @param anchorVolume where the loudness curve belongs - the person's own listening volume
+     *                     ({@link RoomMeasurement#loudnessAnchor}), 0 before the car was measured
      */
     public static Result inspect(int[] gains, int subGainIdx, int subFreqIdx, int bassBoost,
                                  boolean fmEnabled, boolean fatigueEnabled, boolean subComp,
                                  int cal, int strengthPct, int fatigueStartVol,
-                                 int bassFreqIdxFront, int bassGainFront, int measuredVolume) {
+                                 int bassFreqIdxFront, int bassGainFront, int anchorVolume) {
         Result r = new Result();
-        r.recommendedCal = Math.max(0, measuredVolume);
+        r.recommendedCal = Math.max(0, anchorVolume);
         r.recommendedStrength = maxDeliverableStrength(gains, subGainIdx, subFreqIdx, subComp,
                 bassFreqIdxFront, bassGainFront);
 
@@ -176,9 +177,9 @@ public final class LoudnessCheck {
             r.findings.add(new Finding(Code.BASS_BOOST_STACKS, Level.NOTE, bassBoost));
         }
 
-        // 4. The anchor. Only said once the car has been measured, because only then does the app
-        //    know a volume at which the band gains are true.
-        if (fmEnabled && measuredVolume > 0 && !calDead && cal != r.recommendedCal) {
+        // 4. The anchor. Only said once the car has been measured, because only then has the app
+        //    seen the person listen at a volume and measured the steps the curve is scaled over.
+        if (fmEnabled && anchorVolume > 0 && !calDead && cal != r.recommendedCal) {
             r.findings.add(new Finding(Code.CAL_NOT_AT_MEASURED, Level.NOTE,
                     cal, r.recommendedCal));
         }

@@ -2317,7 +2317,10 @@ public class MainActivity extends AppCompatActivity {
             gains[i] = getIntSlider(gainSliders.get(i));
         }
         int bassBoost = Math.max(getIntSlider(seekBassBoostFront), getIntSlider(seekBassBoostRear));
-        int measuredVolume = RoomMeasurement.lastMeasureVolume(getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
+        // Where the curve belongs is the person's own listening volume, not the step the sweeps ran
+        // at (RoomMeasurement.loudnessAnchor, 14.10.2026).
+        int anchorVolume = RoomMeasurement.loudnessAnchor(this,
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
 
         LoudnessCheck.Result r = LoudnessCheck.inspect(
                 gains,
@@ -2332,7 +2335,7 @@ public class MainActivity extends AppCompatActivity {
                 fatStartVol(),
                 frontBassFreqIdx(),
                 seekBassBoostFront != null ? getIntSlider(seekBassBoostFront) : 0,
-                measuredVolume);
+                anchorVolume);
         lastLoudnessResult = r;
 
         StringBuilder sb = new StringBuilder();

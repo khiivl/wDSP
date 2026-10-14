@@ -37,7 +37,14 @@ enum MeasurementFailure {
             "only %1$d speaker(s) were heard - nothing to align against"),
     /** NOTHING_HEARD, except that a probe of an undeclared door did hear a speaker: the layout is wrong. */
     LAYOUT_MISMATCH(R.string.room_err_layout_mismatch,
-            "none of the declared speakers was heard, but undeclared ones played - check the speaker layout");
+            "none of the declared speakers was heard, but undeclared ones played - check the speaker layout"),
+    /**
+     * The cabin was not quiet enough to measure in (MeasureVolume's silence test). The second
+     * failure the person can fix themselves, so the dialog gives them the fix. Argument: the level
+     * heard, dBFS.
+     */
+    CABIN_TOO_NOISY(R.string.room_err_too_noisy,
+            "the cabin is too noisy to measure in (%1$d dBFS) - switch the engine and the fan off");
 
     private final int textRes;
     private final String english;

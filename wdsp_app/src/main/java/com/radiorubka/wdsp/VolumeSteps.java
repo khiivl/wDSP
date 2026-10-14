@@ -68,6 +68,36 @@ final class VolumeSteps {
     }
 
     /**
+     * The stored table as dB against {@link #TOP}, indexed by step 1..{@link #TOP}; null when there
+     * is none or it is not whole. Index 0 is unused - there is no step 0 but mute.
+     *
+     * <p>One parser, two readers: {@link LoudnessCurve} is handed the table by the service and does
+     * the loudness arithmetic with it, {@link MeasureVolume} reads it to pick the step a measurement
+     * runs at. Both ask this class, which is the one that writes it.
+     */
+    static float[] parse(String csv) {
+        if (csv == null) return null;
+        final String[] parts = csv.split(",");
+        if (parts.length != TOP) return null;
+        final float[] t = new float[TOP + 1];
+        for (int i = 0; i < TOP; i++) {
+            try {
+                t[i + 1] = Float.parseFloat(parts[i].trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+            if (Float.isNaN(t[i + 1])) return null;
+        }
+        return t;
+    }
+
+    /** The table this unit has measured, or null. */
+    static float[] table(Context context) {
+        return parse(context.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_TABLE, null));
+    }
+
+    /**
      * The table as a stage of a measurement that already holds the slot, after its own sweeps. A walk
      * that fails fails nothing else: the loudness maths keeps the table it had (or counts steps), and
      * the report file says why this one was not taken.

@@ -97,7 +97,9 @@ public final class CallPreset {
             // The curve is off through _fm_en. These two are sane rather than zero so that the
             // loudness verdict does not report the service preset as a "dead curve" to fix.
             case "_fm_str":   return 100;
-            case "_fm_cal":   return RoomMeasurement.MEASURE_VOLUME;
+            // A listening volume, not a measurement one: that is what a calibration point is
+            // (RoomMeasurement.loudnessAnchor), and the quietest of the band it is held to.
+            case "_fm_cal":   return RoomMeasurement.ANCHOR_MIN;
             case "_rsse_val": return RSSE_NEUTRAL;
             default:          return null;
         }
