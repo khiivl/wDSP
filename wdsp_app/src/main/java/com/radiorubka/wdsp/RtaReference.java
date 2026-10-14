@@ -9,7 +9,8 @@ import android.content.SharedPreferences;
  *
  * <p>Two zeros, one per analyser (owner, 09.10.2026: "роживий нуль різні речі для обох каналів"):
  * the channel's is the level of our digital chain, the microphone's the level the cabin and the
- * capsule give that noise at the volume it was taken at. Until the microphone has its own, it falls
+ * capsule give that noise at the volume it was taken at - kept with it, so the volume table can move
+ * the curve to the volume playing now (AudioSpectrumEngine.addCurveOffset). Until the microphone has its own, it falls
  * back on the channel's zero, held there by our AGC ({@code AudioSpectrumEngine
  * .alignMicrophoneToCalculated}) - the single zero of 08.10.2026 ("тут має працювати власний AGC").
  *
@@ -25,6 +26,7 @@ final class RtaReference {
 
     private static final String KEY_ZERO_DB = "rta_zero_db";
     private static final String KEY_MIC_ZERO_DB = "rta_zero_mic_db";
+    private static final String KEY_MIC_ZERO_VOLUME = "rta_zero_mic_volume";
 
     private final SharedPreferences prefs;
 
@@ -37,8 +39,16 @@ final class RtaReference {
         return prefs.getFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, Float.NaN);
     }
 
-    void store(boolean microphone, float db) {
-        prefs.edit().putFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, db).apply();
+    /** The volume step the microphone's zero was taken at; 0 for a zero older than 14.10.2026. */
+    int micZeroVolume() {
+        return prefs.getInt(KEY_MIC_ZERO_VOLUME, 0);
+    }
+
+    /** @param volume the step playing during the capture - kept for the microphone's zero only */
+    void store(boolean microphone, float db, int volume) {
+        final SharedPreferences.Editor e = prefs.edit().putFloat(microphone ? KEY_MIC_ZERO_DB : KEY_ZERO_DB, db);
+        if (microphone) e.putInt(KEY_MIC_ZERO_VOLUME, volume);
+        e.apply();
     }
 
     /** Averages the levels of the frames a capture saw; NaN when it heard too little. */

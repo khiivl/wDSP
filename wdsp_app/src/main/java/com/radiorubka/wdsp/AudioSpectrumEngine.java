@@ -166,12 +166,16 @@ public class AudioSpectrumEngine {
      * calculated spectrum's. Both then read in the track's dBFS, and what differs between them is
      * what the speakers and the car did. Smoothed over {@link #MIC_OFFSET_TIME_CONSTANT_MS} so a drum
      * hit does not move the whole picture, and held while the track is silent. Until the first valid
-     * reading, and on radio where there is no calculated spectrum, the microphone is normalised as
-     * before.
+     * reading, and on radio where there is no calculated spectrum, the microphone gets only the
+     * volume table ({@link #micVolumeDb}).
      */
     private volatile boolean micOffsetValid = false;
     private float micOffsetDb = 0f;
     private static final float MIC_OFFSET_TIME_CONSTANT_MS = 2000f;
+    /** The volume step, re-read at most every {@link #VOLUME_READ_MS} (a reflection call) - see {@link #micVolumeDb}. */
+    private int volumeStep;
+    private long volumeReadAt;
+    private static final long VOLUME_READ_MS = 500;
     /** Below this the track's middle is silence - there is nothing to align the microphone to. */
     private static final float OFFSET_REFERENCE_MIN_DB = -70f;
     /** Below this the microphone's middle, after its noise floor, has nothing in it either. */
@@ -883,16 +887,46 @@ public class AudioSpectrumEngine {
     /**
      * The microphone's curve in the track's units: the same level offset the bars get
      * ({@link #alignMicrophoneToCalculated} - our AGC, the microphone's 200-800 Hz held on the
-     * calculated spectrum's). Until 08.10.2026 the bars had it and the RTA curve did not
-     * ({@code Analyzer::getCurveDb} returns the frame as measured), so the microphone's curve rose and
-     * fell with the volume. The calculated curve is in the track's units already.
+     * calculated spectrum's, on top of the volume table). Until 08.10.2026 the bars had it and the RTA
+     * curve did not ({@code Analyzer::getCurveDb} returns the frame as measured), so the microphone's
+     * curve rose and fell with the volume. The calculated curve is in the track's units already.
+     *
+     * <p>With a zero of its own the microphone is drawn against it without our AGC, moved by the
+     * table from the step the zero was taken at to the step playing now; a zero taken before the step
+     * was kept, or no table, leaves it raw as before.
      */
     private void addCurveOffset(NativeAnalyzer analyzer, float[] curveDb) {
-        if (!analyzer.isAcoustic() || !micOffsetValid || hasMicZero()) return;
-        for (int j = 0; j < curveDb.length; j++) curveDb[j] += micOffsetDb;
+        if (!analyzer.isAcoustic()) return;
+        final float shift;
+        if (hasMicZero()) {
+            final float atZero = LoudnessCurve.stepDb(rtaReference().micZeroVolume());
+            shift = Float.isNaN(atZero) ? 0f : atZero + micVolumeDb();
+        } else if (micOffsetValid) {
+            shift = micOffsetDb + micVolumeDb();
+        } else {
+            return;
+        }
+        for (int j = 0; j < curveDb.length; j++) curveDb[j] += shift;
     }
 
-    /** The microphone has a zero of its own - its curve is then drawn raw, without our AGC. */
+    /**
+     * dB that brings what the microphone hears to volume step 32: it hears after the volume, and the
+     * measured table ({@link VolumeSteps}, {@link LoudnessCurve#stepDb}) says how far each step took it
+     * down (owner, 13.10.2026: «знаючи криву, можна робити не агц, а брати з кривої»). 0 without a table.
+     * The player's own session is taken before the volume and needs none of it.
+     */
+    private float micVolumeDb() {
+        final long now = android.os.SystemClock.uptimeMillis();
+        if (volumeReadAt == 0 || now - volumeReadAt >= VOLUME_READ_MS) {
+            volumeReadAt = now;
+            if (appContext != null) VolumeHelper.ensureInit(appContext);
+            volumeStep = VolumeHelper.getVolume();
+        }
+        final float db = LoudnessCurve.stepDb(volumeStep);
+        return Float.isNaN(db) ? 0f : -db;
+    }
+
+    /** The microphone has a zero of its own - its curve is then drawn against it, without our AGC. */
     private boolean hasMicZero() {
         RtaReference ref = rtaReference();
         return ref != null && !Float.isNaN(ref.zeroDb(true));
@@ -963,7 +997,7 @@ public class AudioSpectrumEngine {
                 }
             }
             final float zero = ref == null ? Float.NaN : capture.resultDb();
-            if (!Float.isNaN(zero)) ref.store(microphone, zero);
+            if (!Float.isNaN(zero)) ref.store(microphone, zero, microphone ? VolumeHelper.getVolume() : 0);
             Log.i(TAG, "RTA zero (" + (microphone ? "microphone" : "channel") + "): "
                     + (Float.isNaN(zero) ? "not taken - too little heard"
                     : String.format(java.util.Locale.US, "%.1f dB", zero)));
@@ -1842,12 +1876,17 @@ public class AudioSpectrumEngine {
      * synthesis and the stored cabin response are taken against, so what remains different between
      * the two spectra is exactly the quantity the cabin measurement describes. Taken through the one
      * native fold on both sides. Smoothed; held while either middle has nothing in it; with no tap
-     * (radio) there is no calculated spectrum, and the microphone is normalised instead.
+     * (radio) there is no calculated spectrum, and the microphone gets the volume table alone.
+     *
+     * <p>The volume comes off the table first ({@link #micVolumeDb}), so the smoothed offset holds
+     * only what the cabin and the capsule add and a volume change moves the picture at once instead of
+     * over {@link #MIC_OFFSET_TIME_CONSTANT_MS}. Without a table it is the AGC of before.
      */
     private void alignMicrophoneToCalculated(NativeAnalyzer mic, NativeAnalyzer tap) {
+        final float volumeDb = micVolumeDb();
         if (tap == null) {
             micOffsetValid = false;
-            mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, 0f);
+            mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, volumeDb);
             return;
         }
         tap.getLevelsDb16(offsetReferenceDb16);
@@ -1855,7 +1894,7 @@ public class AudioSpectrumEngine {
         float reference = midbandDb(offsetReferenceDb16);
         float microphone = midbandDb(offsetMicrophoneDb16);
         if (reference > OFFSET_REFERENCE_MIN_DB && microphone > OFFSET_MICROPHONE_MIN_DB) {
-            float target = reference - microphone;
+            float target = reference - (microphone + volumeDb);
             if (!micOffsetValid) {
                 micOffsetDb = target;
                 micOffsetValid = true;
@@ -1867,7 +1906,7 @@ public class AudioSpectrumEngine {
                 micOffsetDb += (target - micOffsetDb) * alpha;
             }
         }
-        mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, micOffsetValid ? micOffsetDb : 0f);
+        mic.setLevelOffsetDb(NativeAnalyzer.CONSUMER_MAIN, (micOffsetValid ? micOffsetDb : 0f) + volumeDb);
     }
 
     /** The 200-800 Hz reference: equaliser bands 5..8, mean in dB. */

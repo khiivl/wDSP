@@ -50,6 +50,12 @@ public final class LoudnessCurve {
      */
     private static volatile float[] stepDb;
 
+    /** dB of volume step {@code vol} against step 32 from the measured table; NaN without one. */
+    public static float stepDb(int vol) {
+        final float[] t = stepDb;
+        return t == null || vol < VOL_MIN || vol > VOL_MAX ? Float.NaN : t[vol];
+    }
+
     /** Takes the stored table (32 values, step 1 first, comma separated); anything else clears it. */
     public static void setStepTable(String csv) {
         float[] t = null;
