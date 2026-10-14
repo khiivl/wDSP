@@ -31,10 +31,8 @@ calculated RTA and bars must not depend on the volume; the mic follows the table
 накладатися на цільову» — so no "absolute calc mode".
 
 
-1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
-   resolver gate `SessionResolver.sweep`): + to + → −1, advice, control sweep SUMMED_CANCELLATION
-   (+8.4 dB if flipped); + to − → +1, SUMMED_OK. Fact in MEASURED_FACTS "Subwoofer timing". Left: the
-   `control_impulses.*` dump stays as a tester diagnostic (owner may drop it); the sub sits + to − now.
+1. **Sub phase at the crossover** — done, verified on the bench 13–14.10 (MEASURED_FACTS "Subwoofer
+   timing"); the `control_impulses.*` dump stays as a tester diagnostic.
 2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
    quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
    microphone. The rule (open space: charge nothing at 20/31.5 Hz) **waits for the author** — the owner
