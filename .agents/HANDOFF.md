@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**14.10.2026 evening, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**14.10.2026 ~23:xx, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,18 +12,18 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `345e233` (14.10 evening) — everything up to the EQ pre-warp fix.
-  Bench has 211ac8c (14.10 ~22:2x; clipped level probe repeats, adb install -r + service by hand): Argon code-review fixes and EQ
-  pre-warp on every send. Bench checks 14.10 passed except two daytime ones by ear (TODO «Ближнє» item 4).
-- Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
-  right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
-  13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
-  Sub wired + to − (better with this preset). Bench **released** (board #1716).
+- Pushed: `origin/kostyfmat_mod` = everything up to this slice (14.10 ~23:xx), incl. the manuals
+  (`docs/manual_{uk,en,es,ru}.html`; uk published: https://claude.ai/artifact/33rbFe8XPCeWQqJ1MbEGLz)
+  and the 28-language strings.
+- Bench `192.168.1.138:9876`: `a74218d` (progress by stages) — bench checks 14.10 passed except two
+  daytime ones by ear (TODO «Ближнє» item 4). Sub wired + to −.
+- Argon: review chat 228743237ea71d21 is dead — never address it; current chat 32890fb409d8df41.
 
 ## ⏳ Open
 
-**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): bench checks, the
-20 Hz rule. Done 14.10, unchecked on the unit: the volume table is a wizard stage
+**Next, in order: TODO «Ближнє — по порядку»**: item 7 (the measurement volume chosen by the app, the
+loudness anchor separated from it — Argon's plan) awaits the owner's go; items 5 (20 Hz) and 6 wait
+for the author; item 4's two ear checks are daytime. Done 14.10, unchecked on the unit: the volume table is a wizard stage
 (`VolumeSteps.inMeasurement`: every mic calibration, the first measurement without a table;
 `volume_steps.txt` in the archive); the mic analyser is brought to step 32 by the table
 (`AudioSpectrumEngine.micVolumeDb`) before the AGC, and the mic RTA zero keeps its step. Owner 14.10:
