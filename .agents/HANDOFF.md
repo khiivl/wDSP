@@ -14,7 +14,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 - Pushed: `origin/kostyfmat_mod` = `345e233` (14.10 evening) — everything up to the EQ pre-warp fix.
   Bench has 211ac8c (14.10 ~22:2x; clipped level probe repeats, adb install -r + service by hand): Argon code-review fixes and EQ
-  pre-warp on every send. Bench checks with the owner (TODO «Ближнє» item 4).
+  pre-warp on every send. Bench checks 14.10 passed except two daytime ones by ear (TODO «Ближнє» item 4).
 - Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
