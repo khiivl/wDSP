@@ -25,7 +25,8 @@ Marks: ✅ confirmed in our code by Claude, 💭 Argon's inference not re-derive
 6. ✅ **Auto-EQ ignores band overlap.** `synthesizeAutoEq16` quantises each band alone (only
    `limitZigzag16`); `AudioConfig.prewarpEq` runs only while a loudness offset is non-zero
    (`LoudnessCurve`, `hasOffset`) — the same preset is pre-warped below the calibration point and raw
-   above it. Three adjacent +4 dB read ≈ +7.5 at the middle on the chip.
+   above it. ❌ Argon's "three adjacent +4 dB read ≈ +7.5" is wrong: simulated with our own matrix
+   14.10, they play 4.9 / 5.5 / 5.0. ✅ fixed 14.10: pre-warp on every send (`LoudnessCurve.eqDriveDb`).
 7. ✅ The "+3 dB" boost cap rounds to +4 (`std::round(1.5) = 2` → index 8).
 8. Do not boost a narrow notch (≥ 6 dB below both neighbours) above 315 Hz: Q 2.2 cannot fill it.
 9. **Loudness.** `(t[cal] − t[vol]) / (t[25] − t[1])` is right (a fixed dB/dB gradient). ✅ a measured
