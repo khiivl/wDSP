@@ -14,9 +14,10 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 - Pushed: `origin/kostyfmat_mod` = `bb54fdc`; **three commits after it are local only**
   (`0ddab58` the measurement volume, `7a197f3` its strings, this slice).
-- Bench `192.168.1.138:9876`: still `bb54fdc` — nothing from tonight installed. Sub + to −.
+- Bench `192.168.1.138:9876`: `492e348` (14.10 23:51, adb install -r + service by hand; v0.4.9.8,
+  no crash, nothing measured yet). Sub + to −.
 - Argon: review chat 228743237ea71d21 is dead — never address it; current chat 32890fb409d8df41.
-- Board #1797: the Gemini line owes the other 26 locales of `7a197f3`.
+- Board #1797: Gemini owes the other 26 locales of `7a197f3`.
 
 ## ⏳ Open
 
@@ -26,12 +27,12 @@ on step 8, the step read off the volume-step table for a sweep at 0.22, then a d
 table-gain check that costs 1–2 steps); the volume-step table became the **first** stage of the
 wizard and of every microphone calibration, because that step is read off it; and the loudness
 anchor `_fm_cal` is the person's own volume, not the sweep's (`RoomMeasurement.loudnessAnchor`).
-**The next step is the bench, in this order:** a measurement pass (the report's
+**Next, on the bench, in this order:** a measurement pass (the report's
 `measurement volume:` line says which step and why), the refusal with the fan on, `_fm_cal` in a
-fresh auto preset against the owner's usual volume, and whether loudness is now audible at 10..25.
-The thresholds are Argon's, not measured in a cabin — TODO «Ближнє» item 7 lists them.
+fresh auto preset against the owner's usual volume, loudness audible at 10..25. The thresholds are
+Argon's, not measured in a cabin — TODO «Ближнє» item 7 lists them.
 
-Also done 14.10 and still unchecked on the unit: the mic analyser brought to step 32 by the table
+Also unchecked on the unit: the mic analyser brought to step 32 by the table
 (`AudioSpectrumEngine.micVolumeDb`) before the AGC. Owner 14.10: calculated RTA and bars must not
 depend on the volume; the mic follows the table «щоб плюс мінус накладатися на цільову» — so no
 "absolute calc mode".
