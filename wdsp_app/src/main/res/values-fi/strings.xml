@@ -236,7 +236,7 @@ Yleinen oletus: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Diskantin vaimennus on päällä, mutta sen aloitusäänenvoimakkuuden yläpuolella ei ole äänenvoimakkuutta, jolla se voisi toimia.</string>
     <string name="loud_check_ceiling">Äänenvoimakkuuden %1$d alapuolella käyrästä loppuu tila: %2$d kaistaa lakkaa nousemasta ja käyrä litistyy tasanteeksi.</string>
     <string name="loud_check_bass_stacks">Myös erillinen bassokorostus on päällä. Se tarkoittaa kahta bassosäädintä saman käyrän alla.</string>
-    <string name="loud_check_cal_not_measured">Käyrä on ankkuroitu äänenvoimakkuuteen %1$d, mutta auto mitattiin tasolla %2$d. Profiili on tarkka mittausvoimakkuudella, joten käyrän tulisi päättyä siihen.</string>
+    <string name="loud_check_cal_not_measured">Käyrä on ankkuroitu äänenvoimakkuudelle %1$d, mutta kuuntelet noin tasolla %2$d. Loudness ei tee mitään ankkurissaan tai sen yläpuolella, joten sen kuuluu olla omalla äänenvoimakkuudellasi.</string>
     <string name="perm_battery_opt">Akun optimointi</string>
     <string name="perm_audio_record">Äänen tallennus (EQ)</string>
     <string name="perm_gps_location">GPS-sijainti (GALA)</string>
@@ -549,6 +549,7 @@ Yleinen oletus: %1$s</string>
     <string name="room_err_output_open">Äänilähtöä ei voitu avata.</string>
     <string name="room_err_nothing_heard">Yhtäkään kaiutinta ei kuultu. Tarkista äänenvoimakkuus ja että mikrofoni ei ole peitetty.</string>
     <string name="room_err_too_few_heard">Vain %1$d kaiutin(ta) kuultiin — ei vertailukohtaa kohdistukselle. Tarkista äänenvoimakkuus ja mikrofonin sijainti.</string>
+    <string name="room_err_too_noisy">Matkustamossa on liikaa melua mittausta varten (%1$d dBFS). Sammuta moottori ja puhallin, sulje ikkunat ja mittaa uudelleen.</string>
     <string name="room_err_layout_mismatch">Yhtäkään määrittämääsi kaiutinta ei kuultu, mutta määrittämättömät kaiuttimet soivat. Tarkista kaiutinasettelu ja mittaa uudelleen.</string>
     <string name="room_findings_title">Mittaustulokset</string>
     <string name="room_findings_none">Vikoja ei löytynyt. Se, että etu- ja takakaiuttimet kuulostavat erilaisilta, on autossa normaalia, ei vika.</string>

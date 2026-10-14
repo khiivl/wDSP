@@ -234,7 +234,7 @@
     <string name="loud_check_fatigue_start_no_room">A atenuação de agudos está ativada, mas não há volume acima do seu volume inicial para que atue.</string>
     <string name="loud_check_ceiling">Abaixo do volume %1$d a curva fica sem margem: %2$d bandas param de subir e ela achata-se num patamar em vez de curva.</string>
     <string name="loud_check_bass_stacks">Um reforço de graves separado também está ativado. São dois controlos de graves sob uma mesma curva.</string>
-    <string name="loud_check_cal_not_measured">A curva está ancorada no volume %1$d, mas o veículo foi medido a %2$d. O perfil é exato no volume medido, pelo que é aí que a curva deve parar.</string>
+    <string name="loud_check_cal_not_measured">A curva está ancorada no volume %1$d, mas ouve a cerca de %2$d. O loudness não atua na sua âncora nem acima dela, pelo que deve ficar no seu volume de audição.</string>
     <string name="perm_battery_opt">Otimização da bateria</string>
     <string name="perm_audio_record">Gravação de áudio (EQ)</string>
     <string name="perm_gps_location">Localização GPS (GALA)</string>
@@ -547,6 +547,7 @@
     <string name="room_err_output_open">Não foi possível abrir a saída de áudio.</string>
     <string name="room_err_nothing_heard">Nenhuma coluna foi detetada. Verifique o volume e certifique-se de que o microfone não está tapado.</string>
     <string name="room_err_too_few_heard">Apenas %1$d coluna(s) detetada(s) - nada para alinhar. Verifique o volume e a posição do microfone.</string>
+    <string name="room_err_too_noisy">O habitáculo está demasiado ruidoso para a medição (%1$d dBFS). Desligue o motor e a ventilação, feche os vidros e meça novamente.</string>
     <string name="room_err_layout_mismatch">Nenhuma das colunas da sua configuração foi ouvida, mas tocaram colunas que não declarou. Verifique a configuração das colunas e meça novamente.</string>
     <string name="room_findings_title">Resultados da medição</string>
     <string name="room_findings_none">Nenhum defeito encontrado. O facto de a frente e a traseira soarem de forma diferente é normal num carro — isso não é um defeito.</string>

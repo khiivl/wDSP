@@ -236,7 +236,7 @@ Globalno zadano: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Obrezivanje visokih je uključeno, ali iznad njegove početne glasnoće nema glasnoće u kojoj bi moglo djelovati.</string>
     <string name="loud_check_ceiling">Ispod glasnoće %1$d krivulji ponestaje rezerve: %2$d pojaseva prestaje rasti i stvara se polica umjesto krivulje.</string>
     <string name="loud_check_bass_stacks">Uključeno je i zasebno pojačanje basa. To su dva regulatora basa pod jednom krivuljom.</string>
-    <string name="loud_check_cal_not_measured">Krivulja je usidrena na glasnoći %1$d, a automobil je izmjeren na %2$d. Profil je točan pri glasnoći mjerenja, pa bi krivulja trebala završavati upravo tamo.</string>
+    <string name="loud_check_cal_not_measured">Krivulja je usidrena na glasnoći %1$d, a slušate na oko %2$d. Loudness ne radi ništa na svom sidru ili iznad njega, stoga mu je mjesto na vašoj glasnoći.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>
     <string name="perm_audio_record">Snimanje zvuka (EQ)</string>
     <string name="perm_gps_location">GPS lokacija (GALA)</string>
@@ -549,6 +549,7 @@ Globalno zadano: %1$s</string>
     <string name="room_err_output_open">Audio izlaz se nije mogao otvoriti.</string>
     <string name="room_err_nothing_heard">Nijedan zvučnik nije detektiran. Provjerite glasnoću i pazite da mikrofon nije pokriven.</string>
     <string name="room_err_too_few_heard">Detektirano je samo %1$d zvučnik(a) — premalo za poravnanje. Provjerite glasnoću i položaj mikrofona.</string>
+    <string name="room_err_too_noisy">U kabini je prebučno za mjerenje (%1$d dBFS). Ugasite motor i ventilaciju, zatvorite prozore i izmjerite ponovno.</string>
     <string name="room_err_layout_mismatch">Niti jedan zvučnik iz vaše konfiguracije nije se čuo, ali su svirali zvučnici koje niste označili. Provjerite konfiguraciju zvučnika i ponovite mjerenje.</string>
     <string name="room_findings_title">Nalazi mjerenja</string>
     <string name="room_findings_none">Nisu pronađene nepravilnosti. Različit zvuk naprijed i straga normalan je u automobilu — to nije greška.</string>

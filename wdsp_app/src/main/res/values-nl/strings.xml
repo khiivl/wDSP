@@ -236,7 +236,7 @@ Globale standaard: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Hoge tonen dempen is actief, maar er is geen volume boven het startvolume waarin dit kan werken.</string>
     <string name="loud_check_ceiling">Onder volume %1$d heeft de curve geen speelruimte meer: %2$d banden stoppen met stijgen en het vlakt af tot een plateau in plaats van een curve.</string>
     <string name="loud_check_bass_stacks">Er is ook een afzonderlijke basversterking ingeschakeld. Dat zijn twee basregelaars onder één curve.</string>
-    <string name="loud_check_cal_not_measured">De curve is gekoppeld aan volume %1$d, maar de auto is gemeten op %2$d. Het profiel is exact op het gemeten volume, dus daar moet de curve stoppen.</string>
+    <string name="loud_check_cal_not_measured">De curve is verankerd op volume %1$d, maar u luistert rond %2$d. Loudness doet niets op of boven zijn anker, dus het hoort bij uw eigen luistervolume.</string>
     <string name="perm_battery_opt">Batterijoptimalisatie</string>
     <string name="perm_audio_record">Audio-opname (EQ)</string>
     <string name="perm_gps_location">GPS-locatie (GALA)</string>
@@ -549,6 +549,7 @@ Globale standaard: %1$s</string>
     <string name="room_err_output_open">De audio-uitgang kon niet worden geopend.</string>
     <string name="room_err_nothing_heard">Er is geen enkele luidspreker waargenomen. Controleer het volume en of de microfoon niet is bedekt.</string>
     <string name="room_err_too_few_heard">Slechts %1$d luidspreker(s) waargenomen - niets om op uit te lijnen. Controleer volume en microfoonpositie.</string>
+    <string name="room_err_too_noisy">Het is te lawaaierig in het interieur om te meten (%1$d dBFS). Zet de motor en de aanjager uit, sluit de ramen en meet opnieuw.</string>
     <string name="room_err_layout_mismatch">Geen van de luidsprekers in uw configuratie werd waargenomen, maar niet-opgegeven luidsprekers speelden wel. Controleer de luidsprekerconfiguratie en meet opnieuw.</string>
     <string name="room_findings_title">Wat de meting heeft gevonden</string>
     <string name="room_findings_none">Geen fouten gevonden. Dat voor en achter anders klinken is normaal in een auto - dat is geen fout.</string>

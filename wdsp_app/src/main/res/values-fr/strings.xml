@@ -236,7 +236,7 @@ Par défaut global : %1$s</string>
     <string name="loud_check_fatigue_start_no_room">L\'atténuation des aigus est activée, mais il n\'y a pas de volume au-dessus de son volume de départ pour qu\'elle agisse.</string>
     <string name="loud_check_ceiling">En dessous du volume %1$d, la courbe manque de marge : %2$d bandes cessent d\'augmenter et elle s\'aplatit en palier au lieu d\'une courbe.</string>
     <string name="loud_check_bass_stacks">Une amplification séparée des basses est également activée. Cela fait deux réglages de basses sous une même courbe.</string>
-    <string name="loud_check_cal_not_measured">La courbe est calée sur le volume %1$d, mais le véhicule a été mesuré à %2$d. Le profil est exact au volume mesuré, c\'est donc là que la courbe doit s\'arrêter.</string>
+    <string name="loud_check_cal_not_measured">La courbe est ancrée au volume %1$d, mais vous écoutez autour de %2$d. Le loudness n\'agit pas à son point d\'ancrage ni au-dessus, sa place est donc à votre volume d\'écoute.</string>
     <string name="perm_battery_opt">Optimisation de la batterie</string>
     <string name="perm_audio_record">Enregistrement audio (EQ)</string>
     <string name="perm_gps_location">Position GPS (GALA)</string>
@@ -549,6 +549,7 @@ Par défaut global : %1$s</string>
     <string name="room_err_output_open">Impossible d\'ouvrir la sortie audio.</string>
     <string name="room_err_nothing_heard">Aucun haut-parleur n\'a été détecté. Vérifiez le volume et assurez-vous que le micro n\'est pas obstrué.</string>
     <string name="room_err_too_few_heard">Seulement %1$d haut-parleur(s) détecté(s) - impossible d\'aligner. Vérifiez le volume et l\'emplacement du micro.</string>
+    <string name="room_err_too_noisy">L\'habitacle est trop bruyant pour effectuer la mesure (%1$d dBFS). Coupez le moteur et la ventilation, fermez les vitres et mesurez à nouveau.</string>
     <string name="room_err_layout_mismatch">Aucun des haut-parleurs de votre configuration n\'a été entendu, mais des haut-parleurs non déclarés ont joué. Vérifiez la configuration des haut-parleurs et recommencez la mesure.</string>
     <string name="room_findings_title">Résultats de la mesure</string>
     <string name="room_findings_none">Aucun défaut détecté. Que l\'avant et l\'arrière sonnent différemment est normal dans une voiture ; ce n\'est pas un défaut.</string>

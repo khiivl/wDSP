@@ -236,7 +236,7 @@ Globalno privzeto: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Prirejanje visokih tonov je vklopljeno, vendar nad njegovo začetno glasnostjo ni glasnosti, v kateri bi lahko delovalo.</string>
     <string name="loud_check_ceiling">Pod glasnostjo %1$d krivulji zmanjka rezerve: %2$d pasov ne narašča več in nastane ravna polica namesto krivulje.</string>
     <string name="loud_check_bass_stacks">Vklopljena je tudi ločena ojačitev basov. To sta dva regulatorja basov pod eno krivuljo.</string>
-    <string name="loud_check_cal_not_measured">Krivulja je zasidrana pri glasnosti %1$d, avto pa je bil izmerjen pri %2$d. Profil je točen pri glasnosti merjenja, zato bi se morala krivulja končati prav tam.</string>
+    <string name="loud_check_cal_not_measured">Krivulja je zasidrana pri glasnosti %1$d, poslušate pa pri približno %2$d. Loudness na svojem sidru ali nad njim ne stori ničesar, zato spada na vašo glasnost.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>
     <string name="perm_audio_record">Snemanje zvoka (EQ)</string>
     <string name="perm_gps_location">Lokacija GPS (GALA)</string>
@@ -549,6 +549,7 @@ Globalno privzeto: %1$s</string>
     <string name="room_err_output_open">Zvočnega izhoda ni bilo mogoče odpreti.</string>
     <string name="room_err_nothing_heard">Nobenega zvočnika ni bilo slišati. Preverite glasnost in poskrbite, da mikrofon ni pokrit.</string>
     <string name="room_err_too_few_heard">Zaznanih je bilo le %1$d zvočnikov — premalo za poravnavo. Preverite glasnost in položaj mikrofona.</string>
+    <string name="room_err_too_noisy">V kabini je preveč hrupa za merjenje (%1$d dBFS). Ugasnite motor in ventilacijo, zaprite okna ter izmerite znova.</string>
     <string name="room_err_layout_mismatch">Nobenega od zvočnikov v vaši postavitvi ni bilo slišati, so pa igrali zvočniki, ki jih niste označili. Preverite postavitev zvočnikov in ponovite meritev.</string>
     <string name="room_findings_title">Ugotovitve meritve</string>
     <string name="room_findings_none">Napak ni bilo najdenih. Različen zvok spredaj in zadaj je v avtomobilu normalen — to ni napaka.</string>

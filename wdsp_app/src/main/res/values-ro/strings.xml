@@ -236,7 +236,7 @@ Implicit global: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Atenuarea înaltelor este activată, dar nu există volum peste volumul său de pornire în care să poată acționa.</string>
     <string name="loud_check_ceiling">Sub volumul %1$d curba rămâne fără rezervă: %2$d benzi nu mai cresc și se aplatizează într-un prag în loc de curbă.</string>
     <string name="loud_check_bass_stacks">Este activată și o amplificare separată a basului. Aceasta înseamnă două reglaje de bas sub o singură curbă.</string>
-    <string name="loud_check_cal_not_measured">Curba este ancorată la volumul %1$d, dar mașina a fost măsurată la %2$d. Profilul este exact la volumul măsurat, deci acolo ar trebui să se oprească curba.</string>
+    <string name="loud_check_cal_not_measured">Curba este ancorată la volumul %1$d, dar ascultați la aproximativ %2$d. Loudness-ul nu face nimic la ancora sa sau peste, așa că îi este locul la volumul dvs. de ascultare.</string>
     <string name="perm_battery_opt">Optimizarea bateriei</string>
     <string name="perm_audio_record">Înregistrare audio (EQ)</string>
     <string name="perm_gps_location">Locație GPS (GALA)</string>
@@ -549,6 +549,7 @@ Implicit global: %1$s</string>
     <string name="room_err_output_open">Ieșirea audio nu a putut fi deschisă.</string>
     <string name="room_err_nothing_heard">Nu s-a auzit niciun difuzor. Verificați volumul și asigurați-vă că microfonul nu este acoperit.</string>
     <string name="room_err_too_few_heard">S-au auzit doar %1$d difuzor/difuzoare - nu există referință pentru aliniere. Verificați volumul și poziția microfonului.</string>
+    <string name="room_err_too_noisy">În habitaclu este prea mult zgomot pentru măsurare (%1$d dBFS). Opriți motorul și ventilația, închideți geamurile și măsurați din nou.</string>
     <string name="room_err_layout_mismatch">Niciun difuzor din configurația dvs. nu a fost auzit, dar au cântat difuzoare pe care nu le-ați declarat. Verificați configurația difuzoarelor și măsurați din nou.</string>
     <string name="room_findings_title">Rezultatele măsurătorii</string>
     <string name="room_findings_none">Nu s-au găsit defecte. Faptul că fața și spatele sună diferit este normal într-o mașină — nu este un defect.</string>

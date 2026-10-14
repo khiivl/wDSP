@@ -236,7 +236,7 @@ Globální výchozí: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Oříznutí výšek je zapnuté, ale nad jeho počáteční hlasitostí nezbývá hlasitost, ve které by mohlo působit.</string>
     <string name="loud_check_ceiling">Pod hlasitostí %1$d křivce dochází rezerva: %2$d pásem přestává stoupat a místo křivky vzniká rovná plocha.</string>
     <string name="loud_check_bass_stacks">Současně je zapnuto i samostatné zvýraznění basů. To jsou dva ovladače basů pod jednou křivkou.</string>
-    <string name="loud_check_cal_not_measured">Křivka je ukotvena při hlasitosti %1$d, ale vůz byl měřen při %2$d. Profil je přesný při hlasitosti měření, takže právě tam by měla křivka končit.</string>
+    <string name="loud_check_cal_not_measured">Křivka je ukotvena při hlasitosti %1$d, ale vy posloucháte přibližně na %2$d. Loudness na svém ukotvení ani nad ním nic nedělá, proto patří k vaší hlasitosti.</string>
     <string name="perm_battery_opt">Optimalizace baterie</string>
     <string name="perm_audio_record">Nahrávání zvuku (EQ)</string>
     <string name="perm_gps_location">Poloha GPS (GALA)</string>
@@ -549,6 +549,7 @@ Globální výchozí: %1$s</string>
     <string name="room_err_output_open">Zvukový výstup se nepodařilo otevřít.</string>
     <string name="room_err_nothing_heard">Nebyl detekován žádný reproduktor. Zkontrolujte hlasitost a ujistěte se, že mikrofon není zakrytý.</string>
     <string name="room_err_too_few_heard">Detekováno pouze %1$d reproduktorů — nelze provést zarovnání. Zkontrolujte hlasitost a umístění mikrofonu.</string>
+    <string name="room_err_too_noisy">V kabině je příliš velký hluk na měření (%1$d dBFS). Vypněte motor a větrání, zavřete okna a změřte znovu.</string>
     <string name="room_err_layout_mismatch">Žádný z reproduktorů ve vaší konfiguraci nebyl slyšet, ale hrály reproduktory, které jste neuvedli. Zkontrolujte konfiguraci reproduktorů a změřte znovu.</string>
     <string name="room_findings_title">Co zjistilo měření</string>
     <string name="room_findings_none">Žádné vady nebyly nalezeny. To, že přední a zadní část znějí odlišně, je v autě normální, nikoli vada.</string>

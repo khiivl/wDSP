@@ -236,7 +236,7 @@ Genel Varsayılan: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Tizleri kırpma açık, ancak başlangıç ses seviyesinin üzerinde etkili olabileceği bir ses seviyesi yok.</string>
     <string name="loud_check_ceiling">%1$d ses seviyesinin altında eğrinin payı tükeniyor: %2$d bant yükselmeyi durduruyor ve eğri yerine düz bir rafa dönüşüyor.</string>
     <string name="loud_check_bass_stacks">Ayrı bir bas güçlendirme de açık. Bu, tek bir eğri altında iki bas kontrolü demektir.</string>
-    <string name="loud_check_cal_not_measured">Eğri %1$d ses seviyesine sabitlenmiş, ancak araç %2$d seviyesinde ölçülmüştü. Profil ölçülen ses seviyesinde tam doğrudur, bu yüzden eğri tam orada durmalıdır.</string>
+    <string name="loud_check_cal_not_measured">Eğri %1$d ses düzeyine sabitlenmiş, ancak yaklaşık %2$d düzeyinde dinliyorsunuz. Loudness sabitleme noktasında veya üzerinde hiçbir şey yapmaz, bu yüzden kendi ses düzeyinize ait olmalıdır.</string>
     <string name="perm_battery_opt">Pil optimizasyonu</string>
     <string name="perm_audio_record">Ses kaydı (EQ)</string>
     <string name="perm_gps_location">GPS konumu (GALA)</string>
@@ -549,6 +549,7 @@ Genel Varsayılan: %1$s</string>
     <string name="room_err_output_open">Ses çıkışı açılamadı.</string>
     <string name="room_err_nothing_heard">Hiçbir hoparlör duyulmadı. Ses seviyesini ve mikrofonun kapalı olmadığını kontrol edin.</string>
     <string name="room_err_too_few_heard">Yalnızca %1$d hoparlör duyuldu — hizalama yapılacak yeterli hoparlör yok. Ses seviyesini ve mikrofon konumunu kontrol edin.</string>
+    <string name="room_err_too_noisy">Kabin ölçüm yapmak için fazla gürültülü (%1$d dBFS). Motoru ve fanı kapatın, camları kapatın ve tekrar ölçün.</string>
     <string name="room_err_layout_mismatch">Düzeninizdeki hoparlörlerin hiçbiri duyulmadı, ancak belirtmediğiniz hoparlörler çaldı. Hoparlör düzenini kontrol edin ve tekrar ölçün.</string>
     <string name="room_findings_title">Ölçümün bulguları</string>
     <string name="room_findings_none">Arıza bulunmadı. Ön ve arka hoparlörlerin farklı tınlaması araçta normaldir — bu bir arıza değildir.</string>

@@ -225,7 +225,7 @@
     <string name="loud_check_fatigue_start_no_room">El recorte de agudos está activado, pero no hay volumen por encima de su volumen de inicio para que actúe.</string>
     <string name="loud_check_ceiling">Por debajo del volumen %1$d la curva se queda sin margen: %2$d bandas dejan de subir y se aplanan en una meseta en lugar de una curva.</string>
     <string name="loud_check_bass_stacks">También está activado un refuerzo de graves independiente. Son dos controles de graves bajo una misma curva.</string>
-    <string name="loud_check_cal_not_measured">La curva está anclada al volumen %1$d, pero el coche se midió a %2$d. El perfil es exacto al volumen medido, por lo que ahí es donde debería terminar la curva.</string>
+    <string name="loud_check_cal_not_measured">La curva está anclada al volumen %1$d, pero usted escucha alrededor de %2$d. La sonoridad (loudness) no actúa en su anclaje ni por encima, por lo que debe ajustarse a su propio volumen.</string>
     <string name="perm_battery_opt">Optimización de batería</string>
     <string name="perm_audio_record">Grabación de audio (EQ)</string>
     <string name="perm_gps_location">Ubicación GPS (GALA)</string>
@@ -547,6 +547,7 @@
     <string name="room_err_output_open">No se pudo abrir la salida de audio.</string>
     <string name="room_err_nothing_heard">No se detectó ningún altavoz. Compruebe el volumen y que el micrófono no esté cubierto.</string>
     <string name="room_err_too_few_heard">Solo se detectaron %1$d altavoz(ces) - nada con qué alinear. Compruebe el volumen y la ubicación del micrófono.</string>
+    <string name="room_err_too_noisy">El habitáculo es demasiado ruidoso para medir (%1$d dBFS). Apague el motor y la ventilación, cierre las ventanillas y mida de nuevo.</string>
     <string name="room_err_layout_mismatch">No se escuchó ninguno de los altavoces de su configuración, pero sonaron altavoces que no había declarado. Compruebe la configuración de altavoces y mida de nuevo.</string>
     <string name="room_findings_title">Resultados de la medición</string>
     <string name="room_findings_none">No se encontraron fallos. Que delante y detrás suenen diferente es normal en el coche; no es un fallo.</string>

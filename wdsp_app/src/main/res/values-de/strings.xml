@@ -225,7 +225,7 @@
     <string name="loud_check_fatigue_start_no_room">Die Höhenreduzierung ist aktiv, aber oberhalb ihrer Startlautstärke bleibt keine Lautstärke, in der sie wirken könnte.</string>
     <string name="loud_check_ceiling">Unterhalb von Lautstärke %1$d geht der Kurve der Spielraum aus: %2$d Bänder steigen nicht weiter an und verflachen zu einer Stufe statt einer Kurve.</string>
     <string name="loud_check_bass_stacks">Eine separate Bassanhebung ist ebenfalls aktiv. Das sind zwei Bassregler unter einer Kurve.</string>
-    <string name="loud_check_cal_not_measured">Die Kurve ist bei Lautstärke %1$d verankert, das Fahrzeug wurde jedoch bei %2$d gemessen. Das Profil stimmt bei der Messlautstärke, genau dort sollte die Kurve enden.</string>
+    <string name="loud_check_cal_not_measured">Die Kurve ist bei Lautstärke %1$d verankert, aber Sie hören bei etwa %2$d. Bei oder über ihrem Ankerpunkt greift die Loudness nicht ein, daher gehört sie auf Ihre Lautstärke.</string>
     <string name="perm_battery_opt">Akkuoptimierung</string>
     <string name="perm_audio_record">Audioaufnahme (EQ)</string>
     <string name="perm_gps_location">GPS-Standort (GALA)</string>
@@ -546,6 +546,7 @@
     <string name="room_err_output_open">Die Audioausgabe konnte nicht geöffnet werden.</string>
     <string name="room_err_nothing_heard">Es wurde kein Lautsprecher gehört. Prüfen Sie die Lautstärke und stellen Sie sicher, dass das Mikrofon nicht verdeckt ist.</string>
     <string name="room_err_too_few_heard">Nur %1$d Lautsprecher gehört — keine Basis für den Abgleich. Prüfen Sie Lautstärke und Mikrofonposition.</string>
+    <string name="room_err_too_noisy">Im Innenraum ist es zu laut zum Messen (%1$d dBFS). Schalten Sie Motor und Lüftung aus, schließen Sie die Fenster und messen Sie erneut.</string>
     <string name="room_err_layout_mismatch">Keiner der Lautsprecher in Ihrer Konfiguration wurde gehört, aber es spielten Lautsprecher, die Sie nicht angegeben haben. Prüfen Sie die Lautsprecherkonfiguration und messen Sie erneut.</string>
     <string name="room_findings_title">Was die Messung ergab</string>
     <string name="room_findings_none">Keine Fehler gefunden. Dass Front und Heck im Auto unterschiedlich klingen, ist normal – das ist kein Fehler.</string>

@@ -236,7 +236,7 @@ Global standard: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Diskantdæmpning er slået til, men der er ikke noget lydstyrkeområde over dets startlydstyrke, hvor det kan virke.</string>
     <string name="loud_check_ceiling">Under lydstyrke %1$d mangler kurven overskud: %2$d bånd holder op med at stige, og den flader ud til en hylde i stedet for en kurve.</string>
     <string name="loud_check_bass_stacks">Et separat basboost er også slået til. Det er to basreguleringer under én kurve.</string>
-    <string name="loud_check_cal_not_measured">Kurven er forankret ved lydstyrke %1$d, men bilen blev målt ved %2$d. Profilen er præcis ved den målte lydstyrke, så det er der, kurven bør stoppe.</string>
+    <string name="loud_check_cal_not_measured">Kurven er forankret ved lydstyrke %1$d, men du lytter ved ca. %2$d. Loudness gør intet ved eller over sit anker, så den hører til ved din egen lydstyrke.</string>
     <string name="perm_battery_opt">Batterioptimering</string>
     <string name="perm_audio_record">Lydoptagelse (EQ)</string>
     <string name="perm_gps_location">GPS-placering (GALA)</string>
@@ -549,6 +549,7 @@ Global standard: %1$s</string>
     <string name="room_err_output_open">Lydudgangen kunne ikke åbnes.</string>
     <string name="room_err_nothing_heard">Ingen højttaler blev hørt. Kontroller lydstyrken, og at mikrofonen ikke er tildækket.</string>
     <string name="room_err_too_few_heard">Kun %1$d højttaler(e) blev hørt — intet grundlag for justering. Kontroller lydstyrke og mikrofonplacering.</string>
+    <string name="room_err_too_noisy">Kabinen er for støjende til måling (%1$d dBFS). Sluk motoren og blæseren, luk vinduerne og mål igen.</string>
     <string name="room_err_layout_mismatch">Ingen af højttalerne i din opsætning blev hørt, men højttalere, du ikke har angivet, spillede. Tjek højttaleropsætningen og mål igen.</string>
     <string name="room_findings_title">Hvad målingen fandt</string>
     <string name="room_findings_none">Ingen fejl fundet. At for- og baghøjttalere lyder forskelligt er normalt i en bil - det er ikke en fejl.</string>

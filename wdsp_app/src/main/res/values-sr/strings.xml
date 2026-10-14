@@ -236,7 +236,7 @@
     <string name="loud_check_fatigue_start_no_room">Подрезивање високих је укључено, али изнад његове почетне јачине звука нема јачине звука у којој би могло да делује.</string>
     <string name="loud_check_ceiling">Испод јачине звука %1$d кривој понестаје резерве: %2$d опсега престаје да расте и формира се равна полица уместо криве.</string>
     <string name="loud_check_bass_stacks">Укључено је и посебно појачање баса. То су два регулатора баса под једном кривом.</string>
-    <string name="loud_check_cal_not_measured">Крива је усидрена на јачини звука %1$d, а возило је измерено на %2$d. Профил је тачан при јачини мерења, па би управо тамо крива требало да се завршава.</string>
+    <string name="loud_check_cal_not_measured">Крива је усидрена на јачини %1$d, а слушате на око %2$d. Тонкомпензација не ради ништа на свом сидру нити изнад њега, па јој је место на вашој јачини.</string>
     <string name="perm_battery_opt">Optimizacija baterije</string>
     <string name="perm_audio_record">Snimanje zvuka (EQ)</string>
     <string name="perm_gps_location">GPS lokacija (GALA)</string>
@@ -549,6 +549,7 @@
     <string name="room_err_output_open">Аудио излаз није могао бити отворен.</string>
     <string name="room_err_nothing_heard">Ниједан звучник се није чуо. Проверите јачину звука и да микрофон није покривен.</string>
     <string name="room_err_too_few_heard">Чуло се само %1$d звучник(а) — недовољно за поравнање. Проверите јачину звука и положај микрофона.</string>
+    <string name="room_err_too_noisy">У кабини је превише бучно за мерење (%1$d dBFS). Угасите мотор и вентилацију, затворите прозоре и измерите поново.</string>
     <string name="room_err_layout_mismatch">Ниједан звучник из ваше конфигурације није се чуо, али су свирали звучници које нисте означили. Проверите конфигурацију звучника и поновите мерење.</string>
     <string name="room_findings_title">Резултати мерења</string>
     <string name="room_findings_none">Нема пронађених кварова. То што напред и назад звуче другачије уобичајено је у ауту — то није квар.</string>

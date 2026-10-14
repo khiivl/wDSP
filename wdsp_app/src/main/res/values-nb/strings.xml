@@ -236,7 +236,7 @@ Global standard: %1$s</string>
     <string name="loud_check_fatigue_start_no_room">Diskantdemping er på, men det er ikke noe volum over startvolumet der den kan virke.</string>
     <string name="loud_check_ceiling">Under volum %1$d slipper kurven opp for takhøyde: %2$d bånd slutter å stige og den flater ut til en hylle i stedet for en kurve.</string>
     <string name="loud_check_bass_stacks">En separat bassheving er også slått på. Det er to basskontroller under én kurve.</string>
-    <string name="loud_check_cal_not_measured">Kurven er forankret ved volum %1$d, men bilen ble målt ved %2$d. Profilen er nøyaktig ved det målte volumet, så det er der kurven bør stoppe.</string>
+    <string name="loud_check_cal_not_measured">Kurven er forankret ved volum %1$d, men du lytter på omtrent %2$d. Loudness gjør ingenting ved eller over sitt anker, så den hører hjemme på ditt eget volum.</string>
     <string name="perm_battery_opt">Batterioptimalisering</string>
     <string name="perm_audio_record">Lydopptak (EQ)</string>
     <string name="perm_gps_location">GPS-posisjon (GALA)</string>
@@ -549,6 +549,7 @@ Global standard: %1$s</string>
     <string name="room_err_output_open">Lydutgangen kunne ikke åpnes.</string>
     <string name="room_err_nothing_heard">Ingen høyttaler ble hørt. Sjekk volumet og at mikrofonen ikke er tildekket.</string>
     <string name="room_err_too_few_heard">Kun %1$d høyttaler(e) ble hørt — ingenting å justere mot. Sjekk volum og mikrofonplassering.</string>
+    <string name="room_err_too_noisy">Kupeen er for støyende til å måle i (%1$d dBFS). Slå av motoren og viften, lukk vinduene og mål på nytt.</string>
     <string name="room_err_layout_mismatch">Ingen av høyttalerne i oppsettet ditt ble hørt, men høyttalere du ikke oppga, spilte. Sjekk høyttaleroppsettet og mål på nytt.</string>
     <string name="room_findings_title">Hva målingen fant</string>
     <string name="room_findings_none">Ingen feil funnet. At foran og bak høres forskjellig ut er normalt i en bil - det er ikke en feil.</string>

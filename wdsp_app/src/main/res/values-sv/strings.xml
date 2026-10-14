@@ -224,7 +224,7 @@
     <string name="loud_check_fatigue_start_no_room">Diskantdämpning är på, men det finns ingen volym över dess startvolym där den kan verka.</string>
     <string name="loud_check_ceiling">Under volym %1$d tar marginalen slut för kurvan: %2$d band slutar stiga och den planar ut till en hylla i stället för en kurva.</string>
     <string name="loud_check_bass_stacks">En separat basförstärkning är också påslagen. Det innebär två baskontroller under samma kurva.</string>
-    <string name="loud_check_cal_not_measured">Kurvan är förankrad vid volym %1$d, men bilen mättes vid %2$d. Profilen är exakt vid den uppmätta volymen, så det är där kurvan bör sluta.</string>
+    <string name="loud_check_cal_not_measured">Kurvan är förankrad vid volym %1$d, men du lyssnar vid ungefär %2$d. Loudness gör ingenting vid eller över sitt ankare, så den hör hemma vid din egen volym.</string>
     <string name="perm_battery_opt">Batterioptimering</string>
     <string name="perm_audio_record">Ljudinspelning (EQ)</string>
     <string name="perm_gps_location">GPS-position (GALA)</string>
@@ -546,6 +546,7 @@
     <string name="room_err_output_open">Ljudutgången kunde inte öppnas.</string>
     <string name="room_err_nothing_heard">Ingen högtalare hördes alls. Kontrollera volymen och att mikrofonen inte är övertäckt.</string>
     <string name="room_err_too_few_heard">Endast %1$d högtalare hördes — inget att justera mot. Kontrollera volym och mikrofonplacering.</string>
+    <string name="room_err_too_noisy">Kupén är för bullrig för att mäta i (%1$d dBFS). Stäng av motorn och fläkten, stäng fönstren och mät igen.</string>
     <string name="room_err_layout_mismatch">Ingen av högtalarna i din konfiguration hördes, men högtalare du inte angav spelade. Kontrollera högtalarkonfigurationen och mät igen.</string>
     <string name="room_findings_title">Vad mätningen fann</string>
     <string name="room_findings_none">Inga fel hittades. Att fram och bak låter olika är normalt i en bil – det är inte ett fel.</string>
