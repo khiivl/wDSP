@@ -1674,7 +1674,11 @@ public final class RoomMeasurement {
         return running;
     }
 
-    /** Claims the measurement slot for another sweep-like job (VolumeSteps); false while one runs. */
+    /**
+     * Claims the measurement slot - the one way in for every job that plays and records (the
+     * measurement, the microphone calibration, VolumeSteps), taken on the caller's thread before its
+     * own starts, so two taps cannot both find it free. False while one runs.
+     */
     static synchronized boolean begin() {
         if (running) return false;
         running = true;
@@ -1700,19 +1704,24 @@ public final class RoomMeasurement {
     private static void controlPass(Context app, Result result, Listener listener) {
         final SharedPreferences prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         final String own = prefs.getString(PREF_LAST_SELECTED, null);
+        VolumeHelper.init(app);
         final SharedPreferences.Editor e = prefs.edit();
         copyPresetKeys(prefs, e, autoEqPresetName(result), CONTROL_PRESET);
         writePresetValues(e, CONTROL_PRESET, result);
+        // The recovery record in the same write that selects the control preset, and gone only
+        // after the person's own is back: no instant at which a dying process leaves "wDSP Control"
+        // selected with nothing to undo it. The volume ControlSweep changes is in it too.
+        e.putString(PREF_RECOVERY, PREF_LAST_SELECTED + "=" + own + ";saved_volume=" + VolumeHelper.getVolume());
         e.putString(PREF_LAST_SELECTED, CONTROL_PRESET);
         e.apply();
         try {
-            ControlSweep.run(app, result, listener, own);
+            ControlSweep.run(app, result, listener);
         } catch (Throwable t) {
             if (result.control == null) result.control = new ControlSweep.Outcome();
             result.control.error = t.getClass().getSimpleName() + ": " + t.getMessage();
             Log.e(TAG, "control sweep failed", t);
         } finally {
-            prefs.edit().putString(PREF_LAST_SELECTED, own).apply();
+            prefs.edit().putString(PREF_LAST_SELECTED, own).remove(PREF_RECOVERY).apply();
             app.sendBroadcast(new Intent("com.radiorubka.wdsp.RESET_AUDIO_MCU").setPackage(app.getPackageName()));
         }
         // The phase advice comes after the control sweep (owner, 13.10.2026: «поради краще давати
@@ -1749,12 +1758,11 @@ public final class RoomMeasurement {
                                     final CarBodyType bodyType,
                                     final int listeningDistanceCm,
                                     final Listener listener) {
-        if (running) {
+        if (!begin()) {
             Log.w(TAG, "a measurement is already running, ignoring this request");
             return;
         }
         new Thread(() -> {
-            running = true;
             Result result;
             try {
                 result = measure(context, amplitude, seconds, hasSubwoofer, soundstageMode, targetCurve, bodyType, listeningDistanceCm, listener, false);
@@ -1770,7 +1778,7 @@ public final class RoomMeasurement {
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
                 Log.e(TAG, "measurement failed", t);
             } finally {
-                running = false;
+                end();
             }
             if (listener != null) listener.onFinished(result);
         }, "wDSP_RoomMeasure").start();
@@ -1943,12 +1951,11 @@ public final class RoomMeasurement {
     }
 
     public static void calibrateMicAsync(final Context context, final Listener listener) {
-        if (running) {
+        if (!begin()) {
             Log.w(TAG, "a measurement is already running, ignoring mic calibration request");
             return;
         }
         new Thread(() -> {
-            running = true;
             Result result;
             try {
                 // Stage and target curve are literals on purpose: a calibration pass ends at the
@@ -1980,7 +1987,7 @@ public final class RoomMeasurement {
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
                 Log.e(TAG, "mic calibration failed", t);
             } finally {
-                running = false;
+                end();
             }
             if (listener != null) listener.onFinished(result);
         }, "wDSP_MicCalibration").start();
@@ -2419,8 +2426,10 @@ public final class RoomMeasurement {
                         final long settleFrames = ROUTING_SETTLE_MS * SAMPLE_RATE / 1000L;
                         final long switchAtMs = (long) ((slotAt[k] - settleFrames)
                                 * 1000L / SAMPLE_RATE);
-                        long waitMs = switchAtMs - (System.currentTimeMillis() - playStartedMs);
+                        long waitMs = switchAtMs - (android.os.SystemClock.elapsedRealtime() - playStartedMs);
                         if (waitMs > 0) sleep(waitMs);
+                        // The pass ended early (a call, an abort, a dead input): route nothing more.
+                        if (Thread.currentThread().isInterrupted()) return;
                         // Which speaker plays is said here; how far the pass is, by the recording loop.
                         playingSlot[0] = k;
                         applyRouting(prefs, preset, slots[k]);
@@ -2439,6 +2448,7 @@ public final class RoomMeasurement {
                 }
             });
             if (router[0] != null) {
+                router[0].interrupt();
                 try {
                     router[0].join(2000);
                 } catch (InterruptedException ie) {
@@ -2788,7 +2798,9 @@ public final class RoomMeasurement {
      * output are taken here and given back here - for the measurement's pass and the control sweep's
      * alike, one path rather than two copies of it.
      *
-     * @param onPlaying called once the track plays, with the wall-clock start in ms
+     * @param onPlaying called once the track plays, with the start on {@code SystemClock.elapsedRealtime()}
+     *                  in ms - never the wall clock, which jumps here when the network sets the time
+     *                  (the unit has no RTC); a thread it starts must stop when interrupted
      * @param progress  called at most every {@link #PROGRESS_EVERY_MS}, may be null
      * @return frames recorded, or -1 with {@code result.error} set when the pass never started
      */
@@ -2853,7 +2865,7 @@ public final class RoomMeasurement {
 
             record.startRecording();
             track.play();
-            final long playStartedMs = System.currentTimeMillis();
+            final long playStartedMs = android.os.SystemClock.elapsedRealtime();
 
             final AudioTrack playing = track;
             Thread writer = new Thread(() -> {

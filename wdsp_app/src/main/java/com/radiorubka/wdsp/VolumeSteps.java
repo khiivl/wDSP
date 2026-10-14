@@ -41,6 +41,8 @@ final class VolumeSteps {
     static final int SPLIT = 13;
     private static final float TOP_TARGET_DBFS = -12f;
     private static final float PROBE_AMPLITUDE = 0.005f;
+    /** The loudest the walk's tone gets - the measurement sweep's own cap (RoomMeasurement.LEVEL_MAX). */
+    private static final double MAX_AMPLITUDE = 0.5;
     private static final float TONE_HZ = 1000f;
     private static final float SLOT_TOP_S = 0.5f, SLOT_LOW_S = 1.0f;
     /** Where in each slot the level is read, as shares of it: after the step has reached the speakers. */
@@ -106,6 +108,8 @@ final class VolumeSteps {
     private static final class Half {
         final double[] level = new double[TOP + 1];
         double amplitude, noiseDb;
+        /** Why the half was not read; null when it was. */
+        String error;
 
         Half() {
             java.util.Arrays.fill(level, Double.NaN);
@@ -132,8 +136,9 @@ final class VolumeSteps {
         try {
             RoomMeasurement.pauseMedia(app);
             final Half upper = walk(app, TOP, SPLIT, SLOT_TOP_S, false);
-            final Half lower = upper == null ? null : walk(app, SPLIT, 1, SLOT_LOW_S, true);
-            if (lower == null) return "a pass failed (" + (upper == null ? TOP : SPLIT) + " down)";
+            if (upper.error != null) return upper.error;
+            final Half lower = walk(app, SPLIT, 1, SLOT_LOW_S, true);
+            if (lower.error != null) return lower.error;
             return report(app, prefs, upper, lower) ? null : "a step was not read";
         } finally {
             MicrophoneGuard.releaseHold();
@@ -144,7 +149,8 @@ final class VolumeSteps {
 
     /**
      * A quiet probe at {@code from} sets the tone's level, then the tone plays unbroken while the
-     * volume walks {@code from} .. {@code to}, {@code slotS} a step. Null when a pass failed.
+     * volume walks {@code from} .. {@code to}, {@code slotS} a step. {@link Half#error} says why a
+     * half was not read.
      */
     private static Half walk(Context app, int from, int to, float slotS, boolean releaseHold) {
         final int sr = RoomMeasurement.SAMPLE_RATE;
@@ -156,31 +162,58 @@ final class VolumeSteps {
         final RoomMeasurement.Result pass = new RoomMeasurement.Result();
         int got = RoomMeasurement.playAndRecord(app, probe, probeRec, pass, null, null, false);
         if (got <= 0 || pass.error != null) {
-            Log.w(TAG, "probe at step " + from + " failed: " + pass.error);
-            return null;
+            h.error = "probe at step " + from + " failed: " + pass.error;
+            Log.w(TAG, h.error);
+            return h;
         }
         final double probeDb = levelDb(probeRec, (int) (0.4f * sr), (int) (0.9f * sr));
-        h.amplitude = Math.max(0.002, Math.min(0.5,
-                PROBE_AMPLITUDE * Math.pow(10.0, (TOP_TARGET_DBFS - probeDb) / 20.0)));
+        final double needed = PROBE_AMPLITUDE * Math.pow(10.0, (TOP_TARGET_DBFS - probeDb) / 20.0);
         Log.i(TAG, String.format(Locale.US, "probe at step %d: %.1f dBFS at 1 kHz with amplitude %.4f -> %.4f",
-                from, probeDb, PROBE_AMPLITUDE, h.amplitude));
+                from, probeDb, PROBE_AMPLITUDE, needed));
+        // At the top of the scale a microphone that hardly hears the probe (unplugged, muted, the
+        // amplifier off) would get the loudest tone the walk can make, at volume 32. Refused there;
+        // lower down the cap is what a measurement sweep plays at, and the noise test below judges it.
+        if (needed > MAX_AMPLITUDE && from == TOP) {
+            h.error = String.format(Locale.US, "the microphone hardly hears the probe at step %d "
+                    + "(%.1f dBFS at 1 kHz) - not played louder", from, probeDb);
+            Log.w(TAG, h.error);
+            return h;
+        }
+        h.amplitude = Math.max(0.002, Math.min(MAX_AMPLITUDE, needed));
 
         final int steps = from - to + 1;
         final int lead = (int) (0.3f * sr);
         final int slot = (int) (slotS * sr);
         final short[] walk = tone(lead + steps * slot, h.amplitude, lead);
         final short[] rec = new short[lead + steps * slot + sr / 2];
-        got = RoomMeasurement.playAndRecord(app, walk, rec, pass, startMs -> new Thread(() -> {
-            for (int k = 1; k < steps; k++) {
-                final long at = (long) ((lead + (long) k * slot) * 1000L / sr);
-                final long wait = at - (System.currentTimeMillis() - startMs);
-                if (wait > 0) RoomMeasurement.sleep(wait);
-                setVolume(from - k);
+        final Thread[] walker = new Thread[1];
+        got = RoomMeasurement.playAndRecord(app, walk, rec, pass, startMs -> {
+            walker[0] = new Thread(() -> {
+                for (int k = 1; k < steps; k++) {
+                    final long at = (long) ((lead + (long) k * slot) * 1000L / sr);
+                    final long wait = at - (android.os.SystemClock.elapsedRealtime() - startMs);
+                    if (wait > 0) RoomMeasurement.sleep(wait);
+                    // The pass ended early (a call, an abort): the volume is being put back - leave it.
+                    if (Thread.currentThread().isInterrupted()) return;
+                    setVolume(from - k);
+                }
+            }, "wDSP_VolumeWalk");
+            walker[0].start();
+        }, null, releaseHold);
+        // Stopped and waited for before anyone restores the volume, or a walk cut short would go on
+        // turning it down afterwards - in the middle of a phone call, if that is what cut it.
+        if (walker[0] != null) {
+            walker[0].interrupt();
+            try {
+                walker[0].join(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        }, "wDSP_VolumeWalk").start(), null, releaseHold);
+        }
         if (got <= 0 || pass.error != null) {
-            Log.w(TAG, "walk " + from + ".." + to + " failed: " + pass.error);
-            return null;
+            h.error = "walk " + from + ".." + to + " failed: " + pass.error;
+            Log.w(TAG, h.error);
+            return h;
         }
         h.noiseDb = levelDb(rec, 0, lead);
         for (int k = 0; k < steps; k++) {

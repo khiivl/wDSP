@@ -103,9 +103,8 @@ final class ControlSweep {
     private ControlSweep() {
     }
 
-    /** @param restorePreset the person's own preset - what the recovery record puts back if this dies */
-    static void run(Context app, RoomMeasurement.Result measured, RoomMeasurement.Listener listener,
-                    String restorePreset) {
+    /** The caller (RoomMeasurement.controlPass) holds the recovery record and puts the preset back. */
+    static void run(Context app, RoomMeasurement.Result measured, RoomMeasurement.Listener listener) {
         final Outcome out = new Outcome();
         measured.control = out;
         if (CallState.isActive()) {
@@ -125,10 +124,6 @@ final class ControlSweep {
         McuService.ensureStarted(app);
         VolumeHelper.init(app);
         final int origVolume = VolumeHelper.getVolume();
-        // The same recovery record as a measurement's: if this dies half-way, the service start
-        // puts the volume back (RoomMeasurement.restoreIfInterrupted).
-        prefs.edit().putString(RoomMeasurement.PREF_RECOVERY, RoomMeasurement.PREF_LAST_SELECTED + "="
-                + restorePreset + ";saved_volume=" + origVolume).apply();
 
         final int sr = RoomMeasurement.SAMPLE_RATE;
         try (NativeSweep sweep = new NativeSweep(sr, RoomMeasurement.SUB_SWEEP_START_HZ,
@@ -174,7 +169,6 @@ final class ControlSweep {
             MicrophoneGuard.releaseHold();
             VolumeHelper.setVolume(origVolume);
             VolumeHelper.setVolumeForType("media_type", origVolume);
-            prefs.edit().remove(RoomMeasurement.PREF_RECOVERY).apply();
         }
         judge(measured, out);
         appendToReport(measured, out);
