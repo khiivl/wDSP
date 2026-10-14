@@ -50,9 +50,6 @@ calculated RTA and bars must not depend on the volume; the mic follows the table
 6b. **Loudness by dB, not steps** (13.10, on the bench, not yet heard by the owner): `LoudnessCurve.loudnessRatio`
    reads the measured step table (`VolumeSteps`, MEASURED_FACTS "Volume steps"); the mic level probe
    before sweeps is on the bench too, unverified.
-7. Software EQ — postponed by the owner 13.10 (TODO «Разом із сесією Дж» item 15).
-8. Gemini: translate the new strings into 26 languages — `room_finding_sub_antiphase`,
-   `room_finding_summed_*`, `room_stage_control*`, `room_control_failed`, `toast_rta_zero_listening`.
 
 ## ❓ For the owner
 
