@@ -560,6 +560,15 @@ Globāli noklusējums: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — nav jūsu konfigurācijā, bet no šīs izejas kaut kas skan. Ja auto tur ir skaļrunis, atzīmējiet to uz auto un veiciet mērījumu vēlreiz.</string>
     <string name="room_finding_channels_swapped">%1$s un %2$s — pienākšanas laiki sakrīt tikai tad, ja tie ir samainīti vietām. Ja mikrofons atradās pie punkta, to vadi ir samainīti. Novērsiet to vispirms: pārējie novērojumi nosauc skaļruni pēc tā izejas.</string>
     <string name="room_finding_polarity">%1$s — pretfāzē pret pārējiem galvenajiem skaļruņiem, visticamāk sajaukts pluss un mīnuss. Tas slāpē basus salonā. Pārbaudiet abus šī skaļruņa vadus.</string>
+    <string name="room_finding_sub_antiphase">%1$s — ar šo iestatījumu pie dalījuma frekvences (%2$d Hz) skan pretfāzē pret durvīm un savstarpēji dzēšas. Pārslēdziet sabvūfera pastiprinātāja fāzes slēdzi otrā stāvoklī (0/180); ja slēdža nav — samainiet vietām abus sabvūfera vadus. Pēc tam veiciet mērījumu vēlreiz.</string>
+    <string name="room_finding_summed_cancellation">kontroles sweep: pie %1$d Hz sabvūfers un durvis dzēš viens otru — ar apgrieztu sabvūfera fāzi mikrofona pozīcijā skanētu par %2$d dB skaļāk. Pārslēdziet fāzi pastiprinātājā (0/180); ja slēdža nav, samainiet sabvūfera vadus. Pēc tam mēriet vēlreiz.</string>
+    <string name="room_finding_summed_ok">kontroles sweep: sabvūfers un durvis pie %1$d Hz saskaitās fāzē; fāzes apvēršana mainītu līmeni par %2$+d dB. Tā ir piezīme, nevis defekts.</string>
+    <string name="room_finding_summed_no_verdict">kontroles sweep: pie %1$d Hz visi skaļruņi kopā atšķiras par %2$+d dB no atsevišķo mērījumu prognozes — pārāk liela novirze, lai noteiktu sabvūfera fāzi. Tā ir piezīme, nevis defekts.</string>
+    <string name="room_stage_control">Kontroles sweep</string>
+    <string name="room_stage_control_detail">Visi skaļruņi vienlaicīgi caur aprēķināto iestatījumu</string>
+    <string name="room_stage_volume_steps">Skaļuma soļi</string>
+    <string name="room_stage_volume_steps_detail">Klusa skaņa pakāpeniskas skaļuma samazināšanas laikā, apmēram 20 sekundes — nosaka decibelus katrā solī</string>
+    <string name="room_control_failed">Kontroles sweep nenotika: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: iekritums pie %2$.1f kHz, kāda nav otras puses skaļrunim — augstfrekvences skaļrunis visticamāk skan pretfāzē pret savu zemo-vidējo frekvenču skaļruni. Samainiet vietām abus šī augstfrekvences skaļruņa vadus (vai pārbaudiet krossoveri) un izmēriet vēlreiz.</string>
     <string name="room_finding_speaker_resonance">%1$s: šaura smaile pie %2$d Hz, kādas nav citiem skaļruņiem — vibrē durvju apdare vai stiprinājums. Pārbaudiet skaļruņa skrūves, paneļa klipšus un to, kas grab šajās durvīs.</string>
     <string name="room_finding_cabin_mode">Visiem skaļruņiem ir smaile pie %1$d Hz — tā ir paša salona akustiskā moda, nevis skaļruņa defekts. Korekcija tur nogriež, ko spēj.</string>
@@ -599,7 +608,7 @@ Globāli noklusējums: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizēt dzirdamības slieksnim</string>
     <string name="toast_sweep_hearing_threshold">Atskaņojiet pēc iespējas klusāk – uz dzirdamības sliekšņa, tikko dzirdami.</string>
     <string name="audiocheck_rta_zero">RTA nulle</string>
-    <string name="toast_rta_zero_listening">Klausās rozā troksni 3 sekundes…</string>
+    <string name="toast_rta_zero_listening">RTA kalibrēšana ar rozā troksni, 4 sekundes… Vislabāk pie skaļuma 16, īpaši mikrofonam.</string>
     <string name="toast_rta_zero_taken">RTA nulle iestatīta: rozā troksnis tagad rāda 0 dB.</string>
     <string name="toast_rta_zero_failed">Dzirdams pārāk maz skaņas – RTA nulle netika iestatīta.</string>
     <string name="audiocheck_pink_noise">Rozā troksnis</string>

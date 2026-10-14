@@ -560,6 +560,15 @@ Par défaut global : %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — absent de votre configuration, mais un son est émis sur cette sortie. Si la voiture a un haut-parleur à cet endroit, cochez-le sur la voiture et recommencez la mesure.</string>
     <string name="room_finding_channels_swapped">%1$s et %2$s — les temps d\'arrivée ne correspondent que si ces deux canaux sont inversés. Si le microphone était placé au point indiqué, leurs câbles sont inversés. Corrigez cela d\'abord : les autres remarques identifient chaque haut-parleur par sa sortie.</string>
     <string name="room_finding_polarity">%1$s — en opposition de phase avec les autres haut-parleurs principaux, très probablement plus et moins inversés. Cela annule les basses dans l\'habitacle. Vérifiez les deux câbles de ce haut-parleur.</string>
+    <string name="room_finding_sub_antiphase">%1$s : avec ce préréglage, il joue en opposition de phase avec les portières au raccord (%2$d Hz), s\'annulant mutuellement. Basculez l\'inverseur de phase de l\'ampli du caisson (0/180) ; sans commutateur, inversez les deux fils au caisson. Mesurez à nouveau ensuite.</string>
+    <string name="room_finding_summed_cancellation">balayage de contrôle : à %1$d Hz, le caisson et les portières s\'annulent ; avec la phase inversée, ils joueraient %2$d dB plus fort à l\'emplacement du micro. Inversez la phase sur l\'ampli (0/180) ; sans commutateur, permutez les deux fils au caisson. Mesurez à nouveau ensuite.</string>
+    <string name="room_finding_summed_ok">balayage de contrôle : le caisson et les portières s\'additionnent en phase à %1$d Hz ; inverser la phase du caisson modifierait le niveau de %2$+d dB. Une remarque, pas un défaut.</string>
+    <string name="room_finding_summed_no_verdict">balayage de contrôle : à %1$d Hz, l\'ensemble des haut-parleurs s\'écarte de %2$+d dB des prévisions tirées des balayages individuels — écart trop important pour juger de la phase du caisson. Une remarque, pas un défaut.</string>
+    <string name="room_stage_control">Balayage de contrôle</string>
+    <string name="room_stage_control_detail">Tous les haut-parleurs simultanément, via le préréglage mesuré</string>
+    <string name="room_stage_volume_steps">Paliers de volume</string>
+    <string name="room_stage_volume_steps_detail">Une tonalité douce pendant que le volume descend, environ 20 secondes — mesure les décibels de chaque palier</string>
+    <string name="room_control_failed">Le balayage de contrôle n\'a pas pu être exécuté : %1$s</string>
     <string name="room_finding_crossover_phase">%1$s : un creux à %2$.1f kHz que le haut-parleur de l\'autre côté n\'a pas — le tweeter joue très probablement en opposition de phase avec son bas-médium. Inversez les deux câbles de ce tweeter (ou vérifiez son filtre passif) et mesurez à nouveau.</string>
     <string name="room_finding_speaker_resonance">%1$s : une crête étroite à %2$d Hz que les autres haut-parleurs n\'ont pas — la garniture de porte ou la fixation vibre. Vérifiez les vis du haut-parleur, les clips de la garniture et ce qui cliquette dans cette porte.</string>
     <string name="room_finding_cabin_mode">Tous les haut-parleurs ont une crête à %1$d Hz — c\'est un mode propre de l\'habitacle, pas un défaut de haut-parleur. La correction atténue ce qu\'elle peut à cet endroit.</string>
@@ -599,7 +608,7 @@ Par défaut global : %1$s</string>
     <string name="audiocheck_sweep_normalize">Normaliser pour le seuil d\'audition</string>
     <string name="toast_sweep_hearing_threshold">Jouez aussi doucement que possible – à votre seuil d\'audition, à peine audible.</string>
     <string name="audiocheck_rta_zero">Zéro RTA</string>
-    <string name="toast_rta_zero_listening">Écoute du bruit rose pendant 3 secondes…</string>
+    <string name="toast_rta_zero_listening">Étalonnage du RTA sur bruit rose, 4 secondes… Idéal au volume 16, en particulier pour le microphone.</string>
     <string name="toast_rta_zero_taken">Zéro RTA défini : le bruit rose indique maintenant 0 dB.</string>
     <string name="toast_rta_zero_failed">Trop peu de son capté – le zéro RTA n\'a pas été défini.</string>
     <string name="audiocheck_pink_noise">Bruit rose</string>

@@ -560,6 +560,15 @@ Genel Varsayılan: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — düzeninizde yok, ancak bu çıkışta bir şey çalıyor. Araçta orada bir hoparlör varsa arabada işaretleyin ve tekrar ölçün.</string>
     <string name="room_finding_channels_swapped">%1$s ve %2$s — varış süreleri yalnızca bu ikisi yer değiştirdiğinde uyuşuyor. Mikrofon noktanın olduğu yerdeyse kabloları ters bağlanmıştır. Önce bunu düzeltin: diğer bulguların tümü hoparlörü çıkışına göre adlandırır.</string>
     <string name="room_finding_polarity">%1$s — diğer ana hoparlörlere göre ters fazda, büyük olasılıkla artı ve eksi ters bağlanmış. Bu durum kabindeki bası yok eder. Bu hoparlördeki iki kabloyu kontrol edin.</string>
+    <string name="room_finding_sub_antiphase">%1$s — bu ön ayarla geçiş frekansında (%2$d Hz) kapılara karşı ters fazda çalarak birbirlerini sönümlüyor. Subwoofer amfisi üzerindeki faz anahtarını diğer konuma (0/180) getirin; anahtar yoksa subwooferdaki iki kablonun yerini değiştirin. Ardından tekrar ölçüm yapın.</string>
+    <string name="room_finding_summed_cancellation">kontrol süpürmesi: %1$d Hz değerinde subwoofer ve kapılar birbirini sönümlüyor — subwoofer fazı ters çevrildiğinde mikrofonun bulunduğu noktada %2$d dB daha yüksek ses vereceklerdi. Amfideki fazı değiştirin (0/180); anahtar yoksa subwoofer kablolarını ters çevirin. Yeniden ölçün.</string>
+    <string name="room_finding_summed_ok">kontrol süpürmesi: subwoofer ve kapılar %1$d Hz değerinde aynı fazda toplanıyor; subwoofer fazını çevirmek seviyeyi %2$+d dB değiştirecektir. Bir nottur, arıza değildir.</string>
+    <string name="room_finding_summed_no_verdict">kontrol süpürmesi: %1$d Hz değerinde tüm hoparlörler birlikte, bağımsız süpürmelerin tahmininden %2$+d dB sapma gösteriyor — subwoofer fazını belirlemek için fark çok fazla. Bir nottur, arıza değildir.</string>
+    <string name="room_stage_control">Kontrol süpürmesi</string>
+    <string name="room_stage_control_detail">Tüm hoparlörler aynı anda, ölçülen ön ayar üzerinden</string>
+    <string name="room_stage_volume_steps">Ses adımları</string>
+    <string name="room_stage_volume_steps_detail">Ses seviyesi kademeli olarak düşerken yaklaşık 20 saniye süren sessiz ton — her adımın kaç desibel olduğunu belirler</string>
+    <string name="room_control_failed">Kontrol süpürmesi yapılamadı: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: diğer taraftaki hoparlörde olmayan %2$.1f kHz değerinde bir çöküş — tiz hoparlör büyük olasılıkla kendi mid-basına göre ters fazda çalıyor. Bu tiz hoparlörün iki kablosunun yerini değiştirin (veya geçiş filtresini kontrol edin) ve tekrar ölçün.</string>
     <string name="room_finding_speaker_resonance">%1$s: diğer hoparlörlerde olmayan %2$d Hz değerinde dar bir tepe — kapı paneli veya montaj yuvası tıkırdıyor. Hoparlör vidalarını, panel klipslerini ve bu kapıda neyin titrediğini kontrol edin.</string>
     <string name="room_finding_cabin_mode">Tüm hoparlörler %1$d Hz değerinde bir tepe noktasına sahip — bu hoparlörün arızası değil, kabinin kendi akustik modudur. Düzeltme orada elinden geleni keser.</string>
@@ -599,7 +608,7 @@ Genel Varsayılan: %1$s</string>
     <string name="audiocheck_sweep_normalize">İşitme eşiğine göre normalleştir</string>
     <string name="toast_sweep_hearing_threshold">Mümkün olduğunca sessiz çalın – işitme eşiğinizde, zar zor duyulabilir.</string>
     <string name="audiocheck_rta_zero">RTA Sıfırı</string>
-    <string name="toast_rta_zero_listening">3 saniye boyunca pembe gürültü dinleniyor…</string>
+    <string name="toast_rta_zero_listening">RTA pembe gürültü üzerinde kalibre ediliyor, 4 saniye… Özellikle mikrofon için en iyi seviye 16.</string>
     <string name="toast_rta_zero_taken">RTA sıfırı ayarlandı: pembe gürültü artık 0 dB okuyor.</string>
     <string name="toast_rta_zero_failed">Çok az ses duyuldu – RTA sıfırı ayarlanamadı.</string>
     <string name="audiocheck_pink_noise">Pembe Gürültü</string>

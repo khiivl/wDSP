@@ -558,6 +558,15 @@
     <string name="room_finding_heard_not_declared">%1$s — não consta da sua configuração, mas há som a ser emitido nesta saída. Se o carro tiver uma coluna aí, marque no carro e meça novamente.</string>
     <string name="room_finding_channels_swapped">%1$s e %2$s — os tempos de chegada só coincidem se estas duas forem trocadas. Se o microfone estava no ponto assinalado, os fios estão trocados. Corrija isto primeiro: as restantes notas identificam cada coluna pela sua saída.</string>
     <string name="room_finding_polarity">%1$s — em oposição de fase com as outras colunas principais, muito provavelmente positivo e negativo trocados. Isto anula os graves no habitáculo. Verifique os dois fios nesta coluna.</string>
+    <string name="room_finding_sub_antiphase">%1$s — com este perfil toca em oposição de fase com as portas no corte (%2$d Hz), anulando-se mutuamente. Mude o interruptor de fase no amplificador do subwoofer para a outra posição (0/180); caso não exista interruptor, troque os dois fios no subwoofer. Meça novamente a seguir.</string>
+    <string name="room_finding_summed_cancellation">varrimento de controlo: aos %1$d Hz o subwoofer e as portas anulam-se — com a fase invertida tocariam %2$d dB mais alto na posição do microfone. Mude a fase no amplificador (0/180); se não tiver interruptor, inverta os fios no subwoofer. Meça novamente depois.</string>
+    <string name="room_finding_summed_ok">varrimento de controlo: o subwoofer e as portas somam em fase aos %1$d Hz; inverter a fase alteraria o nível em %2$+d dB. Uma nota, não um defeito.</string>
+    <string name="room_finding_summed_no_verdict">varrimento de controlo: aos %1$d Hz todas as colunas em conjunto desviam-se %2$+d dB da previsão dos varrimentos individuais — desvio excessivo para avaliar a fase do subwoofer. Uma nota, não um defeito.</string>
+    <string name="room_stage_control">Varrimento de controlo</string>
+    <string name="room_stage_control_detail">Todas as colunas em simultâneo através da predefinição calculada</string>
+    <string name="room_stage_volume_steps">Passos de volume</string>
+    <string name="room_stage_volume_steps_detail">Um tom suave enquanto o volume desce, cerca de 20 segundos — determina os decibéis de cada passo</string>
+    <string name="room_control_failed">O varrimento de controlo não foi executado: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: uma quebra aos %2$.1f kHz que a coluna do outro lado não tem — o tweeter toca muito provavelmente em oposição de fase com o seu médio-grave. Troque os dois fios deste tweeter (ou verifique o seu crossover) e meça novamente.</string>
     <string name="room_finding_speaker_resonance">%1$s: um pico estreito aos %2$d Hz que as outras colunas não têm — a forra da porta ou a fixação está a ressoar. Verifique os parafusos da coluna, as molas da forra e o que vibra nessa porta.</string>
     <string name="room_finding_cabin_mode">Todas as colunas têm um pico aos %1$d Hz — é um modo próprio do habitáculo, não um defeito da coluna. A correção reduz o que é possível aí.</string>
@@ -597,7 +606,7 @@
     <string name="audiocheck_sweep_normalize">Normalizar para o limiar de audição</string>
     <string name="toast_sweep_hearing_threshold">Reproduza o mais baixo possível – no seu limiar de audição, quase inaudível.</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
-    <string name="toast_rta_zero_listening">A escutar o ruído rosa durante 3 segundos…</string>
+    <string name="toast_rta_zero_listening">A calibrar o RTA com ruído rosa, 4 segundos… Ideal no volume 16, especialmente para o microfone.</string>
     <string name="toast_rta_zero_taken">Zero RTA definido: o ruído rosa agora marca 0 dB.</string>
     <string name="toast_rta_zero_failed">Muito pouco som detetado – o zero RTA não foi definido.</string>
     <string name="audiocheck_pink_noise">Ruído rosa</string>

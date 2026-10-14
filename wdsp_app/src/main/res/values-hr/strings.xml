@@ -560,6 +560,15 @@ Globalno zadano: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — nije u vašoj konfiguraciji, ali na ovom izlazu nešto svira. Ako u autu postoji zvučnik, označite ga na autu i ponovite mjerenje.</string>
     <string name="room_finding_channels_swapped">%1$s i %2$s — vremena dolaska zvuka odgovaraju samo ako se zamijene mjesta. Ako je mikrofon bio na točki, njihove su žice zamijenjene. To popravite prvo: svi ostali nalazi imenuju zvučnik prema njegovom izlazu.</string>
     <string name="room_finding_polarity">%1$s — u protufazi u odnosu na ostale glavne zvučnike, najvjerojatnije su zamijenjeni plus i minus. To poništava bas u kabini. Provjerite dvije žice na ovom zvučniku.</string>
+    <string name="room_finding_sub_antiphase">%1$s — s ovom postavkom svira u protufazi u odnosu na vrata na reznoj frekvenciji (%2$d Hz) i međusobno se poništavaju. Prebacite prekidač faze na pojačalu subwoofera u drugi položaj (0/180); ako prekidača nema, zamijenite dvije žice na subwooferu. Zatim izmjerite ponovno.</string>
+    <string name="room_finding_summed_cancellation">kontrolni sweep: na %1$d Hz subwoofer i vrata se poništavaju — s obrnutom fazom subwoofera svirali bi %2$d dB glasnije (ondje gdje stoji mikrofon). Prebacite fazu na pojačalu (0/180); ako nema prekidača, zamijenite žice na subwooferu. Zatim izmjerite ponovno.</string>
+    <string name="room_finding_summed_ok">kontrolni sweep: subwoofer i vrata se na %1$d Hz zbrajaju u fazi; okretanje faze subwoofera promijenilo bi razinu za %2$+d dB. Napomena, a ne kvar.</string>
+    <string name="room_finding_summed_no_verdict">kontrolni sweep: na %1$d Hz svi zvučnici zajedno odstupaju za %2$+d dB od procjene iz pojedinačnih sweepova — preveliko odstupanje za procjenu faze subwoofera. Napomena, a ne kvar.</string>
+    <string name="room_stage_control">Kontrolni sweep</string>
+    <string name="room_stage_control_detail">Svi zvučnici odjednom, kroz izmjereni profil</string>
+    <string name="room_stage_volume_steps">Koraci glasnoće</string>
+    <string name="room_stage_volume_steps_detail">Tihi ton dok se glasnoća postupno smanjuje, oko 20 sekundi — mjeri decibele svakog koraka</string>
+    <string name="room_control_failed">Kontrolni sweep nije uspio: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: pad na %2$.1f kHz kakvog nema zvučnik s druge strane — visokotonac najvjerojatnije svira u protufazi u odnosu na svoj srednji bas. Zamijenite dvije žice ovog visokotonca (ili provjerite njegovu skretnicu) i izmjerite ponovno.</string>
     <string name="room_finding_speaker_resonance">%1$s: uski vrh na %2$d Hz kakvog nemaju ostali zvučnici — zvoni ploča vrata ili nosač. Provjerite vijke zvučnika, kopče ploče i što zveckanjem odjekuje u tim vratima.</string>
     <string name="room_finding_cabin_mode">Svi zvučnici imaju vrh na %1$d Hz — to je vlastiti mod kabine, a ne kvar zvučnika. Korekcija reže ondje što može.</string>
@@ -599,7 +608,7 @@ Globalno zadano: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normaliziraj za prag čujnosti</string>
     <string name="toast_sweep_hearing_threshold">Reproducirajte što tiše – na granici čujnosti, jedva čujno.</string>
     <string name="audiocheck_rta_zero">RTA nula</string>
-    <string name="toast_rta_zero_listening">Slušanje ružičastog šuma 3 sekunde…</string>
+    <string name="toast_rta_zero_listening">Kalibracija RTA na ružičastom šumu, 4 sekunde… Najbolje pri glasnoći 16, osobito za mikrofon.</string>
     <string name="toast_rta_zero_taken">RTA nula postavljena: ružičasti šum sada očitava 0 dB.</string>
     <string name="toast_rta_zero_failed">Čuje se premalo zvuka - RTA nula nije postavljena.</string>
     <string name="audiocheck_pink_noise">Ružičasti šum</string>

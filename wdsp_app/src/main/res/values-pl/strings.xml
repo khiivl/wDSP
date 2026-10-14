@@ -557,6 +557,15 @@
     <string name="room_finding_heard_not_declared">%1$s — nie ma w Twojej konfiguracji, ale na tym wyjściu coś gra. Jeśli w aucie jest tam głośnik, zaznacz go na aucie i zmierz ponownie.</string>
     <string name="room_finding_channels_swapped">%1$s i %2$s — czasy dotarcia dźwięku zgadzają się tylko wtedy, gdy zamieni się je miejscami. Jeśli mikrofon stał w miejscu kropki, ich przewody są zamienione. Napraw to najpierw: pozostałe uwagi określają głośnik według jego wyjścia.</string>
     <string name="room_finding_polarity">%1$s — w przeciwfazie do pozostałych głównych głośników, najprawdopodobniej zamieniony plus i minus. Wygasza to bas w kabinie. Sprawdź oba przewody przy tym głośniku.</string>
+    <string name="room_finding_sub_antiphase">%1$s — z tym profilem gra w przeciwfazie do drzwi na podziale (%2$d Hz), przez co wzajemnie się wygaszają. Przestaw przełącznik fazy na wzmacniaczu subwoofera w drugie położenie (0/180); jeśli nie ma przełącznika — zamień miejscami oba przewody przy subwooferze. Następnie zmierz ponownie.</string>
+    <string name="room_finding_summed_cancellation">sweep kontrolny: przy %1$d Hz subwoofer i drzwi wzajemnie się wygaszają — po odwróceniu fazy subwoofera w miejscu mikrofonu byłoby o %2$d dB głośniej. Przestaw przełącznik fazy na wzmacniaczu (0/180); przy braku przełącznika zamień przewody przy subwooferze. Zmierz ponownie.</string>
+    <string name="room_finding_summed_ok">sweep kontrolny: subwoofer i drzwi przy %1$d Hz sumują się w fazie; odwrócenie fazy zmieniłoby tam poziom o %2$+d dB. To uwaga, nie wada.</string>
+    <string name="room_finding_summed_no_verdict">sweep kontrolny: przy %1$d Hz wszystkie głośniki łącznie grają o %2$+d dB poza prognozą z ich pojedynczych sweepów — zbyt duża rozbieżność, by ocenić fazę subwoofera. To uwaga, nie wada.</string>
+    <string name="room_stage_control">Sweep kontrolny</string>
+    <string name="room_stage_control_detail">Wszystkie głośniki jednocześnie, przez zmierzony profil</string>
+    <string name="room_stage_volume_steps">Kroki głośności</string>
+    <string name="room_stage_volume_steps_detail">Cichy ton podczas obniżania głośności, około 20 sekund — wyznacza liczbę decybeli na każdy krok</string>
+    <string name="room_control_failed">Sweep kontrolny nie powiódł się: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: zapadlisko przy %2$.1f kHz, którego nie ma głośnik po drugiej stronie — tweeter najprawdopodobniej gra w przeciwfazie do swojego midbasu. Zamień miejscami oba przewody tego tweetera (lub sprawdź jego zwrotnicę) i zmierz ponownie.</string>
     <string name="room_finding_speaker_resonance">%1$s: wąski pik przy %2$d Hz, którego nie mają inne głośniki — rezonuje boczek drzwi lub mocowanie. Sprawdź śruby głośnika, spinki tapicerki i to, co brzęczy w tych drzwiach.</string>
     <string name="room_finding_cabin_mode">Wszystkie głośniki mają pik przy %1$d Hz — to własny mod akustyczny kabiny, a nie wada głośnika. Korekcja ścina tam tyle, ile zdoła.</string>
@@ -597,7 +606,7 @@
     <string name="audiocheck_sweep_normalize">Normalizuj do Progu Słyszenia</string>
     <string name="toast_sweep_hearing_threshold">Odtwarzaj jak najciszej - na granicy słyszalności, ledwo słyszalnie.</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
-    <string name="toast_rta_zero_listening">Nasłuchiwanie szumu różowego przez 3 sekundy…</string>
+    <string name="toast_rta_zero_listening">Kalibracja RTA na szumie różowym, 4 sekundy… Najlepiej przy głośności 16, zwłaszcza dla mikrofonu.</string>
     <string name="toast_rta_zero_taken">Zero RTA ustawione: szum różowy wskazuje teraz 0 dB.</string>
     <string name="toast_rta_zero_failed">Słychać za mało dźwięku – zero RTA nie zostało ustawione.</string>
     <string name="gala_advanced_settings">Zaawansowane</string>

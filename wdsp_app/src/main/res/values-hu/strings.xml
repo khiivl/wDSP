@@ -560,6 +560,15 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s – nem szerepel az elrendezésben, de valami szól ezen a kimeneten. Ha van ott hangszóró az autóban, jelölje be az autón, és mérjen újra.</string>
     <string name="room_finding_channels_swapped">%1$s és %2$s – a beérkezési idők csak úgy egyeznek, ha felcseréli őket. Ha a mikrofon a pontnál állt, a vezetékek fel vannak cserélve. Ezt javítsa először: a többi megállapítás kimenet szerint nevezi meg a hangszórót.</string>
     <string name="room_finding_polarity">%1$s – ellenfázisban van a többi fő hangszóróhoz képest, valószínűleg felcserélték a pluszt és a mínuszt. Ez kioltja a mélyhangokat az utastérben. Ellenőrizze a két vezetéket ennél a hangszórónál.</string>
+    <string name="room_finding_sub_antiphase">%1$s – ezzel a profillal a keresztezési frekvencián (%2$d Hz) ellenfázisban szól az ajtókhoz képest, így kioltják egymást. Állítsa a mélynyomó erősítőjén a fáziskapcsolót a másik állásba (0/180); ha nincs kapcsoló, cserélje fel a mélynyomó két vezetékét. Ezután mérjen újra.</string>
+    <string name="room_finding_summed_cancellation">ellenőrző sweep: %1$d Hz-en a mélynyomó és az ajtók kioltják egymást – fordított fázisú mélynyomóval %2$d dB-lel hangosabban szólnának a mikrofon helyén. Váltson fázist az erősítőn (0/180); kapcsoló hiányában cserélje fel a mélynyomó vezetékeit. Mérjen újra.</string>
+    <string name="room_finding_summed_ok">ellenőrző sweep: a mélynyomó és az ajtók %1$d Hz-en fázisban összeadódnak; a mélynyomó fázisfordítása %2$+d dB-lel változtatná a szintet. Megjegyzés, nem hiba.</string>
+    <string name="room_finding_summed_no_verdict">ellenőrző sweep: %1$d Hz-en az összes hangszóró együtt %2$+d dB-lel eltér az egyedi mérések előrejelzésétől – túl nagy eltérés a mélynyomó fázisának megítéléséhez. Megjegyzés, nem hiba.</string>
+    <string name="room_stage_control">Ellenőrző sweep</string>
+    <string name="room_stage_control_detail">Minden hangszóró egyszerre, a kiszámított profilon keresztül</string>
+    <string name="room_stage_volume_steps">Hangerőlépcsők</string>
+    <string name="room_stage_volume_steps_detail">Halk mérőhang a hangerő fokozatos csökkentése közben, kb. 20 másodperc – felméri az egyes lépcsők decibelértékét</string>
+    <string name="room_control_failed">Az ellenőrző sweep nem futott le: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: beszakadás %2$.1f kHz-nél, ami a másik oldali hangszórónál nincs meg – a magassugárzó valószínűleg ellenfázisban szól a saját mélyközép hangszórójához képest. Cserélje fel a magassugárzó két vezetékét (vagy ellenőrizze a hangváltóját), és mérjen újra.</string>
     <string name="room_finding_speaker_resonance">%1$s: keskeny kiemelkedés %2$d Hz-nél, ami a többi hangszórónál nincs meg – az ajtópanel vagy a rögzítés rezonál. Ellenőrizze a hangszóró csavarjait, a kárpit patentjeit és azt, ami zörög az ajtóban.</string>
     <string name="room_finding_cabin_mode">Minden hangszórónál kiemelkedés van %1$d Hz-nél – ez az utastér saját módusa (állóhulláma), nem a hangszóró hibája. A korrekció ott csillapít, amennyit tud.</string>
@@ -599,7 +608,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizálás hallásküszöbhöz</string>
     <string name="toast_sweep_hearing_threshold">Játssza le a lehető leghalkabban – a hallásküszöbön, alig hallhatóan.</string>
     <string name="audiocheck_rta_zero">RTA nulla</string>
-    <string name="toast_rta_zero_listening">Rózsaszín zaj figyelése 3 másodpercig…</string>
+    <string name="toast_rta_zero_listening">RTA kalibrálása rózsaszín zajjal, 4 másodperc… Legjobb 16-os hangerőn, különösen a mikrofonhoz.</string>
     <string name="toast_rta_zero_taken">RTA nulla beállítva: a rózsaszín zaj most 0 dB értéket mutat.</string>
     <string name="toast_rta_zero_failed">Túl kevés hang hallható – az RTA nulla nem lett beállítva.</string>
     <string name="audiocheck_pink_noise">Rózsaszín zaj</string>

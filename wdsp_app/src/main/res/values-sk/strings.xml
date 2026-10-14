@@ -560,6 +560,15 @@ Globálne predvolené: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — nie je vo vašej konfigurácii, ale na tomto výstupe niečo hrá. Ak v aute reproduktor je, označte ho na aute a zmerajte znova.</string>
     <string name="room_finding_channels_swapped">%1$s a %2$s — čas príchodu zvuku sedí iba pri ich vzájomnej výmene. Ak mikrofón stál pri bode, ich káble sú prehodené. Opravte najprv toto: ostatné nálezy označujú reproduktor podľa jeho výstupu.</string>
     <string name="room_finding_polarity">%1$s — v protifáze k ostatným hlavným reproduktorom, s najväčšou pravdepodobnosťou sú prehodené plus a mínus. To v kabíne potláča basy. Skontrolujte oba vodiče na tomto reproduktore.</string>
+    <string name="room_finding_sub_antiphase">%1$s — s touto predvoľbou hrá v protifáze k dverám na deliacej frekvencii (%2$d Hz), takže sa navzájom rušia. Prepnite prepínač fázy na zosilňovači subwoofera do druhej polohy (0/180); ak prepínač chýba, prehoďte oba vodiče na subwooferi. Potom zmerajte znova.</string>
+    <string name="room_finding_summed_cancellation">kontrolný sweep: na %1$d Hz sa subwoofer a dvere navzájom rušia — s otočenou fázou subwoofera by hrali o %2$d dB hlasnejšie tam, kde stojí mikrofón. Prepnite fázu na zosilňovači (0/180); ak prepínač chýba, prehoďte vodiče na subwooferi. Zmerajte znova.</string>
+    <string name="room_finding_summed_ok">kontrolný sweep: subwoofer a dvere sa na %1$d Hz sčítavajú vo fáze; otočenie fázy subwoofera by zmenilo úroveň o %2$+d dB. Poznámka, nie chyba.</string>
+    <string name="room_finding_summed_no_verdict">kontrolný sweep: na %1$d Hz hrajú reproduktory spolu o %2$+d dB mimo odhadu z ich vlastných sweepov — príliš veľká odchýlka na posúdenie fázy subwoofera. Poznámka, nie chyba.</string>
+    <string name="room_stage_control">Kontrolný sweep</string>
+    <string name="room_stage_control_detail">Všetky reproduktory naraz cez nameranú predvoľbu</string>
+    <string name="room_stage_volume_steps">Kroky hlasitosti</string>
+    <string name="room_stage_volume_steps_detail">Tichý tón počas znižovania hlasitosti, približne 20 sekúnd — zisťuje decibely pre každý krok</string>
+    <string name="room_control_failed">Kontrolný sweep sa neuskutočnil: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: prepad na %2$.1f kHz, ktorý reproduktor na druhej strane nemá — výškový reproduktor hrá s najväčšou pravdepodobnosťou v protifáze k svojmu stredobasu. Prehoďte oba vodiče tohto výškového reproduktora (alebo skontrolujte jeho výhybku) a zmerajte znova.</string>
     <string name="room_finding_speaker_resonance">%1$s: úzky pík na %2$d Hz, ktorý ostatné reproduktory nemajú — rezonuje výplň dverí alebo uchytenie. Skontrolujte skrutky reproduktora, príchytky výplne a to, čo v týchto dverách drnčí.</string>
     <string name="room_finding_cabin_mode">Všetky reproduktory majú pík na %1$d Hz — ide o vlastný mód kabíny, nie o chybu reproduktora. Korekcia tam potlačí, čo dokáže.</string>
@@ -599,7 +608,7 @@ Globálne predvolené: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizovať pre prah počuteľnosti</string>
     <string name="toast_sweep_hearing_threshold">Prehrávajte čo najtichšie – na prahu počuteľnosti, sotva počuteľné.</string>
     <string name="audiocheck_rta_zero">Nula RTA</string>
-    <string name="toast_rta_zero_listening">Počúvam ružový šum počas 3 sekúnd…</string>
+    <string name="toast_rta_zero_listening">Kalibrácia RTA na ružovom šume, 4 sekundy… Najlepšie pri hlasitosti 16, najmä pre mikrofón.</string>
     <string name="toast_rta_zero_taken">Nula RTA nastavená: ružový šum má teraz 0 dB.</string>
     <string name="toast_rta_zero_failed">Počuť príliš málo zvuku – nula RTA nebola nastavená.</string>
     <string name="audiocheck_pink_noise">Ružový šum</string>

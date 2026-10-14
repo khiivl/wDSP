@@ -560,6 +560,15 @@
     <string name="room_finding_heard_not_declared">%1$s — δεν υπάρχει στη διάταξή σας, αλλά κάτι παίζει σε αυτή την έξοδο. Αν υπάρχει ηχείο εκεί, επιλέξτε το στο αυτοκίνητο και μετρήστε ξανά.</string>
     <string name="room_finding_channels_swapped">%1$s και %2$s — οι χρόνοι άφιξης ταιριάζουν μόνο αν αντιστραφούν αυτά τα δύο. Αν το μικρόφωνο ήταν στην κουκκίδα, τα καλώδιά τους είναι αντεστραμμένα. Διορθώστε το πρώτα: τα υπόλοιπα ευρήματα ονομάζουν το ηχείο από την έξοδό του.</string>
     <string name="room_finding_polarity">%1$s — σε αντίθεση φάσης με τα άλλα κύρια ηχεία, πιθανότατα έχουν αντιστραφεί θετικό και αρνητικό. Αυτό ακυρώνει το μπάσο στην καμπίνα. Ελέγξτε τα δύο καλώδια σε αυτό το ηχείο.</string>
+    <string name="room_finding_sub_antiphase">%1$s — με αυτή την προεπιλογή παίζει σε αντίθεση φάσης με τις πόρτες στη συχνότητα διαχωρισμού (%2$d Hz), με αποτέλεσμα να αλληλοαναιρούνται. Γυρίστε τον διακόπτη φάσης στον ενισχυτή του subwoofer στην άλλη θέση (0/180). Αν δεν υπάρχει διακόπτης, αντιστρέψτε τα δύο καλώδια στο subwoofer. Στη συνέχεια μετρήστε ξανά.</string>
+    <string name="room_finding_summed_cancellation">δοκιμαστικό sweep: στα %1$d Hz το subwoofer και οι πόρτες αλληλοαναιρούνται — με ανεστραμμένη φάση στο subwoofer θα έπαιζαν κατά %2$d dB δυνατότερα εκεί που βρίσκεται το μικρόφωνο. Αλλάξτε τη φάση στον ενισχυτή του (0/180). Χωρίς διακόπτη, αντιστρέψτε τα δύο καλώδια στο subwoofer. Έπειτα μετρήστε ξανά.</string>
+    <string name="room_finding_summed_ok">δοκιμαστικό sweep: το subwoofer και οι πόρτες αθροίζονται στα %1$d Hz. Η αναστροφή φάσης του subwoofer θα άλλαζε τη στάθμη κατά %2$+d dB. Σημείωση, όχι σφάλμα.</string>
+    <string name="room_finding_summed_no_verdict">δοκιμαστικό sweep: στα %1$d Hz όλα τα ηχεία μαζί αποκλίνουν κατά %2$+d dB από την πρόβλεψη των μεμονωμένων sweeps — πολύ μεγάλη απόκλιση για αξιολόγηση της φάσης του subwoofer. Σημείωση, όχι σφάλμα.</string>
+    <string name="room_stage_control">Δοκιμαστικό sweep</string>
+    <string name="room_stage_control_detail">Όλα τα ηχεία ταυτόχρονα, μέσω της υπολογισμένης προεπιλογής</string>
+    <string name="room_stage_volume_steps">Βήματα έντασης</string>
+    <string name="room_stage_volume_steps_detail">Χαμηλός τόνος καθώς η ένταση μειώνεται, περίπου 20 δευτερόλεπτα — μετρά τα decibels κάθε βήματος</string>
+    <string name="room_control_failed">Το δοκιμαστικό sweep δεν εκτελέστηκε: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: μια βύθιση στα %2$.1f kHz που δεν έχει το ηχείο στην άλλη πλευρά — το tweeter πιθανότατα παίζει σε αντίθεση φάσης με το midbass του. Αντιστρέψτε τα δύο καλώδια αυτού του tweeter (ή ελέγξτε το crossover του) και μετρήστε ξανά.</string>
     <string name="room_finding_speaker_resonance">%1$s: μια στενή κορυφή στα %2$d Hz που δεν έχουν τα άλλα ηχεία — συντονίζεται η επένδυση της πόρτας ή η στήριξη. Ελέγξτε τις βίδες του ηχείου, τα κλιπ της επένδυσης και τι τρίζει σε αυτή την πόρτα.</string>
     <string name="room_finding_cabin_mode">Όλα τα ηχεία έχουν κορυφή στα %1$d Hz — πρόκειται για ιδιορυθμό (mode) της καμπίνας, όχι για βλάβη ηχείου. Η διόρθωση κόβει ό,τι μπορεί εκεί.</string>
@@ -599,7 +608,7 @@
     <string name="audiocheck_sweep_normalize">Κανονικοποίηση για ουδό ακοής</string>
     <string name="toast_sweep_hearing_threshold">Αναπαραγωγή όσο πιο σιγά γίνεται - στο όριο ακοής, μόλις ακουστό.</string>
     <string name="audiocheck_rta_zero">Μηδέν RTA</string>
-    <string name="toast_rta_zero_listening">Ακρόαση ροζ θορύβου για 3 δευτερόλεπτα…</string>
+    <string name="toast_rta_zero_listening">Βαθμονόμηση RTA σε ροζ θόρυβο, 4 δευτερόλεπτα… Βέλτιστη στην ένταση 16, ειδικά για το μικρόφωνο.</string>
     <string name="toast_rta_zero_taken">Το μηδέν RTA ορίστηκε: ο ροζ θόρυβος είναι τώρα στα 0 dB.</string>
     <string name="toast_rta_zero_failed">Ακούγεται πολύ χαμηλός ήχος - το μηδέν RTA δεν ορίστηκε.</string>
     <string name="audiocheck_pink_noise">Ροζ θόρυβος</string>

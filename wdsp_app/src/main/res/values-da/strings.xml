@@ -560,6 +560,15 @@ Global standard: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s - ikke i din opsætning, men der spiller noget på denne udgang. Hvis bilen har en højttaler der, vælg den på bilen og mål igen.</string>
     <string name="room_finding_channels_swapped">%1$s og %2$s - ankomsttiderne passer kun hvis disse to er byttet om. Hvis mikrofonen stod ved prikken, er deres ledninger byttet om. Ret dette først: alle andre observationer navngiver en højttaler efter dens udgang.</string>
     <string name="room_finding_polarity">%1$s - i modfase til de andre hovedhøjttalere, sandsynligvis er plus og minus byttet om. Det udligner bassen i kabinen. Tjek de to ledninger ved denne højttaler.</string>
+    <string name="room_finding_sub_antiphase">%1$s - med denne forudindstilling spiller den mod dørene ved delefrekvensen (%2$d Hz), så de udligner hinanden der. Skift fasekontakten på subwooferens forstærker til den anden position (0/180); hvis der ikke er nogen kontakt, byttes de to ledninger ved subwooferen. Mål derefter igen.</string>
+    <string name="room_finding_summed_cancellation">kontrolsweep: ved %1$d Hz udligner subwooferen og dørene hinanden - med vendt fase på subwooferen ville de spille %2$d dB højere der, hvor mikrofonen står. Slå fasekontakten over på forstærkeren (0/180); hvis der mangler kontakt, byt de to ledninger ved subwooferen. Mål derefter igen.</string>
+    <string name="room_finding_summed_ok">kontrolsweep: subwooferen og dørene summerer i fase ved %1$d Hz; hvis fasen vendes, ændres niveauet med %2$+d dB. En bemærkning, ikke en fejl.</string>
+    <string name="room_finding_summed_no_verdict">kontrolsweep: ved %1$d Hz spiller højttalerne tilsammen %2$+d dB fra prognosen ud fra deres egne sweep - for stor afvigelse til at vurdere subwooferens fase. En bemærkning, ikke en fejl.</string>
+    <string name="room_stage_control">Kontrolsweep</string>
+    <string name="room_stage_control_detail">Alle højttalere på én gang gennem den målte forudindstilling</string>
+    <string name="room_stage_volume_steps">Lydstyrketrin</string>
+    <string name="room_stage_volume_steps_detail">En stille tone mens lydstyrken trappes ned, ca. 20 sekunder - måler hvor mange decibel hvert trin giver</string>
+    <string name="room_control_failed">Kontrolsweepet kørte ikke: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: et dyk ved %2$.1f kHz, som højttaleren på den anden side ikke har – diskanten spiller sandsynligvis i modfase til sin mellemtonebas. Byt om på de to ledninger til denne diskant (eller tjek dens delefilter) og mål igen.</string>
     <string name="room_finding_speaker_resonance">%1$s: en smal spids ved %2$d Hz, som de andre højttalere ikke har – dørpanelet eller monteringen rasler. Tjek højttalerens skruer, panelets clips og hvad der rasler i den dør.</string>
     <string name="room_finding_cabin_mode">Alle højttalere har en spids ved %1$d Hz – det er kabinens egen rummode, ikke en fejl ved højttaleren. Korrektionen dæmper, hvad den kan der.</string>
@@ -599,7 +608,7 @@ Global standard: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normaliser til høretærskel</string>
     <string name="toast_sweep_hearing_threshold">Afspil så stille som muligt – ved din høretærskel, knap hørbar.</string>
     <string name="audiocheck_rta_zero">RTA-nul</string>
-    <string name="toast_rta_zero_listening">Lytter til lyserød støj i 3 sekunder…</string>
+    <string name="toast_rta_zero_listening">Kalibrerer RTA med lyserød støj, 4 sekunder… Bedst ved lydstyrke 16, især for mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-nul indstillet: lyserød støj måler nu 0 dB.</string>
     <string name="toast_rta_zero_failed">For lidt lyd registreret - RTA-nul blev ikke indstillet.</string>
     <string name="audiocheck_pink_noise">Lyserød støj</string>

@@ -556,6 +556,15 @@
     <string name="room_finding_heard_not_declared">%1$s — no está en su configuración, pero algo suena en esta salida. Si el auto tiene un parlante allí, márquelo en el auto y mida de nuevo.</string>
     <string name="room_finding_channels_swapped">%1$s y %2$s — los tiempos de llegada coinciden solo si están invertidos entre sí. Si el micrófono estaba donde el punto, sus cables están invertidos. Corrija esto primero: los demás hallazgos nombran al parlante por su salida.</string>
     <string name="room_finding_polarity">%1$s — en antifase con los otros parlantes principales, muy probablemente con positivo y negativo invertidos. Cancela los graves en el habitáculo. Revise los dos cables de este parlante.</string>
+    <string name="room_finding_sub_antiphase">%1$s: con este ajuste suena en antifase con las puertas en el cruce (%2$d Hz), cancelándose entre sí. Cambie la llave de fase en el amplificador del subwoofer a la otra posición (0/180); si no tiene llave, invierta los dos cables en el subwoofer. Vuelva a medir después.</string>
+    <string name="room_finding_summed_cancellation">barrido de control: en %1$d Hz el subwoofer y las puertas se cancelan; invirtiendo la fase del subwoofer sonarían %2$d dB más fuerte donde está el micrófono. Cambie la fase en su amplificador (0/180); si no tiene llave, invierta los dos cables en el subwoofer. Mida nuevamente.</string>
+    <string name="room_finding_summed_ok">barrido de control: el subwoofer y las puertas suman en fase en %1$d Hz; rotar la fase del subwoofer modificaría el nivel en %2$+d dB. Es una observación, no una falla.</string>
+    <string name="room_finding_summed_no_verdict">barrido de control: en %1$d Hz los parlantes juntos se desvían %2$+d dB respecto de la estimación de sus propios barridos; margen demasiado amplio para definir la fase del subwoofer. Es una observación, no una falla.</string>
+    <string name="room_stage_control">Barrido de control</string>
+    <string name="room_stage_control_detail">Todos los parlantes juntos, a través del ajuste medido</string>
+    <string name="room_stage_volume_steps">Pasos de volumen</string>
+    <string name="room_stage_volume_steps_detail">Tono suave mientras el volumen desciende, unos 20 segundos: mide cuántos decibeles tiene cada paso</string>
+    <string name="room_control_failed">El barrido de control no se realizó: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: un pozo en %2$.1f kHz que el parlante del otro lado no tiene — el tweeter muy probablemente suena en antifase con su medio-grave. Invierta los dos cables de ese tweeter (o revise su crossover) y mida nuevamente.</string>
     <string name="room_finding_speaker_resonance">%1$s: un pico estrecho en %2$d Hz que los otros parlantes no tienen — vibra el panel de la puerta o el soporte. Revise los tornillos del parlante, los clips del panel y qué hace ruido en esa puerta.</string>
     <string name="room_finding_cabin_mode">Todos los parlantes tienen un pico en %1$d Hz — es un modo propio del habitáculo, no una falla del parlante. La corrección atenúa lo que puede allí.</string>
@@ -597,7 +606,7 @@
     <string name="stem_vocal">Voz</string>
     <string name="toast_sweep_hearing_threshold">Reproduce lo más bajo posible: en tu umbral auditivo, apenas audible.</string>
     <string name="audiocheck_rta_zero">Cero RTA</string>
-    <string name="toast_rta_zero_listening">Escuchando el ruido rosa durante 3 segundos…</string>
+    <string name="toast_rta_zero_listening">Calibrando el RTA con ruido rosa, 4 segundos… Ideal en volumen 16, en especial para el micrófono.</string>
     <string name="toast_rta_zero_taken">Cero RTA establecido: el ruido rosa ahora marca 0 dB.</string>
     <string name="toast_rta_zero_failed">Se escuchó muy poco sonido: no se estableció el cero RTA.</string>
     <string name="eq_vis_shape_label">Forma del espectro:</string>

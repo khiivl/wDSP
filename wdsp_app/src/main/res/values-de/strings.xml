@@ -557,6 +557,15 @@
     <string name="room_finding_heard_not_declared">%1$s – nicht in Ihrer Konfiguration, aber auf diesem Ausgang wird etwas wiedergegeben. Falls das Auto dort einen Lautsprecher hat, am Auto markieren und erneut messen.</string>
     <string name="room_finding_channels_swapped">%1$s und %2$s – die Laufzeiten passen nur, wenn diese beiden vertauscht sind. Stand das Mikrofon am markierten Punkt, sind die Kabel vertauscht. Beheben Sie dies zuerst: alle weiteren Befunde benennen Lautsprecher nach ihrem Ausgang.</string>
     <string name="room_finding_polarity">%1$s – gegenphasig zu den anderen Hauptlautsprechern, höchstwahrscheinlich sind Plus und Minus vertauscht. Dies löscht den Bass im Innenraum aus. Prüfen Sie beide Kabel an diesem Lautsprecher.</string>
+    <string name="room_finding_sub_antiphase">%1$s – mit diesem Profil spielt er an der Trennfrequenz (%2$d Hz) gegen die Türen, sodass sie sich gegenseitig auslöschen. Stellen Sie den Phasenschalter am Subwoofer-Verstärker auf die andere Position (0/180); falls kein Schalter vorhanden ist, vertauschen Sie die beiden Kabel am Subwoofer. Messen Sie anschließend erneut.</string>
+    <string name="room_finding_summed_cancellation">Kontroll-Sweep: Bei %1$d Hz löschen sich Subwoofer und Türen gegenseitig aus – mit invertierter Subwoofer-Phase wäre es dort (am Mikrofonstandort) um %2$d dB lauter. Schalten Sie die Phase am Verstärker um (0/180); falls kein Schalter vorhanden ist, vertauschen Sie die beiden Kabel am Subwoofer. Danach erneut messen.</string>
+    <string name="room_finding_summed_ok">Kontroll-Sweep: Subwoofer und Türen addieren sich bei %1$d Hz phasengleich; ein Drehen der Subwoofer-Phase würde den Pegel dort um %2$+d dB verändern. Ein Hinweis, kein Fehler.</string>
+    <string name="room_finding_summed_no_verdict">Kontroll-Sweep: Bei %1$d Hz weicht das Zusammenspiel aller Lautsprecher um %2$+d dB von der Vorhersage der Einzelsweeps ab – zu ungenau, um die Subwoofer-Phase zu beurteilen. Ein Hinweis, kein Fehler.</string>
+    <string name="room_stage_control">Kontroll-Sweep</string>
+    <string name="room_stage_control_detail">Alle Lautsprecher gleichzeitig über das gemessene Profil</string>
+    <string name="room_stage_volume_steps">Lautstärkestufen</string>
+    <string name="room_stage_volume_steps_detail">Ein leiser Messton während die Lautstärke abgesenkt wird, ca. 20 Sekunden – ermittelt die Dezibel-Schritte</string>
+    <string name="room_control_failed">Kontroll-Sweep fehlgeschlagen: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: eine Senke bei %2$.1f kHz, die der Lautsprecher auf der anderen Seite nicht aufweist – der Hochtöner spielt höchstwahrscheinlich gegenphasig zu seinem Tiefmitteltöner. Tauschen Sie die beiden Kabel dieses Hochtöners (oder prüfen Sie seine Frequenzweiche) und messen Sie erneut.</string>
     <string name="room_finding_speaker_resonance">%1$s: eine schmale Spitze bei %2$d Hz, die die anderen Lautsprecher nicht aufweisen – die Türverkleidung oder die Befestigung vibriert. Prüfen Sie die Lautsprecherschrauben, die Verkleidungsclips und was in dieser Tür klappert.</string>
     <string name="room_finding_cabin_mode">Alle Lautsprecher weisen eine Spitze bei %1$d Hz auf – das ist eine Eigenmode des Innenraums, kein Lautsprecherfehler. Die Korrektur senkt dort ab, was möglich ist.</string>
@@ -597,7 +606,7 @@
     <string name="audiocheck_sweep_normalize">Für Hörschwelle normalisieren</string>
     <string name="toast_sweep_hearing_threshold">So leise wie möglich abspielen - an deiner Hörschwelle, gerade noch hörbar.</string>
     <string name="audiocheck_rta_zero">RTA-Null</string>
-    <string name="toast_rta_zero_listening">Rosa Rauschen wird 3 Sekunden lang analysiert…</string>
+    <string name="toast_rta_zero_listening">Kalibriere RTA auf rosa Rauschen, 4 Sekunden… Am besten bei Lautstärke 16, besonders für das Mikrofon.</string>
     <string name="toast_rta_zero_taken">RTA-Nullpunkt gesetzt: Rosa Rauschen liegt jetzt bei 0 dB.</string>
     <string name="toast_rta_zero_failed">Zu wenig Signal gehört - RTA-Nullpunkt wurde nicht gesetzt.</string>
     <string name="gala_advanced_settings">Erweitert</string>

@@ -560,6 +560,15 @@ Bendras numatytasis: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — nėra jūsų konfigūracijoje, tačiau šiame išėjime kažkas groja. Jei ten yra garsiakalbis, pažymėkite jį ant automobilio ir išmatuokite dar kartą.</string>
     <string name="room_finding_channels_swapped">%1$s ir %2$s — garso atėjimo laikai sutampa tik sukeitus juos vietomis. Jei mikrofonas stovėjo ties tašku, sukeisti jų laidai. Pirmiausia ištaisykite tai: visi kiti radiniai nurodo garsiakalbį pagal jo išėjimą.</string>
     <string name="room_finding_polarity">%1$s — priešfaziškai su kitais pagrindiniais garsiakalbiais, labiausiai tikėtina, kad supainioti pliusas ir minusas. Tai slopina bosus salone. Patikrinkite abu šio garsiakalbio laidus.</string>
+    <string name="room_finding_sub_antiphase">%1$s — su šiuo profiliu ties skiriamuoju dažniu (%2$d Hz) groja priešfaziškai su durimis ir vienas kitą slopina. Perjunkite žemadažnio stiprintuvo fazės jungiklį į kitą padėtį (0/180); jei jungiklio nėra — sukeiskite žemadažnio laidus vietomis. Tada pamatuokite iš naujo.</string>
+    <string name="room_finding_summed_cancellation">kontrolinis sweep: ties %1$d Hz žemadažnis ir durys slopina vieni kitus — su apversta žemadažnio faze mikrofono taške grotų %2$d dB garsiau. Perjunkite stiprintuvo fazę (0/180); jei jungiklio nėra, sukeiskite laidus prie žemadažnio. Pamatuokite iš naujo.</string>
+    <string name="room_finding_summed_ok">kontrolinis sweep: žemadažnis ir durys ties %1$d Hz susumuojami fazėje; fazės apvertimas pakeistų lygį %2$+d dB. Tai pastaba, o ne trūkumas.</string>
+    <string name="room_finding_summed_no_verdict">kontrolinis sweep: ties %1$d Hz visi garsiakalbiai kartu groja %2$+d dB nukrypę nuo atskirų sweepų prognozės — per didelis nuokrypis žemadažnio fazei nustatyti. Tai pastaba, o ne trūkumas.</string>
+    <string name="room_stage_control">Kontrolinis sweep</string>
+    <string name="room_stage_control_detail">Visi garsiakalbiai vienu metu per apskaičiuotą profilį</string>
+    <string name="room_stage_volume_steps">Garsumo žingsniai</string>
+    <string name="room_stage_volume_steps_detail">Tylus tonas palaipsniui mažinant garsumą, apie 20 sekundžių — nustato kiekvieno žingsnio decibelus</string>
+    <string name="room_control_failed">Kontrolinis sweep neįvyko: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: įduba ties %2$.1f kHz, kurios neturi kitos pusės garsiakalbis — aukštadažnis labiausiai tikėtina groja priešfaziškai su savo žemų-vidutinių dažnių garsiakalbiu. Sukeiskite šio aukštadažnio abu laidus (arba patikrinkite dažnių filtrą) ir pamatuokite iš naujo.</string>
     <string name="room_finding_speaker_resonance">%1$s: siaura viršūnė ties %2$d Hz, kurios kiti garsiakalbiai neturi — barška durų apdaila arba tvirtinimas. Patikrinkite garsiakalbio varžtus, apdailos fiksatorius ir tai, kas barška šiose duryse.</string>
     <string name="room_finding_cabin_mode">Visi garsiakalbiai turi pakilimą ties %1$d Hz — tai yra paties salono akustinė moda, o ne garsiakalbio trūkumas. Korekcija ten slopina tiek, kiek įmanoma.</string>
@@ -599,7 +608,7 @@ Bendras numatytasis: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizuoti pagal girdimumo slenkstį</string>
     <string name="toast_sweep_hearing_threshold">Groti kuo tyliau – ties girdimumo slenksčiu, vos girdimai.</string>
     <string name="audiocheck_rta_zero">RTA nulis</string>
-    <string name="toast_rta_zero_listening">Klausomasi rausvojo triukšmo 3 sekundes…</string>
+    <string name="toast_rta_zero_listening">RTA kalibravimas pagal rausvąjį triukšmą, 4 sekundės… Geriausia nustačius 16 garsumą, ypač mikrofonui.</string>
     <string name="toast_rta_zero_taken">RTA nulis nustatytas: rausvasis triukšmas dabar rodo 0 dB.</string>
     <string name="toast_rta_zero_failed">Girdima per mažai garso – RTA nulis nenustatytas.</string>
     <string name="audiocheck_pink_noise">Rausvasis triukšmas</string>

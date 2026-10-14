@@ -560,6 +560,15 @@
     <string name="room_finding_heard_not_declared">%1$s — pole teie paigutuses, kuid sellest väljundist midagi mängib. Kui autos on seal kõlar, märkige see autol ja mõõtke uuesti.</string>
     <string name="room_finding_channels_swapped">%1$s ja %2$s — helilainete saabumisajad klapivad vaid siis, kui need omavahel vahetada. Kui mikrofon asus punkti kohal, on nende juhtmed vahetuses. Parandage see esmalt: teised teated nimetavad kõlareid väljundi järgi.</string>
     <string name="room_finding_polarity">%1$s — vastandfaasis teiste peakõlarite suhtes, tõenäoliselt on pluss ja miinus vahetuses. See summutab salongis bassi. Kontrollige selle kõlari kahte juhet.</string>
+    <string name="room_finding_sub_antiphase">%1$s — selle seadistusega mängib uste suhtes ristumissagedusel (%2$d Hz) vastandfaasis, summutades teineteist. Lülitage bassikõlari võimendi faasilüliti teise asendisse (0/180); kui lülitit pole, vahetage bassikõlaril kaks juhet omavahel. Seejärel mõõtke uuesti.</string>
+    <string name="room_finding_summed_cancellation">kontrollsageduse pühkimine: sagedusel %1$d Hz summutavad bassikõlar ja uksed teineteist — pööratud faasiga mängiksid nad mikrofoni asukohas %2$d dB valjemini. Lülitage võimendil faasi (0/180); lüliti puudumisel vahetage bassikõlari juhtmed. Mõõtke uuesti.</string>
+    <string name="room_finding_summed_ok">kontrollsageduse pühkimine: bassikõlar ja uksed liituvad sagedusel %1$d Hz faasis; faasi pööramine muudaks taset %2$+d dB võrra. Märkus, mitte viga.</string>
+    <string name="room_finding_summed_no_verdict">kontrollsageduse pühkimine: sagedusel %1$d Hz erinevad kõik kõlarid koos %2$+d dB võrra eraldi mõõtmiste prognoosist — liiga suur hälve faasi hindamiseks. Märkus, mitte viga.</string>
+    <string name="room_stage_control">Kontroll-sweep</string>
+    <string name="room_stage_control_detail">Kõik kõlarid korraga läbi mõõdetud eelseadistuse</string>
+    <string name="room_stage_volume_steps">Helitugevuse astmed</string>
+    <string name="room_stage_volume_steps_detail">Vaikne toon helitugevuse kahanemisel, umbes 20 sekundit — määrab iga astme detsibellid</string>
+    <string name="room_control_failed">Kontroll-sweep ei käivitunud: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: langus sagedusel %2$.1f kHz, mida teisel pool asuval kõlaril pole — kõrgsageduskõlar mängib tõenäoliselt vastandfaasis oma kesk-madalsagedusega. Vahetage selle kõrgsageduskõlari kaks juhet omavahel (või kontrollige sagedusfiltrit) ja mõõtke uuesti.</string>
     <string name="room_finding_speaker_resonance">%1$s: kitsas tipp sagedusel %2$d Hz, mida teistel kõlaritel pole — uksepaneel või kinnitus vibreerib. Kontrollige kõlari kruvisid, paneeli klambreid ja seda, mis selles ukses kõriseb.</string>
     <string name="room_finding_cabin_mode">Kõigil kõlaritel on tipp sagedusel %1$d Hz — see on salongi enda ruumirežiim (mood), mitte kõlari viga. Korrektsioon vaigistab seal, mida suudab.</string>
@@ -599,7 +608,7 @@
     <string name="audiocheck_sweep_normalize">Normaliseeri kuulmislävele</string>
     <string name="toast_sweep_hearing_threshold">Mängi nii vaikselt kui võimalik – kuulmislävel, vaevukuuldav.</string>
     <string name="audiocheck_rta_zero">RTA null</string>
-    <string name="toast_rta_zero_listening">Roosa müra kuulamine 3 sekundit…</string>
+    <string name="toast_rta_zero_listening">RTA kalibreerimine roosal müral, 4 sekundit… Parim helitugevusel 16, eriti mikrofoni puhul.</string>
     <string name="toast_rta_zero_taken">RTA null määratud: roosa müra tase on nüüd 0 dB.</string>
     <string name="toast_rta_zero_failed">Liiga vähe heli kuulda – RTA nulli ei määratud.</string>
     <string name="audiocheck_pink_noise">Roosa müra</string>

@@ -557,6 +557,15 @@
     <string name="room_finding_heard_not_declared">%1$s – finns inte i din konfiguration, men något spelar på denna utgång. Om bilen har en högtalare där, markera den på bilen och mät igen.</string>
     <string name="room_finding_channels_swapped">%1$s och %2$s – ankomsttiderna stämmer endast om dessa två byter plats. Om mikrofonen stod vid punkten är deras kablar förväxlade. Åtgärda detta först: alla övriga observationer namnger högtalaren efter dess utgång.</string>
     <string name="room_finding_polarity">%1$s – i motfas mot de övriga huvudhögtalarna, mest troligt är plus och minus förväxlade. Detta släcker ut basen i kupén. Kontrollera de två kablarna vid denna högtalare.</string>
+    <string name="room_finding_sub_antiphase">%1$s – med denna förinställning spelar den i motfas mot dörrarna vid delningsfrekvensen (%2$d Hz), så att de släcker ut varandra där. Slå om fasomkopplaren på subwooferns förstärkare till det andra läget (0/180); saknas omkopplare, växla de två kablarna vid subwoofern. Mät sedan igen.</string>
+    <string name="room_finding_summed_cancellation">kontrollsvep: vid %1$d Hz släcker subwoofern och dörrarna ut varandra – med omvänd fas skulle de spela %2$d dB högre där mikrofonen är placerad. Slå om fasomkopplaren på förstärkaren (0/180); saknas omkopplare, kasta om kablarna på subwoofern. Mät sedan igen.</string>
+    <string name="room_finding_summed_ok">kontrollsvep: subwoofern och dörrarna samverkar i fas vid %1$d Hz; om fasen vänds ändras nivån med %2$+d dB. En notering, inte ett fel.</string>
+    <string name="room_finding_summed_no_verdict">kontrollsvep: vid %1$d Hz avviker högtalarna tillsammans med %2$+d dB från prognosen utifrån deras egna svep – för stor skillnad för att bedöma subwooferns fas. En notering, inte ett fel.</string>
+    <string name="room_stage_control">Kontrollsvep</string>
+    <string name="room_stage_control_detail">Alla högtalare samtidigt genom den uppmätta förinställningen</string>
+    <string name="room_stage_volume_steps">Volymsteg</string>
+    <string name="room_stage_volume_steps_detail">En låg ton medan volymen sänks stegvis, ca 20 sekunder – mäter hur många decibel varje steg är</string>
+    <string name="room_control_failed">Kontrollsvepet kördes inte: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: en svacka vid %2$.1f kHz som högtalaren på andra sidan inte har – diskanten spelar mest troligt i motfas mot sin mellanbas. Byt plats på de två kablarna till denna diskant (eller kontrollera dess delningsfilter) och mät igen.</string>
     <string name="room_finding_speaker_resonance">%1$s: en smal topp vid %2$d Hz som de andra högtalarna inte har – dörrpanelen eller monteringen skramlar. Kontrollera högtalarens skruvar, panelens clips och vad som skallrar i den dörren.</string>
     <string name="room_finding_cabin_mode">Alla högtalare har en topp vid %1$d Hz – det är kupéns egen rumsnod (mod), inte ett fel på högtalaren. Korrigeringen dämpar vad den kan där.</string>
@@ -597,7 +606,7 @@
     <string name="audiocheck_sweep_normalize">Normalisera för Hörtröskel</string>
     <string name="toast_sweep_hearing_threshold">Spela så tyst som möjligt - vid din hörtröskel, precis hörbart.</string>
     <string name="audiocheck_rta_zero">RTA-nolla</string>
-    <string name="toast_rta_zero_listening">Lyssnar på rosa brus i 3 sekunder…</string>
+    <string name="toast_rta_zero_listening">Kalibrerar RTA mot rosa brus, 4 sekunder… Bäst vid volym 16, särskilt för mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-nolla inställd: rosa brus visar nu 0 dB.</string>
     <string name="toast_rta_zero_failed">För lite ljud hördes – RTA-nollan ställdes inte in.</string>
     <string name="gala_advanced_settings">Avancerat</string>

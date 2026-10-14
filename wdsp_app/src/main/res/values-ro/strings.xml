@@ -560,6 +560,15 @@ Implicit global: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — nu este în configurația dvs., dar ceva cântă pe această ieșire. Dacă mașina are difuzor acolo, bifați-l pe mașină și măsurați din nou.</string>
     <string name="room_finding_channels_swapped">%1$s și %2$s — timpii de sosire se potrivesc doar dacă cele două sunt inversate. Dacă microfonul s-a aflat la punctul indicat, firele lor sunt inversate. Remediați mai întâi acest lucru: celelalte constatări numesc difuzorul după ieșirea sa.</string>
     <string name="room_finding_polarity">%1$s — în antifază față de celelalte difuzoare principale, cel mai probabil plusul și minusul sunt inversate. Anulează basul în habitaclu. Verificați cele două fire de la acest difuzor.</string>
+    <string name="room_finding_sub_antiphase">%1$s — cu această presetare cântă în antifază cu ușile la frecvența de separare (%2$d Hz), anulându-se reciproc. Comutați faza pe amplificatorul subwooferului în cealaltă poziție (0/180); dacă nu există comutator, schimbați între ele cele două fire ale subwooferului. Măsurați din nou.</string>
+    <string name="room_finding_summed_cancellation">sweep de control: la %1$d Hz subwooferul și portierele se anulează reciproc — cu faza inversată ar cânta cu %2$d dB mai tare în punctul microfonului. Comutați faza pe amplificator (0/180); dacă lipsește comutatorul, inversați firele la subwoofer. Măsurați din nou.</string>
+    <string name="room_finding_summed_ok">sweep de control: subwooferul și portierele se adună în fază la %1$d Hz; inversarea fazei subwooferului ar modifica nivelul cu %2$+d dB. O notă, nu un defect.</string>
+    <string name="room_finding_summed_no_verdict">sweep de control: la %1$d Hz toate difuzoarele împreună se abat cu %2$+d dB de la estimarea din sweep-urile individuale — diferență prea mare pentru a evalua faza subwooferului. O notă, nu un defect.</string>
+    <string name="room_stage_control">Sweep de control</string>
+    <string name="room_stage_control_detail">Toate difuzoarele simultan, prin presetarea măsurată</string>
+    <string name="room_stage_volume_steps">Pași de volum</string>
+    <string name="room_stage_volume_steps_detail">Un ton discret în timp ce volumul coboară, aproximativ 20 de secunde — măsoară decibelii fiecărui pas</string>
+    <string name="room_control_failed">Sweep-ul de control nu a putut rula: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: o scădere la %2$.1f kHz pe care difuzorul de pe cealaltă parte nu o are — tweeterul cântă cel mai probabil în antifază față de mediile-joase proprii. Inversați cele două fire ale acestui tweeter (sau verificați crossoverul) și măsurați din nou.</string>
     <string name="room_finding_speaker_resonance">%1$s: un vârf îngust la %2$d Hz pe care celelalte difuzoare nu îl au — vibrează fața de ușă sau prinderea. Verificați șuruburile difuzorului, clemele panoului și ce zdrăngănește în acea ușă.</string>
     <string name="room_finding_cabin_mode">Toate difuzoarele au un vârf la %1$d Hz — este un mod propriu al habitaclului, nu un defect al difuzorului. Corecția taie ce poate acolo.</string>
@@ -599,7 +608,7 @@ Implicit global: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalizare pentru pragul auditiv</string>
     <string name="toast_sweep_hearing_threshold">Redați cât mai încet posibil – la pragul auzului, abia perceptibil.</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
-    <string name="toast_rta_zero_listening">Ascultare zgomot roz timp de 3 secunde…</string>
+    <string name="toast_rta_zero_listening">Calibrare RTA pe zgomot roz, 4 secunde… Recomandat la volumul 16, mai ales pentru microfon.</string>
     <string name="toast_rta_zero_taken">Nivel zero RTA setat: zgomotul roz indică acum 0 dB.</string>
     <string name="toast_rta_zero_failed">Prea puțin sunet auzit – nivelul zero RTA nu a fost setat.</string>
     <string name="audiocheck_pink_noise">Zgomot roz</string>

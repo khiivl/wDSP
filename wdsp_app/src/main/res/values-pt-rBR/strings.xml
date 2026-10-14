@@ -558,6 +558,15 @@
     <string name="room_finding_heard_not_declared">%1$s — não está na sua configuração, mas algo está tocando nesta saída. Se o carro tiver um alto-falante ali, marque no carro e meça novamente.</string>
     <string name="room_finding_channels_swapped">%1$s e %2$s — os tempos de chegada só coincidem se esses dois forem invertidos. Se o microfone estava onde o ponto indica, os fios estão invertidos. Corrija isso primeiro: os outros resultados nomeiam o alto-falante pela saída.</string>
     <string name="room_finding_polarity">%1$s — em antifase em relação aos outros alto-falantes principais, muito provavelmente com positivo e negativo invertidos. Isso cancela os graves na cabine. Verifique os dois fios deste alto-falante.</string>
+    <string name="room_finding_sub_antiphase">%1$s — com este perfil toca em antifase com as portas no corte (%2$d Hz), cancelando-se mutuamente. Mude a chave de fase no amplificador do subwoofer para a outra posição (0/180); se não houver chave, inverta os dois fios no subwoofer. Meça novamente depois.</string>
+    <string name="room_finding_summed_cancellation">varredura de controle: em %1$d Hz o subwoofer e as portas se cancelam — com a fase invertida tocariam %2$d dB mais alto onde o microfone está posicionado. Mude a fase no amplificador (0/180); sem chave seletora, inverta os fios no subwoofer. Meça novamente.</string>
+    <string name="room_finding_summed_ok">varredura de controle: o subwoofer e as portas somam em fase em %1$d Hz; inverter a fase mudaria o nível em %2$+d dB. Uma observação, não um defeito.</string>
+    <string name="room_finding_summed_no_verdict">varredura de controle: em %1$d Hz todos os alto-falantes juntos desviam %2$+d dB da estimativa das varreduras individuais — margem excessiva para avaliar a fase do subwoofer. Uma observação, não um defeito.</string>
+    <string name="room_stage_control">Varredura de controle</string>
+    <string name="room_stage_control_detail">Todos os alto-falantes simultaneamente através da predefinição medida</string>
+    <string name="room_stage_volume_steps">Passos de volume</string>
+    <string name="room_stage_volume_steps_detail">Tom suave enquanto o volume diminui, cerca de 20 segundos — calibra os decibéis de cada passo</string>
+    <string name="room_control_failed">A varredura de controle não foi executada: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: um cancelamento em %2$.1f kHz que o alto-falante do outro lado não tem — o tweeter muito provavelmente está tocando em antifase com seu próprio midbass. Inverta os dois fios deste tweeter (ou verifique o divisor de frequência) e meça novamente.</string>
     <string name="room_finding_speaker_resonance">%1$s: um pico estreito em %2$d Hz que os outros alto-falantes não têm — o acabamento da porta ou a fixação está ressonando. Verifique os parafusos do alto-falante, as presilhas do painel e o que está chacoalhando nessa porta.</string>
     <string name="room_finding_cabin_mode">Todos os alto-falantes têm um pico em %1$d Hz — é um modo acústico da própria cabine, não um defeito do alto-falante. A correção atenua o que consegue ali.</string>
@@ -597,7 +606,7 @@
     <string name="audiocheck_sweep_normalize">Normalizar para limiar auditivo</string>
     <string name="toast_sweep_hearing_threshold">Reproduza o mais baixo possível – no seu limiar auditivo, quase inaudível.</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
-    <string name="toast_rta_zero_listening">Ouvindo o ruído rosa por 3 segundos…</string>
+    <string name="toast_rta_zero_listening">Calibrando o RTA com ruído rosa, 4 segundos… Melhor no volume 16, especialmente para o microfone.</string>
     <string name="toast_rta_zero_taken">Zero RTA definido: o ruído rosa agora marca 0 dB.</string>
     <string name="toast_rta_zero_failed">Muito pouco som detectado – o zero RTA não foi definido.</string>
     <string name="audiocheck_pink_noise">Ruído rosa</string>

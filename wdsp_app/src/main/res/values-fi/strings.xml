@@ -560,6 +560,15 @@ Yleinen oletus: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s — ei ole asettelussasi, mutta tästä lähdöstä kuuluu ääntä. Jos autossa on kaiutin siinä kohdassa, merkitse se autoon ja mittaa uudelleen.</string>
     <string name="room_finding_channels_swapped">%1$s ja %2$s — saapumisajat täsmäävät vain, jos nämä kaksi vaihdetaan keskenään. Jos mikrofoni oli pisteen kohdalla, niiden johdot ovat ristissä. Korjaa tämä ensin: muut havainnot nimeävät kaiuttimen lähdön mukaan.</string>
     <string name="room_finding_polarity">%1$s — vastakkaisessa vaiheessa muihin pääkaiuttimiin nähden, todennäköisesti plus ja miinus ovat vaihtuneet. Tämä vaimentaa bassoa matkustamossa. Tarkista kaiuttimen kaksi johtoa.</string>
+    <string name="room_finding_sub_antiphase">%1$s – toistaa tällä esiasetuksella jakotaajuudella (%2$d Hz) vastakkaisessa vaiheessa oviin nähden kumoten toisensa. Käännä subwooferin vahvistimen vaihekytkin toiseen asentoon (0/180); jos kytkintä ei ole, vaihda subwooferin kaksi johtoa keskenään. Mittaa sitten uudelleen.</string>
+    <string name="room_finding_summed_cancellation">tarkistuspyyhkäisy: kohdassa %1$d Hz subwoofer ja ovet kumoavat toisensa – käännetyllä vaiheella ne soisivat mikrofoniin %2$d dB kovempaa. Käännä vahvistimen vaihekytkintä (0/180); jos kytkintä ei ole, vaihda subwooferin johdot keskenään. Mittaa uudelleen.</string>
+    <string name="room_finding_summed_ok">tarkistuspyyhkäisy: subwoofer ja ovet summautuvat oikein kohdassa %1$d Hz; vaiheen kääntäminen muuttaisi tasoa %2$+d dB. Huomautus, ei vika.</string>
+    <string name="room_finding_summed_no_verdict">tarkistuspyyhkäisy: kohdassa %1$d Hz kaikki kaiuttimet yhdessä poikkeavat %2$+d dB erillisten pyyhkäisyjen ennusteesta – liian suuri ero subwooferin vaiheen arviointiin. Huomautus, ei vika.</string>
+    <string name="room_stage_control">Tarkistuspyyhkäisy</string>
+    <string name="room_stage_control_detail">Kaikki kaiuttimet samanaikaisesti lasketun esiasetuksen läpi</string>
+    <string name="room_stage_volume_steps">Äänenvoimakkuuden portaat</string>
+    <string name="room_stage_volume_steps_detail">Hiljainen ääni äänenvoimakkuuden laskiessa, noin 20 sekuntia – mittaa kunkin portaan desibelit</string>
+    <string name="room_control_failed">Tarkistuspyyhkäisy ei onnistunut: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: kuoppa kohdassa %2$.1f kHz, jota toisen puolen kaiuttimessa ei ole — diskantti toistaa todennäköisesti vastakkaisessa vaiheessa midbassoonsa nähden. Vaihda tämän diskantin kaksi johtoa keskenään (tai tarkista sen jakosuodin) ja mittaa uudelleen.</string>
     <string name="room_finding_speaker_resonance">%1$s: kapea korostuma kohdassa %2$d Hz, jota muissa kaiuttimissa ei ole — ovipaneeli tai kiinnitys rämisee. Tarkista kaiuttimen ruuvit, paneelin kiinnikkeet ja mikä ovessa helisee.</string>
     <string name="room_finding_cabin_mode">Kaikissa kaiuttimissa on korostuma kohdassa %1$d Hz — se on matkustamon oma huonemoodi, ei kaiuttimen vika. Korjaus vaimentaa siinä sen minkä pystyy.</string>
@@ -599,7 +608,7 @@ Yleinen oletus: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normalisoi kuulokynnykselle</string>
     <string name="toast_sweep_hearing_threshold">Toista mahdollisimman hiljaa – kuulokynnyksellä, tuskin kuultavissa.</string>
     <string name="audiocheck_rta_zero">RTA-nolla</string>
-    <string name="toast_rta_zero_listening">Kuunnellaan vaaleanpunaista kohinaa 3 sekuntia…</string>
+    <string name="toast_rta_zero_listening">Kalibroidaan RTA vaaleanpunaisella kohinalla, 4 sekuntia… Parasta voimakkuudella 16, erityisesti mikrofonille.</string>
     <string name="toast_rta_zero_taken">RTA-nolla asetettu: vaaleanpunainen kohina näyttää nyt 0 dB.</string>
     <string name="toast_rta_zero_failed">Liian vähän ääntä havaittu – RTA-nollaa ei asetettu.</string>
     <string name="audiocheck_pink_noise">Vaaleanpunainen kohina</string>

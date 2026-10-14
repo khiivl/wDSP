@@ -560,6 +560,15 @@ Global standard: %1$s</string>
     <string name="room_finding_heard_not_declared">%1$s - ikke i oppsettet ditt, men noe spiller på denne utgangen. Hvis bilen har en høyttaler der, merk den av på bilen og mål igjen.</string>
     <string name="room_finding_channels_swapped">%1$s og %2$s - ankomsttidene stemmer bare hvis disse to byttes om. Hvis mikrofonen sto ved prikken, er ledningene deres byttet om. Rett dette først: alle andre funn navngir en høyttaler etter utgangen.</string>
     <string name="room_finding_polarity">%1$s - i motfase til de andre hovedhøyttalerne, mest sannsynlig er pluss og minus byttet om. Det utligner bassen i kupeen. Sjekk de to ledningene ved denne høyttaleren.</string>
+    <string name="room_finding_sub_antiphase">%1$s - med denne forhåndsinnstillingen spiller den i motfase til dørene ved delefrekvensen (%2$d Hz), slik at de utligner hverandre der. Sett fasebryteren på subwooferens forsterker til den andre posisjonen (0/180); uten bryter bytter du om de to ledningene på subwooferen. Mål deretter på nytt.</string>
+    <string name="room_finding_summed_cancellation">kontrollsveip: ved %1$d Hz utligner subwooferen og dørene hverandre - med snudd fase ville de spilt %2$d dB høyere der mikrofonen står. Vri fasebryteren på forsterkeren (0/180); uten bryter bytter du om ledningene på subwooferen. Mål deretter på nytt.</string>
+    <string name="room_finding_summed_ok">kontrollsveip: subwooferen og dørene summerer i fase ved %1$d Hz; vending av fasen ville endret nivået med %2$+d dB. En merknad, ikke en feil.</string>
+    <string name="room_finding_summed_no_verdict">kontrollsveip: ved %1$d Hz avviker høyttalerne samlet med %2$+d dB fra prognosen fra enkeltsveipene - for stort avvik til å vurdere subwooferens fase. En merknad, ikke en feil.</string>
+    <string name="room_stage_control">Kontrollsveip</string>
+    <string name="room_stage_control_detail">Alle høyttalere samtidig, gjennom det målte oppsettet</string>
+    <string name="room_stage_volume_steps">Volumtrinn</string>
+    <string name="room_stage_volume_steps_detail">En lav tone mens volumet trappes ned, ca. 20 sekunder - måler hvor mange desibel hvert trinn utgjør</string>
+    <string name="room_control_failed">Kontrollsveip ble ikke gjennomført: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: et fall ved %2$.1f kHz som høyttaleren på den andre siden ikke har – diskanthøyttaleren spiller mest sannsynlig i motfase til sin egen mellombass. Bytt om de to ledningene på denne diskanten (eller sjekk delefilteret) og mål på nytt.</string>
     <string name="room_finding_speaker_resonance">%1$s: en smal topp ved %2$d Hz som de andre høyttalerne ikke har - dørpanelet eller festet rasler. Sjekk høyttalerens skruer, panelets klips og hva som rasler i den døren.</string>
     <string name="room_finding_cabin_mode">Alle høyttalere har en topp ved %1$d Hz - det er kupeens egen rommode, ikke en feil ved høyttaleren. Korreksjonen kutter det den kan der.</string>
@@ -599,7 +608,7 @@ Global standard: %1$s</string>
     <string name="audiocheck_sweep_normalize">Normaliser for høreterskel</string>
     <string name="toast_sweep_hearing_threshold">Spill så lavt som mulig – ved høreterskelen, knapt hørbart.</string>
     <string name="audiocheck_rta_zero">RTA-null</string>
-    <string name="toast_rta_zero_listening">Lytter til rosa støy i 3 sekunder…</string>
+    <string name="toast_rta_zero_listening">Kalibrerer RTA med rosa støy, 4 sekunder… Best på volum 16, spesielt for mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-null satt: rosa støy måler nå 0 dB.</string>
     <string name="toast_rta_zero_failed">For lite lyd registrert – RTA-null ble ikke satt.</string>
     <string name="audiocheck_pink_noise">Rosa støy</string>
