@@ -583,7 +583,9 @@
     <string name="room_finding_summed_ok">control sweep: the subwoofer and the doors add up at %1$d Hz; turning the subwoofer\'s phase would change it by %2$+d dB. A note, not a fault.</string>
     <string name="room_finding_summed_no_verdict">control sweep: at %1$d Hz the speakers together play %2$+d dB off the forecast from their own sweeps - too far to judge the subwoofer\'s phase. A note, not a fault.</string>
     <string name="room_stage_control">Control sweep</string>
-    <string name="room_stage_control_detail">Every speaker at once, through the preset just applied</string>
+    <string name="room_stage_control_detail">Every speaker at once, through the measured preset</string>
+    <string name="room_stage_volume_steps">Volume steps</string>
+    <string name="room_stage_volume_steps_detail">A quiet tone while the volume walks down, about 20 seconds - how many decibels each step is</string>
     <string name="room_control_failed">The control sweep did not run: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: a notch at %2$.1f kHz that the speaker on the other side does not have - the tweeter most likely plays against its own mid-bass. Swap the two wires of that tweeter (or check its crossover) and measure again.</string>
     <string name="room_finding_speaker_resonance">%1$s: a narrow peak at %2$d Hz that the other speakers do not have - its door panel or its mounting rings. Check the speaker\'s screws, the panel\'s clips and what rattles in that door.</string>

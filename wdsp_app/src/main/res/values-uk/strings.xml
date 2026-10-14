@@ -566,7 +566,9 @@
     <string name="room_finding_summed_ok">контрольний свіп: саб і двері на %1$d Гц складаються; поворот фази саба змінив би там рівень на %2$+d дБ. Це примітка, не вада.</string>
     <string name="room_finding_summed_no_verdict">контрольний свіп: на %1$d Гц усі динаміки разом грають на %2$+d дБ осторонь від прогнозу з їхніх власних свіпів — задалеко, щоб судити про фазу саба. Це примітка, не вада.</string>
     <string name="room_stage_control">Контрольний свіп</string>
-    <string name="room_stage_control_detail">Усі динаміки разом, через щойно застосований пресет</string>
+    <string name="room_stage_control_detail">Усі динаміки разом, через виміряний пресет</string>
+    <string name="room_stage_volume_steps">Кроки гучності</string>
+    <string name="room_stage_volume_steps_detail">Тихий тон, поки гучність іде вниз, близько 20 секунд - скільки децибелів у кожному кроці</string>
     <string name="room_control_failed">Контрольний свіп не відбувся: %1$s</string>
     <string name="room_finding_crossover_phase">%1$s: провал на %2$.1f кГц, якого нема в динаміка з іншого боку, - твітер, найімовірніше, грає в протифазі до свого мідбаса. Поміняйте місцями два дроти цього твітера (або перевірте його кросовер) і виміряйте знову.</string>
     <string name="room_finding_speaker_resonance">%1$s: вузький пік на %2$d Гц, якого нема в інших динаміків, - дзвенить панель дверей або кріплення. Перевірте гвинти динаміка, кліпси панелі й що деренчить у цих дверях.</string>
