@@ -312,10 +312,11 @@ public final class LoudnessCurve {
      * 11 10 10 9 9 8 8 7 7) and set aside: it is only derived, and it moves three of his numbers by
      * 1 dB.
      *
-     * <p>⚠️ The dynamic-bass research's own verdict on this switch is "compensate through the
-     * equaliser only": the equaliser sits before the subwoofer split, so the subwoofer already
-     * receives the loudness boost band by band and this adds to it (.agents/CABIN_MODEL.md §10-11).
-     * It stays as a deliberate extra for when the bass is short - the owner, 15.09.2026.
+     * <p>This is the only way the loudness curve reaches the subwoofer: the equaliser sits after the
+     * subwoofer branch and has no subwoofer channel (.agents/platform/03-SOUND-PROCESSOR.md, corrected
+     * 15.10.2026), so the per-band boost plays on the doors alone. The dynamic-bass research's verdict
+     * "compensate through the equaliser only" assumed the opposite and is withdrawn
+     * (.agents/CABIN_MODEL.md §11). The switch itself is the owner's, 15.09.2026.
      */
     public static float maxSubBoost(int subFreqIdx) {
         // No subwoofer in the preset, nothing to compensate on it - hzOf would read 80 Hz.

@@ -115,11 +115,13 @@ public final class DspResponse {
      * Full DSP response in dB per band - what the preset makes the hardware do, the "target" the
      * calculated spectrum shows (owner, 14.09.2026), with nothing of the car in it.
      *
-     * <p>The chip's order: 16-band EQ, then the split - doors through their high-pass, subwoofer
-     * through its low-pass. Both outputs carry the equalised signal, so the doors are the EQ response
-     * through the door high-pass (front and rear power-averaged) and the subwoofer is the EQ response
-     * at its own gain through the low-pass; the two are summed as energy, as two sources playing the
-     * same band do.
+     * <p>The chip's order: the split comes first - the subwoofer branches off at Time Alignment,
+     * upstream of the equaliser - and the 16-band EQ sits on the door channels only (it has Front and
+     * Rear registers and no SL/SR; datasheet register map, .agents/platform/03-SOUND-PROCESSOR.md
+     * "Hardware signal path"). So the doors are the EQ response through the door high-pass (front and
+     * rear power-averaged) and the subwoofer is its own gain through its low-pass, with no EQ in it;
+     * the two are summed as energy, as two sources playing the same band do. Until 15.10.2026 the
+     * subwoofer path carried the EQ too, on the belief that the EQ came before the split.
      *
      * @param gains        per-band index 0..12, where 6 is flat and each step is 2 dB
      * @param qNarrow      the Q switches - 🔴 not modelled: the MCU firmware forces Q = 2.2 on every
@@ -205,7 +207,7 @@ public final class DspResponse {
      * pieces {@link #chainDb} sums, for a caller that weighs each path on its own (the control sweep
      * scales each measured speaker by the path that drives it). Front and rear doors through their
      * own high-pass and bass shelf (the author's model, AudioConfig.bassShapingResponseDb); the
-     * subwoofer the same equalised signal at its gain through its low-pass, or
+     * subwoofer its gain through its low-pass - {@code eqDb} does not reach it - or
      * {@link Float#NEGATIVE_INFINITY} where there is none or it is negligible (30 dB down).
      */
     public static void pathsAt(float probeHz, float eqDb, int subFreqIdx, int subGainIdx,
@@ -219,7 +221,7 @@ public final class DspResponse {
         if (subFreqIdx >= 0 && subFreqIdx < SUB_FREQS_HZ.length) {
             final float lowPassDb = lowPass2Db(probeHz, SUB_FREQS_HZ[subFreqIdx]);
             if (lowPassDb >= -30f) {   // negligible this far above the crossover
-                out3[PATH_SUB] = eqDb + Math.max(0, Math.min(12, subGainIdx)) + lowPassDb;
+                out3[PATH_SUB] = Math.max(0, Math.min(12, subGainIdx)) + lowPassDb;
             }
         }
     }

@@ -1105,7 +1105,7 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
     if (hasSub) {
         outSubLpfHz = cutoffHz;
         // In wDSP seekSubGain has range 0..12 (+0 dB .. +12 dB).
-        // Since low bands on the 16-band EQ are kept Flat (0 dB), sub gain only needs modest lift.
+        // The EQ does not reach the sub, so its gain here is the whole of its shelf over the doors.
         if (targetCurveType == TARGET_DOLBY_ATMOS) {
             outSubGain = 3; // +3 dB cinema sub shelf
         } else if (targetCurveType == TARGET_BASS_HEAVY) {
@@ -1239,13 +1239,14 @@ void SweepMeasurement::synthesizeAutoEq16(const float* avgClean16, const float* 
         }
 
         // Subwoofer / Midbass Crossover Rule:
-        // In BU32107, the 16-band EQ sits in the stereo mix BEFORE the crossover filters!
-        // If we cut 20, 31.5, 50 Hz on the 16-band EQ, we cut those frequencies for the SUBWOOFER too.
+        // In BU32107 the 16-band EQ is on the door channels only: the subwoofer branches off at
+        // Time Alignment, upstream of it (datasheet; .agents/platform/03-SOUND-PROCESSOR.md, corrected
+        // 15.10.2026 - this comment used to say the EQ fed the subwoofer).
         // 1) When hasSub is true:
-        //    The subwoofer handles frequencies below cutoffHz (via Sub LPF 0707, 12 dB/oct).
-        //    The door speakers are protected by the Door HPF (0703, 12 dB/oct).
-        //    The 16-band EQ MUST NOT CUT sub-bass below cutoffHz! Keep it flat (0 dB, index 6),
-        //    so the subwoofer receives a full, unattenuated input signal.
+        //    The subwoofer handles frequencies below cutoffHz (via Sub LPF 0707, 12 dB/oct) and no
+        //    EQ band reaches it. The door speakers are high-passed there (Door HPF 0703, 12 dB/oct),
+        //    so an EQ band below cutoffHz would only push the doors where they are filtered off.
+        //    Keep it flat (0 dB, index 6).
         // 0) Below the microphone's own input high-pass nothing was measured, so nothing is
         //    corrected - whatever the car, whatever the subwoofer. The rules that follow are about
         //    crossovers and cone travel; this one is about the measurement not existing. Until now
