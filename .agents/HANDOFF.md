@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**15.10.2026 ~01:xx, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**15.10.2026 ~01:30, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -13,20 +13,17 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `ce35998` (15.10, on the owner's order) — the measurement volume
-  `0ddab58`, its strings `7a197f3`, the 28 locales `51337ac`. Local, not pushed: `8c122ed` (docs:
-  the EQ sits AFTER the sub branch - datasheet; the old "EQ before the crossover" law was wrong).
+  `0ddab58`, its strings `7a197f3`, the 28 locales `51337ac`. Local, not pushed: `8c122ed` (docs: the
+  EQ sits AFTER the sub branch, datasheet) and `8f4431a` (`DspResponse`: no EQ on the sub path; built,
+  not installed). 📻 Owed: −10 dB at 31.5 Hz, doors muted, sub level unchanged; ❓ `0102[5:4]`.
 - Bench `192.168.1.138:9876`: `492e348` (14.10 23:51, adb install -r + service by hand; v0.4.9.8,
   no crash, nothing measured) — the locales after it are strings only. Sub + to −.
-- Argon: chat 228743237ea71d21 is dead — never address it; current one 32890fb409d8df41.
+- Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
 
-**Item 7 is written and builds, and nothing of it has been seen on the unit.** The step a
-measurement runs at is now the app's own choice (`MeasureVolume`: silence, a dual tone 80 Hz + 1 kHz
-on step 8, the step read off the volume-step table for a sweep at 0.22, then a distortion and
-table-gain check that costs 1–2 steps); the volume-step table became the **first** stage of the
-wizard and of every microphone calibration, because that step is read off it; and the loudness
-anchor `_fm_cal` is the person's own volume, not the sweep's (`RoomMeasurement.loudnessAnchor`).
+**Item 7 (measurement volume, `MeasureVolume`; step table first in the wizard; `_fm_cal` = the
+person's volume) builds and has never been seen on the unit.**
 **Next, on the bench, in this order:** a measurement pass (the report's
 `measurement volume:` line says which step and why), the refusal with the fan on, `_fm_cal` in a
 fresh auto preset against the owner's usual volume, loudness audible at 10..25. The thresholds are
@@ -55,10 +52,6 @@ item 4's two ear checks are daytime.
 
 ## ❓ For the owner
 
-- **The EQ does not reach the sub** (`8c122ed`, datasheet; 📻 owed: −10 dB at 31.5 Hz, doors muted,
-  sub level unchanged). Code still assumes the opposite: `DspResponse.pathsAt` adds the EQ to the sub
-  path (calculated spectrum wrong below the crossover); comments in `LoudnessCurve.maxSubBoost` and
-  `sweep.cpp` synthesizeAutoEq16 (behaviour there harmless). Fix the model now, or after the acoustic check?
 - The probe of undeclared doors (two short sweeps) — keep, or make it switchable?
 - Card spinners in Modern night — how should they look?
 - Unproven: during the door sweeps the scratch preset leaves the sub at 0 dB with a 25 Hz low-pass
