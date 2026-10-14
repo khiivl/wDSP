@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**14.10.2026 ~23:xx, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**14.10.2026 ~23:5x, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,42 +12,46 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `bb54fdc` (14.10 ~23:xx), only slice edits after it, incl. the manuals
-  (`docs/manual_{uk,en,es,ru}.html`; uk published: https://claude.ai/artifact/33rbFe8XPCeWQqJ1MbEGLz)
-  and the 28-language strings.
-- Bench `192.168.1.138:9876`: `bb54fdc` (14.10 ~23:xx, adb install -r + service by hand) — bench checks
-  14.10 passed except two daytime ones by ear (TODO «Ближнє» item 4). Sub wired + to −.
+- Pushed: `origin/kostyfmat_mod` = `bb54fdc`; **three commits after it are local only**
+  (`0ddab58` the measurement volume, `7a197f3` its strings, this slice).
+- Bench `192.168.1.138:9876`: still `bb54fdc` — nothing from tonight installed. Sub + to −.
 - Argon: review chat 228743237ea71d21 is dead — never address it; current chat 32890fb409d8df41.
+- Board #1797: the Gemini line owes the other 26 locales of `7a197f3`.
 
 ## ⏳ Open
 
-**Next, in order: TODO «Ближнє — по порядку»**: item 7 (the measurement volume chosen by the app, the
-loudness anchor separated from it — Argon's plan) awaits the owner's go; items 5 (20 Hz) and 6 wait
-for the author; item 4's two ear checks are daytime. Done 14.10, unchecked on the unit: the volume table is a wizard stage
-(`VolumeSteps.inMeasurement`: every mic calibration, the first measurement without a table;
-`volume_steps.txt` in the archive); the mic analyser is brought to step 32 by the table
-(`AudioSpectrumEngine.micVolumeDb`) before the AGC, and the mic RTA zero keeps its step. Owner 14.10:
-calculated RTA and bars must not depend on the volume; the mic follows the table «щоб плюс мінус
-накладатися на цільову» — so no "absolute calc mode".
+**Item 7 is written and builds, and nothing of it has been seen on the unit.** The step a
+measurement runs at is now the app's own choice (`MeasureVolume`: silence, a dual tone 80 Hz + 1 kHz
+on step 8, the step read off the volume-step table for a sweep at 0.22, then a distortion and
+table-gain check that costs 1–2 steps); the volume-step table became the **first** stage of the
+wizard and of every microphone calibration, because that step is read off it; and the loudness
+anchor `_fm_cal` is the person's own volume, not the sweep's (`RoomMeasurement.loudnessAnchor`).
+**The next step is the bench, in this order:** a measurement pass (the report's
+`measurement volume:` line says which step and why), the refusal with the fan on, `_fm_cal` in a
+fresh auto preset against the owner's usual volume, and whether loudness is now audible at 10..25.
+The thresholds are Argon's, not measured in a cabin — TODO «Ближнє» item 7 lists them.
 
+Also done 14.10 and still unchecked on the unit: the mic analyser brought to step 32 by the table
+(`AudioSpectrumEngine.micVolumeDb`) before the AGC. Owner 14.10: calculated RTA and bars must not
+depend on the volume; the mic follows the table «щоб плюс мінус накладатися на цільову» — so no
+"absolute calc mode".
 
-1. **Sub phase at the crossover** — done, verified on the bench 13–14.10 (MEASURED_FACTS "Subwoofer
-   timing"); the `control_impulses.*` dump stays as a tester diagnostic.
-2. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
-   quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to the
-   microphone. The rule (open space: charge nothing at 20/31.5 Hz) **waits for the author** — the owner
-   asked him 14.10 and wants him in on it (TODO «Ближнє» item 5). Do not ask the owner again.
-3. **Call takes the platform's level** (`698830f`, #1704 BitPerfect): on the bench, not checked with a
-   live call — `setprop sys.call.vol 10` outside a call → call → stays 10.
-4. **Source volumes** (`4d1006d`): the owner's live call remains; wake from ACC OFF unchecked (if the
-   platform sets 0 → main_volume there, wDSP takes it as the person's change — owner decides).
-5. **Event-driven service:** `TESTS.md` closed 13.10; unchecked: sync with the owner's radio, the
+Then, in order: **TODO «Ближнє — по порядку»** items 5 (the 20 Hz rule) and 6 wait for the author;
+item 4's two ear checks are daytime.
+
+1. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
+   quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to
+   the microphone. The rule (open space: charge nothing at 20/31.5 Hz) **waits for the author** —
+   the owner asked him 14.10 and wants him in on it. Do not ask the owner again.
+2. **Call takes the platform's level** (`698830f`): bench only — `setprop sys.call.vol 10` outside a
+   call → call → stays 10. **Source volumes** (`4d1006d`): the live call remains; wake from ACC OFF
+   unchecked (if the platform sets 0 → main_volume, wDSP reads it as the person — owner decides).
+3. **Event-driven service:** `TESTS.md` closed 13.10; unchecked: sync with the owner's radio, the
    "microphone" mode after `83bf476`, the screensaver normalisation.
-6. RTA: two zeros + one-button calibration (`f8e0fb3`, `3abcd22`) not checked on the bench. Delays
+4. RTA: two zeros + one-button calibration (`f8e0fb3`, `3abcd22`) unchecked on the bench. Delays
    "for the listener" — DEBT «Вимір», first item.
-6b. **Loudness by dB, not steps** (13.10, on the bench, not yet heard by the owner): `LoudnessCurve.loudnessRatio`
-   reads the measured step table (`VolumeSteps`, MEASURED_FACTS "Volume steps"); the mic level probe
-   before sweeps is on the bench too, unverified.
+5. **Loudness by dB, not steps** (13.10, bench, not yet heard by the owner):
+   `LoudnessCurve.loudnessRatio` reads the step table (MEASURED_FACTS "Volume steps").
 
 ## ❓ For the owner
 
