@@ -21,11 +21,13 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
-**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): absolute calc mode, bench checks, the
+**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): bench checks, the
 20 Hz rule. Done 14.10, unchecked on the unit: the volume table is a wizard stage
 (`VolumeSteps.inMeasurement`: every mic calibration, the first measurement without a table;
 `volume_steps.txt` in the archive); the mic analyser is brought to step 32 by the table
-(`AudioSpectrumEngine.micVolumeDb`) before the AGC, and the mic RTA zero keeps its step.
+(`AudioSpectrumEngine.micVolumeDb`) before the AGC, and the mic RTA zero keeps its step. Owner 14.10:
+calculated RTA and bars must not depend on the volume; the mic follows the table «щоб плюс мінус
+накладатися на цільову» — so no "absolute calc mode".
 
 
 1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
