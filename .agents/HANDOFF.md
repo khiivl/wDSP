@@ -13,7 +13,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `7ffa03c` (13.10 ~22:20). Local, not pushed: `1f16e4c` (volume table
-  in the wizard), `368020d` (its strings) — built, not installed.
+  in the wizard), `368020d` (its strings), `a80c2ef` (mic visualizer from the table) — built, not installed.
 - Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
@@ -21,10 +21,11 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
-**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): the mic-mode visualizer from the table
-instead of AGC, absolute calc mode, bench checks, the 20 Hz rule. Done 14.10: the volume table is a
-wizard stage (`VolumeSteps.inMeasurement`): every mic calibration, and the first room measurement
-when no table exists; `volume_steps.txt` rides in the measurement archive. Unchecked on the unit.
+**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): absolute calc mode, bench checks, the
+20 Hz rule. Done 14.10, unchecked on the unit: the volume table is a wizard stage
+(`VolumeSteps.inMeasurement`: every mic calibration, the first measurement without a table;
+`volume_steps.txt` in the archive); the mic analyser is brought to step 32 by the table
+(`AudioSpectrumEngine.micVolumeDb`) before the AGC, and the mic RTA zero keeps its step.
 
 
 1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
