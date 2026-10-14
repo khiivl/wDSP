@@ -13,7 +13,8 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `7ffa03c` (13.10 ~22:20). Local, not pushed: `1f16e4c` (volume table
-  in the wizard), `368020d` (its strings), `a80c2ef` (mic visualizer from the table) — built, not installed.
+  in the wizard), `368020d` (its strings), `a80c2ef` (mic visualizer from the table) — installed on the bench 14.10 20:5x (adb install -r +
+  service by hand), bench checks (TODO «Ближнє» item 4) with the owner.
 - Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
