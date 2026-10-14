@@ -12,11 +12,11 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = everything up to this slice (14.10 ~23:xx), incl. the manuals
+- Pushed: `origin/kostyfmat_mod` = `bb54fdc` (14.10 ~23:xx), only slice edits after it, incl. the manuals
   (`docs/manual_{uk,en,es,ru}.html`; uk published: https://claude.ai/artifact/33rbFe8XPCeWQqJ1MbEGLz)
   and the 28-language strings.
-- Bench `192.168.1.138:9876`: `a74218d` (progress by stages) — bench checks 14.10 passed except two
-  daytime ones by ear (TODO «Ближнє» item 4). Sub wired + to −.
+- Bench `192.168.1.138:9876`: `bb54fdc` (14.10 ~23:xx, adb install -r + service by hand) — bench checks
+  14.10 passed except two daytime ones by ear (TODO «Ближнє» item 4). Sub wired + to −.
 - Argon: review chat 228743237ea71d21 is dead — never address it; current chat 32890fb409d8df41.
 
 ## ⏳ Open
