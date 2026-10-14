@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**13.10.2026 ~22:15, Claude session (closing) "wDSP mod".** Rewritten, never appended; history is git.
+**14.10.2026 evening, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,7 +12,8 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `7ffa03c` (13.10 ~22:20) — everything, only this slice line after it.
+- Pushed: `origin/kostyfmat_mod` = `7ffa03c` (13.10 ~22:20). Local, not pushed: `1f16e4c` (volume table
+  in the wizard), `368020d` (its strings) — built, not installed.
 - Bench `192.168.1.138:9876`: wDSP at the loudness-by-dB commit (13.10 ~22:10; adb install -r + service by hand): the control sweep runs
   right after the measurement, before «Застосувати» (preset «wDSP Control»); untested on the unit. Owner,
   13.10: *«поточний хардман не погано грає, і затримки ніби правильні»*.
@@ -20,8 +21,10 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
-**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): the volume table inside the wizard,
-the mic-mode visualizer from the table instead of AGC, absolute calc mode, bench checks, the 20 Hz rule.
+**Next, in order: TODO «Ближнє — по порядку»** (owner 13.10): the mic-mode visualizer from the table
+instead of AGC, absolute calc mode, bench checks, the 20 Hz rule. Done 14.10: the volume table is a
+wizard stage (`VolumeSteps.inMeasurement`): every mic calibration, and the first room measurement
+when no table exists; `volume_steps.txt` rides in the measurement archive. Unchecked on the unit.
 
 
 1. **Sub phase at the crossover — done and verified on the bench 13.10 21:2x** (`8a5f758`, `7fdc770`,
