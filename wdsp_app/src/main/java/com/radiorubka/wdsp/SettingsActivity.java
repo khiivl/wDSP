@@ -2834,12 +2834,14 @@ public class SettingsActivity extends AppCompatActivity {
                 byte[] buffer = new byte[8192];
                 // The microphone calibration every sweep here was read through - kept apart from
                 // the runs, so it travels with whichever measurement is sent (owner, 09.10.2026).
-                java.io.File micCal = RoomMeasurement.micCalibrationReport(this);
-                if (micCal != null && micCal.isFile()) {
-                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(micCal.getName());
-                    entry.setTime(micCal.lastModified());
+                // The volume table travels the same way: the loudness maths of every run reads it.
+                for (java.io.File kept : new java.io.File[]{RoomMeasurement.micCalibrationReport(this),
+                        VolumeSteps.reportFile(this)}) {
+                    if (kept == null || !kept.isFile()) continue;
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(kept.getName());
+                    entry.setTime(kept.lastModified());
                     zos.putNextEntry(entry);
-                    try (java.io.FileInputStream in = new java.io.FileInputStream(micCal)) {
+                    try (java.io.FileInputStream in = new java.io.FileInputStream(kept)) {
                         int n;
                         while ((n = in.read(buffer)) > 0) zos.write(buffer, 0, n);
                     }

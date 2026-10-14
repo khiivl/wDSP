@@ -1761,6 +1761,10 @@ public final class RoomMeasurement {
                 // The control sweep before the person decides (owner, 13.10.2026: «не чекати на
                 // "застосувати", а зразу контрольний, потім вердикт і тоді вже застосувати»).
                 if (result.error == null) controlPass(context.getApplicationContext(), result, listener);
+                // The volume table once, on a unit that has none (a calibration takes it every time).
+                if (result.error == null && !VolumeSteps.hasTable(context)) {
+                    VolumeSteps.inMeasurement(context.getApplicationContext(), listener);
+                }
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -1968,6 +1972,9 @@ public final class RoomMeasurement {
                         CabinProfile.hasSubwoofer(context),
                         SoundstageMode.DRIVER, TargetCurve.HARMAN,
                         getBodyType(context), getListeningDistanceCm(context), listener, true);
+                // Every calibration takes the volume table afresh: whoever recalibrates may have
+                // changed the amplifier (owner, 13.10.2026: «програма має сама знімати обладнання»).
+                if (result.error == null) VolumeSteps.inMeasurement(context.getApplicationContext(), listener);
             } catch (Throwable t) {
                 result = new Result();
                 result.error = t.getClass().getSimpleName() + ": " + t.getMessage();

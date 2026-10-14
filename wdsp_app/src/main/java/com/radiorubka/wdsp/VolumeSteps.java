@@ -27,9 +27,12 @@ import java.util.Locale;
  * no step plays louder than a measurement sweep. The halves meet at {@link #SPLIT}. 📻 13.10.2026 two
  * separate walks joined there agreed within 0.2 dB down to step 5.
  *
- * <p>Diagnostic, started by {@code com.radiorubka.wdsp.MEASURE_VOLUME_STEPS}. Writes
- * {@code volume_steps.txt} next to the microphone report and keeps the table in the preference
- * {@link #PREF_TABLE} for the loudness maths.
+ * <p>Taken by the wizard (owner, 13.10.2026: the program measures the person's hardware itself - their
+ * amplifier, the optical link after the BU32107): a stage of every microphone calibration, and of the
+ * first room measurement on a unit that has no table yet - {@link #inMeasurement}. The broadcast
+ * {@code com.radiorubka.wdsp.MEASURE_VOLUME_STEPS} re-runs it on the bench. Writes {@link #reportFile}
+ * next to the microphone report (the measurement archive carries it) and keeps the table in the
+ * preference {@link #PREF_TABLE} for the loudness maths.
  */
 final class VolumeSteps {
 
@@ -47,6 +50,39 @@ final class VolumeSteps {
     static final String PREF_TABLE = "volume_step_db";
 
     private VolumeSteps() {
+    }
+
+    /** The table's report, next to the microphone calibration report. */
+    static File reportFile(Context context) {
+        final File dir = context.getExternalFilesDir(null);
+        return dir == null ? null : new File(dir, "volume_steps.txt");
+    }
+
+    static boolean hasTable(Context context) {
+        return context.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_TABLE, null) != null;
+    }
+
+    /**
+     * The table as a stage of a measurement that already holds the slot, after its own sweeps. A walk
+     * that fails fails nothing else: the loudness maths keeps the table it had (or counts steps), and
+     * the report file says why this one was not taken.
+     */
+    static void inMeasurement(Context app, RoomMeasurement.Listener listener) {
+        if (listener != null) {
+            listener.onProgress(1, 1, app.getString(R.string.room_stage_volume_steps),
+                    app.getString(R.string.room_stage_volume_steps_detail), 0);
+        }
+        String failed;
+        try {
+            failed = run(app);
+        } catch (Throwable t) {
+            failed = t.getClass().getSimpleName() + ": " + t.getMessage();
+            Log.e(TAG, "volume steps failed", t);
+        }
+        if (failed != null) writeReport(app, "volume steps not measured: " + failed + "\ntable in use: "
+                + app.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_TABLE, "none - the loudness curve counts steps") + "\n");
     }
 
     static void measureAsync(Context context) {
@@ -76,15 +112,16 @@ final class VolumeSteps {
         }
     }
 
-    private static void run(Context app) {
+    /** The walk, both halves; null when the table was taken, else why not. */
+    private static String run(Context app) {
         if (CallState.isActive()) {
             Log.w(TAG, "phone call in progress - not measured");
-            return;
+            return "phone call in progress";
         }
         final MicrophoneGuard.Outcome mic = MicrophoneGuard.ensureOurs(app);
         if (mic.needsRestart) {
             Log.w(TAG, "the microphone is held by another app: " + mic);
-            return;
+            return "the microphone is held by another app: " + mic;
         }
         final SharedPreferences prefs = app.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE);
         McuService.ensureStarted(app);
@@ -96,7 +133,8 @@ final class VolumeSteps {
             RoomMeasurement.pauseMedia(app);
             final Half upper = walk(app, TOP, SPLIT, SLOT_TOP_S, false);
             final Half lower = upper == null ? null : walk(app, SPLIT, 1, SLOT_LOW_S, true);
-            if (lower != null) report(app, prefs, upper, lower);
+            if (lower == null) return "a pass failed (" + (upper == null ? TOP : SPLIT) + " down)";
+            return report(app, prefs, upper, lower) ? null : "a step was not read";
         } finally {
             MicrophoneGuard.releaseHold();
             setVolume(origVolume);
@@ -185,8 +223,11 @@ final class VolumeSteps {
         return 20 * Math.log10(amp + 1e-12);
     }
 
-    /** The two halves joined at {@link #SPLIT}, against {@link #TOP}: the file, the log, the preference. */
-    private static void report(Context app, SharedPreferences prefs, Half upper, Half lower) {
+    /**
+     * The two halves joined at {@link #SPLIT}, against {@link #TOP}: the file, the log, the preference.
+     * True when the table was whole and kept.
+     */
+    private static boolean report(Context app, SharedPreferences prefs, Half upper, Half lower) {
         final double[] rel = new double[TOP + 1];
         java.util.Arrays.fill(rel, Double.NaN);
         final double top = upper.level[TOP], split = upper.level[SPLIT];
@@ -213,12 +254,17 @@ final class VolumeSteps {
         }
         txt.append(whole ? "kept as " + PREF_TABLE + "\n" : "not kept - a step was not read\n");
         Log.i(TAG, txt.toString());
-        final File dir = app.getExternalFilesDir(null);
-        if (dir == null) return;
-        try (FileWriter w = new FileWriter(new File(dir, "volume_steps.txt"))) {
-            w.write(txt.toString());
+        writeReport(app, txt.toString());
+        return whole;
+    }
+
+    private static void writeReport(Context app, String text) {
+        final File file = reportFile(app);
+        if (file == null) return;
+        try (FileWriter w = new FileWriter(file)) {
+            w.write(text);
         } catch (Exception e) {
-            Log.w(TAG, "could not write volume_steps.txt", e);
+            Log.w(TAG, "could not write " + file.getName(), e);
         }
     }
 }
