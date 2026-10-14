@@ -254,7 +254,7 @@
     <string name="loud_check_fatigue_start_no_room">The fatigue trim is on, but there is no volume above its start volume for it to act in.</string>
     <string name="loud_check_ceiling">Below volume %1$d the curve runs out of headroom: %2$d bands stop rising and it flattens into a shelf instead of a curve.</string>
     <string name="loud_check_bass_stacks">A separate bass boost is switched on as well. That is two bass controls under one curve.</string>
-    <string name="loud_check_cal_not_measured">The curve is anchored at volume %1$d, but the car was measured at %2$d. The preset is exact at the volume it was measured at, so that is where the curve should stop.</string>
+    <string name="loud_check_cal_not_measured">The curve is anchored at volume %1$d, but you listen at about %2$d. Loudness does nothing at or above its anchor, so it belongs at your own volume.</string>
     <string name="perm_battery_opt">Battery Optimization</string>
     <string name="perm_notification_access">Notification Access (Metadata)</string>
     <string name="perm_audio_record">Audio Record (EQ)</string>
@@ -567,6 +567,7 @@
     <string name="room_err_output_open">The audio output could not be opened.</string>
     <string name="room_err_nothing_heard">No speaker was heard at all. Check the volume and that the microphone is not covered.</string>
     <string name="room_err_too_few_heard">Only %1$d speaker(s) were heard - nothing to align against. Check the volume and the microphone placement.</string>
+    <string name="room_err_too_noisy">The cabin is too noisy to measure in (%1$d dBFS). Switch the engine and the fan off, shut the windows and measure again.</string>
     <string name="room_err_layout_mismatch">None of the speakers in your layout was heard, but speakers you did not declare played. Check the speaker layout and measure again.</string>
     <string name="room_findings_title">What the measurement found</string>
     <string name="room_findings_none">No faults found. Front and rear sounding different is normal in a car - that is not a fault.</string>

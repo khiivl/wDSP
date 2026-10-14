@@ -237,7 +237,7 @@
     <string name="loud_check_fatigue_start_no_room">Підрізання втоми ввімкнено, але вище за його гучність старту немає гучності, де б воно діяло.</string>
     <string name="loud_check_ceiling">Нижче гучності %1$d кривій не вистачає запасу: %2$d смуг перестають підійматися, і замість кривої виходить полиця.</string>
     <string name="loud_check_bass_stacks">Увімкнено ще й окреме підсилення баса. Це два регулятори баса під однією кривою.</string>
-    <string name="loud_check_cal_not_measured">Криву прив\'язано до гучності %1$d, а машину зміряно на %2$d. На гучності виміру пресет точний, тож саме там крива й має закінчуватися.</string>
+    <string name="loud_check_cal_not_measured">Криву прив’язано до гучності %1$d, а ви слухаєте приблизно на %2$d. На своїй прив’язці й вище тонкомпенсація не робить нічого, тож їй місце на вашій гучності.</string>
     <string name="perm_battery_opt">Оптимізація батареї</string>
     <string name="perm_notification_access">Доступ до сповіщень (метадані)</string>
     <string name="perm_audio_record">Запис аудіо (EQ)</string>
@@ -550,6 +550,7 @@
     <string name="room_err_output_open">Не вдалося відкрити звуковий вихід.</string>
     <string name="room_err_nothing_heard">Жодного динаміка не почуто. Перевірте гучність і чи не закритий мікрофон.</string>
     <string name="room_err_too_few_heard">Почуто динаміків: %1$d - вирівнювати нема відносно чого. Перевірте гучність і де стоїть мікрофон.</string>
+    <string name="room_err_too_noisy">У салоні надто шумно, щоб міряти (%1$d dBFS). Вимкніть двигун і пічку, закрийте вікна і поміряйте ще раз.</string>
     <string name="room_err_layout_mismatch">Жодного динаміка з вашої комплектації не чути, зате грають ті, яких ви не позначили. Перевірте комплектацію динаміків і поміряйте ще раз.</string>
     <string name="room_findings_title">Що знайшов вимір</string>
     <string name="room_findings_none">Вад не знайдено. Те, що перед і зад звучать по-різному, — норма для салону, а не вада.</string>
