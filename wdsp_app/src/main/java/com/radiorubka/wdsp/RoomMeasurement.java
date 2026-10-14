@@ -2941,6 +2941,14 @@ public final class RoomMeasurement {
     /** The sweep's amplitude is kept between these, whatever the probe says. */
     private static final float LEVEL_MIN = 0.02f;
     private static final float LEVEL_MAX = 0.5f;
+    /**
+     * A probe peak at or above this sat on the rail, and a clipped peak reads lower than the signal
+     * was - scaled from it, the sweep comes out too loud. 📻 14.10.2026, the owner's bench: the probe
+     * at 0.25 peaked at 0.0 dBFS, the amplitude it gave (0.089) put the passes at -2.7..-6 dBFS
+     * instead of -9. Such a probe is played again at the amplitude it gave.
+     */
+    private static final float LEVEL_PROBE_CLIPPED_DBFS = -1f;
+    private static final int LEVEL_PROBE_TRIES = 3;
 
     /**
      * Sets the sweep's level by the microphone actually in use, before the pass (owner, 13.10.2026:
@@ -2968,32 +2976,43 @@ public final class RoomMeasurement {
         final int lead = (int) (0.3f * SAMPLE_RATE);
         final int len = probe.length();
         final float[] mono = new float[len];
-        probe.generate(mono, amplitude);
         final short[] stereo = new short[(lead + len) * 2];
-        for (int i = 0; i < len; i++) {
-            final short v = (short) Math.max(Short.MIN_VALUE,
-                    Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
-            stereo[(lead + i) * 2] = v;
-            stereo[(lead + i) * 2 + 1] = v;
-        }
         final short[] captured = new short[lead + len + (int) (0.5f * SAMPLE_RATE)];
-        final Result pass = new Result();
-        final int got = playAndRecord(app, stereo, captured, pass, null, null, false);
-        float level = amplitude;
-        if (got > 0 && pass.error == null) {
+        final StringBuilder said = new StringBuilder("level probe (every speaker at once):");
+        float played = amplitude, level = amplitude;
+        for (int attempt = 0; attempt < LEVEL_PROBE_TRIES; attempt++) {
+            probe.generate(mono, played);
+            for (int i = 0; i < len; i++) {
+                final short v = (short) Math.max(Short.MIN_VALUE,
+                        Math.min(Short.MAX_VALUE, Math.round(mono[i] * Short.MAX_VALUE)));
+                stereo[(lead + i) * 2] = v;
+                stereo[(lead + i) * 2 + 1] = v;
+            }
+            final Result pass = new Result();
+            final int got = playAndRecord(app, stereo, captured, pass, null, null, false);
+            if (got <= 0 || pass.error != null) {
+                said.append(" failed (").append(pass.error).append(") - amplitude ").append(level).append(" kept");
+                break;
+            }
             int peak = 0;
             for (int i = 0; i < got; i++) peak = Math.max(peak, Math.abs(captured[i]));
             final float peakDbfs = (float) (20 * Math.log10(peak / 32768.0 + 1e-9));
-            if (peakDbfs > LEVEL_PROBE_DEAF_DBFS) {
-                level = (float) Math.max(LEVEL_MIN, Math.min(LEVEL_MAX,
-                        amplitude * Math.pow(10.0, (LEVEL_TARGET_DBFS - peakDbfs) / 20.0)));
+            if (peakDbfs <= LEVEL_PROBE_DEAF_DBFS) {
+                said.append(String.format(Locale.US, " peak %.1f dBFS at amplitude %.3f - heard nothing, %.3f kept",
+                        peakDbfs, played, level));
+                break;
             }
-            result.levelProbe = String.format(Locale.US, "level probe (every speaker at once): peak %.1f dBFS at "
-                    + "amplitude %.3f -> amplitude %.3f, aiming at %.0f dBFS%s", peakDbfs, amplitude, level,
-                    LEVEL_TARGET_DBFS, peakDbfs > LEVEL_PROBE_DEAF_DBFS ? "" : " (heard nothing - kept)");
-        } else {
-            result.levelProbe = "level probe failed (" + pass.error + ") - amplitude " + amplitude + " kept";
+            level = (float) Math.max(LEVEL_MIN, Math.min(LEVEL_MAX,
+                    played * Math.pow(10.0, (LEVEL_TARGET_DBFS - peakDbfs) / 20.0)));
+            final boolean clipped = peakDbfs >= LEVEL_PROBE_CLIPPED_DBFS;
+            said.append(String.format(Locale.US, " peak %.1f dBFS at amplitude %.3f -> %.3f%s;", peakDbfs, played,
+                    level, clipped ? " (clipped - a lower bound)" : ""));
+            // Again at the amplitude it gave, unless that is where it already played.
+            if (!clipped || level >= played) break;
+            played = level;
         }
+        said.append(String.format(Locale.US, " aiming at %.0f dBFS", LEVEL_TARGET_DBFS));
+        result.levelProbe = said.toString();
         Log.i(TAG, result.levelProbe);
         return level;
     }

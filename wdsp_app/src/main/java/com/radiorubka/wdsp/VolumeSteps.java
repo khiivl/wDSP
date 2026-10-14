@@ -37,6 +37,8 @@ import java.util.Locale;
 final class VolumeSteps {
 
     private static final String TAG = "wDSP_VolumeSteps";
+    /** run()'s answer when the walk went through and a step was too close to the noise. */
+    private static final String STEP_NOT_READ = "a step was not read";
     static final int TOP = 32;
     static final int SPLIT = 13;
     private static final float TOP_TARGET_DBFS = -12f;
@@ -82,7 +84,8 @@ final class VolumeSteps {
             failed = t.getClass().getSimpleName() + ": " + t.getMessage();
             Log.e(TAG, "volume steps failed", t);
         }
-        if (failed != null) writeReport(app, "volume steps not measured: " + failed + "\ntable in use: "
+        // A step not read has its own report already - the table with the gap in it; keep that.
+        if (failed != null && !STEP_NOT_READ.equals(failed)) writeReport(app, "volume steps not measured: " + failed + "\ntable in use: "
                 + app.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE)
                 .getString(PREF_TABLE, "none - the loudness curve counts steps") + "\n");
     }
@@ -139,7 +142,7 @@ final class VolumeSteps {
             if (upper.error != null) return upper.error;
             final Half lower = walk(app, SPLIT, 1, SLOT_LOW_S, true);
             if (lower.error != null) return lower.error;
-            return report(app, prefs, upper, lower) ? null : "a step was not read";
+            return report(app, prefs, upper, lower) ? null : STEP_NOT_READ;
         } finally {
             MicrophoneGuard.releaseHold();
             setVolume(origVolume);
@@ -285,7 +288,8 @@ final class VolumeSteps {
             prefs.edit().putString(PREF_TABLE, csv.toString()).apply();
             LoudnessCurve.setStepTable(csv.toString());
         }
-        txt.append(whole ? "kept as " + PREF_TABLE + "\n" : "not kept - a step was not read\n");
+        txt.append(whole ? "kept as " + PREF_TABLE + "\n" : "not kept - " + STEP_NOT_READ
+                + " (under " + MIN_SNR_DB + " dB above that half's noise); the table in use is the previous one\n");
         Log.i(TAG, txt.toString());
         writeReport(app, txt.toString());
         return whole;

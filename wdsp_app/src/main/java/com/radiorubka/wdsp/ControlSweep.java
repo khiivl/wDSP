@@ -433,7 +433,7 @@ final class ControlSweep {
 
     private static void appendToReport(RoomMeasurement.Result measured, Outcome out) {
         if (measured.reportPath == null) return;
-        final StringBuilder sb = new StringBuilder("\nCONTROL SWEEP: every speaker at once through the applied "
+        final StringBuilder sb = new StringBuilder("\nCONTROL SWEEP: every speaker at once through the measured "
                 + "preset \"" + out.preset + "\". Forecasts from each speaker's own sweep in the preset's state: "
                 + "energy = summed as power (no phase); sub as is / inverted = summed as waves, with the "
                 + "preset's filters and delays.\n");
