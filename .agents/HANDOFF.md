@@ -12,11 +12,11 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `6fa768d`. **Unpushed since:** `05d587c`..`8e113b4` (no noise
+- Pushed: `origin/kostyfmat_mod` = HEAD (`22d9cad`, docs and 28 translations by Сова). Code today: `05d587c`..`8e113b4` (no noise
   refusal; EQ on the doors only in the control forecast, sub pass with the EQ at its floor; both RTA
   zeros in one tap at the mic's calibration step; mic overload -> AGC + red notice over the Q row,
-  on >= 4 % of samples at full scale for 1 s, off under 2 %) + docs/measurements.
-- Bench `192.168.1.138:9876`: `8e113b4`, BitPerfect v5.5.15 on. If adb gives 10013, ClearVPN blocks
+  on >= 4 % of samples at full scale for 1 s, off under 2 %).
+- Bench `192.168.1.138:9876`: `22d9cad`, BitPerfect v5.5.15 on. If adb gives 10013, ClearVPN blocks
   the LAN - the owner turns it off. ❓ `0102[5:4]`. Argon chat: 32890fb409d8df41.
 - Board #1813 → BitPerfect line (other account, no reply expected here): a disabled module leaves
   `car.config music_volume=15` and its `/data` AGDSP config.
@@ -33,11 +33,10 @@ threshold reads the microphone, not the step).
 
 ## ⏳ Next
 
-1. Translations of `rta_mic_overloaded` (en/uk only) - Gemini's job.
-2. Release (owner 15.10: «поки день зробимо всі проби. І зарелізимо»).
-3. Waiting for the author: the 20 Hz rule (mic calibration's 20 Hz swings +0.6..+16 dB run to run,
+1. Release (owner 15.10: «поки день зробимо всі проби. І зарелізимо»).
+2. Waiting for the author: the 20 Hz rule (mic calibration's 20 Hz swings +0.6..+16 dB run to run,
    SNR there 1..12 dB), Argon's model findings (TODO «Ближнє» 5, 6).
-4. Unchecked: call takes the platform's level (`698830f`), wake from ACC OFF volumes (`4d1006d`),
+3. Unchecked: call takes the platform's level (`698830f`), wake from ACC OFF volumes (`4d1006d`),
    radio sync / screensaver normalisation (`TESTS.md`).
 
 ## ❓ For the owner
