@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**15.10.2026 ~01:55, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**15.10.2026 ~02:40, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -21,6 +21,15 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
+**Messengers cannot record voice (owner 15.10 ~02:15) — cause not found, not wDSP's microphone.**
+📻 Held press: Telegram/WhatsApp get ACTION_DOWN, then ACTION_CANCEL 11–20 ms later → recording
+cancelled (Telegram 0.64 s, WhatsApp input closed in 50–100 ms). Mic free (wDSP not recording since
+02:03:55). wDSP injects nothing; `TouchWatcher` 1×1 only gets ACTION_OUTSIDE; screensaver not shown then.
+Suspects: QFassistant `RokoAccessibilityService` (canPerformGestures=true → system touch filter; no
+dispatchGesture in RokoAi code), notificationcenter, wDSP. **Next:** elimination with the owner at the
+unit — assistant first (his call: disable service in UI or `am force-stop`), then notifier, then wDSP.
+Also found: wDSP crash 02:02:58 (DEBT «Код», first item); board #1810 to BitPerfect (EffectHAL SET_CONFIG).
+
 **Item 7 (measurement volume, `MeasureVolume`; step table first in the wizard; `_fm_cal` = the
 person's volume) builds and has never been seen on the unit.**
 **Next, on the bench, in this order:** a measurement pass (the report's
@@ -28,17 +37,13 @@ person's volume) builds and has never been seen on the unit.**
 fresh auto preset against the owner's usual volume, loudness audible at 10..25. The thresholds are
 Argon's, not measured in a cabin — TODO «Ближнє» item 7 lists them.
 
-Also unchecked on the unit: the mic analyser brought to step 32 by the table
-(`AudioSpectrumEngine.micVolumeDb`) before the AGC. Owner 14.10: calculated RTA and bars must not
-depend on the volume; the mic follows the table «щоб плюс мінус накладатися на цільову».
+Also unchecked: mic analyser brought to step 32 by the table (`AudioSpectrumEngine.micVolumeDb`).
 
 Then, in order: **TODO «Ближнє — по порядку»** items 5 (the 20 Hz rule) and 6 wait for the author;
 item 4's two ear checks are daytime.
 
-1. **Mic calibration:** at the usual volume the input overloaded (treble noise −34 dB); two steps
-   quieter it is clean. The 20 Hz correction (+16.6) is suspect — the speakers' roll-off booked to
-   the microphone. The rule (open space: charge nothing at 20/31.5 Hz) **waits for the author** —
-   the owner asked him 14.10 and wants him in on it. Do not ask the owner again.
+1. **Mic calibration:** the 20 Hz rule (open space: charge nothing at 20/31.5 Hz) **waits for the
+   author** (owner asked him 14.10). Do not ask the owner again.
 2. **Call takes the platform's level** (`698830f`): bench only — `setprop sys.call.vol 10` outside a
    call → call → stays 10. **Source volumes** (`4d1006d`): the live call remains; wake from ACC OFF
    unchecked (if the platform sets 0 → main_volume, wDSP reads it as the person — owner decides).
