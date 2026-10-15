@@ -65,6 +65,8 @@ public final class PlayerResume {
     private static final String KEY_SNAPSHOT = "resume_snapshot";
     /** + package: whether that player's session showed a stream (see noteSource). */
     private static final String KEY_STREAMS = "resume_streams_";
+    /** ACTION_SHUTDOWN took the note and no boot has read it yet - see onShutdown. */
+    private static final String KEY_SHUTDOWN = "resume_shutdown";
     /** + package: that player's screen, "package/class" (see noteForeground). */
     private static final String KEY_ACTIVITY = "resume_activity_";
     /** How long a player that streams is given to get a network before it is started anyway. */
@@ -144,17 +146,17 @@ public final class PlayerResume {
             if (!s.getString(KEY_PLAYER, "").isEmpty()) {
                 Log.i(TAG, "the radio took over - nothing to resume any more; it restores itself");
                 s.edit().putString(KEY_PLAYER, "").putBoolean(KEY_PLAYING, false)
-                        .putLong(KEY_STOPPED_AT, System.currentTimeMillis()).apply();
+                        .putLong(KEY_STOPPED_AT, System.currentTimeMillis()).commit();
             }
             return;
         }
         String known = s.getString(KEY_PLAYER, "");
         if (playing && pkg != null && !pkg.isEmpty()) {
             if (!pkg.equals(known) || !s.getBoolean(KEY_PLAYING, false)) {
-                s.edit().putString(KEY_PLAYER, pkg).putBoolean(KEY_PLAYING, true).apply();
+                s.edit().putString(KEY_PLAYER, pkg).putBoolean(KEY_PLAYING, true).commit();
             }
         } else if (s.getBoolean(KEY_PLAYING, false) && (pkg == null || pkg.isEmpty() || pkg.equals(known))) {
-            s.edit().putBoolean(KEY_PLAYING, false).putLong(KEY_STOPPED_AT, System.currentTimeMillis()).apply();
+            s.edit().putBoolean(KEY_PLAYING, false).putLong(KEY_STOPPED_AT, System.currentTimeMillis()).commit();
         }
     }
 
@@ -172,7 +174,7 @@ public final class PlayerResume {
         final String key = KEY_STREAMS + pkg;
         SharedPreferences s = state();
         if (!s.contains(key) || s.getBoolean(key, false) != streams) {
-            s.edit().putBoolean(key, streams).apply();
+            s.edit().putBoolean(key, streams).commit();
             Log.i(TAG, pkg + (streams ? " streams" : " plays local files")
                     + (buffering ? " (it buffered)" : " (" + mediaRef + ")"));
         }
@@ -208,7 +210,7 @@ public final class PlayerResume {
         if (!pkg.equals(s.getString(KEY_PLAYER, "")) || NowPlaying.isRadioPackage(pkg)) return;
         final String key = KEY_ACTIVITY + pkg;
         if (!activity.equals(s.getString(key, ""))) {
-            s.edit().putString(key, activity).apply();
+            s.edit().putString(key, activity).commit();
             Log.i(TAG, "player screen remembered: " + activity);
         }
     }
@@ -236,8 +238,26 @@ public final class PlayerResume {
             snapshot = pkg;
             why = pkg + " was playing";
         }
-        s.edit().putString(KEY_SNAPSHOT, snapshot).putBoolean(KEY_ASLEEP, true).apply();
+        s.edit().putString(KEY_SNAPSHOT, snapshot).putBoolean(KEY_ASLEEP, true).commit();
         Log.i(TAG, "ACC_OFF: " + why + (snapshot.isEmpty() ? " - nothing to resume" : " - remembered"));
+    }
+
+    /**
+     * An orderly reboot or power-off ({@code ACTION_SHUTDOWN}): the same note as {@link #onAccOff},
+     * taken while the player is still known. A power cut announces nothing - for that every change is
+     * written as it happens, synchronously ({@code commit}), so the last record is the state before
+     * it (owner, 15.10.2026: «не можемо записати коли перевантажуємося … що будемо з цим робити?»).
+     */
+    public void onShutdown() {
+        SharedPreferences s = state();
+        if (s.getBoolean(KEY_ASLEEP, false)) return;   // ACC_OFF already took it
+        String pkg = s.getString(KEY_PLAYER, "");
+        boolean playing = s.getBoolean(KEY_PLAYING, false)
+                || System.currentTimeMillis() - s.getLong(KEY_STOPPED_AT, 0) <= PAUSE_GRACE_MS;
+        boolean take = playing && !pkg.isEmpty() && !NowPlaying.isRadioPackage(pkg)
+                && !NowPlaying.getInstance(context).isRadioSource();
+        s.edit().putString(KEY_SNAPSHOT, take ? pkg : "").putBoolean(KEY_SHUTDOWN, true).commit();
+        Log.i(TAG, "shutdown: " + (take ? pkg + " was playing - remembered" : "nothing to resume"));
     }
 
     /**
@@ -252,13 +272,16 @@ public final class PlayerResume {
         bootHandled = true;
         SharedPreferences s = state();
         boolean slept = s.getBoolean(KEY_ASLEEP, false);
+        // An orderly reboot took the same note as ACC_OFF (onShutdown); a power cut left only the
+        // running record, read below.
+        boolean shutDown = s.getBoolean(KEY_SHUTDOWN, false);
         // Slept and then lost power: what was playing when the ignition went off. Power lost or
         // rebooted while driving: whatever was playing last - including a player the platform
         // paused on its way down, which is what a shutdown looks like from here. See
         // PAUSE_BEFORE_BOOT_MS; before it, this branch demanded that the player still be playing
         // and so found nothing every single time.
         String target;
-        if (slept) {
+        if (slept || shutDown) {
             target = s.getString(KEY_SNAPSHOT, "");
         } else {
             final String last = s.getString(KEY_PLAYER, "");
@@ -277,7 +300,7 @@ public final class PlayerResume {
                 }
             }
         }
-        s.edit().putBoolean(KEY_ASLEEP, false).apply();
+        s.edit().putBoolean(KEY_ASLEEP, false).putBoolean(KEY_SHUTDOWN, false).commit();
         if (!ThemeManager.prefs(context).getBoolean(PREF_AFTER_REBOOT, false)) {
             Log.i(TAG, "boot: resuming after a restart is off" + (target.isEmpty() ? "" : " (" + target + " was playing)"));
             return;
@@ -291,7 +314,7 @@ public final class PlayerResume {
         SharedPreferences s = state();
         if (!s.getBoolean(KEY_ASLEEP, false)) return;
         String target = s.getString(KEY_SNAPSHOT, "");
-        s.edit().putBoolean(KEY_ASLEEP, false).apply();
+        s.edit().putBoolean(KEY_ASLEEP, false).commit();
         if (!ThemeManager.prefs(context).getBoolean(PREF_AFTER_SLEEP, false)) {
             Log.i(TAG, "wake: resuming after sleep is off" + (target.isEmpty() ? "" : " (" + target + " was playing)"));
             return;

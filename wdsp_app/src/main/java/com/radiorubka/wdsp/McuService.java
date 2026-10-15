@@ -657,6 +657,9 @@ public class McuService extends Service implements LocationListener {
                     // A boot's own ACC_ON is recognised there and left to the boot.
                     PlayerResume.getInstance(McuService.this).onAccOn();
                 }
+                else if (Intent.ACTION_SHUTDOWN.equals(action)) {
+                    PlayerResume.getInstance(McuService.this).onShutdown();
+                }
                 else if ("com.qf.action.READY_GO_SLEEP".equals(action)) {
                     // Whichever of the two comes first takes the note; the second finds it taken.
                     PlayerResume.getInstance(McuService.this).onAccOff();
@@ -1047,6 +1050,8 @@ public class McuService extends Service implements LocationListener {
         controlFilter.addAction("com.qf.action.VOLUME_CHANGED");
         controlFilter.addAction("com.qf.action.MUTE_EQ");
         controlFilter.addAction("com.qf.action.ACC_OFF");
+        // An orderly reboot or power-off - the only one that announces itself (PlayerResume.onShutdown).
+        controlFilter.addAction(Intent.ACTION_SHUTDOWN);
         controlFilter.addAction("com.qf.action.PHONE_CALL_START");
         controlFilter.addAction("com.qf.action.PHONE_CALL_END");
         controlFilter.addAction(AudioCheck.ACTION_FADER);
