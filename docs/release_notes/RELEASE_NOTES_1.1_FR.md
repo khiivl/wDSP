@@ -35,6 +35,8 @@ UNIQUEMENT DANS LE MOD — l'application de l'auteur ne le fait pas
   lecteur.
 - Il s'occupe du son au-delà de l'égaliseur : appels, volume de chaque source, reprise du
   lecteur après un redémarrage ou une veille.
+- Il fonctionne sur événements, pas sur une horloge : le service de l'auteur vérifie le volume
+  et le lecteur toutes les 200 ms ; le mod ne réagit que lorsque quelque chose change vraiment.
 - Deux interfaces : Classique (l'apparence de l'auteur) et le Moderne propre au mod.
 
 Nouveautés du mod en 1.1 :

@@ -34,6 +34,8 @@ SÓ NO MOD — a aplicação do autor não faz isto
   leitor.
 - Cuida do som para além do equalizador: chamadas, o volume de cada fonte, retoma do leitor
   após reiniciar ou suspender.
+- Funciona por eventos, não por relógio: o serviço do autor verifica o volume e o leitor a
+  cada 200 ms; o mod só reage quando algo muda de facto.
 - Duas interfaces: Clássico (o aspeto do autor) e o Moderno próprio do mod.
 
 Novidades do mod na 1.1:

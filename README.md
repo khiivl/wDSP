@@ -44,6 +44,8 @@ ROHM **BU32107**. Програма керує процесором через MC
   (мікрофон звільняється, вмикається пресет дзвінка), відновлення плеєра після перезавантаження
   чи сну.
 - **Візуалізатор у статус-барі й повноекранна заставка** — в оригіналі їх немає взагалі.
+- **Працює на подіях, а не за годинником.** Служба оригіналу перевіряє гучність і плеєр кожні
+  200 мс; мод реагує лише тоді, коли щось справді змінилося.
 - **Обидва інтерфейси.** Інтерфейс автора лишився як «Класичний», поруч із «Модерн» мода.
 - Root необов'язковий; з ним мод отримує мікрофон раніше за інші програми.
 
@@ -195,6 +197,8 @@ Screensaver gesture map: [docs/screensaver_map.svg](docs/screensaver_map.svg).
 - **It looks after the unit's sound beyond the equaliser**: the volume of each source, calls (the
   microphone is released, the call preset applied), resuming the player after a restart or sleep.
 - **A status bar visualiser and a full-screen screensaver** — the original has neither.
+- **It runs on events, not on a clock.** The original's service checks the volume and the player
+  every 200 ms; the mod reacts only when something actually changes.
 - **Both interfaces.** The author's interface is kept as "Classic", next to the mod's "Modern".
 - Root is optional; with it the mod gets the microphone before other apps.
 

@@ -33,6 +33,8 @@ SOLO EN EL MOD — la app del autor no hace esto
   reproductor.
 - Cuida el sonido más allá del ecualizador: llamadas, el volumen de cada fuente, reanudar el
   reproductor tras reiniciar o suspender.
+- Funciona por eventos, no por reloj: el servicio del autor comprueba el volumen y el
+  reproductor cada 200 ms; el mod solo reacciona cuando algo cambia de verdad.
 - Dos interfaces: Clásico (el aspecto del autor) y el Moderno propio del mod.
 
 Novedades del mod en 1.1:

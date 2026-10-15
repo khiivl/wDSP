@@ -33,6 +33,8 @@ SOLO NEL MOD — l'app dell'autore non lo fa
   lettore.
 - Si occupa del suono oltre l'equalizzatore: chiamate, il volume di ogni sorgente, ripresa del
   lettore dopo un riavvio o la sospensione.
+- Funziona a eventi, non a orologio: il servizio dell'autore controlla volume e lettore ogni
+  200 ms; il mod reagisce solo quando qualcosa cambia davvero.
 - Due interfacce: Classico (l'aspetto dell'autore) e il Moderno proprio del mod.
 
 Novità del mod nella 1.1:

@@ -33,6 +33,8 @@ NUR IN DER MODIFIKATION — die App des Autors kann das nicht
 - Ein Visualisierer in der Statusleiste und ein Vollbild-Bildschirmschoner mit Player-Steuerung.
 - Sie kümmert sich um den Klang über den Equalizer hinaus: Anrufe, die Lautstärke jeder
   Quelle, Fortsetzen des Players nach Neustart oder Standby.
+- Sie arbeitet mit Ereignissen statt mit einer Uhr: der Dienst des Autors prüft Lautstärke
+  und Player alle 200 ms, die Modifikation reagiert nur, wenn sich wirklich etwas ändert.
 - Zwei Oberflächen: Klassisch (das Aussehen des Autors) und das eigene Modern der Modifikation.
 
 Neu in der Modifikation in 1.1:

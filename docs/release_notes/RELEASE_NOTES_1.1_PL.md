@@ -31,6 +31,8 @@ TYLKO W MODZIE — aplikacja autora tego nie robi
 - Wizualizator na pasku stanu i pełnoekranowy wygaszacz ze sterowaniem odtwarzaczem.
 - Dba o dźwięk nie tylko korektorem: rozmowy, głośność każdego źródła, wznawianie
   odtwarzacza po restarcie lub uśpieniu.
+- Działa na zdarzeniach, a nie według zegara: usługa autora sprawdza głośność i odtwarzacz
+  co 200 ms, mod reaguje tylko wtedy, gdy coś naprawdę się zmieni.
 - Dwa interfejsy: Klasyczny (wygląd autora) i własny Nowoczesny moda.
 
 Nowe w modzie w 1.1:

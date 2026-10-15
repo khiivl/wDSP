@@ -32,6 +32,8 @@ ONLY IN THE MOD — the author's app does not do this
 - A visualiser in the status bar and a full-screen screensaver with playback controls.
 - It looks after the sound beyond the equaliser: calls, the volume of each source, resuming
   the player after a restart or sleep.
+- It runs on events, not on a clock: the author's service checks the volume and the player
+  every 200 ms; the mod reacts only when something actually changes.
 - Two interfaces: Classic (the author's look) and the mod's own Modern.
 
 New in the mod in 1.1:
