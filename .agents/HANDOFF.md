@@ -12,10 +12,14 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = HEAD (15.10, on the owner's order). Latest: `f2ce7aa` — the engine
-  no longer attaches a Visualizer while the resolver probes (crash 02:02:58). If adb gives 10013,
-  ClearVPN (WireGuard) is on and blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz test; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `f2ce7aa` (15.10 16:13, adb install -r + service by hand). Sub + to −.
+- Pushed: `origin/kostyfmat_mod` = `f2ce7aa` (the engine no longer attaches a Visualizer while the
+  resolver probes, crash 02:02:58). **Unpushed:** `a46c425` (the spectrum watchdog asks
+  `SessionResolver.mediaTrackStarted`, not `isMediaPlaybackActive`; the MCU send log says
+  sent/unchanged/REFUSED) + two slice commits. If adb gives 10013, ClearVPN (WireGuard) is on and
+  blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz test; ❓ `0102[5:4]`.
+- Bench `192.168.1.138:9876`: `a46c425` (15.10 ~17:00, service alive). Sub + to −.
+- ⏳ Open from `a46c425`: Bluetooth (gocsdk_zj) is not in the playback list - with BitPerfect
+  session 0 hears it; whether the resolver finds it **without** BitPerfect is the next check.
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
