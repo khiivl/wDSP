@@ -208,6 +208,16 @@ public final class PlayerResume {
         if (slash <= 0 || slash == activity.length() - 1) return;
         final String pkg = activity.substring(0, slash);
         if (!pkg.equals(s.getString(KEY_PLAYER, "")) || NowPlaying.isRadioPackage(pkg)) return;
+        // A real, exported activity only. An activity-alias is an icon, not a screen, and a player
+        // switches its icons: 📻 15.10.2026, YouTube Music (Morphe) showed .morphe_black_1, which was
+        // gone (ActivityNotFoundException) when the reboot asked for it.
+        try {
+            final android.content.pm.ActivityInfo info = context.getPackageManager().getActivityInfo(
+                    ComponentName.unflattenFromString(activity), 0);
+            if (info == null || info.targetActivity != null || !info.exported || !info.enabled) return;
+        } catch (Throwable t) {
+            return;
+        }
         final String key = KEY_ACTIVITY + pkg;
         if (!activity.equals(s.getString(key, ""))) {
             s.edit().putString(key, activity).commit();
@@ -548,18 +558,33 @@ public final class PlayerResume {
         final String back = foregroundBefore;
         foregroundBefore = "";
         try {
+            final android.content.pm.PackageManager pm = context.getPackageManager();
             if (!back.isEmpty() && !back.equals(pkg) && !back.equals(context.getPackageName())) {
-                Intent previous = context.getPackageManager().getLaunchIntentForPackage(back);
+                // A launcher goes back through its HOME activity. 🔴 15.10.2026 20:08: its launcher
+                // entry was taken instead and opened the launcher chooser on the owner's unit (fifteen
+                // launchers installed, none set as the default).
+                Intent itsHome = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(back);
+                android.content.pm.ResolveInfo home = pm.resolveActivity(itsHome, 0);
+                Intent previous = home != null && home.activityInfo != null
+                        ? itsHome.setComponent(new ComponentName(back, home.activityInfo.name))
+                        : pm.getLaunchIntentForPackage(back);
                 if (previous != null) {
                     previous.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                             | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
                     context.startActivity(previous);
-                    Log.i(TAG, "screen put back to " + back);
+                    Log.i(TAG, "screen put back to " + back + (home != null ? " (its home)" : ""));
                     return;
                 }
             }
+            // The generic HOME only where a default launcher is set - otherwise it is the chooser.
             Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            android.content.pm.ResolveInfo def = pm.resolveActivity(home,
+                    android.content.pm.PackageManager.MATCH_DEFAULT_ONLY);
+            if (def == null || def.activityInfo == null || "android".equals(def.activityInfo.packageName)) {
+                Log.i(TAG, "screen left as it is - no default launcher to go back to");
+                return;
+            }
             context.startActivity(home);
             Log.i(TAG, "screen put back to the launcher");
         } catch (Throwable t) {
@@ -608,7 +633,8 @@ public final class PlayerResume {
                 return true;
             } catch (Throwable t) {
                 Log.i(TAG, remembered + " would not open (" + t.getClass().getSimpleName()
-                        + ") - the launcher's entry instead");
+                        + ") - forgotten, the launcher's entry instead");
+                state().edit().remove(KEY_ACTIVITY + pkg).commit();
             }
         }
         try {
