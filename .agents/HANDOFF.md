@@ -28,6 +28,9 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 - Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
   the control sweep verdicts. Player resume after reboot/sleep - owner 15.10: «працює».
 - The 0.4.9.9 pack in Downloads is superseded, never handed out.
+- README.md rewritten for the mod (owner: «рідмі автора в нашій гілці - обман»), NOT committed:
+  it links manual_pt/pl.html, which Сова is writing (#1828). Commit when they exist.
+- Pre-release `mod-v1.1` on khiivl/wDSP: owner «подумаємо»; the author's consent first.
 - Who gets 1.1 (testers / public) - the owner says; record it.
 
 ## ⏳ Next after that
