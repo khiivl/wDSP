@@ -21,11 +21,15 @@ NOVITÀ
 -----------------------------------------------------------------------------
 
 La versione 1.0 dell'autore
-- Due stili di interfaccia in Impostazioni → "Stile interfaccia": Classico (dell'autore) e Moderno.
-  Temi chiaro e scuro per entrambi.
-- Ultra Bass, il nuovo Loudness, più visualizzazioni, blocco coppie per i ritardi, "Spento" nell'elenco
-  subwoofer per le auto sprovviste, GALA disattivabile per singolo predefinito.
+- Ultra Bass, il nuovo Loudness, una curva dell'analizzatore in tempo reale dietro l'equalizzatore,
+  "Spento" nell'elenco subwoofer per le auto sprovviste, GALA disattivabile per singolo predefinito.
 - La scheda "Test Audio": segnali di prova e registrazioni di test per ciascun altoparlante.
+
+Interfaccia
+- Due stili di interfaccia in Impostazioni → "Stile interfaccia": Classico (l'aspetto dell'autore)
+  e Moderno. Temi diurno e notturno per entrambi.
+- Blocco coppie per i ritardi: "Anteriori insieme" e "Posteriori insieme" mantengono la differenza
+  tra sinistra e destra.
 
 Misurazione dell'abitacolo
 - Impostazioni → scheda abitacolo: indica il tipo di abitacolo, le dimensioni e tocca gli altoparlanti

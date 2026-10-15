@@ -21,11 +21,15 @@ NEW
 -----------------------------------------------------------------------------
 
 The author's 1.0
-- Two interface styles in Settings → "UI Style": Classic (the author's) and Modern. Day and night
-  themes in both.
-- Ultra Bass, the new Loudness, more visualisations, pair locks for delays, "Off" in the
+- Ultra Bass, the new Loudness, a live analyser curve behind the equaliser, "Off" in the
   subwoofer list for cars without one, GALA switchable per preset.
 - The "Audio Check" tab: test signals and test recordings for each speaker.
+
+Interface
+- Two interface styles in Settings → "UI Style": Classic (the author's look) and Modern. Day and
+  night themes in both.
+- Pair locks for delays: "Move fronts together" and "Move rears together" keep the difference
+  between left and right.
 
 Cabin measurement
 - Settings → cabin card: say what kind of cabin it is, its size, and tap the speakers that are

@@ -22,12 +22,16 @@ NOUVEAUTÉS
 -----------------------------------------------------------------------------
 
 La version 1.0 de l'auteur
-- Deux styles d'interface dans Paramètres → "Style d'interface" : Classique (celui de l'auteur) et Moderne.
-  Thèmes jour et nuit disponibles dans les deux.
-- Ultra Bass, la nouvelle compensation de Loudness, davantage de visualisations, verrouillage par paire
-  des délais, "Arrêt" dans la liste du subwoofer pour les véhicules non équipés, GALA désactivable
+- Ultra Bass, la nouvelle compensation de Loudness, une courbe d'analyseur en direct derrière
+  l'égaliseur, "Arrêt" dans la liste du subwoofer pour les véhicules non équipés, GALA désactivable
   par préréglage.
 - L'onglet "Test Audio" : signaux de test et enregistrements de contrôle pour chaque haut-parleur.
+
+Interface
+- Deux styles d'interface dans Paramètres → "Style d'interface" : Classique (l'apparence de
+  l'auteur) et Moderne. Thèmes jour et nuit disponibles dans les deux.
+- Verrouillage par paire des délais : "Avants ensemble" et "Arrières ensemble" conservent l'écart
+  entre gauche et droite.
 
 Mesure de l'habitacle
 - Paramètres → carte de l'habitacle : indiquez le type d'habitacle, ses dimensions et touchez les

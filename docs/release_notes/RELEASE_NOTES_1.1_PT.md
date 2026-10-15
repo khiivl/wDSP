@@ -22,11 +22,15 @@ NOVIDADES
 -----------------------------------------------------------------------------
 
 A versão 1.0 do autor
-- Dois estilos de interface em Definições → "Estilo de interface": Clássico (do autor) e Moderno.
-  Temas claro e escuro em ambos.
-- Ultra Bass, o novo Loudness, mais visualizações, bloqueio de pares para atrasos, "Desl." na
-  lista de subwoofer para carros sem ele, GALA desativável por predefinição.
+- Ultra Bass, o novo Loudness, uma curva de analisador em tempo real por trás do equalizador,
+  "Desl." na lista de subwoofer para carros sem ele, GALA desativável por predefinição.
 - O separador "Teste de Áudio": sinais de teste e gravações de teste para cada coluna.
+
+Interface
+- Dois estilos de interface em Definições → "Estilo de interface": Clássico (o aspeto do autor) e
+  Moderno. Temas diurno e noturno em ambos.
+- Bloqueio de pares para atrasos: "Frontais juntos" e "Traseiros juntos" mantêm a diferença entre
+  esquerda e direita.
 
 Medição do habitáculo
 - Definições → cartão do habitáculo: indique o tipo de habitáculo, as suas dimensões e toque nas

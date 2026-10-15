@@ -22,11 +22,15 @@ NEU
 -----------------------------------------------------------------------------
 
 Die Version 1.0 des Autors
-- Zwei Oberflächenstile in Einstellungen → "UI-Stil": Klassisch (des Autors) und Modern. Tag- und
-  Nacht-Themen in beiden Stilen.
-- Ultra Bass, die neue Loudness, mehr Visualisierungen, Paarsperren für Laufzeitverzögerungen, "Aus"
-  in der Subwoofer-Liste für Fahrzeuge ohne Subwoofer, GALA pro Preset abschaltbar.
+- Ultra Bass, die neue Loudness, eine Live-Analysatorkurve hinter dem Equalizer, "Aus" in der
+  Subwoofer-Liste für Fahrzeuge ohne Subwoofer, GALA pro Preset abschaltbar.
 - Der Reiter "Audio-Check": Testsignale und Testaufnahmen für jeden einzelnen Lautsprecher.
+
+Oberfläche
+- Zwei Oberflächenstile in Einstellungen → "UI-Stil": Klassisch (das Aussehen des Autors) und
+  Modern. Tag- und Nacht-Themen in beiden Stilen.
+- Paarsperren für Laufzeitverzögerungen: "Vorne zusammen" und "Hinten zusammen" behalten den
+  Unterschied zwischen links und rechts bei.
 
 Fahrgastraum-Messung
 - Einstellungen → Fahrgastraum-Karte: Art des Innenraums und Maße angeben sowie die verbauten

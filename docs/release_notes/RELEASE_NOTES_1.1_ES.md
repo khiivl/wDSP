@@ -21,11 +21,15 @@ NOVEDADES
 -----------------------------------------------------------------------------
 
 La versión 1.0 del autor
-- Dos estilos de interfaz en Ajustes → "Estilo de interfaz": Clásico (el del autor) y Moderno.
-  Temas diurno y nocturno en ambos.
-- Ultra Bass, el nuevo Loudness, más visualizaciones, bloqueo de pares para retardos, "Apag."
+- Ultra Bass, el nuevo Loudness, una curva de analizador en vivo detrás del ecualizador, "Apag."
   en la lista de subwoofer para coches sin él, GALA desactivable por preajuste.
 - La pestaña "Prueba Audio": señales de prueba y grabaciones de prueba para cada altavoz.
+
+Interfaz
+- Dos estilos de interfaz en Ajustes → "Estilo de interfaz": Clásico (el aspecto del autor) y
+  Moderno. Temas diurno y nocturno en ambos.
+- Bloqueo de pares para retardos: "Delanteros juntos" y "Traseros juntos" mantienen la diferencia
+  entre izquierda y derecha.
 
 Medición del habitáculo
 - Ajustes → tarjeta del habitáculo: indique el tipo de habitáculo, sus medidas y toque los altavoces

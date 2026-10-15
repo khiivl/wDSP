@@ -20,11 +20,15 @@ NOWOŚCI
 -----------------------------------------------------------------------------
 
 Wersja 1.0 autora
-- Dwa style interfejsu w Ustawienia → "Styl interfejsu": Klasyczny (autora) i Nowoczesny.
-  Motyw dzienny i nocny w obu.
-- Ultra Bass, nowa funkcja Loudness, więcej wizualizacji, blokada par dla opóźnień, "Wył." na
-  liście subwoofera dla aut bez niego, GALA wyłączana dla pojedynczego presetu.
+- Ultra Bass, nowa funkcja Loudness, krzywa analizatora na żywo za korektorem, "Wył." na liście
+  subwoofera dla aut bez niego, GALA wyłączana dla pojedynczego presetu.
 - Zakładka "Test Audio": sygnały testowe i nagrania kontrolne dla każdego głośnika.
+
+Interfejs
+- Dwa style interfejsu w Ustawienia → "Styl interfejsu": Klasyczny (wygląd autora) i Nowoczesny.
+  Motyw dzienny i nocny w obu.
+- Blokada par dla opóźnień: "Przednie razem" i "Tylne razem" zachowują różnicę między lewym
+  a prawym.
 
 Pomiar kabiny
 - Ustawienia → karta kabiny: wskaż rodzaj kabiny, jej wymiary i dotknij zainstalowanych głośników.
