@@ -38,7 +38,8 @@ Cabin measurement
   "corrected".
 
 Spectrum
-- A switch on the main screen: calculated, microphone, or off.
+- A switch on the main screen: Off, Music (what the preset makes of the music), Microphone (what
+  the cabin actually sounds like).
 - "RTA zero" in Audio Check calibrates the spectrum in one press.
 - A warning when the microphone is overloaded: lower its sensitivity in the car settings.
 

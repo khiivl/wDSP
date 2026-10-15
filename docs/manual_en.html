@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>wDSP Manual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,6 +77,7 @@ dl.tabs dt { font-weight: 600; }
 dl.tabs dd { margin: 0; max-width: 62ch; }
 .scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
 footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
 </style>
 
 <div class="wrap">
@@ -122,7 +127,6 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
         <li><span class="ui">Background work</span> — prevents Android from terminating the persistent service managing the DSP processor.</li>
       </ul>
       <p>Root access (Magisk) is optional. When available, it allows the app to cleanly acquire exclusive microphone access from voice assistants prior to sweep runs.</p>
-      <div class="note"><p><span class="k">Important.</span> Permissions should always be granted directly within the app UI. Do not grant permissions artificially via adb commands, so permission flow integrity remains verified.</p></div>
     </section>
 
     <section id="order">
@@ -198,7 +202,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
         <li><div>
           <h3>Capture RTA zero</h3>
           <p>Open <span class="ui">Audio Check</span> → <span class="ui">Pink Noise</span> → <span class="ui">RTA zero</span>. This establishes a fixed reference baseline for the real-time analyzer curve instead of a floating average.</p>
-          <p>A single tap captures both zero references, synthesized and microphone, regardless of the active display mode. For several seconds, the app temporarily sets the volume at which the microphone was calibrated, then restores your previous volume. The microphone zero locks to that step, so the curve no longer drifts when you adjust volume.</p>
+          <p>A single tap captures both zero references, Music and Microphone, regardless of the active display mode. For several seconds, the app temporarily sets the volume at which the microphone was calibrated, then restores your previous volume. The microphone zero locks to that step, so the curve no longer drifts when you adjust volume.</p>
         </div></li>
         <li><div>
           <h3>Sync visualizer with audio playback</h3>
@@ -223,14 +227,6 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
         </table>
       </div>
       <p>The loudness calibration point is a configuration threshold rather than an automated sweep pass: it is set either by the measurement wizard or adjusted manually.</p>
-      <h3>Volume scale behavior</h3>
-      <p>Hardware volume steps are non-linear. Below is the profile measured on our reference stand. Your values will be measured automatically by the app.</p>
-      <div class="scale">step   32 → 13   ≈ 1 dB per step
-step   12 → 8    ≈ 2 dB per step
-step    7 → 5    ≈ 3 dB per step
-step    4 → 1    ≈ 5–6 dB per step
-total  32 → 1    ≈ 62 dB</div>
-      <p>Lowering volume by five steps near the top drops level by roughly <span class="val">5 dB</span>, whereas five steps near the bottom drops it by nearly <span class="val">25 dB</span>. This is why loudness compensation relies on calibrated decibels rather than step counts.</p>
     </section>
 
     <section id="tabs">
@@ -253,16 +249,16 @@ total  32 → 1    ≈ 62 dB</div>
 
     <section id="spectrum">
       <h2>Spectrum and RTA</h2>
-      <p>Switch between spectrum modes via the <span class="ui">Spectrum</span> toggle above the equalizer. Supports classic bar graph or live RTA curve, configurable in settings.</p>
+      <p>The <span class="ui">Spectrum</span> switch above the equalizer has three positions. In Settings you choose whether it is drawn as bars or as a live curve.</p>
       <dl class="tabs">
+        <dt>Off</dt>
+        <dd>No spectrum on the main screen. The status bar widget and the screensaver keep working.</dd>
         <dt>Music</dt>
-        <dd>Pre-DSP digital audio stream directly from the media player.</dd>
-        <dt>Synthesized</dt>
-        <dd>Music spectrum combined with active preset response curves: <b>what the preset intends to achieve</b>. Volume-independent: curves remain identical at step 5 and step 32, with only dynamic loudness curves varying.</dd>
+        <dd>The music that is playing, as the current preset shapes it: <b>what the preset is meant to sound like</b>. It does not depend on the volume.</dd>
         <dt>Microphone</dt>
-        <dd><b>Actual sound captured</b> by the cabin microphone. Scaled to align with the synthesized curve. When tuned, both curves match closely; residual divergence highlights cabin acoustic reflections.</dd>
+        <dd><b>What the cabin actually sounds like</b>, heard by the unit's microphone, on the same scale as Music. Where the two curves differ, the car is adding or taking something away.</dd>
       </dl>
-      <p>FM radio playback cannot display synthesized spectrum because the analog radio tuner routes directly to hardware without passing through the Android audio pipeline. In radio mode, the visualizer uses microphone input.</p>
+      <p>FM radio does not pass through Android, so in Music mode the radio has no spectrum; the Microphone mode works with the radio too.</p>
     </section>
 
     <section id="presets">
@@ -272,13 +268,36 @@ total  32 → 1    ≈ 62 dB</div>
         <li><span class="ui">Preset Automation</span> binds specific presets to media apps: radio uses one profile, Bluetooth streaming another. A dedicated profile handles <span class="ui">Phone Call</span>. <span class="ui">Global Default</span> applies whenever no app binding matches.</li>
         <li>Volume is stored independently per source, matching native head unit behavior.</li>
         <li><span class="ui">Backup All Settings</span> and <span class="ui">Restore Settings</span>: backs up full configuration with presets or settings alone.</li>
+        <li><span class="ui">Resume the player after a restart</span> and <span class="ui">Resume the player after sleep</span>: the player that was playing comes back on its own, without its window jumping on top of the navigator. Radio restores itself. For sleep, press <span class="ui">Let wDSP stay alive through sleep</span> and enable wDSP in the list that opens.</li>
       </ul>
     </section>
 
     <section id="looks">
       <h2>Widget and screensaver</h2>
       <p><span class="ui">Status Bar Visualizer</span> — embedded mini-spectrum in the Android status bar: adjustable width, horizontal offset, height, visualization style (Classic bars, Outrun, VU meter, Oscilloscope), and color palettes.</p>
-      <p><span class="ui">Screensaver</span> — full-screen visualizer when the unit is idle: configurable timeout, Day/Night brightness profiles, and app exclusion blacklist. Navigation apps are never occluded. A single tap dismisses the screensaver; tapping album art returns directly to the active media player.</p>
+      <p><span class="ui">Screensaver</span> — full-screen visualizer when the unit is idle: configurable timeout, Day/Night brightness profiles, and app exclusion blacklist. The navigator chosen in the head unit settings is never covered. <span class="ui">Cover the status bar</span> decides whether the screensaver hides the status bar. Its controls are on the map below.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Screensaver touch map: taps on the left, drags on the right" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Screensaver touch map: taps (left) and drag gestures (right).</figcaption>
+      </figure>
+      <h3>Screensaver touch zones</h3>
+      <p><b>Taps (left diagram):</b></p>
+      <ul>
+        <li><b>1</b> — upper half: dismiss screensaver;</li>
+        <li><b>2</b> — lower half, left third (to the outer edge): previous track;</li>
+        <li><b>3</b> — middle zone: play / pause;</li>
+        <li><b>4</b> — right third (to the outer edge): next track;</li>
+        <li><b>5</b> — album art / player icon (bottom-left): open playing media player or radio;</li>
+        <li><b>6</b> — style button (bottom-right): tap cycles visualizer style; long press (1 s) opens wDSP equalizer.</li>
+      </ul>
+      <p><b>Drags (right diagram)</b> — what changes depends on the edge the finger starts at. Drag in any direction; up or right is more. The setting is kept when you lift the finger:</p>
+      <ul>
+        <li><b>7</b> — from top edge: backdrop dimming (transparency);</li>
+        <li><b>8</b> — from bottom edge: visualizer width;</li>
+        <li><b>9</b> — from left edge: visualizer height;</li>
+        <li><b>10</b> — from right edge: brightness (stored separately for day and night);</li>
+        <li><b>11</b> — from center: system volume (entire screen corresponds to full 0–32 scale).</li>
+      </ul>
       <p><span class="ui">UI Style</span>: <span class="ui">Classic (Original)</span> — original author interface layout; <span class="ui">Modern</span> — refreshed responsive design. Both styles support native Day and Night themes.</p>
     </section>
 
@@ -289,11 +308,11 @@ total  32 → 1    ≈ 62 dB</div>
       <h3>Measurement reports "measured in noise"</h3>
       <p>The cabin was not quiet enough. The app selects sweep volume automatically, so reduce cabin noise: shut all doors and windows, turn off the engine and climate fan, and measure again.</p>
       <h3>Volume steps failed to record</h3>
-      <p>Transient noise interrupted the tone sequence, or the microphone failed to register the level check. The app retains previously calibrated step tables; without a table, it falls back to nominal steps. Inspect <span class="val">volume_steps.txt</span> inside the exported archive, and rerun microphone calibration.</p>
+      <p>Transient noise interrupted the tone sequence, or the microphone failed to register the level check. The app retains previously calibrated step tables; without a table, it falls back to nominal steps. Run the microphone calibration again in a quiet cabin.</p>
       <h3>Microphone RTA baseline drifts when adjusting volume</h3>
       <p>Microphone RTA zero was calibrated before volume-tracking was enabled. Re-zero RTA on pink noise (step 6).</p>
       <h3>Red "Microphone overloaded" warning above the equalizer</h3>
-      <p>The microphone signal is so loud it clips against the ceiling, most often on heavy bass. While overloaded, the microphone curve is displayed with AGC: its level is matched to the synthesized spectrum and the curve shape is approximate. Once the level drops, the warning disappears and the curve returns to its calibrated zero. If the warning appears even at normal listening volume, lower microphone sensitivity in head unit settings.</p>
+      <p>The microphone signal is so loud it clips against the ceiling, most often on heavy bass. While overloaded, the microphone curve is displayed with AGC: its level is matched to the Music curve and the shape is approximate. Once the level drops, the warning disappears and the curve returns to its calibrated zero. If the warning appears even at normal listening volume, lower microphone sensitivity in head unit settings.</p>
       <h3>Audio tone changes after reboot</h3>
       <p>DSP parameters are restored at boot by the background service without launching the UI. Ensure <span class="ui">Background work</span> is granted and wDSP is allowed to <span class="ui">stay alive during sleep</span>.</p>
     </section>
@@ -301,12 +320,12 @@ total  32 → 1    ≈ 62 dB</div>
     <section id="send">
       <h2>Sharing measurements</h2>
       <p>After completing cabin calibration, tap <span class="ui">Save Archive (.zip)</span>. The archive packages measurement logs, microphone response data, volume step calibrations, and a synchronized system bugreport.</p>
-      <p>Share your archive in the Telegram community <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>, in the calibration topic <a href="https://t.me/wDSPapp/79" target="_blank" rel="noopener">t.me/wDSPapp/79</a>, or via direct forum message. Avoid sending bare uncompressed files as individual attachments are easily fragmented.</p>
+      <p>Send the archive, the system report (<span class="ui">Diagnostics</span> → <span class="ui">System report</span>) and a few words on how the sound changed to the mod's group: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. The author's original app has no cabin measurement, so measurements go to the mod's group. The original project: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
       <p>Include your car's make, model, microphone position, and amplifier configuration when posting.</p>
     </section>
 
     <footer>
-      Manual for branch <span class="val">kostyfmat_mod</span>, 14.10.2026. wDSP app — by khiivl; mod — Kostiantyn.
+      Manual for wDSP 1.1 "Bulldozer" mod, 15.10.2026. wDSP — by Volodymyr Chebanenko (khiivl); mod — Kostiantyn Matviyevskyy.
     </footer>
   </main>
 </div>

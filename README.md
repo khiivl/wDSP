@@ -46,7 +46,8 @@ Release notes for 1.1: [docs/release_notes/](docs/release_notes/). Screensaver g
   only then corrects what the equaliser can. A control sweep after applying shows whether it
   worked.
 - **Microphone calibration** for the built-in microphone.
-- **Spectrum** in three modes: calculated, microphone, off.
+- **Spectrum** in three modes: Off, Music (what the preset makes of the music), Microphone (what
+  the cabin actually sounds like).
 - **Screensaver gestures**: track and play/pause zones, a cover that opens the playing player,
   volume and display settings by swiping.
 - **Loudness** that follows the real volume steps of the unit, measured by the app.
