@@ -285,9 +285,15 @@ public final class SessionResolver {
      * resolver kept declining to look for one. The music stream's own activity is asked as well:
      * a native track (gocsdk_zj's Bluetooth, 📻 15.10.2026) is started in AudioFlinger and absent
      * from the playback list.
+     *
+     * <p>A call is never media. gocsdk_zj plays a Bluetooth call through the same kind of native
+     * track (16 kHz stereo, music stream), so without this the watchdog and the start-up both swept
+     * the sessions for 12 s in every call (📻 15.10.2026 21:44-21:46, two calls, the call track on
+     * session 193). The package cannot tell music from a call - it is the same one (owner) - and
+     * {@link CallState} can.
      */
     static boolean mediaTrackStarted(AudioManager am) {
-        if (am == null) return false;
+        if (am == null || CallState.isActive()) return false;
         try {
             if (am.isMusicActive()) return true;
         } catch (Throwable ignored) {
