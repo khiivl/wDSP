@@ -827,6 +827,7 @@ public final class NowPlaying {
 
     private synchronized void acceptMetadata(MediaMetadata metadata) {
         if (metadata == null) {
+            mediaRef = null;
             title = null;
             artist = null;
             album = null;
@@ -834,6 +835,17 @@ public final class NowPlaying {
             art = null;
             artKey = null;
             return;
+        }
+        // Where the track comes from - a stream or a file - for PlayerResume (owner, 15.10.2026:
+        // «якщо сесія грала стрім, а не локально … треба все ж чекати на неї»).
+        mediaRef = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_URI);
+        if (!notEmpty(mediaRef)) mediaRef = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID);
+        if (!notEmpty(mediaRef) && metadata.getDescription() != null) {
+            if (metadata.getDescription().getMediaUri() != null) {
+                mediaRef = metadata.getDescription().getMediaUri().toString();
+            } else {
+                mediaRef = metadata.getDescription().getMediaId();
+            }
         }
         title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         if (!notEmpty(title)) title = metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE);
@@ -889,13 +901,18 @@ public final class NowPlaying {
         return controller != null ? pausedAt : 0L;
     }
 
+    /** The playing track's URI or media id, null when the player gives none. */
+    private String mediaRef;
+
     private void acceptState(PlaybackState state) {
         if (state == null) return;
         boolean started;
         boolean stopped;
         String pkg;
         boolean nowPlaying;
+        String ref;
         synchronized (this) {
+            ref = mediaRef;
             boolean was = playing;
             playing = state.getState() == PlaybackState.STATE_PLAYING;
             positionMs = state.getPosition();
@@ -907,8 +924,10 @@ public final class NowPlaying {
             pkg = playerPackage;
             nowPlaying = playing;
         }
-        // What was playing, for starting it again after a restart or sleep.
+        // What was playing, for starting it again after a restart or sleep - and whether it streams.
         PlayerResume.getInstance(context).onPlaybackState(pkg, nowPlaying);
+        PlayerResume.getInstance(context).noteSource(pkg,
+                state.getState() == PlaybackState.STATE_BUFFERING, ref);
         notifyMetadataChanged();
         if (started && onStarted != null) main.post(onStarted);
         if (stopped && onStopped != null) main.post(onStopped);

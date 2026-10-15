@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -15,6 +18,7 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.Locale;
 
 /**
  * Starts the player that was playing again, after a restart or after the car slept.
@@ -59,6 +63,13 @@ public final class PlayerResume {
     private static final String KEY_ASLEEP = "resume_asleep";
     /** The player to start at the next wake or boot, taken at ACC_OFF; empty = nothing. */
     private static final String KEY_SNAPSHOT = "resume_snapshot";
+    /** + package: whether that player's session showed a stream (see noteSource). */
+    private static final String KEY_STREAMS = "resume_streams_";
+    /** + package: that player's screen, "package/class" (see noteForeground). */
+    private static final String KEY_ACTIVITY = "resume_activity_";
+    /** How long a player that streams is given to get a network before it is started anyway. */
+    private static final long NETWORK_WAIT_MS = 20_000;
+    private static final long NETWORK_POLL_MS = 2000;
 
     /** A pause this close before ACC_OFF is taken as the platform's, not the person's. */
     private static final long PAUSE_GRACE_MS = 5000;
@@ -144,6 +155,61 @@ public final class PlayerResume {
             }
         } else if (s.getBoolean(KEY_PLAYING, false) && (pkg == null || pkg.isEmpty() || pkg.equals(known))) {
             s.edit().putBoolean(KEY_PLAYING, false).putLong(KEY_STOPPED_AT, System.currentTimeMillis()).apply();
+        }
+    }
+
+    /**
+     * Whether the player's track comes from the network, read off its session (owner, 15.10.2026:
+     * «якщо сесія грала стрім, а не локально, то і змісту запускати до мережі немає»; «ми можемо
+     * якось це прочитати і зафіксувати десь?»): BUFFERING is a stream's state - a file never buffers -
+     * and the track's URI or media id says http(s)/a service scheme or content/file. Kept per player
+     * only when the session said something; with nothing said, {@link #NEEDS_NETWORK} decides.
+     */
+    public void noteSource(String pkg, boolean buffering, String mediaRef) {
+        if (pkg == null || pkg.isEmpty() || NowPlaying.isRadioPackage(pkg)) return;
+        Boolean streams = buffering ? Boolean.TRUE : streamsByRef(mediaRef);
+        if (streams == null) return;
+        final String key = KEY_STREAMS + pkg;
+        SharedPreferences s = state();
+        if (!s.contains(key) || s.getBoolean(key, false) != streams) {
+            s.edit().putBoolean(key, streams).apply();
+            Log.i(TAG, pkg + (streams ? " streams" : " plays local files")
+                    + (buffering ? " (it buffered)" : " (" + mediaRef + ")"));
+        }
+    }
+
+    /** true = a stream, false = a local file, null = the reference says neither. */
+    static Boolean streamsByRef(String ref) {
+        if (ref == null || ref.trim().isEmpty()) return null;
+        final String r = ref.trim().toLowerCase(Locale.US);
+        if (r.startsWith("content:") || r.startsWith("file:") || r.startsWith("/")
+                || r.startsWith("android.resource:")) return Boolean.FALSE;
+        if (r.startsWith("http:") || r.startsWith("https:") || r.startsWith("rtsp:")
+                || r.startsWith("rtmp:") || r.startsWith("spotify:")) return Boolean.TRUE;
+        return null;
+    }
+
+    /**
+     * The player's own screen, as the platform names what is in front ({@code sys.qf.current.activity},
+     * "package/class") - kept whenever the player that plays is on screen, so a resume raises that
+     * screen rather than the launcher's entry (owner, 15.10.2026: «правильно запам'ятовувати
+     * медіасесію та активність, і пробувати зразу підняти її, це справедливо наприклад для спотіфай»;
+     * DefaultAppsChanger did it from {@code dumpsys activity recents} with root). Called by McuService on
+     * every change of the watched properties.
+     */
+    public void noteForeground() {
+        SharedPreferences s = state();
+        if (s.getBoolean(KEY_ASLEEP, false)) return;
+        final String activity = HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY);
+        if (activity == null) return;
+        final int slash = activity.indexOf('/');
+        if (slash <= 0 || slash == activity.length() - 1) return;
+        final String pkg = activity.substring(0, slash);
+        if (!pkg.equals(s.getString(KEY_PLAYER, "")) || NowPlaying.isRadioPackage(pkg)) return;
+        final String key = KEY_ACTIVITY + pkg;
+        if (!activity.equals(s.getString(key, ""))) {
+            s.edit().putString(key, activity).apply();
+            Log.i(TAG, "player screen remembered: " + activity);
         }
     }
 
@@ -286,10 +352,64 @@ public final class PlayerResume {
         if (ready || SystemClock.elapsedRealtime() > deadline) {
             if (!ready) Log.i(TAG, "after " + after + ": the screen never settled - going ahead anyway");
             else if (!fg.isEmpty()) foregroundBefore = fg;
-            start(pkg, after);
+            waitForNetwork(pkg, after, SystemClock.elapsedRealtime() + NETWORK_WAIT_MS, false);
             return;
         }
         main.postDelayed(() -> waitForSystem(pkg, after, deadline), SYSTEM_POLL_MS);
+    }
+
+    /**
+     * A player that streams is not started before there is a network: it has nothing to play and
+     * fails the request (owner, 15.10.2026). A local player goes straight on, and the wait ends the
+     * moment the network is usable.
+     */
+    private void waitForNetwork(String pkg, String after, long deadline, boolean announced) {
+        if (!needsNetwork(pkg) || hasUsableNetwork()) {
+            if (announced) Log.i(TAG, "after " + after + ": the network is up - starting " + pkg);
+            start(pkg, after);
+            return;
+        }
+        if (SystemClock.elapsedRealtime() > deadline) {
+            Log.w(TAG, "after " + after + ": no network after " + (NETWORK_WAIT_MS / 1000)
+                    + " s - starting " + pkg + " anyway, it may refuse");
+            start(pkg, after);
+            return;
+        }
+        if (!announced) Log.i(TAG, "after " + after + ": " + pkg + " streams - waiting for the network");
+        main.postDelayed(() -> waitForNetwork(pkg, after, deadline, true), NETWORK_POLL_MS);
+    }
+
+    /** What the session said about this player; the package list when it never said. */
+    private boolean needsNetwork(String pkg) {
+        final String key = KEY_STREAMS + pkg;
+        final SharedPreferences s = state();
+        if (s.contains(key)) return s.getBoolean(key, false);
+        final String p = pkg.toLowerCase(Locale.US);
+        for (String mark : NEEDS_NETWORK) {
+            if (p.contains(mark)) return true;
+        }
+        return false;
+    }
+
+    /** Streaming players by name, for one whose session never said where its track comes from. */
+    private static final String[] NEEDS_NETWORK = {
+            "com.spotify", "youtube.music", "com.google.android.apps.youtube",
+            "deezer", "tidal", "soundcloud", "yandex.music", "vk.music", "apple.music",
+            "com.aspiro", "podcast",
+    };
+
+    private boolean hasUsableNetwork() {
+        try {
+            ConnectivityManager cm =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) return true;   // nothing we can see to wait for
+            Network active = cm.getActiveNetwork();
+            if (active == null) return false;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+            return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Throwable t) {
+            return true;
+        }
     }
 
     /**
@@ -443,6 +563,23 @@ public final class PlayerResume {
      * If that permission is ever lost this rung stops working and the log says so.
      */
     private boolean launchApp(String pkg) {
+        // Its own screen first - the one it was last seen on (noteForeground); flags as DAC's
+        // `am start -f 0x10200000`. An activity that is not exported refuses, and the launcher's
+        // entry is the fallback.
+        final String remembered = state().getString(KEY_ACTIVITY + pkg, "");
+        if (!remembered.isEmpty()) {
+            try {
+                Intent own = new Intent(Intent.ACTION_MAIN)
+                        .setComponent(ComponentName.unflattenFromString(remembered))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                context.startActivity(own);
+                Log.i(TAG, "raised " + remembered);
+                return true;
+            } catch (Throwable t) {
+                Log.i(TAG, remembered + " would not open (" + t.getClass().getSimpleName()
+                        + ") - the launcher's entry instead");
+            }
+        }
         try {
             Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
             if (launch == null) return false;

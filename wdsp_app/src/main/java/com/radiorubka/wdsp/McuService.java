@@ -1244,6 +1244,8 @@ public class McuService extends Service implements LocationListener {
                         + " (remembered base was " + was + ")");
             }
         }
+        // The player's own screen, for raising it again after a restart or sleep.
+        PlayerResume.getInstance(getApplicationContext()).noteForeground();
         // The source, the player, the call, the mute, the live level and what is in front are all
         // properties - this service's check, the analyser and the screensaver read them.
         StateEvents.fire();
