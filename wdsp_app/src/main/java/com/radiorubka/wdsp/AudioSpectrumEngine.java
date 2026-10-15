@@ -1387,12 +1387,18 @@ public class AudioSpectrumEngine {
                         ? Math.min(RESOLVE_RETRY_MAX_MS, RESOLVE_RETRY_MS << Math.min(Math.max(0, fruitlessResolves - 1), 4))
                         : RESOLVE_COOLDOWN_MS;
                 // The tap runs in the microphone mode too, as its reference, so a silent session is
-                // re-resolved whatever the mode. On radio isMediaPlaybackActive() is false.
-                // 🔴 Kept even while paused for silence (owner, 13.10.2026: «ні … причина, БТ
-                // трансляція, наприклад»): Bluetooth music plays past AudioFlinger's playback list,
-                // so "nothing audible" can be wrong exactly when a session must still be found.
+                // re-resolved whatever the mode. Kept even while paused for silence (owner,
+                // 13.10.2026: «ні … причина, БТ трансляція, наприклад»).
+                // 🔴 Asked with the resolver's own fact, not isMediaPlaybackActive(): a session can
+                // only be found on a started track the platform lists, and the resolver declines to
+                // sweep without one. "A media source is selected" said yes after every boot (volume
+                // type media_type, nothing playing) and released and re-attached the tap for a
+                // resolution that was refused at once - 📻 15.10.2026, boot 180: at 43, 59 and 91 s.
+                // Bluetooth is no loss: gocsdk_zj plays a native track the playback list never shows
+                // (📻 15.10.2026), so no sweep could find it either way, and with BitPerfect's single
+                // primary output session 0 hears it (analysis resumed, no silent-session complaint).
                 if (visualizer != null && now - lastSignalTime > SILENCE_TOLERANCE_MS
-                        && isMediaPlaybackActive()) {
+                        && SessionResolver.mediaTrackStarted(audioManager)) {
                     if (now - lastResolveTime > wait) {
                         requestResolve("attached session silent while media plays");
                         // A sweep that finds nothing leaves a silent session, and silence never

@@ -1191,8 +1191,8 @@ public class McuService extends Service implements LocationListener {
                 startPolling();
                 startGps();
             });
-            Log.d("McuService", "Background tasks started after 5s delay");
-        }, 3000); // 5 second delay
+            Log.d("McuService", "Background tasks started after 3 s delay");
+        }, 3000);
 
         return START_STICKY;
     }
@@ -2639,15 +2639,21 @@ public class McuService extends Service implements LocationListener {
             turboSenderType = "[EQ]: ";
         }
 
-        Log.d(TAG, "[TurboSender2000] SendToHardware invoked with " + turboSenderType + turboSender);
-
+        // The outcome, not the call: the line used to be written before the cache check, so a boot
+        // that applied the preset three times read as three sends of each frame although the cache
+        // let only the first reach the MCU (📻 15.10.2026, boot 180).
         byte[] cached = mcuCache.get(cmd);
-        if (cached == null || !Arrays.equals(cached, data)) {
-            try {
-                if (McuLink.setEqData(data)) mcuCache.put(cmd, data.clone());
-            } catch (Exception e) {
-                Log.e(TAG, "MCU Error: " + e.getMessage());
-            }
+        if (cached != null && Arrays.equals(cached, data)) {
+            Log.d(TAG, "[TurboSender2000] unchanged, not sent: " + turboSenderType + turboSender);
+            return;
+        }
+        try {
+            boolean sent = McuLink.setEqData(data);
+            if (sent) mcuCache.put(cmd, data.clone());
+            Log.d(TAG, "[TurboSender2000] " + (sent ? "sent: " : "REFUSED by the MCU link: ")
+                    + turboSenderType + turboSender);
+        } catch (Exception e) {
+            Log.e(TAG, "MCU Error: " + e.getMessage());
         }
     }
 
