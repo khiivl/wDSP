@@ -159,8 +159,9 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
             <li><span class="ui">Soundstage focus</span> — Driver seat, Front center, Cabin center, or No delays;</li>
             <li><span class="ui">Distance from microphone to ears</span>.</li>
           </ul>
-          <p>Set normal listening volume before measuring. The wizard measures at that level, bounded between steps <span class="val">6</span> and <span class="val">16</span>. The stages progress as follows:</p>
+          <p>Set the volume to your usual listening level before measuring: the new preset's loudness compensation anchors to it. The measurement pass picks its own volume automatically. The stages progress as follows:</p>
           <ul>
+            <li><b>volume selection</b>, about <span class="val">4 s</span>: silence, then a dual test tone <span class="val">80 Hz + 1 kHz</span>. The app selects a step between <span class="val">6</span> and <span class="val">18</span> where bass rises clear above cabin noise without distortion. A noisy cabin does not abort the pass: ambient noise is recorded into the report;</li>
             <li>noise floor recording;</li>
             <li>individual speaker sweeps;</li>
             <li>time-alignment delay calculation;</li>
@@ -189,7 +190,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
           <h3>Tune loudness compensation</h3>
           <p>Open the <span class="ui">Loudness</span> tab. Human hearing perceives bass less efficiently at low listening levels. Loudness progressively boosts low frequencies as you lower the volume.</p>
           <ul>
-            <li><span class="ui">Calibration point</span> — volume step above which loudness applies zero boost. For measured presets, this is set to your calibration volume;</li>
+            <li><span class="ui">Calibration point</span> — volume step above which loudness applies zero boost. For measured presets, it anchors to the normal listening volume at which you launched the measurement. If that was lower than the measurement sweep volume, the app sets an anchor <span class="val">18 dB</span> louder than your listening level, between steps <span class="val">16</span> and <span class="val">24</span>;</li>
             <li><span class="ui">Correction intensity</span> — scaling factor applied to the equal-loudness curve.</li>
           </ul>
           <p>The app computes attenuation in actual decibels measured during step 2 rather than arbitrary volume steps. An automated validator at the bottom inspects settings: if any parameter conflicts, tap <span class="ui">Set it correctly</span> to fix it instantly.</p>
@@ -197,7 +198,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
         <li><div>
           <h3>Capture RTA zero</h3>
           <p>Open <span class="ui">Audio Check</span> → <span class="ui">Pink Noise</span> → <span class="ui">RTA zero</span>. This establishes a fixed reference baseline for the real-time analyzer curve instead of a floating average.</p>
-          <p>Zero reference is stored independently for each spectrum mode. For synthesized spectrum: enable synthesized mode and tap the button. For microphone RTA: switch to microphone mode and capture again. The microphone zero locks to the capture volume level, keeping the RTA baseline stable when adjusting volume.</p>
+          <p>A single tap captures both zero references, synthesized and microphone, regardless of the active display mode. For several seconds, the app temporarily sets the volume at which the microphone was calibrated, then restores your previous volume. The microphone zero locks to that step, so the curve no longer drifts when you adjust volume.</p>
         </div></li>
         <li><div>
           <h3>Sync visualizer with audio playback</h3>
@@ -216,7 +217,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
             <tr><td>Microphone</td><td>Settings → Calibrate Microphone</td><td>How the built-in microphone perceives low and high frequencies vs human ear</td><td>Cabin measurement, Microphone spectrum mode</td><td>New microphone or modified mounting</td></tr>
             <tr><td>Volume steps</td><td>Automatic, during microphone calibration</td><td>Exact decibel drop for steps <span class="val">1…32</span> on your specific head unit and amplifier</td><td>Loudness compensation, microphone RTA scaling</td><td>Whenever calibrating microphone</td></tr>
             <tr><td>Cabin</td><td>Settings → Calibrate Cabin & Create Preset</td><td>Acoustic faults, delays, crossover, and Auto-EQ profile for your vehicle</td><td>New Auto-EQ preset</td><td>Replaced speakers, subwoofer, or sound deadening</td></tr>
-            <tr><td>RTA zero</td><td>Audio Check → Pink Noise → RTA zero</td><td>Stable baseline reference for real-time spectrum visualization</td><td>Visual display only</td><td>Anytime; does not alter audio processing</td></tr>
+            <tr><td>RTA zero</td><td>Audio Check → Pink Noise → RTA zero</td><td>Stable baseline reference for real-time spectrum visualization</td><td>Visual display only</td><td>After calibrating the microphone; does not alter audio processing</td></tr>
             <tr><td>Sound sync</td><td>Settings → Sound sync</td><td>Audio delay relative to display rendering</td><td>Visual display only</td><td>Following firmware updates or audio module changes</td></tr>
           </tbody>
         </table>
@@ -286,11 +287,13 @@ total  32 → 1    ≈ 62 dB</div>
       <h3>"Microphone temporarily busy, using calculated spectrum"</h3>
       <p>Another app holds exclusive microphone access, most commonly Google Assistant. Reboot the head unit: wDSP initializes early to claim the microphone first. On rooted units, wDSP acquires the handle automatically.</p>
       <h3>Measurement reports "measured in noise"</h3>
-      <p>Excessive ambient noise or sweep volume set too low. Close all doors and windows, turn off the engine, increase volume toward step <span class="val">16</span>, and run the pass again.</p>
+      <p>The cabin was not quiet enough. The app selects sweep volume automatically, so reduce cabin noise: shut all doors and windows, turn off the engine and climate fan, and measure again.</p>
       <h3>Volume steps failed to record</h3>
       <p>Transient noise interrupted the tone sequence, or the microphone failed to register the level check. The app retains previously calibrated step tables; without a table, it falls back to nominal steps. Inspect <span class="val">volume_steps.txt</span> inside the exported archive, and rerun microphone calibration.</p>
       <h3>Microphone RTA baseline drifts when adjusting volume</h3>
       <p>Microphone RTA zero was calibrated before volume-tracking was enabled. Re-zero RTA on pink noise (step 6).</p>
+      <h3>Red "Microphone overloaded" warning above the equalizer</h3>
+      <p>The microphone signal is so loud it clips against the ceiling, most often on heavy bass. While overloaded, the microphone curve is displayed with AGC: its level is matched to the synthesized spectrum and the curve shape is approximate. Once the level drops, the warning disappears and the curve returns to its calibrated zero. If the warning appears even at normal listening volume, lower microphone sensitivity in head unit settings.</p>
       <h3>Audio tone changes after reboot</h3>
       <p>DSP parameters are restored at boot by the background service without launching the UI. Ensure <span class="ui">Background work</span> is granted and wDSP is allowed to <span class="ui">stay alive during sleep</span>.</p>
     </section>

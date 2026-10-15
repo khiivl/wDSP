@@ -159,8 +159,9 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
             <li><span class="ui">Enfoque del escenario</span> — Conductor, Centro delantero, Centro del habitáculo o Sin retardos;</li>
             <li><span class="ui">Distancia del micrófono a los oídos</span>.</li>
           </ul>
-          <p>Ponga el volumen a un nivel de escucha habitual. El asistente medirá en ese nivel, manteniéndose entre los pasos <span class="val">6</span> y <span class="val">16</span>. Fases:</p>
+          <p>Antes de medir, ajuste el volumen al nivel que escucha habitualmente: la compensación de sonoridad (loudness) del nuevo preajuste se anclará a él. El volumen de la propia medición lo elige la aplicación automáticamente. Las etapas avanzan así:</p>
           <ul>
+            <li><b>selección de volumen</b>, unos <span class="val">4 s</span>: silencio y luego un tono dual de <span class="val">80 Hz + 1 kHz</span>. El programa elige un paso entre <span class="val">6</span> y <span class="val">18</span> donde el grave sobresale del ruido del habitáculo sin distorsionar. Un habitáculo ruidoso no interrumpe la medición: el ruido queda registrado en el informe;</li>
             <li>medición del ruido de fondo;</li>
             <li>barridos individuales por altavoz;</li>
             <li>cálculo de retardos de alineación temporal;</li>
@@ -189,7 +190,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
           <h3>Ajuste la compensación de sonoridad (Loudness)</h3>
           <p>Pestaña <span class="ui">Loudness</span>. A bajo volumen, el oído percibe menos los graves. La compensación añade graves a medida que se baja el volumen, con mayor realce cuanto más bajo sea este.</p>
           <ul>
-            <li><span class="ui">Punto de calibración</span> — volumen por encima del cual la curva no altera el sonido. En un perfil medido, se fija automáticamente al volumen de calibración;</li>
+            <li><span class="ui">Punto de calibración</span> — volumen por encima del cual la curva no aplica realce. En un preajuste medido queda fijado en su volumen habitual con el que inició la medición. Si este era inferior al volumen de medición, la aplicación establece un paso <span class="val">18 dB</span> más alto que el suyo, entre los pasos <span class="val">16</span> y <span class="val">24</span>;</li>
             <li><span class="ui">Intensidad de corrección</span> — porcentaje de aplicación de la curva psicofísica.</li>
           </ul>
           <p>La aplicación calcula decibelios reales obtenidos en el paso 2, no simples números de paso. En la parte inferior, un comprobador automático analiza la configuración: si detecta incongruencias, pulse <span class="ui">Ajustar correctamente</span> para corregirlas.</p>
@@ -197,7 +198,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
         <li><div>
           <h3>Capture el cero RTA</h3>
           <p>Pestaña <span class="ui">Comprobación de Audio</span> → <span class="ui">Ruido Rosa</span> → <span class="ui">Cero RTA</span>. Fija una línea base de referencia constante para el analizador de espectro en lugar de una media flotante.</p>
-          <p>El cero se captura de forma independiente para cada modo de espectro. En modo calculado: actívelo y pulse el botón. En modo micrófono: seleccione modo micrófono y vuelva a pulsar. El cero de micrófono guarda el volumen de captura y la curva permanece estable al cambiar el volumen.</p>
+          <p>Una sola pulsación toma ambos ceros, calculado y de micrófono, sin importar el modo que esté en pantalla. Durante unos segundos, la aplicación fija automáticamente el volumen al que se calibró el micrófono y luego restablece el suyo. El cero del micrófono memoriza ese paso, por lo que la curva ya no se desplaza al variar el volumen.</p>
         </div></li>
         <li><div>
           <h3>Sincronice la imagen con el sonido</h3>
@@ -216,7 +217,7 @@ footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
             <tr><td>Micrófono</td><td>Ajustes → Calibrar micrófono</td><td>Diferencia de captación en graves y agudos respecto al oído humano</td><td>Medición del habitáculo, espectro en modo Micrófono</td><td>Nuevo micrófono o cambio de ubicación</td></tr>
             <tr><td>Pasos de volumen</td><td>Automático, en la calibración del micrófono</td><td>Decibelios reales de cada paso <span class="val">1…32</span> en su radio y amplificador</td><td>Loudness, espectro de micrófono a distinto volumen</td><td>Junto con el micrófono</td></tr>
             <tr><td>Habitáculo</td><td>Ajustes → Calibrar habitáculo y crear preset</td><td>Defectos acústicos, retardos, filtros de cruce y ecualización para su coche</td><td>Nuevo preajuste Auto-EQ</td><td>Cambio de altavoces, subwoofer o insonorización</td></tr>
-            <tr><td>Cero RTA</td><td>Comprobación de Audio → Ruido Rosa → Cero RTA</td><td>Nivel base de referencia estable para el analizador RTA</td><td>Solo a la imagen en pantalla</td><td>Cuando lo desee; no altera el sonido</td></tr>
+            <tr><td>Cero RTA</td><td>Comprobación de Audio → Ruido Rosa → Cero RTA</td><td>Nivel de referencia estable para la curva de espectro</td><td>Solo a la imagen en pantalla</td><td>Tras calibrar el micrófono; no altera el sonido</td></tr>
             <tr><td>Sincronización</td><td>Ajustes → Sincronización con el sonido</td><td>Retardo del audio frente a la visualización gráfica</td><td>Solo a la imagen en pantalla</td><td>Tras actualizar firmware o cambiar módulos de audio</td></tr>
           </tbody>
         </table>
@@ -286,11 +287,13 @@ total  32 → 1    ≈ 62 dB</div>
       <h3>«Micrófono ocupado temporalmente, usando espectro calculado»</h3>
       <p>Otra aplicación retiene el micrófono, normalmente el asistente de voz. Reinicie la radio: wDSP toma el micrófono en primer lugar al arrancar. Con root, wDSP lo recupera automáticamente.</p>
       <h3>La medición indica «medido en ruido»</h3>
-      <p>Había ruido ambiental excesivo o el volumen estaba demasiado bajo. Cierre puertas y ventanas, apague el motor, suba el volumen hacia el paso <span class="val">16</span> y repita.</p>
+      <p>El habitáculo no estaba suficientemente silencioso. La aplicación selecciona el volumen automáticamente, así que reduzca el ruido: cierre puertas y ventanas, apague el motor y la ventilación, y repita la medición.</p>
       <h3>No se registraron los «pasos de volumen»</h3>
       <p>Un ruido interfirió durante el tono o el micrófono apenas captó la prueba de nivel. El sistema conservará la tabla anterior; si no existe, usará pasos teóricos. Revise <span class="val">volume_steps.txt</span> en el archivo comprimido y repita la calibración del micrófono.</p>
       <h3>La curva de micrófono RTA varía al cambiar el volumen</h3>
       <p>Se capturó el cero RTA antes de que la app memorizara el volumen. Capture nuevamente el cero de RTA con ruido rosa (paso 6).</p>
+      <h3>Aviso rojo «Micrófono sobrecargado» sobre el ecualizador</h3>
+      <p>El micrófono capta un nivel tan alto que satura contra el límite, casi siempre en los graves. Mientras esté saturado, la curva del micrófono se muestra con AGC: el nivel se ajusta al espectro calculado y la forma de la curva es aproximada. Al bajar el volumen, el aviso desaparece y la curva recupera su cero calibrado. Si el aviso aparece ya a su volumen habitual de escucha, reduzca la sensibilidad del micrófono en los ajustes de la radio.</p>
       <h3>El sonido cambia tras reiniciar el equipo</h3>
       <p>El perfil lo envía el servicio en segundo plano sin necesidad de abrir la aplicación. Compruebe que tiene concedido <span class="ui">Segundo plano</span> y que wDSP tiene permiso para <span class="ui">mantenerse activo durante el reposo</span>.</p>
     </section>
