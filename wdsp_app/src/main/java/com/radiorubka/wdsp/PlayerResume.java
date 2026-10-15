@@ -515,6 +515,14 @@ public final class PlayerResume {
      * receiver the running player registered for itself hears it as well as the manifest's.
      */
     private void sendPlay(String pkg) {
+        // An opened player has usually made its session by now, and that is what it listens to:
+        // 📻 15.10.2026 20:08, the bench after a reboot - YouTube Music on screen, its own session
+        // PAUSED at 2:56 with the queue restored, no media button session in the system, and two
+        // keys to its package did nothing. DAC's later version waited for exactly that session.
+        if (NowPlaying.getInstance(context).playPackage(pkg)) {
+            Log.i(TAG, "PLAY through the session of " + pkg);
+            return;
+        }
         try {
             for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
                 Intent key = new Intent(Intent.ACTION_MEDIA_BUTTON).setPackage(pkg)
