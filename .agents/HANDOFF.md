@@ -13,7 +13,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `22d9cad` (manuals uk/en/es/ru, 28 translations by Сова).
-  **Unpushed:** `fe0dd2f` (TODO) and the player-resume series `040cc07`..`279b0e1`.
+  **Unpushed:** `fe0dd2f` (TODO) and the player-resume series from `040cc07`.
 - Bench `192.168.1.138:9876`: `279b0e1`, BitPerfect v5.5.15 on. ❓ `0102[5:4]`. Argon chat:
   32890fb409d8df41. Board #1813 → BitPerfect line (other account): a disabled module leaves
   `car.config music_volume=15`.
@@ -21,26 +21,20 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ In progress: resuming the player after reboot / sleep (`PlayerResume`)
 
-Owner 15.10: the right recipe is DefaultAppsChanger `c0bca87` (before Gemini's refactor `3111d5a`);
-ours of 21.09 was copied from the broken one. Done so far: open the player, wait for it on screen,
-+1.5 s, PLAY through its session (key to its package as fallback), verify, one more PLAY; streams
-(BUFFERING or http/spotify media URI, `resume_streams_<pkg>`) wait for the network; state written with
-`commit()`; `ACTION_SHUTDOWN` takes the ACC_OFF snapshot; the launcher goes back by its own HOME
-(a launcher entry opened the chooser - 15 launchers, no default).
+Owner 15.10: «ти аудіосесію плеєра маєш зберігати а не всю систему» - nobody listens with a player
+open, the screen is the launcher or the navigator. Now (`a23d73c`): remembered per player
+while it plays - its media button receiver as the system records it (`Settings.Secure
+media_button_receiver`, survives a reboot; on the bench = YouTube Music's androidx
+`MediaButtonReceiver`) and whether it streams (BUFFERING / http-spotify media URI). Resume ladder,
+each rung checked 3 s later: live session -> explicit PLAY to that receiver (starts the process
+without a screen) -> its `MediaBrowserService` -> only then the launcher entry, wait on screen, PLAY,
+the launcher put back by its own HOME. Streams wait for the network first; state is written with
+`commit()`; `ACTION_SHUTDOWN` takes the ACC_OFF snapshot. No screens are remembered any more.
 
-📻 Reboot 20:08: YouTube Music opened (via launcher - the remembered `.morphe_black_1` was an
-icon alias), its session PAUSED at 2:56, two keys to the package did nothing - hence session-first
-PLAY in `eb40b9b`, not yet seen on a reboot.
-
-**🔴 Owner's last order, not yet done:** «ти аудіосесію плеєра маєш зберігати а не всю систему».
-So: what is remembered must come from the player's media session, not from the system's foreground
-(`noteForeground` / `sys.qf.current.activity`, `resume_activity_<pkg>`, `restoreForeground` - all
-system-wide). Candidates to read before coding: the session's own media button receiver /
-browser service component, and Android's own `Settings.Secure` `media_button_receiver` (the last
-receiver, kept across reboot). Ask the owner one question if the reading is ambiguous.
-
-Switches «after restart / after sleep» were never on in this unit's prefs - the owner turns them on.
-
+📻 Reboot 20:08 (before this): YouTube Music opened by the launcher entry, its session PAUSED, two
+package keys did nothing; the launcher entry of fantasy.purple opened the chooser (fixed).
+**Next: a reboot with «after restart» on, then a sleep with «after sleep» on** - the owner turns
+the switches on (they never were); read the result from the boot logger.
 ## ⏳ Next after that
 
 1. Release (owner: «поки день зробимо всі проби. І зарелізимо»); annotation 0.4.9.8 in TODO.
