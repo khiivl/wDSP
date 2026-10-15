@@ -79,6 +79,17 @@ Provenance marks as elsewhere in `.agents/`: 📻 measured on the wire, 🔬 rea
   read after the fact ([[read-the-boot-logger-not-logcat]]).
 - 🧩 **Toppal / TXZ are vendor assistants with priority on the microphone.** Haiwai builds have no
   Toppal; Jitu2 has the lot. Which one a unit carries decides how hard the input is to hold.
+- 📻 **The microphone on the factory policy** (BitPerfect off, 15.10.2026): we ask `UNPROCESSED` (9),
+  the firmware opens `AUDIO_SOURCE_MIC` (1) on `IN_BUILTIN_MIC` at 48 kHz; the platform offers only AEC
+  (switched off), no NS/AGC; content above 8 kHz present (−13 dB), we alone on the input.
+- 📻 **Bluetooth music is a native track**: `gocsdk_zj` (root) plays it on session **41**, absent from
+  `getActivePlaybackConfigurations()`; `isMusicActive()` sees it, a Visualizer on 41 attaches and hears
+  it. The resolver walks the first 64 session ids `(n << 3) | 1` for exactly this (`a374aa7`).
+- 📻 **Disabling BitPerfect leaves two things behind**: its `audioparam_config.xml` in
+  `/data/vendor/local/media/audio_params/` (routes only; restored to factory 15.10, backup in
+  `/data/local/tmp/agdsp_backup_20261015_bp_leftover/`) and `music_volume current=15` in
+  `/great/protect_dir/car.config` (factory 9 = −16 dB; backup `/data/adb/BitPerfect.car.config.bak`) -
+  Android music at full scale into the factory 16-bit path distorts on every source.
 - 📻 BitPerfect v5.3 leaves `pcmC0D3p` busy with a live HAL
   ([[bitperfect-v53-pcm-busy-and-silent-tts]]); `com.txznet.weather` was removed.
 

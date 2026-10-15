@@ -19,8 +19,10 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
   sessions - gocsdk_zj's native track sits on 41) + slice commits. If adb gives 10013, ClearVPN
   (WireGuard) is on and blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz
   test; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `a374aa7` (15.10 17:20, BitPerfect off; resolved session 41 in
-  967 ms). Sub + to −.
+- Bench `192.168.1.138:9876`: `a374aa7` (15.10 ~17:45, BitPerfect off; resolved session 41 in
+  967 ms, then YouTube Music 41 → 65 by its announcement). Sub + to −. The factory AGDSP config is
+  back in `/data`; `car.config music_volume` is still BitPerfect's 15 (distorts without it) - left
+  as is, owner: «це не впливає» (MEASURED_FACTS "The platform around us").
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
