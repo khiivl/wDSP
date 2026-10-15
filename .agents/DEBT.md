@@ -5,6 +5,13 @@
 
 ## Код
 
+**wDSP падає: `Visualizer.setCaptureSize` на звільненому Visualizer** (15.10, стенд, 8f4431a). О 02:02:58
+SIGABRT у потоці `wDSP_SessionRes`: `FORTIFY: pthread_mutex_lock called on a destroyed mutex`, стек
+`SessionResolver` (лямбда) → `Visualizer.setCaptureSize`. Гонка: інший потік звільнив Visualizer, поки
+резолвер перепідключав сесію («attached session silent while media plays»). Тоді ж до входу сів Telegram —
+чи це пов'язано, не доведено. Сервіс перезапустився сам через 1 с. Tombstone: `/data/tombstones/tombstone_07`.
+Не виправлено: щойно знайдено.
+
 **Мікрофон мертвий після двох дзвонилок одночасно** (13.10, низький пріоритет). Причина — власник: *«я подзвонив на телефон до магнітоли з телефона, який по блютузу був прив'язаний… спрацювали дві дзвонилки одночасно. Одна на вхід, а друга на вихід»* — BT HFP і голосовий канал SIM разом; у поїздці так не буває. Симптом: з 01:17:46 захоплення wDSP (48 кГц,
 `UNPROCESSED`, єдиний записувач, Active) віддає нулі з однаковим сплеском раз на ~3,7 с
 (`RadioMicCapture: gate: rms=0 … peak=0`, `rms=294 peak=6656`); новий процес wDSP (01:32) — те саме.
