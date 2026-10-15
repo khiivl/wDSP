@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**15.10.2026 ~02:40, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**15.10.2026 day, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,11 +12,10 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `91d758c` (15.10 ~01:55, on the owner's order) — `8c122ed` docs: the
-  EQ sits AFTER the sub branch (datasheet); `8f4431a` `DspResponse`: no EQ on the sub path. 📻 Owed:
-  −10 dB at 31.5 Hz, doors muted, sub level unchanged; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `8f4431a` (15.10 01:53, adb install -r + service by hand; v0.4.9.8, no
-  crash; the calculated spectrum below the crossover not yet looked at). Sub + to −.
+- Pushed: `origin/kostyfmat_mod` = HEAD (15.10, on the owner's order). Latest: `f2ce7aa` — the engine
+  no longer attaches a Visualizer while the resolver probes (crash 02:02:58); built, **not on the
+  unit** (bench unreachable: adb connect 10013). 📻 Owed: sub −10 dB at 31.5 Hz test; ❓ `0102[5:4]`.
+- Bench `192.168.1.138:9876`: `8f4431a`. Install `f2ce7aa` when it is reachable. Sub + to −.
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
@@ -28,7 +27,7 @@ cancelled (Telegram 0.64 s, WhatsApp input closed in 50–100 ms). Mic free (wDS
 Suspects: QFassistant `RokoAccessibilityService` (canPerformGestures=true → system touch filter; no
 dispatchGesture in RokoAi code), notificationcenter, wDSP. **Next:** elimination with the owner at the
 unit — assistant first (his call: disable service in UI or `am force-stop`), then notifier, then wDSP.
-Also found: wDSP crash 02:02:58 (DEBT «Код», first item); board #1810 to BitPerfect (EffectHAL SET_CONFIG).
+Also: board #1810 to BitPerfect (EffectHAL SET_CONFIG).
 
 **Item 7 (measurement volume, `MeasureVolume`; step table first in the wizard; `_fm_cal` = the
 person's volume) builds and has never been seen on the unit.**
