@@ -2403,8 +2403,8 @@ public class AudioSpectrumEngine {
      */
     /**
      * The microphone's converter is clipping: at least {@link #MIC_CLIP_SHARE} of the samples at full
-     * scale in each of {@link #MIC_CLIP_SECONDS} seconds running starts it, as many seconds under it end
-     * it - a share and a delay, not a single peak (owner, 15.10.2026: «і трохи з затримкою, може хтось
+     * scale for {@link #MIC_CLIP_SECONDS} second(s) running starts it, under {@link #MIC_CLIP_RELEASE_SHARE}
+     * for as long ends it - a share and a delay, not a single peak (owner, 15.10.2026: «і трохи з затримкою, може хтось
      * голосно перднув»): the first rule, three clipped chunks a second, fired at step 9 on a drum hit,
      * where the curve still held. 📻 15.10.2026, the owner's bench, built-in microphone: from step 13 on
      * the raw peaks sat at 32768 and the RMS grew 6 dB over steps 12..28 where the volume table says
@@ -2418,12 +2418,14 @@ public class AudioSpectrumEngine {
     private int micClipWindowSamples, micClipWindowClipped, micClipRun;
     private static final int MIC_CLIP_MAGNITUDE = 32700;
     /**
-     * 0.5 %: about 240 of a second's 48 000 samples on the rail. 📻 15.10.2026, bench: step 10 gave
-     * 0.21-0.25 % (bass peaks), step 14 5.6 %; owner: «в стелю бьють саме баси, я б ігнорував трохи
-     * більше семплів» - 0.1 % called step 10 overloaded.
+     * On at 2 %, off under 1 %, each after one second. 📻 15.10.2026, bench: step 9 gave 0.48-0.66 %,
+     * step 10 0.21-0.25 % (bass peaks), step 14 5.6 % (on the rail without a break - where the curve
+     * sagged). Owner: «в стелю бьють саме баси, я б ігнорував трохи більше семплів», «затримку
+     * реакції зменшив вдвічі»; a single threshold of 0.5 % flickered (0.50 -> 0.22 -> 0.50), hence two.
      */
-    private static final float MIC_CLIP_SHARE = 0.005f;
-    private static final int MIC_CLIP_SECONDS = 2;
+    private static final float MIC_CLIP_SHARE = 0.02f;
+    private static final float MIC_CLIP_RELEASE_SHARE = 0.01f;
+    private static final int MIC_CLIP_SECONDS = 1;
     private static final long MIC_CLIP_WINDOW_MS = 1000;
 
     /** Whether the microphone is overloaded now - see {@link #micOverloaded}. */
@@ -2444,7 +2446,7 @@ public class AudioSpectrumEngine {
         micClipWindowAt = now;
         micClipWindowSamples = 0;
         micClipWindowClipped = 0;
-        final boolean overSecond = share >= MIC_CLIP_SHARE;
+        final boolean overSecond = share >= (micOverloaded ? MIC_CLIP_RELEASE_SHARE : MIC_CLIP_SHARE);
         micClipRun = overSecond == micOverloaded ? 0 : micClipRun + 1;
         if (micClipRun < MIC_CLIP_SECONDS) return;
         micClipRun = 0;
