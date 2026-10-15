@@ -13,17 +13,15 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `1fc3f3e`. **Unpushed:** `6c7aae4` (call is not media),
-  `ab204f2` (version 0.4.9.9 / 26), `f89293e` (release notes EN+UA), this slice.
+  `ab204f2` (version 0.4.9.9 / 26), release notes in 7 languages, the slices.
 - Bench `192.168.1.138:9876`: the pack APK 0.4.9.9 (sha256 `0c90a87c…`, hash checked on the unit
   21:52). BitPerfect v5.5.15 on. ❓ `0102[5:4]`.
 - **The BU32107 EQ never reaches the sub** - memory `bu32107-eq-never-reaches-sub`.
 
 ## ⏳ In progress: release 0.4.9.9 (owner 15.10: «читай зріз і збирай реліз»)
 
-- Pack folder `~/Downloads/wDSP-0.4.9.9/`: `wdsp.0.4.9.9.apk` (release build with `6c7aae4`,
-  sha256 `0c90a87c…`), WHATS_NEW_EN/UA.txt, manual_{en,uk,es,ru}.html. Not zipped yet.
-- Waiting: RU/ES/DE/FR/IT notes from Сова (board #1821) -> `docs/release_notes/`, commit, copy
-  into the pack as WHATS_NEW_<LANG>.txt, zip `wDSP-0.4.9.9.zip`.
+- **Packed:** `~/Downloads/wDSP-0.4.9.9.zip` (16.9 MB): `wdsp.0.4.9.9.apk` (sha256 `0c90a87c…`,
+  the same bytes as on the bench), WHATS_NEW in 7 languages, manual_{en,uk,es,ru}.html.
 - `6c7aae4` proven 15.10: BT call 21:52:56-21:54:14 - no resolve, 0 Visualizer failures, the
   analyser resumed at the end.
 - Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
