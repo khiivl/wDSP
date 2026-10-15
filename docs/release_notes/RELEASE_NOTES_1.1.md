@@ -1,130 +1,184 @@
 wDSP — 1.1 "Bulldozer" (build 26)
-What changed since 0.4.9.8 (build 25)
-=====================================
+Changes since 0.4.9.8 (build 25), the previous distribution of 13.09.2026
+==========================================================================
 
-This is a big one: a month of work, and the author's version 1.0 is now inside. Below is what is
-new and how to use it. The full manual for every function is in the pack: manual_en.html (also in
-Ukrainian, Spanish and Russian). Open it in any browser, it needs no internet.
+BASE
 
-INSTALLING
+This release is my modification of wDSP by Volodymyr Chebanenko (khiivl):
+https://github.com/khiivl/wDSP
+It contains all of the author's work up to his version 1.0.2.
 
-Install the APK over the previous version, nothing needs removing first. Your presets and
-settings stay. After installing, open wDSP once so it can start its service.
+INSTALLATION
 
------------------------------------------------------------------------------
-1. TWO LOOKS: CLASSIC AND MODERN
------------------------------------------------------------------------------
+Install the APK over the previous version. Presets and settings are kept. Open wDSP once after
+installing so that its service starts.
 
-The author's version 1.0 is merged in. Under Settings → "UI Style" you choose:
+DOCUMENTATION
 
-- Classic (Original) — the author's own Material 3 interface;
-- Modern — the frosted-glass one you know from my versions.
+A manual for every function is included: manual_en.html, manual_uk.html, manual_es.html,
+manual_ru.html. They open in any browser without internet access.
 
-Both work in day and night themes. What came with 1.0:
+=============================================================================
+ADDED
+=============================================================================
 
-- The equaliser graph now draws the chip's real curve (Q 2.2), not a sketch.
-- Ultra Bass — subwoofer gain that grows with the volume knob.
-- Loudness through the bass shelf, plus Trim Highs.
-- Pair locks for delays — left and right move together and say so when switched on.
+1. Interface (from the author's version 1.0)
+
+- Settings → "UI Style": Classic (Original) — the author's interface; Modern — the glass interface
+  of earlier mod versions. Both in day and night themes.
+- The equaliser graph draws the processor's actual curve (Q 2.2).
+- Ultra Bass: subwoofer gain that increases with volume.
+- Loudness through the bass shelf; Trim Highs.
+- Pair locks for delays.
 - "Off" in the subwoofer frequency list, for cars without a subwoofer.
-- GALA (speed-dependent volume) can be switched off for a single preset — "Disable for this
-  preset".
-- The Audio Check tab: pink noise, a sine at any frequency, a sweep, and test recordings per
-  speaker. Use it to hear each speaker on its own before measuring.
+- GALA can be switched off for an individual preset: "Disable for this preset".
+- "Audio Check" tab: pink noise, a sine at a chosen frequency, a sweep, test recordings per speaker.
 
------------------------------------------------------------------------------
-2. CABIN MEASUREMENT (AUTO-EQ) — REWORKED
------------------------------------------------------------------------------
+2. Cabin model (updated)
 
-How to use it now:
+- The result of a measurement is, first, a list of acoustic faults and, second, a coarse
+  correction within what the processor can do (16 bands, 2 dB steps, fixed Q 2.2). Faults the
+  equaliser cannot correct are reported, not equalised.
+- Faults detected: a speaker quieter than its mirror counterpart; a tweeter in antiphase with its
+  midbass; left and right channels swapped; a speaker resonance or a cabin mode below 200 Hz; a
+  subwoofer in antiphase with the doors at the crossover; a measurement degraded by noise.
+- The cabin is described by a profile: closed or open space, dimensions, installed speakers.
+  Delays are computed from the geometry and the measured arrival times.
+- The equaliser does not act on the subwoofer channel. The model now treats the subwoofer
+  separately: its level, crossover and polarity are set on their own.
+- Door channels are averaged in power. A failed tweeter no longer shifts the whole estimate.
+- The correction for overlapping equaliser bands is always applied.
+- The report shows the correction in dB.
 
-1. Settings → the cabin card. Say whether it is a closed car or an open space (bench,
-   cabriolet), set the dimensions, and TAP THE SPEAKERS on the little car to say which ones are
-   really installed. Only the speakers you declared are swept.
-2. Calibrate the microphone (once per unit).
-3. Run the measurement. You no longer set the volume — the app picks it itself, and on the way it
-   measures how many dB each step of the volume knob gives on your unit.
-4. Press "Apply Auto-EQ". Straight after it the app plays a short CONTROL SWEEP through the new preset and
-   tells you whether the correction actually worked.
+3. Measurement procedure
 
-What the report shows now:
+1. Settings → cabin card: space type, dimensions, installed speakers (tap the speakers on the
+   diagram). Only declared speakers are measured.
+2. Microphone calibration (once per unit).
+3. Measurement. The measurement volume is chosen by the application; during the run it also
+   measures the level change per volume step of the unit.
+4. "Apply Auto-EQ". A control sweep follows automatically and reports whether the correction
+   took effect. If the subwoofer is in antiphase, the report says to change the phase switch on its
+   amplifier (0/180).
 
-- A LIST OF FAULTS comes first, in plain words: a speaker quieter than its mirror twin, a tweeter
-  playing against its own midbass, channels swapped left/right, a speaker resonance or a cabin
-  mode below 200 Hz, a measurement drowned in noise.
-- If the subwoofer plays against the doors at the crossover, the app tells you to turn the phase
-  switch on the subwoofer amplifier to the other position (0/180).
-- The correction is shown in dB, not in chip numbers.
-- Cabin noise is no longer a reason to refuse the measurement; it lowers the trust in the bands it
-  covers instead.
+Cabin noise no longer stops the measurement; it reduces the confidence of the affected bands.
 
------------------------------------------------------------------------------
-3. SPECTRUM (RTA)
------------------------------------------------------------------------------
+4. Spectrum (RTA)
 
-- Choose its shape: a live curve or bars.
-- The "RTA zero" button in Audio Check takes both zeros at once (the channel and the microphone):
-  it plays pink noise itself, listens, and sets the zero.
-- If the microphone clips, the spectrum says "Microphone overloaded". Lower the microphone
-  sensitivity in the car settings until the message goes.
-- The spectrum sleeps when nothing is playing, and wakes on its own.
-- Bluetooth music now shows in the spectrum also on units without the BitPerfect module.
+- Display as a live curve or as bars.
+- "RTA zero" in Audio Check sets both zero references (channel and microphone) in one step.
+- Microphone overload indication. If it appears, lower the microphone sensitivity in the car
+  settings.
+- Analysis pauses when nothing is playing and resumes on its own.
+- Bluetooth audio is shown on units without the BitPerfect module.
 
------------------------------------------------------------------------------
-4. NEW: RESUMING THE PLAYER AFTER A RESTART OR SLEEP
------------------------------------------------------------------------------
+5. Player resume after restart and after sleep
 
-Two switches in Settings: "Resume the player after a restart" and "Resume the player after sleep".
-If music was playing when the unit went off, wDSP starts the same player again once it is up —
-without opening its screen on top of your launcher or navigator. Radio restores itself and is
-left alone.
+Settings: "Resume the player after a restart", "Resume the player after sleep". The player that
+was playing is started again without its window being brought to the front. Radio is not
+affected. For sleep, "Let wDSP stay alive through sleep" opens the unit's sleep whitelist; wDSP
+must be enabled there.
 
-For sleep, press "Let wDSP stay alive through sleep" under the switch: it opens the unit's own
-sleep whitelist, where wDSP has to be ticked.
+6. Other
 
-This is new. Tell me which player you use and whether it came back.
+- Screensaver: "Cover the status bar" switch.
+- Diagnostics: "Screen Topology" — a file describing the screen layout and touches.
+- Interface in 30 languages and regional variants.
 
------------------------------------------------------------------------------
-5. CALLS, SCREENSAVER, VOLUME
------------------------------------------------------------------------------
+=============================================================================
+FIXED
+=============================================================================
 
-- During a call the app lets go of the microphone at once and switches to the call preset; after
-  the call everything comes back.
-- The screensaver closes the moment a call starts.
-- The screensaver now appears on units where "floating video" or "floating navigation" is ticked
-  in the factory settings — it did not before.
-- The navigator chosen in the head unit settings is added to the screensaver's exceptions by
-  itself, so the screensaver does not cover the map. If you want the screensaver over the
-  navigator, remove it from that list.
+Calls
+
+- The preset no longer switches back and forth during a call; the call preset is applied, other
+  processing is paused.
+- The microphone is released immediately when a call starts.
+- During a Bluetooth call the spectrum no longer searches for an audio session.
+- The screensaver is closed when a call starts.
+- After a call the volume is taken from the platform, not from the application's own memory.
+
+Start-up and processor
+
+- The service starts at unlock, in stages: audio system, microphone, MCU, presets.
+- An empty preset is no longer sent to the processor before the stored one is read.
+- After the MCU link is re-established the preset is sent again.
+- The service restarts after an application update.
+- Subwoofer gain set incorrectly at start-up (author's fix, 1.0.1).
+- Unchanged data is not re-sent to the MCU.
+- No audio session search at start-up when nothing is playing.
+- A crash when the application opened directly on the Loudness tab.
+- Storage permission is requested in the form this firmware grants.
+
+Microphone and spectrum
+
+- The microphone is taken back as soon as the input is free; no restart request.
+- The microphone is no longer closed on wake-up.
+- A mid-band dip in the microphone spectrum after sleep (caused by the application's own gate).
+- A narrow-band microphone (16 kHz) is never shown as the cabin response.
+- The platform's capture effects are no longer switched by the application.
+- A test tone froze the spectrum.
+- The spectrum's sample rate is taken from the output.
+- The "Off" spectrum mode switches off only the RTA; the widget and the screensaver keep working.
+- One analyser (native); the third-octave grid is standard.
+
+Measurement
+
+- The deepest door bands were overstated (the sweep window cut the first arrival).
+- The 20 Hz and 20 kHz bands read flat.
+- The subwoofer is swept from 15 Hz, the doors from 20 Hz.
+- Door high-pass and subwoofer crossover: code 0 is "Through", not 20 Hz.
+- Subwoofer compensation works at 100 Hz and no longer changes the crossover.
+- The subwoofer is aligned at the crossover selected by the measurement, at the peak closest to the
+  geometry.
+- A measurement is no longer overwritten by the next one.
+- The level probe is repeated if it clipped.
+- Measurement progress follows the recording time.
+- The "bass added twice" warning removed; the loudness fix button is offered only when it would
+  change something.
+
+Interface and screensaver
+
 - The bottom row of the equaliser no longer cuts off the amplifier buttons on narrow and vertical
-  screens — the whole row shrinks together.
-- The volume of each source is remembered and follows changes made outside wDSP.
-- GALA no longer leaves an extra step of volume behind after every slow-down.
+  screens.
+- The bottom navigation fits 640 dp windows.
+- The main screen and dialogs fit all panels of the platform.
+- The processor follows the slider during the movement again.
+- A pending save is written before the preset changes.
+- The preset follows the player that is actually playing.
+- The screensaver appears on units with "floating video" or "floating navigation" enabled in the
+  factory settings.
+- The navigator selected in the unit's settings is added to the screensaver exceptions.
+- The screensaver steps aside when the application underneath changes.
+- Screensaver touch zones are correct on vertical panels.
+- A tap on the cover opens the radio that is actually playing.
 
------------------------------------------------------------------------------
-LANGUAGES
------------------------------------------------------------------------------
+Volume and GALA
 
-The interface is in 30 languages and regional variants.
+- The volume of each source follows changes made outside wDSP.
+- GALA no longer leaves an extra volume step after slowing down.
+- Fewer disk writes when settings change (author's change).
 
------------------------------------------------------------------------------
-A REQUEST TO TESTERS
------------------------------------------------------------------------------
+=============================================================================
+REQUEST TO TESTERS
+=============================================================================
 
-1. AUTO-PRESETS. Is the preset assembled correctly, in your opinion? Is the soundstage right?
-   Please send the measurement archive ("Save archive" after a measurement) and the system report
-   (Diagnostics → "System report"). Both land in the Download/wDSP folder.
+1. Measurements. After a cabin measurement send the measurement archive ("Save archive") and the
+   system report (Diagnostics → "System report"). Both are saved to Download/wDSP. Add your
+   impressions: how the sound changed after applying the preset, and the soundstage.
 
-2. IF THE SCREENSAVER NEVER APPEARS on your unit: leave the unit for two minutes on any app
-   except wDSP. Then Settings → Diagnostics → "Screen Topology" → save and send the file. If the
-   screensaver does appear, first tap it a few times (the track zones, the screen edges), and only
-   then save — the file will show where the touches landed and how the app understood them.
+2. Screensaver. If it does not appear: leave the unit for two minutes on any application other
+   than wDSP, then Diagnostics → "Screen Topology" → save and send the file. If it appears, tap it
+   a few times (track zones, screen edges) before saving.
 
-3. PLAYER RESUME — which player, restart or sleep, and did it come back.
+3. Player resume. Which player, after restart or after sleep, and the result.
 
-Send everything to the group: https://t.me/wDSPapp/79
+Send to: https://t.me/wDSPapp/79
 
-If something is wrong, add a comment saying what exactly. If nothing is wrong, tell me how the
-presets sound to you.
+=============================================================================
+ACKNOWLEDGEMENTS
+=============================================================================
 
-Thank you.
+To Volodymyr Chebanenko (khiivl), the author of wDSP: for the application, the Classic interface
+and version 1.0, on which this release is built, and for his knowledge of sound.
+To the testers who sent measurements and reports.
