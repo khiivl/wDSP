@@ -610,6 +610,7 @@
     <string name="audiocheck_rta_zero">RTA null</string>
     <string name="toast_rta_zero_listening">RTA kalibreerimine roosal müral, 4 sekundit… Parim helitugevusel 16, eriti mikrofoni puhul.</string>
     <string name="toast_rta_zero_taken">RTA null määratud: roosa müra tase on nüüd 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon on üle koormatud — kuvatakse AGC-ga, kuju ligikaudne. Vähendage mikrofoni tundlikkust</string>
     <string name="toast_rta_zero_failed">Liiga vähe heli kuulda – RTA nulli ei määratud.</string>
     <string name="audiocheck_pink_noise">Roosa müra</string>
     <string name="gala_advanced_settings">Täpsemalt</string>

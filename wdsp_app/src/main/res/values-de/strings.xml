@@ -608,6 +608,7 @@
     <string name="audiocheck_rta_zero">RTA-Null</string>
     <string name="toast_rta_zero_listening">Kalibriere RTA auf rosa Rauschen, 4 Sekunden… Am besten bei Lautstärke 16, besonders für das Mikrofon.</string>
     <string name="toast_rta_zero_taken">RTA-Nullpunkt gesetzt: Rosa Rauschen liegt jetzt bei 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon übersteuert — Anzeige mit AGC, Form näherungsweise. Mikrofonempfindlichkeit verringern</string>
     <string name="toast_rta_zero_failed">Zu wenig Signal gehört - RTA-Nullpunkt wurde nicht gesetzt.</string>
     <string name="gala_advanced_settings">Erweitert</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>

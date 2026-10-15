@@ -610,6 +610,7 @@ Implicit global: %1$s</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
     <string name="toast_rta_zero_listening">Calibrare RTA pe zgomot roz, 4 secunde… Recomandat la volumul 16, mai ales pentru microfon.</string>
     <string name="toast_rta_zero_taken">Nivel zero RTA setat: zgomotul roz indică acum 0 dB.</string>
+    <string name="rta_mic_overloaded">Microfon supraîncărcat — afișat cu AGC, formă aproximativă. Reduceți sensibilitatea microfonului</string>
     <string name="toast_rta_zero_failed">Prea puțin sunet auzit – nivelul zero RTA nu a fost setat.</string>
     <string name="audiocheck_pink_noise">Zgomot roz</string>
     <string name="gala_advanced_settings">Avansat</string>

@@ -608,6 +608,7 @@
     <string name="audiocheck_rta_zero">Zero RTA</string>
     <string name="toast_rta_zero_listening">Kalibracja RTA na szumie różowym, 4 sekundy… Najlepiej przy głośności 16, zwłaszcza dla mikrofonu.</string>
     <string name="toast_rta_zero_taken">Zero RTA ustawione: szum różowy wskazuje teraz 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon przesterowany — pokazywany z AGC, kształt przybliżony. Zmniejsz czułość mikrofonu</string>
     <string name="toast_rta_zero_failed">Słychać za mało dźwięku – zero RTA nie zostało ustawione.</string>
     <string name="gala_advanced_settings">Zaawansowane</string>
     <string name="eq_vis_shape_label">Kształt widma:</string>

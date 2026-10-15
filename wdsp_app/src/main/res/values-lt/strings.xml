@@ -610,6 +610,7 @@ Bendras numatytasis: %1$s</string>
     <string name="audiocheck_rta_zero">RTA nulis</string>
     <string name="toast_rta_zero_listening">RTA kalibravimas pagal rausvąjį triukšmą, 4 sekundės… Geriausia nustačius 16 garsumą, ypač mikrofonui.</string>
     <string name="toast_rta_zero_taken">RTA nulis nustatytas: rausvasis triukšmas dabar rodo 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofonas perkrautas — rodoma su AGC, forma apytikslė. Sumažinkite mikrofono jautrumą</string>
     <string name="toast_rta_zero_failed">Girdima per mažai garso – RTA nulis nenustatytas.</string>
     <string name="audiocheck_pink_noise">Rausvasis triukšmas</string>
     <string name="gala_advanced_settings">Išplėstiniai</string>

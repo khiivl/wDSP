@@ -610,6 +610,7 @@
     <string name="audiocheck_rta_zero">Нула RTA</string>
     <string name="toast_rta_zero_listening">Калибрација RTA на ружичастом шуму, 4 секунде… Најбоље на гласноћи 16, посебно за микрофон.</string>
     <string name="toast_rta_zero_taken">Нула RTA је постављена: ружичасти шум сада показује 0 dB.</string>
+    <string name="rta_mic_overloaded">Микрофон је преоптерећен — приказано са АРУ, облик приближан. Смањите осетљивост микрофона</string>
     <string name="toast_rta_zero_failed">Чује се премало звука — нула RTA није постављена.</string>
     <string name="audiocheck_pink_noise">Ружичасти шум</string>
     <string name="gala_advanced_settings">Напредно</string>

@@ -610,6 +610,7 @@ Globale standaard: %1$s</string>
     <string name="audiocheck_rta_zero">RTA-nul</string>
     <string name="toast_rta_zero_listening">RTA kalibreren met roze ruis, 4 seconden… Het beste op volume 16, vooral voor de microfoon.</string>
     <string name="toast_rta_zero_taken">RTA-nulpunt ingesteld: roze ruis meet nu 0 dB.</string>
+    <string name="rta_mic_overloaded">Microfoon overstuurd — weergegeven met AGC, vorm bij benadering. Verlaag de microfoongevoeligheid</string>
     <string name="toast_rta_zero_failed">Te weinig geluid waargenomen – RTA-nulpunt is niet ingesteld.</string>
     <string name="audiocheck_pink_noise">Roze ruis</string>
     <string name="gala_advanced_settings">Geavanceerd</string>

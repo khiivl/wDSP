@@ -610,6 +610,7 @@ Global standard: %1$s</string>
     <string name="audiocheck_rta_zero">RTA-null</string>
     <string name="toast_rta_zero_listening">Kalibrerer RTA med rosa støy, 4 sekunder… Best på volum 16, spesielt for mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-null satt: rosa støy måler nå 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon overstyrt — vises med AGC, formen er omtrentlig. Reduser mikrofonfølsomheten</string>
     <string name="toast_rta_zero_failed">For lite lyd registrert – RTA-null ble ikke satt.</string>
     <string name="audiocheck_pink_noise">Rosa støy</string>
     <string name="gala_advanced_settings">Avansert</string>

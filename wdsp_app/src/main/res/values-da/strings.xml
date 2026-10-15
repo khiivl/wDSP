@@ -610,6 +610,7 @@ Global standard: %1$s</string>
     <string name="audiocheck_rta_zero">RTA-nul</string>
     <string name="toast_rta_zero_listening">Kalibrerer RTA med lyserød støj, 4 sekunder… Bedst ved lydstyrke 16, især for mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-nul indstillet: lyserød støj måler nu 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon overstyret — vises med AGC, formen er omtrentlig. Sænk mikrofonfølsomheden</string>
     <string name="toast_rta_zero_failed">For lidt lyd registreret - RTA-nul blev ikke indstillet.</string>
     <string name="audiocheck_pink_noise">Lyserød støj</string>
     <string name="gala_advanced_settings">Avanceret</string>

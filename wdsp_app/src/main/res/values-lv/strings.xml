@@ -610,6 +610,7 @@ Globāli noklusējums: %1$s</string>
     <string name="audiocheck_rta_zero">RTA nulle</string>
     <string name="toast_rta_zero_listening">RTA kalibrēšana ar rozā troksni, 4 sekundes… Vislabāk pie skaļuma 16, īpaši mikrofonam.</string>
     <string name="toast_rta_zero_taken">RTA nulle iestatīta: rozā troksnis tagad rāda 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofons pārslogots — attēlots ar AGC, forma aptuvena. Samaziniet mikrofona jutību</string>
     <string name="toast_rta_zero_failed">Dzirdams pārāk maz skaņas – RTA nulle netika iestatīta.</string>
     <string name="audiocheck_pink_noise">Rozā troksnis</string>
     <string name="gala_advanced_settings">Paplašināti</string>

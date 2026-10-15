@@ -609,6 +609,7 @@
     <string name="audiocheck_rta_zero">Cero RTA</string>
     <string name="toast_rta_zero_listening">Calibrando el RTA con ruido rosa, 4 segundos… Recomendado a volumen 16, sobre todo para el micrófono.</string>
     <string name="toast_rta_zero_taken">Cero RTA establecido: el ruido rosa ahora marca 0 dB.</string>
+    <string name="rta_mic_overloaded">Micrófono sobrecargado: se muestra con AGC, forma aproximada. Baje la sensibilidad del micrófono</string>
     <string name="toast_rta_zero_failed">Se ha escuchado muy poco sonido: el cero RTA no se ha establecido.</string>
     <string name="gala_advanced_settings">Avanzado</string>
     <string name="eq_vis_shape_label">Forma del espectro:</string>

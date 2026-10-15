@@ -610,6 +610,7 @@ Globální výchozí: %1$s</string>
     <string name="audiocheck_rta_zero">Nula RTA</string>
     <string name="toast_rta_zero_listening">Kalibruji RTA na růžovém šumu, 4 sekundy… Nejlépe při hlasitosti 16, zejména pro mikrofon.</string>
     <string name="toast_rta_zero_taken">Nula RTA nastavena: růžový šum má nyní 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon je přetížen — zobrazeno s AGC, tvar je přibližný. Snižte citlivost mikrofonu</string>
     <string name="toast_rta_zero_failed">Je slyšet příliš málo zvuku - nula RTA nebyla nastavena.</string>
     <string name="audiocheck_pink_noise">Růžový šum</string>
     <string name="gala_advanced_settings">Rozšířené</string>

@@ -610,6 +610,7 @@ Yleinen oletus: %1$s</string>
     <string name="audiocheck_rta_zero">RTA-nolla</string>
     <string name="toast_rta_zero_listening">Kalibroidaan RTA vaaleanpunaisella kohinalla, 4 sekuntia… Parasta voimakkuudella 16, erityisesti mikrofonille.</string>
     <string name="toast_rta_zero_taken">RTA-nolla asetettu: vaaleanpunainen kohina näyttää nyt 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofoni yliohjautuu — näytetään AGC:llä, muoto likimääräinen. Pienennä mikrofonin herkkyyttä</string>
     <string name="toast_rta_zero_failed">Liian vähän ääntä havaittu – RTA-nollaa ei asetettu.</string>
     <string name="audiocheck_pink_noise">Vaaleanpunainen kohina</string>
     <string name="gala_advanced_settings">Lisäasetukset</string>

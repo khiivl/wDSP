@@ -610,6 +610,7 @@
     <string name="audiocheck_rta_zero">Нула RTA</string>
     <string name="toast_rta_zero_listening">Калибрирам RTA на розов шум, 4 секунди… Най-добре при сила на звука 16, особено за микрофона.</string>
     <string name="toast_rta_zero_taken">Нулата на RTA е зададена: розовият шум вече показва 0 dB.</string>
+    <string name="rta_mic_overloaded">Микрофонът е претоварен — показва се с АРУ, формата е приблизителна. Намалете чувствителността на микрофона</string>
     <string name="toast_rta_zero_failed">Чува се твърде малко звук - нулата на RTA не беше зададена.</string>
     <string name="audiocheck_pink_noise">Розов шум</string>
     <string name="gala_advanced_settings">Разширени</string>

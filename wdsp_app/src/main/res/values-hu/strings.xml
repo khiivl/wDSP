@@ -610,6 +610,7 @@ Globális alapértelmezett: %1$s</string>
     <string name="audiocheck_rta_zero">RTA nulla</string>
     <string name="toast_rta_zero_listening">RTA kalibrálása rózsaszín zajjal, 4 másodperc… Legjobb 16-os hangerőn, különösen a mikrofonhoz.</string>
     <string name="toast_rta_zero_taken">RTA nulla beállítva: a rózsaszín zaj most 0 dB értéket mutat.</string>
+    <string name="rta_mic_overloaded">Mikrofon túlvezérelve — AGC-vel mutatva, a görbe hozzávetőleges. Csökkentse a mikrofon érzékenységét</string>
     <string name="toast_rta_zero_failed">Túl kevés hang hallható – az RTA nulla nem lett beállítva.</string>
     <string name="audiocheck_pink_noise">Rózsaszín zaj</string>
     <string name="gala_advanced_settings">Haladó</string>

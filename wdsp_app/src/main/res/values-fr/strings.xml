@@ -610,6 +610,7 @@ Par défaut global : %1$s</string>
     <string name="audiocheck_rta_zero">Zéro RTA</string>
     <string name="toast_rta_zero_listening">Étalonnage du RTA sur bruit rose, 4 secondes… Idéal au volume 16, en particulier pour le microphone.</string>
     <string name="toast_rta_zero_taken">Zéro RTA défini : le bruit rose indique maintenant 0 dB.</string>
+    <string name="rta_mic_overloaded">Microphone saturé - affiché avec AGC, forme approximative. Baissez la sensibilité du micro</string>
     <string name="toast_rta_zero_failed">Trop peu de son capté – le zéro RTA n\'a pas été défini.</string>
     <string name="audiocheck_pink_noise">Bruit rose</string>
     <string name="gala_advanced_settings">Avancé</string>

@@ -610,6 +610,7 @@ Genel Varsayılan: %1$s</string>
     <string name="audiocheck_rta_zero">RTA Sıfırı</string>
     <string name="toast_rta_zero_listening">RTA pembe gürültü üzerinde kalibre ediliyor, 4 saniye… Özellikle mikrofon için en iyi seviye 16.</string>
     <string name="toast_rta_zero_taken">RTA sıfırı ayarlandı: pembe gürültü artık 0 dB okuyor.</string>
+    <string name="rta_mic_overloaded">Mikrofon aşırı yüklendi — AGC ile gösteriliyor, şekil yaklaşık. Mikrofon hassasiyetini düşürün</string>
     <string name="toast_rta_zero_failed">Çok az ses duyuldu – RTA sıfırı ayarlanamadı.</string>
     <string name="audiocheck_pink_noise">Pembe Gürültü</string>
     <string name="gala_advanced_settings">Gelişmiş</string>

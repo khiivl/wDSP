@@ -610,6 +610,7 @@ Predefinito globale: %1$s</string>
     <string name="audiocheck_rta_zero">Zero RTA</string>
     <string name="toast_rta_zero_listening">Calibrazione dell\'RTA su rumore rosa, 4 secondi… Ottimale a volume 16, specialmente per il microfono.</string>
     <string name="toast_rta_zero_taken">Zero RTA impostato: il rumore rosa ora misura 0 dB.</string>
+    <string name="rta_mic_overloaded">Microfono sovraccarico: visualizzato con AGC, forma approssimativa. Ridurre la sensibilità del microfono</string>
     <string name="toast_rta_zero_failed">Troppo poco suono rilevato – lo zero RTA non è stato impostato.</string>
     <string name="audiocheck_pink_noise">Rumore rosa</string>
     <string name="gala_advanced_settings">Avanzate</string>

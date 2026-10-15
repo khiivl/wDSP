@@ -610,6 +610,7 @@ Globalno privzeto: %1$s</string>
     <string name="audiocheck_rta_zero">Ničla RTA</string>
     <string name="toast_rta_zero_listening">Umerjanje RTA na rožnatem šumu, 4 sekunde… Najbolje pri glasnosti 16, zlasti za mikrofon.</string>
     <string name="toast_rta_zero_taken">Ničla RTA nastavljena: rožnati šum zdaj kaže 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon je preobremenjen — prikaz z AGC, oblika približna. Zmanjšajte občutljivost mikrofona</string>
     <string name="toast_rta_zero_failed">Zaznanega premalo zvoka – ničla RTA ni bila nastavljena.</string>
     <string name="audiocheck_pink_noise">Rožnati šum</string>
     <string name="gala_advanced_settings">Napredno</string>

@@ -608,6 +608,7 @@
     <string name="audiocheck_rta_zero">RTA-nolla</string>
     <string name="toast_rta_zero_listening">Kalibrerar RTA mot rosa brus, 4 sekunder… Bäst vid volym 16, särskilt för mikrofonen.</string>
     <string name="toast_rta_zero_taken">RTA-nolla inställd: rosa brus visar nu 0 dB.</string>
+    <string name="rta_mic_overloaded">Mikrofon överstyrd — visas med AGC, formen är ungefärlig. Sänk mikrofonkänsligheten</string>
     <string name="toast_rta_zero_failed">För lite ljud hördes – RTA-nollan ställdes inte in.</string>
     <string name="gala_advanced_settings">Avancerat</string>
     <string name="eq_vis_shape_label">Spektrumform:</string>

@@ -612,6 +612,7 @@
     <string name="audiocheck_rta_zero">Ноль RTA</string>
     <string name="toast_rta_zero_listening">Калибрую RTA по розовому шуму, 4 секунды… Лучше всего на громкости 16, особенно для микрофона.</string>
     <string name="toast_rta_zero_taken">Ноль RTA установлен: розовый шум теперь на 0 дБ.</string>
+    <string name="rta_mic_overloaded">Микрофон перегружен — показано с АРУ, форма приблизительная. Уменьшите чувствительность микрофона</string>
     <string name="toast_rta_zero_failed">Слышно слишком мало звука — ноль RTA не установлен.</string>
     <string name="gala_advanced_settings">Дополнительно</string>
     <string name="eq_vis_shape_label">Форма спектра:</string>

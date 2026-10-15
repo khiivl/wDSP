@@ -610,6 +610,7 @@
     <string name="audiocheck_rta_zero">Μηδέν RTA</string>
     <string name="toast_rta_zero_listening">Βαθμονόμηση RTA σε ροζ θόρυβο, 4 δευτερόλεπτα… Βέλτιστη στην ένταση 16, ειδικά για το μικρόφωνο.</string>
     <string name="toast_rta_zero_taken">Το μηδέν RTA ορίστηκε: ο ροζ θόρυβος είναι τώρα στα 0 dB.</string>
+    <string name="rta_mic_overloaded">Υπερφόρτωση μικροφώνου — εμφάνιση με AGC, κατά προσέγγιση. Μειώστε την ευαισθησία μικροφώνου</string>
     <string name="toast_rta_zero_failed">Ακούγεται πολύ χαμηλός ήχος - το μηδέν RTA δεν ορίστηκε.</string>
     <string name="audiocheck_pink_noise">Ροζ θόρυβος</string>
     <string name="gala_advanced_settings">Για προχωρημένους</string>
