@@ -256,7 +256,11 @@ final class ControlSweep {
      * preset's state, delayed as the preset delays it, the sub at the preset's gain over its pass's,
      * evaluated as a DFT at {@link #POINTS_PER_THIRD} frequencies per third. Written as the energy
      * forecast plus the complex sum's ratio to the energy sum of the same spectra, so it inherits the
-     * energy forecast's calibrated level. The EQ is common to every speaker and leaves the ratio alone.
+     * energy forecast's calibrated level. The doors carry the preset's EQ (its magnitude; the phase
+     * of a 2 dB peaking band is a few degrees) and the sub does not: it branches off upstream of the
+     * EQ (corrected 15.10.2026 - until then this read "the EQ is common to every speaker and leaves the
+     * ratio alone", which put the doors at the wrong level against the sub wherever a band near the
+     * crossover was not flat).
      */
     private static void complexForecast(RoomMeasurement.Result m, Outcome out, SharedPreferences prefs) {
         if (out.error != null || !out.forecastKnown || m.impulses == null || m.channels == null) return;
@@ -327,7 +331,9 @@ final class ControlSweep {
                     }
                     final double ph = -2 * Math.PI * f * delaySec;
                     final double dr = Math.cos(ph), di = Math.sin(ph);
-                    final double r = gain * (re * dr - im * di), q = gain * (re * di + im * dr);
+                    final float eqDb = isSub ? 0f : AudioSpectrumEngine.getInstance().dspDoorEqDbAt((float) f);
+                    final double g = gain * (Float.isNaN(eqDb) ? 1.0 : Math.pow(10.0, eqDb / 20.0));
+                    final double r = g * (re * dr - im * di), q = g * (re * di + im * dr);
                     if (isSub) {
                         reS[i][k] += r;
                         imS[i][k] += q;

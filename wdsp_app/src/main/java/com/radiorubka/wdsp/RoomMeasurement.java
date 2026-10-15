@@ -3177,6 +3177,11 @@ public final class RoomMeasurement {
         Log.i(TAG, "--- " + channel.label + ": balance=" + channel.leftRight
                 + " fader=" + channel.frontRear + " ---");
         SharedPreferences.Editor ed = prefs.edit();
+        // The EQ reaches the doors only - the sub branches off upstream of it (15.10.2026) - so on the
+        // sub's pass every band at its floor takes the doors 12 dB further down under their high-pass
+        // and leaves the sub untouched (AudioCheck.setOnlySub does the same). Flat again for the doors.
+        final int eq = channel == Channel.SUBWOOFER ? 0 : AudioConfig.EQ_FLAT_INDEX;
+        for (int b = 0; b < 16; b++) ed.putInt(preset + "_g" + b, eq);
         if (channel == Channel.SUBWOOFER) {
             ed.putInt(preset + "_f_lr", FADER_CENTRE)
               .putInt(preset + "_f_fr", FADER_CENTRE)
@@ -3187,7 +3192,11 @@ public final class RoomMeasurement {
         } else {
             ed.putInt(preset + "_f_lr", channel.leftRight)
               .putInt(preset + "_f_fr", channel.frontRear)
-              .putInt(preset + "_sub_g", 0)   // Subwoofer muted during door speaker sweeps
+              // Not muted - nothing can mute it: 0x8B has no off bit, gain 0 is 12 dB under its
+              // loudest, the fader and balance carry it with the fronts (0A04/0A05 mirror FL/FR) and
+              // the EQ never reaches it. Its lowest crossover (25 Hz, scratch preset) is what keeps it
+              // out of the doors' sweep, and only from about 40 Hz up.
+              .putInt(preset + "_sub_g", 0)
               .putInt(preset + "_bf_f", 0)   // Through HPF on front
               .putInt(preset + "_bf_r", 0);  // Through HPF on rear
         }

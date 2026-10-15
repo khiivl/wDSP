@@ -645,6 +645,17 @@ public class AudioSpectrumEngine {
     }
 
     /**
+     * The doors' equaliser at this frequency as last published, dB, or NaN while McuService has
+     * published nothing. The doors only: the subwoofer branches off upstream of the EQ.
+     */
+    public float dspDoorEqDbAt(float hz) {
+        synchronized (dspGainIdx) {
+            if (!hasServiceDspState) return Float.NaN;
+            return AudioConfig.compositeResponseDb(dspGainIdx, hz);
+        }
+    }
+
+    /**
      * The crossover as last published: {front door high-pass code, rear door high-pass code, sub
      * low-pass index, sub gain dB}, or null while McuService has published nothing.
      */
