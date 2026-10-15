@@ -1,98 +1,129 @@
-<img width="1280" height="646" alt="wDSP_repo" src="https://github.com/user-attachments/assets/13869fb3-748f-4d1f-aa26-e6bf8a090b9e" />
+# wDSP "Bulldozer" mod by kostyamat — 1.1
 
-----------------------------------------------------------------------------------------------------------------------
+An equaliser, cabin-measurement and visualiser app for **QF / K706** Android head units with the
+ROHM **BU32107** sound processor. It drives the processor through the unit's MCU.
 
-This is a free and open-source DSP app designed to fully replace the stock DSP app on K706/QF Android head units. 
+This branch (`kostyfmat_mod`) is **Kostiantyn Matviyevskyy's modification** of
+[wDSP by Volodymyr Chebanenko (khiivl)](https://github.com/khiivl/wDSP). It contains all of the
+author's work up to his version 1.0.2 ("Bulldozer"); the author's own app and description are on
+the [`master` branch](https://github.com/khiivl/wDSP/tree/master).
 
-The app communicates with the MCU using the framework, so it doesn't require rooting the device.
-Compatible with vertical and horizontal head units with the BU32107 chip.
+----------------------------------------------------------------------------------------------------
 
-Made in Germany, by a Ukrainian guy.
+## Manuals
 
-I have to give credits to the people who taught me a lot i know about sound for free: oratory1990 (legend), Crinacle (headphone), Underbelly from YSAP (Uncle Joe) and, of course, Dan Worrall (the trustworthy British accent). Credits to Sam Battle from LMNC for making me interested in audio circuits. Many thanks to Kostyantyn Matviyevskyy for mentoring, contributions, insides into the inner workings of the head unit and the inspiration for this project and making difficult things simple. Try his mod of wDSP if you want something different, because everyone has their own preferences and vision.
+A manual for every function, in nine languages. Download the file and open it in any browser; no
+internet is needed. The same files are in the release archive.
 
-Measure accurately, correct surgically, and stop trying to boost acoustic nulls.
+| | | |
+|---|---|---|
+| [English](docs/manual_en.html) | [Українська](docs/manual_uk.html) | [Español](docs/manual_es.html) |
+| [Deutsch](docs/manual_de.html) | [Français](docs/manual_fr.html) | [Italiano](docs/manual_it.html) |
+| [Português](docs/manual_pt.html) | [Polski](docs/manual_pl.html) | [Русский](docs/manual_ru.html) |
 
-Telegram group for discussion and bug reporting (also use Issues on GitHub): https://t.me/wDSPapp
+Release notes for 1.1: [docs/release_notes/](docs/release_notes/). Screensaver gesture map:
+[docs/screensaver_map.svg](docs/screensaver_map.svg).
 
-If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp. If you don't want to support me specifically, but want to make a donation for the good, please use this link to support the soldiers who are currently defending Ukraine from the russian aggression: https://www.sternenkofund.org/en/donate
+----------------------------------------------------------------------------------------------------
 
-----------------------------------------------------------------------------------------------------------------------
+## How the mod differs from the original
 
-<details>
+- **It measures the car.** The original is tuned by ear: you set the equaliser, crossovers and
+  delays yourself, and its spectrum shows the music being played. The mod also plays test sweeps
+  through the speakers, records them with the unit's microphone, and builds a preset, the delays
+  and a list of problems from what it heard.
+- **Its spectrum can listen to the cabin**, through the microphone, not only show the signal.
+- **It looks after the unit's sound beyond the equaliser**: the volume of each source, calls (the
+  microphone is released, the call preset applied), resuming the player after a restart or sleep,
+  and a full-screen screensaver with playback controls.
+- **Both interfaces.** The author's interface is kept as "Classic", next to the mod's "Modern".
+- Root is optional; with it the mod gets the microphone before other apps.
 
-<summary>Screenshots</summary>
+## What else the mod adds
 
-<img width="1024" height="600" alt="Screenshot_20261005_005940" src="https://github.com/user-attachments/assets/09721a9f-3791-4137-a185-770a3648caf9" />
+- **Cabin measurement report** that starts with problems in plain words (a weak speaker, a
+  tweeter in the wrong polarity, swapped channels, a subwoofer playing against the doors) and
+  only then corrects what the equaliser can. A control sweep after applying shows whether it
+  worked.
+- **Microphone calibration** for the built-in microphone.
+- **Spectrum** in three modes: calculated, microphone, off.
+- **Screensaver gestures**: track and play/pause zones, a cover that opens the playing player,
+  volume and display settings by swiping.
+- **Loudness** that follows the real volume steps of the unit, measured by the app.
+- **Diagnostics**: system report, screen topology, measurement archive.
+- **30 interface languages.**
 
-<img width="1024" height="600" alt="Screenshot_20261005_005954" src="https://github.com/user-attachments/assets/6c704193-b5e7-4991-b266-04a1b7f4f289" />
+----------------------------------------------------------------------------------------------------
 
-<img width="1024" height="600" alt="Screenshot_20261005_010001" src="https://github.com/user-attachments/assets/e0c89c59-40c6-44c6-a871-062c8d1eec62" />
+## Installing
 
-<img width="1024" height="600" alt="Screenshot_20261005_010007" src="https://github.com/user-attachments/assets/c65fb258-926d-4663-9780-54b7c099f088" />
+1. Install the APK from the release archive. Open wDSP once, grant the permissions it asks for, and
+   add it to the unit's sleep whitelist (the app opens it: Settings → "Let wDSP stay alive through
+   sleep").
+2. The mod is signed with its own key, not the author's. Android does not install one over the
+   other: to switch from the author's build to the mod (or back), save your presets with the
+   app's backup, uninstall the other build, then install.
+3. Disabling the stock DSP app is recommended, since it writes the same processor registers:
+   `adb shell pm disable com.qf.soundeffect` (back: `adb shell pm enable com.qf.soundeffect`).
+4. Root (optional) gives the microphone priority over other apps. With root and the
+   [PMPatch3](https://github.com/vova7878-modules/PMPatch/releases) Magisk module, the wDSP proxy
+   (`wdsp_proxy`) can be installed as an update of the stock DSP app, so the quick-settings DSP
+   button opens wDSP.
 
-<img width="1024" height="600" alt="Screenshot_20261005_010015" src="https://github.com/user-attachments/assets/9f2a6137-e363-4f0f-bcc1-a7ba70bb4b2e" />
+----------------------------------------------------------------------------------------------------
 
-<img width="1024" height="600" alt="Screenshot_20261005_010021" src="https://github.com/user-attachments/assets/614a968c-a940-4f0e-b8dd-ca9f7e2c109e" />
+## Reports
 
-</details>
+Measurements (the archive saved after a cabin measurement plus the system report), impressions of
+the presets, and bugs of this mod: [discussion of the mod](https://t.me/kostyamat_dev/92). Both
+files are saved to `Download/wDSP` on the unit.
 
-----------------------------------------------------------------------------------------------------------------------
+The original project, its author and its users: [wDSP Telegram group](https://t.me/wDSPapp),
+[GitHub](https://github.com/khiivl/wDSP).
 
-Features:
+----------------------------------------------------------------------------------------------------
 
-Equalization:
-- EQ that is true-to-hardware (16 bands with 2dB per step), correctly labeled with true curve visualization, with a fixed Q of 2.2. Subwoofer control on the same page. Amp gain control.
-- Visualization of every filter, every setting, all on the same page, a curve that follows the shape of all the filters (self-developed approximation algorithm) with a self-developed RTA (1024-sample, Hann-windowed STFT, ~50% overlap, radix-2 Cooley-Tukey FFT, Catmull-Rom spectral interpolation, 0.45-octave triangular smoothing, plus an asymmetric attack/release envelope follower for the temporal ballistics)
-- ISO 226 Loudness Correction curve which uses all the settings available to compensate for the non-linearity of hearing at low volumes. Self-developed anti-ripple algorithm for the EQ (2.2Q bell filters cause ripple!), Bass Boost for the low frequencies, dynamic subwoofer gain tweaking, Ultra Bass function to compensate for the head unit not scaling subwoofer gain correctly with the volume. All done to make music sound as perceptually "flat" as possible at all volumes, true to the coloring settings set by the user.
-- Bass filtering and boost just like in the stock DSP, but with correctly labeled values.
+## Building
 
-Other:
-- "Positioning" delays for careful tweaking of the sound center with 0.5ms step up to 5ms for all the speakers and subwoofer, also expressed in centimeters for convenience.
-or
-- "Surround" delays more suited for Haas effect, no subwoofer tweaking, max 10ms with 1ms step. "Rear fill enhancement", which i'm not sure if it does anything, but i have copied the control logic verbatim for a possible future MCU update.
-- Speaker balance adjustable with an XY controller and step buttons featuring my car, beloved Škoda Fabia mk1.
+```bash
+./gradlew :wdsp_app:assembleRelease
+```
 
-Presets:
-- All the settings in the app are saved to a preset that the user is able to duplicate, export, import and rename.
-- Automatic preset switching system that makes it possible to apply presets to different audio types, like Media, AUX, Radio and Bluetooth calls. Default Call preset with optimized values.
+Gradle and the JDK are provisioned by the wrapper; see [.agents/BUILDING.md](.agents/BUILDING.md).
+Java, `targetSdk 29` on purpose (the QF framework behaves as Android 10); the MCU protocol was
+reverse-engineered and is reached through the framework service by reflection.
 
-GALA:
-- Uses GPS data to read vehicle speed and calculates a volume boost based on the parameters the user sets. Just like on VAG radios, or in the Nightrunners demo.
+----------------------------------------------------------------------------------------------------
 
-Soundcheck:
-- Theme song loop that i composed that allows you to play the bass, drums, melody and vocals separately or combined in stems for a repeatable tuning reference.
-- Pink noise generator.
-- Sine wave generator with precise control, sweep function and a perceptual normalization at 0 phon (hearing threshold) which can be really quiet and expose the distortion of the DSP or the amp.
-- Test buttons for all the speakers
-- Sub-only toggle to make everything apart from the sub as quiet as possible.
+## Support
 
-----------------------------------------------------------------------------------------------------------------------
+The same two blocks as at the top of the app's Settings, in the same order: the original project
+first, then this mod.
 
-How to use:
+**wDSP — the original project.** This build is a mod based on it. The base, and the thanks for it,
+are the author's.
 
-1. Install, launch, give all the permissions, add to sleep whitelist in 8888. Ready to use. Don't use the stock DSP app, since it will reset your settings if launched and closed, if that happens - restart wDSP.
-2. If you want to disable the stock DSP app (recommended!), run the 'adb shell pm disable com.qf.soundeffect' command to disable it. Use 'adb shell pm enable com.qf.soundeffect' to enable it back.
-3. (Root only) You can install the wDSP-Proxy as an update to the stock DSP app to have the button in the quick settings open wDSP. You need to have PMPatch3.zip Magisk module installed, if you have disabled it, you need to enable it again. https://github.com/vova7878-modules/PMPatch/releases
+- GitHub — wDSP discussion: <https://github.com/khiivl/wDSP>
+- Telegram group: <https://t.me/wDSPapp>
+- Buy me a coffee: <https://buymeacoffee.com/radiorubka>
+- PayPal: <https://paypal.me/wDSPApp>
 
-My recommendations:
-1. You have to know that the 2.2Q filters on the EQ don't tolerate shelving. The inter-frequency interaction (in the worst case - ripple) can:
-- Destroy the phase at high frequencies, making everything sound "smeared" even on high-end setups.
-- Furthermore, they can affect the phase of the bass and make the interaction between the sub and the door speakers unpredictable, destroying the linearity of the sound and even causing gaps in the frequency response.
-Therefore:
-- Cut, not boost. Boosting can cause DSP clipping if overdone and cause ripple if too many bands are adjusted at the same time. Surgical cuts (like at the lower treble region, where the hearing is the most sensitive, or at the resonance points of the cabin/speaker setup) can make all the difference in the world.
-- If you have to boost the bass, adjust the sub or the bass boost sliders. That's generally all you need.
-2. If you have a sub, a generous crossover is recommended. Start by setting the sub freq to 63Hz and the HPF (Bass filter) freq of the front and rear speakers to 100Hz. If you have door rattle, that will tame it as well. Adjust if needed. Also turn on Ultra Bass, because the sub gets quieter as you adjust the master volume (QF platform quirk). Adjust if needed, rinse and repeat. Look at the RTA and the curves on the EQ screen for clues. If using the Loudness feature, try Sub tweaking, it will boost the sub at low volumes.
-3. Turn on the Loudness, Sub tweaking, Trim Highs and Show on main. Set the Loudness calibration volume to roughly 80db (Freight train at 50ft, food blender, highway car interior). That is the point where the hearing is the flattest. The Loudness curve will be applied to the sound below that level. Don't treat as gospel, adjust by taste afterwards. Be aware that Loudness causes some inter-frequency ripple that can't be avoided. Don't use the feature if that bothers you or if you always listen to music at the same volume.
-4. GALA feature is used to compensate for road noise at higher speeds. Set the values conservatively, i recommend a max adjustment of 6 and a step every 50km/h for a start, reduce if it gets too loud, increase if it gets too quiet. Only touch the Advanced settings if you have specific issues.
+**wDSP kostyamat mod.** This build. It is free: no licences, no unlocks — only voluntary thanks.
 
-Report, report and report bugs again. It is crucial to me that you share what doesn't work so i can keep improving the app.
+- Discussion of the mod: <https://t.me/kostyamat_dev/92>
+- Buy me a coffee: <https://t.me/kostyamat_dev/10>
+- PayPal: <https://www.paypal.com/paypalme/kostyamat>
+- Revolut: <https://revolut.me/kostyamat>
+- Crypto — TRC-20 (Tron): `TCSvCEyX1Zxb9E97oTpxHsBCLiDZLPTvzk`
+- Crypto — TON (Telegram wallet): `UQCqracCOo_DEwVWQjPVYkKak-gSZx1TXQOxICi_9frpdr5j`
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
-Written on Java, set to target API29. Reverse-engineered proprietary MCU communication protocol. Communicates with the framework.jar service using reflections.
+## Credits and license
 
-The app is licensed with the GPLv3 license. 
-If you improve the program and share it, you must share the source code too.
+To **Volodymyr Chebanenko (khiivl)**, the author of wDSP: for the application this mod is built on,
+the Classic interface, version 1.0, and his knowledge of sound. To the testers who send
+measurements and reports.
 
-License rights belong to Volodymyr Chebanenko, the creator and the maintainer.
+The app is licensed under **GPLv3**: whoever improves it and shares it shares the source too.
+License rights belong to Volodymyr Chebanenko, the creator and maintainer of wDSP.

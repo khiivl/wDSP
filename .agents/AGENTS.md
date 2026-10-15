@@ -65,8 +65,8 @@ adb shell am force-stop com.radiorubka.wdsp && adb shell am start-foreground-ser
 - Do not touch or commit anyone else's `.idea/*`. **Gemini does not commit here**, and destructive
   git is banned to it everywhere; constructive git is its right — [DECISIONS.md](DECISIONS.md).
   Commit before letting it into the tree.
-- Tester measurements: the group <https://t.me/wDSPapp> (post <https://t.me/wDSPapp/79>) or a forum PM — **never**
-  a direct message, where lone files get lost.
+- Tester measurements go to the mod's group <https://t.me/kostyamat_dev/92> (the author's app has no measurement;
+  owner 15.10), or a forum PM — **never** a direct message, where lone files get lost.
 
 ## Working with the owner
 
