@@ -27,7 +27,9 @@ Z APLIKACJI AUTORA (khiivl, do jego 1.0.2) — wszystko to jest też w modzie
 TYLKO W MODZIE — aplikacja autora tego nie robi
 - Mierzy samochód: sweepy przez każdy głośnik, nagrane mikrofonem radia, a z tego, co usłyszy —
   preset, opóźnienia i lista problemów.
-- Jego widmo potrafi słuchać kabiny przez mikrofon, a nie tylko pokazywać muzykę.
+- Pracuje z mikrofonem: widmo i RTA słuchają kabiny, także przy analogowym radiu FM, które
+  w ogóle nie przechodzi przez Androida i bez mikrofonu nie ma widma.
+- Analizator to kod natywny (C++), a nie Java.
 - Wizualizator na pasku stanu i pełnoekranowy wygaszacz ze sterowaniem odtwarzaczem.
 - Dba o dźwięk nie tylko korektorem: rozmowy, głośność każdego źródła, wznawianie
   odtwarzacza po restarcie lub uśpieniu.

@@ -30,7 +30,9 @@ DE L'APPLICATION DE L'AUTEUR (khiivl, jusqu'à sa 1.0.2) — tout cela est aussi
 UNIQUEMENT DANS LE MOD — l'application de l'auteur ne le fait pas
 - Il mesure la voiture : balayages dans chaque haut-parleur, enregistrés par le micro de
   l'autoradio, et à partir de ce qu'il entend, un préréglage, les délais et une liste de problèmes.
-- Son spectre peut écouter l'habitacle par le micro, pas seulement afficher la musique.
+- Il travaille avec le micro : le spectre et le RTA écoutent l'habitacle, y compris avec la radio
+  FM analogique, qui ne passe pas par Android et n'a sinon aucun spectre.
+- L'analyseur est du code natif (C++), pas du Java.
 - Un visualiseur dans la barre d'état et un économiseur d'écran plein écran avec commandes du
   lecteur.
 - Il s'occupe du son au-delà de l'égaliseur : appels, volume de chaque source, reprise du

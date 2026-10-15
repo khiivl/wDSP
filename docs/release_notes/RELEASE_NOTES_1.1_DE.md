@@ -29,7 +29,9 @@ AUS DER APP DES AUTORS (khiivl, bis zu seiner 1.0.2) — alles davon ist auch in
 NUR IN DER MODIFIKATION — die App des Autors kann das nicht
 - Sie misst das Auto: Sweeps über jeden Lautsprecher, aufgenommen mit dem Mikrofon des Radios,
   und daraus ein Preset, die Laufzeiten und eine Liste der Probleme.
-- Das Spektrum kann über das Mikrofon in den Innenraum hören, nicht nur die Musik zeigen.
+- Sie arbeitet mit dem Mikrofon: Spektrum und RTA hören in den Innenraum, auch beim analogen
+  UKW-Radio, das gar nicht über Android läuft und sonst kein Spektrum hat.
+- Der Analysator ist nativer Code (C++), nicht Java.
 - Ein Visualisierer in der Statusleiste und ein Vollbild-Bildschirmschoner mit Player-Steuerung.
 - Sie kümmert sich um den Klang über den Equalizer hinaus: Anrufe, die Lautstärke jeder
   Quelle, Fortsetzen des Players nach Neustart oder Standby.

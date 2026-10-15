@@ -28,7 +28,9 @@ FROM THE AUTHOR'S APP (khiivl, up to his 1.0.2) — all of it is in the mod too
 ONLY IN THE MOD — the author's app does not do this
 - It measures the car: sweeps through every speaker, recorded by the unit's microphone, and
   builds a preset, the delays and a list of problems from what it heard.
-- Its spectrum can listen to the cabin through the microphone, not only show the music.
+- It works with the microphone: the spectrum and RTA can listen to the cabin, also on the
+  analogue FM radio, which never passes through Android and so has no spectrum otherwise.
+- The analyser is native code (C++), not Java.
 - A visualiser in the status bar and a full-screen screensaver with playback controls.
 - It looks after the sound beyond the equaliser: calls, the volume of each source, resuming
   the player after a restart or sleep.

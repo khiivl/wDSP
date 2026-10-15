@@ -28,7 +28,9 @@ DE LA APP DEL AUTOR (khiivl, hasta su 1.0.2) — todo esto está también en el 
 SOLO EN EL MOD — la app del autor no hace esto
 - Mide el coche: barridos por cada altavoz, grabados con el micrófono del equipo, y con lo que
   oye construye un preajuste, los retardos y una lista de problemas.
-- Su espectro puede escuchar el habitáculo con el micrófono, no solo mostrar la música.
+- Trabaja con el micrófono: el espectro y el RTA escuchan el habitáculo, también con la radio
+  FM analógica, que no pasa por Android y sin micrófono no tiene espectro.
+- El analizador es código nativo (C++), no Java.
 - Un visualizador en la barra de estado y un salvapantallas a pantalla completa con control del
   reproductor.
 - Cuida el sonido más allá del ecualizador: llamadas, el volumen de cada fuente, reanudar el

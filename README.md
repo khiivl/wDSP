@@ -39,7 +39,9 @@ ROHM **BU32107**. Програма керує процесором через MC
 - **Він вимірює машину.** Оригінал налаштовують на слух: еквалайзер, кросовери й затримки ви
   виставляєте самі, а його спектр показує музику, що грає. Мод ще й програє тестові свіпи через
   динаміки, записує їх мікрофоном магнітоли і з почутого будує пресет, затримки та перелік проблем.
-- **Його спектр уміє слухати салон** через мікрофон, а не лише показувати сигнал.
+- **Працює з мікрофоном**: спектр і RTA слухають салон, зокрема й на аналоговому FM-радіо, яке
+  не проходить через Android і без мікрофона спектра не має.
+- **Аналізатор — нативний код (C++)**, а не Java.
 - **Він дбає про звук магнітоли не тільки еквалайзером**: гучність кожного джерела, дзвінки
   (мікрофон звільняється, вмикається пресет дзвінка), відновлення плеєра після перезавантаження
   чи сну.
@@ -193,7 +195,9 @@ Screensaver gesture map: [docs/screensaver_map.svg](docs/screensaver_map.svg).
   delays yourself, and its spectrum shows the music being played. The mod also plays test sweeps
   through the speakers, records them with the unit's microphone, and builds a preset, the delays
   and a list of problems from what it heard.
-- **Its spectrum can listen to the cabin**, through the microphone, not only show the signal.
+- **It works with the microphone**: the spectrum and RTA listen to the cabin, also on the analogue
+  FM radio, which never passes through Android and so has no spectrum otherwise.
+- **The analyser is native code (C++)**, not Java.
 - **It looks after the unit's sound beyond the equaliser**: the volume of each source, calls (the
   microphone is released, the call preset applied), resuming the player after a restart or sleep.
 - **A status bar visualiser and a full-screen screensaver** — the original has neither.

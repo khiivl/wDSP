@@ -28,7 +28,9 @@ DALL'APP DELL'AUTORE (khiivl, fino alla sua 1.0.2) — tutto questo è anche nel
 SOLO NEL MOD — l'app dell'autore non lo fa
 - Misura l'auto: sweep su ogni altoparlante, registrati dal microfono dell'autoradio, e da ciò che
   sente costruisce un predefinito, i ritardi e un elenco di problemi.
-- Il suo spettro può ascoltare l'abitacolo con il microfono, non solo mostrare la musica.
+- Lavora con il microfono: spettro e RTA ascoltano l'abitacolo, anche con la radio FM analogica,
+  che non passa da Android e senza microfono non ha spettro.
+- L'analizzatore è codice nativo (C++), non Java.
 - Un visualizzatore nella barra di stato e un salvaschermo a schermo intero con i comandi del
   lettore.
 - Si occupa del suono oltre l'equalizzatore: chiamate, il volume di ogni sorgente, ripresa del

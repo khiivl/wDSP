@@ -29,7 +29,9 @@ DA APLICAÇÃO DO AUTOR (khiivl, até à sua 1.0.2) — tudo isto está também 
 SÓ NO MOD — a aplicação do autor não faz isto
 - Mede o carro: varrimentos por cada coluna, gravados pelo microfone do autorrádio, e com o que
   ouve constrói uma predefinição, os atrasos e uma lista de problemas.
-- O seu espectro pode ouvir o habitáculo pelo microfone, não só mostrar a música.
+- Trabalha com o microfone: o espectro e o RTA ouvem o habitáculo, também no rádio FM
+  analógico, que não passa pelo Android e sem microfone não tem espectro.
+- O analisador é código nativo (C++), não Java.
 - Um visualizador na barra de estado e um protetor de ecrã em ecrã inteiro com controlo do
   leitor.
 - Cuida do som para além do equalizador: chamadas, o volume de cada fonte, retoma do leitor
