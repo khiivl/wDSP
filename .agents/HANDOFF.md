@@ -20,14 +20,8 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Open
 
-**Messengers cannot record voice (owner 15.10 ~02:15) — cause not found, not wDSP's microphone.**
-📻 Held press: Telegram/WhatsApp get ACTION_DOWN, then ACTION_CANCEL 11–20 ms later → recording
-cancelled (Telegram 0.64 s, WhatsApp input closed in 50–100 ms). Mic free (wDSP not recording since
-02:03:55). wDSP injects nothing; `TouchWatcher` 1×1 only gets ACTION_OUTSIDE; screensaver not shown then.
-Suspects: QFassistant `RokoAccessibilityService` (canPerformGestures=true → system touch filter; no
-dispatchGesture in RokoAi code), notificationcenter, wDSP. **Next:** elimination with the owner at the
-unit — assistant first (his call: disable service in UI or `am force-stop`), then notifier, then wDSP.
-Also: board #1810 to BitPerfect (EffectHAL SET_CONFIG).
+Messengers record again (owner 15.10 16:20) - the touch cancel was QFassistant's, fixed by the owner
+overnight; not wDSP. Board #1810 to BitPerfect (EffectHAL SET_CONFIG) still open on their side.
 
 **Item 7 (measurement volume, `MeasureVolume`; step table first in the wizard; `_fm_cal` = the
 person's volume) builds and has never been seen on the unit.**
