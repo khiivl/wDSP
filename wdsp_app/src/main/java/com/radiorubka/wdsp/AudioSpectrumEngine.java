@@ -2417,8 +2417,12 @@ public class AudioSpectrumEngine {
     private long micClipWindowAt;
     private int micClipWindowSamples, micClipWindowClipped, micClipRun;
     private static final int MIC_CLIP_MAGNITUDE = 32700;
-    /** 0.1 %: about 48 of a second's 48 000 samples on the rail. */
-    private static final float MIC_CLIP_SHARE = 0.001f;
+    /**
+     * 0.5 %: about 240 of a second's 48 000 samples on the rail. 📻 15.10.2026, bench: step 10 gave
+     * 0.21-0.25 % (bass peaks), step 14 5.6 %; owner: «в стелю бьють саме баси, я б ігнорував трохи
+     * більше семплів» - 0.1 % called step 10 overloaded.
+     */
+    private static final float MIC_CLIP_SHARE = 0.005f;
     private static final int MIC_CLIP_SECONDS = 2;
     private static final long MIC_CLIP_WINDOW_MS = 1000;
 
