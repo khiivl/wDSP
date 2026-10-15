@@ -20,18 +20,29 @@ in any browser without internet.
 NEW
 -----------------------------------------------------------------------------
 
-Author (khiivl) · up to his 1.0.2
+FROM THE AUTHOR'S APP (khiivl, up to his 1.0.2) — all of it is in the mod too
 - Ultra Bass, the new Loudness, a live analyser curve behind the equaliser, "Off" in the
   subwoofer list for cars without one, GALA switchable per preset.
 - The "Audio Check" tab: test signals and test recordings for each speaker.
 
-Mod · Interface
+ONLY IN THE MOD — the author's app does not do this
+- It measures the car: sweeps through every speaker, recorded by the unit's microphone, and
+  builds a preset, the delays and a list of problems from what it heard.
+- Its spectrum can listen to the cabin through the microphone, not only show the music.
+- A visualiser in the status bar and a full-screen screensaver with playback controls.
+- It looks after the sound beyond the equaliser: calls, the volume of each source, resuming
+  the player after a restart or sleep.
+- Two interfaces: Classic (the author's look) and the mod's own Modern.
+
+New in the mod in 1.1:
+
+Interface
 - Two interface styles in Settings → "UI Style": Classic (the author's look) and Modern. Day and
   night themes in both.
 - Pair locks for delays: "Move fronts together" and "Move rears together" keep the difference
   between left and right.
 
-Mod · Cabin measurement
+Cabin measurement
 - Settings → cabin card: say what kind of cabin it is, its size, and tap the speakers that are
   installed.
 - The app chooses the measurement volume itself.
@@ -41,18 +52,18 @@ Mod · Cabin measurement
   turn its phase switch). Problems an equaliser cannot fix are reported instead of being
   "corrected".
 
-Mod · Spectrum
+Spectrum
 - A switch on the main screen: Off, Music (what the preset makes of the music), Microphone (what
   the cabin actually sounds like).
 - "RTA zero" in Audio Check calibrates the spectrum in one press.
 - A warning when the microphone is overloaded: lower its sensitivity in the car settings.
 
-Mod · Player resume
+Player resume
 - Settings: "Resume the player after a restart" and "Resume the player after sleep". The player
   that was playing comes back on its own, without its window jumping on top of the navigator.
 - For sleep, press "Let wDSP stay alive through sleep" and enable wDSP in the list that opens.
 
-Mod · Screensaver
+Screensaver
 - Swipe from the middle of the screen to change the volume.
 - Hold the style button for a second to open the equaliser.
 - A tap on the cover opens the player or radio that is actually playing.

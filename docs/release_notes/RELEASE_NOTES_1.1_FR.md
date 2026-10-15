@@ -21,19 +21,31 @@ Ils s'ouvrent dans n'importe quel navigateur sans connexion Internet.
 NOUVEAUTÉS
 -----------------------------------------------------------------------------
 
-Auteur (khiivl) · jusqu'à sa 1.0.2
+DE L'APPLICATION DE L'AUTEUR (khiivl, jusqu'à sa 1.0.2) — tout cela est aussi dans le mod
 - Ultra Bass, la nouvelle compensation de Loudness, une courbe d'analyseur en direct derrière
   l'égaliseur, "Arrêt" dans la liste du subwoofer pour les véhicules non équipés, GALA désactivable
   par préréglage.
 - L'onglet "Test Audio" : signaux de test et enregistrements de contrôle pour chaque haut-parleur.
 
-Mod · Interface
+UNIQUEMENT DANS LE MOD — l'application de l'auteur ne le fait pas
+- Il mesure la voiture : balayages dans chaque haut-parleur, enregistrés par le micro de
+  l'autoradio, et à partir de ce qu'il entend, un préréglage, les délais et une liste de problèmes.
+- Son spectre peut écouter l'habitacle par le micro, pas seulement afficher la musique.
+- Un visualiseur dans la barre d'état et un économiseur d'écran plein écran avec commandes du
+  lecteur.
+- Il s'occupe du son au-delà de l'égaliseur : appels, volume de chaque source, reprise du
+  lecteur après un redémarrage ou une veille.
+- Deux interfaces : Classique (l'apparence de l'auteur) et le Moderne propre au mod.
+
+Nouveautés du mod en 1.1 :
+
+Interface
 - Deux styles d'interface dans Paramètres → "Style d'interface" : Classique (l'apparence de
   l'auteur) et Moderne. Thèmes jour et nuit disponibles dans les deux.
 - Verrouillage par paire des délais : "Avants ensemble" et "Arrières ensemble" conservent l'écart
   entre gauche et droite.
 
-Mod · Mesure de l'habitacle
+Mesure de l'habitacle
 - Paramètres → carte de l'habitacle : indiquez le type d'habitacle, ses dimensions et touchez les
   haut-parleurs installés.
 - L'application détermine automatiquement le volume de mesure.
@@ -43,18 +55,18 @@ Mod · Mesure de l'habitacle
   portes (avec indication d'inverser son sélecteur de phase). Les problèmes qu'un égaliseur ne peut
   résoudre sont signalés au lieu d'être « corrigés ».
 
-Mod · Spectre
+Spectre
 - Un commutateur sur l'écran principal : "Désactivé", "Musique" (ce que le préréglage produit à partir
   de la musique), "Microphone" (le rendu réel dans l'habitacle).
 - "Zéro RTA" dans Test Audio étalonne le spectre en une seule pression.
 - Avertissement en cas de saturation du microphone : réduisez sa sensibilité dans les réglages du véhicule.
 
-Mod · Reprise du lecteur
+Reprise du lecteur
 - Paramètres : "Reprendre la lecture après le redémarrage" et "Reprendre la lecture après la veille".
   Le lecteur actif reprend automatiquement, sans que sa fenêtre ne vienne masquer la navigation.
 - Pour la veille, appuyez sur "Garder wDSP actif en veille" et activez wDSP dans la liste affichée.
 
-Mod · Économiseur d'écran
+Économiseur d'écran
 - Glissez depuis le centre de l'écran pour modifier le volume.
 - Maintenez le bouton de style enfoncé une seconde pour ouvrir l'égaliseur.
 - Un appui sur la pochette ouvre le lecteur ou la radio en cours d'écoute.

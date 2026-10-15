@@ -19,18 +19,29 @@ w dowolnej przeglądarce bez dostępu do Internetu.
 NOWOŚCI
 -----------------------------------------------------------------------------
 
-Autor (khiivl) · do jego 1.0.2
+Z APLIKACJI AUTORA (khiivl, do jego 1.0.2) — wszystko to jest też w modzie
 - Ultra Bass, nowa funkcja Loudness, krzywa analizatora na żywo za korektorem, "Wył." na liście
   subwoofera dla aut bez niego, GALA wyłączana dla pojedynczego presetu.
 - Zakładka "Test Audio": sygnały testowe i nagrania kontrolne dla każdego głośnika.
 
-Mod · Interfejs
+TYLKO W MODZIE — aplikacja autora tego nie robi
+- Mierzy samochód: sweepy przez każdy głośnik, nagrane mikrofonem radia, a z tego, co usłyszy —
+  preset, opóźnienia i lista problemów.
+- Jego widmo potrafi słuchać kabiny przez mikrofon, a nie tylko pokazywać muzykę.
+- Wizualizator na pasku stanu i pełnoekranowy wygaszacz ze sterowaniem odtwarzaczem.
+- Dba o dźwięk nie tylko korektorem: rozmowy, głośność każdego źródła, wznawianie
+  odtwarzacza po restarcie lub uśpieniu.
+- Dwa interfejsy: Klasyczny (wygląd autora) i własny Nowoczesny moda.
+
+Nowe w modzie w 1.1:
+
+Interfejs
 - Dwa style interfejsu w Ustawienia → "Styl interfejsu": Klasyczny (wygląd autora) i Nowoczesny.
   Motyw dzienny i nocny w obu.
 - Blokada par dla opóźnień: "Przednie razem" i "Tylne razem" zachowują różnicę między lewym
   a prawym.
 
-Mod · Pomiar kabiny
+Pomiar kabiny
 - Ustawienia → karta kabiny: wskaż rodzaj kabiny, jej wymiary i dotknij zainstalowanych głośników.
 - Aplikacja sama dobiera głośność pomiaru.
 - Po naciśnięciu "Apply Auto-EQ" krótki sweep kontrolny pokazuje, czy korekta przyniosła skutek.
@@ -39,18 +50,18 @@ Mod · Pomiar kabiny
   przełączenia jego fazy). Problemy, których korektor nie może rozwiązać, są zgłaszane zamiast być
   "korygowane".
 
-Mod · Widmo
+Widmo
 - Przełącznik na ekranie głównym: "Wył.", "Muzyka" (co preset robi z muzyką), "Microphone" (jak
   naprawdę brzmi kabina).
 - "Zero RTA" w Test Audio kalibruje widmo jednym naciśnięciem.
 - Ostrzeżenie o przesterowaniu mikrofonu: zmniejsz jego czułość w ustawieniach samochodu.
 
-Mod · Wznawianie odtwarzacza
+Wznawianie odtwarzacza
 - Ustawienia: "Wznów odtwarzacz po restarcie" oraz "Wznów odtwarzacz po uśpieniu". Grający odtwarzacz
   powraca sam, bez wyskakiwania jego okna na wierzch nawigacji.
 - Dla uśpienia naciśnij "Pozwól wDSP działać w uśpieniu" i włącz wDSP na liście, która się otworzy.
 
-Mod · Wygaszacz
+Wygaszacz
 - Przeciągnięcie od środka ekranu zmienia głośność.
 - Przytrzymanie przycisku stylu przez sekundę otwiera korektor.
 - Dotknięcie okładki otwiera ten odtwarzacz lub radio, które rzeczywiście gra.

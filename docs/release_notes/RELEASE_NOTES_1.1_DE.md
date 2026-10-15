@@ -21,18 +21,29 @@ Archiv. Sie lassen sich in jedem Browser ohne Internetverbindung öffnen.
 NEU
 -----------------------------------------------------------------------------
 
-Autor (khiivl) · bis zu seiner 1.0.2
+AUS DER APP DES AUTORS (khiivl, bis zu seiner 1.0.2) — alles davon ist auch in der Modifikation
 - Ultra Bass, die neue Loudness, eine Live-Analysatorkurve hinter dem Equalizer, "Aus" in der
   Subwoofer-Liste für Fahrzeuge ohne Subwoofer, GALA pro Preset abschaltbar.
 - Der Reiter "Audio-Check": Testsignale und Testaufnahmen für jeden einzelnen Lautsprecher.
 
-Mod · Oberfläche
+NUR IN DER MODIFIKATION — die App des Autors kann das nicht
+- Sie misst das Auto: Sweeps über jeden Lautsprecher, aufgenommen mit dem Mikrofon des Radios,
+  und daraus ein Preset, die Laufzeiten und eine Liste der Probleme.
+- Das Spektrum kann über das Mikrofon in den Innenraum hören, nicht nur die Musik zeigen.
+- Ein Visualisierer in der Statusleiste und ein Vollbild-Bildschirmschoner mit Player-Steuerung.
+- Sie kümmert sich um den Klang über den Equalizer hinaus: Anrufe, die Lautstärke jeder
+  Quelle, Fortsetzen des Players nach Neustart oder Standby.
+- Zwei Oberflächen: Klassisch (das Aussehen des Autors) und das eigene Modern der Modifikation.
+
+Neu in der Modifikation in 1.1:
+
+Oberfläche
 - Zwei Oberflächenstile in Einstellungen → "UI-Stil": Klassisch (das Aussehen des Autors) und
   Modern. Tag- und Nacht-Themen in beiden Stilen.
 - Paarsperren für Laufzeitverzögerungen: "Vorne zusammen" und "Hinten zusammen" behalten den
   Unterschied zwischen links und rechts bei.
 
-Mod · Fahrgastraum-Messung
+Fahrgastraum-Messung
 - Einstellungen → Fahrgastraum-Karte: Art des Innenraums und Maße angeben sowie die verbauten
   Lautsprecher antippen.
 - Die App wählt die Messlautstärke selbstständig.
@@ -42,18 +53,18 @@ Mod · Fahrgastraum-Messung
   spielt (mit dem Hinweis, den Phasenschalter umzulegen). Probleme, die ein Equalizer nicht beheben
   kann, werden gemeldet, statt sie zu "korrigieren".
 
-Mod · Spektrum
+Spektrum
 - Umschalter auf dem Hauptbildschirm: "Aus", "Musik" (was das Preset aus der Musik macht),
   "Microphone" (wie der Innenraum tatsächlich klingt).
 - "RTA-Nullpunkt" im Audio-Check kalibriert das Spektrum mit einem einzigen Druck.
 - Warnung bei Übersteuerung des Mikrofons: Empfindlichkeit in den Fahrzeugeinstellungen verringern.
 
-Mod · Player-Wiederaufnahme
+Player-Wiederaufnahme
 - Einstellungen: "Player nach Neustart fortsetzen" und "Player nach Standby fortsetzen". Der zuletzt
   aktive Player kehrt eigenständig zurück, ohne dass sich sein Fenster über die Navigation drängt.
 - Für den Standby-Modus tippen Sie auf "wDSP im Standby aktiv lassen" und aktivieren Sie wDSP in der Liste.
 
-Mod · Bildschirmschoner
+Bildschirmschoner
 - Wischen von der Bildschirmmitte aus regelt die Lautstärke.
 - Stil-Taste eine Sekunde lang gedrückt halten öffnet den Equalizer.
 - Ein Tippen auf das Cover öffnet den aktuell tatsächlich spielenden Player oder das Radio.

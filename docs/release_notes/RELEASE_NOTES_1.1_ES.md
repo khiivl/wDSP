@@ -20,18 +20,30 @@ Se abren en cualquier navegador sin internet.
 NOVEDADES
 -----------------------------------------------------------------------------
 
-Autor (khiivl) · hasta su 1.0.2
+DE LA APP DEL AUTOR (khiivl, hasta su 1.0.2) — todo esto está también en el mod
 - Ultra Bass, el nuevo Loudness, una curva de analizador en vivo detrás del ecualizador, "Apag."
   en la lista de subwoofer para coches sin él, GALA desactivable por preajuste.
 - La pestaña "Prueba Audio": señales de prueba y grabaciones de prueba para cada altavoz.
 
-Mod · Interfaz
+SOLO EN EL MOD — la app del autor no hace esto
+- Mide el coche: barridos por cada altavoz, grabados con el micrófono del equipo, y con lo que
+  oye construye un preajuste, los retardos y una lista de problemas.
+- Su espectro puede escuchar el habitáculo con el micrófono, no solo mostrar la música.
+- Un visualizador en la barra de estado y un salvapantallas a pantalla completa con control del
+  reproductor.
+- Cuida el sonido más allá del ecualizador: llamadas, el volumen de cada fuente, reanudar el
+  reproductor tras reiniciar o suspender.
+- Dos interfaces: Clásico (el aspecto del autor) y el Moderno propio del mod.
+
+Novedades del mod en 1.1:
+
+Interfaz
 - Dos estilos de interfaz en Ajustes → "Estilo de interfaz": Clásico (el aspecto del autor) y
   Moderno. Temas diurno y nocturno en ambos.
 - Bloqueo de pares para retardos: "Delanteros juntos" y "Traseros juntos" mantienen la diferencia
   entre izquierda y derecha.
 
-Mod · Medición del habitáculo
+Medición del habitáculo
 - Ajustes → tarjeta del habitáculo: indique el tipo de habitáculo, sus medidas y toque los altavoces
   instalados.
 - La aplicación elige el volumen de medición por sí misma.
@@ -41,18 +53,18 @@ Mod · Medición del habitáculo
   (con la indicación de cambiar su conmutador de fase). Los problemas que un ecualizador no puede
   solucionar se informan en lugar de "corregirse".
 
-Mod · Espectro
+Espectro
 - Un conmutador en la pantalla principal: "Desactivado", "Música" (lo que el preajuste hace con la música),
   "Microphone" (cómo suena realmente el habitáculo).
 - "Cero RTA" en Prueba Audio calibra el espectro con una sola pulsación.
 - Aviso cuando el micrófono está saturado: reduzca su sensibilidad en los ajustes del coche.
 
-Mod · Reanudación del reproductor
+Reanudación del reproductor
 - Ajustes: "Reanudar reproductor tras reiniciar" y "Reanudar reproductor tras suspensión". El reproductor
   que estaba sonando vuelve por sí solo, sin que su ventana salte sobre el navegador.
 - Para la suspensión, pulse "Permitir wDSP activo en suspensión" y active wDSP en la lista que se abre.
 
-Mod · Salvapantallas
+Salvapantallas
 - Deslice desde el centro de la pantalla para cambiar el volumen.
 - Mantenga pulsado el botón de estilo un segundo para abrir el ecualizador.
 - Un toque en la carátula abre el reproductor o la radio que realmente está sonando.

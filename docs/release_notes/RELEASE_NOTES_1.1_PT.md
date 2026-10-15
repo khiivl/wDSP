@@ -21,18 +21,30 @@ em qualquer navegador sem ligação à Internet.
 NOVIDADES
 -----------------------------------------------------------------------------
 
-Autor (khiivl) · até à sua 1.0.2
+DA APLICAÇÃO DO AUTOR (khiivl, até à sua 1.0.2) — tudo isto está também no mod
 - Ultra Bass, o novo Loudness, uma curva de analisador em tempo real por trás do equalizador,
   "Desl." na lista de subwoofer para carros sem ele, GALA desativável por predefinição.
 - O separador "Teste de Áudio": sinais de teste e gravações de teste para cada coluna.
 
-Mod · Interface
+SÓ NO MOD — a aplicação do autor não faz isto
+- Mede o carro: varrimentos por cada coluna, gravados pelo microfone do autorrádio, e com o que
+  ouve constrói uma predefinição, os atrasos e uma lista de problemas.
+- O seu espectro pode ouvir o habitáculo pelo microfone, não só mostrar a música.
+- Um visualizador na barra de estado e um protetor de ecrã em ecrã inteiro com controlo do
+  leitor.
+- Cuida do som para além do equalizador: chamadas, o volume de cada fonte, retoma do leitor
+  após reiniciar ou suspender.
+- Duas interfaces: Clássico (o aspeto do autor) e o Moderno próprio do mod.
+
+Novidades do mod na 1.1:
+
+Interface
 - Dois estilos de interface em Definições → "Estilo de interface": Clássico (o aspeto do autor) e
   Moderno. Temas diurno e noturno em ambos.
 - Bloqueio de pares para atrasos: "Frontais juntos" e "Traseiros juntos" mantêm a diferença entre
   esquerda e direita.
 
-Mod · Medição do habitáculo
+Medição do habitáculo
 - Definições → cartão do habitáculo: indique o tipo de habitáculo, as suas dimensões e toque nas
   colunas instaladas.
 - A aplicação escolhe o volume de medição autonomamente.
@@ -42,18 +54,18 @@ Mod · Medição do habitáculo
   (com indicação para alterar o interruptor de fase). Problemas que um equalizador não pode resolver
   são comunicados em vez de serem "corrigidos".
 
-Mod · Espectro
+Espectro
 - Um comutador no ecrã principal: "Desligado", "Música" (o que a predefinição faz da música),
   "Microphone" (como o habitáculo realmente soa).
 - "Zero RTA" no Teste de Áudio calibra o espectro com uma única pressão.
 - Aviso quando o microfone está sobrecarregado: reduza a sua sensibilidade nas definições do carro.
 
-Mod · Retoma do leitor
+Retoma do leitor
 - Definições: "Retomar leitor após reiniciar" e "Retomar leitor após suspensão". O leitor que estava
   a tocar regressa sozinho, sem que a sua janela salte sobre o navegador.
 - Para a suspensão, prima "Permitir wDSP ativo em suspensão" e ative o wDSP na lista apresentada.
 
-Mod · Protetor de ecrã
+Protetor de ecrã
 - Deslize a partir do centro do ecrã para ajustar o volume.
 - Mantenha premido o botão de estilo durante um segundo para abrir o equalizador.
 - Um toque na capa abre o leitor ou rádio que está efetivamente a tocar.

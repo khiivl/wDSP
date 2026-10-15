@@ -20,18 +20,30 @@ in qualsiasi browser senza bisogno di Internet.
 NOVITÀ
 -----------------------------------------------------------------------------
 
-Autore (khiivl) · fino alla sua 1.0.2
+DALL'APP DELL'AUTORE (khiivl, fino alla sua 1.0.2) — tutto questo è anche nel mod
 - Ultra Bass, il nuovo Loudness, una curva dell'analizzatore in tempo reale dietro l'equalizzatore,
   "Spento" nell'elenco subwoofer per le auto sprovviste, GALA disattivabile per singolo predefinito.
 - La scheda "Test Audio": segnali di prova e registrazioni di test per ciascun altoparlante.
 
-Mod · Interfaccia
+SOLO NEL MOD — l'app dell'autore non lo fa
+- Misura l'auto: sweep su ogni altoparlante, registrati dal microfono dell'autoradio, e da ciò che
+  sente costruisce un predefinito, i ritardi e un elenco di problemi.
+- Il suo spettro può ascoltare l'abitacolo con il microfono, non solo mostrare la musica.
+- Un visualizzatore nella barra di stato e un salvaschermo a schermo intero con i comandi del
+  lettore.
+- Si occupa del suono oltre l'equalizzatore: chiamate, il volume di ogni sorgente, ripresa del
+  lettore dopo un riavvio o la sospensione.
+- Due interfacce: Classico (l'aspetto dell'autore) e il Moderno proprio del mod.
+
+Novità del mod nella 1.1:
+
+Interfaccia
 - Due stili di interfaccia in Impostazioni → "Stile interfaccia": Classico (l'aspetto dell'autore)
   e Moderno. Temi diurno e notturno per entrambi.
 - Blocco coppie per i ritardi: "Anteriori insieme" e "Posteriori insieme" mantengono la differenza
   tra sinistra e destra.
 
-Mod · Misurazione dell'abitacolo
+Misurazione dell'abitacolo
 - Impostazioni → scheda abitacolo: indica il tipo di abitacolo, le dimensioni e tocca gli altoparlanti
   installati.
 - L'applicazione sceglie autonomamente il volume di misurazione.
@@ -41,18 +53,18 @@ Mod · Misurazione dell'abitacolo
   (con il suggerimento di commutare la fase). I problemi che un equalizzatore non può risolvere vengono
   segnalati anziché essere "corretti".
 
-Mod · Spettro
+Spettro
 - Un selettore nella schermata principale: "Spento", "Musica" (ciò che il predefinito ricava dalla
   musica), "Microphone" (come suona realmente l'abitacolo).
 - "Zero RTA" in Test Audio calibra lo spettro con una sola pressione.
 - Avviso quando il microfono è sovraccarico: riduci la sensibilità nelle impostazioni dell'auto.
 
-Mod · Ripresa del lettore
+Ripresa del lettore
 - Impostazioni: "Riprendi il lettore dopo il riavvio" e "Riprendi il lettore dopo la sospensione". Il
   lettore in riproduzione torna attivo da solo, senza che la sua finestra si sovrapponga al navigatore.
 - Per la sospensione, tocca "Consenti a wDSP di restare attivo" e abilita wDSP nell'elenco che si apre.
 
-Mod · Salvaschermo
+Salvaschermo
 - Scorri dal centro dello schermo per regolare il volume.
 - Tieni premuto il pulsante dello stile per un secondo per aprire l'equalizzatore.
 - Un tocco sulla copertina apre il lettore o la radio effettivamente in riproduzione.
