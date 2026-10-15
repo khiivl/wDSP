@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**15.10.2026 evening, Claude session "wDSP mod".** Rewritten, never appended; history is git.
+**15.10.2026 21:50, Claude session "wDSP mod".** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,33 +12,29 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `22d9cad` (manuals uk/en/es/ru, 28 translations by Сова).
-  **Unpushed:** `fe0dd2f` (TODO) and the player-resume series from `040cc07`.
-- Bench `192.168.1.138:9876`: `a23d73c`, BitPerfect v5.5.15 on. ❓ `0102[5:4]`. Argon chat:
-  32890fb409d8df41. Board #1813 → BitPerfect line (other account): a disabled module leaves
-  `car.config music_volume=15`.
+- Pushed: `origin/kostyfmat_mod` = `1fc3f3e`. **Unpushed:** `6c7aae4` (call is not media),
+  `ab204f2` (version 0.4.9.9 / 26), `f89293e` (release notes EN+UA), this slice.
+- Bench `192.168.1.138:9876`: 0.4.9.9 built **before** `6c7aae4` (sha256 `77f97f51…`), installed
+  21:45 by mistake during the owner's BT calls. BitPerfect v5.5.15 on. ❓ `0102[5:4]`.
 - **The BU32107 EQ never reaches the sub** - memory `bu32107-eq-never-reaches-sub`.
 
-## ⏳ In progress: resuming the player after reboot / sleep (`PlayerResume`)
+## ⏳ In progress: release 0.4.9.9 (owner 15.10: «читай зріз і збирай реліз»)
 
-Owner 15.10: «ти аудіосесію плеєра маєш зберігати а не всю систему» - nobody listens with a player
-open, the screen is the launcher or the navigator. Now (`a23d73c`): remembered per player
-while it plays - its media button receiver as the system records it (`Settings.Secure
-media_button_receiver`, survives a reboot; on the bench = YouTube Music's androidx
-`MediaButtonReceiver`) and whether it streams (BUFFERING / http-spotify media URI). Resume ladder,
-each rung checked 3 s later: live session -> explicit PLAY to that receiver (starts the process
-without a screen) -> its `MediaBrowserService` -> only then the launcher entry, wait on screen, PLAY,
-the launcher put back by its own HOME. Streams wait for the network first; state is written with
-`commit()`; `ACTION_SHUTDOWN` takes the ACC_OFF snapshot. No screens are remembered any more.
-
-📻 Reboot 20:08 (before this): YouTube Music opened by the launcher entry, its session PAUSED, two
-package keys did nothing; the launcher entry of fantasy.purple opened the chooser (fixed).
-**Next: a reboot with «after restart» on, then a sleep with «after sleep» on** - the owner turns
-the switches on (they never were); read the result from the boot logger.
+- Pack folder `~/Downloads/wDSP-0.4.9.9/`: `wdsp.0.4.9.9.apk` (release build with `6c7aae4`,
+  sha256 `0c90a87c…`), WHATS_NEW_EN/UA.txt, manual_{en,uk,es,ru}.html. Not zipped yet.
+- Waiting: RU/ES/DE/FR/IT notes from Сова (board #1821) -> `docs/release_notes/`, commit, copy
+  into the pack as WHATS_NEW_<LANG>.txt, zip `wDSP-0.4.9.9.zip`.
+- Before handing out: install the pack APK on the bench when the owner is off the calls, compare
+  the hash, and one BT call must show no «Resolving audio session» between «call in progress»
+  and its end.
+- Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
+  the control sweep verdicts, the player-resume ladder after reboot/sleep (switches default off).
+- Who gets 0.4.9.9 (testers / public) - the owner says; record it.
 
 ## ⏳ Next after that
 
-1. Release (owner: «поки день зробимо всі проби. І зарелізимо»); annotation 0.4.9.8 in TODO.
+1. Player resume: a reboot with «after restart» on, then a sleep with «after sleep» on - the owner
+   turns the switches on; read the result from the boot logger.
 2. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
 3. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
 
