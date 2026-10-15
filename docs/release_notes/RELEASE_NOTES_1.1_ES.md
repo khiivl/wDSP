@@ -1,4 +1,4 @@
-wDSP — 0.4.9.9 (compilación 26)
+wDSP — 1.1 "Bulldozer" (compilación 26)
 Novedades desde la versión 0.4.9.8 (compilación 25)
 ===================================================
 

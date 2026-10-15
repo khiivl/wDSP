@@ -13,20 +13,20 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = `1fc3f3e`. **Unpushed:** `6c7aae4` (call is not media),
-  `ab204f2` (version 0.4.9.9 / 26), release notes in 7 languages, the slices.
-- Bench `192.168.1.138:9876`: the pack APK 0.4.9.9 (sha256 `0c90a87c…`, hash checked on the unit
-  21:52). BitPerfect v5.5.15 on. ❓ `0102[5:4]`.
+  version 1.1 "Bulldozer" / 26, release notes in 7 languages, the slices.
+- Bench `192.168.1.138:9876`: the pack APK 1.1 (sha256 `0c8c106a…`, hash checked on the unit). BitPerfect v5.5.15 on. ❓ `0102[5:4]`.
 - **The BU32107 EQ never reaches the sub** - memory `bu32107-eq-never-reaches-sub`.
 
-## ⏳ In progress: release 0.4.9.9 (owner 15.10: «читай зріз і збирай реліз»)
+## ⏳ In progress: release 1.1 "Bulldozer", code 26 (owner 15.10: «Код релізу в.1.1 як в автора»)
 
-- **Packed:** `~/Downloads/wDSP-0.4.9.9.zip` (16.9 MB): `wdsp.0.4.9.9.apk` (sha256 `0c90a87c…`,
-  the same bytes as on the bench), WHATS_NEW in 7 languages, manual_{en,uk,es,ru}.html.
+- **Packed:** `~/Downloads/wDSP-1.1.zip`: `wdsp.1.1.apk` (sha256 `0c8c106a…`, the same bytes as
+  on the bench), WHATS_NEW in 7 languages, manual_{en,uk,es,ru}.html.
 - `6c7aae4` proven 15.10: BT call 21:52:56-21:54:14 - no resolve, 0 Visualizer failures, the
   analyser resumed at the end.
 - Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
   the control sweep verdicts. Player resume after reboot/sleep - owner 15.10: «працює».
-- Who gets 0.4.9.9 (testers / public) - the owner says; record it.
+- The 0.4.9.9 pack in Downloads is superseded, never handed out.
+- Who gets 1.1 (testers / public) - the owner says; record it.
 
 ## ⏳ Next after that
 
