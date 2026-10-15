@@ -28,15 +28,13 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
   the hash, and one BT call must show no «Resolving audio session» between «call in progress»
   and its end.
 - Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
-  the control sweep verdicts, the player-resume ladder after reboot/sleep (switches default off).
+  the control sweep verdicts. Player resume after reboot/sleep - owner 15.10: «працює».
 - Who gets 0.4.9.9 (testers / public) - the owner says; record it.
 
 ## ⏳ Next after that
 
-1. Player resume: a reboot with «after restart» on, then a sleep with «after sleep» on - the owner
-   turns the switches on; read the result from the boot logger.
-2. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
-3. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
+1. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
+2. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
 
 ## ❓ For the owner
 
