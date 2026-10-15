@@ -777,6 +777,12 @@ public class MainActivity extends AppCompatActivity {
                 mlp.leftMargin = isClassic ? 0 : (int) (32 * density);
                 eqContainer.setLayoutParams(mlp);
             }
+            View overloadNotice = findViewById(R.id.rta_overload_notice);
+            if (overloadNotice != null && overloadNotice.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) overloadNotice.getLayoutParams();
+                mlp.leftMargin = isClassic ? 0 : (int) (32 * density);
+                overloadNotice.setLayoutParams(mlp);
+            }
 
             // All cards styling across tabs with FrostedGlassDrawable
             int[] cards16dp = {
@@ -1281,6 +1287,10 @@ public class MainActivity extends AppCompatActivity {
         com.radiorubka.wdsp.ui.views.TextScroller.attach(spinnerPresets);
         eqVisualizer = findViewById(R.id.eq_visualizer);
         spectrumAnalyzer = findViewById(R.id.spectrum_analyzer);
+        final View overloadNotice = findViewById(R.id.rta_overload_notice);
+        if (spectrumAnalyzer != null && overloadNotice != null) {
+            spectrumAnalyzer.setOnMicOverloadChanged(on -> overloadNotice.setVisibility(on ? View.VISIBLE : View.GONE));
+        }
         seekSubGain = findViewById(R.id.seek_sub_gain);
         spinnerSubFreq = findViewById(R.id.spinner_sub_freq);
         tvSubDb = findViewById(R.id.tv_sub_db);

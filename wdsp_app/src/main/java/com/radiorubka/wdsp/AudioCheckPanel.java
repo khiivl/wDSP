@@ -90,8 +90,9 @@ final class AudioCheckPanel implements AudioCheck.Listener {
         bind(onlySub, () -> engine.setOnlySub(onlySub.isChecked()));
 
         // The RTA's zero from the author's pink noise, in one tap (owner, 09.10.2026: one button and
-        // nothing else to know): the noise is switched on if it is not playing, listened to for the
-        // mode on screen, and switched off again. A new zero replaces the old one; there is no reset.
+        // nothing else to know): the noise is switched on if it is not playing, listened to by both
+        // analysers at once - the channel's and the microphone's zero in one tap, whichever mode is on
+        // screen (15.10.2026) - and switched off again. A new zero replaces the old one; no reset.
         if (rtaZero != null) {
             rtaZero.setOnClickListener(v -> {
                 final boolean ownNoise = !engine.isPinkNoiseOn();
@@ -107,13 +108,13 @@ final class AudioCheckPanel implements AudioCheck.Listener {
                 Toaster.show(activity, activity.getString(R.string.toast_rta_zero_listening));
                 // The output answers after its latency (591 ms measured on the bench), so the capture
                 // starts once the noise is surely in the analyser.
-                rtaZero.postDelayed(() -> AudioSpectrumEngine.getInstance().captureRtaZero(zeroDb -> {
+                rtaZero.postDelayed(() -> AudioSpectrumEngine.getInstance().captureRtaZero((channelDb, micDb) -> {
                     if (ownNoise) {
                         engine.setPinkNoise(false);
                         refresh();
                     }
                     rtaZero.setEnabled(true);
-                    Toaster.show(activity, activity.getString(Float.isNaN(zeroDb)
+                    Toaster.show(activity, activity.getString(Float.isNaN(channelDb) && Float.isNaN(micDb)
                             ? R.string.toast_rta_zero_failed : R.string.toast_rta_zero_taken));
                 }), ownNoise ? RTA_ZERO_NOISE_SETTLE_MS : 0);
             });

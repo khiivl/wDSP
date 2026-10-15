@@ -174,6 +174,7 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         rta.reset();
         curveAlpha = 0f;
         lastCurveNanos = 0;
+        updateOverload(false);
         invalidate();
     }
 
@@ -216,6 +217,7 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
         float density = getResources().getDisplayMetrics().density;
 
         boolean enabled = ThemeManager.prefs(getContext()).getBoolean("pref_eq_visualizer_enabled", true);
+        updateOverload(enabled && shapeOf(ThemeManager.prefs(getContext())) == SHAPE_CURVE);
         if (!enabled) return;
 
         int mode = ThemeManager.prefs(getContext()).getInt("pref_eq_visualizer_mode", MODE_SPECTRUM);
@@ -283,6 +285,30 @@ public class SpectrumAnalyzerView extends View implements AudioSpectrumEngine.On
             barRect.set(left, top, right, gridBottom);
             canvas.drawRoundRect(barRect, barCornerRadius, barCornerRadius, barPaint);
         }
+    }
+
+    /** Told when the microphone starts or stops clipping while the RTA curve is shown. */
+    public interface OnMicOverloadChanged {
+        void onMicOverloadChanged(boolean overloaded);
+    }
+
+    private OnMicOverloadChanged overloadListener;
+    private boolean overloadShown;
+
+    /**
+     * The microphone is clipping and the curve is drawn through the AGC instead of its zero
+     * (AudioSpectrumEngine.micOverloaded): the screen says so in red over the Q switches' row, owner
+     * 15.10.2026 - «прозорим оверлеєм з жирним текстом в області кнопок перемикання q».
+     */
+    public void setOnMicOverloadChanged(OnMicOverloadChanged listener) {
+        overloadListener = listener;
+    }
+
+    private void updateOverload(boolean curveShown) {
+        final boolean on = curveShown && AudioSpectrumEngine.getInstance().isMicOverloaded();
+        if (on == overloadShown) return;
+        overloadShown = on;
+        if (overloadListener != null) overloadListener.onMicOverloadChanged(on);
     }
 
     /**

@@ -909,7 +909,7 @@ public class AudioSpectrumEngine {
     private void addCurveOffset(NativeAnalyzer analyzer, float[] curveDb) {
         if (!analyzer.isAcoustic()) return;
         final float shift;
-        if (hasMicZero()) {
+        if (hasMicZero() && !micOverloaded) {
             final float atZero = LoudnessCurve.stepDb(rtaReference().micZeroVolume());
             shift = Float.isNaN(atZero) ? 0f : atZero + micVolumeDb();
         } else if (micOffsetValid) {
@@ -955,7 +955,8 @@ public class AudioSpectrumEngine {
             NativeAnalyzer analyzer = shownAnalyzer();
             if (analyzer == null) return Float.NaN;
             if (analyzer.isAcoustic()) {
-                float own = ref.zeroDb(true);
+                // An overloaded microphone falls back on the channel's zero through our AGC (micOverloaded).
+                float own = micOverloaded ? Float.NaN : ref.zeroDb(true);
                 if (!Float.isNaN(own)) return own;
                 if (!micOffsetValid) return Float.NaN;
             }
@@ -965,55 +966,90 @@ public class AudioSpectrumEngine {
 
     /** What a zero capture reports, on the main thread. */
     public interface RtaZeroListener {
-        /** @param zeroDb the zero taken, NaN when too little was heard */
-        void onRtaZero(float zeroDb);
+        /** Each zero taken, NaN where too little was heard (or no microphone could run). */
+        void onRtaZero(float channelDb, float microphoneDb);
     }
 
     /**
-     * Takes the RTA's zero from what plays now - meant for Audio Check's pink noise - over
-     * {@link RtaReference#CAPTURE_MS}, read straight from the analyser shown at a third of an octave,
-     * so it does not depend on the curve being on screen: the channel's zero in the channel's mode, the
-     * microphone's own, raw, in the microphone's. Stored only if enough was heard.
+     * Takes both of the RTA's zeros from what plays now - meant for Audio Check's pink noise - in one
+     * pass of {@link RtaReference#CAPTURE_MS}: the channel's off the tap and the microphone's, raw, off
+     * the microphone, whichever mode is on screen (owner, 15.10.2026: «калібрацію по шуму зробив би
+     * для обох режимів зразу, а не по одному» - until then it took the shown mode's only, so a person
+     * calibrated twice, switching modes in between). In the calculated mode the microphone's analysis
+     * runs for the capture alone and stops after it, through the same path a mode switch takes. Read
+     * at a third of an octave straight from the analysers, so it does not depend on the curve being on
+     * screen. Each is stored only if enough was heard.
      */
     public void captureRtaZero(RtaZeroListener listener) {
         final RtaReference ref = rtaReference();
         final Handler main = new Handler(Looper.getMainLooper());
+        final boolean ownMicrophone = beginZeroMicrophone();
         new Thread(() -> {
             final float[] curve = new float[NativeAnalyzer.CURVE_POINTS];
-            final RtaReference.Capture capture = new RtaReference.Capture();
+            final RtaReference.Capture channel = new RtaReference.Capture();
+            final RtaReference.Capture microphone = new RtaReference.Capture();
             // The same ballistics the screen applies (RtaCurve), so the zero is the level the drawn
             // curve has; its envelope needs half a second to settle before it is counted.
-            final RtaCurve ballistics = new RtaCurve();
+            final RtaCurve channelBallistics = new RtaCurve();
+            final RtaCurve microphoneBallistics = new RtaCurve();
             final float[] noCorrection = new float[NativeAnalyzer.CURVE_POINTS];
             final long settled = System.currentTimeMillis() + 500;
             final long end = settled + RtaReference.CAPTURE_MS;
-            boolean microphone = false;
-            while (System.currentTimeMillis() < end) {
-                synchronized (analyzerLock) {
-                    NativeAnalyzer analyzer = analysisPaused() ? null : shownAnalyzer();
-                    if (analyzer != null && analyzer.isValid()) {
-                        microphone = analyzer.isAcoustic();
-                        analyzer.setCurveFraction(3);
-                        analyzer.getCurveDb(curve);
-                        ballistics.update(curve, noCorrection, getDisplayRangeDb(), System.nanoTime(), Float.NaN);
-                        if (System.currentTimeMillis() >= settled) {
-                            capture.offer(RtaCurve.contentLevelDb(ballistics.smoothedDb(), getDisplayRangeDb()));
+            try {
+                while (System.currentTimeMillis() < end) {
+                    synchronized (analyzerLock) {
+                        if (!analysisPaused()) {
+                            final boolean count = System.currentTimeMillis() >= settled;
+                            offerZero(nativeAnalyzer, curve, channelBallistics, noCorrection, count, channel);
+                            offerZero(micAnalysing ? micAnalyzer : null, curve, microphoneBallistics,
+                                    noCorrection, count, microphone);
                         }
                     }
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                 }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    return;
-                }
+            } finally {
+                endZeroMicrophone(ownMicrophone);
             }
-            final float zero = ref == null ? Float.NaN : capture.resultDb();
-            if (!Float.isNaN(zero)) ref.store(microphone, zero, microphone ? VolumeHelper.getVolume() : 0);
-            Log.i(TAG, "RTA zero (" + (microphone ? "microphone" : "channel") + "): "
-                    + (Float.isNaN(zero) ? "not taken - too little heard"
-                    : String.format(java.util.Locale.US, "%.1f dB", zero)));
-            if (listener != null) main.post(() -> listener.onRtaZero(zero));
+            final float channelZero = ref == null ? Float.NaN : channel.resultDb();
+            final float microphoneZero = ref == null ? Float.NaN : microphone.resultDb();
+            if (!Float.isNaN(channelZero)) ref.store(false, channelZero, 0);
+            if (!Float.isNaN(microphoneZero)) ref.store(true, microphoneZero, VolumeHelper.getVolume());
+            Log.i(TAG, "RTA zeros: channel " + zeroText(channelZero) + ", microphone " + zeroText(microphoneZero)
+                    + (ownMicrophone ? " (microphone run for the capture)" : ""));
+            if (listener != null) main.post(() -> listener.onRtaZero(channelZero, microphoneZero));
         }, "rta-zero").start();
+    }
+
+    /** One frame of one analyser into its zero. Under {@link #analyzerLock}. */
+    private void offerZero(NativeAnalyzer analyzer, float[] curve, RtaCurve ballistics, float[] noCorrection,
+                           boolean count, RtaReference.Capture capture) {
+        if (analyzer == null || !analyzer.isValid()) return;
+        analyzer.setCurveFraction(3);
+        analyzer.getCurveDb(curve);
+        ballistics.update(curve, noCorrection, getDisplayRangeDb(), System.nanoTime(), Float.NaN);
+        if (count) capture.offer(RtaCurve.contentLevelDb(ballistics.smoothedDb(), getDisplayRangeDb()));
+    }
+
+    private static String zeroText(float db) {
+        return Float.isNaN(db) ? "not taken - too little heard" : String.format(java.util.Locale.US, "%.1f dB", db);
+    }
+
+    /** Starts the microphone's analysis for a zero when nothing runs it; true when this did. */
+    private synchronized boolean beginZeroMicrophone() {
+        if (micAnalysing || !canRunMic() || pausedForCall) return false;
+        startRadioMicPipeline();
+        return micAnalysing;
+    }
+
+    /** Puts the microphone back as the mode wants it, after a zero that started it. */
+    private synchronized void endZeroMicrophone(boolean started) {
+        if (!started || wantsMicPipeline(isRadioSourceNow())) return;
+        stopMicAnalysis();
+        stopRadioMicCapture();
     }
 
     /**
@@ -1698,6 +1734,7 @@ public class AudioSpectrumEngine {
     private void stopMicAnalysis() {
         micAnalysing = false;
         micOffsetValid = false;
+        micOverloaded = false;
         NativeAnalyzer analyzer = micAnalyzer;
         if (analyzer != null) analyzer.stop();
         Thread analysis = micAnalysisThread;
@@ -2319,11 +2356,53 @@ public class AudioSpectrumEngine {
      * The one sink of the microphone capture, for as long as the capture lives - held or not, and
      * whatever is analysing it. Capture thread.
      */
+    /**
+     * The microphone's converter is clipping: three chunks at full scale within a second start it, two
+     * seconds without one end it. 📻 15.10.2026, the owner's bench, built-in microphone: from step 13 on
+     * the raw peaks sat at 32768 and the RMS grew 6 dB over steps 12..28 where the volume table says
+     * 19.9, so the RTA curve drawn from the microphone's zero by the table fell away from the track the
+     * louder it played. Nothing digital undoes a clipped converter: while this holds, the curve is drawn
+     * through our AGC instead of the zero and the view says why, in red (owner: «повідомивши червоним
+     * поверху РТА, що застосовано АГЦ»).
+     */
+    private volatile boolean micOverloaded;
+    private long micClipWindowAt, micLastClipAt;
+    private int micClipsInWindow;
+    private static final int MIC_CLIP_MAGNITUDE = 32700;
+    private static final int MIC_CLIPS_TO_START = 3;
+    private static final long MIC_CLIP_WINDOW_MS = 1000, MIC_CLIP_RELEASE_MS = 2000;
+
+    /** Whether the microphone is overloaded now - see {@link #micOverloaded}. */
+    public boolean isMicOverloaded() {
+        return micOverloaded && micAnalysing;
+    }
+
+    private void noteMicClipping(short[] raw, int len) {
+        int peak = 0;
+        for (int i = 0; i < len; i++) peak = Math.max(peak, Math.abs(raw[i]));
+        final long now = android.os.SystemClock.uptimeMillis();
+        if (peak >= MIC_CLIP_MAGNITUDE) {
+            if (now - micClipWindowAt > MIC_CLIP_WINDOW_MS) {
+                micClipWindowAt = now;
+                micClipsInWindow = 0;
+            }
+            micLastClipAt = now;
+            if (++micClipsInWindow >= MIC_CLIPS_TO_START && !micOverloaded) {
+                micOverloaded = true;
+                Log.i(TAG, "microphone overloaded (full scale) - the RTA is drawn through the AGC");
+            }
+        } else if (micOverloaded && now - micLastClipAt > MIC_CLIP_RELEASE_MS) {
+            micOverloaded = false;
+            Log.i(TAG, "microphone back under full scale - the RTA is drawn from its zero again");
+        }
+    }
+
     private void onMicChunk(short[] boosted, short[] raw, int len, float captureGain) {
         // Held but not analysed: the samples go nowhere, and nothing downstream is told of them -
         // signal from a microphone nobody is drawing must not look like playback to NowPlaying.
         if (!micAnalysing) return;
         if (analysisPaused()) return;   // the stream stays open; the samples go nowhere
+        noteMicClipping(raw, len);
         synchronized (analyzerLock) {
             NativeAnalyzer analyzer = micAnalyzer;
             if (analyzer == null) return;
