@@ -19,17 +19,17 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ In progress: release 1.1 "Bulldozer", code 26 (owner 15.10: «Код релізу в.1.1 як в автора»)
 
-- **Packed:** `~/Downloads/wDSP_Bulldozer_mod_by_kostyamat-v1.1/` (zip of the same name after the translations; owner's name, the author's spelling): `wdsp.1.1.apk` (sha256 `0c8c106a…`, the same bytes as
-  on the bench), manual_{en,uk,es,ru}.html. **Notes rewritten** (owner: base, every fix since
-  0.4.9.8, thanks to the author, dry tone): EN+UA in `e5caded`; RU/ES/DE/FR/IT stale - Сова
-  re-translates (board #1823), then copy WHATS_NEW_* into the pack and re-zip.
+- Bases final (`1fa31fc`): RELEASE_NOTES_1.1 EN+UA (plain language), manual_en.html (read through,
+  map, doctype/charset), README (mod vs original). Сова (board #1832, strict: translation only,
+  after a reprimand #1830 for invented fixes) translates notes RU/ES/DE/FR/IT/PL/PT and manuals
+  uk/es/ru/de/fr/it/pl/pt. Then: check them, commit, rebuild the pack folder
+  `~/Downloads/wDSP_Bulldozer_mod_by_kostyamat-v1.1/` (wdsp.1.1.apk `0c8c106a…` + 9 manuals + svg
+  + 9 WHATS_NEW) and zip it myself. The zip Сова made there holds her bad notes - do not hand out.
 - `6c7aae4` proven 15.10: BT call 21:52:56-21:54:14 - no resolve, 0 Visualizer failures, the
   analyser resumed at the end.
 - Not proven on the unit, shipped on order: the volume-steps table, «cabin noise is no refusal»,
   the control sweep verdicts. Player resume after reboot/sleep - owner 15.10: «працює».
 - The 0.4.9.9 pack in Downloads is superseded, never handed out.
-- README.md rewritten for the mod (owner: «рідмі автора в нашій гілці - обман»), NOT committed:
-  it links manual_pt/pl.html, which Сова is writing (#1828). Commit when they exist.
 - Pre-release `mod-v1.1` on khiivl/wDSP: owner «подумаємо»; the author's consent first.
 - Who gets 1.1 (testers / public) - the owner says; record it.
 
