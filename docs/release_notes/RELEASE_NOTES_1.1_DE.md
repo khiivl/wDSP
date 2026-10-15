@@ -1,141 +1,94 @@
 wDSP — 1.1 "Bulldozer" (Build 26)
-Was sich seit 0.4.9.8 (Build 25) geändert hat
-=============================================
+Änderungen seit 0.4.9.8, der vorherigen Version vom 13.09.2026
+==============================================================
 
-Ein großes Update: ein Monat Arbeit, und die Version 1.0 des Autors ist nun integriert. Im Folgenden
-erfahren Sie, was neu ist und wie Sie es nutzen. Das vollständige Handbuch für jede Funktion liegt dem
-Paket bei: manual_en.html (auch auf Ukrainisch, Spanisch und Russisch verfügbar). Es kann in jedem
-Browser geöffnet werden und benötigt keine Internetverbindung.
+Diese Version ist meine Modifikation von wDSP von Volodymyr Chebanenko (khiivl),
+https://github.com/khiivl/wDSP, und enthält all seine Arbeit bis zu Version 1.0.2.
 
 INSTALLATION
 
-Installieren Sie die APK einfach über die vorherige Version; eine vorherige Deinstallation ist nicht
-erforderlich. Ihre Presets und Einstellungen bleiben erhalten. Öffnen Sie wDSP nach der Installation
-einmalig, damit der Hintergrunddienst gestartet wird.
+- Über eine frühere Version der Modifikation: Installieren Sie die APK darüber; Presets und
+  Einstellungen bleiben erhalten.
+- Über die Originalversion des Autors: Beide sind mit unterschiedlichen Schlüsseln signiert und
+  Android installiert sie nicht übereinander. Sichern Sie Ihre Presets mit dem App-Backup, deinstallieren
+  Sie die Version des Autors und installieren Sie anschließend die Modifikation.
+- Öffnen Sie wDSP einmalig nach der Installation.
+
+Die Anleitungen (neun Sprachen, einschließlich der Gestenkarte für den Bildschirmschoner) liegen im
+Archiv. Sie lassen sich in jedem Browser ohne Internetverbindung öffnen.
 
 -----------------------------------------------------------------------------
-1. ZWEI DESIGNS: KLASSISCH UND MODERN
+NEU
 -----------------------------------------------------------------------------
 
-Die Version 1.0 des Autors wurde zusammengeführt. Unter wDSP Einstellungen → «UI-Stil» wählen Sie:
+Die Version 1.0 des Autors
+- Zwei Oberflächenstile in Einstellungen → "UI-Stil": Klassisch (Original) und Modern. Tag- und
+  Nacht-Themen in beiden Stilen.
+- Ultra Bass, die neue Loudness, mehr Visualisierungen, Paarsperren für Laufzeitverzögerungen, "Aus"
+  in der Subwoofer-Liste für Fahrzeuge ohne Subwoofer, GALA pro Preset abschaltbar.
+- Der Reiter "Audio-Check": Testsignale und Testaufnahmen für jeden einzelnen Lautsprecher.
 
-- Klassisch (Original) — die originale Material-3-Oberfläche des Autors;
-- Modern — das bekannte Milchglas-Design aus meinen Versionen.
+Fahrgastraum-Messung
+- Einstellungen → Fahrgastraum-Karte: Art des Innenraums und Maße angeben sowie die verbauten
+  Lautsprecher antippen.
+- Die App wählt die Messlautstärke selbstständig.
+- Nach "Apply Auto-EQ" zeigt ein kurzer Kontroll-Sweep, ob die Korrektur gewirkt hat.
+- Der Bericht beginnt mit einer Fehlerliste in verständlichen Worten — zum Beispiel ein zu leiser
+  Lautsprecher, ein verpolter Hochtöner, vertauschte Kanäle, ein Subwoofer, der gegen die Türen
+  spielt (mit dem Hinweis, den Phasenschalter umzulegen). Probleme, die ein Equalizer nicht beheben
+  kann, werden gemeldet, statt sie unpassend zu "korrigieren".
 
-Beide Stile unterstützen das helle und dunkle Design. Neuigkeiten aus Version 1.0:
+Spektrum
+- Umschalter auf dem Hauptbildschirm: "Aus", "Musik" (was das Preset aus der Musik macht),
+  "Microphone" (wie der Innenraum tatsächlich klingt).
+- "RTA-Nullpunkt" im Audio-Check kalibriert das Spektrum mit einem einzigen Druck.
+- Warnung bei Übersteuerung des Mikrofons: Empfindlichkeit in den Fahrzeugeinstellungen verringern.
 
-- Der Equalizer-Graph zeichnet nun die reale Kurve des Audio-Chips (Q 2.2), keine grobe Skizze mehr.
-- Ultra Bass — Subwoofer-Verstärkung, die mit dem Lautstärkeregler dynamisch ansteigt.
-- Loudness über ein Bass-Kuhschwanzfilter (Shelf) plus Höhenabsenkung (Trim Highs).
-- Paarweise Sperre für Laufzeitkorrekturen — linker und rechter Kanal bewegen sich gemeinsam und
-  bestätigen dies beim Einschalten.
-- «Aus» in der Subwoofer-Frequenzliste für Fahrzeuge ohne Subwoofer.
-- GALA (geschwindigkeitsabhängige Lautstärke) kann für ein einzelnes Preset deaktiviert werden —
-  «Für dieses Preset deaktivieren».
-- Der Reiter «Audio-Check»: Rosa Rauschen, Sinusgenerator für beliebige Frequenzen, Sweep-Messung und
-  Testaufnahmen für jeden einzelnen Lautsprecher. Ideal, um jeden Lautsprecher vor der Einmessung
-  einzeln zu überprüfen.
+Player-Wiederaufnahme
+- Einstellungen: "Player nach Neustart fortsetzen" und "Player nach Standby fortsetzen". Der zuletzt
+  aktive Player kehrt eigenständig zurück, ohne dass sich sein Fenster über die Navigation drängt.
+- Für den Standby-Modus tippen Sie auf "wDSP im Standby aktiv lassen" und aktivieren Sie wDSP in der Liste.
 
------------------------------------------------------------------------------
-2. FAHRZEUGEINMESSUNG (AUTO-EQ) — GRUNDLEGEND ÜBERARBEITET
------------------------------------------------------------------------------
-
-So nutzen Sie die Einmessung jetzt:
-
-1. wDSP Einstellungen → Fahrzeugkarte. Geben Sie an, ob es sich um ein geschlossenes Fahrzeug oder
-   einen offenen Raum (Prüfstand, Cabrio) handelt, tragen Sie die Abmessungen ein und TIPPEN SIE DIE
-   LAUTSPRECHER auf der Fahrzeugskizze an, um festzulegen, welche tatsächlich verbaut sind. Nur
-   aktivierte Lautsprecher werden eingemessen.
-2. Kalibrieren Sie das Mikrofon (einmalig pro Gerät).
-3. Starten Sie die Messung. Die Lautstärke müssen Sie nicht mehr selbst einstellen — die App wählt sie
-   automatisch und misst dabei präzise, wie viel dB jeder Lautstärkeschritt an Ihrem Gerät ausmacht.
-4. Tippen Sie auf «Apply Auto-EQ». Direkt im Anschluss spielt die App einen kurzen KONTROLL-SWEEP über
-   das neue Preset ab und prüft, ob die Korrektur wie gewünscht greift.
-
-Was der neue Bericht anzeigt:
-
-- An erster Stelle steht eine FEHLERLISTE in verständlichen Worten: ein Lautsprecher leiser als sein
-  gespiegeltes Gegenüber, ein Hochtöner gegenphasig zu seinem Tiefmitteltöner, vertauschte Kanäle
-  links/rechts, Lautsprecher-Resonanz oder Raummode unter 200 Hz, eine im Störgeräusch untergegangene
-  Messung.
-- Spielt der Subwoofer an der Trennfrequenz gegenphasig zu den Türen, empfiehlt die App, den
-  Phasenschalter am Subwoofer-Verstärker umzulegen (0/180).
-- Die Korrektur wird in echten dB angezeigt, nicht mehr in internen Chip-Registern.
-- Umgebungsgeräusche im Fahrzeug führen nicht mehr zum Messabbruch; sie reduzieren lediglich die
-  Vertrauenswürdigkeit in den betroffenen Frequenzbändern.
+Bildschirmschoner
+- Wischen von der Bildschirmmitte aus regelt die Lautstärke.
+- Stil-Taste eine Sekunde lang gedrückt halten öffnet den Equalizer.
+- Ein Tippen auf das Cover öffnet den aktuell tatsächlich spielenden Player oder das Radio.
+- Schalter "Statusleiste überdecken".
 
 -----------------------------------------------------------------------------
-3. SPEKTRUM (RTA)
+BEHOBEN
 -----------------------------------------------------------------------------
 
-- Wählen Sie die Darstellungsform: Echtzeitkurve (RTA) oder klassische Balken.
-- Die Schaltfläche «RTA-Null» im Audio-Check setzt beide Nullen gleichzeitig (Wiedergabekanal und
-  Mikrofon): Sie spielt selbstständig Rosa Rauschen ab, misst den Pegel und setzt den Referenzpunkt.
-- Bei Mikrofon-Übersteuerung warnt die Anzeige: «Mikrofon übersteuert — Anzeige mit AGC, Form
-  näherungsweise. Mikrofonempfindlichkeit verringern». Senken Sie die Mikrofonempfindlichkeit in den
-  Fahrzeugeinstellungen, bis die Meldung erlischt.
-- Die Spektrum-Anzeige pausiert bei Inaktivität und wacht bei Wiedergabe selbsttätig auf.
-- Bluetooth-Musik wird nun auch auf Geräten ohne BitPerfect-Modul im Spektrum visualisiert.
+- Anrufe: Das Preset springt während eines Telefonats nicht mehr hin und her, das Mikrofon wird sofort
+  freigegeben und die Lautstärke nach dem Gespräch stimmt.
+- Start: Einstellungen erreichen den Audioprozessor nach dem Einschalten und nach Updates zuverlässig.
+- Der Bildschirmschoner erscheint nun auch auf Geräten mit aktivem "schwebendem Video" oder "schwebender
+  Navigation", verdeckt das Navigationssystem nicht und funktioniert auf vertikalen Bildschirmen.
+- Equalizer-Ansicht und Dialogfenster passen auf schmale und vertikale Bildschirme.
+- Mikrofonspektrum nach dem Aufwachen und nachdem der Sprachassistent das Mikrofon verwendet hat.
+- Mehrere Fehler bei der Fahrgastraum-Messung, insbesondere im Tiefbass und im Zusammenspiel mit dem Subwoofer.
+- GALA lässt die Lautstärke nach dem Abbremsen nicht mehr fälschlicherweise angehoben.
+- Absturz beim direkten Öffnen der App im Loudness-Reiter.
 
 -----------------------------------------------------------------------------
-4. NEU: WIEDERGABE-FORTSETZUNG NACH NEUSTART ODER STANDBY
+BITTE EINSENDEN
 -----------------------------------------------------------------------------
 
-Zwei Schalter in den Einstellungen: «Player nach Neustart fortsetzen» und «Player nach Standby
-fortsetzen». Lief beim Ausschalten Musik, startet wDSP denselben Player beim Hochfahren erneut — ohne
-dessen Bildschirm über Ihren Launcher oder die Navigation zu legen. Das Radio stellt sich selbstständig
-wieder her und bleibt unberührt.
+Die Version des Autors besitzt keine Fahrgastraum-Messung, daher gehen Messdaten an die Gruppe der Modifikation.
 
-Für den Standby tippen Sie unter dem Schalter auf «wDSP im Standby aktiv lassen»: Dies öffnet die
-fahrzeugeigene Whitelist für Hintergrund-Apps, in der wDSP aktiviert werden muss.
+1. Nach einer Fahrgastraum-Messung: das Messarchiv ("Archiv speichern") und der Systembericht
+   (Diagnose → "Systembericht"), beide in Download/wDSP, sowie ein paar Worte dazu, wie sich der
+   Klang und die Bühne verändert haben.
+2. Falls der Bildschirmschoner nie erscheint: Diagnose → "Bildschirm-Topologie" → speichern und einsenden.
+3. Ob die Player-Wiederaufnahme bei Ihnen funktioniert hat und mit welchem Player.
 
-Diese Funktion ist neu. Bitte teilen Sie mir mit, welchen Player Sie verwenden und ob er zuverlässig
-wieder anlief.
-
------------------------------------------------------------------------------
-5. ANRUFE, BILDSCHIRMSCHONER, LAUTSTÄRKE
------------------------------------------------------------------------------
-
-- Bei eingehenden Anrufen gibt die App das Mikrofon sofort frei und schaltet auf das Anruf-Preset um;
-  nach dem Auflegen kehren die vorherigen Einstellungen zurück.
-- Der Bildschirmschoner schließt sich unmittelbar bei Anrufbeginn.
-- Der Bildschirmschoner funktioniert nun auch auf Geräten, bei denen in den Werkseinstellungen
-  «schwebendes Video» oder «schwebende Navigation» aktiv ist (zuvor wurde er dort blockiert).
-- Die in den Systemeinstellungen gewählte Navigations-App wird automatisch als Ausnahme hinterlegt,
-  damit der Bildschirmschoner niemals die Karte verdeckt. Wer den Bildschirmschoner dennoch über der
-  Navigation wünscht, kann sie aus der Liste entfernen.
-- Die untere Zeile des Equalizers schneidet Verstärker-Buttons auf schmalen und vertikalen Displays
-  nicht mehr ab — die gesamte Leiste skaliert gleichmäßig.
-- Die Lautstärke jeder Quelle wird separat gespeichert und folgt Änderungen, die außerhalb von wDSP
-  vorgenommen werden.
-- GALA hinterlässt nach dem Abbremsen keinen überflüssigen Lautstärkeschritt mehr.
+Gruppe der Modifikation: https://t.me/kostyamat_dev/92
+Originalprojekt: https://t.me/wDSPapp, https://github.com/khiivl/wDSP
 
 -----------------------------------------------------------------------------
-SPRACHEN
+DANKSAGUNG
 -----------------------------------------------------------------------------
 
-Die Benutzeroberfläche steht in 30 Sprachen und regionalen Varianten zur Verfügung.
-
------------------------------------------------------------------------------
-BITTE AN DIE TESTER
------------------------------------------------------------------------------
-
-1. AUTO-PRESETS. Wurde das Preset nach Ihrem Hörgeschmack passend erstellt? Stimmt die Räumlichkeit
-   der Bühne? Bitte senden Sie das Messarchiv («Archiv speichern» nach der Messung) und den
-   Systembericht (Diagnose → «Systembericht»). Beide Dateien werden im Ordner Download/wDSP abgelegt.
-
-2. FALLS DER BILDSCHIRMSCHONER NIE ERSCHEINT: Belassen Sie das Gerät zwei Minuten lang in einer
-   beliebigen App außer wDSP. Öffnen Sie anschließend wDSP Einstellungen → Diagnose → «Screen Topology»
-   → Datei speichern und einsenden. Erscheint der Bildschirmschoner, tippen Sie zunächst mehrmals
-   darauf (auf Titel-Zonen, Bildschirmränder) und speichern Sie erst dann: So lässt sich genau
-   analysieren, wo Berührungen erkannt und wie sie verarbeitet wurden.
-
-3. WIEDERGABE-FORTSETZUNG — welcher Player, nach Neustart oder Standby, und ob die Musik wie erwartet
-   weiterspielte.
-
-Bitte senden Sie alle Rückmeldungen in die Gruppe: https://t.me/wDSPapp/79
-
-Sollte etwas nicht ordnungsgemäß funktionieren, erläutern Sie bitte genau, was passiert ist. Wenn alles
-bestens klappt, berichten Sie gern, wie die Presets in Ihrem Fahrzeug klingen.
-
-Vielen Dank.
+An Volodymyr Chebanenko (khiivl), den Autor von wDSP, für die Anwendung, auf der diese Version aufbaut.
+An Mirek (Polen) für das Testen des Equalizers des Autors auf echter Hardware. An alle Tester, die Messungen
+und Berichte einsenden.
