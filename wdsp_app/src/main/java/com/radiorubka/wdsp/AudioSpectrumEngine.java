@@ -2418,13 +2418,14 @@ public class AudioSpectrumEngine {
     private int micClipWindowSamples, micClipWindowClipped, micClipRun;
     private static final int MIC_CLIP_MAGNITUDE = 32700;
     /**
-     * On at 2 %, off under 1 %, each after one second. 📻 15.10.2026, bench: step 9 gave 0.48-0.66 %,
+     * On at 4 %, off under 2 %, each after one second. 📻 15.10.2026, bench: step 9 gave 0.48-0.66 %,
      * step 10 0.21-0.25 % (bass peaks), step 14 5.6 % (on the rail without a break - where the curve
      * sagged). Owner: «в стелю бьють саме баси, я б ігнорував трохи більше семплів», «затримку
-     * реакції зменшив вдвічі»; a single threshold of 0.5 % flickered (0.50 -> 0.22 -> 0.50), hence two.
+     * реакції зменшив вдвічі»; a single threshold of 0.5 % flickered (0.50 -> 0.22 -> 0.50), hence two;
+     * 2 % fired at step 12 on bass alone (2-3 %, «шкалить на 12, і це ті ж баси»), where the curve held.
      */
-    private static final float MIC_CLIP_SHARE = 0.02f;
-    private static final float MIC_CLIP_RELEASE_SHARE = 0.01f;
+    private static final float MIC_CLIP_SHARE = 0.04f;
+    private static final float MIC_CLIP_RELEASE_SHARE = 0.02f;
     private static final int MIC_CLIP_SECONDS = 1;
     private static final long MIC_CLIP_WINDOW_MS = 1000;
 
