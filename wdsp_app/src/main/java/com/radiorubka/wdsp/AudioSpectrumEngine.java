@@ -1769,6 +1769,10 @@ public class AudioSpectrumEngine {
         micAnalysing = false;
         micOffsetValid = false;
         micOverloaded = false;
+        micClipRun = 0;
+        micClipWindowAt = 0;
+        micClipWindowSamples = 0;
+        micClipWindowClipped = 0;
         NativeAnalyzer analyzer = micAnalyzer;
         if (analyzer != null) analyzer.stop();
         Thread analysis = micAnalysisThread;
@@ -2398,8 +2402,11 @@ public class AudioSpectrumEngine {
      * whatever is analysing it. Capture thread.
      */
     /**
-     * The microphone's converter is clipping: three chunks at full scale within a second start it, two
-     * seconds without one end it. 📻 15.10.2026, the owner's bench, built-in microphone: from step 13 on
+     * The microphone's converter is clipping: at least {@link #MIC_CLIP_SHARE} of the samples at full
+     * scale in each of {@link #MIC_CLIP_SECONDS} seconds running starts it, as many seconds under it end
+     * it - a share and a delay, not a single peak (owner, 15.10.2026: «і трохи з затримкою, може хтось
+     * голосно перднув»): the first rule, three clipped chunks a second, fired at step 9 on a drum hit,
+     * where the curve still held. 📻 15.10.2026, the owner's bench, built-in microphone: from step 13 on
      * the raw peaks sat at 32768 and the RMS grew 6 dB over steps 12..28 where the volume table says
      * 19.9, so the RTA curve drawn from the microphone's zero by the table fell away from the track the
      * louder it played. Nothing digital undoes a clipped converter: while this holds, the curve is drawn
@@ -2407,11 +2414,13 @@ public class AudioSpectrumEngine {
      * поверху РТА, що застосовано АГЦ»).
      */
     private volatile boolean micOverloaded;
-    private long micClipWindowAt, micLastClipAt;
-    private int micClipsInWindow;
+    private long micClipWindowAt;
+    private int micClipWindowSamples, micClipWindowClipped, micClipRun;
     private static final int MIC_CLIP_MAGNITUDE = 32700;
-    private static final int MIC_CLIPS_TO_START = 3;
-    private static final long MIC_CLIP_WINDOW_MS = 1000, MIC_CLIP_RELEASE_MS = 2000;
+    /** 0.1 %: about 48 of a second's 48 000 samples on the rail. */
+    private static final float MIC_CLIP_SHARE = 0.001f;
+    private static final int MIC_CLIP_SECONDS = 2;
+    private static final long MIC_CLIP_WINDOW_MS = 1000;
 
     /** Whether the microphone is overloaded now - see {@link #micOverloaded}. */
     public boolean isMicOverloaded() {
@@ -2419,23 +2428,26 @@ public class AudioSpectrumEngine {
     }
 
     private void noteMicClipping(short[] raw, int len) {
-        int peak = 0;
-        for (int i = 0; i < len; i++) peak = Math.max(peak, Math.abs(raw[i]));
+        int clipped = 0;
+        for (int i = 0; i < len; i++) if (Math.abs(raw[i]) >= MIC_CLIP_MAGNITUDE) clipped++;
+        micClipWindowSamples += len;
+        micClipWindowClipped += clipped;
         final long now = android.os.SystemClock.uptimeMillis();
-        if (peak >= MIC_CLIP_MAGNITUDE) {
-            if (now - micClipWindowAt > MIC_CLIP_WINDOW_MS) {
-                micClipWindowAt = now;
-                micClipsInWindow = 0;
-            }
-            micLastClipAt = now;
-            if (++micClipsInWindow >= MIC_CLIPS_TO_START && !micOverloaded) {
-                micOverloaded = true;
-                Log.i(TAG, "microphone overloaded (full scale) - the RTA is drawn through the AGC");
-            }
-        } else if (micOverloaded && now - micLastClipAt > MIC_CLIP_RELEASE_MS) {
-            micOverloaded = false;
-            Log.i(TAG, "microphone back under full scale - the RTA is drawn from its zero again");
-        }
+        if (micClipWindowAt == 0) micClipWindowAt = now;
+        if (now - micClipWindowAt < MIC_CLIP_WINDOW_MS) return;
+        // A second is over: was it overloaded, and has the verdict held long enough to change?
+        final float share = micClipWindowSamples > 0 ? micClipWindowClipped / (float) micClipWindowSamples : 0f;
+        micClipWindowAt = now;
+        micClipWindowSamples = 0;
+        micClipWindowClipped = 0;
+        final boolean overSecond = share >= MIC_CLIP_SHARE;
+        micClipRun = overSecond == micOverloaded ? 0 : micClipRun + 1;
+        if (micClipRun < MIC_CLIP_SECONDS) return;
+        micClipRun = 0;
+        micOverloaded = overSecond;
+        Log.i(TAG, String.format(java.util.Locale.US, overSecond
+                ? "microphone overloaded (%.2f %% of samples at full scale) - the RTA is drawn through the AGC"
+                : "microphone back under full scale (%.2f %%) - the RTA is drawn from its zero again", share * 100f));
     }
 
     private void onMicChunk(short[] boosted, short[] raw, int len, float captureGain) {
