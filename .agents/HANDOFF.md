@@ -12,17 +12,17 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = `f2ce7aa` (the engine no longer attaches a Visualizer while the
-  resolver probes, crash 02:02:58). **Unpushed:** `a46c425` (the spectrum watchdog asks
-  `SessionResolver.mediaTrackStarted`; the MCU send log says sent/unchanged/REFUSED), `a374aa7`
-  (Bluetooth without BitPerfect: the fact reads `isMusicActive()`, the sweep walks the first 64
-  sessions - gocsdk_zj's native track sits on 41) + slice commits. If adb gives 10013, ClearVPN
+- Pushed (15.10, owner's order): `origin/kostyfmat_mod` = HEAD. Latest code: `a374aa7` (Bluetooth
+  without BitPerfect: the fact reads `isMusicActive()`, the sweep walks the first 64 sessions -
+  gocsdk_zj's native track sits on 41), `a46c425` (the spectrum watchdog asks
+  `SessionResolver.mediaTrackStarted`; the MCU send log says sent/unchanged/REFUSED). If adb gives 10013, ClearVPN
   (WireGuard) is on and blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz
   test; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `a374aa7` (15.10 ~17:45, BitPerfect off; resolved session 41 in
-  967 ms, then YouTube Music 41 → 65 by its announcement). Sub + to −. The factory AGDSP config is
-  back in `/data`; `car.config music_volume` is still BitPerfect's 15 (distorts without it) - left
-  as is, owner: «це не впливає» (MEASURED_FACTS "The platform around us").
+- Bench `192.168.1.138:9876`: `a374aa7`; BitPerfect v5.5.15 re-enabled and reinstalled from the same
+  zip (owner, 15.10 17:50), rebooted: bus `WD_24BIT`, AGDSP blobs rebuilt 17:51. Without BitPerfect
+  (15.10 17:20) the resolver found Bluetooth on session 41 and followed YouTube Music to 65. Sub + to −.
+- Board #1813 → BitPerfect line: a disabled module leaves `car.config music_volume=15` (distorts on
+  the factory path) and its `/data` AGDSP config; owner: «будемо шукати вирішення з нею».
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
