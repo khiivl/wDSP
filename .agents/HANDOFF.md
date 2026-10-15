@@ -30,10 +30,13 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 Messengers record again (owner 15.10 16:20) - the touch cancel was QFassistant's, fixed by the owner
 overnight; not wDSP. Board #1810 to BitPerfect (EffectHAL SET_CONFIG) still open on their side.
 
-**Item 7 (measurement volume, `MeasureVolume`; step table first in the wizard; `_fm_cal` = the
-person's volume) builds and has never been seen on the unit.**
+**Item 7 (measurement volume) seen on the bench 15.10 18:09** (`measurements/2026-10-15-measure-volume/`):
+table 63.1 dB 32..1, step 7 chosen clean, level probe to -9 dBFS, no clipping, `_fm_cal`=19 (usual 5 is
+under the step, so derived +18 dB off the table, as predicted). Mic calibration puts +16 dB at 20 Hz
+(trust 0.09 there) - the 20 Hz rule, waits for the author. **Next: loudness by ear at 10/15/19/25.**
 **Next, on the bench, in this order:** a measurement pass (the report's
-`measurement volume:` line says which step and why), the refusal with the fan on, `_fm_cal` in a
+`measurement volume:` line says which step and why; no noise refusal any more - owner 15.10 «просто
+прийняти як даність»), `_fm_cal` in a
 fresh auto preset against the owner's usual volume, loudness audible at 10..25. The thresholds are
 Argon's, not measured in a cabin — TODO «Ближнє» item 7 lists them.
 
