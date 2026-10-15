@@ -12,32 +12,40 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- Pushed: `origin/kostyfmat_mod` = HEAD (`22d9cad`, docs and 28 translations by Сова). Code today: `05d587c`..`8e113b4` (no noise
-  refusal; EQ on the doors only in the control forecast, sub pass with the EQ at its floor; both RTA
-  zeros in one tap at the mic's calibration step; mic overload -> AGC + red notice over the Q row,
-  on >= 4 % of samples at full scale for 1 s, off under 2 %).
-- Bench `192.168.1.138:9876`: `22d9cad`, BitPerfect v5.5.15 on. If adb gives 10013, ClearVPN blocks
-  the LAN - the owner turns it off. ❓ `0102[5:4]`. Argon chat: 32890fb409d8df41.
-- Board #1813 → BitPerfect line (other account, no reply expected here): a disabled module leaves
-  `car.config music_volume=15` and its `/data` AGDSP config.
-- **The BU32107 EQ never reaches the sub** (author 15.10, MCU + datasheet); model, synthesis, control
-  forecast and docs follow it now - memory `bu32107-eq-never-reaches-sub`.
+- Pushed: `origin/kostyfmat_mod` = `22d9cad` (manuals uk/en/es/ru, 28 translations by Сова).
+  **Unpushed:** `fe0dd2f` (TODO) and the player-resume series `040cc07`..`279b0e1`.
+- Bench `192.168.1.138:9876`: `279b0e1`, BitPerfect v5.5.15 on. ❓ `0102[5:4]`. Argon chat:
+  32890fb409d8df41. Board #1813 → BitPerfect line (other account): a disabled module leaves
+  `car.config music_volume=15`.
+- **The BU32107 EQ never reaches the sub** - memory `bu32107-eq-never-reaches-sub`.
 
-## ✅ Seen on the bench 15.10 (owner present)
+## ⏳ In progress: resuming the player after reboot / sleep (`PlayerResume`)
 
-Measurement volume (step 7, clean; table 63.1 dB), loudness by ear 10..25 («все норм на слух»), sub
-delay 4.2 -> 2.4 ms after the sub-pass fix («стала більш вірогідна»), mic calibration stores its step
-(7), RTA zeros: channel -30.3, mic -32.0 at step 7 in one tap, volume put back; overload notice: on at
-13, off at 12 on the owner's preset («13 встало, 12 зняло»; depends on the preset - by design, the
-threshold reads the microphone, not the step).
+Owner 15.10: the right recipe is DefaultAppsChanger `c0bca87` (before Gemini's refactor `3111d5a`);
+ours of 21.09 was copied from the broken one. Done so far: open the player, wait for it on screen,
++1.5 s, PLAY through its session (key to its package as fallback), verify, one more PLAY; streams
+(BUFFERING or http/spotify media URI, `resume_streams_<pkg>`) wait for the network; state written with
+`commit()`; `ACTION_SHUTDOWN` takes the ACC_OFF snapshot; the launcher goes back by its own HOME
+(a launcher entry opened the chooser - 15 launchers, no default).
 
-## ⏳ Next
+📻 Reboot 20:08: YouTube Music opened (via launcher - the remembered `.morphe_black_1` was an
+icon alias), its session PAUSED at 2:56, two keys to the package did nothing - hence session-first
+PLAY in `eb40b9b`, not yet seen on a reboot.
 
-1. Release (owner 15.10: «поки день зробимо всі проби. І зарелізимо»).
-2. Waiting for the author: the 20 Hz rule (mic calibration's 20 Hz swings +0.6..+16 dB run to run,
-   SNR there 1..12 dB), Argon's model findings (TODO «Ближнє» 5, 6).
-3. Unchecked: call takes the platform's level (`698830f`), wake from ACC OFF volumes (`4d1006d`),
-   radio sync / screensaver normalisation (`TESTS.md`).
+**🔴 Owner's last order, not yet done:** «ти аудіосесію плеєра маєш зберігати а не всю систему».
+So: what is remembered must come from the player's media session, not from the system's foreground
+(`noteForeground` / `sys.qf.current.activity`, `resume_activity_<pkg>`, `restoreForeground` - all
+system-wide). Candidates to read before coding: the session's own media button receiver /
+browser service component, and Android's own `Settings.Secure` `media_button_receiver` (the last
+receiver, kept across reboot). Ask the owner one question if the reading is ambiguous.
+
+Switches «after restart / after sleep» were never on in this unit's prefs - the owner turns them on.
+
+## ⏳ Next after that
+
+1. Release (owner: «поки день зробимо всі проби. І зарелізимо»); annotation 0.4.9.8 in TODO.
+2. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
+3. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
 
 ## ❓ For the owner
 
