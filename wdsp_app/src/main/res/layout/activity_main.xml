@@ -368,6 +368,26 @@
                         android:layout_marginStart="32dp"
                         android:orientation="horizontal"
                     android:weightSum="16" />
+
+                    <!-- The microphone is clipping: over the Q switches' row, which does nothing yet. -->
+                    <TextView
+                        android:id="@+id/rta_overload_notice"
+                        android:layout_width="match_parent"
+                        android:layout_height="28dp"
+                        android:layout_gravity="top"
+                        android:layout_marginStart="32dp"
+                        android:background="#99000000"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:paddingHorizontal="6dp"
+                        android:text="@string/rta_mic_overloaded"
+                        android:textColor="#FFFF5252"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:visibility="gone" />
                 </FrameLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>

@@ -626,6 +626,7 @@
     <string name="audiocheck_rta_zero">RTA zero</string>
     <string name="toast_rta_zero_listening">Calibrating the RTA on pink noise, 4 seconds… Best at volume 16, the microphone especially.</string>
     <string name="toast_rta_zero_taken">RTA zero set: pink noise now reads 0 dB.</string>
+    <string name="rta_mic_overloaded">Microphone overloaded - shown with AGC, shape approximate. Lower the microphone sensitivity</string>
     <string name="toast_rta_zero_failed">Too little sound heard - the RTA zero was not set.</string>
     <string name="audiocheck_sweep_play" translatable="false">⏯</string>
     <string name="audiocheck_sweep_pause" translatable="false">⏯</string>

@@ -617,6 +617,7 @@
     <string name="audiocheck_rta_zero">Нуль RTA</string>
     <string name="toast_rta_zero_listening">Калібрую RTA на рожевому шумі, 4 секунди… Найкраще на гучності 16, особливо мікрофон.</string>
     <string name="toast_rta_zero_taken">Нуль RTA встановлено: рожевий шум тепер на 0 дБ.</string>
+    <string name="rta_mic_overloaded">Мікрофон перевантажений - показано з АРП, форма приблизна. Зменште чутливість мікрофона</string>
     <string name="toast_rta_zero_failed">Чути замало звуку - нуль RTA не встановлено.</string>
 </resources>
 
