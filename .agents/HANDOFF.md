@@ -14,7 +14,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 - Pushed: `origin/kostyfmat_mod` = `22d9cad` (manuals uk/en/es/ru, 28 translations by Сова).
   **Unpushed:** `fe0dd2f` (TODO) and the player-resume series from `040cc07`.
-- Bench `192.168.1.138:9876`: `279b0e1`, BitPerfect v5.5.15 on. ❓ `0102[5:4]`. Argon chat:
+- Bench `192.168.1.138:9876`: `a23d73c`, BitPerfect v5.5.15 on. ❓ `0102[5:4]`. Argon chat:
   32890fb409d8df41. Board #1813 → BitPerfect line (other account): a disabled module leaves
   `car.config music_volume=15`.
 - **The BU32107 EQ never reaches the sub** - memory `bu32107-eq-never-reaches-sub`.
@@ -35,6 +35,7 @@ the launcher put back by its own HOME. Streams wait for the network first; state
 package keys did nothing; the launcher entry of fantasy.purple opened the chooser (fixed).
 **Next: a reboot with «after restart» on, then a sleep with «after sleep» on** - the owner turns
 the switches on (they never were); read the result from the boot logger.
+
 ## ⏳ Next after that
 
 1. Release (owner: «поки день зробимо всі проби. І зарелізимо»); annotation 0.4.9.8 in TODO.
