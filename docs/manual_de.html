@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wDSP Anleitung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a printed car-audio manual — a sticky contents rail on the left, one reading column, the head unit's own units (dB, Hz, volume step 1–32) set in mono. */
+:root {
+  --bg: #f6f7f8;
+  --paper: #ffffff;
+  --ink: #1b2226;
+  --muted: #5a666d;
+  --rule: #dde2e5;
+  --accent: #0b6e86;
+  --accent-soft: #e2f1f5;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+    --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+  --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; padding-block: 2rem 4rem; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; } nav.toc { position: static; } }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); align-self: start; font-size: .9rem; }
+nav.toc .label { font-family: var(--font-display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+nav.toc ol { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .35rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); text-decoration: underline; }
+main { min-width: 0; }
+header.top { padding-block: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+header.top .eyebrow { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: .5rem 0 1rem; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+section { padding-block: 2.25rem .5rem; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.25; margin: 0 0 1rem; text-wrap: balance; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 66ch; }
+p { margin: 0 0 .9rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; display: grid; gap: .35rem; }
+a { color: var(--accent); }
+.ui { font-weight: 600; white-space: nowrap; }
+.val { font-family: var(--font-mono); font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.steps { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 1.25rem; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; max-width: none; }
+.steps > li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; }
+.steps h3 { margin-top: .25rem; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: .75rem 1rem; margin: 1rem 0; max-width: 66ch; }
+.note p:last-child { margin: 0; }
+.note .k { color: var(--warn); font-weight: 600; }
+.tablebox { overflow-x: auto; margin: 1rem 0 1.25rem; border: 1px solid var(--rule); background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+dl.tabs { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: .6rem 1.25rem; margin: 0 0 1rem; }
+@media (max-width: 560px) { dl.tabs { grid-template-columns: minmax(0, 1fr); gap: .2rem; } dl.tabs dd { margin-bottom: .8rem; } }
+dl.tabs dt { font-weight: 600; }
+dl.tabs dd { margin: 0; max-width: 62ch; }
+.scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Inhaltsverzeichnis">
+    <div class="label">Inhalt</div>
+    <ol>
+      <li><a href="#about">Über die App</a></li>
+      <li><a href="#first">Erster Start</a></li>
+      <li><a href="#order">Reihenfolge der Einrichtung</a></li>
+      <li><a href="#calibrations">Was kalibriert wird und warum</a></li>
+      <li><a href="#tabs">Reiter des Hauptbildschirms</a></li>
+      <li><a href="#spectrum">Spektrum und RTA</a></li>
+      <li><a href="#presets">Presets und Automatisierung</a></li>
+      <li><a href="#looks">Widget und Bildschirmschoner</a></li>
+      <li><a href="#trouble">Fehlerbehebung</a></li>
+      <li><a href="#send">Messungen einsenden</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="eyebrow">wDSP · mod kostyamat · QF / K706 Autoradios</div>
+      <h1>wDSP Anleitung</h1>
+      <p>Alles über die App, die richtige Einstellungsreihenfolge, was gemessen wird und warum. Geschrieben für den Fahrer, nicht für den Programmierer.</p>
+    </header>
+
+    <section id="about">
+      <h2>Über die App</h2>
+      <p>In QF-Autoradios durchläuft das Audiosignal aus Android einen dedizierten Soundprozessor <span class="val">ROHM BU32107</span>. wDSP steuert ihn über die MCU des Autoradios: den Equalizer, die Türfilter, den Subwoofer, die Laufzeitkorrekturen und den Fader. Die werksseitige DSP-App steuert denselben Chip, bietet jedoch weitaus weniger Kontrolle.</p>
+      <p>Es ist wichtig, von Anfang an zu verstehen, was der Prozessor leisten kann und was nicht:</p>
+      <ul>
+        <li>ein gemeinsamer Equalizer für alle Lautsprecher: <span class="val">16</span> Bänder von <span class="val">20 Hz</span> bis <span class="val">20 kHz</span>, <span class="val">2 dB</span> Schritte, Grenzen <span class="val">±12 dB</span>, feste Bandgüte Q;</li>
+        <li>kein unabhängiger Equalizer für linke oder rechte Lautsprecher;</li>
+        <li>der Subwoofer verfügt über eine eigene Frequenzweiche (Tiefpass), Pegel und Laufzeit; die Türen besitzen Hochpassfilter und Bassanhebung.</li>
+      </ul>
+      <p>Daher zielt die Fahrgastraum-Messung vor allem darauf ab, <b>Fehler</b> aufzuspüren: vertauschte Kabel, verpolte Lautsprecher, ungleiche Seiten und Türresonanzen. Der Equalizer korrigiert breitbandig und maßvoll. Eine auf das Dezibel lineare Kurve gibt es auf dieser Hardware nicht, und die App verspricht sie nicht.</p>
+    </section>
+
+    <section id="first">
+      <h2>Erster Start</h2>
+      <p>Beim ersten Start öffnet die App einen Berechtigungsassistenten. Aktivieren Sie jede Berechtigung über die entsprechende Schaltfläche:</p>
+      <ul>
+        <li><span class="ui">Microphone (Audio Recording)</span> — Fahrgastraum-Messung und Echtzeit-Spektrum im Mikrofonmodus;</li>
+        <li><span class="ui">Display Over Other Apps</span> — Statusleisten-Widget und Bildschirmschoner;</li>
+        <li><span class="ui">Notification Access (Metadata)</span> — Auslesen von Titeln und Albumcovern;</li>
+        <li><span class="ui">GPS Location (GALA Speed)</span> — geschwindigkeitsabhängige Lautstärkeanpassung (GALA);</li>
+        <li><span class="ui">Background Power Optimization</span> — verhindert das Beenden des Hintergrunddienstes durch Android.</li>
+      </ul>
+      <p>Root-Zugriff (Magisk) ist optional. Falls vorhanden, kann die App das Mikrofon vor Messungen automatisch von Sprachassistenten übernehmen.</p>
+    </section>
+
+    <section id="order">
+      <h2>Reihenfolge der Einrichtung</h2>
+      <p>Die Reihenfolge ist entscheidend: Jeder Schritt baut auf den Ergebnissen des vorherigen auf. Führen Sie alle Schritte mit Mikrofon im Auto durch: Türen und Fenster geschlossen, Motor aus, absolute Stille.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Beschreiben Sie Ihr Fahrzeug</h3>
+          <p><span class="ui">wDSP Einstellungen</span> → <span class="ui">Cabin Acoustic Calibration & Auto-Presets</span>. Hier legen Sie die Rahmenbedingungen fest, nach denen die Messung interpretiert wird:</p>
+          <ul>
+            <li><span class="ui">Fahrgastraum</span>: <span class="ui">Geschlossen (Auto)</span> oder <span class="ui">Offen (Stand, Cabrio)</span>. Im geschlossenen Raum verstärkt die Karosserie tiefe Bässe (Cabin Gain), was das Synthesemodell berücksichtigt;</li>
+            <li>Länge, Breite und Höhe;</li>
+            <li><span class="ui">Wo sich das Mikrofon befindet</span> und <span class="ui">Was die Kapsel umgibt</span>: beeinflusst die Hochtonkorrektur;</li>
+            <li>ob ein Subwoofer vorhanden ist und <span class="ui">Position des Subwoofers</span>.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Kalibrieren Sie das Mikrofon</h3>
+          <p>Tippen Sie auf <span class="ui">Calibrate Microphone</span>. Das Mikrofon im Autoradio ist kein Labormikrofon: Bei tiefsten und höchsten Frequenzen weicht seine Empfindlichkeit deutlich vom menschlichen Gehör ab. Die Kalibrierung ermittelt das Profil der Kapsel, damit deren Eigenheiten nicht dem Fahrzeug zugeschrieben werden.</p>
+          <p>Was in dieser Minute geschieht:</p>
+          <ul>
+            <li><b>Pegeltest</b> — ein kurzer Ton über alle Lautsprecher zur Anpassung an die Mikrofonempfindlichkeit;</li>
+            <li><b>Sweeps</b> — gleichmäßige Sinustöne von tief bis hoch durch jeden Lautsprecher und den Subwoofer nacheinander;</li>
+            <li><b>Lautstärkeschritte</b> — ca. <span class="val">20 s</span> eines leisen Tons, während die Lautstärke automatisch von <span class="val">32</span> auf <span class="val">1</span> sinkt. So misst die App den genauen Dezibelabfall jedes einzelnen Lautstärkeschritts an Ihrem Radio.</li>
+          </ul>
+          <p>Dies geschieht einmalig. Nur wiederholen, wenn das Mikrofon versetzt oder der Verstärker getauscht wurde.</p>
+        </div></li>
+        <li><div>
+          <h3>Messen Sie den Raum und erstellen Sie ein Preset</h3>
+          <p>Tippen Sie auf <span class="ui">Messen</span>. Der Assistent fragt vier Dinge ab:</p>
+          <ul>
+            <li><span class="ui">Subwoofer Configuration</span> — ob der Subwoofer aktiv ist;</li>
+            <li><span class="ui">Target Sound Profile</span>: <span class="ui">Harman</span> (warmer Automobil-Standard), <span class="ui">Dolby Atmos</span>, <span class="ui">Club / Bass Heavy</span>, <span class="ui">Vocal / Podcast</span> oder <span class="ui">Studio Flat</span>;</li>
+            <li><span class="ui">Bühnenfokus</span> — Fahrersitz, Vorne Mitte, Raum Mitte oder Ohne Laufzeitkorrektur;</li>
+            <li><span class="ui">Abstand vom Mikrofon zu den Ohren</span>.</li>
+          </ul>
+          <p>Stellen Sie vor der Messung Ihre übliche Hörlautstärke ein: An diesen Wert dockt die Loudness-Kompensation an. Die Messung selbst wählt ihre Lautstärke eigenständig. Der Ablauf umfasst:</p>
+          <ul>
+            <li><b>Lautstärkewahl</b>, ca. <span class="val">4 s</span>: Stille, dann ein Doppelton <span class="val">80 Hz + 1 kHz</span>. Die App wählt einen Schritt zwischen <span class="val">6</span> und <span class="val">18</span>, bei dem Bässe unverzerrt über dem Grundrauschen liegen. Umgebungsgeräusche brechen den Test nicht ab, sondern fließen in den Bericht ein;</li>
+            <li>Erfassung des Grundrauschens;</li>
+            <li>Sweeps für jeden Lautsprecher einzeln;</li>
+            <li>Berechnung der Laufzeitverzögerungen;</li>
+            <li>Synthese des Presets;</li>
+            <li><b>Kontroll-Sweep</b> — alle Lautsprecher spielen gleichzeitig über das neu berechnete Preset. Dies prüft, ob Subwoofer und Türen phasengleich addieren oder sich an der Trennfrequenz auslöschen.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Prüfen Sie den Bericht und wenden Sie das Preset an</h3>
+          <p>Der Bildschirm <span class="ui">Calibration Results & Auto-EQ</span> zeigt die akustische Auswertung Ihres Systems:</p>
+          <ul>
+            <li><span class="ui">Was die Messung ergab</span> — erkannte Mängel mit Zuverlässigkeit (<span class="ui">Sicher</span>, <span class="ui">Wahrscheinlich</span>, <span class="ui">Möglich</span>) und Hinweisen zur Behebung;</li>
+            <li>Trennfrequenz — ab welcher Frequenz die Türen an den Subwoofer übergeben;</li>
+            <li>berechnete Kanalverzögerungen;</li>
+            <li>Korrekturkurve des Equalizers.</li>
+          </ul>
+          <p>Schaltflächen unten:</p>
+          <ul>
+            <li><span class="ui">Apply Auto-EQ</span> — speichert und aktiviert das neue Preset;</li>
+            <li><span class="ui">Save Archive (.zip)</span> — speichert die Datei zum Einsenden an uns;</li>
+            <li><span class="ui">Close</span> — Beenden ohne Übernahme der Änderungen.</li>
+          </ul>
+          <p>Der Hinweis zur Phasenumkehr des Subwoofers (Schalter <span class="val">0/180</span> oder Kabelverpolung) erscheint nur dann, wenn der Kontroll-Sweep tatsächliche Phasenauslöschungen festgestellt hat.</p>
+        </div></li>
+        <li><div>
+          <h3>Passen Sie die Loudness an</h3>
+          <p>Öffnen Sie den Reiter <span class="ui">Gehörr. Laust.</span> Das Gehör nimmt Bässe bei niedriger Lautstärke schwächer wahr. Loudness hebt die Tiefen an, wenn leiser gedreht wird.</p>
+          <ul>
+            <li><span class="ui">Kalibrierpunkt</span> — Lautstärkeschritt, ab dem die Loudness keine Anhebung mehr vornimmt. Bei gemessenen Presets dockt er an die normale Hörlautstärke an. Lag diese unter dem Messpegel, setzt die App den Punkt <span class="val">18 dB</span> über die Hörlautstärke, zwischen Schritt <span class="val">16</span> und <span class="val">24</span>;</li>
+            <li><span class="ui">Korrekturstärke</span> — Maß der Bassanhebung.</li>
+          </ul>
+          <p>Die App rechnet mit echten, in Schritt 2 gemessenen Dezibelwerten statt mit bloßen Schrittnummern. Ein Prüfmechanismus unten meldet Konflikte; die Schaltfläche <span class="ui">Richtig einstellen</span> behebt sie sofort.</p>
+        </div></li>
+        <li><div>
+          <h3>Richten Sie den RTA-Nullpunkt ein</h3>
+          <p>Öffnen Sie <span class="ui">Audio-Check</span> → <span class="ui">Rosa Rauschen</span> → <span class="ui">RTA-Null</span>. Dies fixiert eine stabile Referenzlinie für die Kurve anstelle eines gleitenden Durchschnitts.</p>
+          <p>Ein Tastendruck erfasst beide Nullen, Musik und Mikrofon. Die App stellt kurzzeitig den Pegel der Mikrofonkalibrierung ein und kehrt zurück. Die Nullinie des Mikrofons bleibt verankert und wandert nicht beim Drehen am Lautstärkeregler.</p>
+        </div></li>
+        <li><div>
+          <h3>Synchronisieren Sie das Widget mit der Musik</h3>
+          <p><span class="ui">wDSP Einstellungen</span> → <span class="ui">Synchronisierung mit dem Ton</span> → <span class="ui">Synchronisieren</span>. Die App ermittelt die Verzögerung des Audiopfads im Verhältnis zum Bildschirm. Die Balken tanzen exakt im Takt.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="calibrations">
+      <h2>Was kalibriert wird und warum</h2>
+      <p>Die App beinhaltet fünf unterschiedliche Kalibrierungen mit völlig verschiedenen Aufgaben:</p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Verfahren</th><th>Wo</th><th>Was die App ermittelt</th><th>Worauf es sich auswirkt</th><th>Wann wiederholen</th></tr></thead>
+          <tbody>
+            <tr><td>Mikrofon</td><td>Einstellungen → Calibrate Microphone</td><td>Frequenzgang des internen Mikrofons im Vergleich zum Ohr</td><td>Fahrgastraum-Messung, Spektrum Mikrofon</td><td>Neues Mikrofon oder geänderte Befestigung</td></tr>
+            <tr><td>Lautstärkeschritte</td><td>Automatisch bei der Mikrofonkalibrierung</td><td>Genauer dB-Abfall für Schritte <span class="val">1…32</span> an Radio und Verstärker</td><td>Loudness, RTA-Skalierung des Mikrofons</td><td>Immer zusammen mit dem Mikrofon</td></tr>
+            <tr><td>Fahrgastraum</td><td>Einstellungen → Cabin Acoustic Calibration</td><td>Akustische Mängel, Laufzeiten, Weiche und Auto-EQ-Preset</td><td>Neues Preset</td><td>Lautsprechertausch, neuer Subwoofer, Dämmung</td></tr>
+            <tr><td>RTA-Nullpunkt</td><td>Audio-Check → Rosa Rauschen → RTA-Nullpunkt</td><td>Stabile Referenzlinie für die Spektrumanzeige</td><td>Nur visuelle Anzeige</td><td>Nach Mikrofonkalibrierung; ändert den Klang nicht</td></tr>
+            <tr><td>Tonsynchronisation</td><td>Einstellungen → Tonsynchronisation</td><td>Verzögerung des Tons gegenüber der Bilddarstellung</td><td>Nur Anzeige von Widget und Schoner</td><td>Nach Firmware- oder Audiomodul-Updates</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Der Loudness-Referenzpunkt ist ein Einstellwert und keine Messung: Er wird vom Assistenten oder manuell gesetzt.</p>
+    </section>
+
+    <section id="tabs">
+      <h2>Reiter des Hauptbildschirms</h2>
+      <dl class="tabs">
+        <dt>Equalizer</dt>
+        <dd>16 Bänder, Preset-Auswahl oben und Bereich <span class="ui">Subwoofer</span>: Trennfrequenz und Pegel. Jeder Regler bestimmt den dB-Wert der Bandmitte. Benachbarte Bänder überlappen gleichmäßig: Drei Regler auf <span class="val">+4</span> erzeugen ein einheitliches <span class="val">+4</span>-Plateau ohne Buckel. Die Kurve visualisiert die tatsächliche Ansteuerung des DSP-Chips.</dd>
+        <dt>Loudness</dt>
+        <dd>Gehörrichtige Lautstärkekompensation (<span class="ui">Loudness</span>), Schwellenwert und Anhebung. <span class="ui">Subwoofer-Kompensation</span> erweitert den Effekt auf den Subwoofer. <span class="ui">Höhen reduzieren</span> mildert scharfe Töne bei hohen Pegeln. <span class="ui">Ultra Bass</span> liefert Extra-Tiefbass unterhalb der gewählten Schwelle. Die Grafik zeigt die tatsächliche Kurve.</dd>
+        <dt>Verzögerungen</dt>
+        <dd>Laufzeitkorrektur pro Kanal in Millisekunden und Zentimetern, damit der Schall aller Lautsprecher zeitgleich am Ohr ankommt. Berechnet bei der Raummessung. Die Tasten <span class="ui">Vorne zusammen</span> / <span class="ui">Hinten zusammen</span> verschieben Paare unter Beibehaltung der Differenzen. Enthält Raumklang und Rear-Fill.</dd>
+        <dt>Sonstiges</dt>
+        <dd>Türlautsprecher-Filter: Der <span class="ui">Filter</span> entlastet die Türen von unspielbarem Tiefbass und übergibt an den Subwoofer; die <span class="ui">Boost</span> betont gewählte Frequenzen. Getrennte Regelung vorne und hinten; <span class="ui">Wie vorne</span> spiegelt Einstellungen. Enthält Fader und Balance.</dd>
+        <dt>GALA</dt>
+        <dd>Geschwindigkeitsabhängige Lautstärkeanpassung per GPS gegen Fahrgeräusche. Geschwindigkeitsintervall, Ansprechschwelle und Pegelgrenze. Bei Anrufen pausiert die Funktion automatisch.</dd>
+        <dt>Audio-Check</dt>
+        <dd>Testsignale zur Hörprüfung: Stem-Spuren (Bass, Gesang, Schlagzeug, Melodie) in beliebigen Kombinationen, rosa Rauschen, Sinusgenerator, Sweep, Einzelprüfung der Lautsprecher und <span class="ui">Nur Subwoofer</span>-Modus. Signale durchlaufen das aktive Preset ohne gespeicherte Werte zu überschreiben.</dd>
+      </dl>
+    </section>
+
+    <section id="spectrum">
+      <h2>Spektrum und RTA</h2>
+      <p>Der Umschalter <span class="ui">Spektrum</span> über dem Equalizer bietet drei Positionen. In den Einstellungen wählen Sie zwischen Balkendarstellung und Echtzeitkurve.</p>
+      <dl class="tabs">
+        <dt>Aus</dt>
+        <dd>Kein Spektrum auf dem Hauptbildschirm. Statusleisten-Widget und Bildschirmschoner arbeiten weiter.</dd>
+        <dt>Musik</dt>
+        <dd>Das wiedergegebene Musiksignal geformt durch das aktuelle Preset: <b>wie es klingen soll</b>. Lautstärkeunabhängig.</dd>
+        <dt>Microphone</dt>
+        <dd><b>Wie der Innenraum tatsächlich klingt</b>, erfasst durch das Mikrofon des Geräts im gleichen Maßstab wie Musik. Wo die beiden Kurven auseinandergehen, fügt das Auto etwas hinzu oder nimmt etwas weg.</dd>
+      </dl>
+      <p>UKW-Radio läuft nicht über Android, weshalb Musik im Radiomodus kein Spektrum anzeigt; der Microphone-Modus funktioniert auch bei Radio.</p>
+    </section>
+
+    <section id="presets">
+      <h2>Presets und Automatisierung</h2>
+      <ul>
+        <li>Preset-Verwaltung auf dem Hauptbildschirm: Erstellen, Umbenennen, Löschen, Exportieren und Importieren.</li>
+        <li><span class="ui">Preset-Automatisierung</span> verknüpft Presets mit Medien-Apps: Radio läuft mit eigenem Profil, Bluetooth mit einem anderen. Ein Profil bedient <span class="ui">Telefonanruf</span>. <span class="ui">Globaler Standard</span> gilt für alle übrigen Fälle.</li>
+        <li>Lautstärke wird für jede Quelle separat gespeichert.</li>
+        <li><span class="ui">Einstellungen sichern</span> und <span class="ui">Einstellungen wiederherstellen</span>: Sichert die Gesamtkonfiguration oder Einstellungen einzeln.</li>
+        <li><span class="ui">Player nach Neustart fortsetzen</span> und <span class="ui">Player nach Standby fortsetzen</span>: Der aktive Player startet selbstständig, ohne die Navigation zu überdecken. Das Radio stellt sich selbst wieder her. Für den Standby auf <span class="ui">wDSP im Standby aktiv lassen</span> tippen und wDSP in der Liste aktivieren.</li>
+      </ul>
+    </section>
+
+    <section id="looks">
+      <h2>Widget und Bildschirmschoner</h2>
+      <p><span class="ui">Statusleisten-Visualisierer</span> — kompaktes Spektrum in der Android-Leiste: Breite, Versatz, Höhe, Stile (klassische Balken, Outrun, VU-Meter, Oszilloskop) und Farbpaletten.</p>
+      <p><span class="ui">Bildschirmschoner</span> — Vollbildanzeige bei Inaktivität: Wartezeit, Helligkeit Tag/Nacht, App-Ausschlussliste. Das Navigationssystem wird niemals verdeckt. <span class="ui">Statusleiste überdecken</span> legt fest, ob die Leiste sichtbar bleibt. Die Steuerung ist unten abgebildet.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Gestenkarte des Bildschirmschoners: Berührungen links, Wischgesten rechts" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Zonen des Bildschirmschoners: Tippen (links) und Wischen (rechts).</figcaption>
+      </figure>
+      <h3>Touch-Zonen des Schoners</h3>
+      <p><b>Tippen (linke Skizze):</b></p>
+      <ul>
+        <li><b>1</b> — obere Hälfte: Schoner schließen;</li>
+        <li><b>2</b> — untere Hälfte, linkes Drittel (bis zum Rand): vorheriger Titel;</li>
+        <li><b>3</b> — Mitte: Pause / Wiedergabe;</li>
+        <li><b>4</b> — rechtes Drittel (bis zum Rand): nächster Titel;</li>
+        <li><b>5</b> — Albumcover / Player-Symbol (unten links): aktiven Player oder Radio öffnen;</li>
+        <li><b>6</b> — Stil-Taste (unten rechts): Tippen schaltet Stil um; 1 s Halten öffnet wDSP Equalizer.</li>
+      </ul>
+      <p><b>Wischgesten (rechte Skizze)</b> — die Funktion richtet sich nach dem Rand, an dem der Finger startet. Wischen in jede Richtung möglich; nach oben oder rechts erhöht den Wert. Die Einstellung speichert beim Loslassen:</p>
+      <ul>
+        <li><b>7</b> — vom oberen Rand: Hintergrundabdunklung (Transparenz);</li>
+        <li><b>8</b> — vom unteren Rand: Visualisierer-Breite;</li>
+        <li><b>9</b> — vom linken Rand: Höhe;</li>
+        <li><b>10</b> — vom rechten Rand: Helligkeit (separat für Tag und Nacht);</li>
+        <li><b>11</b> — aus der Mitte: Gesamtlautstärke (über den ganzen Bildschirm 0–32).</li>
+      </ul>
+      <p><span class="ui">UI-Stil</span>: <span class="ui">Klassisch (Original)</span> — ursprüngliches Layout; <span class="ui">Modern</span> — überarbeitetes, anpassungsfähiges Design. Beide Stile bieten Tag- und Nachtmodi.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>Fehlerbehebung</h2>
+      <h3>"Mikrofon belegt, berechnetes Spektrum aktiv"</h3>
+      <p>Eine andere App belegt das Mikrofon, meist Google Assistant. Starten Sie das Autoradio neu: wDSP startet frühzeitig und sichert sich den Zugriff. Mit Root übernimmt wDSP das Mikrofon automatisch.</p>
+      <h3>Messung meldet "Messung mit Störgeräuschen"</h3>
+      <p>Im Fahrzeug war es zu laut. Die Lautstärke wählt die App selbst; senken Sie Außengeräusche: Türen und Fenster schließen, Motor und Lüftung abstellen und wiederholen.</p>
+      <h3>Lautstärkeschritte wurden nicht erfasst</h3>
+      <p>Störschall hat das Tonsignal unterbrochen oder das Mikrofon hat die Töne verpasst. Die App behält zuvor gemessene Tabellen; ohne Tabelle nutzt sie nominale Schritte. Wiederholen Sie die Mikrofonkalibrierung in ruhiger Umgebung.</p>
+      <h3>Mikrofon-Nullpunkt wandert beim Regeln der Lautstärke</h3>
+      <p>Der Mikrofon-Nullpunkt wurde erfasst, bevor die Lautstärkeverfolgung aktiv war. Führen Sie den Nullabgleich mit rosa Rauschen erneut aus (Schritt 6).</p>
+      <h3>Rote Warnung "Mikrofon übersteuert" über dem Equalizer</h3>
+      <p>Das Signal erreicht die Aussteuerungsgrenze, meist bei sehr tiefen Bässen. Während der Übersteuerung arbeitet die Mikrofonkurve mit AGC: Pegel angepasst an Musik, Form angenähert. Bei sinkendem Pegel erlischt die Warnung. Tritt dies bei normaler Lautstärke auf, Mikrofonempfindlichkeit im Radio reduzieren.</p>
+      <h3>Klang verändert sich nach Neustart</h3>
+      <p>DSP-Parameter stellt der Hintergrunddienst beim Start ohne Fenster wieder her. Prüfen Sie die Berechtigungen <span class="ui">Hintergrundaktivität</span> und <span class="ui">Aktivität im Standby</span>.</p>
+    </section>
+
+    <section id="send">
+      <h2>Messungen einsenden</h2>
+      <p>Tippen Sie nach der Raummessung auf <span class="ui">Save Archive (.zip)</span>. Es bündelt Messprotokolle, Mikrofonkurve, Schritt-Tabelle und synchronen Systembericht.</p>
+      <p>Senden Sie das Archiv, den Systembericht (<span class="ui">Diagnose</span> → <span class="ui">Systembericht</span>) und eine kurze Beschreibung der Klangveränderung an die Gruppe der Modifikation: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. Die Originalversion besitzt keine Raummessung, daher gehen Messungen an die Gruppe der Modifikation. Originalprojekt: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
+      <p>Geben Sie Automarke, Modell, Mikrofonposition und Verstärkerkonfiguration an.</p>
+    </section>
+
+    <footer>
+      Anleitung für wDSP 1.1 "Bulldozer" Mod, 15.10.2026. wDSP — von Volodymyr Chebanenko (khiivl); Mod — Kostiantyn Matviyevskyy.
+    </footer>
+  </main>
+</div>

@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instrukcja obsługi wDSP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a printed car-audio manual — a sticky contents rail on the left, one reading column, the head unit's own units (dB, Hz, volume step 1–32) set in mono. */
+:root {
+  --bg: #f6f7f8;
+  --paper: #ffffff;
+  --ink: #1b2226;
+  --muted: #5a666d;
+  --rule: #dde2e5;
+  --accent: #0b6e86;
+  --accent-soft: #e2f1f5;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+    --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+  --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; padding-block: 2rem 4rem; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; } nav.toc { position: static; } }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); align-self: start; font-size: .9rem; }
+nav.toc .label { font-family: var(--font-display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+nav.toc ol { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .35rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); text-decoration: underline; }
+main { min-width: 0; }
+header.top { padding-block: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+header.top .eyebrow { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: .5rem 0 1rem; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+section { padding-block: 2.25rem .5rem; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.25; margin: 0 0 1rem; text-wrap: balance; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 66ch; }
+p { margin: 0 0 .9rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; display: grid; gap: .35rem; }
+a { color: var(--accent); }
+.ui { font-weight: 600; white-space: nowrap; }
+.val { font-family: var(--font-mono); font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.steps { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 1.25rem; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; max-width: none; }
+.steps > li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; }
+.steps h3 { margin-top: .25rem; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: .75rem 1rem; margin: 1rem 0; max-width: 66ch; }
+.note p:last-child { margin: 0; }
+.note .k { color: var(--warn); font-weight: 600; }
+.tablebox { overflow-x: auto; margin: 1rem 0 1.25rem; border: 1px solid var(--rule); background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+dl.tabs { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: .6rem 1.25rem; margin: 0 0 1rem; }
+@media (max-width: 560px) { dl.tabs { grid-template-columns: minmax(0, 1fr); gap: .2rem; } dl.tabs dd { margin-bottom: .8rem; } }
+dl.tabs dt { font-weight: 600; }
+dl.tabs dd { margin: 0; max-width: 62ch; }
+.scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Spis treści">
+    <div class="label">Spis treści</div>
+    <ol>
+      <li><a href="#about">O programie</a></li>
+      <li><a href="#first">Pierwsze uruchomienie</a></li>
+      <li><a href="#order">Kolejność konfiguracji</a></li>
+      <li><a href="#calibrations">Co jest kalibrowane i dlaczego</a></li>
+      <li><a href="#tabs">Zakładki ekranu głównego</a></li>
+      <li><a href="#spectrum">Widmo i RTA</a></li>
+      <li><a href="#presets">Presety i automatyzacja</a></li>
+      <li><a href="#looks">Widżet i wygaszacz</a></li>
+      <li><a href="#trouble">Rozwiązywanie problemów</a></li>
+      <li><a href="#send">Przesyłanie pomiarów</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="eyebrow">wDSP · mod kostyamat · stacje QF / K706</div>
+      <h1>Instrukcja obsługi wDSP</h1>
+      <p>Wszystko o aplikacji, właściwa kolejność konfiguracji, co i dlaczego mierzy. Napisane dla kierowcy, a nie dla programisty.</p>
+    </header>
+
+    <section id="about">
+      <h2>O programie</h2>
+      <p>W stacjach multimedialnych QF sygnał audio z systemu Android trafia do dedykowanego procesora dźwięku <span class="val">ROHM BU32107</span>. wDSP steruje nim poprzez MCU stacji: korektorem, filtrami głośników w drzwiach, subwooferem, opóźnieniami kanałów oraz faderem. Fabryczna aplikacja DSP steruje tym samym układem, lecz oferuje znacznie mniejsze możliwości.</p>
+      <p>Warto od początku wiedzieć, na co pozwala procesor, a czego zrobić nie może:</p>
+      <ul>
+        <li>jeden wspólny korektor dla wszystkich głośników: <span class="val">16</span> pasm od <span class="val">20 Hz</span> do <span class="val">20 kHz</span>, krok <span class="val">2 dB</span>, zakres <span class="val">±12 dB</span>, stała dobroć Q;</li>
+        <li>brak niezależnego korektora dla lewego i prawego głośnika;</li>
+        <li>subwoofer posiada dedykowaną zwrotnicę (filtr LPF), regulację wzmocnienia i opóźnienia; głośniki w drzwiach mają filtr górnoprzepustowy (HPF) oraz podbicie basu.</li>
+      </ul>
+      <p>Dlatego pomiar akustyki kabiny koncentruje się przede wszystkim na wykrywaniu <b>wad</b>: zamienionych przewodów, głośników grających w przeciwfazie, nierównomiernych poziomów stron i rezonansów drzwi. Korektor wprowadza zrównoważone, szerokopasmowe korekty. Na tym sprzęcie idealnie płaska charakterystyka z dokładnością do decybela fizycznie nie istnieje i program jej nie obiecuje.</p>
+    </section>
+
+    <section id="first">
+      <h2>Pierwsze uruchomienie</h2>
+      <p>Przy pierwszym starcie aplikacja otwiera kreator uprawnień. Należy nadać wymagane uprawnienia za pomocą przycisków w interfejsie:</p>
+      <ul>
+        <li><span class="ui">Microphone (Audio Recording)</span> — pomiar akustyki kabiny oraz widmo w czasie rzeczywistym w trybie mikrofonu;</li>
+        <li><span class="ui">Display Over Other Apps</span> — widżet na pasku stanu oraz pełnoekranowy wygaszacz;</li>
+        <li><span class="ui">Notification Access (Metadata)</span> — odczyt tytułów utworów i okładek albumów;</li>
+        <li><span class="ui">GPS Location (GALA Speed)</span> — automatyczna kompensacja głośności w funkcji prędkości (GALA);</li>
+        <li><span class="ui">Background Power Optimization</span> — zabezpiecza usługę sterującą procesorem DSP przed zamknięciem przez system Android.</li>
+      </ul>
+      <p>Uprawnienia roota (Magisk) są opcjonalne. Jeśli są dostępne, pozwalają aplikacji na natychmiastowe przejęcie mikrofonu od asystentów głosowych przed rozpoczęciem pomiarów.</p>
+    </section>
+
+    <section id="order">
+      <h2>Kolejność konfiguracji</h2>
+      <p>Kolejność ma kluczowe znaczenie: każdy kolejny krok opiera się na wynikach poprzedniego. Wszystkie etapy wykorzystujące mikrofon należy przeprowadzać w samochodzie: przy zamkniętych drzwiach i oknach, wyłączonym silniku i zachowaniu absolutnej ciszy.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Opisz swój samochód</h3>
+          <p><span class="ui">Ustawienia wDSP</span> → <span class="ui">Cabin Acoustic Calibration & Auto-Presets</span>. Tutaj określa się parametry geometrii, na podstawie których interpretowane są pomiary:</p>
+          <ul>
+            <li><span class="ui">Kabina</span>: <span class="ui">Zamknięta (auto)</span> lub <span class="ui">Otwarta (stanowisko, cabrio)</span>. Zamknięta przestrzeń naturalnie wzmacnia najniższe częstotliwości (gain kabiny), co model syntezy bierze pod uwagę;</li>
+            <li>długość, szerokość i wysokość kabiny;</li>
+            <li><span class="ui">Gdzie znajduje się mikrofon</span> oraz <span class="ui">Co otacza kapsułę</span>: wpływa na kompensację wysokich częstotliwości;</li>
+            <li>obecność subwoofera oraz <span class="ui">Położenie subwoofera</span>.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Skalibruj mikrofon</h3>
+          <p>Naciśnij <span class="ui">Calibrate Microphone</span>. Wbudowane mikrofony stacji samochodowych to nie przyrządy laboratoryjne: ich charakterystyka na skrajach pasma znacznie odbiega od ludzkiego słuchu. Kalibracja zdejmuje profil kapsuły, aby jej wady nie zostały przypisane akustyce samochodu.</p>
+          <p>Co dzieje się podczas tej ~1-minutowej procedury:</p>
+          <ul>
+            <li><b>kontrola poziomu</b> — krótki impuls przez głośniki w celu dopasowania wzmocnienia do czułości mikrofonu;</li>
+            <li><b>sygnały sweep</b> — płynne przebiegi sinusoidalne od dołu do góry przez każdy głośnik i subwoofer po kolei;</li>
+            <li><b>kroki głośności</b> — około <span class="val">20 s</span> cichego tonu referencyjnego, podczas gdy głośność samoczynnie schodzi od stopnia <span class="val">32</span> do <span class="val">1</span>. Pozwala to zmierzyć rzeczywisty spadek w decybelach dla każdego stopnia głośności stacji.</li>
+          </ul>
+          <p>Kalibrację wykonuje się raz. Powtarza się ją tylko po zmianie mikrofonu lub wymianie wzmacniacza.</p>
+        </div></li>
+        <li><div>
+          <h3>Zmierz kabinę i wygeneruj preset</h3>
+          <p>Naciśnij <span class="ui">Zmierz</span>. Kreator zapyta o cztery parametry:</p>
+          <ul>
+            <li><span class="ui">Subwoofer Configuration</span> — czy subwoofer jest aktywny;</li>
+            <li><span class="ui">Target Sound Profile</span>: <span class="ui">Harman</span> (ciepły wzorzec samochodowy), <span class="ui">Dolby Atmos</span>, <span class="ui">Club / Bass Heavy</span>, <span class="ui">Vocal / Podcast</span> lub <span class="ui">Studio Flat</span>;</li>
+            <li><span class="ui">Ogniskowanie sceny dźwiękowej</span> — Miejsce kierowcy, Środek przodu, Środek kabiny lub Bez opóźnień;</li>
+            <li><span class="ui">Odległość od mikrofonu do uszu</span>.</li>
+          </ul>
+          <p>Przed rozpoczęciem pomiaru ustaw głośność na swój typowy poziom odsłuchu: to do niego zostanie zakotwiczona krzywa kompensacji głośności (Loudness). Sam pomiar dobiera własny poziom automatycznie. Etapy przebiegają następująco:</p>
+          <ul>
+            <li><b>dobór głośności</b>, około <span class="val">4 s</span>: chwila ciszy, a następnie dwutonowy sygnał testowy <span class="val">80 Hz + 1 kHz</span>. Aplikacja dobiera stopień między <span class="val">6</span> a <span class="val">18</span>, przy którym bas wyraźnie wybija się ponad szum kabiny bez wprowadzania przesterowań. Szum otoczenia nie przerywa pomiaru, lecz jest odnotowywany w raporcie;</li>
+            <li>rejestracja szumu tła;</li>
+            <li>przebiegi sweep dla poszczególnych głośników;</li>
+            <li>obliczanie opóźnień czasowych wyrównujących fazę;</li>
+            <li>synteza presetu Auto-EQ;</li>
+            <li><b>sweep kontrolny</b> — wszystkie głośniki grają jednocześnie z zastosowaną nową charakterystyką. Pozwala to sprawdzić, czy subwoofer i midbasy w drzwiach sumują się w fazie, czy znoszą na częstotliwości podziału.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Przejrzyj wyniki i zastosuj</h3>
+          <p>Raport <span class="ui">Calibration Results & Auto-EQ</span> przedstawia szczegółową diagnozę akustyki Twojego systemu:</p>
+          <ul>
+            <li><span class="ui">Wyniki pomiaru</span> — wykryte nieprawidłowości oznaczone jako <span class="ui">Na pewno</span>, <span class="ui">Prawdopodobnie</span> lub <span class="ui">Możliwe</span>, wraz z konkretnymi wskazówkami naprawy;</li>
+            <li>częstotliwość podziału zwrotnicy — punkt odcięcia basu między drzwiami a subwooferem;</li>
+            <li>obliczone opóźnienia kanałów;</li>
+            <li>krzywa korekcji syntezowanego Auto-EQ.</li>
+          </ul>
+          <p>Dostępne przyciski:</p>
+          <ul>
+            <li><span class="ui">Apply Auto-EQ</span> — zapisuje i natychmiast aktywuje obliczony preset;</li>
+            <li><span class="ui">Save Archive (.zip)</span> — zapisuje pełny pakiet diagnostyczny do analizy;</li>
+            <li><span class="ui">Close</span> — wyjście bez modyfikacji aktywnych nastaw DSP.</li>
+          </ul>
+          <p>Zalecenie zmiany fazy subwoofera (przełącznik <span class="val">0/180</span> lub zamiana biegunów) pojawia się wyłącznie wtedy, gdy sweep kontrolny fizycznie wykazał znoszenie się fal akustycznych.</p>
+        </div></li>
+        <li><div>
+          <h3>Skonfiguruj kompensację głośności (Loudness)</h3>
+          <p>Otwórz zakładkę <span class="ui">Loudness</span>. Ludzki słuch przy cichym odsłuchu jest znacznie mniej czuły na niskie tony. Loudness progresywnie podbija bas w miarę obniżania poziomu głośności.</p>
+          <ul>
+            <li><span class="ui">Punkt kalibracji</span> — stopień głośności, powyżej którego korekcja nie wprowadza podbicia. W zmierzonych presetach kotwiczy się do poziomu odsłuchu, przy którym uruchomiono pomiar. Jeśli był on niższy od głośności samego pomiaru, program ustala punkt o <span class="val">18 dB</span> wyższy od poziomu odsłuchu, w zakresie stopni od <span class="val">16</span> do <span class="val">24</span>;</li>
+            <li><span class="ui">Głębokość korekcji</span> — mnożnik skali krzywej izofonicznej.</li>
+          </ul>
+          <p>Aplikacja oblicza tłumienie w rzeczywistych decybelach zmierzonych w kroku 2, a nie według arbitralnych numerów stopni. Wbudowany walidator na dole sprawdza spójność ustawień: w razie konfliktu przycisk <span class="ui">Ustaw poprawnie</span> natychmiast koryguje parametry.</p>
+        </div></li>
+        <li><div>
+          <h3>Zdejmij punkt zerowy RTA</h3>
+          <p>Otwórz <span class="ui">Test Audio</span> → <span class="ui">Szum różowy</span> → <span class="ui">Zero RTA</span>. Ustala to stałą linię odniesienia dla krzywej analizatora czasu rzeczywistego zamiast pływającej średniej.</p>
+          <p>Jedno naciśnięcie rejestruje jednocześnie oba zera — sygnału obliczeniowego i mikrofonu — niezależnie od aktywnego widoku. Na kilka sekund aplikacja tymczasowo ustawia poziom głośności, przy którym kalibrowano mikrofon, po czym powraca do poprzedniego poziomu. Zero mikrofonu blokuje się na tym poziomie, dzięki czemu krzywa nie pływa podczas regulacji głośności.</p>
+        </div></li>
+        <li><div>
+          <h3>Zsynchronizuj wizualizator z dźwiękiem</h3>
+          <p><span class="ui">Ustawienia wDSP</span> → <span class="ui">Synchronizacja z dźwiękiem</span> → <span class="ui">Synchronizuj</span>. Program wyznacza opóźnienie toru audio względem odświeżania ekranu na Twojej stacji. Słupki widma będą uderzać idealnie w punkt z bitem muzyki.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="calibrations">
+      <h2>Co jest kalibrowane i dlaczego</h2>
+      <p>Aplikacja zawiera pięć odrębnych procedur kalibracyjnych. Służą one zupełnie innym celom:</p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Procedura</th><th>Gdzie uruchomić</th><th>Co wyznacza</th><th>Na co wpływa</th><th>Kiedy powtórzyć</th></tr></thead>
+          <tbody>
+            <tr><td>Mikrofon</td><td>Ustawienia → Calibrate Microphone</td><td>Jak wbudowany mikrofon odbiera niskie i wysokie tony w porównaniu do ucha</td><td>Pomiar kabiny, tryb widma Microphone</td><td>Nowy mikrofon lub zmiana jego mocowania</td></tr>
+            <tr><td>Kroki głośności</td><td>Automatycznie, podczas kalibracji mikrofonu</td><td>Rzeczywisty spadek dB dla stopni <span class="val">1…32</span> w danym samochodzie i wzmacniaczu</td><td>Kompensacja Loudness, skalowanie RTA mikrofonu</td><td>Zawsze przy kalibracji mikrofonu</td></tr>
+            <tr><td>Kabina</td><td>Ustawienia → Cabin Acoustic Calibration</td><td>Wady akustyczne, opóźnienia, zwrotnica i profil Auto-EQ pojazdu</td><td>Nowy preset Auto-EQ</td><td>Wymiana głośników, subwoofera lub wygłuszenie drzwi</td></tr>
+            <tr><td>Zero RTA</td><td>Test Audio → Szum różowy → Zero RTA</td><td>Stabilna linia odniesienia dla wykresu widma w czasie rzeczywistym</td><td>Wyłącznie wizualizacja</td><td>Po kalibracji mikrofonu; nie wpływa na dźwięk</td></tr>
+            <tr><td>Synchronizacja dźwięku</td><td>Ustawienia → Synchronizacja dźwięku</td><td>Opóźnienie audio względem renderowania grafiki na ekranie</td><td>Wyłącznie wizualizacja</td><td>Po aktualizacji oprogramowania układowego</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Punkt kalibracji Loudness jest parametrem konfiguracyjnym, a nie automatycznym przebiegiem sweep: wyznacza go kreator pomiaru lub ustawia się go ręcznie.</p>
+    </section>
+
+    <section id="tabs">
+      <h2>Zakładki ekranu głównego</h2>
+      <dl class="tabs">
+        <dt>Korektor</dt>
+        <dd>16 pasm, wybór presetu u góry oraz sekcja <span class="ui">Subwoofer</span>: częstotliwość odcięcia i wzmocnienie. Każdy suwak reguluje poziom w dB w punkcie środkowym pasma. Sąsiednie pasma łagodnie zachodzą na siebie z prawidłowym sumowaniem: trzy kolejne suwaki na <span class="val">+4</span> tworzą jednolitą półkę <span class="val">+4</span> bez nienaturalnych garbów. Wykres prezentuje rzeczywistą charakterystykę wysyłaną do procesora DSP.</dd>
+        <dt>Loudness</dt>
+        <dd>Fizjologiczna kompensacja głośności (<span class="ui">Loudness</span>), próg zadziałania i głębokość podbicia. <span class="ui">Kompensacja subwoofera</span> rozszerza podbicie na kanał subwoofera. <span class="ui">Ogranicz wysokie tony</span> łagodzi ostrość wysokich tonów przy dużej głośności. <span class="ui">Ultra Bass</span> zapewnia dodatkowe wzmocnienie najniższego basu poniżej wybranego progu. Wykres podglądu ilustruje dynamiczną krzywą podbicia.</dd>
+        <dt>Opóźnienia</dt>
+        <dd>Korekcja czasowa poszczególnych kanałów w milisekundach i centymetrach, dzięki czemu fale dźwiękowe ze wszystkich głośników docierają do uszu w tym samym ułamku sekundy. Wyliczana automatycznie podczas pomiaru kabiny. Przyciski <span class="ui">Przednie razem</span> / <span class="ui">Tylne razem</span> pozwalają przesuwać całe pary z zachowaniem wyznaczonych różnic. Zawiera także przetwarzanie przestrzenne Surround i Rear-Fill.</dd>
+        <dt>Inne</dt>
+        <dd>Kształtowanie basu w drzwiach: filtr górnoprzepustowy <span class="ui">Filtr</span> chroni głośniki przed przesterowaniem i odciąża je przekazując bas do subwoofera; <span class="ui">Wzmocnienie</span> uwypukla wybraną częstotliwość basu. Osobna regulacja dla przodu i tyłu; funkcja <span class="ui">Jak z przodu</span> kopiuje ustawienia. Zawiera również suwaki fader i balans.</dd>
+        <dt>GALA</dt>
+        <dd>Dostosowanie głośności do prędkości pojazdu na podstawie sygnału GPS w celu maskowania szumu drogowego. Krok prędkości ustala interwał, próg aktywacji prędkość włączenia, a maksymalna kompensacja górny limit podbicia. Automatycznie wstrzymywana podczas rozmów telefonicznych.</dd>
+        <dt>Test Audio</dt>
+        <dd>Sygnały kontrolne do weryfikacji odsłuchowej: ścieżki stem (odseparowany bas, wokal, perkusja, melodia) w dowolnej kombinacji, skalibrowany szum różowy, generator sinusoidy, sygnał sweep, sekwencyjny test poszczególnych głośników oraz tryb <span class="ui">Tylko Subwoofer</span>. Wszystkie sygnały przechodzą przez aktywny preset bez nadpisywania zapisanych nastaw.</dd>
+      </dl>
+    </section>
+
+    <section id="spectrum">
+      <h2>Widmo i RTA</h2>
+      <p>Przełącznik <span class="ui">Widmo</span> nad korektorem ma trzy położenia. W ustawieniach wybiera się formę graficzną: słupki lub płynną krzywą RTA.</p>
+      <dl class="tabs">
+        <dt>Wył.</dt>
+        <dd>Brak widma na ekranie głównym. Widżet na pasku stanu oraz wygaszacz ekranu pracują bez zmian.</dd>
+        <dt>Muzyka</dt>
+        <dd>Odtwarzany sygnał muzyczny ukształtowany przez aktywny preset: <b>jak powinno brzmieć</b>. Nie zależy od wybranej głośności.</dd>
+        <dt>Microphone</dt>
+        <dd><b>Rzeczywiste brzmienie kabiny</b> zarejestrowane przez mikrofon urządzenia, w tej samej skali co Muzyka. Tam, gdzie obie krzywe się rozchodzą, samochód coś dodaje lub odejmuje.</dd>
+      </dl>
+      <p>Radio FM nie przechodzi przez tor dźwiękowy Androida, dlatego w trybie Muzyka nie generuje widma; tryb Microphone działa również z radiem.</p>
+    </section>
+
+    <section id="presets">
+      <h2>Presety i automatyzacja</h2>
+      <ul>
+        <li>Menedżer presetów na ekranie głównym: tworzenie, zmiana nazwy, usuwanie, eksport i import.</li>
+        <li><span class="ui">Automatyzacja presetów</span> wiąże profile z aplikacjami multimedialnymi: radio używa własnego profilu, streaming Bluetooth innego. Dedykowany profil obsługuje <span class="ui">Połączenie telefoniczne</span>. <span class="ui">Globalny standard</span> jest stosowany w pozostałych przypadkach.</li>
+        <li>Głośność jest zapamiętywana niezależnie dla każdego źródła dźwięku.</li>
+        <li><span class="ui">Kopia zapasowa ustawień</span> i <span class="ui">Przywróć ustawienia</span>: pełna archiwizacja konfiguracji z presetami lub samych ustawień.</li>
+        <li><span class="ui">Wznów odtwarzacz po restarcie</span> i <span class="ui">Wznów odtwarzacz po uśpieniu</span>: grający odtwarzacz wznawia pracę samoczynnie bez narzucania okna na wierzch nawigacji. Radio wznawia się samo. W przypadku uśpienia naciśnij <span class="ui">Pozwól wDSP działać w uśpieniu</span> i włącz wDSP na liście.</li>
+      </ul>
+    </section>
+
+    <section id="looks">
+      <h2>Widżet i wygaszacz</h2>
+      <p><span class="ui">Wizualizator paska stanu</span> — zminiaturyzowane widmo w pasku systemu Android: regulowana szerokość, przesunięcie poziome, wysokość, style (klasyczne słupki, Outrun, VU meter, oscyloskop) oraz palety barw.</p>
+      <p><span class="ui">Wygaszacz</span> — pełnoekranowy wizualizator po bezczynności: konfigurowalne opóźnienie, profile jasności Dzień/Noc oraz lista wykluczonych aplikacji. Nawigacja wybrana w ustawieniach stacji nigdy nie jest zasłaniana. <span class="ui">Zakrywaj pasek stanu</span> decyduje, czy ukrywać pasek stanu. Elementy sterujące przedstawiono na mapie poniżej.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Mapa stref dotyku wygaszacza: dotknięcia po lewej, przeciągnięcia po prawej" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Strefy wygaszacza: dotknięcia (lewa strona) i przeciągnięcia (prawa strona).</figcaption>
+      </figure>
+      <h3>Strefy dotykowe wygaszacza</h3>
+      <p><b>Dotknięcia (schemat po lewej):</b></p>
+      <ul>
+        <li><b>1</b> — górna połowa: ukrycie wygaszacza;</li>
+        <li><b>2</b> — dolna połowa, lewa trzecia część (do krawędzi): poprzedni utwór;</li>
+        <li><b>3</b> — strefa środkowa: pauza / odtwarzanie;</li>
+        <li><b>4</b> — prawa trzecia część (do krawędzi): następny utwór;</li>
+        <li><b>5</b> — okładka albumu / ikona odtwarzacza (dół po lewej): otwarcie grającego odtwarzacza lub radia;</li>
+        <li><b>6</b> — przycisk stylu (dół po prawej): dotknięcie zmienia styl wizualizacji; przytrzymanie 1 s otwiera korektor wDSP.</li>
+      </ul>
+      <p><b>Przeciągnięcia (schemat po prawej)</b> — funkcja zależy od krawędzi, przy której palec rozpoczął ruch. Przeciągać można w dowolną stronę; ruch w górę lub w prawo zwiększa wartość. Zmiana zapisuje się po uniesieniu palca:</p>
+      <ul>
+        <li><b>7</b> — od górnej krawędzi: przyciemnienie tła (przezroczystość);</li>
+        <li><b>8</b> — od dolnej krawędzi: szerokość wizualizatora;</li>
+        <li><b>9</b> — od lewej krawędzi: wysokość;</li>
+        <li><b>10</b> — od prawej krawędzi: jasność (zapamiętywana osobno dla dnia i nocy);</li>
+        <li><b>11</b> — od środka: głośność systemowa (przeciągnięcie przez cały ekran odpowiada pełnej skali 0–32).</li>
+      </ul>
+      <p><span class="ui">Styl interfejsu</span>: <span class="ui">Klasyczny (Oryginał)</span> — oryginalny układ autora; <span class="ui">Nowoczesny</span> — odświeżony, responsywny wygląd. Oba wspierają tryb dzienny i nocny.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>Rozwiązywanie problemów</h2>
+      <h3>"Mikrofon chwilowo zajęty, użycie widma obliczanego"</h3>
+      <p>Inna aplikacja blokuje wyłączny dostęp do mikrofonu — najczęściej Asystent Google. Uruchom ponownie stację: wDSP startuje wczesną fazą, aby zająć mikrofon jako pierwszy. Na urządzeniach z rootem wDSP przejmuje mikrofon samoczynnie.</p>
+      <h3>Raport informuje o "pomiarze w hałasie"</h3>
+      <p>W kabinie było za głośno. Aplikacja dobiera głośność pomiaru automatycznie, należy więc zredukować hałas otoczenia: domknąć drzwi i okna, wyłączyć silnik oraz nawiew i ponowić pomiar.</p>
+      <h3>Kroki głośności nie zostały zarejestrowane</h3>
+      <p>Chwilowy hałas przerwał sekwencję dźwiękową lub mikrofon nie zarejestrował tonu. Program zachowuje wcześniej skalibrowane tabele; w razie ich braku używa kroków nominalnych. Powtórz kalibrację mikrofonu w cichym pojeździe.</p>
+      <h3>Punkt zerowy RTA mikrofonu pływa przy regulacji głośności</h3>
+      <p>Punkt zerowy RTA mikrofonu skalibrowano przed aktywacją śledzenia głośności. Ponownie zdejmij zero RTA na szumie różowym (krok 6).</p>
+      <h3>Czerwone ostrzeżenie "Mikrofon przesterowany" nad korektorem</h3>
+      <p>Sygnał z mikrofonu jest zbyt silny i osiąga granicę przesterowania, najczęściej przy mocnym basie. W tym stanie krzywa mikrofonu jest pokazywana z automatyczną regulacją wzmocnienia (AGC): jej poziom jest dopasowywany do widma Muzyka, a kształt staje się przybliżony. Po spadku poziomu ostrzeżenie znika. Jeżeli ostrzeżenie pojawia się przy normalnej głośności, zmniejsz czułość mikrofonu w ustawieniach stacji.</p>
+      <h3>Barwa dźwięku zmienia się po restarcie</h3>
+      <p>Parametry DSP są przywracane przy starcie systemu przez usługę w tle bez otwierania okna aplikacji. Upewnij się, że włączono uprawnienie <span class="ui">Praca w tle</span> oraz zezwolono aplikacji na <span class="ui">działanie w uśpieniu</span>.</p>
+    </section>
+
+    <section id="send">
+      <h2>Przesyłanie pomiarów</h2>
+      <p>Po zakończeniu kalibracji kabiny naciśnij <span class="ui">Save Archive (.zip)</span>. Archiwum zawiera kompletne logi pomiarowe, charakterystykę mikrofonu, tabelę kroków głośności oraz zsynchronizowany raport systemowy.</p>
+      <p>Prześlij archiwum, raport systemowy (<span class="ui">Diagnostyka</span> → <span class="ui">Raport systemowy</span>) oraz krótką opinię o zmianie brzmienia do grupy moda: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. Oryginalna aplikacja autora nie posiada pomiaru kabiny, dlatego zgłoszenia kierowane są do grupy modyfikacji. Oryginalny projekt: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
+      <p>W opisie podaj markę i model samochodu, położenie mikrofonu oraz konfigurację wzmacniacza.</p>
+    </section>
+
+    <footer>
+      Instrukcja dla wDSP 1.1 "Bulldozer" mod, 15.10.2026. wDSP — autor: Volodymyr Chebanenko (khiivl); mod — Kostiantyn Matviyevskyy.
+    </footer>
+  </main>
+</div>

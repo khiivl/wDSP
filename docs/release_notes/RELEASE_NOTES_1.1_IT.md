@@ -1,134 +1,95 @@
 wDSP — 1.1 "Bulldozer" (build 26)
-Cosa è cambiato rispetto alla 0.4.9.8 (build 25)
-=================================================
+Modifiche dalla versione 0.4.9.8, la precedente distribuzione del 13.09.2026
+============================================================================
 
-Un aggiornamento importante: un mese di sviluppo che integra ora al suo interno la versione 1.0 dell'autore.
-Di seguito sono illustrate le novità e come utilizzarle. Il manuale completo per ciascuna funzione è incluso
-nel pacchetto: manual_en.html (disponibile anche in ucraino, spagnolo e russo). Può essere aperto in qualsiasi
-browser e non richiede connessione a internet.
+Questo rilascio è la mia modifica di wDSP di Volodymyr Chebanenko (khiivl),
+https://github.com/khiivl/wDSP, e include tutto il suo lavoro fino alla versione 1.0.2.
 
 INSTALLAZIONE
 
-Installate l'APK direttamente sopra la versione precedente, senza disinstallare nulla. I vostri preset e
-le impostazioni rimarranno invariati. Al termine dell'installazione, aprite wDSP una volta per avviare il
-suo servizio in background.
+- Sopra una versione precedente del mod: installa l'APK sopra; predefiniti e impostazioni rimangono.
+- Sopra la versione dell'autore: sono firmate con chiavi diverse e Android non installerà l'una
+  sopra l'altra. Salva i predefiniti con il backup dell'applicazione, disinstalla la versione
+  dell'autore e quindi installa il mod.
+- Apri wDSP una volta dopo l'installazione.
+
+I manuali (nove lingue, inclusa la mappa dei gesti del salvaschermo) sono nell'archivio. Si aprono
+in qualsiasi browser senza bisogno di Internet.
 
 -----------------------------------------------------------------------------
-1. DUE STILI DI INTERFACCIA: CLASSICO E MODERNO
+NOVITÀ
 -----------------------------------------------------------------------------
 
-La versione 1.0 dell'autore è stata unificata con la mia. In Impostazioni wDSP → «Stile interfaccia» potete scegliere:
+La versione 1.0 dell'autore
+- Due stili di interfaccia in Impostazioni → "Stile interfaccia": Classico (dell'autore) e Moderno.
+  Temi chiaro e scuro per entrambi.
+- Ultra Bass, il nuovo Loudness, più visualizzazioni, blocco coppie per i ritardi, "Spento" nell'elenco
+  subwoofer per le auto sprovviste, GALA disattivabile per singolo predefinito.
+- La scheda "Test Audio": segnali di prova e registrazioni di test per ciascun altoparlante.
 
-- Classico (Originale) — l'interfaccia originale Material 3 dell'autore;
-- Moderno — il tema in vetro satinato già noto nelle mie versioni.
+Misurazione dell'abitacolo
+- Impostazioni → scheda abitacolo: indica il tipo di abitacolo, le dimensioni e tocca gli altoparlanti
+  installati.
+- L'applicazione sceglie autonomamente il volume di misurazione.
+- Dopo "Apply Auto-EQ" un breve sweep di controllo verifica se la correzione ha avuto effetto.
+- Il rapporto inizia con un elenco di problemi descritti in parole semplici — ad esempio un altoparlante
+  debole, un tweeter con polarità invertita, canali scambiati, un subwoofer che suona contro le portiere
+  (con il suggerimento di commutare la fase). I problemi che un equalizzatore non può risolvere vengono
+  segnalati anziché essere "corretti".
 
-Entrambi gli stili supportano pienamente i temi chiaro e scuro. Novità introdotte con la 1.0:
+Spettro
+- Un selettore nella schermata principale: "Spento", "Musica" (ciò che il predefinito ricava dalla
+  musica), "Microphone" (come suona realmente l'abitacolo).
+- "Zero RTA" in Test Audio calibra lo spettro con una sola pressione.
+- Avviso quando il microfono è sovraccarico: riduci la sensibilità nelle impostazioni dell'auto.
 
-- Il grafico dell'equalizzatore traccia ora la curva reale del processore sonoro (Q 2.2), non un semplice abbozzo.
-- Ultra Bass — amplificazione del subwoofer che incrementa in modo progressivo con la manopola del volume.
-- Loudness tramite filtro shelf per i bassi, accompagnato dal taglio delle frequenze alte (Trim Highs).
-- Blocco per coppie nei ritardi temporali: i canali sinistro e destro si muovono assieme e lo confermano all'attivazione.
-- Opzione «Off» nell'elenco delle frequenze del subwoofer per le auto prive di subwoofer.
-- GALA (volume in funzione della velocità) disattivabile per un singolo profilo — «Disattiva per profilo».
-- Scheda «Test Audio»: rumore rosa, generatore sinusoidale per qualsiasi frequenza, sweep e tracce di test
-  dedicate per ogni singolo altoparlante. Ideale per ascoltare ciascun diffusore prima della misurazione.
+Ripresa del lettore
+- Impostazioni: "Riprendi il lettore dopo il riavvio" e "Riprendi il lettore dopo la sospensione". Il
+  lettore in riproduzione torna attivo da solo, senza che la sua finestra si sovrapponga al navigatore.
+- Per la sospensione, tocca "Consenti a wDSP di restare attivo" e abilita wDSP nell'elenco che si apre.
 
------------------------------------------------------------------------------
-2. CALIBRAZIONE DELL'ABITACOLO (AUTO-EQ) — COMPLETAMENTE RINNOVATA
------------------------------------------------------------------------------
-
-Come utilizzarla adesso:
-
-1. Impostazioni wDSP → scheda dell'abitacolo. Specificate se l'auto è chiusa o se si tratta di uno spazio
-   aperto (banco di prova, cabriolet), impostate le dimensioni e TOCCATE GLI ALTOPARLANTI sul disegno
-   dell'auto per selezionare quali sono realmente installati. La misurazione verrà eseguita solo sui canali dichiarati.
-2. Calibrate il microfono (una sola volta per autoradio).
-3. Avviate la misurazione. Non dovrete più impostare il volume manualmente: l'app lo determina da sé e,
-   lungo il percorso, misura quanti dB effettivi eroga ciascun livello della manopola del volume sulla vostra unità.
-4. Premete «Apply Auto-EQ». Subito dopo l'app riprodurrà un breve SWEEP DI CONTROLLO attraverso il nuovo preset
-   e vi confermerà se la correzione acustica ha funzionato a dovere.
-
-Cosa evidenzia ora il report:
-
-- Per prima cosa viene mostrato un ELENCO DEI DIFETTI in linguaggio chiaro: un altoparlante con livello
-  inferiore al suo simmetrico, un tweeter in controfase con il proprio midbass in portiera, canali sinistro/destro
-  invertiti, risonanza del diffusore o modo di risonanza dell'abitacolo sotto i 200 Hz, misurazione sommersa dal rumore.
-- Se all'incrocio del crossover il subwoofer lavora in controfase con le portiere, l'app suggerisce di
-  invertire l'interruttore di fase sull'amplificatore del sub (0/180).
-- La correzione è espressa in dB reali e non in registri interni del chip.
-- Il rumore di fondo dell'abitacolo non costituisce più motivo di interruzione: riduce unicamente l'indice di
-  affidabilità sulle bande di frequenza che copre.
+Salvaschermo
+- Scorri dal centro dello schermo per regolare il volume.
+- Tieni premuto il pulsante dello stile per un secondo per aprire l'equalizzatore.
+- Un tocco sulla copertina apre il lettore o la radio effettivamente in riproduzione.
+- Interruttore "Copri la barra di stato".
 
 -----------------------------------------------------------------------------
-3. SPETTRO (RTA)
+RISOLTO
 -----------------------------------------------------------------------------
 
-- Scegliete la visualizzazione preferita: curva RTA in tempo reale o barre classiche.
-- Il pulsante «Zero RTA» nella scheda Test Audio calibra entrambi gli zeri contemporaneamente (canale audio
-  diretto e microfono): riproduce autonomamente il rumore rosa, rileva il segnale e imposta lo zero.
-- In caso di saturazione del microfono, sullo spettro appare l'avviso: «Microfono sovraccarico: visualizzato
-  con AGC, forma approssimativa. Ridurre la sensibilità del microfono». Abbassate la sensibilità del microfono
-  nelle impostazioni dell'autoradio fino a quando la scritta non scompare.
-- L'analizzatore entra in pausa quando non c'è riproduzione attiva e si riattiva automaticamente alla ripresa dell'audio.
-- La musica via Bluetooth viene ora visualizzata sullo spettro anche sui dispositivi privi del modulo BitPerfect.
+- Chiamate: il predefinito non salta più durante una chiamata, il microfono viene rilasciato subito
+  e il volume dopo la chiamata è corretto.
+- Avvio: le impostazioni raggiungono il processore audio in modo affidabile dopo l'accensione e dopo
+  un aggiornamento.
+- Il salvaschermo ora appare anche su dispositivi con "video mobile" o "navigazione mobile" abilitati,
+  non copre il navigatore e funziona su schermi verticali.
+- La schermata dell'equalizzatore e le finestre di dialogo si adattano a schermi stretti e verticali.
+- Spettro del microfono ripristinato dopo la sospensione e dopo l'uso del microfono da parte dell'assistente vocale.
+- Corretti diversi errori nella misurazione dell'abitacolo, in particolare sui bassi profondi e con il subwoofer.
+- GALA non lascia più il volume elevato dopo aver rallentato.
+- Chiusura anomala aprendo l'app sulla scheda Loudness.
 
 -----------------------------------------------------------------------------
-4. NOVITÀ: RIPRESA DEL LETTORE DOPO IL RIAVVIO O LO STANDBY
+INVIA PER FAVORE
 -----------------------------------------------------------------------------
 
-Due interruttori nelle Impostazioni: «Riprendi il lettore dopo il riavvio» e «Riprendi il lettore dopo la
-sospensione». Se la musica era in riproduzione allo spegnimento, wDSP riavvia lo stesso lettore al risveglio
-dell'unità — senza sovrapporre la sua schermata al launcher o al navigatore. La radio si ripristina da sola e
-non viene toccata dall'applicazione.
+La versione dell'autore non dispone della misurazione dell'abitacolo, pertanto le misurazioni vanno
+al gruppo del mod.
 
-Per la sospensione, premete «Consenti a wDSP di restare attivo» sotto l'interruttore: si aprirà la whitelist di
-sistema dell'autoradio per le app in background, dove andrà spuntato wDSP.
+1. Dopo una misurazione dell'abitacolo: l'archivio di misurazione ("Salva l'archivio") e il rapporto
+   di sistema (Diagnostica → "Rapporto di sistema"), entrambi in Download/wDSP, con due parole su come
+   è cambiato il suono e la scena sonora.
+2. Se il salvaschermo non compare mai: Diagnostica → "Screen Topology" → salva e invia.
+3. Se la ripresa del lettore ha funzionato e con quale lettore.
 
-Questa funzionalità è del tutto inedita. Fatemi sapere quale lettore utilizzate e se la riproduzione è ripresa regolarmente.
-
------------------------------------------------------------------------------
-5. CHIAMATE, SCREENSAVER, VOLUME
------------------------------------------------------------------------------
-
-- Durante una chiamata telefonica l'app rilascia immediatamente il microfono e attiva il preset per le chiamate;
-  al termine della conversazione vengono ripristinate le impostazioni precedenti.
-- Lo screensaver si chiude nell'istante esatto in cui comincia una telefonata.
-- Lo screensaver si attiva ora correttamente anche sulle autoradio in cui è abilitato il «video mobile» o la
-  «navigazione mobile» nelle impostazioni di fabbrica (in precedenza su tali sistemi non compariva).
-- L'app di navigazione configurata nelle impostazioni dell'autoradio viene aggiunta in automatico alle eccezioni
-  dello screensaver, così da non coprire mai la mappa. Chi preferisce lo screensaver sopra il navigatore può rimuoverlo dall'elenco.
-- La fila inferiore dell'equalizzatore non taglia più i pulsanti dell'amplificatore sugli schermi stretti o
-  verticali: l'intera riga si adatta proporzionalmente.
-- Il volume di ciascuna sorgente viene memorizzato in modo indipendente e segue le modifiche effettuate
-  all'esterno di wDSP.
-- GALA non lascia più uno scatto di volume residuo dopo ogni frenata o rallentamento.
+Gruppo del mod: https://t.me/kostyamat_dev/92
+Progetto originale: https://t.me/wDSPapp, https://github.com/khiivl/wDSP
 
 -----------------------------------------------------------------------------
-LINGUE
+RINGRAZIAMENTI
 -----------------------------------------------------------------------------
 
-L'interfaccia è disponibile in 30 lingue e varianti regionali.
-
------------------------------------------------------------------------------
-RICHIESTA PER I TESTER
------------------------------------------------------------------------------
-
-1. AUTOPRESET. A vostro giudizio, il preset è bilanciato correttamente? Il fronte sonoro è ben strutturato?
-   Vi prego di inviare l'archivio di misurazione («Salva l'archivio» dopo la calibrazione) e il rapporto di sistema
-   (Diagnostica → «Rapporto di sistema»). Entrambi i file vengono salvati nella cartella Download/wDSP.
-
-2. SE LO SCREENSAVER NON DOVESSE MAI APPARIRE SULLA VOSTRA UNITÀ: lasciate l'autoradio per due minuti su una
-   qualsiasi applicazione tranne wDSP. Andate quindi in Impostazioni wDSP → Diagnostica → «Screen Topology» →
-   salvate e inviate il file. Se invece lo screensaver appare, effettuate prima qualche tocco su di esso (sulle aree
-   di controllo tracce, sui bordi dello schermo) e solo dopo salvate: nel file sarà registrato con precisione dove
-   sono caduti i tocchi e come sono stati interpretati dall'app.
-
-3. RIPRESA DEL LETTORE — indicate quale lettore musicale utilizzate, se dopo riavvio o sospensione, e se la
-   riproduzione è ripartita correttamente.
-
-Inviate tutto sul gruppo: https://t.me/wDSPapp/79
-
-Se riscontrate qualche anomalia, aggiungete un commento descrivendo esattamente l'accaduto. Se tutto funziona al
-meglio, raccontatemi semplicemente come suonano i preset sulla vostra vettura.
-
-Grazie mille.
+A Volodymyr Chebanenko (khiivl), autore di wDSP, per l'applicazione su cui è costruito questo rilascio.
+A Mirek (Polonia) per aver collaudato l'equalizzatore dell'autore su hardware reale. A tutti i tester che
+inviano misurazioni e rapporti.

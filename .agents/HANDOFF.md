@@ -20,9 +20,13 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## ⏳ In progress: release 1.1 "Bulldozer", code 26 (owner 15.10: «Код релізу в.1.1 як в автора»)
 
 - Bases final (`1fa31fc`): RELEASE_NOTES_1.1 EN+UA (plain language), manual_en.html (read through,
-  map, doctype/charset), README (mod vs original). Сова (board #1832, strict: translation only,
-  after a reprimand #1830 for invented fixes) translates notes RU/ES/DE/FR/IT/PL/PT and manuals
-  uk/es/ru/de/fr/it/pl/pt. Then: check them, commit, rebuild the pack folder
+  map, doctype/charset), README (mod vs original). Сова's translations (notes RU/ES/DE/FR/IT/PL/PT,
+  manuals uk/es/ru/de/fr/it/pl/pt) are in and **checked and fixed** (cloud session 15.10, branch
+  `kostyfmat_mod-p5pci6`, not pushed): she translated six languages from her own uk, not from EN, and
+  carried its inventions ("glass" Modern, "averaged" steps, a wrong RTA-drift cause, "curves show
+  reflections", "analog radio"); her uk/ru had lost the app's own button names. Fixed against EN;
+  every `<span class="ui">` that has an app string now carries `values-xx/strings.xml` verbatim
+  (English where the app is untranslated - that is what the user sees). Next: rebuild the pack folder
   `~/Downloads/wDSP_Bulldozer_mod_by_kostyamat-v1.1/` (wdsp.1.1.apk `0c8c106a…` + 9 manuals + svg
   + 9 WHATS_NEW) and zip it myself. The zip Сова made there holds her bad notes - do not hand out.
 - `6c7aae4` proven 15.10: BT call 21:52:56-21:54:14 - no resolve, 0 Visualizer failures, the

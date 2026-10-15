@@ -1,142 +1,93 @@
 wDSP — 1.1 "Bulldozer" (compilación 26)
-Novedades desde la versión 0.4.9.8 (compilación 25)
-===================================================
+Cambios desde 0.4.9.8, la distribución anterior del 13.09.2026
+==============================================================
 
-Una actualización importante: un mes de desarrollo con la versión 1.0 del autor ya integrada.
-A continuación se detallan las novedades y cómo utilizarlas. El manual completo para cada función se
-incluye en el paquete: manual_es.html (también disponible en inglés, ucraniano y ruso). Puede abrirse
-en cualquier navegador sin necesidad de conexión a internet.
+Este lanzamiento es mi modificación de wDSP de Volodymyr Chebanenko (khiivl),
+https://github.com/khiivl/wDSP, y contiene todo su trabajo hasta su versión 1.0.2.
 
 INSTALACIÓN
 
-Instale el APK sobre la versión anterior, sin necesidad de desinstalar nada antes. Sus preajustes y
-configuraciones se mantendrán intactos. Tras la instalación, abra wDSP una vez para iniciar su
-servicio en segundo plano.
+- Sobre una versión anterior del mod: instale el APK encima; los ajustes y preajustes se conservan.
+- Sobre la versión del autor: ambas están firmadas con claves distintas y Android no instalará
+  una sobre la otra. Guarde sus preajustes con la copia de seguridad de la app, desinstale la versión
+  del autor y luego instale el mod.
+- Abra wDSP una vez tras la instalación.
+
+Los manuales (nueve idiomas, incluido el mapa de gestos del salvapantallas) están en el archivo.
+Se abren en cualquier navegador sin internet.
 
 -----------------------------------------------------------------------------
-1. DOS ESTILOS VISUALES: CLÁSICO Y MODERNO
+NOVEDADES
 -----------------------------------------------------------------------------
 
-Se ha integrado la versión 1.0 del autor original. En Ajustes wDSP → «Estilo de interfaz» puede elegir:
+La versión 1.0 del autor
+- Dos estilos de interfaz en Ajustes → "Estilo de interfaz": Clásico (el del autor) y Moderno.
+  Temas diurno y nocturno en ambos.
+- Ultra Bass, el nuevo Loudness, más visualizaciones, bloqueo de pares para retardos, "Apag."
+  en la lista de subwoofer para coches sin él, GALA desactivable por preajuste.
+- La pestaña "Prueba Audio": señales de prueba y grabaciones de prueba para cada altavoz.
 
-- Clásico (Original) — la interfaz original del autor basada en Material 3;
-- Moderno — la interfaz de cristal translúcido ya conocida en mis versiones.
+Medición del habitáculo
+- Ajustes → tarjeta del habitáculo: indique el tipo de habitáculo, sus medidas y toque los altavoces
+  instalados.
+- La aplicación elige el volumen de medición por sí misma.
+- Tras "Apply Auto-EQ", un breve barrido de control muestra si la corrección ha funcionado.
+- El informe comienza con una lista de problemas en palabras sencillas — por ejemplo, un altavoz débil,
+  un tweeter con la polaridad invertida, canales intercambiados, un subwoofer sonando contra las puertas
+  (con la indicación de cambiar su conmutador de fase). Los problemas que un ecualizador no puede
+  solucionar se informan en lugar de "corregirse".
 
-Ambos estilos son totalmente compatibles con los temas claro y oscuro. Novedades procedentes de la 1.0:
+Espectro
+- Un conmutador en la pantalla principal: "Desactivado", "Música" (lo que el preajuste hace con la música),
+  "Microphone" (cómo suena realmente el habitáculo).
+- "Cero RTA" en Prueba Audio calibra el espectro con una sola pulsación.
+- Aviso cuando el micrófono está saturado: reduzca su sensibilidad en los ajustes del coche.
 
-- El gráfico del ecualizador traza ahora la curva real del procesador de sonido (Q 2.2), no un esbozo aproximado.
-- Ultra Bass — realce del subwoofer que aumenta progresivamente con la rueda de volumen.
-- Compensación de sonoridad (Loudness) mediante filtro shelf de graves, además de Recorte de agudos (Trim Highs).
-- Bloqueo por parejas en los retardos: los canales izquierdo y derecho se mueven conjuntamente e informan de ello al activarse.
-- Opción «Apagado» en la lista de frecuencias del subwoofer para vehículos sin sub.
-- GALA (volumen según la velocidad) se puede desactivar para un perfil individual: «Desactivar para este preajuste».
-- Pestaña «Comprobación de Audio»: ruido rosa, generador de seno a cualquier frecuencia, barrido (sweep)
-  y pistas de prueba para cada altavoz por separado. Resulta ideal para comprobar cada altavoz
-  individualmente antes de la medición.
+Reanudación del reproductor
+- Ajustes: "Reanudar reproductor tras reiniciar" y "Reanudar reproductor tras suspensión". El reproductor
+  que estaba sonando vuelve por sí solo, sin que su ventana salte sobre el navegador.
+- Para la suspensión, pulse "Permitir wDSP activo en suspensión" y active wDSP en la lista que se abre.
 
------------------------------------------------------------------------------
-2. MEDICIÓN DEL HABITÁCULO (AUTO-EQ) — COMPLETAMENTE RENOVADA
------------------------------------------------------------------------------
-
-Cómo utilizarla ahora:
-
-1. Ajustes wDSP → ficha del habitáculo. Indique si se trata de un vehículo cerrado o de un espacio
-   abierto (banco de pruebas, descapotable), introduzca las dimensiones y TOQUE LOS ALTAVOCES en el
-   esquema del coche para marcar cuáles están realmente instalados. Solo se medirán los altavoces
-   declarados.
-2. Calibre el micrófono (una sola vez por dispositivo).
-3. Inicie la medición. Ya no es necesario ajustar el volumen manualmente: la aplicación lo selecciona de
-   forma automática y, al mismo tiempo, mide los decibelios reales que entrega cada paso del control de
-   volumen en su equipo.
-4. Pulse «Apply Auto-EQ». Inmediatamente después, el programa reproducirá un breve BARRIDO DE CONTROL
-   a través del nuevo preajuste y comprobará si la corrección funciona como es debido.
-
-Qué muestra el nuevo informe:
-
-- En primer lugar aparece una LISTA DE DEFECTOS explicada con claridad: un altavoz con menor nivel que
-  su simétrico, un tweeter en contrafase con su propio woofer de puerta, canales izquierdo y derecho
-  invertidos, resonancia de altavoz o modo de cabina por debajo de 200 Hz, o una medición ahogada en
-  ruido ambiental.
-- Si en el punto de corte el subwoofer trabaja en contrafase con las puertas, la aplicación le indicará
-  que cambie la posición del interruptor de fase en el amplificador del subwoofer (0/180).
-- La corrección se expresa en dB reales y no en valores internos del chip.
-- El ruido de la cabina ya no cancela la medición: simplemente reduce el nivel de confianza en las
-  bandas de frecuencia afectadas.
+Salvapantallas
+- Deslice desde el centro de la pantalla para cambiar el volumen.
+- Mantenga pulsado el botón de estilo un segundo para abrir el ecualizador.
+- Un toque en la carátula abre el reproductor o la radio que realmente está sonando.
+- Interruptor "Cubrir la barra de estado".
 
 -----------------------------------------------------------------------------
-3. ESPECTRO (RTA)
+CORREGIDO
 -----------------------------------------------------------------------------
 
-- Elija su formato preferido: curva RTA en tiempo real o barras clásicas.
-- El botón «Cero RTA» en Comprobación de Audio calibra ambos ceros simultáneamente (el canal directo y el
-  micrófono): reproduce automáticamente ruido rosa, realiza la escucha y ajusta el cero.
-- En caso de saturación del micrófono, el espectro muestra: «Micrófono sobrecargado: se muestra con AGC,
-  forma aproximada. Baje la sensibilidad del micrófono». Reduzca la sensibilidad del micrófono en los
-  ajustes de la radio hasta que desaparezca el aviso.
-- El analizador entra en reposo cuando no hay reproducción activa y se reactiva automáticamente al
-  reanudarse el audio.
-- La música transmitida por Bluetooth ahora se visualiza en el espectro incluso en unidades que carecen
-  del módulo BitPerfect.
+- Llamadas: el preajuste ya no salta durante una llamada, el micrófono se libera de inmediato y el
+  volumen tras la llamada es el correcto.
+- Arranque: los ajustes llegan de forma fiable al procesador de sonido tras encender y tras una actualización.
+- El salvapantallas ahora aparece en equipos con "vídeo flotante" o "navegación flotante" activados,
+  no cubre el navegador y funciona en pantallas verticales.
+- La pantalla del ecualizador y los diálogos se adaptan a pantallas estrechas y verticales.
+- El espectro del micrófono tras la suspensión y tras el uso del micrófono por el asistente de voz.
+- Varios errores en la medición del habitáculo, especialmente en graves profundos y con el subwoofer.
+- GALA ya no deja el volumen elevado tras reducir la velocidad.
+- Cierre inesperado al abrir la aplicación en la pestaña "Curva F-M".
 
 -----------------------------------------------------------------------------
-4. NOVEDAD: REANUDACIÓN DEL REPRODUCTOR TRAS REINICIO O SUSPENSIÓN
+POR FAVOR ENVÍE
 -----------------------------------------------------------------------------
 
-Dos nuevos selectores en Ajustes wDSP: «Reanudar reproductor tras reiniciar» y «Reanudar reproductor
-tras suspensión». Si había música sonando al apagarse la unidad, wDSP reanuda el mismo reproductor al
-encenderse, sin superponer su pantalla sobre el lanzador o el navegador GPS. La radio se restablece por
-sí misma y la aplicación no interfiere en ella.
+La versión del autor no tiene medición del habitáculo, por lo que las mediciones van al grupo del mod.
 
-Para la suspensión, pulse «Permitir wDSP activo en suspensión» debajo del interruptor: se abrirá la
-lista blanca del sistema de la radio, donde debe marcar wDSP.
+1. Tras una medición del habitáculo: el archivo de medición ("Guardar archivo") y el informe del
+   sistema (Diagnóstico → "Informe del sistema"), ambos en Download/wDSP, junto con unas palabras sobre
+   cómo cambió el sonido y la escena sonora.
+2. Si el salvapantallas nunca aparece: Diagnóstico → "Screen Topology" → guardar y enviar.
+3. Si la reanudación del reproductor le funcionó y con qué reproductor.
 
-Se trata de una función nueva. Coménteme qué reproductor utiliza y si se reanudó correctamente.
-
------------------------------------------------------------------------------
-5. LLAMADAS, SALVAPANTALLAS Y VOLUMEN
------------------------------------------------------------------------------
-
-- Durante una llamada, la aplicación libera de inmediato el micrófono y activa el perfil específico para
-  llamadas; al colgar, se restauran los ajustes previos.
-- El salvapantallas se cierra en el instante en que entra una llamada.
-- El salvapantallas ahora funciona correctamente en radios donde está activado el «vídeo flotante» o la
-  «navegación flotante» en los ajustes de fábrica (antes no se mostraba en esas condiciones).
-- La app de navegación configurada en el sistema se añade automáticamente a las excepciones del
-  salvapantallas para no tapar el mapa. Si desea ver el salvapantallas sobre el navegador, elimínelo de
-  dicha lista.
-- La fila inferior del ecualizador ya no recorta los botones del amplificador en pantallas estrechas o
-  verticales: toda la barra se comprime armónicamente.
-- El volumen de cada fuente se memoriza de forma independiente y sigue los cambios efectuados fuera de
-  wDSP.
-- GALA ya no deja un paso de volumen residual tras cada deceleración.
+Grupo del mod: https://t.me/kostyamat_dev/92
+Proyecto original: https://t.me/wDSPapp, https://github.com/khiivl/wDSP
 
 -----------------------------------------------------------------------------
-IDIOMAS
+AGRADECIMIENTOS
 -----------------------------------------------------------------------------
 
-La interfaz está disponible en 30 idiomas y variantes regionales.
-
------------------------------------------------------------------------------
-PETICIÓN A LOS TESTERS
------------------------------------------------------------------------------
-
-1. AUTOPREAJUSTES. ¿Considera que el preajuste se ha generado correctamente? ¿La escena sonora es
-   adecuada? Por favor, envíe el archivo comprimido de la medición («Guardar archivo» tras medir) y el
-   informe del sistema (Diagnóstico → «Informe del sistema»). Ambos archivos se guardan en la carpeta
-   Download/wDSP.
-
-2. SI EL SALVAPANTALLAS NUNCA LLEGA A APARECER: deje la radio durante dos minutos en cualquier
-   aplicación salvo wDSP. A continuación abra Ajustes wDSP → Diagnóstico → «Screen Topology» → guarde y
-   envíe el archivo generado. Si el salvapantallas sí aparece, pulse varias veces sobre él (en los
-   controles de pistas y en los bordes de la pantalla) antes de guardar: el informe registrará las
-   coordenadas exactas de las pulsaciones y cómo las interpretó el sistema.
-
-3. REANUDACIÓN DEL REPRODUCTOR — indique qué reproductor utiliza, si fue tras reinicio o suspensión, y
-   si reanudó la música con éxito.
-
-Envíen todos los datos al grupo: https://t.me/wDSPapp/79
-
-Si algo no funciona bien, añada un comentario explicando con detalle lo ocurrido. Si todo va perfecto,
-simplemente comparta qué tal suenan los preajustes en su vehículo.
-
-Muchas gracias.
+A Volodymyr Chebanenko (khiivl), autor de wDSP, por la aplicación sobre la que se construye este
+lanzamiento. A Mirek (Polonia) por probar el ecualizador del autor en hardware real. A los probadores
+que envían mediciones e informes.
