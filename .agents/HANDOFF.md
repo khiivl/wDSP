@@ -19,7 +19,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ In progress: release 1.1 "Bulldozer", code 26 (owner 15.10: «Код релізу в.1.1 як в автора»)
 
-- **Packed:** `~/Downloads/wDSP-1.1.zip`: `wdsp.1.1.apk` (sha256 `0c8c106a…`, the same bytes as
+- **Packed:** `~/Downloads/wDSP_Buldozer_mod_by_kostyamat-v1.1/` (zip of the same name after the translations; owner's name, spelling his): `wdsp.1.1.apk` (sha256 `0c8c106a…`, the same bytes as
   on the bench), manual_{en,uk,es,ru}.html. **Notes rewritten** (owner: base, every fix since
   0.4.9.8, thanks to the author, dry tone): EN+UA in `e5caded`; RU/ES/DE/FR/IT stale - Сова
   re-translates (board #1823), then copy WHATS_NEW_* into the pack and re-zip.
