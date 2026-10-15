@@ -984,6 +984,14 @@ public class AudioSpectrumEngine {
         final RtaReference ref = rtaReference();
         final Handler main = new Handler(Looper.getMainLooper());
         final boolean ownMicrophone = beginZeroMicrophone();
+        // The microphone's zero is taken at the step the cabin measurement chose - where its converter
+        // is known to be clean - not at whatever the person had on: on the bench step 28 clipped it and
+        // step 3 drowns the noise in the cabin (owner, 15.10.2026: «калібровка по рта повинна братися з
+        // калібровки мікрофона відносно гучності і ставити якийсь рівень гучності самому»). The table
+        // carries the zero to every other step; the channel's zero is taken before the volume anyway.
+        final int personVolume = VolumeHelper.getVolume();
+        final int zeroStep = zeroVolumeStep();
+        if (ownMicrophone || micAnalysing) setZeroVolume(zeroStep);
         new Thread(() -> {
             final float[] curve = new float[NativeAnalyzer.CURVE_POINTS];
             final RtaReference.Capture channel = new RtaReference.Capture();
@@ -993,7 +1001,8 @@ public class AudioSpectrumEngine {
             final RtaCurve channelBallistics = new RtaCurve();
             final RtaCurve microphoneBallistics = new RtaCurve();
             final float[] noCorrection = new float[NativeAnalyzer.CURVE_POINTS];
-            final long settled = System.currentTimeMillis() + 500;
+            // Half a second for the ballistics, and as much again for the new step to reach the cabin.
+            final long settled = System.currentTimeMillis() + 1000;
             final long end = settled + RtaReference.CAPTURE_MS;
             try {
                 while (System.currentTimeMillis() < end) {
@@ -1013,13 +1022,15 @@ public class AudioSpectrumEngine {
                 }
             } finally {
                 endZeroMicrophone(ownMicrophone);
+                if (VolumeHelper.getVolume() != personVolume) setZeroVolume(personVolume);
             }
             final float channelZero = ref == null ? Float.NaN : channel.resultDb();
             final float microphoneZero = ref == null ? Float.NaN : microphone.resultDb();
             if (!Float.isNaN(channelZero)) ref.store(false, channelZero, 0);
-            if (!Float.isNaN(microphoneZero)) ref.store(true, microphoneZero, VolumeHelper.getVolume());
+            if (!Float.isNaN(microphoneZero)) ref.store(true, microphoneZero, zeroStep);
             Log.i(TAG, "RTA zeros: channel " + zeroText(channelZero) + ", microphone " + zeroText(microphoneZero)
-                    + (ownMicrophone ? " (microphone run for the capture)" : ""));
+                    + " at step " + zeroStep + " (the person's " + personVolume + " put back)"
+                    + (ownMicrophone ? ", microphone run for the capture" : ""));
             if (listener != null) main.post(() -> listener.onRtaZero(channelZero, microphoneZero));
         }, "rta-zero").start();
     }
@@ -1038,16 +1049,33 @@ public class AudioSpectrumEngine {
         return Float.isNaN(db) ? "not taken - too little heard" : String.format(java.util.Locale.US, "%.1f dB", db);
     }
 
+    /** The step the microphone's zero is taken at: the last cabin measurement's, else the volume probe's. */
+    private int zeroVolumeStep() {
+        if (appContext == null) return MeasureVolume.PROBE_STEP;
+        final int measured = RoomMeasurement.lastMeasureVolume(
+                appContext.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE));
+        return measured > 0 ? measured : MeasureVolume.PROBE_STEP;
+    }
+
+    private static void setZeroVolume(int step) {
+        VolumeHelper.setVolume(step);
+        VolumeHelper.setVolumeForType("media_type", step);
+    }
+
     /** Starts the microphone's analysis for a zero when nothing runs it; true when this did. */
     private synchronized boolean beginZeroMicrophone() {
         if (micAnalysing || !canRunMic() || pausedForCall) return false;
+        zeroMicHeld = true;
         startRadioMicPipeline();
+        if (!micAnalysing) zeroMicHeld = false;
         return micAnalysing;
     }
 
     /** Puts the microphone back as the mode wants it, after a zero that started it. */
     private synchronized void endZeroMicrophone(boolean started) {
-        if (!started || wantsMicPipeline(isRadioSourceNow())) return;
+        if (!started) return;
+        zeroMicHeld = false;
+        if (wantsMicPipeline(isRadioSourceNow())) return;
         stopMicAnalysis();
         stopRadioMicCapture();
     }
@@ -2281,8 +2309,15 @@ public class AudioSpectrumEngine {
      */
     private boolean wantsMicPipeline(boolean isRadio) {
         if (!canRunMic()) return false;
+        // A zero being taken wants the microphone whatever the mode: without this the watchdog's
+        // checkSourceState stopped it within the capture, in the calculated mode, as "not wanted"
+        // (15.10.2026 19:11 - "microphone not taken - too little heard").
+        if (zeroMicHeld) return true;
         return isRadio ? radioMicVisualizerEnabled : micModeInEffect();
     }
+
+    /** The microphone runs for a zero ({@link #captureRtaZero}) - the mode alone does not decide. */
+    private volatile boolean zeroMicHeld;
 
     /** Schedules the silence watchdog. Safe to call repeatedly; it never stacks. */
     private void armWatchdog() {
