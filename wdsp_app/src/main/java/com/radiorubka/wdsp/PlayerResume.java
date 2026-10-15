@@ -4,14 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
-import android.media.browse.MediaBrowser;
-import android.media.session.MediaController;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -22,8 +15,6 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Starts the player that was playing again, after a restart or after the car slept.
@@ -87,18 +78,13 @@ public final class PlayerResume {
     /** After our own ACC_ON work and the platform restoring its own apps. */
     private static final long AFTER_WAKE_DELAY_MS = 4000;
     private static final long AFTER_BOOT_DELAY_MS = 5000;
-    private static final long BROWSER_HOLD_MS = 10_000;
-    /** How long each rung of the ladder is given before the next one is tried. */
-    private static final long STEP_SETTLE_MS = 3000;
-    /** How long a freshly opened player is given to build a screen and claim a session. */
-    private static final long LAUNCH_WAIT_MS = 15_000;
-    /** How often it is asked again while that window runs. */
-    private static final long PLAY_RETRY_MS = 1500;
-    /** How many PLAYs one rung sends before giving up on it. */
-    private static final int MAX_PLAY_TRIES = 5;
-    /** How long a player that streams is given to get a network before it is asked to play. */
-    private static final long NETWORK_WAIT_MS = 20_000;
-    private static final long NETWORK_POLL_MS = 2000;
+    /** How long a freshly opened player is given to come on screen (DAC: 15 s, every 0.5 s). */
+    private static final long APPEAR_WAIT_MS = 15_000;
+    private static final long APPEAR_POLL_MS = 500;
+    /** On screen, its UI is given this long before the PLAY - DAC's "UI stabilization". */
+    private static final long UI_SETTLE_MS = 1500;
+    /** How long after a PLAY the music is looked for. */
+    private static final long VERIFY_MS = 3000;
     /** The system is still starting while nothing real is in front - see waitForSystem. */
     private static final long SYSTEM_READY_WAIT_MS = 60_000;
     private static final long SYSTEM_POLL_MS = 1000;
@@ -300,135 +286,102 @@ public final class PlayerResume {
         if (ready || SystemClock.elapsedRealtime() > deadline) {
             if (!ready) Log.i(TAG, "after " + after + ": the screen never settled - going ahead anyway");
             else if (!fg.isEmpty()) foregroundBefore = fg;
-            waitForNetwork(pkg, after, SystemClock.elapsedRealtime() + NETWORK_WAIT_MS, false);
+            start(pkg, after);
             return;
         }
         main.postDelayed(() -> waitForSystem(pkg, after, deadline), SYSTEM_POLL_MS);
     }
 
     /**
-     * Gives a player that streams its network before asking it to play.
+     * Starts the player the way DefaultAppsChanger did before its refactor - the version that worked
+     * (owner, 15.10.2026: «в початкових коммітах, ще до зміни інтерфейсу, була правильна система
+     * запуску останніх плеєрів після ребуту та сну, потім Дж зламав»; DAC {@code c0bca87},
+     * {@code QfMonitorService.restoreLastPlayer} and {@code AdvancedLaunchManager}): open its
+     * activity, wait until it is on screen, give its UI a second and a half, then a PLAY key to its
+     * package - context first, key last - and put the screen back.
      *
-     * <p>Also from DefaultAppsChanger, which pings and waits. A streaming player asked to play
-     * with no network does not queue the request - it fails, and the failure looks exactly like
-     * "the resume does not work". Only the players that need it wait; everything else goes
-     * straight on, and the wait ends the moment the network is usable.
+     * <p>🔴 What replaced it here on 21.09 was copied from DAC's later, broken version: a ladder of
+     * session, media browser service, launch and media button 3 s apart, a wait for the network, and
+     * PLAYs through a session that is invisible without notification access. The browser rung
+     * "succeeded" without music and ate the time; the key went to the manifest receiver only, last.
+     *
+     * <p>A player still alive with a live session is simply asked through it - it has its context.
      */
-    private void waitForNetwork(String pkg, String after, long deadline, boolean announced) {
-        if (!needsNetwork(pkg) || hasUsableNetwork()) {
-            if (announced) Log.i(TAG, "after " + after + ": the network is up - asking " + pkg + " now");
-            climb(pkg, after, 0);
+    private void start(String pkg, String after) {
+        if (NowPlaying.getInstance(context).playPackage(pkg)) {
+            Log.i(TAG, "after " + after + ": " + pkg + " still has its session - asked through it");
+            main.postDelayed(() -> {
+                if (isPlaying(pkg)) {
+                    Log.i(TAG, "after " + after + ": " + pkg + " is playing (its session)");
+                } else {
+                    Log.i(TAG, "after " + after + ": its session did not start " + pkg + " - opening it");
+                    openAndPlay(pkg, after);
+                }
+            }, VERIFY_MS);
             return;
         }
-        if (SystemClock.elapsedRealtime() > deadline) {
-            Log.w(TAG, "after " + after + ": no network after " + (NETWORK_WAIT_MS / 1000)
-                    + " s - asking " + pkg + " anyway, it may refuse");
-            climb(pkg, after, 0);
-            return;
-        }
-        if (!announced) Log.i(TAG, "after " + after + ": " + pkg + " plays from the network - waiting for one");
-        main.postDelayed(() -> waitForNetwork(pkg, after, deadline, true), NETWORK_POLL_MS);
+        openAndPlay(pkg, after);
     }
 
-    /**
-     * Asks a player to play, and keeps asking differently until it does or the ways run out.
-     *
-     * <p>🔴 Rewritten 21.09.2026, and the owner named the fault before the log confirmed it: "you
-     * are launching it wrong - without context. Spotify will not start from a targeted intent
-     * either, like any other player, because if nobody has taken the media session yet, a plain
-     * input key flies into the void." The unit's own log from boot 0034 says exactly that:
-     * <pre>
-     *   asked app.morphe.android.apps.youtube.music to play through its media button receiver
-     *   app.morphe.android.apps.youtube.music is NOT playing 6000 ms later
-     * </pre>
-     * The old code took "a media button receiver exists" for success and stopped there, so the
-     * browser service - the one rung that can actually start a dead process - was never reached.
-     *
-     * <p>So the rungs go from the ones that give the player a context to the ones that need it to
-     * have one already, and every rung is CHECKED rather than assumed:
-     * <ol>
-     *   <li>its live session, if it still has one - nothing to start;</li>
-     *   <li>its media browser service: binds it, which starts the process without a screen, and
-     *       plays through the session it hands back;</li>
-     *   <li>launching the app itself: for a player with no browser service, that is the only way
-     *       its session is ever created;</li>
-     *   <li>the media button, last, because by now something is listening for it.</li>
-     * </ol>
-     */
-    private void climb(String pkg, String after, int step) {
-        final NowPlaying now = NowPlaying.getInstance(context);
-        if (isPlaying(pkg)) {
-            Log.i(TAG, "after " + after + ": " + pkg + " is playing");
+    private void openAndPlay(String pkg, String after) {
+        if (!launchApp(pkg)) {
+            Log.w(TAG, "after " + after + ": " + pkg + " has no screen to open - a media key only");
+            sendPlay(pkg);
+            verify(pkg, after, true);
             return;
         }
-        String how;
-        switch (step) {
-            case 0:
-                if (!now.playPackage(pkg)) { climb(pkg, after, 1); return; }
-                how = "its media session";
-                break;
-            case 1:
-                if (!playThroughBrowser(pkg)) { climb(pkg, after, 2); return; }
-                how = "its media browser service";
-                break;
-            case 2:
-                if (!launchApp(pkg)) { climb(pkg, after, 3); return; }
-                // Opening it is not the end of this rung: the app has a screen to build and a
-                // session to claim, and only then is there anybody to ask. DefaultAppsChanger
-                // watches for exactly that - the app in front, then an active session - and asks
-                // again every second and a half until the music is actually on. The same here,
-                // minus the root: the foreground comes from sys.qf.current.activity and the
-                // session from the one we are allowed to read.
-                Log.i(TAG, "after " + after + ": opened " + pkg + " - waiting for it to take a session");
-                pressPlayUntilItPlays(pkg, after, SystemClock.elapsedRealtime() + LAUNCH_WAIT_MS, 0);
-                return;
-            case 3:
-                if (!sendPlayKey(pkg)) { climb(pkg, after, 4); return; }
-                how = "its media button receiver";
-                break;
-            default:
-                Log.w(TAG, "after " + after + ": " + pkg + " would not start - session, browser "
-                        + "service, its own screen and the media button were all tried");
-                return;
+        Log.i(TAG, "after " + after + ": opened " + pkg + " - waiting for it on screen");
+        waitOnScreen(pkg, after, SystemClock.elapsedRealtime() + APPEAR_WAIT_MS);
+    }
+
+    /** DAC's {@code waitForAppToAppear}: the foreground every half second, fifteen seconds at most. */
+    private void waitOnScreen(String pkg, String after, long deadline) {
+        final String fg = foregroundPackage();
+        if (pkg.equals(fg) || fg.isEmpty() || SystemClock.elapsedRealtime() > deadline) {
+            if (!pkg.equals(fg)) {
+                Log.i(TAG, "after " + after + ": " + pkg + (fg.isEmpty()
+                        ? " - the foreground cannot be read, going on" : " never came on screen - going on"));
+            }
+            main.postDelayed(() -> {
+                sendPlay(pkg);
+                restoreForeground(pkg);
+                verify(pkg, after, true);
+            }, UI_SETTLE_MS);
+            return;
         }
-        final int next = step + 1;
-        Log.i(TAG, "after " + after + ": asked " + pkg + " to play through " + how);
+        main.postDelayed(() -> waitOnScreen(pkg, after, deadline), APPEAR_POLL_MS);
+    }
+
+    /** Whether the PLAY took; one more key if it did not, and the outcome in the log. */
+    private void verify(String pkg, String after, boolean again) {
         main.postDelayed(() -> {
             if (isPlaying(pkg)) {
-                Log.i(TAG, "after " + after + ": " + pkg + " is playing (" + how + ")");
-                return;
+                Log.i(TAG, "after " + after + ": " + pkg + " is playing");
+            } else if (again) {
+                Log.i(TAG, "after " + after + ": " + pkg + " not playing yet - one more PLAY");
+                sendPlay(pkg);
+                verify(pkg, after, false);
+            } else {
+                Log.w(TAG, "after " + after + ": " + pkg + " would not play - opened and asked twice");
             }
-            Log.i(TAG, "after " + after + ": " + how + " did not start " + pkg + " - trying further");
-            climb(pkg, after, next);
-        }, STEP_SETTLE_MS);
+        }, VERIFY_MS);
     }
 
     /**
-     * Asks a just-opened player to play until it does, then puts the screen back as it was.
-     *
-     * <p>One ask was never enough: an app that has just started shows a splash, restores its own
-     * state and only then registers a session, and a PLAY sent before that is dropped without a
-     * word. So this asks again every {@link #PLAY_RETRY_MS} until the music is on, the tries run
-     * out or the window closes - which is what DefaultAppsChanger does with root, and what the log
-     * from boot 0034 was missing.
+     * DAC's PLAY: down and up, ordered, addressed to the package rather than to one component, so a
+     * receiver the running player registered for itself hears it as well as the manifest's.
      */
-    private void pressPlayUntilItPlays(String pkg, String after, long deadline, int tries) {
-        if (isPlaying(pkg)) {
-            Log.i(TAG, "after " + after + ": " + pkg + " is playing (opened and asked "
-                    + tries + (tries == 1 ? " time)" : " times)"));
-            restoreForeground(pkg);
-            return;
+    private void sendPlay(String pkg) {
+        try {
+            for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
+                Intent key = new Intent(Intent.ACTION_MEDIA_BUTTON).setPackage(pkg)
+                        .putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(action, KeyEvent.KEYCODE_MEDIA_PLAY));
+                context.sendOrderedBroadcast(key, null);
+            }
+            Log.i(TAG, "PLAY sent to " + pkg);
+        } catch (Throwable t) {
+            Log.w(TAG, "PLAY to " + pkg + " failed: " + t);
         }
-        final boolean asked = NowPlaying.getInstance(context).playPackage(pkg);
-        final int nextTries = asked ? tries + 1 : tries;
-        if (nextTries >= MAX_PLAY_TRIES || SystemClock.elapsedRealtime() > deadline) {
-            Log.i(TAG, "after " + after + ": " + pkg + " was opened and asked " + nextTries
-                    + " times without playing - trying the media button");
-            restoreForeground(pkg);
-            climb(pkg, after, 3);
-            return;
-        }
-        main.postDelayed(() -> pressPlayUntilItPlays(pkg, after, deadline, nextTries), PLAY_RETRY_MS);
     }
 
     /**
@@ -473,43 +426,6 @@ public final class PlayerResume {
 
     private static final String PROP_CURRENT_ACTIVITY = "sys.qf.current.activity";
 
-    /**
-     * Players that have nothing to play until there is a network.
-     *
-     * <p>A list rather than a guess: nearly every app holds the INTERNET permission, so asking the
-     * package manager would delay a local player for nothing. WARNING: Spotify is in it and is
-     * still its own story - the owner, 22.09.2026: "the particulars of starting Spotify are a
-     * separate song". This gets it as far as a network and an open app; what it wants after that
-     * is a daytime question.
-     */
-    private static final String[] NEEDS_NETWORK = {
-            "com.spotify", "youtube.music", "com.google.android.apps.youtube",
-            "deezer", "tidal", "soundcloud", "yandex.music", "vk.music", "apple.music",
-            "com.aspiro", "podcast",
-    };
-
-    private boolean needsNetwork(String pkg) {
-        final String p = pkg.toLowerCase(Locale.US);
-        for (String mark : NEEDS_NETWORK) {
-            if (p.contains(mark)) return true;
-        }
-        return false;
-    }
-
-    private boolean hasUsableNetwork() {
-        try {
-            ConnectivityManager cm =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm == null) return true;   // nothing we can see to wait for
-            Network active = cm.getActiveNetwork();
-            if (active == null) return false;
-            NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-            return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-        } catch (Throwable t) {
-            return true;
-        }
-    }
-
     /** Playing, as anything outside this class can see it: our own session view or the mixer. */
     private boolean isPlaying(String pkg) {
         final NowPlaying now = NowPlaying.getInstance(context);
@@ -535,60 +451,6 @@ public final class PlayerResume {
             return true;
         } catch (Throwable t) {
             Log.w(TAG, "could not open " + pkg + ": " + t);
-            return false;
-        }
-    }
-
-    /** An explicit PLAY key to the player's own receiver - starts a player whose process is gone. */
-    private boolean sendPlayKey(String pkg) {
-        try {
-            PackageManager pm = context.getPackageManager();
-            List<ResolveInfo> receivers = pm.queryBroadcastReceivers(
-                    new Intent(Intent.ACTION_MEDIA_BUTTON).setPackage(pkg), 0);
-            if (receivers == null || receivers.isEmpty()) return false;
-            ComponentName target = new ComponentName(pkg, receivers.get(0).activityInfo.name);
-            for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
-                Intent key = new Intent(Intent.ACTION_MEDIA_BUTTON).setComponent(target)
-                        .putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(action, KeyEvent.KEYCODE_MEDIA_PLAY));
-                context.sendBroadcast(key);
-            }
-            return true;
-        } catch (Throwable t) {
-            Log.w(TAG, "media button to " + pkg + " failed: " + t);
-            return false;
-        }
-    }
-
-    /** Binds the player's browser service, which starts it without its screen, and asks it to play. */
-    private boolean playThroughBrowser(String pkg) {
-        try {
-            List<ResolveInfo> services = context.getPackageManager().queryIntentServices(
-                    new Intent("android.media.browse.MediaBrowserService").setPackage(pkg), 0);
-            if (services == null || services.isEmpty()) return false;
-            ComponentName service = new ComponentName(pkg, services.get(0).serviceInfo.name);
-            final MediaBrowser[] holder = new MediaBrowser[1];
-            holder[0] = new MediaBrowser(context, service, new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    try {
-                        new MediaController(context, holder[0].getSessionToken()).getTransportControls().play();
-                    } catch (Throwable t) {
-                        Log.w(TAG, "browser of " + pkg + " connected but would not play: " + t);
-                    }
-                    main.postDelayed(() -> {
-                        try { holder[0].disconnect(); } catch (Throwable ignored) {}
-                    }, BROWSER_HOLD_MS);
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    Log.w(TAG, "browser of " + pkg + " refused the connection");
-                }
-            }, null);
-            holder[0].connect();
-            return true;
-        } catch (Throwable t) {
-            Log.w(TAG, "browser of " + pkg + " failed: " + t);
             return false;
         }
     }
