@@ -1049,11 +1049,17 @@ public class AudioSpectrumEngine {
         return Float.isNaN(db) ? "not taken - too little heard" : String.format(java.util.Locale.US, "%.1f dB", db);
     }
 
-    /** The step the microphone's zero is taken at: the last cabin measurement's, else the volume probe's. */
+    /**
+     * The step the microphone's zero is taken at: the one it was calibrated at, else the last cabin
+     * measurement's, else the volume probe's - each chosen and checked for distortion by MeasureVolume.
+     */
     private int zeroVolumeStep() {
         if (appContext == null) return MeasureVolume.PROBE_STEP;
-        final int measured = RoomMeasurement.lastMeasureVolume(
-                appContext.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE));
+        final android.content.SharedPreferences prefs =
+                appContext.getSharedPreferences(RoomMeasurement.PREFS_NAME, Context.MODE_PRIVATE);
+        final int calibrated = prefs.getInt(RoomMeasurement.PREF_MIC_CALIBRATION_VOLUME, 0);
+        if (calibrated > 0) return calibrated;
+        final int measured = RoomMeasurement.lastMeasureVolume(prefs);
         return measured > 0 ? measured : MeasureVolume.PROBE_STEP;
     }
 

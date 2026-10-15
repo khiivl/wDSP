@@ -190,6 +190,8 @@ public final class RoomMeasurement {
     /** Silence before the first sweep (ambient noise floor capture), and inside every window. */
     static final float LEAD_SECONDS = 1.0f;
     public static final String PREF_MIC_COMPENSATION = "pref_mic_compensation";
+    /** The volume step the microphone was calibrated at; 0 before 15.10.2026. */
+    public static final String PREF_MIC_CALIBRATION_VOLUME = "pref_mic_calibration_volume";
     /** Curves this unit had before the current one, newest first, one per line: "stamp v,v,...". */
     public static final String PREF_MIC_COMPENSATION_HISTORY = "pref_mic_compensation_history";
     /** How many past microphone curves are kept. Sixteen numbers each - the cost is nothing. */
@@ -2881,6 +2883,13 @@ public final class RoomMeasurement {
             }
             Log.i(TAG, snrLog.toString());
             setMicCompensationCurve(context, result.micCompensation16);
+            // The step this microphone was calibrated at - chosen and checked for distortion by
+            // MeasureVolume - is where the RTA takes the microphone's zero (owner, 15.10.2026: «калібрований
+            // мікрофон сам вкаже нам на якій гучності треба ставити нуль РТА»).
+            if (result.measureVolume > 0) {
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                        .putInt(PREF_MIC_CALIBRATION_VOLUME, result.measureVolume).apply();
+            }
             result.micCalibrated = true; // this pass is the calibration
 
             StringBuilder mcLog = new StringBuilder("estimated & saved mic compensation (16 bands):");
