@@ -32,7 +32,7 @@ overnight; not wDSP. Board #1810 to BitPerfect (EffectHAL SET_CONFIG) still open
 **Item 7 (measurement volume) seen on the bench 15.10 18:09** (`measurements/2026-10-15-measure-volume/`):
 table 63.1 dB 32..1, step 7 chosen clean, level probe to -9 dBFS, no clipping, `_fm_cal`=19 (usual 5 is
 under the step, so derived +18 dB off the table, as predicted). Mic calibration puts +16 dB at 20 Hz
-(trust 0.09 there) - the 20 Hz rule, waits for the author. **Next: loudness by ear at 10/15/19/25.**
+(trust 0.09 there) - the 20 Hz rule, waits for the author. `0b8c968` (control forecast puts the EQ on the doors only, sub pass with the EQ at its floor) needs one more measurement pass. **Next: that pass, then loudness by ear at 10/15/19/25.**
 **Next, on the bench, in this order:** a measurement pass (the report's
 `measurement volume:` line says which step and why; no noise refusal any more - owner 15.10 «просто
 прийняти як даність»), `_fm_cal` in a
@@ -60,5 +60,3 @@ item 4's two ear checks are daytime.
 
 - The probe of undeclared doors (two short sweeps) — keep, or make it switchable?
 - Card spinners in Modern night — how should they look?
-- Unproven: during the door sweeps the scratch preset leaves the sub at 0 dB with a 25 Hz low-pass
-  rather than off — whether it leaks into the doors' bottom end is unchecked.
