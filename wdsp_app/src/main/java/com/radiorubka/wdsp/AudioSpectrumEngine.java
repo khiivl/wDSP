@@ -2562,6 +2562,17 @@ public class AudioSpectrumEngine {
 
     /** Creates the Visualizer on a session and starts its pipeline; session 0 if that one fails. */
     private void attachVisualizer(int sessionId) {
+        // 🔴 Resolution is exclusive (requestResolve): while the resolver probes, the tap stays
+        // released and the resolver's callback attaches it again. Any other path that saw
+        // "visualizer == null" in that window - a source check woken by another app starting to
+        // record, a mode switch - used to attach a second handle beside the probe's, and the probe's
+        // fresh Visualizer died in setCaptureSize on a destroyed native mutex (FORTIFY SIGABRT).
+        // 📻 15.10.2026 02:02:58, bench: Telegram started recording, the source check re-attached
+        // while "attached session silent while media plays" was being resolved; tombstone_07.
+        if (sessionResolver != null && sessionResolver.isResolving()) {
+            Log.i(TAG, "session " + sessionId + " not attached: the resolver is probing, its result attaches");
+            return;
+        }
         try {
             Visualizer v = new Visualizer(sessionId);
 
