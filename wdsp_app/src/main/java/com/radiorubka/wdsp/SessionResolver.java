@@ -66,6 +66,8 @@ public final class SessionResolver {
      * spaced eight apart, so this still covers the latest sixteen sessions.
      */
     private static final int MAX_REFUSED_IN_A_ROW = 128;
+    /** How many of the first session ids a boot-time native player may hold (ids up to 513). */
+    private static final int BOOT_SESSIONS = 64;
     /** A player announcing its session is only trusted for this long. */
     private static final long HINT_TTL_MS = 5 * 60 * 1000L;
 
@@ -248,6 +250,21 @@ public final class SessionResolver {
                 break;
             }
         }
+        return sweepBootSessions();
+    }
+
+    /**
+     * The lowest sessions, oldest first. A native daemon that opens its track at boot holds one of
+     * the first ids and is never in the playback list: 📻 15.10.2026, Bluetooth without BitPerfect -
+     * gocsdk_zj (root) played on session 41, attachable, signal; the walk from the top gave up
+     * hundreds of ids above it. Only session ids are probed: AudioFlinger hands them out as
+     * {@code (n << 3) | 1} (17, 41, YouTube's 473).
+     */
+    private int sweepBootSessions() {
+        for (int n = 1; n <= BOOT_SESSIONS; n++) {
+            int sid = (n << 3) | 1;
+            if (SessionProbe.probe(sid, PROBE_MS).hasSignal()) return sid;
+        }
         return -1;
     }
 
@@ -265,10 +282,16 @@ public final class SessionResolver {
      * One answer for the engine and for this resolver: until 09.10.2026 the resolver asked
      * {@code isMusicActive()}, which on the bench said "nothing" while YouTube played (an active
      * AudioTrack, usage MEDIA, state started), so the engine kept asking for a session and the
-     * resolver kept declining to look for one.
+     * resolver kept declining to look for one. The music stream's own activity is asked as well:
+     * a native track (gocsdk_zj's Bluetooth, 📻 15.10.2026) is started in AudioFlinger and absent
+     * from the playback list.
      */
     static boolean mediaTrackStarted(AudioManager am) {
         if (am == null) return false;
+        try {
+            if (am.isMusicActive()) return true;
+        } catch (Throwable ignored) {
+        }
         try {
             java.util.List<AudioPlaybackConfiguration> configs = am.getActivePlaybackConfigurations();
             if (configs == null) return false;

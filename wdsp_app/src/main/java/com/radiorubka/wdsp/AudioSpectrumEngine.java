@@ -1394,9 +1394,9 @@ public class AudioSpectrumEngine {
                 // sweep without one. "A media source is selected" said yes after every boot (volume
                 // type media_type, nothing playing) and released and re-attached the tap for a
                 // resolution that was refused at once - 📻 15.10.2026, boot 180: at 43, 59 and 91 s.
-                // Bluetooth is no loss: gocsdk_zj plays a native track the playback list never shows
-                // (📻 15.10.2026), so no sweep could find it either way, and with BitPerfect's single
-                // primary output session 0 hears it (analysis resumed, no silent-session complaint).
+                // Bluetooth: gocsdk_zj plays a native track the playback list never shows; the fact
+                // reads the music stream for it, and the resolver walks the boot-time sessions where
+                // it sits (📻 15.10.2026, BitPerfect off: session 41).
                 if (visualizer != null && now - lastSignalTime > SILENCE_TOLERANCE_MS
                         && SessionResolver.mediaTrackStarted(audioManager)) {
                     if (now - lastResolveTime > wait) {
