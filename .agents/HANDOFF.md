@@ -32,7 +32,7 @@ overnight; not wDSP. Board #1810 to BitPerfect (EffectHAL SET_CONFIG) still open
 **Item 7 (measurement volume) seen on the bench 15.10 18:09** (`measurements/2026-10-15-measure-volume/`):
 table 63.1 dB 32..1, step 7 chosen clean, level probe to -9 dBFS, no clipping, `_fm_cal`=19 (usual 5 is
 under the step, so derived +18 dB off the table, as predicted). Mic calibration puts +16 dB at 20 Hz
-(trust 0.09 there) - the 20 Hz rule, waits for the author. `0b8c968` (control forecast puts the EQ on the doors only, sub pass with the EQ at its floor) needs one more measurement pass. **Next: that pass, then loudness by ear at 10/15/19/25.**
+(trust 0.09 there) - the 20 Hz rule, waits for the author. `0b8c968` (control forecast puts the EQ on the doors only, sub pass with the EQ at its floor) needs one more measurement pass. Pass done 18:38 (sub delay 4.2 -> 2.4 ms, owner: «стала більш вірогідна»). Loudness by ear at 10..25 ✅ owner 15.10 «все норм на слух»; on the wire nothing above the anchor 19, first change at 16, growing to step 4 (shelf 1..6, sub 2..6, treble up to +4). **Next: mic analyser at step 32 by the table, then RTA zeros.**
 **Next, on the bench, in this order:** a measurement pass (the report's
 `measurement volume:` line says which step and why; no noise refusal any more - owner 15.10 «просто
 прийняти як даність»), `_fm_cal` in a
