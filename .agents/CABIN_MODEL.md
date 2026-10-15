@@ -250,7 +250,7 @@ difference as a fader trim in the preset (only when the rear pair is really hear
 |---|---|---|
 | low-level bass loss is hearing (ISO 226); small-signal speaker is linear | ✅ physics; the owner's "lazy midbass" not supported | Klippel papers (sources 1–2); sources 3–4 (YouTube, XDA) irrelevant |
 | drive loudness by volume step, not program RMS; keep HPF static; apply after the knob stops | ✅ matches the code | `LoudnessCurve`; 500 ms throttle with a trailing write |
-| EQ sits before the sub split, so "Sub compensation" doubles the boost | ❌ wrong (15.10.2026): the EQ has no SL/SR channel and the sub crossover is fed from Time Alignment, which is upstream of the EQ (`platform/03-SOUND-PROCESSOR.md`); "Sub compensation" is the only path loudness has to the sub. 📻 acoustic check owed | the owner's switch stays (§10) |
+| EQ sits before the sub split, so "Sub compensation" doubles the boost | ❌ wrong (15.10.2026): the EQ has no SL/SR channel and the sub crossover is fed from Time Alignment, which is upstream of the EQ (`platform/03-SOUND-PROCESSOR.md`); "Sub compensation" is the only path loudness has to the sub. 📻 by ear: the author, EQ at 0 or +12, the sub plays the same (15.10) | the owner's switch stays (§10) |
 | "the chip takes 2 commands a second" | ❌ our own `McuService.THROTTLE_MS = 500` | — |
 | "MEMS input cut at 70–150 Hz, useless for bass" | ❌ disproved by measurement | §5 |
 | `CAL_STEP = 24` ≈ 80 dBA | ❌ unfounded (SPL never measured) | our calibration step defaults to 25; the curve ends where the cabin was measured |

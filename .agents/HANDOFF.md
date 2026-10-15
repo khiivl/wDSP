@@ -16,8 +16,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
   without BitPerfect: the fact reads `isMusicActive()`, the sweep walks the first 64 sessions -
   gocsdk_zj's native track sits on 41), `a46c425` (the spectrum watchdog asks
   `SessionResolver.mediaTrackStarted`; the MCU send log says sent/unchanged/REFUSED). If adb gives 10013, ClearVPN
-  (WireGuard) is on and blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz
-  test; ❓ `0102[5:4]`.
+  (WireGuard) is on and blocks the LAN - the owner turns it off. ❓ `0102[5:4]`.
 - Bench `192.168.1.138:9876`: `a374aa7`; BitPerfect v5.5.15 re-enabled and reinstalled from the same
   zip (owner, 15.10 17:50), rebooted: bus `WD_24BIT`, AGDSP blobs rebuilt 17:51. Without BitPerfect
   (15.10 17:20) the resolver found Bluetooth on session 41 and followed YouTube Music to 65. Sub + to −.

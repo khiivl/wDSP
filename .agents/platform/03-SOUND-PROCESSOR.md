@@ -468,12 +468,13 @@ Registers `0003(hex)[2:0]` (0.7 ms to 5.3 ms) and `0005(hex)[3:0]` (0.7 ms to 23
 > ✍️ *Досліджено Kostyamat & Antigravity (Gemini) — 10.09.2026 21:40*.
 
 ### 1. Послідовність обробки сигналу в цифровому ядрі BU32107
-Цифровий потік проходить наступні апаратні каскади:
-$$\text{I2S Stereo In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0610..061F) \longrightarrow \text{P2Bass}\ (0705..0706) \longrightarrow \mathbf{Crossover}\ [\text{HPF}\ (0703/0704) + \text{Sub LPF}\ (0707)] \longrightarrow \text{DVol}\ (0900..090B) \longrightarrow \text{Fader Vol}\ (0A00..0A05) \longrightarrow \text{DAC}$$
-
-⚠️ **Фундаментальний закон**: 16-смуговий еквалайзер стоїть **ДО** кросовера в спільному стереотракті!
-- Будь-яке зарізання басів (20, 31.5, 50, 80 Гц) на 16-смуговому еквалайзері нещадно душить вхідний сигнал для сабвуфера.
-- **Золоте правило Auto-EQ**: при наявності сабвуфера (`hasSubwoofer == true`) смуги 16-смугового EQ нижче точки зрізу тримаються суворо на **0 дБ (Flat, індекс 6)**. Розподілом низьких частот між дверима та сабвуфером займається виключно апаратний кросовер BU32107.
+❌ **The chain once written here (10.09, "I2S -> 16-band EQ -> P2Bass -> crossover [HPF + Sub LPF]"),
+and its "fundamental law" that the EQ sits before the crossover and feeds the sub, were wrong**
+(corrected 15.10.2026: MCU code + datasheet register map, and the author by ear - EQ at 0 or +12,
+the sub plays the same). The sub branches off at Time Alignment (`0206[7:6]` = `00`), upstream
+of the EQ, and the EQ has no SL/SR channel: **the EQ never reaches the sub.** The real chain is
+the diagram in the section on the signal path above. What stays true: with a sub, the EQ bands
+below the door high-pass are kept at 0 dB - they have nothing left to act on.
 
 ### 2. Крутизна зрізу кросовера та біт `Order`
 - У регістрах `0703` (Front HPF), `0704` (Rear HPF) та `0707` (Subwoofer LPF) біт 4 (`Order`) за замовчуванням виставлений у `0`:

@@ -450,8 +450,12 @@ history (`git show 0889a2d:.agents/ROOM_CALIBRATION.md`).
 ### 18. 🔬 Апаратна топологія кросовера BU32107, порядок 12 дБ/окт та узгодження сабвуфера в Auto-EQ (10.09.2026 20:45)
 - ✍️ Досліджено та сформульовано Antigravity & Kostyamat — 10.09.2026 20:45.
 - 🔬 **Послідовність обробки в цифровому тракті ROHM BU32107**:
-  $$\text{I2S In} \longrightarrow \mathbf{16\text{-Band Parametric EQ}}\ (0610..061F) \longrightarrow \text{P2Bass}\ (0705..0706) \longrightarrow \mathbf{Crossover}\ [\text{Door HPF}\ (0703/0704) + \text{Sub LPF}\ (0707)] \longrightarrow \text{DVol} \longrightarrow \text{DAC}$$
-  - **Залізний закон**: 16-смуговий еквалайзер стоїть **ДО** кросовера в спільному стереотракті! Будь-яке зарізання басів у 16-смуговому еквалайзері (смуги 20, 31.5, 50, 80 Гц) нещадно душить вхідний сигнал для сабвуфера. Спроба компенсувати це регулятором гейну сабвуфера (+8..+12 дБ) лише задирає рівень ослабленого сигналу та додає шуми/кліпінг.
+  - ❌ **The chain written here on 10.09 was wrong** (corrected 15.10.2026; MCU code + datasheet,
+    and the author by ear: «шо еквалайзер стоїть на нулі, що на +12, сабу похую, він далі грає»).
+    The sub branches off **before** the 16-band EQ: its crossover is fed from Time Alignment, which
+    is upstream of the EQ, and the EQ (`0610..062F`, selector `1000[6:4]`) has no SL/SR channel at all.
+    So the EQ never reaches the sub, cutting the EQ's low bands does not starve it, and the sub gain
+    is the only way to shape it. Canon: `platform/03-SOUND-PROCESSOR.md`, `CABIN_MODEL.md` §10-11.
 - 🔬 **Крутизна зрізу фільтрів та коди MCU (`mcudecomplied.c:2756`)**:
   - Біт `Order` (біт 4) у регістрах `0703` (Front HPF), `0704` (Rear HPF) та `0707` (Sub LPF) за замовчуванням дорівнює `0` = **2-й порядок = 12 дБ/октаву** (спад Баттерворта / Лінквіца-Райлі).
   - У коді MCU (`mcudecomplied.c:2756`):
@@ -462,7 +466,7 @@ history (`git show 0889a2d:.agents/ROOM_CALIBRATION.md`).
   - Для дверних динаміків масив HPF має нульовий елемент Through (20 Гц), тому індекс 6 відправляє код 6 (80 Гц). Обидва фільтри ідеально зводяться на частоті 80 Гц із симетричним спадом 12 дБ/октаву та точкою перетину на -3 дБ.
 - 🧩 **Архітектура розділу обов'язків (Subwoofer Handover)**:
   1. **При наявності сабвуфера (`hasSubwoofer == true`)**:
-     - Смуги 16-смугового еквалайзера нижче точки зрізу (20, 31.5, 50, 80 Гц) **суворо тримаються на 0 дБ (Flat / індекс 6)**. Сабвуфер отримує 100% неспотвореного повного низькочастотного сигналу.
+     - Смуги 16-смугового еквалайзера нижче точки зрізу (20, 31.5, 50, 80 Гц) **суворо тримаються на 0 дБ (Flat / індекс 6)** - not for the sub's sake (the EQ never reaches it, see above) but because below the door high-pass those bands have nothing left to act on.
      - Дверні динаміки відсікаються апаратним кросовером BU32107 (HPF, 80 Гц, 12 дБ/окт).
      - Гейн сабвуфера встановлюється в комфортний діапазон **+2..+4 dB** ⚠️ *(02.10: in code the index is dB and the value is a constant per target — Harman +2, Atmos +3, Bass +5, Vocal/Flat 0; see `CABIN_MODEL.md` §9)*, що дає соковитий і потужний бас без перевантаження тракту.
   2. **Без сабвуфера (`hasSubwoofer == false`)**:
