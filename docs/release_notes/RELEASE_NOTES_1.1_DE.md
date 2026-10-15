@@ -81,10 +81,20 @@ BEHOBEN
 Autor (khiivl)
 - Subwoofer-Pegel beim Einschalten: ein Wettlauf beim Start setzte ihn falsch (seine 1.0.1).
 
-Mod
+Mod · Start und Prozessorlast
+- Kein Sturm beim Start: der Dienst startet in Stufen (Audiosystem, Mikrofon, MCU, Presets) und
+  sucht keine Audiositzung, wenn nichts spielt.
+- Nach einem Neustart dreht sich die Sitzungssuche nicht mehr alle 4–5 s.
+- Lautstärke, Player, Visualisierer und Bildschirmschoner reagieren auf Ereignisse statt auf
+  eigene Timer; GALA behält einen Timer nur, solange es arbeitet.
+- Unveränderte Daten werden nicht erneut an die MCU gesendet; Einstellungen gehen einmal pro
+  Pause auf die Platte, nicht bei jedem Reglerschritt.
+- Das Spektrum schläft, solange nichts zu hören ist.
+- Einstellungen erreichen den Audioprozessor nach dem Einschalten und nach Updates zuverlässig.
+
+Mod · Sonstiges
 - Anrufe: Das Preset springt während eines Telefonats nicht mehr hin und her, das Mikrofon wird sofort
   freigegeben und die Lautstärke nach dem Gespräch stimmt.
-- Start: Einstellungen erreichen den Audioprozessor nach dem Einschalten und nach Updates zuverlässig.
 - Der Bildschirmschoner erscheint nun auch auf Geräten mit aktivem "schwebendem Video" oder "schwebender
   Navigation", verdeckt das Navigationssystem nicht und funktioniert auf vertikalen Bildschirmen.
 - Equalizer-Ansicht und Dialogfenster passen auf schmale und vertikale Bildschirme.

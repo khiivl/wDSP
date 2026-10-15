@@ -82,10 +82,20 @@ CORRIGIDO
 Autor (khiivl)
 - O nível do subwoofer ao ligar: uma condição de corrida no arranque definia-o mal (a sua 1.0.1).
 
-Mod
+Mod · Arranque e carga do processador
+- Sem tempestade no arranque: o serviço arranca por etapas (sistema de áudio, microfone, MCU,
+  predefinições) e não procura uma sessão de áudio quando nada está a tocar.
+- Após reiniciar, a procura de sessão já não gira a cada 4–5 s.
+- O volume, o leitor, o visualizador e o protetor de ecrã reagem a eventos em vez de temporizadores
+  próprios; o GALA mantém um temporizador só enquanto trabalha.
+- Os dados inalterados não são reenviados à MCU; as definições vão para o disco uma vez por pausa,
+  não a cada passo do cursor.
+- O espectro dorme enquanto nada se ouve.
+- As configurações chegam com fiabilidade ao processador de som após ligar e após atualizações.
+
+Mod · Outros
 - Chamadas: a predefinição já não salta durante uma chamada, o microfone é libertado de imediato e
   o volume após a chamada é restabelecido corretamente.
-- Arranque: as configurações chegam com fiabilidade ao processador de som após ligar e após atualizações.
 - O protetor de ecrã surge agora em equipamentos com "vídeo flutuante" ou "navegação flutuante" ativados,
   não cobre o navegador e funciona em ecrãs verticais.
 - O ecrã do equalizador e as caixas de diálogo adaptam-se a ecrãs estreitos e verticais.

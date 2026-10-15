@@ -83,11 +83,21 @@ CORRIGÉ
 Auteur (khiivl)
 - Le niveau du subwoofer à l'allumage : une concurrence au démarrage le réglait mal (sa 1.0.1).
 
-Mod
+Mod · Démarrage et charge du processeur
+- Plus de tempête au démarrage : le service démarre par étapes (système audio, micro, MCU,
+  préréglages) et ne cherche pas de session audio quand rien ne joue.
+- Après un redémarrage, la recherche de session ne tourne plus toutes les 4–5 s.
+- Le volume, le lecteur, le visualiseur et l'économiseur d'écran réagissent à des événements au
+  lieu de leurs propres minuteries ; GALA ne garde une minuterie que pendant qu'il travaille.
+- Les données inchangées ne sont pas renvoyées à la MCU ; les réglages sont écrits sur le disque
+  une fois par pause, pas à chaque pas du curseur.
+- Le spectre dort tant que rien ne s'entend.
+- Les réglages sont transmis de manière fiable au processeur audio après l'allumage et après une
+  mise à jour.
+
+Mod · Autres
 - Appels : le préréglage ne saute plus pendant un appel, le microphone est libéré immédiatement et
   le volume après l'appel est rétabli correctement.
-- Démarrage : les réglages sont transmis de manière fiable au processeur audio après l'allumage et
-  après une mise à jour.
 - L'économiseur d'écran s'affiche désormais sur les appareils avec "vidéo flottante" ou "navigation
   flottante" activée, ne masque pas la navigation et fonctionne sur écrans verticaux.
 - L'écran de l'égaliseur et les boîtes de dialogue s'adaptent aux écrans étroits et verticaux.

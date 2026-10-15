@@ -78,10 +78,20 @@ NAPRAWIONO
 Autor (khiivl)
 - Poziom subwoofera po włączeniu: wyścig przy starcie ustawiał go błędnie (jego 1.0.1).
 
-Mod
+Mod · Start i obciążenie procesora
+- Bez burzy przy starcie: usługa uruchamia się etapami (system audio, mikrofon, MCU, presety) i nie
+  szuka sesji audio, gdy nic nie gra.
+- Po restarcie wyszukiwanie sesji nie kręci się już co 4–5 s.
+- Głośność, odtwarzacz, wizualizator i wygaszacz reagują na zdarzenia zamiast własnych timerów;
+  GALA trzyma timer tylko wtedy, gdy działa.
+- Niezmienione dane nie są ponownie wysyłane do MCU; ustawienia trafiają na dysk raz na pauzę, a
+  nie przy każdym kroku suwaka.
+- Widmo śpi, dopóki nic nie słychać.
+- Ustawienia niezawodnie docierają do procesora dźwięku po włączeniu i po aktualizacji.
+
+Mod · Inne
 - Rozmowy: preset nie skacze już w trakcie połączenia, mikrofon jest zwalniany natychmiast, a głośność
   po rozmowie jest prawidłowa.
-- Start: ustawienia niezawodnie docierają do procesora dźwięku po włączeniu i po aktualizacji.
 - Wygaszacz pojawia się teraz na stacjach z włączonym "pływającym wideo" lub "pływającą nawigacją",
   nie zasłania nawigacji i działa na ekranach pionowych.
 - Ekran korektora i okna dialogowe mieszczą się na wąskich i pionowych ekranach.

@@ -81,10 +81,20 @@ CORREGIDO
 Autor (khiivl)
 - El nivel del subwoofer al encender: una condición de carrera en el arranque lo fijaba mal (su 1.0.1).
 
-Mod
+Mod · Arranque y carga del procesador
+- Sin tormenta al arrancar: el servicio arranca por etapas (sistema de audio, micrófono, MCU,
+  preajustes) y no busca una sesión de audio cuando no suena nada.
+- Tras un reinicio, la búsqueda de sesión ya no gira cada 4–5 s.
+- El volumen, el reproductor, el visualizador y el salvapantallas reaccionan a eventos en lugar
+  de sus propios temporizadores; GALA mantiene un temporizador solo mientras funciona.
+- Los datos sin cambios no se reenvían a la MCU; los ajustes se guardan en disco una vez por
+  pausa, no en cada paso del deslizador.
+- El espectro duerme mientras no se oye nada.
+- Los ajustes llegan de forma fiable al procesador de sonido tras encender y tras una actualización.
+
+Mod · Otros
 - Llamadas: el preajuste ya no salta durante una llamada, el micrófono se libera de inmediato y el
   volumen tras la llamada es el correcto.
-- Arranque: los ajustes llegan de forma fiable al procesador de sonido tras encender y tras una actualización.
 - El salvapantallas ahora aparece en equipos con "vídeo flotante" o "navegación flotante" activados,
   no cubre el navegador y funciona en pantallas verticales.
 - La pantalla del ecualizador y los diálogos se adaptan a pantallas estrechas y verticales.

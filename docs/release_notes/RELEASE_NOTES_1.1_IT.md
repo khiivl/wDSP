@@ -81,11 +81,21 @@ RISOLTO
 Autore (khiivl)
 - Il livello del subwoofer all'accensione: una race condition all'avvio lo impostava male (la sua 1.0.1).
 
-Mod
+Mod · Avvio e carico del processore
+- Nessuna tempesta all'avvio: il servizio parte per fasi (sistema audio, microfono, MCU,
+  predefiniti) e non cerca una sessione audio quando non suona nulla.
+- Dopo un riavvio la ricerca della sessione non gira più ogni 4–5 s.
+- Volume, lettore, visualizzatore e salvaschermo reagiscono agli eventi invece che a timer
+  propri; GALA tiene un timer solo mentre lavora.
+- I dati invariati non vengono reinviati alla MCU; le impostazioni vanno su disco una volta per
+  pausa, non a ogni passo del cursore.
+- Lo spettro dorme finché non si sente nulla.
+- Le impostazioni raggiungono il processore audio in modo affidabile dopo l'accensione e dopo un
+  aggiornamento.
+
+Mod · Altro
 - Chiamate: il predefinito non salta più durante una chiamata, il microfono viene rilasciato subito
   e il volume dopo la chiamata è corretto.
-- Avvio: le impostazioni raggiungono il processore audio in modo affidabile dopo l'accensione e dopo
-  un aggiornamento.
 - Il salvaschermo ora appare anche su dispositivi con "video mobile" o "navigazione mobile" abilitati,
   non copre il navigatore e funziona su schermi verticali.
 - La schermata dell'equalizzatore e le finestre di dialogo si adattano a schermi stretti e verticali.

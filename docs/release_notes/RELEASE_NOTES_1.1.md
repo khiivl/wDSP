@@ -80,10 +80,20 @@ FIXED
 Author (khiivl)
 - The subwoofer level at switch-on: a start-up race set it wrong (his 1.0.1).
 
-Mod
+Mod · Start-up and processor load
+- No start-up storm: the service starts in stages (audio system, microphone, MCU, presets) and
+  does not search for an audio session when nothing is playing.
+- After a reboot the session search no longer spins every 4–5 s.
+- The volume, the player, the visualiser and the screensaver react to events instead of their
+  own timers; GALA keeps a timer only while it works.
+- Unchanged data is not re-sent to the MCU; settings go to disk once per pause, not on every
+  slider step.
+- The spectrum sleeps while nothing can be heard.
+- Settings reach the sound processor reliably after switching on and after an update.
+
+Mod · Other
 - Calls: the preset no longer jumps during a call, the microphone is released at once, and the
   volume after a call is correct.
-- Start-up: settings reach the sound processor reliably after switching on and after an update.
 - The screensaver now appears on units with "floating video" or "floating navigation" enabled,
   does not cover the navigator, and works on vertical screens.
 - The equaliser screen and dialogs fit narrow and vertical screens.
