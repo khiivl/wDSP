@@ -549,7 +549,6 @@ Globális alapértelmezett: %1$s</string>
     <string name="room_err_output_open">A hangkimenetet nem sikerült megnyitni.</string>
     <string name="room_err_nothing_heard">Egyetlen hangszóró sem észlelhető. Ellenőrizze a hangerőt és a mikrofon rálátását.</string>
     <string name="room_err_too_few_heard">Csak %1$d hangszóró észlelve — nincs mihez igazítani. Ellenőrizze a hangerőt és a mikrofon helyét.</string>
-    <string name="room_err_too_noisy">Túl nagy a zaj az utastérben a méréshez (%1$d dBFS). Állítsa le a motort és a ventilátort, húzza fel az ablakokat, és mérjen újra.</string>
     <string name="room_err_layout_mismatch">Az elrendezésben szereplő egyik hangszóró sem volt hallható, de nem jelölt hangszórók szóltak. Ellenőrizze a hangszóró-elrendezést, és mérjen újra.</string>
     <string name="room_findings_title">A mérés eredményei</string>
     <string name="room_findings_none">Nem található hiba. Az, hogy az első és a hátsó rész máshogy szól, teljesen normális egy autóban – nem hiba.</string>

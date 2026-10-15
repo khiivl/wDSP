@@ -2320,11 +2320,6 @@ public final class RoomMeasurement {
             sleep(ROUTING_SETTLE_MS);
             final MeasureVolume.Outcome chosen = MeasureVolume.choose(app, origVolume);
             result.volumeChoice = chosen.said;
-            if (chosen.tooNoisy) {
-                result.fail(MeasurementFailure.CABIN_TOO_NOISY, chosen.noiseForPerson());
-                Log.w(TAG, result.error);
-                return result;
-            }
             result.measureVolume = chosen.step;
             result.loudnessAnchor = anchorFor(app, origVolume, chosen.step);
             VolumeHelper.setVolume(chosen.step);

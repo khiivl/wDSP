@@ -549,7 +549,6 @@ Global standard: %1$s</string>
     <string name="room_err_output_open">Lydudgangen kunne ikke åbnes.</string>
     <string name="room_err_nothing_heard">Ingen højttaler blev hørt. Kontroller lydstyrken, og at mikrofonen ikke er tildækket.</string>
     <string name="room_err_too_few_heard">Kun %1$d højttaler(e) blev hørt — intet grundlag for justering. Kontroller lydstyrke og mikrofonplacering.</string>
-    <string name="room_err_too_noisy">Kabinen er for støjende til måling (%1$d dBFS). Sluk motoren og blæseren, luk vinduerne og mål igen.</string>
     <string name="room_err_layout_mismatch">Ingen af højttalerne i din opsætning blev hørt, men højttalere, du ikke har angivet, spillede. Tjek højttaleropsætningen og mål igen.</string>
     <string name="room_findings_title">Hvad målingen fandt</string>
     <string name="room_findings_none">Ingen fejl fundet. At for- og baghøjttalere lyder forskelligt er normalt i en bil - det er ikke en fejl.</string>

@@ -20,9 +20,9 @@ import java.util.Locale;
  * <p>About four seconds, before the sweeps, through the flat scratch preset with every speaker
  * routed as the loudest pass will have them:
  * <ol>
- *   <li><b>Silence.</b> {@link #SILENCE_S} with nothing playing. Broadband over
- *   {@link #NOISE_BROADBAND_DBFS}, or 63/80 Hz over {@link #NOISE_BASS_DBFS}, and the run refuses
- *   with the one fix the person has: the engine and the fan off.</li>
+ *   <li><b>Silence.</b> {@link #SILENCE_S} with nothing playing: the cabin's noise, broadband and
+ *   at 63/80 Hz, goes into the report and sets the bass margin below. Never a refusal - the cabin
+ *   is taken as it is (owner, 15.10.2026: «просто прийняти як даність»).</li>
  *   <li><b>A dual tone</b>, 80 Hz and 1 kHz together at {@link #TONE_AMPLITUDE}, on
  *   {@link #PROBE_STEP}. One tone in the bass because that is where the amplifier and the door
  *   woofers run out first, one in the midrange because that is where the chain is honest.</li>
@@ -55,9 +55,6 @@ final class MeasureVolume {
     /** The amplitude the step is chosen for - what the level probe then trims around. */
     static final float SWEEP_AMPLITUDE = 0.22f;
     private static final float BASS_HZ = 80f, MID_HZ = 1000f;
-    /** The cabin is not quiet enough to measure in. */
-    private static final float NOISE_BROADBAND_DBFS = -42f;
-    private static final float NOISE_BASS_DBFS = -38f;
     /** How far the 80 Hz tone must stand over the cabin before deconvolution. */
     private static final float MIN_BASS_SNR_DB = 20f;
     /** H2+H3 against the tone: the bass runs out first, so it is allowed more. */
@@ -76,17 +73,10 @@ final class MeasureVolume {
     static final class Outcome {
         /** The step the measurement should run at. */
         int step;
-        /** Set when the cabin was too noisy to measure in at all; the run stops. */
-        boolean tooNoisy;
         /** The cabin in silence: everything at once, and its bass. */
         float noiseDbfs = Float.NaN, noiseBassDbfs = Float.NaN;
         /** One line for the report and the log - what was heard and why this step. */
         String said = "";
-
-        /** The noisier of the two readings, for the refusal the person sees. */
-        int noiseForPerson() {
-            return Math.round(Math.max(noiseDbfs, noiseBassDbfs));
-        }
     }
 
     /**
@@ -123,15 +113,6 @@ final class MeasureVolume {
                 SignalLevel.toneDb(quietRec, 0, qTo, BASS_HZ));
         said.append(String.format(Locale.US, " cabin %.1f dBFS broadband, %.1f at 63/80 Hz;",
                 out.noiseDbfs, out.noiseBassDbfs));
-        if (out.noiseDbfs > NOISE_BROADBAND_DBFS || out.noiseBassDbfs > NOISE_BASS_DBFS) {
-            out.tooNoisy = true;
-            said.append(" too noisy to measure in (limits ")
-                    .append((int) NOISE_BROADBAND_DBFS).append(" / ")
-                    .append((int) NOISE_BASS_DBFS).append(" dBFS)");
-            out.said = said.toString();
-            Log.w(TAG, out.said);
-            return out;
-        }
 
         // 2. The dual tone on PROBE_STEP.
         final Tone low = play(app, PROBE_STEP, said);

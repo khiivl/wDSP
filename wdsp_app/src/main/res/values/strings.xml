@@ -567,7 +567,6 @@
     <string name="room_err_output_open">The audio output could not be opened.</string>
     <string name="room_err_nothing_heard">No speaker was heard at all. Check the volume and that the microphone is not covered.</string>
     <string name="room_err_too_few_heard">Only %1$d speaker(s) were heard - nothing to align against. Check the volume and the microphone placement.</string>
-    <string name="room_err_too_noisy">The cabin is too noisy to measure in (%1$d dBFS). Switch the engine and the fan off, shut the windows and measure again.</string>
     <string name="room_err_layout_mismatch">None of the speakers in your layout was heard, but speakers you did not declare played. Check the speaker layout and measure again.</string>
     <string name="room_findings_title">What the measurement found</string>
     <string name="room_findings_none">No faults found. Front and rear sounding different is normal in a car - that is not a fault.</string>

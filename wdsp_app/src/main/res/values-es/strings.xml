@@ -547,7 +547,6 @@
     <string name="room_err_output_open">No se pudo abrir la salida de audio.</string>
     <string name="room_err_nothing_heard">No se detectó ningún altavoz. Compruebe el volumen y que el micrófono no esté cubierto.</string>
     <string name="room_err_too_few_heard">Solo se detectaron %1$d altavoz(ces) - nada con qué alinear. Compruebe el volumen y la ubicación del micrófono.</string>
-    <string name="room_err_too_noisy">El habitáculo es demasiado ruidoso para medir (%1$d dBFS). Apague el motor y la ventilación, cierre las ventanillas y mida de nuevo.</string>
     <string name="room_err_layout_mismatch">No se escuchó ninguno de los altavoces de su configuración, pero sonaron altavoces que no había declarado. Compruebe la configuración de altavoces y mida de nuevo.</string>
     <string name="room_findings_title">Resultados de la medición</string>
     <string name="room_findings_none">No se encontraron fallos. Que delante y detrás suenen diferente es normal en el coche; no es un fallo.</string>

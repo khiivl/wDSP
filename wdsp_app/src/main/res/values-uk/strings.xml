@@ -550,7 +550,6 @@
     <string name="room_err_output_open">Не вдалося відкрити звуковий вихід.</string>
     <string name="room_err_nothing_heard">Жодного динаміка не почуто. Перевірте гучність і чи не закритий мікрофон.</string>
     <string name="room_err_too_few_heard">Почуто динаміків: %1$d - вирівнювати нема відносно чого. Перевірте гучність і де стоїть мікрофон.</string>
-    <string name="room_err_too_noisy">У салоні надто шумно, щоб міряти (%1$d dBFS). Вимкніть двигун і пічку, закрийте вікна і поміряйте ще раз.</string>
     <string name="room_err_layout_mismatch">Жодного динаміка з вашої комплектації не чути, зате грають ті, яких ви не позначили. Перевірте комплектацію динаміків і поміряйте ще раз.</string>
     <string name="room_findings_title">Що знайшов вимір</string>
     <string name="room_findings_none">Вад не знайдено. Те, що перед і зад звучать по-різному, — норма для салону, а не вада.</string>

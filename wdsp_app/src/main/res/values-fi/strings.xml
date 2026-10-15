@@ -549,7 +549,6 @@ Yleinen oletus: %1$s</string>
     <string name="room_err_output_open">Äänilähtöä ei voitu avata.</string>
     <string name="room_err_nothing_heard">Yhtäkään kaiutinta ei kuultu. Tarkista äänenvoimakkuus ja että mikrofoni ei ole peitetty.</string>
     <string name="room_err_too_few_heard">Vain %1$d kaiutin(ta) kuultiin — ei vertailukohtaa kohdistukselle. Tarkista äänenvoimakkuus ja mikrofonin sijainti.</string>
-    <string name="room_err_too_noisy">Matkustamossa on liikaa melua mittausta varten (%1$d dBFS). Sammuta moottori ja puhallin, sulje ikkunat ja mittaa uudelleen.</string>
     <string name="room_err_layout_mismatch">Yhtäkään määrittämääsi kaiutinta ei kuultu, mutta määrittämättömät kaiuttimet soivat. Tarkista kaiutinasettelu ja mittaa uudelleen.</string>
     <string name="room_findings_title">Mittaustulokset</string>
     <string name="room_findings_none">Vikoja ei löytynyt. Se, että etu- ja takakaiuttimet kuulostavat erilaisilta, on autossa normaalia, ei vika.</string>

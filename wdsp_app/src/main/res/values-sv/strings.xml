@@ -546,7 +546,6 @@
     <string name="room_err_output_open">Ljudutgången kunde inte öppnas.</string>
     <string name="room_err_nothing_heard">Ingen högtalare hördes alls. Kontrollera volymen och att mikrofonen inte är övertäckt.</string>
     <string name="room_err_too_few_heard">Endast %1$d högtalare hördes — inget att justera mot. Kontrollera volym och mikrofonplacering.</string>
-    <string name="room_err_too_noisy">Kupén är för bullrig för att mäta i (%1$d dBFS). Stäng av motorn och fläkten, stäng fönstren och mät igen.</string>
     <string name="room_err_layout_mismatch">Ingen av högtalarna i din konfiguration hördes, men högtalare du inte angav spelade. Kontrollera högtalarkonfigurationen och mät igen.</string>
     <string name="room_findings_title">Vad mätningen fann</string>
     <string name="room_findings_none">Inga fel hittades. Att fram och bak låter olika är normalt i en bil – det är inte ett fel.</string>

@@ -547,7 +547,6 @@
     <string name="room_err_output_open">Não foi possível abrir a saída de áudio.</string>
     <string name="room_err_nothing_heard">Nenhum alto-falante foi detectado. Verifique o volume e certifique-se de que o microfone não está coberto.</string>
     <string name="room_err_too_few_heard">Apenas %1$d alto-falante(s) detectado(s) - nada para alinhar. Verifique o volume e a posição do microfone.</string>
-    <string name="room_err_too_noisy">A cabine está muito barulhenta para a medição (%1$d dBFS). Desligue o motor e a ventilação, feche os vidros e meça novamente.</string>
     <string name="room_err_layout_mismatch">Nenhum dos alto-falantes da sua configuração foi ouvido, mas tocaram alto-falantes que você não declarou. Verifique a configuração dos alto-falantes e meça novamente.</string>
     <string name="room_findings_title">Resultados da medição</string>
     <string name="room_findings_none">Nenhum defeito encontrado. O fato de frente e traseira soarem diferentes é normal em um carro — isso não é um defeito.</string>

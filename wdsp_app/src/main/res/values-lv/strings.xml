@@ -549,7 +549,6 @@ Globāli noklusējums: %1$s</string>
     <string name="room_err_output_open">Neizdevās atvērt audio izvadi.</string>
     <string name="room_err_nothing_heard">Netika konstatēts neviens skaļrunis. Pārbaudiet skaļumu un pārliecinieties, ka mikrofons nav aizsegts.</string>
     <string name="room_err_too_few_heard">Konstatēti tikai %1$d skaļruņi — nav atsauces salāgošanai. Pārbaudiet skaļumu un mikrofona novietojumu.</string>
-    <string name="room_err_too_noisy">Salonā ir pārāk liels troksnis mērīšanai (%1$d dBFS). Izslēdziet dzinēju un ventilatoru, aizveriet logus un mēriet vēlreiz.</string>
     <string name="room_err_layout_mismatch">Neviens no konfigurācijā norādītajiem skaļruņiem netika dzirdēts, bet skanēja nenorādīti skaļruņi. Pārbaudiet skaļruņu konfigurāciju un veiciet mērījumu vēlreiz.</string>
     <string name="room_findings_title">Mērījumu rezultāti</string>
     <string name="room_findings_none">Defekti nav atrasti. Tas, ka priekšpuse un aizmugure skan atšķirīgi, automašīnā ir normāli — tas nav defekts.</string>

@@ -549,7 +549,6 @@
     <string name="room_err_output_open">Heliväljundit ei õnnestunud avada.</string>
     <string name="room_err_nothing_heard">Ühtegi kõlarit ei tuvastatud. Kontrolli helitugevust ja veendu, et mikrofon poleks kaetud.</string>
     <string name="room_err_too_few_heard">Tuvastati ainult %1$d kõlar(it) — joondamiseks ebapiisav. Kontrolli helitugevust ja mikrofoni asukohta.</string>
-    <string name="room_err_too_noisy">Salongis on mõõtmiseks liiga palju müra (%1$d dBFS). Lülitage mootor ja ventilaator välja, sulgege aknad ning mõõtke uuesti.</string>
     <string name="room_err_layout_mismatch">Ühtegi kõlarit teie paigutusest ei tuvastatud, kuid mängisid kõlarid, mida te ei märkinud. Kontrollige kõlarite paigutust ja mõõtke uuesti.</string>
     <string name="room_findings_title">Mõõtmise tulemused</string>
     <string name="room_findings_none">Vigu ei leitud. See, et esi- ja tagaosa kõlavad autos erinevalt, on normaalne, mitte viga.</string>

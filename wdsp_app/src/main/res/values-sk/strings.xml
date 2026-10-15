@@ -549,7 +549,6 @@ Globálne predvolené: %1$s</string>
     <string name="room_err_output_open">Zvukový výstup sa nepodarilo otvoriť.</string>
     <string name="room_err_nothing_heard">Nebol detegovaný žiadny reproduktor. Skontrolujte hlasitosť a uistite sa, že mikrofón nie je zakrytý.</string>
     <string name="room_err_too_few_heard">Detegovaných iba %1$d reproduktorov — nie je voči čomu vyrovnať. Skontrolujte hlasitosť a umiestnenie mikrofónu.</string>
-    <string name="room_err_too_noisy">V kabíne je príliš veľký hluk na meranie (%1$d dBFS). Vypnite motor a ventilátor, zatvorte okná a zmerajte znova.</string>
     <string name="room_err_layout_mismatch">Žiaden z reproduktorov vo vašej konfigurácii nebolo počuť, ale hrali reproduktory, ktoré ste neuviedli. Skontrolujte konfiguráciu reproduktorov a zmerajte znova.</string>
     <string name="room_findings_title">Čo zistilo meranie</string>
     <string name="room_findings_none">Žiadne chyby sa nenašli. To, že predok a zadok znejú v aute odlišne, je normálne — nie je to chyba.</string>

@@ -549,7 +549,6 @@ Par défaut global : %1$s</string>
     <string name="room_err_output_open">Impossible d\'ouvrir la sortie audio.</string>
     <string name="room_err_nothing_heard">Aucun haut-parleur n\'a été détecté. Vérifiez le volume et assurez-vous que le micro n\'est pas obstrué.</string>
     <string name="room_err_too_few_heard">Seulement %1$d haut-parleur(s) détecté(s) - impossible d\'aligner. Vérifiez le volume et l\'emplacement du micro.</string>
-    <string name="room_err_too_noisy">L\'habitacle est trop bruyant pour effectuer la mesure (%1$d dBFS). Coupez le moteur et la ventilation, fermez les vitres et mesurez à nouveau.</string>
     <string name="room_err_layout_mismatch">Aucun des haut-parleurs de votre configuration n\'a été entendu, mais des haut-parleurs non déclarés ont joué. Vérifiez la configuration des haut-parleurs et recommencez la mesure.</string>
     <string name="room_findings_title">Résultats de la mesure</string>
     <string name="room_findings_none">Aucun défaut détecté. Que l\'avant et l\'arrière sonnent différemment est normal dans une voiture ; ce n\'est pas un défaut.</string>

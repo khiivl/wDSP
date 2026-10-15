@@ -549,7 +549,6 @@ Bendras numatytasis: %1$s</string>
     <string name="room_err_output_open">Nepavyko atidaryti garso išvesties.</string>
     <string name="room_err_nothing_heard">Neaptiktas nė vienas garsiakalbis. Patikrinkite garsumą ir ar mikrofonas neuždengtas.</string>
     <string name="room_err_too_few_heard">Aptikta tik %1$d garsiakalbių — nėra pagal ką lyginti. Patikrinkite garsumą ir mikrofono padėtį.</string>
-    <string name="room_err_too_noisy">Salone per daug triukšmo matavimui (%1$d dBFS). Išjunkite variklį ir ventiliatorių, uždarykite langus ir matuokite dar kartą.</string>
     <string name="room_err_layout_mismatch">Neišgirstas nė vienas garsiakalbis iš jūsų konfigūracijos, tačiau grojo garsiakalbiai, kurių nenurodėte. Patikrinkite garsiakalbių konfigūraciją ir išmatuokite dar kartą.</string>
     <string name="room_findings_title">Matavimo radiniai</string>
     <string name="room_findings_none">Trūkumų nerasta. Tai, kad priekis ir galas skamba skirtingai, automobilyje yra normalu — tai ne trūkumas.</string>

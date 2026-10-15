@@ -549,7 +549,6 @@ Globale standaard: %1$s</string>
     <string name="room_err_output_open">De audio-uitgang kon niet worden geopend.</string>
     <string name="room_err_nothing_heard">Er is geen enkele luidspreker waargenomen. Controleer het volume en of de microfoon niet is bedekt.</string>
     <string name="room_err_too_few_heard">Slechts %1$d luidspreker(s) waargenomen - niets om op uit te lijnen. Controleer volume en microfoonpositie.</string>
-    <string name="room_err_too_noisy">Het is te lawaaierig in het interieur om te meten (%1$d dBFS). Zet de motor en de aanjager uit, sluit de ramen en meet opnieuw.</string>
     <string name="room_err_layout_mismatch">Geen van de luidsprekers in uw configuratie werd waargenomen, maar niet-opgegeven luidsprekers speelden wel. Controleer de luidsprekerconfiguratie en meet opnieuw.</string>
     <string name="room_findings_title">Wat de meting heeft gevonden</string>
     <string name="room_findings_none">Geen fouten gevonden. Dat voor en achter anders klinken is normaal in een auto - dat is geen fout.</string>
