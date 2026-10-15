@@ -13,9 +13,9 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 ## State
 
 - Pushed: `origin/kostyfmat_mod` = HEAD (15.10, on the owner's order). Latest: `f2ce7aa` — the engine
-  no longer attaches a Visualizer while the resolver probes (crash 02:02:58); built, **not on the
-  unit** (bench unreachable: adb connect 10013). 📻 Owed: sub −10 dB at 31.5 Hz test; ❓ `0102[5:4]`.
-- Bench `192.168.1.138:9876`: `8f4431a`. Install `f2ce7aa` when it is reachable. Sub + to −.
+  no longer attaches a Visualizer while the resolver probes (crash 02:02:58). If adb gives 10013,
+  ClearVPN (WireGuard) is on and blocks the LAN - the owner turns it off. 📻 Owed: sub −10 dB at 31.5 Hz test; ❓ `0102[5:4]`.
+- Bench `192.168.1.138:9876`: `f2ce7aa` (15.10 16:13, adb install -r + service by hand). Sub + to −.
 - Argon chat: 32890fb409d8df41 (228743237ea71d21 is dead).
 
 ## ⏳ Open
