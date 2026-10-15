@@ -20,18 +20,18 @@ in any browser without internet.
 NEW
 -----------------------------------------------------------------------------
 
-The author's 1.0
+Author (khiivl) · up to his 1.0.2
 - Ultra Bass, the new Loudness, a live analyser curve behind the equaliser, "Off" in the
   subwoofer list for cars without one, GALA switchable per preset.
 - The "Audio Check" tab: test signals and test recordings for each speaker.
 
-Interface
+Mod · Interface
 - Two interface styles in Settings → "UI Style": Classic (the author's look) and Modern. Day and
   night themes in both.
 - Pair locks for delays: "Move fronts together" and "Move rears together" keep the difference
   between left and right.
 
-Cabin measurement
+Mod · Cabin measurement
 - Settings → cabin card: say what kind of cabin it is, its size, and tap the speakers that are
   installed.
 - The app chooses the measurement volume itself.
@@ -41,18 +41,18 @@ Cabin measurement
   turn its phase switch). Problems an equaliser cannot fix are reported instead of being
   "corrected".
 
-Spectrum
+Mod · Spectrum
 - A switch on the main screen: Off, Music (what the preset makes of the music), Microphone (what
   the cabin actually sounds like).
 - "RTA zero" in Audio Check calibrates the spectrum in one press.
 - A warning when the microphone is overloaded: lower its sensitivity in the car settings.
 
-Player resume
+Mod · Player resume
 - Settings: "Resume the player after a restart" and "Resume the player after sleep". The player
   that was playing comes back on its own, without its window jumping on top of the navigator.
 - For sleep, press "Let wDSP stay alive through sleep" and enable wDSP in the list that opens.
 
-Screensaver
+Mod · Screensaver
 - Swipe from the middle of the screen to change the volume.
 - Hold the style button for a second to open the equaliser.
 - A tap on the cover opens the player or radio that is actually playing.
@@ -62,6 +62,10 @@ Screensaver
 FIXED
 -----------------------------------------------------------------------------
 
+Author (khiivl)
+- The subwoofer level at switch-on: a start-up race set it wrong (his 1.0.1).
+
+Mod
 - Calls: the preset no longer jumps during a call, the microphone is released at once, and the
   volume after a call is correct.
 - Start-up: settings reach the sound processor reliably after switching on and after an update.
@@ -71,7 +75,6 @@ FIXED
 - The microphone spectrum after sleep and after the voice assistant has used the microphone.
 - Several errors in the cabin measurement, especially in the low bass and with the subwoofer.
 - GALA no longer leaves the volume raised after slowing down.
-- A crash when opening the app on the Loudness tab.
 
 -----------------------------------------------------------------------------
 PLEASE SEND

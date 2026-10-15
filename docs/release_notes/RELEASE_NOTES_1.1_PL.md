@@ -19,18 +19,18 @@ w dowolnej przeglądarce bez dostępu do Internetu.
 NOWOŚCI
 -----------------------------------------------------------------------------
 
-Wersja 1.0 autora
+Autor (khiivl) · do jego 1.0.2
 - Ultra Bass, nowa funkcja Loudness, krzywa analizatora na żywo za korektorem, "Wył." na liście
   subwoofera dla aut bez niego, GALA wyłączana dla pojedynczego presetu.
 - Zakładka "Test Audio": sygnały testowe i nagrania kontrolne dla każdego głośnika.
 
-Interfejs
+Mod · Interfejs
 - Dwa style interfejsu w Ustawienia → "Styl interfejsu": Klasyczny (wygląd autora) i Nowoczesny.
   Motyw dzienny i nocny w obu.
 - Blokada par dla opóźnień: "Przednie razem" i "Tylne razem" zachowują różnicę między lewym
   a prawym.
 
-Pomiar kabiny
+Mod · Pomiar kabiny
 - Ustawienia → karta kabiny: wskaż rodzaj kabiny, jej wymiary i dotknij zainstalowanych głośników.
 - Aplikacja sama dobiera głośność pomiaru.
 - Po naciśnięciu "Apply Auto-EQ" krótki sweep kontrolny pokazuje, czy korekta przyniosła skutek.
@@ -39,18 +39,18 @@ Pomiar kabiny
   przełączenia jego fazy). Problemy, których korektor nie może rozwiązać, są zgłaszane zamiast być
   "korygowane".
 
-Widmo
+Mod · Widmo
 - Przełącznik na ekranie głównym: "Wył.", "Muzyka" (co preset robi z muzyką), "Microphone" (jak
   naprawdę brzmi kabina).
 - "Zero RTA" w Test Audio kalibruje widmo jednym naciśnięciem.
 - Ostrzeżenie o przesterowaniu mikrofonu: zmniejsz jego czułość w ustawieniach samochodu.
 
-Wznawianie odtwarzacza
+Mod · Wznawianie odtwarzacza
 - Ustawienia: "Wznów odtwarzacz po restarcie" oraz "Wznów odtwarzacz po uśpieniu". Grający odtwarzacz
   powraca sam, bez wyskakiwania jego okna na wierzch nawigacji.
 - Dla uśpienia naciśnij "Pozwól wDSP działać w uśpieniu" i włącz wDSP na liście, która się otworzy.
 
-Wygaszacz
+Mod · Wygaszacz
 - Przeciągnięcie od środka ekranu zmienia głośność.
 - Przytrzymanie przycisku stylu przez sekundę otwiera korektor.
 - Dotknięcie okładki otwiera ten odtwarzacz lub radio, które rzeczywiście gra.
@@ -60,6 +60,10 @@ Wygaszacz
 NAPRAWIONO
 -----------------------------------------------------------------------------
 
+Autor (khiivl)
+- Poziom subwoofera po włączeniu: wyścig przy starcie ustawiał go błędnie (jego 1.0.1).
+
+Mod
 - Rozmowy: preset nie skacze już w trakcie połączenia, mikrofon jest zwalniany natychmiast, a głośność
   po rozmowie jest prawidłowa.
 - Start: ustawienia niezawodnie docierają do procesora dźwięku po włączeniu i po aktualizacji.
@@ -69,7 +73,6 @@ NAPRAWIONO
 - Widmo mikrofonu po uśpieniu oraz po użyciu mikrofonu przez asystenta głosowego.
 - Kilka błędów w pomiarze kabiny, szczególnie na najniższym basie i w kanale subwoofera.
 - GALA nie pozostawia już podwyższonej głośności po zwolnieniu prędkości.
-- Awaria podczas otwierania aplikacji na zakładce Loudness.
 
 -----------------------------------------------------------------------------
 PROŚBA O PRZESŁANIE

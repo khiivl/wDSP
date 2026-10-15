@@ -21,18 +21,18 @@ Archiv. Sie lassen sich in jedem Browser ohne Internetverbindung öffnen.
 NEU
 -----------------------------------------------------------------------------
 
-Die Version 1.0 des Autors
+Autor (khiivl) · bis zu seiner 1.0.2
 - Ultra Bass, die neue Loudness, eine Live-Analysatorkurve hinter dem Equalizer, "Aus" in der
   Subwoofer-Liste für Fahrzeuge ohne Subwoofer, GALA pro Preset abschaltbar.
 - Der Reiter "Audio-Check": Testsignale und Testaufnahmen für jeden einzelnen Lautsprecher.
 
-Oberfläche
+Mod · Oberfläche
 - Zwei Oberflächenstile in Einstellungen → "UI-Stil": Klassisch (das Aussehen des Autors) und
   Modern. Tag- und Nacht-Themen in beiden Stilen.
 - Paarsperren für Laufzeitverzögerungen: "Vorne zusammen" und "Hinten zusammen" behalten den
   Unterschied zwischen links und rechts bei.
 
-Fahrgastraum-Messung
+Mod · Fahrgastraum-Messung
 - Einstellungen → Fahrgastraum-Karte: Art des Innenraums und Maße angeben sowie die verbauten
   Lautsprecher antippen.
 - Die App wählt die Messlautstärke selbstständig.
@@ -42,18 +42,18 @@ Fahrgastraum-Messung
   spielt (mit dem Hinweis, den Phasenschalter umzulegen). Probleme, die ein Equalizer nicht beheben
   kann, werden gemeldet, statt sie zu "korrigieren".
 
-Spektrum
+Mod · Spektrum
 - Umschalter auf dem Hauptbildschirm: "Aus", "Musik" (was das Preset aus der Musik macht),
   "Microphone" (wie der Innenraum tatsächlich klingt).
 - "RTA-Nullpunkt" im Audio-Check kalibriert das Spektrum mit einem einzigen Druck.
 - Warnung bei Übersteuerung des Mikrofons: Empfindlichkeit in den Fahrzeugeinstellungen verringern.
 
-Player-Wiederaufnahme
+Mod · Player-Wiederaufnahme
 - Einstellungen: "Player nach Neustart fortsetzen" und "Player nach Standby fortsetzen". Der zuletzt
   aktive Player kehrt eigenständig zurück, ohne dass sich sein Fenster über die Navigation drängt.
 - Für den Standby-Modus tippen Sie auf "wDSP im Standby aktiv lassen" und aktivieren Sie wDSP in der Liste.
 
-Bildschirmschoner
+Mod · Bildschirmschoner
 - Wischen von der Bildschirmmitte aus regelt die Lautstärke.
 - Stil-Taste eine Sekunde lang gedrückt halten öffnet den Equalizer.
 - Ein Tippen auf das Cover öffnet den aktuell tatsächlich spielenden Player oder das Radio.
@@ -63,6 +63,10 @@ Bildschirmschoner
 BEHOBEN
 -----------------------------------------------------------------------------
 
+Autor (khiivl)
+- Subwoofer-Pegel beim Einschalten: ein Wettlauf beim Start setzte ihn falsch (seine 1.0.1).
+
+Mod
 - Anrufe: Das Preset springt während eines Telefonats nicht mehr hin und her, das Mikrofon wird sofort
   freigegeben und die Lautstärke nach dem Gespräch stimmt.
 - Start: Einstellungen erreichen den Audioprozessor nach dem Einschalten und nach Updates zuverlässig.
@@ -72,7 +76,6 @@ BEHOBEN
 - Mikrofonspektrum nach dem Aufwachen und nachdem der Sprachassistent das Mikrofon verwendet hat.
 - Mehrere Fehler bei der Fahrgastraum-Messung, insbesondere im Tiefbass und im Zusammenspiel mit dem Subwoofer.
 - GALA lässt die Lautstärke nach dem Abbremsen nicht mehr angehoben.
-- Absturz beim Öffnen der App im Reiter "Gehörr. Laust.".
 
 -----------------------------------------------------------------------------
 BITTE EINSENDEN

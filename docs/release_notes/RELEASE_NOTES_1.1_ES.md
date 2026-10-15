@@ -20,18 +20,18 @@ Se abren en cualquier navegador sin internet.
 NOVEDADES
 -----------------------------------------------------------------------------
 
-La versión 1.0 del autor
+Autor (khiivl) · hasta su 1.0.2
 - Ultra Bass, el nuevo Loudness, una curva de analizador en vivo detrás del ecualizador, "Apag."
   en la lista de subwoofer para coches sin él, GALA desactivable por preajuste.
 - La pestaña "Prueba Audio": señales de prueba y grabaciones de prueba para cada altavoz.
 
-Interfaz
+Mod · Interfaz
 - Dos estilos de interfaz en Ajustes → "Estilo de interfaz": Clásico (el aspecto del autor) y
   Moderno. Temas diurno y nocturno en ambos.
 - Bloqueo de pares para retardos: "Delanteros juntos" y "Traseros juntos" mantienen la diferencia
   entre izquierda y derecha.
 
-Medición del habitáculo
+Mod · Medición del habitáculo
 - Ajustes → tarjeta del habitáculo: indique el tipo de habitáculo, sus medidas y toque los altavoces
   instalados.
 - La aplicación elige el volumen de medición por sí misma.
@@ -41,18 +41,18 @@ Medición del habitáculo
   (con la indicación de cambiar su conmutador de fase). Los problemas que un ecualizador no puede
   solucionar se informan en lugar de "corregirse".
 
-Espectro
+Mod · Espectro
 - Un conmutador en la pantalla principal: "Desactivado", "Música" (lo que el preajuste hace con la música),
   "Microphone" (cómo suena realmente el habitáculo).
 - "Cero RTA" en Prueba Audio calibra el espectro con una sola pulsación.
 - Aviso cuando el micrófono está saturado: reduzca su sensibilidad en los ajustes del coche.
 
-Reanudación del reproductor
+Mod · Reanudación del reproductor
 - Ajustes: "Reanudar reproductor tras reiniciar" y "Reanudar reproductor tras suspensión". El reproductor
   que estaba sonando vuelve por sí solo, sin que su ventana salte sobre el navegador.
 - Para la suspensión, pulse "Permitir wDSP activo en suspensión" y active wDSP en la lista que se abre.
 
-Salvapantallas
+Mod · Salvapantallas
 - Deslice desde el centro de la pantalla para cambiar el volumen.
 - Mantenga pulsado el botón de estilo un segundo para abrir el ecualizador.
 - Un toque en la carátula abre el reproductor o la radio que realmente está sonando.
@@ -62,6 +62,10 @@ Salvapantallas
 CORREGIDO
 -----------------------------------------------------------------------------
 
+Autor (khiivl)
+- El nivel del subwoofer al encender: una condición de carrera en el arranque lo fijaba mal (su 1.0.1).
+
+Mod
 - Llamadas: el preajuste ya no salta durante una llamada, el micrófono se libera de inmediato y el
   volumen tras la llamada es el correcto.
 - Arranque: los ajustes llegan de forma fiable al procesador de sonido tras encender y tras una actualización.
@@ -71,7 +75,6 @@ CORREGIDO
 - El espectro del micrófono tras la suspensión y tras el uso del micrófono por el asistente de voz.
 - Varios errores en la medición del habitáculo, especialmente en graves profundos y con el subwoofer.
 - GALA ya no deja el volumen elevado tras reducir la velocidad.
-- Cierre inesperado al abrir la aplicación en la pestaña "Curva F-M".
 
 -----------------------------------------------------------------------------
 POR FAVOR ENVÍE

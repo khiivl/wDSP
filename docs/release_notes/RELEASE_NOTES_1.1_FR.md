@@ -21,19 +21,19 @@ Ils s'ouvrent dans n'importe quel navigateur sans connexion Internet.
 NOUVEAUTÉS
 -----------------------------------------------------------------------------
 
-La version 1.0 de l'auteur
+Auteur (khiivl) · jusqu'à sa 1.0.2
 - Ultra Bass, la nouvelle compensation de Loudness, une courbe d'analyseur en direct derrière
   l'égaliseur, "Arrêt" dans la liste du subwoofer pour les véhicules non équipés, GALA désactivable
   par préréglage.
 - L'onglet "Test Audio" : signaux de test et enregistrements de contrôle pour chaque haut-parleur.
 
-Interface
+Mod · Interface
 - Deux styles d'interface dans Paramètres → "Style d'interface" : Classique (l'apparence de
   l'auteur) et Moderne. Thèmes jour et nuit disponibles dans les deux.
 - Verrouillage par paire des délais : "Avants ensemble" et "Arrières ensemble" conservent l'écart
   entre gauche et droite.
 
-Mesure de l'habitacle
+Mod · Mesure de l'habitacle
 - Paramètres → carte de l'habitacle : indiquez le type d'habitacle, ses dimensions et touchez les
   haut-parleurs installés.
 - L'application détermine automatiquement le volume de mesure.
@@ -43,18 +43,18 @@ Mesure de l'habitacle
   portes (avec indication d'inverser son sélecteur de phase). Les problèmes qu'un égaliseur ne peut
   résoudre sont signalés au lieu d'être « corrigés ».
 
-Spectre
+Mod · Spectre
 - Un commutateur sur l'écran principal : "Désactivé", "Musique" (ce que le préréglage produit à partir
   de la musique), "Microphone" (le rendu réel dans l'habitacle).
 - "Zéro RTA" dans Test Audio étalonne le spectre en une seule pression.
 - Avertissement en cas de saturation du microphone : réduisez sa sensibilité dans les réglages du véhicule.
 
-Reprise du lecteur
+Mod · Reprise du lecteur
 - Paramètres : "Reprendre la lecture après le redémarrage" et "Reprendre la lecture après la veille".
   Le lecteur actif reprend automatiquement, sans que sa fenêtre ne vienne masquer la navigation.
 - Pour la veille, appuyez sur "Garder wDSP actif en veille" et activez wDSP dans la liste affichée.
 
-Économiseur d'écran
+Mod · Économiseur d'écran
 - Glissez depuis le centre de l'écran pour modifier le volume.
 - Maintenez le bouton de style enfoncé une seconde pour ouvrir l'égaliseur.
 - Un appui sur la pochette ouvre le lecteur ou la radio en cours d'écoute.
@@ -64,6 +64,10 @@ Reprise du lecteur
 CORRIGÉ
 -----------------------------------------------------------------------------
 
+Auteur (khiivl)
+- Le niveau du subwoofer à l'allumage : une concurrence au démarrage le réglait mal (sa 1.0.1).
+
+Mod
 - Appels : le préréglage ne saute plus pendant un appel, le microphone est libéré immédiatement et
   le volume après l'appel est rétabli correctement.
 - Démarrage : les réglages sont transmis de manière fiable au processeur audio après l'allumage et
@@ -75,7 +79,6 @@ CORRIGÉ
 - Correction de plusieurs erreurs de mesure de l'habitacle, particulièrement dans les graves profonds et
   avec le subwoofer.
 - GALA ne maintient plus le volume élevé après un ralentissement.
-- Correction d'un plantage à l'ouverture de l'application sur l'onglet Loudness.
 
 -----------------------------------------------------------------------------
 MERCI D'ENVOYER

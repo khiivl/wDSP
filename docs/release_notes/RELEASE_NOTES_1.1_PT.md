@@ -21,18 +21,18 @@ em qualquer navegador sem ligação à Internet.
 NOVIDADES
 -----------------------------------------------------------------------------
 
-A versão 1.0 do autor
+Autor (khiivl) · até à sua 1.0.2
 - Ultra Bass, o novo Loudness, uma curva de analisador em tempo real por trás do equalizador,
   "Desl." na lista de subwoofer para carros sem ele, GALA desativável por predefinição.
 - O separador "Teste de Áudio": sinais de teste e gravações de teste para cada coluna.
 
-Interface
+Mod · Interface
 - Dois estilos de interface em Definições → "Estilo de interface": Clássico (o aspeto do autor) e
   Moderno. Temas diurno e noturno em ambos.
 - Bloqueio de pares para atrasos: "Frontais juntos" e "Traseiros juntos" mantêm a diferença entre
   esquerda e direita.
 
-Medição do habitáculo
+Mod · Medição do habitáculo
 - Definições → cartão do habitáculo: indique o tipo de habitáculo, as suas dimensões e toque nas
   colunas instaladas.
 - A aplicação escolhe o volume de medição autonomamente.
@@ -42,18 +42,18 @@ Medição do habitáculo
   (com indicação para alterar o interruptor de fase). Problemas que um equalizador não pode resolver
   são comunicados em vez de serem "corrigidos".
 
-Espectro
+Mod · Espectro
 - Um comutador no ecrã principal: "Desligado", "Música" (o que a predefinição faz da música),
   "Microphone" (como o habitáculo realmente soa).
 - "Zero RTA" no Teste de Áudio calibra o espectro com uma única pressão.
 - Aviso quando o microfone está sobrecarregado: reduza a sua sensibilidade nas definições do carro.
 
-Retoma do leitor
+Mod · Retoma do leitor
 - Definições: "Retomar leitor após reiniciar" e "Retomar leitor após suspensão". O leitor que estava
   a tocar regressa sozinho, sem que a sua janela salte sobre o navegador.
 - Para a suspensão, prima "Permitir wDSP ativo em suspensão" e ative o wDSP na lista apresentada.
 
-Protetor de ecrã
+Mod · Protetor de ecrã
 - Deslize a partir do centro do ecrã para ajustar o volume.
 - Mantenha premido o botão de estilo durante um segundo para abrir o equalizador.
 - Um toque na capa abre o leitor ou rádio que está efetivamente a tocar.
@@ -63,6 +63,10 @@ Protetor de ecrã
 CORRIGIDO
 -----------------------------------------------------------------------------
 
+Autor (khiivl)
+- O nível do subwoofer ao ligar: uma condição de corrida no arranque definia-o mal (a sua 1.0.1).
+
+Mod
 - Chamadas: a predefinição já não salta durante uma chamada, o microfone é libertado de imediato e
   o volume após a chamada é restabelecido corretamente.
 - Arranque: as configurações chegam com fiabilidade ao processador de som após ligar e após atualizações.
@@ -72,7 +76,6 @@ CORRIGIDO
 - Espectro do microfone após a suspensão e após utilização do microfone pelo assistente de voz.
 - Vários erros na medição do habitáculo, especialmente nos graves profundos e com o subwoofer.
 - O GALA já não deixa o volume aumentado após abrandar.
-- Falha ao abrir a aplicação no separador "Curva F-M".
 
 -----------------------------------------------------------------------------
 POR FAVOR ENVIE

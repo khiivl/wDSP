@@ -20,18 +20,18 @@ in qualsiasi browser senza bisogno di Internet.
 NOVITÀ
 -----------------------------------------------------------------------------
 
-La versione 1.0 dell'autore
+Autore (khiivl) · fino alla sua 1.0.2
 - Ultra Bass, il nuovo Loudness, una curva dell'analizzatore in tempo reale dietro l'equalizzatore,
   "Spento" nell'elenco subwoofer per le auto sprovviste, GALA disattivabile per singolo predefinito.
 - La scheda "Test Audio": segnali di prova e registrazioni di test per ciascun altoparlante.
 
-Interfaccia
+Mod · Interfaccia
 - Due stili di interfaccia in Impostazioni → "Stile interfaccia": Classico (l'aspetto dell'autore)
   e Moderno. Temi diurno e notturno per entrambi.
 - Blocco coppie per i ritardi: "Anteriori insieme" e "Posteriori insieme" mantengono la differenza
   tra sinistra e destra.
 
-Misurazione dell'abitacolo
+Mod · Misurazione dell'abitacolo
 - Impostazioni → scheda abitacolo: indica il tipo di abitacolo, le dimensioni e tocca gli altoparlanti
   installati.
 - L'applicazione sceglie autonomamente il volume di misurazione.
@@ -41,18 +41,18 @@ Misurazione dell'abitacolo
   (con il suggerimento di commutare la fase). I problemi che un equalizzatore non può risolvere vengono
   segnalati anziché essere "corretti".
 
-Spettro
+Mod · Spettro
 - Un selettore nella schermata principale: "Spento", "Musica" (ciò che il predefinito ricava dalla
   musica), "Microphone" (come suona realmente l'abitacolo).
 - "Zero RTA" in Test Audio calibra lo spettro con una sola pressione.
 - Avviso quando il microfono è sovraccarico: riduci la sensibilità nelle impostazioni dell'auto.
 
-Ripresa del lettore
+Mod · Ripresa del lettore
 - Impostazioni: "Riprendi il lettore dopo il riavvio" e "Riprendi il lettore dopo la sospensione". Il
   lettore in riproduzione torna attivo da solo, senza che la sua finestra si sovrapponga al navigatore.
 - Per la sospensione, tocca "Consenti a wDSP di restare attivo" e abilita wDSP nell'elenco che si apre.
 
-Salvaschermo
+Mod · Salvaschermo
 - Scorri dal centro dello schermo per regolare il volume.
 - Tieni premuto il pulsante dello stile per un secondo per aprire l'equalizzatore.
 - Un tocco sulla copertina apre il lettore o la radio effettivamente in riproduzione.
@@ -62,6 +62,10 @@ Salvaschermo
 RISOLTO
 -----------------------------------------------------------------------------
 
+Autore (khiivl)
+- Il livello del subwoofer all'accensione: una race condition all'avvio lo impostava male (la sua 1.0.1).
+
+Mod
 - Chiamate: il predefinito non salta più durante una chiamata, il microfono viene rilasciato subito
   e il volume dopo la chiamata è corretto.
 - Avvio: le impostazioni raggiungono il processore audio in modo affidabile dopo l'accensione e dopo
@@ -72,7 +76,6 @@ RISOLTO
 - Spettro del microfono ripristinato dopo la sospensione e dopo l'uso del microfono da parte dell'assistente vocale.
 - Corretti diversi errori nella misurazione dell'abitacolo, in particolare sui bassi profondi e con il subwoofer.
 - GALA non lascia più il volume elevato dopo aver rallentato.
-- Chiusura anomala aprendo l'app sulla scheda Loudness.
 
 -----------------------------------------------------------------------------
 INVIA PER FAVORE
