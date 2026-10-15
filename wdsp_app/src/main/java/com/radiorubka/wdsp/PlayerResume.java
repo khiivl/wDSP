@@ -4,6 +4,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.session.MediaController;
+import android.media.browse.MediaBrowser;
+import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -18,6 +21,7 @@ import com.radiorubka.wdsp.ui.theme.ThemeManager;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -67,8 +71,10 @@ public final class PlayerResume {
     private static final String KEY_STREAMS = "resume_streams_";
     /** ACTION_SHUTDOWN took the note and no boot has read it yet - see onShutdown. */
     private static final String KEY_SHUTDOWN = "resume_shutdown";
-    /** + package: that player's screen, "package/class" (see noteForeground). */
-    private static final String KEY_ACTIVITY = "resume_activity_";
+    /** + package: that player's media button receiver, "package/class" (see noteSession). */
+    private static final String KEY_RECEIVER = "resume_receiver_";
+    /** How long a bound session service is held after asking it to play. */
+    private static final long BROWSER_HOLD_MS = 10_000;
     /** How long a player that streams is given to get a network before it is started anyway. */
     private static final long NETWORK_WAIT_MS = 20_000;
     private static final long NETWORK_POLL_MS = 2000;
@@ -152,6 +158,7 @@ public final class PlayerResume {
         }
         String known = s.getString(KEY_PLAYER, "");
         if (playing && pkg != null && !pkg.isEmpty()) {
+            noteSession(pkg);
             if (!pkg.equals(known) || !s.getBoolean(KEY_PLAYING, false)) {
                 s.edit().putString(KEY_PLAYER, pkg).putBoolean(KEY_PLAYING, true).commit();
             }
@@ -192,36 +199,35 @@ public final class PlayerResume {
     }
 
     /**
-     * The player's own screen, as the platform names what is in front ({@code sys.qf.current.activity},
-     * "package/class") - kept whenever the player that plays is on screen, so a resume raises that
-     * screen rather than the launcher's entry (owner, 15.10.2026: «правильно запам'ятовувати
-     * медіасесію та активність, і пробувати зразу підняти її, це справедливо наприклад для спотіфай»;
-     * DefaultAppsChanger did it from {@code dumpsys activity recents} with root). Called by McuService on
-     * every change of the watched properties.
+     * The player's audio session, not the system around it (owner, 15.10.2026: «ти аудіосесію плеєра
+     * маєш зберігати а не всю систему»; «хто в машині слухає щось з відкритим інтерфейсом, там лаунчер
+     * або навігатор»): the component that receives its media button, as the system itself records it
+     * while that player plays ({@code Settings.Secure media_button_receiver}, "package/class,user" - kept
+     * across a reboot, it is how Android starts the last player on a key). Kept per player while it plays.
      */
-    public void noteForeground() {
-        SharedPreferences s = state();
-        if (s.getBoolean(KEY_ASLEEP, false)) return;
-        final String activity = HardwareProfile.systemProperty(PROP_CURRENT_ACTIVITY);
-        if (activity == null) return;
-        final int slash = activity.indexOf('/');
-        if (slash <= 0 || slash == activity.length() - 1) return;
-        final String pkg = activity.substring(0, slash);
-        if (!pkg.equals(s.getString(KEY_PLAYER, "")) || NowPlaying.isRadioPackage(pkg)) return;
-        // A real, exported activity only. An activity-alias is an icon, not a screen, and a player
-        // switches its icons: 📻 15.10.2026, YouTube Music (Morphe) showed .morphe_black_1, which was
-        // gone (ActivityNotFoundException) when the reboot asked for it.
-        try {
-            final android.content.pm.ActivityInfo info = context.getPackageManager().getActivityInfo(
-                    ComponentName.unflattenFromString(activity), 0);
-            if (info == null || info.targetActivity != null || !info.exported || !info.enabled) return;
-        } catch (Throwable t) {
-            return;
+    private void noteSession(String pkg) {
+        final String component = systemMediaButtonReceiver();
+        if (component == null || !component.startsWith(pkg + "/")) return;
+        final String key = KEY_RECEIVER + pkg;
+        final SharedPreferences s = state();
+        if (!component.equals(s.getString(key, ""))) {
+            s.edit().putString(key, component).commit();
+            Log.i(TAG, "player session remembered: media button receiver " + component);
         }
-        final String key = KEY_ACTIVITY + pkg;
-        if (!activity.equals(s.getString(key, ""))) {
-            s.edit().putString(key, activity).commit();
-            Log.i(TAG, "player screen remembered: " + activity);
+    }
+
+    /** The system's last media button receiver, "package/class", or null. */
+    private String systemMediaButtonReceiver() {
+        try {
+            String v = android.provider.Settings.Secure.getString(context.getContentResolver(),
+                    "media_button_receiver");
+            if (v == null || v.isEmpty()) return null;
+            final int comma = v.indexOf(',');
+            if (comma > 0) v = v.substring(0, comma);
+            final ComponentName c = ComponentName.unflattenFromString(v);
+            return c != null ? c.flattenToString() : null;
+        } catch (Throwable t) {
+            return null;
         }
     }
 
@@ -446,45 +452,125 @@ public final class PlayerResume {
     }
 
     /**
-     * Starts the player the way DefaultAppsChanger did before its refactor - the version that worked
-     * (owner, 15.10.2026: «в початкових коммітах, ще до зміни інтерфейсу, була правильна система
-     * запуску останніх плеєрів після ребуту та сну, потім Дж зламав»; DAC {@code c0bca87},
-     * {@code QfMonitorService.restoreLastPlayer} and {@code AdvancedLaunchManager}): open its
-     * activity, wait until it is on screen, give its UI a second and a half, then a PLAY key to its
-     * package - context first, key last - and put the screen back.
-     *
-     * <p>🔴 What replaced it here on 21.09 was copied from DAC's later, broken version: a ladder of
-     * session, media browser service, launch and media button 3 s apart, a wait for the network, and
-     * PLAYs through a session that is invisible without notification access. The browser rung
-     * "succeeded" without music and ate the time; the key went to the manifest receiver only, last.
-     *
-     * <p>A player still alive with a live session is simply asked through it - it has its context.
+     * Brings the player's audio session back without its screen - in a car the screen is the launcher
+     * or the navigator, and nobody listens with a player open (owner, 15.10.2026). Each rung is checked
+     * {@link #VERIFY_MS} later before the next one:
+     * <ol>
+     *   <li>its live session - it still has its context;</li>
+     *   <li>its media button receiver, by component: the system's own record of it, else the one in its
+     *       manifest - an explicit broadcast starts the process with no screen, and the player opens its
+     *       session to answer it;</li>
+     *   <li>its session service ({@code MediaBrowserService}): bound, and asked through the session it
+     *       hands back;</li>
+     *   <li>only then its screen through the launcher's entry, the way DefaultAppsChanger {@code c0bca87}
+     *       did it - wait for it on screen, a second and a half, PLAY, and the launcher put back.</li>
+     * </ol>
      */
     private void start(String pkg, String after) {
-        if (NowPlaying.getInstance(context).playPackage(pkg)) {
-            Log.i(TAG, "after " + after + ": " + pkg + " still has its session - asked through it");
-            main.postDelayed(() -> {
-                if (isPlaying(pkg)) {
-                    Log.i(TAG, "after " + after + ": " + pkg + " is playing (its session)");
-                } else {
-                    Log.i(TAG, "after " + after + ": its session did not start " + pkg + " - opening it");
-                    openAndPlay(pkg, after);
-                }
-            }, VERIFY_MS);
+        rung(pkg, after, 0);
+    }
+
+    private void rung(String pkg, String after, int step) {
+        if (isPlaying(pkg)) {
+            Log.i(TAG, "after " + after + ": " + pkg + " is playing");
             return;
         }
-        openAndPlay(pkg, after);
+        final String how;
+        switch (step) {
+            case 0:
+                if (!NowPlaying.getInstance(context).playPackage(pkg)) { rung(pkg, after, 1); return; }
+                how = "its live session";
+                break;
+            case 1:
+                if (!playThroughReceiver(pkg)) { rung(pkg, after, 2); return; }
+                how = "its media button receiver";
+                break;
+            case 2:
+                if (!playThroughBrowser(pkg)) { rung(pkg, after, 3); return; }
+                how = "its session service";
+                break;
+            default:
+                openAndPlay(pkg, after);
+                return;
+        }
+        Log.i(TAG, "after " + after + ": asked " + pkg + " to play through " + how);
+        main.postDelayed(() -> {
+            if (isPlaying(pkg)) {
+                Log.i(TAG, "after " + after + ": " + pkg + " is playing (" + how + ")");
+            } else {
+                Log.i(TAG, "after " + after + ": " + how + " did not start " + pkg + " - next");
+                rung(pkg, after, step + 1);
+            }
+        }, VERIFY_MS);
     }
 
     private void openAndPlay(String pkg, String after) {
         if (!launchApp(pkg)) {
-            Log.w(TAG, "after " + after + ": " + pkg + " has no screen to open - a media key only");
-            sendPlay(pkg);
-            verify(pkg, after, true);
+            Log.w(TAG, "after " + after + ": " + pkg + " would not start - its session, receiver and "
+                    + "service were tried, and it has no screen to open");
             return;
         }
-        Log.i(TAG, "after " + after + ": opened " + pkg + " - waiting for it on screen");
+        Log.i(TAG, "after " + after + ": its session would not come back - opened " + pkg + " as the last resort");
         waitOnScreen(pkg, after, SystemClock.elapsedRealtime() + APPEAR_WAIT_MS);
+    }
+
+    /** A PLAY to the player's media button receiver by component - starts a player whose process is gone. */
+    private boolean playThroughReceiver(String pkg) {
+        String component = state().getString(KEY_RECEIVER + pkg, "");
+        final String system = systemMediaButtonReceiver();
+        if (component.isEmpty() && system != null && system.startsWith(pkg + "/")) component = system;
+        ComponentName target = component.isEmpty() ? null : ComponentName.unflattenFromString(component);
+        if (target == null) {
+            List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(
+                    new Intent(Intent.ACTION_MEDIA_BUTTON).setPackage(pkg), 0);
+            if (receivers == null || receivers.isEmpty()) return false;
+            target = new ComponentName(pkg, receivers.get(0).activityInfo.name);
+        }
+        try {
+            for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
+                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_BUTTON).setComponent(target)
+                        .putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(action, KeyEvent.KEYCODE_MEDIA_PLAY)));
+            }
+            Log.i(TAG, "PLAY to " + target.flattenToShortString());
+            return true;
+        } catch (Throwable t) {
+            Log.w(TAG, "PLAY to " + target.flattenToShortString() + " failed: " + t);
+            return false;
+        }
+    }
+
+    /** Binds the player's session service, which starts it without its screen, and plays through it. */
+    private boolean playThroughBrowser(String pkg) {
+        try {
+            List<ResolveInfo> services = context.getPackageManager().queryIntentServices(
+                    new Intent("android.media.browse.MediaBrowserService").setPackage(pkg), 0);
+            if (services == null || services.isEmpty()) return false;
+            ComponentName service = new ComponentName(pkg, services.get(0).serviceInfo.name);
+            final MediaBrowser[] holder = new MediaBrowser[1];
+            holder[0] = new MediaBrowser(context, service, new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    try {
+                        new MediaController(context, holder[0].getSessionToken()).getTransportControls().play();
+                    } catch (Throwable t) {
+                        Log.w(TAG, "session service of " + pkg + " connected but would not play: " + t);
+                    }
+                    main.postDelayed(() -> {
+                        try { holder[0].disconnect(); } catch (Throwable ignored) {}
+                    }, BROWSER_HOLD_MS);
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.w(TAG, "session service of " + pkg + " refused the connection");
+                }
+            }, null);
+            holder[0].connect();
+            return true;
+        } catch (Throwable t) {
+            Log.w(TAG, "session service of " + pkg + " failed: " + t);
+            return false;
+        }
     }
 
     /** DAC's {@code waitForAppToAppear}: the foreground every half second, fifteen seconds at most. */
@@ -619,24 +705,6 @@ public final class PlayerResume {
      * If that permission is ever lost this rung stops working and the log says so.
      */
     private boolean launchApp(String pkg) {
-        // Its own screen first - the one it was last seen on (noteForeground); flags as DAC's
-        // `am start -f 0x10200000`. An activity that is not exported refuses, and the launcher's
-        // entry is the fallback.
-        final String remembered = state().getString(KEY_ACTIVITY + pkg, "");
-        if (!remembered.isEmpty()) {
-            try {
-                Intent own = new Intent(Intent.ACTION_MAIN)
-                        .setComponent(ComponentName.unflattenFromString(remembered))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                context.startActivity(own);
-                Log.i(TAG, "raised " + remembered);
-                return true;
-            } catch (Throwable t) {
-                Log.i(TAG, remembered + " would not open (" + t.getClass().getSimpleName()
-                        + ") - forgotten, the launcher's entry instead");
-                state().edit().remove(KEY_ACTIVITY + pkg).commit();
-            }
-        }
         try {
             Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
             if (launch == null) return false;
