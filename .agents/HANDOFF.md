@@ -1,6 +1,6 @@
 # HANDOFF — wDSP slice
 
-**16.10.2026 ~00:30, Claude cloud session (branch `kostyfmat_mod`).** Rewritten, never appended; history is git.
+**16.10.2026, Claude session "wDSP mod" (after the cloud session's 00:30 slice).** Rewritten, never appended; history is git.
 
 ## For the author's agent: where to start
 
@@ -12,7 +12,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- **Everything is pushed:** `origin/kostyfmat_mod` = `052d301`; the desktop pulled it (fast-forward).
+- **Everything is pushed:** `origin/kostyfmat_mod` = `dc6bbb0` (this slice on top); the desktop pulled it (fast-forward).
   `origin/master` (author) untouched at `5cc3860`.
 - **Release 1.1 "Bulldozer" / 26 is handed out** (owner 15.10: «виставив людям»): XDA, Telegram, 4PDA.
   The pack is `~/Downloads/wDSP_Bulldozer_mod_by_kostyamat-v1.1.zip`, rebuilt from scratch from
@@ -20,10 +20,12 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
   `screensaver_map.svg` + 9 `RELEASE_NOTES_1.1*.md` = 20 files. ❓ The owner confirmed 3 of 4 checks
   (APK, notes, 20 files); the final `ZIP: 20` after packing was not reported back.
 - **Binaries never go into the repo** (owner 15.10): `/Release/` is in `.gitignore`; packs live on disk.
-- Bench `192.168.1.138:9876`: the pack APK 1.1. BitPerfect v5.5.15 on. ❓ `0102[5:4]`.
+- Bench `192.168.1.138:9876`: the pack APK 1.1. **BitPerfect v5.6-Universal** (BitPerfect line
+  released it 15.10 ~23:15, reboot done, board #1833). ❓ `0102[5:4]`.
 - **The BU32107 EQ never reaches the sub** — memory `bu32107-eq-never-reaches-sub`; the "EQ is before the
   sub split" claim (Gemini 10.09/15.09) is wrong, `platform/03-SOUND-PROCESSOR.md` §5. Owed on the wire:
   doors muted, −10 dB at 31.5 Hz on the EQ — the sub's level must not move.
+- Call is not media (`6c7aae4`) proven 15.10 on a BT call: no session sweep, analyser resumes after.
 - Desktop: `git stash` holds Сова's raw translations (superseded by `8e9ce7f`) — droppable.
 
 ## What the docs now say, and why (15.10, after the owner caught false claims in public posts)
@@ -55,13 +57,12 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## ⏳ Next
 
-1. Who got 1.1 (testers / public) — record the owner's answer.
-2. Pre-release `mod-v1.1` on khiivl/wDSP: owner «подумаємо»; the author's consent first.
-3. Untranslated app strings found in passing: the permission wizard, «Close», «Save Archive (.zip)»,
+1. Pre-release `mod-v1.1` on khiivl/wDSP: owner «подумаємо»; the author's consent first.
+2. Untranslated app strings found in passing: the permission wizard, «Close», «Save Archive (.zip)»,
    «Target Sound Profile» in DE/ES/FR/IT/PL/PT; «Backup All Settings» / «Restore Settings» in RU.
    An app change, not docs — ask the owner.
-4. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
-5. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
+3. Waiting for the author: the 20 Hz rule, Argon's model findings (TODO «Ближнє» 5, 6).
+4. Daytime ear checks: band overlap (TODO «Ближнє» 4), sub delay applies at once (TODO).
 
 ## ❓ For the owner
 
