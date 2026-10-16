@@ -12,7 +12,7 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
 
 ## State
 
-- `origin/kostyfmat_mod` = `dc6bbb0` (cloud, pulled); local is 3 slice commits ahead, push on order.
+- `origin/kostyfmat_mod` = `dc6bbb0` (cloud, pulled); local is ahead by slice-only commits, push on order.
   `origin/master` (author) untouched at `5cc3860`.
 - **Release 1.1 "Bulldozer" / 26 is public** (owner 15.10: «виставив людям»): XDA, Telegram, 4PDA.
   The pack is `~/Downloads/wDSP_Bulldozer_mod_by_kostyamat-v1.1.zip`, rebuilt from scratch from
